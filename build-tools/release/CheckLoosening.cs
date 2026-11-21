@@ -236,7 +236,7 @@ internal static class CheckLoosening
             int occurrence = occurrences.GetValueOrDefault(key) + 1;
             occurrences[key] = occurrence;
             if (after.GetValueOrDefault(text) > 0) { after[text]--; continue; }
-            findings.Add(new(tree.Change.OldPath, "assertion-removed", "data-row:" + Hash(text) + ":" + occurrence, "Test data row removed",
+            findings.Add(new(tree.Change.OldPath, "assertion-removed", "data-row:" + Hash(text) + ":" + occurrence, "Test data row removed: " + row,
                 row.GetLocation().GetLineSpan().StartLinePosition.Line + 1));
         }
     }
@@ -317,7 +317,8 @@ internal static class CheckLoosening
             if (match < 0) match = available.FindIndex(candidate => Stronger(assertion, candidate));
             if (match >= 0) { available.RemoveAt(match); continue; }
             findings.Add(new(path, "assertion-removed", member + ":" + Hash(text) + ":" + occurrence,
-                "Removed assertion: " + text, assertion.GetLocation().GetLineSpan().StartLinePosition.Line + 1));
+                "Removed assertion: " + (assertion is AttributeSyntax ? assertion.ToString() : text), assertion.GetLocation().GetLineSpan().StartLinePosition
+                    .Line + 1));
         }
     }
 

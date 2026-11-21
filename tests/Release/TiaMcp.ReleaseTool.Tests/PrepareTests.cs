@@ -9,6 +9,16 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class PrepareTests
 {
+    private static string GenerateDraft(StaticTree tree, string version)
+    {
+        var path = PrereleaseNotes.NotesPath(version);
+        var marker = PrereleaseNotes.Begin + "\n" + PrereleaseNotes.End + "\n";
+        tree.Write(path, "## 中文\n\n" + marker + "\n## English\n\n" + marker);
+        var notes = PrereleaseNotes.Outputs(tree.Root, version)[path];
+        File.WriteAllText(Path.Combine(tree.Root, path), notes);
+        return notes;
+    }
+
     [Fact]
     public void PrepareCommandIsRegistered()
     {
@@ -54,14 +64,14 @@ public sealed class PrepareTests
     {
         using var tree = VersionTree();
         Assert.Contains("is missing", Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.6")).Message);
-        foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath,
+        foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath, PrereleaseNotes.TranslationsPath,
             RealMachineStatusGenerator.Roster, RealMachineStatusGenerator.Manifest }) tree.Copy(source);
-        var path = tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.6"), PrereleaseNotes.Begin + "\nstale\n" + PrereleaseNotes.End + "\n");
+        var stale = PrereleaseNotes.Begin + "\nstale\n" + PrereleaseNotes.End + "\n";
+        var path = tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.6"), "## 中文\n\n" + stale + "\n## English\n\n" + stale);
         var before = File.ReadAllText(path);
-        Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.6"));
+        Assert.Contains("stale", Assert.Throws<ReleaseException>(() => Prepare.RequireNotes(tree.Root, "4.0.0-beta.6")).Message);
         Assert.Equal(before, File.ReadAllText(path));
-        File.WriteAllText(path, PrereleaseNotes.DraftBlock(File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.LedgerPath)),
-            File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.ChecklistPath)), RealMachineStatusGenerator.Read(tree.Root)));
+        GenerateDraft(tree, "4.0.0-beta.6");
         Prepare.RequireNotes(tree.Root, "4.0.0-beta.6");
     }
 
@@ -491,11 +501,9 @@ public sealed class PrepareTests
     private static StaticTree ContextTree()
     {
         var tree = VersionTree();
-        foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath,
+        foreach (var source in new[] { PrereleaseNotes.LedgerPath, PrereleaseNotes.ChecklistPath, PrereleaseNotes.TranslationsPath,
             RealMachineStatusGenerator.Roster, RealMachineStatusGenerator.Manifest }) tree.Copy(source);
-        tree.Write(PrereleaseNotes.NotesPath("4.0.0-beta.6"), PrereleaseNotes.DraftBlock(
-            File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.LedgerPath)), File.ReadAllText(Path.Combine(tree.Root, PrereleaseNotes.ChecklistPath)),
-            RealMachineStatusGenerator.Read(tree.Root)));
+        GenerateDraft(tree, "4.0.0-beta.6");
         tree.Write("python.exe", "interpreter existence fixture; process probe is injected");
         tree.Write(".gitignore", "bin-build/\n");
         tree.Write("nuget.config", "<configuration><packageSources><clear /></packageSources></configuration>");

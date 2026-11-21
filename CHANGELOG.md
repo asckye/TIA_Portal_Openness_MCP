@@ -6,6 +6,11 @@
 
 ### Changed
 
+- On V20/V21, `GetSessionState` reports the binding identity before the first worker status reply. A cached identity is marked `identityStatus: "cached"`. Invalid arguments return `INVALID_ARGUMENT` before admission.
+- File-output calls identify a missing parent directory with the shared `output-parent-missing` condition. Global-library inventory rows report individual field failures in a `readErrors` object.
+- Paging reserves about 110 more characters for envelope metadata, so a response near the former cutoff may need another page.
+- Native-message redaction covers recognized credential fields and values available to the call. Unlabelled secrets supplied by external software can still appear in diagnostic text.
+
 - V21 enables native PLC and Unified cross-reference queries by default. The Workbench switch and environment opt-in have been removed, including `switches.nativeCrossReferences` in `GetSessionState`. Delete previews still require `crossReferences=true` to query. V21 real-machine confirmation is pending.
 
 - PUT/GET inspection and configuration prefer the CPU when a station mirrors its attribute. Both tools accept an optional exact `itemPath`.
@@ -18,9 +23,9 @@
 - On V14 SP1 through V19, an explicit status read now leaves a cold bundled worker stopped if it cannot find the installation’s Openness API files. The doctor’s Openness check uses installation evidence on all eight releases.
 - `GetToolUsage` applies V4 field names to index and example-library requests on every release. Named full-engine examples outside the ported usage path now report `summary` for the reply’s message on V20 and V21, matching earlier releases. Caller argument names are preserved.
 
-- Ported tools on V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21 share a Workbench approval and result path. Replies now identify unverified native behavior according to each release’s verification record, including early refusals.
+- Ported tools on V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21 share a Workbench approval and result path. Replies include `meta.behaviorPolicy` and identify unverified behavior with `UNVERIFIED_BEHAVIOR`, including early approval refusals.
 - V19 now returns the V20/V21 argument diagnostics for Unified inputs that repeat an object key.
-- On V20 and V21, ported calls include recovery guidance from the Foundation host. A refused `SetUnifiedGlobalScript` create request also reports when Workbench approval is disabled. `ManagePlcExternalSources` reports `UNSUPPORTED_CAPABILITY` for unknown actions on both releases and for `renameGroup` on V20.
+- On V20 and V21, ported calls include `RECOVERY_GUIDANCE` from the Foundation host. A refused `SetUnifiedGlobalScript` create request also reports `APPROVAL_DISABLED` when Workbench approval is disabled. `ManagePlcExternalSources` reports `UNSUPPORTED_CAPABILITY` for unknown actions on both releases and for `renameGroup` on V20.
 
 ### Added
 

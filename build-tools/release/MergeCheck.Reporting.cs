@@ -132,10 +132,10 @@ internal static partial class MergeCheck
             if (!earlier.TryGetValue((metric, unit), out var values) || values.Length < 5) continue;
             int middle = values.Length / 2;
             double median = values.Length % 2 == 0 ? values[middle - 1] / 2 + values[middle] / 2 : values[middle];
-            double ratio = value / median;
-            if (!(ratio > 2)) continue;
+            if (!(median == 0 ? value > 0 : value / median > 2)) continue;
             if (!heading) { notice.AppendLine("Slower than usual"); heading = true; }
-            notice.AppendLine(FormattableString.Invariant($"{metric}: {value:G6} {unit}, median {median:G6} {unit}, ratio {ratio:G6}x"));
+            var change = median == 0 ? "new" : FormattableString.Invariant($"ratio {value / median:G6}x");
+            notice.AppendLine(FormattableString.Invariant($"{metric}: {value:G6} {unit}, median {median:G6} {unit}, {change}"));
         }
         return notice.ToString();
     }

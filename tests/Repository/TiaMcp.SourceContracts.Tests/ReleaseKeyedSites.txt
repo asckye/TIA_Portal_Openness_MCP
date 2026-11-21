@@ -76,3 +76,86 @@ FoundationHost/PortedToolContract.cs|string release = "21"
 Studio/Gui/Configuration/ClientProfiles.cs|string releaseKey = "21"
 Studio/Gui/Configuration/ConfigCore.cs|string version = "21"
 ToolPipeline/EngineHostPipeline.cs|static string ReleaseKey = "21";
+
+# These 80 numeric version comparisons predate LOW-E. Migrate them to the capability table in 4.1.
+# Each row permits one occurrence. Remove its row when the comparison is migrated.
+Adapters.Contracts/HardwareCapabilities.cs|if ((name == "ManageHardwareObject" || name == "HardwareManageHardwareObject") && action == "changeType" && version < 18)
+Adapters.Contracts/HardwareCapabilities.cs|&& version < 15)
+Adapters.Contracts/HardwareCapabilities.cs|&& version < 16)
+Adapters.Contracts/HardwareCapabilities.cs|if ((name == "ExchangeSystemDiagnosticsSettings" || name == "HardwareExchangeSystemDiagnosticsSettings") && version < 17)
+Adapters.Contracts/HardwareCapabilities.cs|if (family == "certificateServices" && version < 18) return "CertificateManagementConfiguration requires V18.";
+Adapters.Contracts/HardwareCapabilities.cs|if ((name == "ManageHardwareUtilities" || name == "HardwareManageHardwareUtilities") && action == "exportCardReaderPsc" && version < 15)
+Adapters.Contracts/HardwareCapabilities.cs|if ((name == "ManageHardwareUtilities" || name == "HardwareManageHardwareUtilities") && action == "normalizeTypeIdentifier" && version < 17)
+Adapters.Contracts/HardwareCapabilities.cs|if ((name == "ManageTransferArea" || name == "HardwareManageTransferArea") && family == "multicast" && version < 19)
+Adapters.Contracts/HardwareCapabilities.cs|&& version < 16
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major == 14 && request.DriveObjectIndex > 0)
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major == 14 && (request.Operation == "ManageStartdriveParameter" && request.Action == "write"
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major == 14 && request.Operation == "ManageDriveTelegrams"
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.DriveObjectNumber != 0)
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation == "ListDccCharts" && (request.IncludeLibraries || request.IncludeBlocks || request.IncludePins))
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation == "GetDriveParameters" && request.Source == "read")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major == 15 && request.Operation == "ManageSivarcRule" && request.Action == "create")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation is "ResolveSivarcExpression" or "UpgradeSivarcDefinitions")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 21 && request.Operation is "ManageSivarcScreenLayout" or "ManageDriveSafetyAcceptanceTest")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation == "ManageDcbLibraries" && request.Action == "read")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation == "ManageDccChart" && request.Action == "create")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation == "ManageDccChart" && request.Action == "readSequence" && !string.IsNullOrEmpty(request.ChartName))
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major == 15 && request.Operation == "GenerateSivarc" && request.Inputs.TryGetValue(request.AdditionalHmiDeviceNamesJson, out var devices) && devices
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Category == "advancedTags") return "AdvancedTagRules requires V20 or later.";
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation == "ManageSivarcRuleContainer")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation is "ListSivarcRules" or "ManageSivarcRule")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation == "ManageDccChart" && (request.SequenceIndex >= 0
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation is "GetSivarcRuleTree" or "ManageSivarcTableRule" && !string.IsNullOrEmpty(request.TablePath))
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation == "ManageDccPin" && request.Action == "publish" && request.ArrayIndex >= 0)
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|&& (major < 19 || major < 20 && request.InterfaceKind == "torque"))
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 19 && request.Operation == "ManageDriveTelegrams" && request.TelegramType == "MainTelegram" && request.Action is "check" or "insert")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation == "ManageDriveTelegrams" && request.TelegramType == "EdgeTelegram")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 17 && request.Operation == "ManageDriveFunctions" && request.Action == "setSimoGearMlfb")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 19 && request.Operation == "ManageDriveFunctions" && request.Action == "setMotorType"
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && options.Any(value => value is "UserCreatedRules" or "EnergySuiteRules" or "AllRules"))
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && options.Contains("AdvancedTags", StringComparer.Ordinal))
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 18 && request.Operation == "ManageDccChart" && request.Action == "showEditor")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation == "ManageDriveFunctions" && request
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 19 && request.Operation == "ManageDriveFunctions" && request
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation == "ManageTechnologyExtensions" && request.Action == "installAndGetIdentifier")
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation == "ManageTechnologyExtensions" && request.IncludeParameters)
+Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation == "ManageSivarcTableRule")
+Adapters.Contracts/PlcB4Capabilities.cs|if (version == 21 && request.Operation == "ManageTechnologyObject" && request.Action == "create"
+Adapters.Contracts/PlcB4Capabilities.cs|if (request.Operation == "ManagePlcSoftwareUnit" && version < 18 && request.Properties.ContainsKey("NamespacePreset"))
+Adapters.Contracts/PlcB4Capabilities.cs|if (request.Operation == "ManagePlcTableEntries" && version < 17 && request.Action != "createComment" && request.Action != "createTable")
+Adapters.Contracts/PlcB4Capabilities.cs|if (version < 21
+Adapters.Contracts/PlcB4Capabilities.cs|if (version < 16 && (request.Aspect.StartsWith("conveyor", StringComparison.Ordinal) || request.Aspect == "synchronousDelayed"))
+Adapters.Contracts/PlcB4Capabilities.cs|if (version < 15 && request.Aspect == "torque") return "TorqueHardwareConnectionInterface requires V15.1.";
+Adapters.Contracts/PlcB4Capabilities.cs|if (request.Operation == "ConfigureMotionHardwareConnection" && version < 15 && request.Aspect == "torque")
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if ((tool == "ListPlcSoftwareUnits" || tool == "ManagePlcSoftwareUnit") && unitKind == "safety" && version < 18)
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "ManagePlcSoftwareUnit" && copyMode.Length != 0 && version < 20) return "Software-unit master-copy modes require V20.";
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "ManagePlcBlockProtection" && version < 15) return "PlcBlockProtectionProvider requires V15.1.";
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "ManagePlcUserGroup" && family == "watchTables" && version < 15) return "Watch-table user groups require V15.1.";
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "ManagePlcUserGroup" && action == "rename" && (family == "blocks" || family == "types" || family == "watchTables") && version < 21)
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "ManagePlcUserGroup" && action == "rename" && family == "tags" && version < 20)
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "CreatePlcInstanceDb" && version < 15) return "CreateInstanceDB requires V15.1.";
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "SetPlcProgram" && version < 18) return "UpdateProgram requires V18.";
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "GetPlcCrossReferences" && version < 18) return "CrossReferenceService requires V18.";
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (!string.IsNullOrEmpty(unitName) && (version < OpennessApi.PlcUnits.FirstMajor || unitKind == "safety" && version < 18))
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "ManagePlcExternalSources" && version < 17 && targetKind.Length != 0)
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "ManagePlcExternalSources" && version < 20 && copyMode.Length != 0) return "External-source master-copy modes require V20 or later.";
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "ManagePlcExternalSources" && version < 15 && generateOption != "None") return "GenerateBlockOption requires V15.1 or later.";
+Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "BuildAndImportPlcArtifact" && version < 21)
+Adapters.Contracts/SecurityCapabilities.cs|if (Array.IndexOf(PlcProtectionRules.MasterSecretActions, action) >= 0 && version < 17)
+Adapters.Contracts/SecurityCapabilities.cs|if (operation == "ManageDeviceUsers" && scope == "simpleWebserver" && version < 18)
+Adapters.Contracts/SecurityCapabilities.cs|if (operation == "ManageSyslogServers" && scope == "project" && version < 20)
+Adapters.Contracts/SecurityCapabilities.cs|if (action is "createOffline" or "rename" && version < 20)
+Adapters.Contracts/SecurityCapabilities.cs|if (scope == "server" && action is "checkConsistency" or "synchronize" && version < 18)
+Adapters.Contracts/SecurityCapabilities.cs|if (operation == "GetProjectUserManagement" && category == "passwordPolicy" && version < 18)
+Adapters.Contracts/SecurityCapabilities.cs|if (operation == "ManageProjectUserManagement" && action == "deleteDeviceRight" && version < 20)
+Adapters.Contracts/SecurityCapabilities.cs|if (operation == "ManagePlcCertificate" && action == "export" && version < 19
+Adapters.Contracts/SimaticMlImportWindow.cs|return api.Major >= 19 ? new Version(api.Major - 3, 0) : null;
+Adapters/Native/Libraries/LibraryPolicy.cs|if (major != 21 || !properties.Contains("Name", StringComparer.Ordinal)) return;
+Adapters/Native/Plc/PlcB5Alarms.cs|var before = Version >= 17 ? Snapshot() : null;
+FoundationHost/FoundationTools.cs|return TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion >= 15
+FoundationHost/HostOptions.cs|&& !(version.MajorVersion >= 17 && string.Equals(extension, ".als" + major, StringComparison.OrdinalIgnoreCase)))
+Logic/Siemens/EngineeringAuditLogic.cs|if (major == 20 && (installedUpdate == null || installedUpdate < 4))
+Logic/Siemens/EngineeringAuditLogic.cs|if (major == 20)
+Logic/Siemens/EngineeringAuditLogic.cs|["patchSupportKnown"] = major > 20 || major == 20 && installedUpdate >= 4,
+Logic/Siemens/LibraryDeepLogic.cs|if (major != 21 || !properties.Contains("Name", StringComparer.Ordinal)) return;
+Logic/Siemens/TiaVersionCatalog.cs|get { return MajorVersion == 20 || MajorVersion == 21 ? ApartmentState.MTA : ApartmentState.STA; }

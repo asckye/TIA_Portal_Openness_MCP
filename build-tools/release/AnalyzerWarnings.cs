@@ -63,14 +63,19 @@ internal static class AnalyzerWarnings
             if (part.LinkTarget != null) throw new ReleaseException("Analyzer report path contains a symbolic link: " + path);
     }
 
-    internal static string RepositoryPath(string root, string value)
+    private static string LocalInputPath(string root, string value)
     {
         if (Uri.TryCreate(value, UriKind.Absolute, out var uri))
         {
             if (!uri.IsFile) throw new ReleaseException("Analyzer path is not a local file: " + value);
             value = uri.LocalPath;
         }
-        var full = Path.GetFullPath(value.Replace('\\', '/'), root);
+        return Path.GetFullPath(value.Replace('\\', '/'), root);
+    }
+
+    internal static string RepositoryPath(string root, string value)
+    {
+        var full = LocalInputPath(root, value);
         var prefix = Path.GetFullPath(root).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
         if (!full.StartsWith(prefix, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
             throw new ReleaseException("Analyzer path leaves repository: " + value);
@@ -138,9 +143,8 @@ internal static class AnalyzerWarnings
     private static bool TestSdkTemplate(string path)
     {
         var local = path.Replace('\\', '/');
-        return (OperatingSystem.IsWindows() ? Regex.IsMatch(local, @"\A[A-Za-z]:/") : local.StartsWith('/') && !local
-                .StartsWith("//", StringComparison.Ordinal))
-            &&
+        return (OperatingSystem.IsWindows() ? Regex.IsMatch(local, @"\A[A-Za-z]:/")
+            : local.StartsWith('/') && !local.StartsWith("//", StringComparison.Ordinal)) &&
             Regex.IsMatch(local, @"/microsoft\.net\.test\.sdk/[^/]+/build/[^/]+/Microsoft\.NET\.Test\.Sdk\.Program\.cs$", RegexOptions.IgnoreCase);
     }
 
@@ -173,6 +177,28 @@ internal static class AnalyzerWarnings
         // The SDK keys file apps by their absolute source path, case folded on Windows.
         var identity = OperatingSystem.IsWindows() ? path.ToUpperInvariant() : path;
         return Path.GetFileNameWithoutExtension(path) + "-" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
+    }
+
+    // MSBuild writes FullPath|FileHash for each input beside its SARIF. Collect still verifies every receipt and hash.
+    internal static string[] CompiledChanges(string root, string directory, string[] changes)
+    {
+        var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        var candidates = changes.Where(path => path.EndsWith(".cs", StringComparison.Ordinal) && !Generated(path))
+            .ToDictionary(path => LocalInputPath(root, path), path => path, comparer);
+        if (candidates.Count == 0) return [];
+        var compiled = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var report in Directory.EnumerateFiles(directory, "*.sarif"))
+        {
+            var inputs = Path.ChangeExtension(report, ".inputs");
+            RepositoryPath(root, inputs);
+            foreach (var row in File.ReadLines(inputs).Skip(1))
+            {
+                var delimiter = row.IndexOf('|');
+                if (delimiter < 1) throw new ReleaseException("Invalid analyzer input receipt: " + inputs);
+                if (candidates.TryGetValue(LocalInputPath(root, row[..delimiter]), out var path)) compiled.Add(path);
+            }
+        }
+        return compiled.Order(StringComparer.Ordinal).ToArray();
     }
 
     internal static AnalyzerWarningCollection Collect(string root, string directory)
@@ -401,6 +427,14 @@ internal static class AnalyzerWarnings
                     $"Recorded {additions.Length} reviewed warnings for {rules.Count} newly enabled rules; existing entries preserved.");
             }
             var issues = Compare(root, current, baseline, options.Has("Complete") && updatePaths.Count == 0);
+            var checkPaths = options.All("CheckPath").Select(source => RepositoryPath(root, source)).ToHashSet(StringComparer.Ordinal);
+            if (checkPaths.Count != 0)
+            {
+                if (!options.Has("Check")) throw new ReleaseException("-CheckPath requires -Check", 64);
+                var selected = current with { Entries = current.Entries.Where(entry => checkPaths.Contains(entry.Path)).ToArray() };
+                issues = issues.Union(Compare(root, selected, baseline.Where(entry => checkPaths.Contains(entry.Path)).ToArray(), complete: true),
+                    StringComparer.Ordinal).ToList();
+            }
             if (options.Has("UpdateBaseline"))
             {
                 // Growth and incomplete builds never write the baseline. Only

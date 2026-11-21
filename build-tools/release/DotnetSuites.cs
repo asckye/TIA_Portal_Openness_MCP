@@ -22,11 +22,18 @@ internal static class DotnetSuites
             var output = new StringBuilder();
             var seen = new HashSet<string>(StringComparer.Ordinal);
             var root = XDocument.Load(path).Root;
+            int failed = 0;
+            var classes = new SortedSet<string>(StringComparer.Ordinal);
+            var definitions = root?.Element(Ns + "TestDefinitions")?.Elements(Ns + "UnitTest")
+                .ToLookup(test => (string?)test.Attribute("id"), test => (string?)test.Element(Ns + "TestMethod")?.Attribute("className"));
             foreach (var row in root?.Element(Ns + "Results")?.Elements(Ns + "UnitTestResult") ?? [])
             {
                 if ((string?)row.Attribute("outcome") != "Failed") continue;
                 var name = (string?)row.Attribute("testName") ?? (string?)row.Attribute("testId") ?? "Unknown test";
-                if (!seen.Add(name)) continue;
+                failed++;
+                foreach (var cls in definitions?[(string?)row.Attribute("testId")] ?? [])
+                    if (!string.IsNullOrEmpty(cls)) classes.Add(cls);
+                if (!seen.Add(name) || seen.Count > 10) continue;
                 output.Append("FAILED TEST: ").AppendLine(name);
                 var error = row.Element(Ns + "Output")?.Element(Ns + "ErrorInfo");
                 var message = error?.Element(Ns + "Message")?.Value;
@@ -36,8 +43,9 @@ internal static class DotnetSuites
                     using var stack = new StringReader(error?.Element(Ns + "StackTrace")?.Value ?? "");
                     for (int line = 0; line < 4 && stack.ReadLine() is { } text; line++) output.AppendLine(text);
                 }
-                if (seen.Count == 10) break;
             }
+            if (failed > 10)
+                output.AppendLine($"Total failed: {failed}. Failing classes: {string.Join(", ", classes)}");
             return output.ToString();
         }
         catch (Exception) /* swallow(logging-failure): Supplemental TRX diagnostics must never change the suite result. */

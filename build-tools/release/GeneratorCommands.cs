@@ -35,6 +35,12 @@ internal static partial class ReleaseCommands
                 outputs = CatalogAudits.Version(root, Path.GetFullPath(api), options.Get("Output", "bin-build/multi-version/api-audit"), options.Get("InputsRoot")); break;
             case "audit-tool-usage": outputs = new() { ["manifest/tool-usage-coverage.json"] = CatalogJson.Encode(CatalogAudits.Usage(root, options.Get("InputsRoot"), options.Get("Records"))) }; break;
             case "check-tools-list": return ToolsListChecks.Run(root, options.Get("Manifest", "manifest/tools-list.json"));
+            case "generate-prerelease-notes" when options.Has("TranslationsOnly"):
+                if (!options.Has("Check") || options.Get("Version") != null)
+                    throw new ReleaseException("-TranslationsOnly requires -Check without -Version.", 64);
+                PrereleaseNotes.DraftBlocks(root);
+                Console.WriteLine("Pre-release translation coverage: both language sections rendered.");
+                return 0;
             case "generate-prerelease-notes": outputs = PrereleaseNotes.Outputs(root, options.Get("Version") ?? throw new ReleaseException("-Version is required", 64)); break;
             default: throw new ReleaseException("Unknown generator command", 64);
         }

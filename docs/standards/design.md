@@ -502,6 +502,7 @@ V4 协议是全部 MCP 工具结果的形状，也被 CLI、批次、worker 通�
 | `APPROVAL_PRECHECK_REFUSED` | 写入被自身预览拒绝，没有发起审批 | `stage: approval-precheck` |
 | `UNSETTLED_CALLS` | `SaveProject` 和 `SaveProjectCopy` 预览或执行时存在未确认调用 | `unsettled[{requestId, tool, utc, fromPreviousOwner}]` |
 | `RECOVERY_GUIDANCE` | 错误码为 `INVALID_ARGUMENT`、`PRECONDITION_FAILED` 或 `CONFIRMATION_REQUIRED` 时，每个信封至多 1 条 | `getToolUsage{toolName, operation?}`、`releaseKey`、`exampleArguments`（≤ 4096 字节）、`exampleOmitted`、`validation`、`bindingMeaning` |
+| `DEPRECATED_PARAMETER` | 使用了兼容的旧参数形式 | `parameter`、`replacement`、`removalVersion` |
 | `BACKUP_SKIPPED` | 覆盖导入前的备份被跳过 | `objects`、`recoveryDirectory` |
 | `STAGING_FOLDER_RETAINED` | 暂存目录被保留 | 暂存定义 |
 
@@ -737,10 +738,7 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 - 错误对象 MUST 符合第 4.6 节，参数错误的 `details.parameter` 和 `parameters` 使用 JSON 指针，`expected` 始终输出期望的类型或形式，枚举错误给出 `allowedValues`。
 - DES-4R2 实现输入 schema、派发前宿主校验和批量行的参数详情，整体和重复字段错误使用根指针。原生证据缺少字段身份时保留根指针，宿主只采纳工具 schema 已声明的 adapter `ParamName`。个别领域消息的修订由后续任务处理（API-04、API-14）。
-- DES-4R3 在 `error.innererror` 返回 `{exceptionType, hResult, diagnosticId}`。`exceptionType` 使用短类型名，
-  ported 工具只采纳 worker 的证据，缺值为 null。`diagnosticId` 等于本信封的 `meta.requestId` 和调用日志行的 `id`。
-  批次子结果使用自己的请求号，CanonicalBatchTools 保留子结果已有请求号，缺少子请求号时使用父请求号。
-  `details` 中的 `target` 与 `parameter` 表示出错的对象或参数。
+- DES-4R3 在 `error.innererror` 返回 `{exceptionType, hResult, diagnosticId}`。`exceptionType` 使用短类型名，ported 工具只采纳 worker 的证据，缺值为 null。原生调用的 `diagnosticId` 对应该调用的日志行 `id` 和请求号。`CanonicalBatchTools` 的父信封使用批次请求号，引用子调用的错误时保留子调用的诊断编号；子结果保留自己的请求号，缺少子请求号时使用父请求号。`details.target` 和 `details.parameter` 标识出错的对象或参数。
 - 原生失败的 `details.nativeMessage` 和 `details.evidence` 在诊断构造时去敏，只保留首行，堆栈与多行详情只进日志。
   诊断构造使用当前调用及外层作用域中凭据命名字段的字符串、数字和布尔值作跨文本替换，其中空串和单字符字符串除外。
   仅以 `Validity`、`Count`、`Length`、`Attempts` 或 `Enabled` 结尾的策略字段保留数字和布尔值，其他凭据键值对始终去敏。

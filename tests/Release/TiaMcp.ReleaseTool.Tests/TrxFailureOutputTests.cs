@@ -34,6 +34,7 @@ public sealed class TrxFailureOutputTests
         Assert.Equal(1, result.StandardOutput.Split("FAILED TEST: Example.Checks.Check(row: 5)").Length - 1);
         Assert.Contains("FAILED TEST: Example.Checks.Check(row: 9)", result.StandardOutput);
         Assert.DoesNotContain("FAILED TEST: Example.Checks.Check(row: 10)", result.StandardOutput);
+        Assert.Contains("Total failed: 16. Failing classes: Example.Checks, Example.OtherChecks", result.StandardOutput);
         Assert.Contains("16 failed checks", result.StandardError);
     }
 
@@ -104,6 +105,13 @@ public sealed class TrxFailureOutputTests
         var path = Path.Combine(directory, name + ".trx");
         DotnetSuiteSelfTests.SyntheticTrx(path, outcomes);
         var doc = XDocument.Load(path);
+        if (offset != 0)
+        {
+            var last = doc.Descendants(Ns + "UnitTest").Last();
+            last.SetAttributeValue("id", "other-class-test");
+            last.Element(Ns + "TestMethod")!.SetAttributeValue("className", "Example.OtherChecks");
+            doc.Descendants(Ns + "UnitTestResult").Last().SetAttributeValue("testId", "other-class-test");
+        }
         int index = offset;
         foreach (var row in doc.Descendants(Ns + "UnitTestResult"))
         {

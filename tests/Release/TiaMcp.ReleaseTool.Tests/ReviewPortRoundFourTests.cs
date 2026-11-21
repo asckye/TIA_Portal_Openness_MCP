@@ -8,6 +8,24 @@ public sealed class ReviewPortRoundFourTests
 {
     private static CheckChange Change(string before, string after) => new("tests/Example.cs", "tests/Example.cs", before, after);
 
+    [Fact]
+    public void RenamedLimitFileKeepsItsOriginalBound()
+    {
+        const string before = "class SuiteHang { int Timeout => 300; }";
+        var change = new CheckChange("build-tools/release/NewTimeout.cs", "build-tools/release/SuiteHang.cs", before, before.Replace("300", "301"));
+        Assert.Contains(CheckLoosening.Scan([change]), row => row.Path == change.Path && row.Kind == "limit-raised");
+    }
+
+    [Fact]
+    public void RemovedInlineDataPrintsTheEntireRow()
+    {
+        string value = new string('x', 240) + "-end";
+        const string method = " public void M(string text, int count) {} }";
+        string row = $"InlineData(\"{value}\", 17)";
+        var findings = CheckLoosening.Scan([Change("class T { [Theory][" + row + "]" + method, "class T { [Theory]" + method)]);
+        Assert.Contains(findings, finding => finding.Message.Contains(row, StringComparison.Ordinal));
+    }
+
     [Theory]
     [InlineData("Check")]
     [InlineData("check")]

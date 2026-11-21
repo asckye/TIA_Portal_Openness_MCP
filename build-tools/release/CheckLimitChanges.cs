@@ -156,7 +156,7 @@ internal static class CheckLimitChanges
         ("build-tools/release/PublishPrepared.cs", "RemainingMilliseconds", false)
     ];
 
-    private static IEnumerable<Limit> Limits(string source, string path)
+    private static IEnumerable<Limit> Limits(string source, CheckChange change)
     {
         var syntax = CheckLoosening.Parse(source);
         foreach (var node in syntax.DescendantNodes())
@@ -168,7 +168,7 @@ internal static class CheckLimitChanges
                 VariableDeclaratorSyntax variable when variable.Parent?.Parent is FieldDeclarationSyntax => variable.Identifier.Text,
                 _ => ""
             };
-            var location = Locations.FirstOrDefault(row => row.Path == path && row.Member == member);
+            var location = Locations.FirstOrDefault(row => (row.Path == change.OldPath || row.Path == change.Path) && row.Member == member);
             bool timeout = node is AttributeArgumentSyntax argument && argument.NameEquals?.Name.Identifier.Text == "Timeout" &&
                 argument.Ancestors().OfType<AttributeSyntax>().Any(attribute => attribute.Name.ToString().Split('.').Last() is
                     "Fact" or "Theory" or "FactAttribute" or "TheoryAttribute");
@@ -197,8 +197,8 @@ internal static class CheckLimitChanges
 
     private static void CSharp(CheckChange change, List<ReviewFinding> findings)
     {
-        var after = Limits(change.After!, change.Path).GroupBy(row => row.Key).ToDictionary(group => group.Key, group => group.First());
-        foreach (var previous in Limits(change.Before!, change.Path).DistinctBy(row => row.Key))
+        var after = Limits(change.After!, change).GroupBy(row => row.Key).ToDictionary(group => group.Key, group => group.First());
+        foreach (var previous in Limits(change.Before!, change).DistinctBy(row => row.Key))
         {
             if (!after.TryGetValue(previous.Key, out var current)) current = previous with { Values = [] };
             for (int index = current.Values.Length; index < previous.Values.Length; index++)

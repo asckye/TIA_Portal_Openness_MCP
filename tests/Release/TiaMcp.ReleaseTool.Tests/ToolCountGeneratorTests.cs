@@ -32,6 +32,18 @@ public sealed class ToolCountGeneratorTests
         }
     }
 
+    [Fact]
+    public void DraftReleaseNoteListsTheSameEightRowsInBothLanguages()
+    {
+        var note = ToolCountGenerator.Generate(Root)["docs/releases/v4.0.0.md"];
+        var split = PrereleaseNotes.RequireLanguages(note);
+        static string[] Rows(string section) => section.Split('\n').Where(line => line.StartsWith("| `", StringComparison.Ordinal))
+            .Where(line => CatalogJson.Keys.Any(key => line.StartsWith("| `" + key + "` |", StringComparison.Ordinal))).ToArray();
+        var chinese = Rows(note[..split]);
+        Assert.Equal(CatalogJson.Keys.Count, chinese.Length);
+        Assert.Equal(chinese, Rows(note[split..]));
+    }
+
     [Theory]
     [InlineData("missing")]
     [InlineData("duplicate")]

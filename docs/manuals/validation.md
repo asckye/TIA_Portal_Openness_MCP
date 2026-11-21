@@ -65,7 +65,7 @@ dotnet run --project build-tools/release -- check-loosening -Base master -Record
 
 分析器基线仍只减不增。首次启用一组新规则时，维护者可使用 `check-analyzer-warnings -InitializeRules <逗号分隔规则> -ReviewData <审查文件> -Base <ref>`，并传入对应的 `-DiagnosticsDirectory`；命令拒绝基线已有的规则、原来已启用的规则、曾初始化的规则及未审查的新增项。初始化成功后在同一基线文件的 `initializedRules` 中记录规则；零行规则也记录，后续缩减基线保留该历史，删除初始化记录会触发审查。发布专属规则只接受包含物理 src 的 release 报告，不能用 merge 报告初始化；每条审查行都要求对应源文件的匹配 profile。`-UpdateBaseline -Complete`、`-Initialize` 和禁止 `-AllowGrowth` 的原有语义保留。本次不自动记录新警告。
 
-维护者批准定点移除 STALE 时，可在 `-UpdateBaseline -Complete` 后重复指定 `-UpdatePath <仓库相对源码路径>`。所选源码必须有完整编译上下文，未选路径的条目原样保留；全部已收集报告中的 NEW 仍会阻止更新。`-UpdatePath` 只用于基线维护，不能用于 `-Check`；无此选项时仍要求全仓基线覆盖。
+维护者批准定点移除 STALE 时，可在 `-UpdateBaseline -Complete` 后重复指定 `-UpdatePath <仓库相对源码路径>`。所选源码必须有完整编译上下文，未选路径的条目原样保留；全部已收集报告中的 NEW 仍会阻止更新。`-UpdatePath` 只用于基线维护，不能用于 `-Check`；无此选项时仍要求全仓基线覆盖。如果所选路径已写回，但其余路径仍有可确认的 STALE，命令会列出这些行并以 1 退出。合并门在受影响的项目构建后读取本轮编译回执，只把实际编译的变更源码作为 `-CheckPath` 传入；对这些路径要求相应的基线编译上下文。所有已收集的警告继续参与比较。
 
 漏洞扫描运行当前解决方案的 `dotnet list ... package --vulnerable --include-transitive --format json --output-version 1 --source https://api.nuget.org/v3/index.json`，清除继承的离线恢复配置，要求返回源包含该 URL。项目只有 `path`、没有 `frameworks` 是有效的干净结果。未批准的 High/Critical 退出 1；Low/Moderate 只报告。网络、恢复、超时或无效报告写 `not run: <首条错误>` 并退出 2，不能报告为通过；缓存可返回有效咨询数据，不强制证明实时联网。单次上限 300 秒。
 
@@ -81,7 +81,7 @@ dotnet run --project build-tools/release -- check-loosening -Base master -Record
 - 测试源范围只读取可直接解析的本地 XML 导入及路径；条件 MSBuild、无法展开的属性、SDK/包内导入和生成源码可能使推断与真实编译不同。它不替代真实构建及发现测试。
 - 数值比较只识别支持的字面量形式：C# 的已列成员按数字出现顺序对应，签名、数字数量或顺序同时改写仍需人工核对。Python 的 if 分支阈值仍不作语义判定，只检查命名上限/下限、timeout/growth/default 及断言表达式；普通常量别名、任意控制流中的阈值和间接计算不作语义推导；Python 限制名称改写、删除或重排后无法保证对应到原参数。更严格判断只支持数字在比较右侧的简单关系式，复杂逻辑可能报告需审查。
 - Python 使用文本扫描覆盖函数和全局语句，不执行代码；跨文件或嵌套同名函数、名称碰撞、字符串中的类似语法仍需复核。
-- 未注册 gate 项目内部的移动与限额源文件重命名已记入主导审查者收件箱，本轮不处理。
+- Git 识别出的限额源文件重命名同时按旧路径和新路径检查。未注册 gate 项目内部移动检查文件仍可能报告删除，交主导审查者判断。
 - 非测试文件删除、拆分文件，以及从 `MergeCheck.cs` 或 `PrepareChecks.cs` 计划中删掉作业不保证检出。初始化 profile 核对不证明全仓源码都已构建，主导审查者仍须提供完整构建报告。
 
 `PlcWorker` 不在解决方案中，缺少发布键时不能直接恢复；其依赖通过 `Logic` 和 `KeptCode.Tests` 扫描。合并门不联网，CI 在每次推送 master、每周及手动触发时扫描，但不阻塞合并；完整 `prepare` 的新扫描负责发布阻塞。规则编译开销由主机测量，不增加计时门槛。

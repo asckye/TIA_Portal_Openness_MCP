@@ -11,6 +11,7 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class PublishPreparedTests
 {
     [Theory]
+    [InlineData("old-draft-body", "run upload-draft")]
     [InlineData("missing", "no candidate")]
     [InlineData("head", "HEAD differs")]
     [InlineData("dirty", "dirty tree")]
@@ -200,12 +201,12 @@ public sealed class PublishPreparedTests
     }
 
     [Fact]
-    public async Task DownloadRetriesUsePublishedUrlAndThreeSecondDelays()
+    public async Task DownloadRetriesUsePublishedUrlAndGrowingDelays()
     {
         using var f = new Fixture { DownloadFailures = 4 };
         Assert.Equal(0, await f.Publish());
         Assert.Equal(5, f.Events.Count(e => e == "reachable"));
-        Assert.Equal(new[] { 3d, 3d, 3d, 3d }, f.Delays.Select(d => d.TotalSeconds));
+        Assert.Equal(new[] { 10d, 20d, 40d, 80d }, f.Delays.Select(d => d.TotalSeconds));
     }
 
     [Fact]
@@ -381,7 +382,9 @@ public sealed class PublishPreparedTests
         {
             Directory.CreateDirectory(Path.GetDirectoryName(CandidatePath)!);
             Directory.CreateDirectory(Path.GetDirectoryName(Notes)!);
-            File.WriteAllText(Notes, "# Release\n[Checklist](../guides/check.md)\n" + PrereleaseNotes.Begin + "\n" + PrereleaseNotes.Heading + "\n\n1. Not run.\n" + PrereleaseNotes.End + "\n");
+            File.WriteAllText(Notes, "# Release\n## 中文\n" + PrereleaseNotes.Begin + "\n" + PrereleaseNotes.ChineseHeading
+                + "\n1. 未验收。\n" + PrereleaseNotes.End + "\n## English\n[Checklist](../guides/check.md)\n" + PrereleaseNotes.Begin + "\n" + PrereleaseNotes
+                    .Heading + "\n\n1. Not run.\n" + PrereleaseNotes.End + "\n");
             File.WriteAllBytes(ZipPath, [0x50, 0x4b, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
             File.WriteAllText(Sidecar, Hash(File.ReadAllBytes(ZipPath)) + "  pkg.zip\n");
             SaveCandidate(true);
@@ -426,7 +429,9 @@ public sealed class PublishPreparedTests
         {
             var assets = Assets.Select(a => (JsonObject)a.DeepClone()).ToArray();
             if (Public) foreach (var a in assets) a["browser_download_url"] = "https://fixture.invalid/download/published-" + a["name"]!.GetValue<string>();
-            return new { id = 42, tag_name = "v4.0.0-beta.3", draft = !Public, prerelease = true, upload_url = "https://fixture.invalid/upload{?name,label}", assets };
+            var body = Fault == "old-draft-body" ? "Single-language notes" : (string?)DraftBody?["body"] ?? File.ReadAllText(Notes);
+            return new { id = 42, tag_name = "v4.0.0-beta.3", draft = !Public, prerelease = true,
+                upload_url = "https://fixture.invalid/upload{?name,label}", body, assets };
         }
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
         {

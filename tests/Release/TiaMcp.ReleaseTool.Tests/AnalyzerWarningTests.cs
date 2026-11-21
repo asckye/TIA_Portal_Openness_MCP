@@ -134,12 +134,10 @@ public sealed class AnalyzerWarningTests
         var result = new { ruleId = entry.Rule, level = "warning", message = new { text = entry.Message },
             locations = new[] { new { physicalLocation = new { artifactLocation = new { uri = new Uri(source).AbsoluteUri },
                 region = new { startLine = entry.Line, startColumn = entry.Column, endLine = entry.EndLine, endColumn = entry.EndColumn } } } } };
-        tree
-            .Write("reports/" + suffix + ".sarif", JsonSerializer
-                .Serialize(new { version = "2.1.0", runs = new[] { new { results = warning ? new[] { result } : [] } } }));
-        tree
-            .Write("reports/" + suffix + ".inputs", "context|" + Path.Combine(tree.Root, "C.csproj") + "|net10.0|NET\n" + source + "|" + FileHash
-                .Sha256(source) + "\n");
+        tree.Write("reports/" + suffix + ".sarif",
+            JsonSerializer.Serialize(new { version = "2.1.0", runs = new[] { new { results = warning ? new[] { result } : [] } } }));
+        tree.Write("reports/" + suffix + ".inputs",
+            "context|" + Path.Combine(tree.Root, "C.csproj") + "|net10.0|NET\n" + source + "|" + FileHash.Sha256(source) + "\n");
         return Path.Combine(tree.Root, "reports");
     }
 
@@ -378,6 +376,7 @@ public sealed class AnalyzerWarningTests
         data["runs"]![0]!["results"]![0]!["ruleId"] = "CA2202";
         File.WriteAllText(path, data.ToJsonString());
         Assert.Equal(1, Run("-UpdateBaseline", "-Complete"));
+        Assert.Equal(1, Run("-UpdateBaseline", "-Complete", "-UpdatePath", "src/C.cs"));
         Assert.Equal(bytes, File.ReadAllBytes(baseline));
     }
 
@@ -393,8 +392,12 @@ public sealed class AnalyzerWarningTests
         var baseline = tree.Write("baseline.json", JsonSerializer.Serialize(new AnalyzerWarningBaseline(1, [entry, other]), json));
         string[] arguments = ["-Root", tree.Root, "-DiagnosticsDirectory", reports, "-Baseline", baseline];
         int Run(params string[] args) => StaticCheckVectorTests.RunCommand("check-analyzer-warnings", [.. arguments, .. args]).ExitCode;
+        Assert.Equal(0, Run("-Check"));
+        Assert.Equal(0, Run("-Check", "-CheckPath", "src/C.cs"));
+        Assert.Equal(1, Run("-Check", "-CheckPath", "src/Other.cs"));
         Reports(tree, warning: false);
         var bytes = File.ReadAllBytes(baseline);
+        Assert.Equal(64, Run("-UpdateBaseline", "-Complete", "-UpdatePath", "src/Unreviewed.cs"));
         Assert.Equal(64, Run("-Check", "-UpdatePath", "src/C.cs"));
         Assert.Equal(64, Run("-Initialize", "-UpdatePath", "src/C.cs"));
         Assert.Equal(64, Run("-Capture", Path.Combine(tree.Root, "capture.json"), "-UpdatePath", "src/C.cs"));
@@ -403,6 +406,33 @@ public sealed class AnalyzerWarningTests
         Assert.Equal(0, Run("-UpdateBaseline", "-Complete", "-UpdatePath", "src/C.cs"));
         var retained = JsonSerializer.Deserialize<AnalyzerWarningBaseline>(File.ReadAllText(baseline), json)!;
         Assert.Equal(JsonSerializer.Serialize(other, json), JsonSerializer.Serialize(Assert.Single(retained.Entries), json));
+    }
+
+    [Fact]
+    public void ChangedSourceRequiresAReviewedContextOnlyWhenItWasCompiled()
+    {
+        using var tree = new StaticTree();
+        var reports = Reports(tree);
+        var compiled = AnalyzerWarnings.Collect(tree.Root, reports).Entries.Single() with { Reason = "fixture" };
+        tree.Write("scripts/Net48Only.cs", Source);
+        var unbuilt = AnalyzerWarnings.Describe(tree.Root, "scripts/Net48Only.cs", compiled.Line, compiled.Column,
+            compiled.EndLine, compiled.EndColumn, compiled.Rule, compiled.Message, Source) with { Reason = "fixture", Contexts = compiled.Contexts };
+        var json = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        void Baseline(AnalyzerWarning first) =>
+            tree.Write("baseline.json", JsonSerializer.Serialize(new AnalyzerWarningBaseline(1, [first, unbuilt]), json));
+        int Run(params string[] args) => StaticCheckVectorTests.RunCommand("check-analyzer-warnings",
+            ["-Root", tree.Root, "-Check", "-Baseline", Path.Combine(tree.Root, "baseline.json"), "-DiagnosticsDirectory", reports, .. args]).ExitCode;
+        var paths = AnalyzerWarnings.CompiledChanges(tree.Root, reports, [unbuilt.Path, compiled.Path, "README.md"]);
+        Assert.Equal(new[] { compiled.Path }, paths);
+        string[] checkPaths = paths.SelectMany(path => new[] { "-CheckPath", path }).ToArray();
+        Baseline(compiled);
+        Assert.Equal(0, Run(checkPaths));
+        Assert.Equal(1, Run("-CheckPath", unbuilt.Path));
+
+        Reports(tree, warning: false);
+        Baseline(compiled with { Contexts = ["ordinary|Net48.csproj|net48|NET48"] });
+        Assert.Equal(0, Run());
+        Assert.Equal(1, Run(checkPaths));
     }
 
     [Fact]

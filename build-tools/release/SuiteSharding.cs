@@ -155,7 +155,13 @@ internal static class SuiteCosts
         WithHistoryLock(path, () =>
         {
             using var stream = File.OpenRead(path);
-            result = JsonSerializer.Deserialize<T>(stream)!;
+            try { result = JsonSerializer.Deserialize<T>(stream) ?? throw new JsonException("Unexpected null history."); }
+            catch (JsonException error)
+            {
+                var suite = Path.GetFileName(path).Split('.')[0];
+                throw new ReleaseException($"Invalid shard history {path}: {error.Message}. Move the corrupt file aside, then rebuild with "
+                    + $"dotnet run --project build-tools/release -- test-suites -Suite {suite} -Shards 4 -TimingHistory \"{Path.GetDirectoryName(path)}\"");
+            }
         });
         return result;
     }

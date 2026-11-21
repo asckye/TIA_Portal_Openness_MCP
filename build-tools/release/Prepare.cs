@@ -297,7 +297,10 @@ internal static class Prepare
     {
         if (!File.Exists(Path.Combine(root, PrereleaseNotes.NotesPath(version))))
             throw new ReleaseException(PrereleaseNotes.NotesPath(version) + " is missing");
-        if (ReleaseVersions.Require(version, "Invalid release version").IsPrerelease && PrereleaseNotes.CurrentError(root, version) is { } error)
+        var parsed = ReleaseVersions.Require(version, "Invalid release version");
+        if (!parsed.IsPrerelease && !PrereleaseNotes.Published(root, version))
+            PrereleaseNotes.RequireLanguages(File.ReadAllText(Path.Combine(root, PrereleaseNotes.NotesPath(version))));
+        if (parsed.IsPrerelease && PrereleaseNotes.CurrentError(root, version) is { } error)
             throw new ReleaseException(error);
         if (!File.ReadAllText(Path.Combine(root, "docs/README.md")).Contains($"[当前版本说明](releases/v{version}.md)", StringComparison.Ordinal))
             throw new ReleaseException("docs/README.md current release link is stale");

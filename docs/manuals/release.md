@@ -8,6 +8,10 @@
 
 实施状态：master 已含 NEW-REL-A 的构建打包、NEW-REL-B 的完整检查与候选、NEW-REL-C 的上传和公开命令。`prepare -BuildOnly` 只得到 ZIP，不能视为可发布候选，也不能手工补候选记录。
 
+## 双语发布说明
+
+在 `docs/releases/v<版本>.md` 中先写 `## 中文`，再写 `## English`。两节使用同一份改动、兼容性和验收事实。预发布的每节在清单位置各保留一对 `<!-- generated:not-verified:begin -->` 与 `<!-- generated:not-verified:end -->` 标记。运行 `generate-prerelease-notes -Version <版本>` 会按相同编号更新两节的验收事项。合并门在台账、API 清单或译文变更时运行 `generate-prerelease-notes -Check -TranslationsOnly`，直接从当前来源核对两种语言的覆盖。台账或 API 清单的条目改变时，同步维护[清单译文](../../build-tools/release/prerelease-translations.json)。上传草稿时，发布工具在每节末尾添加同一交付包、提交和摘要。若已有草稿仍为单语，先用 `upload-draft` 刷新；`publish-prepared` 在推送及创建标签前检查草稿的双语章节。已有发布记录或标签的说明保持冻结。
+
 ## 准备环境
 
 完整准备和公开从 Windows 上的 master 检出根目录运行；`prepare -BuildOnly` 可在任意分支的干净 worktree 中运行。准备前核对：
@@ -79,6 +83,8 @@ dotnet run --no-build --project build-tools/release -- publish-prepared -Version
 |---|---|
 | 准备的前置条件、构建或检查失败 | 修复报告的问题，由维护者将源文件改动提交到 master 后重跑同一条 `prepare`；不要改候选或清单中的哈希 |
 | 草稿上传失败，候选仍存在 | 排除凭据或网络问题，重跑同一条 `upload-draft` |
+
+上传较大附件时，工具每隔至少 10 秒输出已发送字节数和平均速率。连续 60 秒没有发送进展或上传结束后仍未收到响应，本次尝试终止并按原次数重试。如果代理持续阻塞，可在绕开代理的网络上将同一候选目录中的 ZIP 和 `.sha256` 文件按原名上传到同一版本的 GitHub 草稿。保持草稿状态，随后运行上面的 `upload-draft` 命令；它按文件大小和 SHA-256 核对已有附件，补传缺失或不匹配的文件，并将核对后的附件 ID 写入本地候选记录。
 | 公开前核对失败 | 按报错修复候选与环境不一致的问题；源代码变化必须重新准备。条件一致后重跑同一条 `publish-prepared` |
 | “标签存在或状态未知、草稿可能尚未公开” | 重跑同一条 `publish-prepared`，由命令读取已有标签和草稿状态；不要手工删除标签 |
 | “已公开、下载未确认” | 重跑同一条 `publish-prepared`；已有公开版本及资产匹配时只确认下载，不再次推送、建标签或公开 |

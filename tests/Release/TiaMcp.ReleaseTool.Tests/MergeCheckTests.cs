@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
@@ -35,6 +36,7 @@ public sealed class MergeCheckTests
         CommandResult Process(string exe, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
         {
             var args = arguments.ToArray();
+            WriteApprovalEvidence(args);
             if (args[0] == "test")
             {
                 var directory = args[Array.IndexOf(args, "--results-directory") + 1];
@@ -127,6 +129,21 @@ public sealed class MergeCheckTests
         }
     }
 
+    private static void WriteApprovalEvidence(string[] args)
+    {
+        if (args.Contains("--product") && args.Contains("engine"))
+        {
+            var directory = args[Array.IndexOf(args, "--output") + 1];
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "result.json"), JsonSerializer.Serialize(new
+            {
+                checksPassed = 8, checksExpected = 8, status = "passed", workbenchConnected = false, tiaConnected = false,
+                results = new { CreateDevice = "native-admission; no approval card; not-started",
+                    direct = "refused-before-dispatch; read-succeeded", CallTool = "refused-before-dispatch" }
+            }));
+        }
+    }
+
     private static JsonObject Suite(string project, params string[] arguments) => new()
     {
         ["project"] = project, ["arguments"] = new JsonArray(arguments.Select(arg => (JsonNode?)JsonValue.Create(arg)).ToArray()),
@@ -147,6 +164,40 @@ public sealed class MergeCheckTests
         Dictionary<string, HashSet<string>>? closures = null, bool all = false, Func<string, string, bool>? mentions = null) =>
         MergeCheck.Select(paths, all, catalog ?? Catalog(), closures ?? new(), mentions ?? ((_, _) => false),
             ["scripts/checks/a.cs"], "dotnet", "python", "sdk", "output");
+
+    [Theory]
+    [InlineData("src/FoundationHost/FoundationTools.cs", true)]
+    [InlineData("src/Logic/Approval/ApprovalSettings.cs", true)]
+    [InlineData("build-tools/release/PrepareContents.cs", true)]
+    [InlineData("build-tools/release/TrendNotice.cs", false)]
+    [InlineData("tests/FoundationHost/TiaMcp.Engine.Harness/TestApproval.cs", false)]
+    [InlineData("scripts/checks/Test-ReleaseApprovalGate.py", false)]
+    [InlineData("scripts/checks/Test-ResourceDiscovery.py", false)]
+    [InlineData("build-tools/release/ApprovalChecks.cs", true)]
+    public void ApprovalHostChecksFollowAffectedInputs(string path, bool expected)
+    {
+        var plan = Select([path]);
+        foreach (var key in new[] { "20", "21" })
+            Assert.Equal(expected, plan.Checks.Any(check => check.Name == "approval-v" + key + "-host"));
+    }
+
+    [Theory]
+    [InlineData(PrereleaseNotes.LedgerPath, true)]
+    [InlineData(PrereleaseNotes.ChecklistPath, true)]
+    [InlineData(PrereleaseNotes.TranslationsPath, true)]
+    [InlineData("docs/manuals/release.md", false)]
+    public void TranslationSourceChangesSelectCoverageWithoutRequiringADraft(string path, bool expected)
+    {
+        var plan = Select([path]);
+        var job = plan.Checks.SingleOrDefault(job => job.Name == "generate-prerelease-notes");
+        Assert.Equal(expected, job != null);
+        if (job != null) Assert.Equal(new[] { "-Check", "-TranslationsOnly" }, job.Arguments.Skip(2));
+        if (path == PrereleaseNotes.ChecklistPath)
+        {
+            Assert.True(plan.DocsOnly);
+            Assert.Empty(plan.Builds);
+        }
+    }
 
     [Theory]
     [InlineData("Directory.Build.props", false)]
@@ -335,7 +386,13 @@ public sealed class MergeCheckTests
         Assert.Contains(Path.GetFileNameWithoutExtension(diagnostics.Executable), bundleNames);
     }
 
-    private static void RunOverlappingPreSuiteChecks(bool updater)
+    [Theory]
+    [InlineData("updater-exit")]
+    [InlineData("updater-minimum")]
+    [InlineData("pre-suite")]
+    public void MergeFailsWhenAnOverlappingCheckFails(string failure) => RunOverlappingPreSuiteChecks(true, failure);
+
+    private static void RunOverlappingPreSuiteChecks(bool updater, string? failure = null)
     {
         using var tree = new StaticTree();
         var sdk = WriteSdk(tree);
@@ -351,6 +408,7 @@ public sealed class MergeCheckTests
             ["plc-exchange-worker-v20"] = Suite("tests/plc.csproj", "-p:EngineRelease=20"),
             ["plc-exchange-worker-v21"] = Suite("tests/plc.csproj", "-p:EngineRelease=21") };
         if (updater) catalog["updater"] = Suite("tests/updater.csproj");
+        if (failure == "updater-minimum") catalog["updater"]!["minimumPassed"] = 2;
         tree.Write("tests/test-suites.json", catalog.ToJsonString());
         int finished = 0, updaterRuns = 0;
         int expected = updater ? 4 : 3;
@@ -387,6 +445,9 @@ public sealed class MergeCheckTests
                     Interlocked.Increment(ref finished);
                 }
             }
+            WriteApprovalEvidence(args);
+            if (failure == "pre-suite" && check?.EndsWith("Test-AdapterInputs.cs", StringComparison.Ordinal) == true && args[0] != "build")
+                return new(1, "", "pre-suite fixture failure");
             if (args[0] == "test")
             {
                 var directory = args[Array.IndexOf(args, "--results-directory") + 1];
@@ -396,6 +457,7 @@ public sealed class MergeCheckTests
                 if (name.StartsWith("plc-exchange-worker-", StringComparison.Ordinal))
                     Assert.Equal(Path.GetFullPath(Path.Combine(tree.Root, "bin-build/merge-check/suites/compiled", name)), Path.GetFullPath(args[Array.IndexOf(args, "--output") + 1]));
                 WriteTrx(Path.Combine(directory, name + ".trx"), [name]);
+                if (name == "updater" && failure == "updater-exit") return new(1, "", "updater fixture failure");
             }
             if (args[0] == "build" && args.Contains("-p:TiaMcpCollectFileBasedPrograms=true")) Assert.Contains("-p:BuildProjectReferences=false", args);
             return new(0, args.SequenceEqual(new[] { "--self-test" })
@@ -405,7 +467,9 @@ public sealed class MergeCheckTests
             Process, args => new(0, args[0] == "merge-base" ? "abc"
                 : args.Contains("--git-common-dir") ? Path.Combine(tree.Root, ".git")
                 : args.Contains("HEAD") ? "revision" : "", ""), (_, _) => 0);
-        Assert.Equal(0, result); Assert.Equal(expected, finished); Assert.Equal(updater ? 1 : 0, updaterRuns);
+        if (failure == null) Assert.Equal(0, result);
+        else Assert.Equal(1, result);
+        Assert.Equal(expected, finished); Assert.Equal(updater ? 1 : 0, updaterRuns);
         var snapshot = calls.ToArray();
         Assert.Single(snapshot, args => args.Length > 1 && args[0] == "msbuild"
             && Path.GetFullPath(args[1]) == Path.GetFullPath(Path.Combine(tree.Root, "bin-build/merge-check/table-restore.proj")));
@@ -1061,12 +1125,23 @@ public sealed class MergeCheckTests
         var sdk = WriteSdk(tree);
         var python = tree.Write("python.exe", "fixture");
         const string source = "src/WorkerChannel/Channel.cs";
-        tree.Write("tests/one.csproj", "<Project />");
+        const string uncompiled = "scripts/checks/Uncompiled.cs";
+        var compiledPath = tree.Write(source, "class Channel { }");
+        var project = tree.Write("tests/one.csproj", "<Project />");
         tree.Write("tests/test-suites.json", new JsonObject { ["fixture"] = Suite("tests/one.csproj") }.ToJsonString());
         var calls = new ConcurrentQueue<string[]>();
         CommandResult Process(string exe, IEnumerable<string> arguments, string root, IDictionary<string, string?>? env)
         {
-            var args = arguments.ToArray(); calls.Enqueue(args);
+            var args = arguments.ToArray();
+            WriteApprovalEvidence(args);
+            calls.Enqueue(args);
+            if (args[0] == "msbuild" && Path.GetFileName(args[1]) == "build.proj" && args.Contains("-t:Build"))
+            {
+                var directory = env!["TIA_MCP_ANALYZER_REPORT_DIRECTORY"]!;
+                File.WriteAllText(Path.Combine(directory, "channel.sarif"), """{"version":"2.1.0","runs":[{"results":[]}]}""");
+                File.WriteAllText(Path.Combine(directory, "channel.inputs"),
+                    $"context|{project}|net10.0|NET|merge\n{compiledPath}|{FileHash.Sha256(compiledPath)}\n");
+            }
             if (args.Any(arg => arg.StartsWith("-getItem:", StringComparison.Ordinal)))
                 return new(0, new JsonObject
                 {
@@ -1098,13 +1173,15 @@ public sealed class MergeCheckTests
                 ? "COMPLETE: 1 native harness safety checks passed; live TIA tests NOT RUN" : "", "");
         }
         CommandResult Git(string[] args) => new(0, args[0] == "merge-base" ? "abc"
-            : args[0] == "diff" && args[^1] == "HEAD" ? source + "\0"
+            : args[0] == "diff" && args[^1] == "HEAD" ? source + "\0" + uncompiled + "\0"
             : args.Contains("--git-common-dir") ? Path.Combine(tree.Root, ".git")
             : args.Contains("HEAD") ? "revision" : "", "");
         var result = MergeCheck.Run(tree.Root, Options.Parse(["-PublicApiRoot", sdk, "-Python", python], Program.BooleanOptions), Process, Git, (_, _) => 0);
         Assert.True(result == 0, string.Join("\n", Directory.EnumerateFiles(Path.Combine(tree.Root, "bin-build/merge-check"), "*.log")
             .Select(File.ReadAllText).Where(text => text.Contains("Exit code: 1", StringComparison.Ordinal))));
         var snapshot = calls.ToArray();
+        var analyzer = Assert.Single(snapshot, args => args.Contains("check-analyzer-warnings"));
+        Assert.Equal(new[] { source }, Options.Parse(analyzer.Skip(2).ToArray(), Program.BooleanOptions).All("CheckPath"));
         int table = Array.FindIndex(snapshot, args => args.Any(arg => arg.EndsWith("table-Worker.proj", StringComparison.Ordinal)));
         var fixtures = snapshot.Select((args, index) => (args, index)).Where(row => row.args.Contains("-p:BuildProjectReferences=false")).ToArray();
         Assert.Equal(2, fixtures.Length);

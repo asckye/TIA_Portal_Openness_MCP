@@ -8,6 +8,24 @@ namespace TiaMcp.ReleaseTool.Tests;
 public sealed class TrendNoticeTests
 {
     [Fact]
+    public void FailedRevisionLookupReportsTheSkippedMerge()
+    {
+        using var tree = new StaticTree();
+        var result = MergeCheck.MergeTrends(tree.Root, tree.Root, _ => new(7, "", "revision unavailable"), []);
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("Skipped trend metadata", result.StandardOutput);
+        Assert.Contains("Skipped trend metadata", File.ReadAllText(Path.Combine(tree.Root, "trend-notice.txt")));
+    }
+
+    [Fact]
+    public void PositiveSampleWithZeroMedianIsNew()
+    {
+        using var tree = new StaticTree();
+        var notice = MergeCheck.TrendNotice(Rows(tree, "compile", "s", 2), Rows(tree, "compile", "s", 0, 0, 0, 0, 0), out _);
+        Assert.Contains("median 0 s, new", notice);
+    }
+
+    [Fact]
     public void FailedJobsDoNotContaminateTrendHistory()
     {
         using var tree = new StaticTree();

@@ -6,7 +6,7 @@ internal static class Program
 {
     internal static readonly HashSet<string> BooleanOptions = new(StringComparer.OrdinalIgnoreCase)
     {
-        "RecordApprovals",
+        "RecordApprovals", "TranslationsOnly",
         "NoDraftUpload", "DryRun", "SelfTest", "NoBinaries", "UseReferenceAssemblyPackage", "NoRestore", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "BuildOnly", "Initialize", "Complete", "ConfirmPublication", "Reuse", "All", "Offline"
     };
 

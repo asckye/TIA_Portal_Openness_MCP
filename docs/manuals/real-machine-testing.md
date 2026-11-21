@@ -66,9 +66,14 @@ python scripts/checks/Test-NativeLifecycle.py --runner tests/FoundationHost/TiaM
 
 输出 `supervisor-result.json`、`runner-output.log`、`native/native-result.json` 和 `native/native-events.jsonl`；报告缺失本身就是失败证据。依据为项目保存的 Siemens 指南 [openness-testing](../../reference/siemens-openness/skills/openness-testing/SKILL.md)、[session-and-project](../../reference/siemens-openness/skills/session-and-project/SKILL.md)、[threading-and-concurrency](../../reference/siemens-openness/skills/threading-and-concurrency/SKILL.md)；指南面向 V21+，V20 另按本地 PublicAPI 编译核对。
 
-## worker 自动恢复核对
+## 会话移交核对（NO-LOCK Part 6）
 
 NO-LOCK Part 6 的会话移交真机核对当前为 NOT RUN。客户端保留旧会话并重新初始化，10 分钟内连接相同 PID 应给出持有者信息，`takeOver=true` 或最后一次请求后满 10 分钟应完成交接。核对旧会话收到 `taken-over`，随后可显式连接回来。运行中调用、审批等待、已附着工作台和 worker 自启 TIA 都应保留占用。让 Disconnect 被 TIA 对话框阻塞，核对新连接返回 `in-progress`，回答对话框后可取回最终连接结果，并检查未确认编号与未保存工程状态。
+
+- 让满足移交条件的持有者发生故障，确认宿主停止原 worker 后，新会话才取得租约。
+- 在已被接管的旧会话调用 `DisconnectPortal`，确认它在本地结清并返回接管警告，新会话的绑定仍可用。
+
+## worker 自动恢复核对（NO-LOCK Part 4）
 
 NO-LOCK Part 4 的真机核对当前为 NOT RUN。获准连接测试环境后，在工程副本中逐项记录调用编号、worker 代次、TIA PID、项目路径和实际工程状态。
 
@@ -157,7 +162,7 @@ S7-1500（CM PtP）分别验证：除指令名称与版本，还须核对 `PORT`
 2. 按工具契约把导入、生成、编译和保存分为独立的序列步骤；导入或编译成功不代表已保存。
 3. 如实区分完整源、片段和导出模块编辑，同步更新结果解释、版本与编码约束和官方出处；不为单个 API 问题或语言另写指南。
 4. 依次运行 `generate-catalogs`、`generate-tool-usage`（生成 `src/Shared/ToolUsageData.json`，`-Check` 检查漂移），再构建并执行八版检索和功能检查。检查逐版取回每个工具和操作，核对 schema、参数来源、源文页面和哈希，并执行可离线运行的调用示例；结果写入[覆盖记录](../../manifest/tool-usage-coverage.json)，其中原生导入和编译为 NOT RUN。
-5. VM 回归后按实测修正参数，核对结果记入真机台账，`validation` 按 `Real-machine evidence: V21 only (4.0.0-beta.4, 2026-11-05): <实际执行的 read、preview 或 apply 及结果>. Other releases: input schema checked offline; native execution NOT RUN.` 标明实测版本（仅注册于 V21 的工具写 `V21 (registered on V21 only; ...)`，仅预览写 `apply NOT RUN`，没有实机执行的行保留 `NOT RUN` 并说明原因，不写实机证据前缀），不包含请求 ID。
+5. VM 回归后按实测修正参数，核对结果记入真机台账，`validation` 按 `Real-machine evidence: <实测 TIA 版本> only (<候选版本>, <YYYY-MM-DD>): <实际执行的 read、preview 或 apply 及结果>. Other releases: input schema checked offline; native execution NOT RUN.` 标明实测版本（仅注册于 V21 的工具写 `V21 (registered on V21 only; ...)`，仅预览写 `apply NOT RUN`，没有实机执行的行保留 `NOT RUN` 并说明原因，不写实机证据前缀），不包含请求 ID。
 
 官方语料只作参考文本，不编译、不执行；不分发 Siemens SDK 二进制和示例项目归档：
 

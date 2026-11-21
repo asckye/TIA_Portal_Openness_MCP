@@ -49,7 +49,7 @@ Part 4 在下一次需要原生 worker 的调用上恢复丢失的 worker。恢�
 
 恢复增加绑定 generation，使旧预览和审批身份失效。`WORKER_RESTARTED` 在恢复后的首个结果中说明代次、原因、是否重绑以及丢失的 worker 状态，`sessionState.workerRecovery` 保留该记录。自动恢复保留导出句柄、暂存、生成记录、未确认调用与迟到结果，并保持工作台中的会话活动状态。显式重启继续清理导出句柄和重绑目标。已附着 TIA 中的未保存项目更改仍由 TIA 持有。由 worker 自己启动的 TIA 不自动关闭或重新打开。
 
-租约随持有进程结束。死持有者留下的 BUSY、UNCERTAIN 或遗留 ACTIVE 记录在新连接时转为 `PREVIOUS_OWNER_UNCLEAN` 警告。IDLE 和 RELEASED 记录允许连接，保持无此警告。`data.previousOwner` 保留前持有者状态与请求编号。活持有者仍阻止另一写入者。断开后允许在同一 MCP 会话重新连接。
+租约随持有进程结束。死持有者留下的 BUSY、UNCERTAIN 或遗留 ACTIVE 记录在新连接时转为 `PREVIOUS_OWNER_UNCLEAN` 警告。IDLE 和 RELEASED 记录允许连接，保持无此警告。`data.previousOwner` 保留前持有者状态与请求编号。受保护的活持有者仍阻止另一写入者。断开后允许在同一 MCP 会话重新连接。
 
 同一宿主中的被遗弃会话，在没有调用、审批、工作台参与、操作端所有权或自启 TIA 的情况下，闲置至少 10 分钟或新连接显式给出 `takeOver=true` 时可以让出。健康通道的移交执行所属线程上的非拥有式 Disconnect。若它仍在执行，移交保持等待中的事实。
 

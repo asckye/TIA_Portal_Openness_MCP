@@ -78,11 +78,8 @@ internal static partial class MergeCheck
 
     internal sealed record Prerequisites(string Api, string Python, string? NuGet);
 
-    internal static Prerequisites RequirePrerequisites(string root, Options options, Func<string[], CommandResult> git,
-        Func<string, string?>? environment = null)
+    internal static string ResolvePublicApi(string root, string? api, Func<string[], CommandResult> git)
     {
-        environment ??= Environment.GetEnvironmentVariable;
-        var api = options.Get("PublicApiRoot") ?? environment("TIA_MCP_TEST_PUBLIC_API_ROOT");
         if (api == null)
         {
             api = Path.Combine(root, "sdk");
@@ -94,7 +91,15 @@ internal static partial class MergeCheck
                 api = Path.Combine(Directory.GetParent(Path.GetFullPath(Path.Combine(root, common.StandardOutput.Trim())))!.FullName, "sdk");
             }
         }
-        api = Path.GetFullPath(Path.Combine(root, api));
+        return Path.GetFullPath(Path.Combine(root, api));
+    }
+
+    internal static Prerequisites RequirePrerequisites(string root, Options options, Func<string[], CommandResult> git,
+        Func<string, string?>? environment = null)
+    {
+        environment ??= Environment.GetEnvironmentVariable;
+        var api = options.Get("PublicApiRoot") ?? environment("TIA_MCP_TEST_PUBLIC_API_ROOT");
+        api = ResolvePublicApi(root, api, git);
         try { Prepare.RequirePublicApi(root, api); }
         catch (ReleaseException ex) { throw new ReleaseException("PublicAPI SDK is missing or incomplete; pass -PublicApiRoot <SDK-root>. " + ex.Message); }
         var python = ReleaseCommands.DecoderPythonOptions(options, environment).Get("Python")!;
@@ -248,7 +253,13 @@ internal static partial class MergeCheck
             ConfigureTests(checkEnvironment);
             var executable = Path.GetDirectoryName(job.Executable) is { Length: > 0 }
                 ? Path.GetFullPath(job.Executable, root) : job.Executable;
-            var result = process(executable, job.Arguments, root, checkEnvironment);
+            var arguments = job.Arguments;
+            if (job.Name == "check-analyzer-warnings")
+            {
+                var paths = AnalyzerWarnings.CompiledChanges(root, Path.Combine(output, "analyzers"), changes);
+                arguments = [.. arguments, .. paths.SelectMany(path => new[] { "-CheckPath", path })];
+            }
+            var result = process(executable, arguments, root, checkEnvironment);
             return CheckResult(job.Name, result, output, transportFallback);
         });
         var preSuite = UpdaterCompanionChecks(plan).Select(job => (job.Name, (Func<PipelineResult>)(() =>
@@ -368,6 +379,8 @@ internal static partial class MergeCheck
         if (name.StartsWith("native-safety-", StringComparison.Ordinal)
             && !System.Text.RegularExpressions.Regex.IsMatch(result.StandardOutput, @"COMPLETE: (\d+) native harness safety checks passed; live TIA tests NOT RUN"))
             return result with { ExitCode = 1, StandardError = "Native safety check count missing." };
+        if (name is "approval-v20-host" or "approval-v21-host")
+            ReleaseCommands.ValidateApproval(Path.Combine(output, name, "result.json"));
         if (name == "configuration-page")
         {
             var match = System.Text.RegularExpressions.Regex.Match(result.StandardOutput, @"(?m)^Passed: (\d+)\s*$");

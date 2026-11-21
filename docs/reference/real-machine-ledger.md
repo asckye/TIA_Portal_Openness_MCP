@@ -4,6 +4,8 @@
 
 当前构建、离线功能与协议检查由 `merge-check` 和 `prepare` 记录在 `bin-build/merge-check/`、`bin-build/prepared/`；这些检查不等于连接真实 TIA 工程或在线 PLC 的验收。历史版本与现场结果在下方单列，不能推广为当前版本通过。
 
+beta.6 V21 M4 记录勘误：`ImportHmiTagTable` 的测试调用把 JSON 路径中的 `\t` 解码成了制表符。这条记录不能证明中文文件名导致导入失败。
+
 ## 预发布例外
 
 维护者决定（2026-10-20，2026-11-01 修订）：预发布（`X.Y.Z-beta.N`、`X.Y.Z-rc.N`）交给测试者测试，维护方在虚拟机上按[预发布真机验证清单](../guides/beta-tester-checklist.md)回归。下文“发布前必须在真机上完成”
@@ -34,7 +36,7 @@ TIA-BATCH-3：**NOT RUN**。在 V14 SP1 或 V15.1 与 V21 工程副本上：导�
 TIA-BATCH-1：**NOT RUN**。在 V14 SP1 或 V15.1 与 V21 工程副本上，用一次 PreviewToolBatch/ApplyToolBatch 删除 3 个块、新建 5 个变量；V21 再批量建 3 个 Unified 变量；确认需要计划哈希的工具在批处理中直接执行、第一个失败项整体回滚且后续项为 NOT_EXECUTED；记录请求 ID 与原生消息。还需确认：带自身计划哈希的工具在逐项执行时复核并拒绝变更的输入文件；ImportPlcTagTable 及现有不带自身计划哈希的批量导入只在批次复验证阶段检查输入文件，复验证之后的变化不受逐项计划哈希保护。
 API-P1b（beta.6）：**NOT RUN**。在 V21、V18 的一次性工程副本中核对现有监控表组的 createTable 预览、计划哈希和项目绑定执行、名称与数量读回、同组 watch/force 重名拒绝及缺失父组拒绝；验证 force 目录导出的整批预览、tableKind/清单/项目绑定哈希、单次审批、审批后复查与首错停止 → 导入另一现有组 → 按返回名称重新查找，watch XML 按 force 导入必须拒绝，保留原文件与失败后的工程状态。确认全程没有在线监视、激活强制、下载或自动保存；最后由测试者显式保存。Part B 已实现 block/group/unit 范围编译，原生验收仍为 **NOT RUN**。负责人 Step 0 仅在 V21 确认 PlcBlock.GetService<ICompilable>() 返回 CompileProvider，具有 Compile()；V18 及组/单元服务尚未探测。各版按 SDK XML 实现，接口存在不等于运行时服务可用。负责人须在 V21/V18 核对 block/group/unit 各范围预览的 compilable、精确对象、MIN-ESCAPE 路径和单元根隔离，验证不支持时拒绝且不回退整 PLC；执行保持 confirm + expectedProjectFile（无计划哈希、无 WRITE 审批）、两轮离线检查、完整嵌套诊断和 Safety 登录/清理顺序。Step 0b 某范围在 V21 返回 compilable=false 时，由负责人按任务决定下一轮移除对应枚举。V14 SP1/V15.1 单元范围须在原生访问前拒绝。
 
-VMFIX-3 Round 2：**NOT RUN**。V14 SP1、V15.1、V16、V17、V18、V19、V20 的 ImportDeviceAml 保留原有 ExclusiveAccess 路径；需分别在工程副本上确认导入、失败后的工程状态及设备计数。只有 V21 按已记录的 reset 13 证据在 ExclusiveAccess 外导入，仍需复测。库文档 Override、带目标环境及非 None 选项的失败保持未知结果，不能只凭类型/版本数量未变判为未写入。
+VMFIX-3 Round 2：**NOT RUN**。VMFIX-18B 后各版 ImportDeviceAml 均在 ExclusiveAccess 外导入。V14 SP1–V18 待 VM 核对；使用工程副本记录导入、失败后的工程状态及设备计数。V21 的 reset 13 仍需复测。库文档 Override、带目标环境及非 None 选项的失败保持未知结果，不能只凭类型/版本数量未变判为未写入。
 
 VMFIX-3（2026-11-03）：**NOT RUN**。需在 V21 工程副本上复验 ExclusiveAccess 占用拒绝、通道属性未改变读回、三类密码策略拒绝、无 ExclusiveAccess 的 AML 导入、库类型/版本导入失败详情和数量读回、文件夹中的 Unified 屏幕及无名部件创建、文档导入失败后的声明名称查找、PROFINET 连接、报警文本导出、HMI 输入拒绝、未知写入的会话锁存、worker 执行证据、标签注释、强制表列表及下载预览。库导入仍保留 ExclusiveAccess；其他导入族的 ExclusiveAccess 兼容性留待 VM 回归。主题负载和标签绑定功能修复由 VMFIX-5b 负责。本任务仅使用离线与本机合成夹具，没有连接 TIA Portal、PLC 或 VM。
 
@@ -585,7 +587,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 
 | 缺陷 / 路径 | 需要的原生复验 |
 |---|---|
-| worker 超时与附件释放 | 保持默认读取 120 秒及现有长操作预算；验证读超时立即报告 requiresSessionReset=true，关闭输入后已返回的原生调用在原所属线程调用一次分离 / TiaPortal.Dispose；既有优雅退出期限内仍不响应才终止。核对租约是否仅在确认分离后释放，硬终止仍需重启 TIA；不得自动重放请求。 |
+| worker 超时与附件释放 | 保持默认读取 120 秒及现有长操作预算；验证超过客户端等待期限时返回 in-progress，并用 GetCallResult 读取原请求的最终结果，关闭输入后已返回的原生调用在原所属线程调用一次分离 / TiaPortal.Dispose；既有优雅退出期限内仍不响应才终止。核对租约是否仅在确认分离后释放，硬终止后核对进程身份、前持有者状态和未决请求；不得自动重放请求。 |
 | DCC / Startdrive、库和工程比较、SiVArc、Safety 读取 | 各诱发一次缺选件、无对象和连接失效；首个失败与后续会话状态的重置标志一致，信封保留脱敏后的原生异常类型和消息。 |
 | L2 PLC / 硬件原语 | CreatePlcBlockGroup 嵌套组、MovePlcBlockToGroup、RepairAndReimportPlcBlock、ImportPlcTagTablesFromDirectory、CreateDevice、CreateHardwareCatalogDevice；核对原调用顺序、STA/MTA 归属、回复转换、前置拒绝与实际读回。 |
 | 精确目录设备创建 | 取消两颗示例 CPU 和 family 白名单，保留既有 Unified 面板版本必须匹配 Portal major 的真实故障保护；从同一目录读取得到 ET 200SP、其他 S7-1500 CPU、HMI 面板的精确 OrderNumber 行，预览不创建，确认工程文件和哈希后只调用一次 CreateWithItem。核对根设备/未分组系统组父对象与完整库存读回；HMI 子类型标识需真实目录和 API 确认，禁止猜测、候选探测或回退。 |

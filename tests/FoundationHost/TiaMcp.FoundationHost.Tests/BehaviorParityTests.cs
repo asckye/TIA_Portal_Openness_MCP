@@ -23,13 +23,15 @@ public sealed class BehaviorParityTests
         {
             await Task.WhenAll(Enumerable.Range(0, 64).Select(_ => Task.Run(() =>
             {
-                var arguments = BehaviorParityCases.Arguments("single-type-group-missing");
+                using var import = new BehaviorParityCases.ImportFixture("single-type-group-missing");
+                var arguments = BehaviorParityCases.Arguments("single-type-group-missing", import);
                 string path = (string)arguments["importPath"]!;
                 paths.Add(path);
                 Assert.True(Path.IsPathFullyQualified(path));
                 Assert.Equal("<Document/>", File.ReadAllText(path));
             })));
             Assert.Equal(64, paths.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+            Assert.All(paths, path => Assert.False(File.Exists(path)));
         }
         finally { foreach (string path in paths) File.Delete(path); }
     }
@@ -263,9 +265,16 @@ public sealed class BehaviorParityTests
                 if (source == "CompilePlcSoftware") Assert.True((string?)body["error"]?["code"] == "COMPILE_ERRORS", body.ToJsonString());
                 return BehaviorParityCases.Project(body);
             }
-            var results = new JsonArray(await Call(scenario=="single-type-group-missing" ? "ImportPlcType" : scenario=="single-table-group-missing" ? "ImportPlcTagTable" : scenario == "single-legacy-group-missing" ? "ImportPlcBlock" : scenario.StartsWith("compile-", StringComparison.Ordinal) ? "CompilePlcSoftware" : scenario == "native-read" ? "ListPlcTags"
-                : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias" ? "ImportPlcBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(scenario)));
-            Assert.Equal(code, (string?)results[0]?["code"]); Assert.Equal(outcome, (string?)results[0]?["outcome"]); Assert.Equal(execution, (string?)results[0]?["execution"]);
+            using var import = new BehaviorParityCases.ImportFixture(scenario);
+            var results =
+                new JsonArray(await Call(scenario=="single-type-group-missing" ? "ImportPlcType" : scenario=="single-table-group-missing" ? "ImportPlcTagTable"
+                        : scenario == "single-legacy-group-missing" ? "ImportPlcBlock" : scenario.StartsWith("compile-", StringComparison.Ordinal)
+                        ? "CompilePlcSoftware" : scenario == "native-read" ? "ListPlcTags"
+                : scenario == "missing-directory" || scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias"
+                    ? "ImportPlcBlocksFromDirectory" : scenario == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases
+                    .Arguments(scenario, import)));
+            Assert.Equal(code, (string?)results[0]?["code"]); Assert.Equal(outcome, (string?)results[0]?["outcome"]); Assert
+                .Equal(execution, (string?)results[0]?["execution"]);
             if (scenario == "single-import-failed") Assert.True((bool?)results[0]?["reset"]);
             if (enabled && scenario is ("argument" or "single-group-missing" or "single-legacy-group-missing" or "batch-inconsistent"))
             { Assert.NotNull(results[0]?["precheckWarning"]); Assert.False((bool?)results[0]?["nativeWarning"]); }

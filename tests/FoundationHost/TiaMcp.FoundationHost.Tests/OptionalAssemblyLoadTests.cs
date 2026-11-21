@@ -196,8 +196,7 @@ public sealed class OptionalAssemblyLoadTests
 
         internal ApiFolder(string assembly)
         {
-            string root = TestPaths.RepositoryRoot(AppContext.BaseDirectory);
-            Path = System.IO.Path.Combine(root, "bin-build/vmfix-9a/assembly-tests", Guid.NewGuid().ToString("N"));
+            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "assembly-test-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Path);
             File = System.IO.Path.Combine(Path, assembly + ".dll");
             System.IO.File.WriteAllBytes(File, Array.Empty<byte>());

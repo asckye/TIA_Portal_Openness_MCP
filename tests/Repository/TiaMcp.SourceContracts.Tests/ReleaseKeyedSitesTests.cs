@@ -1,14 +1,33 @@
+using System.Text.Json;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text.RegularExpressions;
 using TiaMcp.BuildCommon;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace TiaMcp.SourceContracts.Tests;
 
-public sealed class ReleaseKeyedSitesTests
+public sealed class ReleaseKeyedSitesTests(ITestOutputHelper output)
 {
-    private static readonly Regex Literal = new("\"(?:20|21)\"");
+    private static readonly Regex Literal = new(""" "(?:20|21)" | \b(?:major|version|MajorVersion)\s*(?:<=?|>=?|==|!=)\s*(?:1[4-9]|2[01])\b """,
+        RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase);
     private static readonly Regex ToolRosterRow = new(
         """^\["\w+"\] = (ReleaseRange\.(Since|Between)\("[\d.a-z]+"(, "[\d.a-z]+")?\)|new\[\] \{ "[\d.a-z]+"(, "[\d.a-z]+")* \}),?$""");
+
+    [Fact]
+    public void EveryV21OnlyPolicyKeyHasAToolListRow()
+    {
+        var root = Repository.FindRoot(AppContext.BaseDirectory);
+        var syntax = CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(root, "src/Logic/Siemens/ToolVersionPolicy.cs"))).GetRoot();
+        var policy = syntax.DescendantNodes().OfType<VariableDeclaratorSyntax>().Single(variable => variable.Identifier.Text == "V21Only");
+        var keys = policy.Initializer!.Value.DescendantNodes().OfType<ImplicitElementAccessSyntax>()
+            .Select(access => ((LiteralExpressionSyntax)access.ArgumentList.Arguments.Single().Expression).Token.ValueText).ToArray();
+        using var tools = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/tools-list.json")));
+        var names = tools.RootElement.GetProperty("tools").EnumerateArray().Select(row => row.GetProperty("name").GetString()).ToHashSet();
+        Assert.NotEmpty(keys);
+        Assert.All(keys, key => Assert.Contains(key, names));
+    }
 
     [Fact]
     public void Release_literals_are_confined_to_reviewed_sites()
@@ -42,6 +61,9 @@ public sealed class ReleaseKeyedSitesTests
             }
             findings.AddRange(allowed.Select(fragment => $"{relative}  unused exception: {fragment}"));
         }
+        foreach (var group in exceptions.Where(group => !File.Exists(Path.Combine(src, group.Key))))
+            findings.AddRange(group.Select(fragment => $"{group.Key}  unused exception: {fragment}"));
+        foreach (var finding in findings) output.WriteLine(finding);
         Assert.Empty(findings);
     }
 }

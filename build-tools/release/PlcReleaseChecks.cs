@@ -112,7 +112,7 @@ internal static partial class ReleaseCommands
             throw new ReleaseException($"{message}; expected {(expected.Exact ? "exactly" : "at least")} {expected.Count}, actual {actual}");
     }
 
-    private static void ValidateApproval(string path)
+    internal static void ValidateApproval(string path)
     {
         using var doc = JsonDocument.Parse(File.ReadAllText(path)); var evidence = doc.RootElement;
         CheckReleaseCount("approvalSafety", GetJsonInt(evidence, "checksPassed"), "Default approval checks incomplete");

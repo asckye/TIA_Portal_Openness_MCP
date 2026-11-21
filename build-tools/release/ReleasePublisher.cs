@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
@@ -39,8 +40,9 @@ internal static class ReleasePublisher
         var package = PreparedCandidate.Read(root, candidatePath, options.Version);
         await package.VerifyAsync(cancellationToken);
         var notes = await File.ReadAllTextAsync(Path.Combine(root, "docs/releases", version.Tag + ".md"), cancellationToken);
-        if (!PrereleaseNotes.HasSection(notes))
-            throw new ReleaseException(version.Tag + " needs the generated Not verified on a real TIA Portal section (generate-prerelease-notes)");
+        if (!PrereleaseNotes.HasBilingualSections(notes))
+            throw new ReleaseException(version.Tag
+                    + " needs the generated Not verified on a real TIA Portal section in Chinese and English (generate-prerelease-notes)");
         using var ownedClient = client is null ? new HttpClient { Timeout = Timeout.InfiniteTimeSpan } : null;
         var api = PreparedApi(root, options, client ?? ownedClient!);
         var releases = "repos/" + api.Repository + "/releases";
@@ -74,10 +76,10 @@ internal static class ReleasePublisher
         foreach (var assetId in unexpected)
             await api.DeleteAsync(releases + "/assets/" + assetId.ToString(CultureInfo.InvariantCulture), cancellationToken);
         var upload = JsonString(draft.RootElement, "upload_url").Replace("{?name,label}", "", StringComparison.Ordinal);
-        await UploadAndVerifyAsync(api, assetsPath, upload, await File.ReadAllBytesAsync(package.Zip, cancellationToken),
-            Path.GetFileName(package.Zip), "application/zip", options, cancellationToken);
-        await UploadAndVerifyAsync(api, assetsPath, upload, await File.ReadAllBytesAsync(package.Sidecar, cancellationToken),
-            Path.GetFileName(package.Sidecar), "text/plain", options, cancellationToken);
+        await UploadAndVerifyAsync(api, assetsPath, upload, package.Zip, package.Digest, "application/zip", options, TimeSpan.FromSeconds(60),
+                cancellationToken);
+        await UploadAndVerifyAsync(api, assetsPath, upload, package.Sidecar, FileHash.Sha256(package.Sidecar), "text/plain", options, TimeSpan.FromSeconds(60),
+                cancellationToken);
         using var finalAssets = await api.GetRequiredAsync(assetsPath, cancellationToken);
         var zipId = JsonLong(FindAssets(finalAssets.RootElement, Path.GetFileName(package.Zip)).Single(), "id");
         await ReadPreparedReleaseAsync(api, package with { ReleaseId = id, AssetId = zipId }, cancellationToken);
@@ -104,7 +106,10 @@ internal static class ReleasePublisher
         if (assets.GetArrayLength() != 2 || zip.Length != 1 || sidecar.Length != 1 || JsonLong(zip[0], "id") != package.AssetId ||
             !Matches(zip[0], package.Size, package.Digest) || !Matches(sidecar[0], sidecarBytes.LongLength, Sha256Digest(sidecarBytes)))
             throw new ReleaseException("release asset size or digest differs from prepared ZIP or .sha256");
-        return new(!JsonBool(release.RootElement, "draft"), zip[0].Clone());
+        bool draft = JsonBool(release.RootElement, "draft");
+        if (draft && !PrereleaseNotes.HasBilingualSections(JsonString(release.RootElement, "body")))
+            throw new ReleaseException("Prepared draft needs Chinese and English release notes; run upload-draft to refresh it.");
+        return new(!draft, zip[0].Clone());
     }
 
     internal static async Task<bool> PreparedTagExistsAsync(GitHubApi api, PreparedCandidate package, CancellationToken cancellationToken)
@@ -167,7 +172,7 @@ internal static class ReleasePublisher
             }
             catch (Exception error) when (attempt < 5 && error is ReleaseException or HttpRequestException or OperationCanceledException)
             {
-                await budget.DelayAsync(TimeSpan.FromSeconds(3));
+                await budget.DelayAsync(TimeSpan.FromSeconds(10 * (1 << (attempt - 1))));
             }
         }
     }
@@ -176,20 +181,27 @@ internal static class ReleasePublisher
     internal static string ComposeBody(string notes, string webBase, string repository, string commit, string zipName, long fileCount, long zipLength, string digest)
     {
         notes = Regex.Replace(notes, @"\]\((\.\./[^)]+)\)", match => "](" + webBase + "/" + repository + "/blob/" + commit + "/docs/releases/" + match.Groups[1].Value + ")");
-        return notes + $"\n\nPackage: `{zipName}` ({fileCount} files, {zipLength} bytes).\n\nSource commit: [{commit}]({webBase}/{repository}/commit/{commit}).\n\nZIP SHA-256:\n\n```text\n{digest}\n```\n";
+        int split = PrereleaseNotes.RequireLanguages(notes);
+        var link = $"[{commit}]({webBase}/{repository}/commit/{commit})";
+        var sha = $"\n\n```text\n{digest}\n```\n";
+        return notes[..split].TrimEnd() + $"\n\n交付包：`{zipName}`（{fileCount} 个文件，{zipLength} 字节）。\n\n源提交：{link}。\n\nZIP SHA-256：" + sha
+            + "\n" + notes[split..].TrimEnd() + $"\n\nPackage: `{zipName}` ({fileCount} files, {zipLength} bytes).\n\nSource commit: {link}.\n\nZIP SHA-256:"
+                + sha;
     }
 
-    private static async Task UploadAndVerifyAsync(GitHubApi api, string assetsPath, string uploadBase, byte[] bytes, string name,
-        string contentType, PublishOptions options, CancellationToken cancellationToken)
+    internal static async Task UploadAndVerifyAsync(GitHubApi api, string assetsPath, string uploadBase, string file, string digest,
+        string contentType, PublishOptions options, TimeSpan stallTimeout, CancellationToken cancellationToken)
     {
-        var expected = "sha256:" + Sha256Digest(bytes);
+        var name = Path.GetFileName(file);
+        var size = new FileInfo(file).Length;
+        var expected = "sha256:" + digest;
         for (var attempt = 1; attempt <= options.RetryCount; attempt++)
         {
             using var assets = await api.GetRequiredAsync(assetsPath, cancellationToken);
             JsonElement? verified = null;
             foreach (var stale in FindAssets(assets.RootElement, name).ToArray())
             {
-                if (verified is null && JsonString(stale, "state") == "uploaded" && JsonLong(stale, "size") == bytes.LongLength && JsonString(stale, "digest") == expected)
+                if (verified is null && JsonString(stale, "state") == "uploaded" && JsonLong(stale, "size") == size && JsonString(stale, "digest") == expected)
                     verified = stale;
                 else
                     await api.DeleteAsync("repos/" + api.Repository + "/releases/assets/" + JsonLong(stale, "id"), cancellationToken);
@@ -198,10 +210,19 @@ internal static class ReleasePublisher
             JsonDocument uploaded;
             try
             {
-                uploaded = await api.UploadRequiredAsync(uploadBase + "?name=" + Uri.EscapeDataString(name), bytes, contentType, cancellationToken);
+                using var attemptTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                attemptTimeout.CancelAfter(stallTimeout);
+                using var content = new UploadContent(file, size, attemptTimeout, stallTimeout);
+                content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                uploaded = await api.UploadRequiredAsync(uploadBase + "?name=" + Uri.EscapeDataString(name), content, attemptTimeout.Token);
             }
-            catch (Exception) when (attempt < options.RetryCount)
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && attempt == options.RetryCount)
             {
+                throw new ReleaseException($"{name}: upload stalled after {attempt} attempts; the draft is kept for inspection");
+            }
+            catch (Exception error) when (attempt < options.RetryCount && !cancellationToken.IsCancellationRequested)
+            {
+                Console.Error.WriteLine($"{name}: upload attempt {attempt} failed ({error.GetType().Name}), retrying.");
                 if (options.RetryDelaySeconds > 0)
                     await Task.Delay(TimeSpan.FromSeconds(options.RetryDelaySeconds * attempt), cancellationToken);
                 continue;
@@ -210,13 +231,41 @@ internal static class ReleasePublisher
             {
                 var assetId = JsonLong(uploaded.RootElement, "id");
                 using var check = await api.GetRequiredAsync("repos/" + api.Repository + "/releases/assets/" + assetId, cancellationToken);
-                if (JsonString(check.RootElement, "state") == "uploaded" && JsonLong(check.RootElement, "size") == bytes.LongLength && JsonString(check.RootElement, "digest") == expected)
+                if (JsonString(check.RootElement, "state") == "uploaded" && JsonLong(check.RootElement, "size") == size
+                        && JsonString(check.RootElement, "digest") == expected)
                     return;
             }
             if (attempt < options.RetryCount && options.RetryDelaySeconds > 0)
                 await Task.Delay(TimeSpan.FromSeconds(options.RetryDelaySeconds * attempt), cancellationToken);
         }
         throw new ReleaseException(name + $": could not upload and verify after {options.RetryCount} attempts; the draft is kept for inspection");
+    }
+
+    private sealed class UploadContent(string path, long size, CancellationTokenSource watchdog, TimeSpan limit) : HttpContent
+    {
+        protected override bool TryComputeLength(out long length) { length = size; return true; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) =>
+            SerializeToStreamAsync(stream, context, watchdog.Token);
+
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context, CancellationToken token)
+        {
+            await using var file = File.OpenRead(path);
+            var buffer = new byte[64 * 1024];
+            var clock = Stopwatch.StartNew();
+            long sent = 0;
+            var next = TimeSpan.FromSeconds(10);
+            int count;
+            while ((count = await file.ReadAsync(buffer, token)) > 0)
+            {
+                await stream.WriteAsync(buffer.AsMemory(0, count), token);
+                watchdog.CancelAfter(limit);
+                sent += count;
+                if (clock.Elapsed < next) continue;
+                Console.WriteLine($"{Path.GetFileName(path)}: {sent}/{size} bytes sent, {sent / clock.Elapsed.TotalSeconds:F0} bytes/s");
+                next = clock.Elapsed + TimeSpan.FromSeconds(10);
+            }
+        }
     }
 
     private static IEnumerable<JsonElement> FindAssets(JsonElement assets, string name) =>
@@ -237,7 +286,7 @@ internal static class ReleasePublisher
 
         internal async Task<JsonDocument?> GetReleaseByTagOrNullAsync(string path, CancellationToken cancellationToken)
         {
-            var response = await SendAsync(HttpMethod.Get, path, null, null, null, cancellationToken);
+            var response = await SendAsync(HttpMethod.Get, path, null, null, cancellationToken);
             if (response.Status == HttpStatusCode.NotFound) return null;
             AssertSuccess(response, HttpMethod.Get, path);
             return JsonDocument.Parse(response.Body);
@@ -245,25 +294,25 @@ internal static class ReleasePublisher
 
         internal async Task<JsonDocument> SendJsonRequiredAsync(HttpMethod method, string path, object? body, CancellationToken cancellationToken)
         {
-            var response = await SendAsync(method, path, body, null, null, cancellationToken);
+            var response = await SendAsync(method, path, body, null, cancellationToken);
             AssertSuccess(response, method, path);
             return JsonDocument.Parse(response.Body);
         }
 
-        internal async Task<JsonDocument> UploadRequiredAsync(string url, byte[] bytes, string contentType, CancellationToken cancellationToken)
+        internal async Task<JsonDocument> UploadRequiredAsync(string url, HttpContent content, CancellationToken cancellationToken)
         {
-            var response = await SendAsync(HttpMethod.Post, url, null, bytes, contentType, cancellationToken);
+            var response = await SendAsync(HttpMethod.Post, url, null, content, cancellationToken);
             AssertSuccess(response, HttpMethod.Post, url);
             return JsonDocument.Parse(response.Body);
         }
 
         internal async Task DeleteAsync(string path, CancellationToken cancellationToken)
         {
-            var response = await SendAsync(HttpMethod.Delete, path, null, null, null, cancellationToken);
+            var response = await SendAsync(HttpMethod.Delete, path, null, null, cancellationToken);
             AssertSuccess(response, HttpMethod.Delete, path);
         }
 
-        private async Task<ApiResponse> SendAsync(HttpMethod method, string pathOrUrl, object? json, byte[]? bytes, string? contentType, CancellationToken cancellationToken)
+        private async Task<ApiResponse> SendAsync(HttpMethod method, string pathOrUrl, object? json, HttpContent? content, CancellationToken cancellationToken)
         {
             var uri = Uri.TryCreate(pathOrUrl, UriKind.Absolute, out var absolute) ? absolute : new Uri(apiBase, pathOrUrl.TrimStart('/'));
             using var request = new HttpRequestMessage(method, uri);
@@ -271,11 +320,7 @@ internal static class ReleasePublisher
             request.Headers.TryAddWithoutValidation("X-GitHub-Api-Version", "2022-11-28");
             request.Headers.TryAddWithoutValidation("User-Agent", "TiaMcp-Release");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            if (bytes is not null)
-            {
-                request.Content = new ByteArrayContent(bytes);
-                request.Content.Headers.ContentType = new MediaTypeHeaderValue(contentType!);
-            }
+            if (content is not null) request.Content = content;
             else if (json is not null)
             {
                 request.Content = new StringContent(JsonSerializer.Serialize(json), Encoding.UTF8, "application/json");

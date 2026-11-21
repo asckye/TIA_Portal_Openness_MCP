@@ -119,6 +119,8 @@ internal static partial class MergeCheck
         Tool("generate-tool-counts", "-Check");
         const string status = "generate-real-machine-status";
         plan.Checks.Add(new(status, dotnet, [typeof(Program).Assembly.Location, status, "-Check"], PostSuite: true));
+        if (all || changes.Any(path => path is PrereleaseNotes.LedgerPath or PrereleaseNotes.ChecklistPath or PrereleaseNotes.TranslationsPath))
+            Tool("generate-prerelease-notes", "-Check", "-TranslationsOnly");
         if (plan.DocsOnly) return plan;
         void Suite(string name, string path) { if (catalog.ContainsKey(name)) Reason(plan.Suites, name, path); }
         void Everything(string path)
@@ -189,7 +191,7 @@ internal static partial class MergeCheck
         foreach (var program in filePrograms.Where(program => plan.Wide || changes.Contains(program, StringComparer.OrdinalIgnoreCase)))
             Reason(plan.Builds, "file:" + program, plan.Wide ? "wide change" : program);
         AddChecks(plan, changes, dotnet, python, api, output);
-        AddWorkerChecks(plan, changes, parallelism, dotnet, python, api, output, transportFallback);
+        AddWorkerChecks(plan, changes, all, parallelism, dotnet, python, api, output, transportFallback);
         return plan;
     }
 

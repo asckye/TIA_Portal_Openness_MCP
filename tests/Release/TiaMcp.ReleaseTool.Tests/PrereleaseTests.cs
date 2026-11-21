@@ -147,11 +147,26 @@ public sealed class PrereleaseTests
     private const string Checklist = "# API audit VM checklist\n\nintro\n\n## Online (P8-81a)\n\n1. F1: item one.\n2. F2: item two\n   continued.\n\n" +
         "## Pending\n\nintro\n\n- session.md F1: item three\n  continued.\n";
 
+    private static PrereleaseNotes.Translation[] FixtureTranslations() =>
+    [
+        .. PrereleaseNotes.ReadTranslations(Root),
+        new("**A 项**：**NOT RUN**；检查 A", "**A item**: **NOT RUN**；check A"),
+        new("**20**：**NOT RUN**；V20 步骤", "**20**: **NOT RUN** — V20 steps"),
+        new("**P6-DEVICE 设备创建**：**NOT RUN**；19/20/21；设备", "**P6-DEVICE 设备创建**: **NOT RUN**；19/20/21 — device"),
+        new("**P6-PRODUCT（八版）**：启动包", "**P6-PRODUCT（八版）**: start the package"),
+        new("在线（P8-81a）", "Online (P8-81a)"),
+        new("F1：第一项。", "F1: item one."),
+        new("F2：第二项及续行。", "F2: item two continued."),
+        new("待验收", "Pending"),
+        new("介绍", "intro"),
+        new("session.md F1：第三项及续行。", "session.md F1: item three continued.")
+    ];
+
     [Fact]
     public void NotVerifiedSectionComesFromTheLedgerAndTheChecklist()
     {
         var status = RealMachineStatusGenerator.Read(Root);
-        var block = PrereleaseNotes.DraftBlock(Ledger, Checklist, status);
+        var block = PrereleaseNotes.DraftBlock(Ledger, Checklist, status, FixtureTranslations(), false);
         foreach (var key in CatalogJson.Keys)
         {
             var s = status.Summarize(key);
@@ -174,8 +189,27 @@ public sealed class PrereleaseTests
         Assert.DoesNotContain("old", block, StringComparison.Ordinal);
         Assert.DoesNotContain("**14sp1**", block, StringComparison.Ordinal);
         var renamed = Ledger.Replace("## V20/V21 host + worker acceptance (P6-54)", "## Renamed", StringComparison.Ordinal);
-        Assert.Throws<ReleaseException>(() => PrereleaseNotes.DraftBlock(renamed, Checklist, status));
-        Assert.Throws<ReleaseException>(() => PrereleaseNotes.DraftBlock(Ledger, "no sections", status));
+        Assert.Throws<ReleaseException>(() => PrereleaseNotes.DraftBlock(renamed, Checklist, status, FixtureTranslations(), false));
+        Assert.Throws<ReleaseException>(() => PrereleaseNotes.DraftBlock(Ledger, "no sections", status, FixtureTranslations(), false));
+    }
+
+    [Fact]
+    public void TranslationCoverageChecksCurrentSourcesWithoutAReleaseNote()
+    {
+        using var tree = new StaticTree();
+        tree.Write(PrereleaseNotes.LedgerPath, Ledger);
+        tree.Write(PrereleaseNotes.ChecklistPath, Checklist);
+        tree.Copy(RealMachineStatusGenerator.Roster);
+        tree.Copy(RealMachineStatusGenerator.Manifest);
+        var pairs = FixtureTranslations();
+        var options = Options.Parse(["-Root", tree.Root, "-Check", "-TranslationsOnly"], Program.BooleanOptions);
+        int Check() => ReleaseCommands.Run("generate-prerelease-notes", options);
+        tree.Write(PrereleaseNotes.TranslationsPath, System.Text.Json.JsonSerializer.Serialize(pairs));
+        Assert.Equal(0, Check());
+        var withVersion = Options.Parse([.. options.Arguments(), "-Version", "4.0.0-rc.1"], Program.BooleanOptions);
+        Assert.Equal(64, Assert.Throws<ReleaseException>(() => ReleaseCommands.Run("generate-prerelease-notes", withVersion)).ExitCode);
+        tree.Write(PrereleaseNotes.TranslationsPath, System.Text.Json.JsonSerializer.Serialize(pairs.Where(pair => pair.En != "F1: item one.")));
+        Assert.Contains("Missing release-note translation", Assert.Throws<ReleaseException>(() => Check()).Message);
     }
 
     [Fact]
@@ -230,8 +264,17 @@ public sealed class PrereleaseTests
         tree.Copy(RealMachineStatusGenerator.Roster);
         tree.Copy(RealMachineStatusGenerator.Manifest);
         var draftPath = PrereleaseNotes.NotesPath(draft);
-        tree.Write(draftPath, $"# Draft\n\n{PrereleaseNotes.Begin}\nstale\n{PrereleaseNotes.End}\n");
+        tree.Write(PrereleaseNotes.TranslationsPath, System.Text.Json.JsonSerializer.Serialize(FixtureTranslations()));
+        var markers = $"{PrereleaseNotes.Begin}\nstale\n{PrereleaseNotes.End}\n";
+        tree.Write(draftPath, "# Draft\n\n## 中文\n\n中文介绍。\n\n" + markers + "\n## English\n\nIntroduction.\n\n" + markers);
         var draftNotes = PrereleaseNotes.Outputs(tree.Root, draft);
+        string note = draftNotes[draftPath];
+        Assert.True(PrereleaseNotes.HasBilingualSections(note));
+        int split = note.IndexOf("## English", StringComparison.Ordinal);
+        Assert.Contains("中文介绍。", note[..split]);
+        Assert.Contains("8. session.md F1：第三项及续行。", note[..split]);
+        Assert.Contains("Introduction.", note[split..]);
+        Assert.Contains("8. session.md F1: item three", note[split..]);
         var table = RealMachineStatusGenerator.Read(tree.Root);
         foreach (var key in CatalogJson.Keys)
         {

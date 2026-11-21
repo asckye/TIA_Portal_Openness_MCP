@@ -9,6 +9,19 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class SuiteShardingTests
 {
+    [Theory]
+    [InlineData("sample.json")]
+    [InlineData("sample.classes.json")]
+    public void CorruptShardHistoryFailsWithRebuildInstructions(string name)
+    {
+        using var tree = new StaticTree();
+        var path = tree.Write(name, "{broken");
+        var error = Assert.Throws<ReleaseException>(() => SuiteCosts.ReadHistory<Dictionary<string, double>>(path));
+        Assert.Contains(path, error.Message);
+        Assert.Contains("test-suites -Suite sample -Shards 4 -TimingHistory", error.Message);
+        Assert.Equal("{broken", File.ReadAllText(path));
+    }
+
     [Fact]
     public void GuiHistoryKeepsThreeLayoutShardsAndOneInputShard()
     {

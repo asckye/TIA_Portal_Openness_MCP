@@ -78,14 +78,25 @@ namespace TiaMcp.BehaviorParity
                 new object[] { "single-type-group-missing-disabled","PRECONDITION_FAILED","rejected-before-operation","not-started" },
                 new object[] { "single-table-group-missing-disabled","PRECONDITION_FAILED","rejected-before-operation","not-started" } });
 
-        public static JsonObject Arguments(string scenario)
+        public sealed class ImportFixture : IDisposable
+        {
+            internal string? Path { get; }
+            public ImportFixture(string scenario)
+            {
+                if (scenario is "single-legacy-group-missing" or "single-type-group-missing" or "single-table-group-missing")
+                {
+                    Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "parity-single-" + Guid.NewGuid().ToString("N") + ".xml");
+                    System.IO.File.WriteAllText(Path, "<Document/>");
+                }
+            }
+            public void Dispose() { if (Path != null) System.IO.File.Delete(Path); }
+        }
+
+        public static JsonObject Arguments(string scenario, ImportFixture? import = null)
         {
             if (scenario is "single-legacy-group-missing" or "single-type-group-missing" or "single-table-group-missing")
-            {
-                string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "parity-single-" + Guid.NewGuid().ToString("N") + ".xml");
-                System.IO.File.WriteAllText(path, "<Document/>");
-                return new JsonObject { ["softwarePath"] = "PLC_1", [scenario=="single-table-group-missing" ? "folderPath" : "groupPath"] = "Missing", ["importPath"] = path };
-            }
+                return new JsonObject { ["softwarePath"] = "PLC_1", [scenario == "single-table-group-missing" ? "folderPath" : "groupPath"] = "Missing",
+                    ["importPath"] = import?.Path ?? throw new ArgumentException("Missing parity import fixture.", nameof(import)) };
             if (scenario.StartsWith("batch-", StringComparison.Ordinal) && scenario != "batch-alias")
             {
                 string dir = System.IO.Path.GetFullPath("bin-build/P6-67r/parity-batch"); System.IO.Directory.CreateDirectory(dir);

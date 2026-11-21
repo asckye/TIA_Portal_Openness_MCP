@@ -179,8 +179,15 @@ namespace TiaMcp.Engine.Tests
                     scenario == "refused-approval" ? "denied" : null)); };
                 JsonNode Call(string tool, JsonObject args) => ExternalCall?.Invoke(tool, args) ?? McpServer.ResultBody(McpServer.CallTool(tool,
                     new ToolArguments(JsonSerializer.SerializeToElement(args))))!;
-                var results = new JsonArray(BehaviorParityCases.Project(Call(value=="single-type-group-missing" ? "ImportPlcType" : value=="single-table-group-missing" ? "ImportPlcTagTable" : value == "single-legacy-group-missing" ? "ImportPlcBlock" : value.StartsWith("compile-", StringComparison.Ordinal) ? "CompilePlcSoftware" : value == "native-read" ? "ListPlcTags"
-                    : value == "missing-directory" || value.StartsWith("batch-", StringComparison.Ordinal) && value != "batch-alias" ? "ImportPlcBlocksFromDirectory" : value == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases.Arguments(value))));
+                using var import = new BehaviorParityCases.ImportFixture(value);
+                var results =
+                    new JsonArray(BehaviorParityCases
+                        .Project(Call(value=="single-type-group-missing" ? "ImportPlcType" : value=="single-table-group-missing" ? "ImportPlcTagTable"
+                                : value == "single-legacy-group-missing" ? "ImportPlcBlock" : value.StartsWith("compile-", StringComparison.Ordinal)
+                                ? "CompilePlcSoftware" : value == "native-read" ? "ListPlcTags"
+                    : value == "missing-directory" || value.StartsWith("batch-", StringComparison.Ordinal) && value != "batch-alias"
+                        ? "ImportPlcBlocksFromDirectory" : value == "missing-file" ? "ImportPlcExternalSource" : "CreatePlcTag", BehaviorParityCases
+                        .Arguments(value, import))));
                 if (value.StartsWith("blocked-export", StringComparison.Ordinal) || value == "typed-export-refusal")
                 {
                     scenario = "followup";

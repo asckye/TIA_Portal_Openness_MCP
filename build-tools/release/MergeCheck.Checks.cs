@@ -55,7 +55,7 @@ internal static partial class MergeCheck
         }
     }
 
-    private static void AddWorkerChecks(Plan plan, string[] changes, int parallelism, string dotnet, string python, string api, string output,
+    private static void AddWorkerChecks(Plan plan, string[] changes, bool all, int parallelism, string dotnet, string python, string api, string output,
         string? transportFallback)
     {
         bool transport = plan.Wide || changes.Any(path =>
@@ -71,7 +71,15 @@ internal static partial class MergeCheck
                 or "scripts/checks/Test-CampaignInputs.py" or CampaignProgram
                 or "build-tools/release/CatalogGenerator.cs" or "build-tools/release/CatalogData.cs"
                 or "build-tools/release/ToolUsageGenerator.cs" or "build-tools/release/ToolCountGenerator.cs");
-        if (!transport && !worker) return;
+        bool approval = all || changes.Any(path =>
+            new[] { "src/FoundationHost", "src/ToolPipeline", "src/WorkerChannel", "src/PlcWorker", "src/Adapters",
+                "src/Adapters.Contracts", "src/Shared" }.Any(dir => Under(path, dir))
+            || (Under(path, "src") || Under(path, "build-tools")) && path.Contains("Approval", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("build-tools/release/Prepare", StringComparison.Ordinal)
+            || path.StartsWith("build-tools/release/Bundle", StringComparison.Ordinal)
+            || path is "build-tools/release/PlcReleaseChecks.cs" or "build-tools/release/ReleaseCommands.cs"
+                or "build-tools/release/PackageDependencies.cs");
+        if (!transport && !worker && !approval) return;
         var reason = plan.Wide ? "wide change" : string.Join(", ", changes);
         Reason(plan.Builds, "eight-release-table", reason);
         Reason(plan.Builds, SourceHostProject, reason);
@@ -79,6 +87,17 @@ internal static partial class MergeCheck
         var host = "src/FoundationHost/bin/Release/net10.0/TiaMcp.FoundationHost.exe";
         void Py(string name, string script, bool post, params string[] args) =>
             plan.Checks.Add(new(name, python, ["scripts/checks/" + script, .. args], PostSuite: post, Isolated: true));
+        if (approval)
+        {
+            foreach (var key in new[] { "20", "21" })
+            {
+                var name = "approval-v" + key + "-host";
+                var sdk = Path.Combine(api, ReleaseCommands.PlcWorkerApi(key).Directory);
+                Py(name, "Test-ReleaseApprovalGate.py", false, "--product", "engine", "--major", key, "--exe", host,
+                    "--portal-root", sdk, "--public-api", sdk, "--plc-worker", ReleaseCommands.ReleasePlcFixture(output, key),
+                    "--temp-root", Path.Combine(output, "checks", name, "temp"), "--output", Path.Combine(output, name));
+            }
+        }
         if (transport)
         {
             Reason(plan.Builds, TransportFixtureProject, reason);
