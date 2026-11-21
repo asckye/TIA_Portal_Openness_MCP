@@ -16,6 +16,19 @@ using ResponseGuard = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseGu
 [Collection(BundleSelectionCollection.Name)]
 public sealed class CallTimingTests
 {
+    [Theory, InlineData(false), InlineData(true)]
+    public void Previous_owner_result_identifies_the_available_timing(bool retained)
+    {
+        var unsettled = new Engine.UnsettledCalls();
+        if (retained)
+            unsettled.ImportPreviousOwner(new[] { new Engine.UnsettledCall("previous", "fixture", null, DateTimeOffset.UtcNow) { OriginalElapsedMs = 42 } });
+        else unsettled.ImportPreviousOwner(new[] { "previous" });
+        var body = new Engine.LateCalls().Read("21", "previous", unsettled)!.StructuredContent!;
+        Assert.True((long?)body["meta"]?["elapsedMs"] >= 0);
+        Assert.Equal(retained ? "original-call" : "result-lookup", (string?)body["data"]?["elapsedMsSource"]);
+        if (retained) Assert.Equal(42, (long?)body["meta"]?["elapsedMs"]);
+    }
+
     [Fact]
     public async Task Host_preview_reports_elapsed_time_and_preserves_the_domain_plan_hash()
     {

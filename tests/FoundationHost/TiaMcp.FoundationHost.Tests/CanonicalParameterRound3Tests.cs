@@ -18,6 +18,63 @@ public sealed class CanonicalParameterRound3Tests
     public static IEnumerable<object[]> Releases() => CanonicalParameterRound2Tests.Releases();
 
     [Theory, MemberData(nameof(Releases))]
+    public async Task Existing_station_aml_in_the_default_directory_uses_the_effective_alias(string release)
+    {
+        using var fixture = new Fixture(release);
+        Directory.CreateDirectory(fixture.Root);
+        File.WriteAllText(Path.Combine(fixture.Root, "PLC.aml"), """<CAEXFile FileName="PLC.aml" SchemaVersion="2.15"/>""");
+        var inner = new Capture("ExportDeviceAml", "exportPath", true, "devicePath");
+        inner.Reply = request => {
+            string directory = request.Arguments!["exportPath"].GetString()!;
+            Assert.True(File.Exists(Path.Combine(directory, "PLC.aml")));
+            return toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Reject(release, "ExportDeviceAml",
+                new Error("exportPath already contains the file.", new InvalidArgumentDetails("/exportPath", Array.Empty<string>(),
+                    expected: "a free exportPath")));
+        };
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, release, () => fixture.Root);
+        var result = await tool.InvokeAsync(Request(tool, new JsonObject { ["devicePath"] = "PLC" }));
+        var error = result.StructuredContent!["error"]!;
+        Assert.Equal("/exportDirectory", (string?)error["details"]?["parameter"]);
+        Assert.Equal("a free exportDirectory", (string?)error["details"]?["expected"]);
+        Assert.Equal("exportDirectory already contains the file.", (string?)error["message"]);
+
+        inner.Reply = _ => toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Reject(release, "ExportDeviceAml",
+            new Error("Existing exportPath.", new PreconditionFailedDetails("output-exists", "/exportPath")));
+        var refused = await tool.InvokeAsync(Request(tool, new JsonObject { ["devicePath"] = "PLC" }));
+        Assert.Equal("/exportDirectory", (string?)refused.StructuredContent?["error"]?["details"]?["target"]);
+    }
+
+    [Theory]
+    [InlineData("ExportPlcBlockDocuments")]
+    [InlineData("ExportPlcBlocksDocuments")]
+    public async Task Omitted_document_export_target_is_a_new_child_of_the_session_directory(string name)
+    {
+        using var fixture = new Fixture("20");
+        Directory.CreateDirectory(fixture.Root);
+        var inner = new Capture(name, "exportPath", true);
+        var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(inner, "20", () => fixture.Root);
+        var result = await tool.InvokeAsync(Request(tool, new JsonObject()));
+        Assert.True((bool?)result.StructuredContent?["ok"], result.StructuredContent?.ToJsonString());
+        string child = Path.Combine(fixture.Root, name);
+        Assert.Equal(child, inner.Last!.Arguments!["exportPath"].GetString());
+        Assert.False(Directory.Exists(child));
+        string help = tool.ProtocolTool.InputSchema.GetProperty("properties").GetProperty("exportDirectory").GetProperty("description").GetString()!;
+        Assert.Contains(name, help);
+        Assert.Contains("new", help, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Only_defaulted_output_targets_offer_the_session_directory()
+    {
+        var optional = new Capture("PatchPlcBlockDocument", "outputPath", false);
+        var required = new Capture("BuildDeviceAmlDocument", "outputPath", true);
+        string Description(Capture source) => toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool.Describe(source.ProtocolTool)
+            .InputSchema.GetProperty("properties").GetProperty("exportFile").GetProperty("description").GetString()!;
+        Assert.DoesNotContain("Omit the target", Description(optional));
+        Assert.Contains("Omit the target", Description(required));
+    }
+
+    [Theory, MemberData(nameof(Releases))]
     public async Task Aml_preview_accepts_the_pending_default_but_rejects_a_missing_explicit_directory(string release)
     {
         using var fixture = new Fixture(release);
@@ -143,6 +200,7 @@ public sealed class CanonicalParameterRound3Tests
     private sealed class Capture : McpServerTool
     {
         internal CallToolRequestParams? Last;
+        internal Func<CallToolRequestParams, CallToolResult>? Reply;
         internal CancellationToken Cancellation;
         internal bool HeartbeatAvailable;
         internal int Calls;
@@ -159,6 +217,7 @@ public sealed class CanonicalParameterRound3Tests
             CancellationToken cancellationToken = default)
         {
             Last = request.Params; Cancellation = cancellationToken; Calls++;
+            if (Reply != null) return ValueTask.FromResult(Reply(Last!));
             using var heartbeat = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat.Begin(request);
             HeartbeatAvailable = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat.CaptureSender() != null;
             var body = JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { written = true }, null,

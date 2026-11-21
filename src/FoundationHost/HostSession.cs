@@ -216,7 +216,7 @@ internal sealed class HostSession : IHostSession
     {
         lock (sync)
         {
-            if (activeCalls > 0 || lane != null || givingWay) return "This clears when the active call returns.";
+            if (givingWay || activeCalls > 0 || lane != null) return "";
             if (operators > 0 || OperatorOwned) return "The Workbench participant or operator ownership keeps this holder protected.";
             if (disposed || hostStopping) return "The holder session is ending. Connect again after its connection has ended.";
             if (takeOver) return "The holder's session state changed during handover admission. Connect again when it is idle.";
@@ -233,7 +233,8 @@ internal sealed class HostSession : IHostSession
                 System.Globalization.DateTimeStyles.RoundtripKind, out var started) ? started : lastRequestUtc;
             return $"Session {SessionKey}, client {TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(clientName) ?? "unknown"}, "
                 + $"idle for {(clock.GetUtcNow() - lastRequestUtc).TotalSeconds:F0} seconds. "
-                + (activeCalls > 0 || lane != null || givingWay ? $"Call {running?["tool"]} (request {running?["requestId"]}, "
+                + (givingWay ? "The session is handing over its TIA connection. " : activeCalls > 0 || lane != null || running != null
+                        ? $"Call {running?["tool"]} (request {running?["requestId"]}, "
                     + $"started {since:O}, elapsed {(clock.GetUtcNow() - since).TotalSeconds:F0} seconds) is active, including any approval wait. "
                     + "This clears when that call returns. "
                     + (running == null ? "" : LateCalls.RunningDiagnostic(running)) : "")

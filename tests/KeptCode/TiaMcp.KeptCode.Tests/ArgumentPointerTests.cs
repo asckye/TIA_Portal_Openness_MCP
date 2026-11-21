@@ -35,6 +35,16 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
+        public void Short_field_identity_preserves_a_larger_diagnostic_word()
+        {
+            var args = JsonSerializer.Deserialize<JsonElement>("{}");
+            var error = new Error("Invalid grid configuration.", new InvalidArgumentDetails("id", Array.Empty<string>()));
+            Assert.Equal(error.Message, Schema.Restrict(error, args).Message);
+            var masked = new Error("Invalid field token=••••.", new InvalidArgumentDetails("token=sk-live", Array.Empty<string>()));
+            Assert.DoesNotContain("token=", Schema.Restrict(masked, args).Message);
+        }
+
+        [Fact]
         public void Data_words_are_preserved_and_disclosed_keys_use_whole_safe_values()
         {
             var data = new System.Text.Json.Nodes.JsonObject {
@@ -110,6 +120,21 @@ namespace TiaMcp.Engine.Tests
                 var error = Schema.Validate(JsonSerializer.Deserialize<JsonElement>(json), "arguments")!;
                 Assert.DoesNotContain(key, V4Json.Serialize(error), StringComparison.Ordinal);
             }
+        }
+
+        [Fact]
+        public void A_missing_declared_test_case_title_precedes_the_private_parent_pointer()
+        {
+            var testCase = InputSchema.Object(new Dictionary<string, InputSchema> { ["title"] = InputSchema.String() }, new[] { "title" });
+            var schema = InputSchema.Object(new Dictionary<string, InputSchema> { ["testCase"] = testCase });
+            var args = JsonSerializer.Deserialize<JsonElement>("""{"testCase":{"private-caller-key":"a"}}""");
+            var error = schema.Validate(args, "arguments")!;
+            var details = Assert.IsType<InvalidArgumentDetails>(error.Details);
+            Assert.Equal("/testCase/title", details.Parameter);
+            Assert.Equal(new[] { "/testCase/title", "/testCase" }, details.Parameters);
+            Assert.DoesNotContain("private-caller-key", V4Json.Serialize(error));
+            var typed = new InputContract<JsonElement>(testCase, new InputBudget()).Read(args.GetProperty("testCase"), "testCase");
+            Assert.Equal(details.Parameters, Assert.IsType<InvalidArgumentDetails>(typed.Error!.Details).Parameters);
         }
 
         [Fact]

@@ -32,6 +32,17 @@ public sealed class EditorTargetTests
             new JsonObject { ["action"] = action, ["dryRun"] = false }, true, true, true));
     }
 
+    [Theory, InlineData(true), InlineData(false)]
+    public async Task V20_omitted_kind_gives_device_view_guidance_before_dispatch(bool dryRun)
+    {
+        using var fixture = new Fixture("20");
+        var body = await fixture.Call("ShowObjectInEditor", new JsonObject { ["devicePath"] = new JsonArray("Station"), ["dryRun"] = dryRun });
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.Contains("view=device|network|topology", (string?)body["error"]?["message"], StringComparison.Ordinal);
+        Assert.Equal(0, fixture.Approvals);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
     private static readonly string[] Releases = { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" };
     public static IEnumerable<object[]> Targets() => from release in Releases
         from target in new[] { "plcWatchTable", "plcForceTable", "device", "network", "topology", "" }

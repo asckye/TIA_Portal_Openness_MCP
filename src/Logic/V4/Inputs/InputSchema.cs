@@ -132,14 +132,17 @@ namespace TiaMcp.Logic.V4.Inputs
             return groups.Count == 0 ? "Input does not satisfy the declared contract." : string.Join(" ", groups);
         }
 
-        public Error? Validate(JsonElement value, string parameter)
+        public Error? Validate(JsonElement value, string parameter) =>
+            Validate(value, parameter, new InputBudget(), reportFields: parameter == "arguments");
+
+        internal Error? Validate(JsonElement value, string parameter, InputBudget budget, bool reportFields = false)
         {
-            string pointer = parameter == "arguments" ? "" : parameter;
-            try { new InputBudget().Check(value); Check(value); return null; }
+            string pointer = reportFields ? "" : InvalidArgumentDetails.Pointer(parameter);
+            try { budget.Check(value); Check(Json, value, Json, pointer); return null; }
             catch (InputRejectionException ex)
             {
-                var error = ex.ToError(ex.IsLimit ? parameter : pointer, Expected);
-                if (parameter == "arguments" && value.ValueKind == JsonValueKind.Object
+                var error = ex.ToError(ex.IsLimit ? parameter : ex.HasLocation ? "" : pointer, Expected);
+                if (reportFields && value.ValueKind == JsonValueKind.Object
                     && error.Details is InvalidArgumentDetails details)
                 {
                     if (ex.HasLocation) details.WholeArgumentValidation = true;
@@ -234,7 +237,14 @@ namespace TiaMcp.Logic.V4.Inputs
 
         private static string ProtectMessage(string message, string name, bool fieldIdentity = false)
         {
-            if (fieldIdentity && message.IndexOf(name, StringComparison.Ordinal) >= 0) return "Input does not satisfy the declared contract.";
+            if (fieldIdentity)
+            {
+                string? masked = NativeFailureDiagnostics.Text(name);
+                string pattern = Regex.Escape(name);
+                if (masked != name && !string.IsNullOrEmpty(masked)) pattern += "|" + Regex.Escape(masked!);
+                if (Regex.IsMatch(message, @"(?<!\w)(?:" + pattern + @")(?!\w)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)))
+                    return "Input does not satisfy the declared contract.";
+            }
             const string fieldList = "Missing or invalid target field(s): ";
             bool listed = message.StartsWith(fieldList, StringComparison.Ordinal)
                 && message.Substring(fieldList.Length).TrimEnd('.').Split(',').Any(item => item.Trim() == name);
@@ -507,11 +517,17 @@ namespace TiaMcp.Logic.V4.Inputs
                 }
                 if (schema.TryGetProperty("required", out var required))
                     foreach (var key in required.EnumerateArray())
-                        if (!names.Contains(key.GetString()!))
-                            failures.Add(new InputRejectionException().At(
-                                disclose ? pointer + "/" + InvalidArgumentDetails.Segment(key.GetString()!) : pointer,
-                                declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(key.GetString()!, out var member)
-                                    ? ExpectedForm(member, root) : null));
+                    {
+                        string name = key.GetString()!;
+                        if (names.Contains(name)) continue;
+                        var missing = new InputRejectionException().At(disclose ? pointer + "/" + InvalidArgumentDetails.Segment(name) : pointer,
+                            declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(name, out var member) ? ExpectedForm(member, root) : null);
+                        // Keep the parent for case mistakes. Prefer a genuinely missing field over the private key collapsed to that parent.
+                        if (disclose && pointer.Length > 0 && failures.Count > 0 && failures[0].IsInvalidAt(pointer)
+                            && !names.Contains(name, StringComparer.OrdinalIgnoreCase))
+                            failures.Insert(0, missing);
+                        else failures.Add(missing);
+                    }
                 if (failures.Count > 0) throw InputRejectionException.Combine(failures);
             }
         }

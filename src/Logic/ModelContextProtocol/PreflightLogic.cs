@@ -51,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
             public bool DryRunEffective => DryRunSupported && (DryRunGiven ?? DryRunDefault);
         }
 
-        public static Report Analyze(IReadOnlyList<ParameterSpec> specs, JsonObject args) => Analyze(specs, args, discloseUnknownNames: true);
+        public static Report Analyze(IReadOnlyList<ParameterSpec> specs, JsonObject args) => Analyze(specs, args, discloseUnknownNames: false);
 
         public static Report Analyze(IReadOnlyList<ParameterSpec> specs, JsonObject args, bool discloseUnknownNames)
         {
@@ -230,7 +230,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>What a caller must keep in mind for the tool's operation class, domain and read-only hint.</summary>
         public static IReadOnlyList<string> Precautions(
-            string operation, string domain, Report report, bool readOnly, IReadOnlyList<ParameterSpec> specs)
+            string operation, string domain, Report report, bool readOnly, IReadOnlyList<ParameterSpec> specs, string? tool = null)
         {
             var list = new List<string>();
             var op = (operation ?? "").ToUpperInvariant();
@@ -243,6 +243,11 @@ namespace TiaMcpServer.ModelContextProtocol
                         "confirmation.");
                     break;
                 case "WRITE":
+                    if (tool is "ManagePlcCertificate" or "ManageSyslogServers")
+                    {
+                        list.Add("Compile the hardware configuration with CompileDevice before downloading it.");
+                        break;
+                    }
                     list.Add(WriteCompileTools.TryGetValue(domain, out var compileTool)
                         ? "Modifies the open project offline; nothing is saved, compiled or downloaded by itself - "
                             + compileTool + " then SaveProject afterwards."

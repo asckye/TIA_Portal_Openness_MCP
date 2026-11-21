@@ -16,7 +16,9 @@ public sealed partial class PlcFoundationEngine
     internal Siemens.Engineering.Project? SecurityProject => project;
 #endif
     internal T SecurityHardwareService<T>(HardwareObject owner, string parameter) where T : class, IEngineeringService
-        => HardwareRequireHardwareService<T>(owner, parameter);
+        => HardwareServiceProvider(owner).GetService<T>()
+            ?? throw StepFailureStatus.UnsupportedByTarget(Hardware.HardwareServicesPolicy.DeclaredParameter(parameter)
+                + " does not expose " + typeof(T).Name + " (service is null for this hardware object).");
     internal object? SecurityFindOnFresh(Func<object> composition, string name, Dictionary<string, object?> meta, string phase)
         => HardwareFindOnFresh(composition, name, meta, phase);
     internal int? SecurityCountOnFresh(Func<object> composition, Dictionary<string, object?> meta, string key)

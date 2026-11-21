@@ -137,7 +137,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data, new Error("Worker restart preconditions are not satisfied.",
                     new PreconditionFailedDetails("worker-enabled-and-idle", null)), Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
             if (tool == "EnsureOpennessUserGroup" && success == false) knownFailure = true;
-            if (tool == "CheckProductUpdate" && success == false && data["releaseApiUrl"] == null)
+            if (tool == "CheckProductUpdate" && success == false && evidence["releaseApiUrl"] == null)
                 return Result(tool, data,
                         new Error("The operation did not establish success.", new InvalidArgumentDetails("repository", Array.Empty<string>())),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);

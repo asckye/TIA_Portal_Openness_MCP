@@ -29,8 +29,19 @@ internal static class OptionalNativeOperations
     {
         string method = version == null ? "Create" : "CreateFrom";
         object argument = version ?? name;
-        return CreateSivarcContainer(meta, resolveCollection, () =>
-            PlcGroupOperations.Call(collection, method, new[] { argument.GetType() }, argument));
+        bool issued = false;
+        try
+        {
+            return CreateSivarcContainer(meta, resolveCollection, () => {
+                issued = true;
+                return PlcGroupOperations.Call(collection, method, new[] { argument.GetType() }, argument);
+            });
+        }
+        finally
+        {
+            if (issued && meta.TryGetValue("mayHaveChanged", out var changed) && changed is true)
+                EngineeringWriteJournal.Unrestored(collection.GetType().Name + "/" + method);
+        }
     }
 
     internal static object CreateSivarcContainer(IDictionary<string, object?> meta, Func<object> resolveCollection, Func<object> create)

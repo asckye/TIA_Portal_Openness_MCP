@@ -39,7 +39,7 @@ internal static class ProjectUmacDeletion
         meta["apiCallSuccess"] = true;
         bool Present()
         {
-            foreach (var item in fresh())
+            foreach (var item in HardwareGroupOperations.Items(fresh()).Cast<T>())
             {
                 try { if (string.Equals(readName(item), name, StringComparison.Ordinal)) return true; }
                 catch (Exception error) when (HmiReadPolicy.DisposedObjectOnly(error))
@@ -68,8 +68,9 @@ internal sealed class ProjectUsers
             => hardware is Device device ? device.GetService<T>() : hardware is DeviceItem item ? item.GetService<T>() : null;
         private UmacDevice RequireUmacDevice(string[] devicePathJson, string[] itemPathJson)
             => HardwareService<UmacDevice>(_session.ExactEngineeringHardware(devicePathJson, itemPathJson))
-               ?? throw new NotSupportedException("UmacDevice service unavailable on the selected hardware object. On the reference project it lives on the " +
-                   "Device (devicePathJson only, itemPathJson=[]), not on the CPU DeviceItem; address the Device or the DeviceItem that owns the UMAC " +
+               ?? throw StepFailureStatus
+                   .UnsupportedByTarget("UmacDevice service unavailable on the selected hardware object. On the reference project it lives on the " +
+                   "Device (devicePath only, itemPath=[]), not on the CPU DeviceItem; address the Device or the DeviceItem that owns the UMAC " +
                    "configuration.");
         public SecurityResult ReadProjectUserManagement(string category = "users", string name = "", string[] devicePathJson = null!, string[] itemPathJson =
                 null!, int offset = 0, int limit = 100)
@@ -97,7 +98,7 @@ internal sealed class ProjectUsers
 #if SECURITY_POLICY
                         items = new object[] {
                             _session.CurrentProject!.GetService<PasswordPolicyConfigurator>()
-                                ?? throw new NotSupportedException("PasswordPolicyConfigurator service unavailable on this project.")
+                                ?? throw StepFailureStatus.UnsupportedByTarget("PasswordPolicyConfigurator service unavailable on this project.")
                         }; break;
 #else
                         throw new NotSupportedException("PasswordPolicyConfigurator requires V18 or later.");

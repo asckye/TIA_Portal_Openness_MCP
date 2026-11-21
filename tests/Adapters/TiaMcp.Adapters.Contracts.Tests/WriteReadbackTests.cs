@@ -118,6 +118,22 @@ public sealed class WriteReadbackTests
         if (result == "fresh") Assert.Equal("Auditor", reply.Meta["after"]);
     }
 
+    [Fact]
+    public void Missing_access_level_service_identifies_the_selected_item()
+    {
+        var refusal = Assert.Throws<NotSupportedException>(() => SecurityRules.RequireAccessLevelProvider("setAccessLevel", false));
+        Assert.Equal("target", refusal.Data["unsupportedBy"]);
+        Assert.Equal("The selected device item does not provide PlcAccessLevelProvider.", refusal.Message);
+    }
+
+    [Fact]
+    public void Deletion_readback_uses_the_filtered_composition()
+    {
+        var meta = new Dictionary<string, object?>();
+        ProjectUmacDeletion.Run(meta, "role", "Auditor", () => { }, () => new string?[] { null, "Other" }, name => name!.ToString());
+        Assert.Equal(true, meta["verifiedAbsent"]);
+    }
+
     [Theory]
     [InlineData("absent"), InlineData("disposed-entry"), InlineData("disposed-then-present"), InlineData("present")]
     [InlineData("refresh-failed"), InlineData("name-unreadable"), InlineData("delete-failed"), InlineData("connection-lost")]

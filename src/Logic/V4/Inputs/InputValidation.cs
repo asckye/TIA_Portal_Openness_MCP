@@ -122,8 +122,7 @@ namespace TiaMcp.Logic.V4.Inputs
                     : Failure(presence, InputGuard.Invalid(argument, expected: schema.Expected));
             try
             {
-                Budget.Check(input);
-                schema.Check(input);
+                if (schema.Validate(input, argument, Budget) is { } invalid) return Failure(presence, invalid);
                 // Family aggregate budgets must run before constructors can reject
                 // them as ordinary argument errors. The shape is already checked.
                 validateInput?.Invoke(input);
@@ -175,6 +174,7 @@ namespace TiaMcp.Logic.V4.Inputs
             expected ??= form;
             return this;
         }
+        internal bool IsInvalidAt(string pointer) => !IsLimit && pointers?[0] == pointer;
         internal static InputRejectionException Combine(IReadOnlyList<InputRejectionException> errors)
         {
             var first = errors[0];

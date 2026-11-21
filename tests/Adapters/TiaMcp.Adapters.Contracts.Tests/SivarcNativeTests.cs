@@ -22,6 +22,35 @@ namespace TiaMcp.Adapters.Contracts.Tests
             }
         }
 
+        private sealed class CreatableFolders : List<RuleFolder>
+        {
+            public RuleFolder Create(string name)
+            {
+                var folder = new RuleFolder(name);
+                Add(folder);
+                return folder;
+            }
+        }
+
+        [Fact]
+        public void Later_observation_failure_keeps_the_completed_legacy_create_in_the_journal()
+        {
+            var folders = new CreatableFolders();
+            var reply = MutationEvidenceTests.RunStep("18", "ManageSivarcRuleContainer", meta => {
+                OptionalNativeOperations.CreateLegacySivarcContainer(meta, () => folders, folders, "New", null);
+                throw new InvalidOperationException("Could not read the created folder.");
+            });
+            Assert.Equal("New", Assert.Single(folders).Name);
+            Assert.Equal(true, reply.Meta["unrestoredWrite"]);
+        }
+
+        [Fact]
+        public void Unverified_legacy_create_retains_its_journal_cleanup()
+        {
+            var reply = ContainerRefusal(true, "added");
+            Assert.Equal(true, reply.Meta["unrestoredWrite"]);
+        }
+
         public static IEnumerable<object[]> ContainerCases()
         {
             foreach (bool legacy in new[] { true, false })

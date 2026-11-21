@@ -457,11 +457,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                     else if (operation == "CloseProject" && ((bool?)result?["Executed"] == true
                         || (bool?)result?["SecondaryProjectGone"] == true))
                     {
-                        if (!ForgetSecondaryIfHolderGone())
-                        {
-                            RequireSecondaryHolder();
-                            ClearSecondaryRecord();
-                        }
+                        ClearSecondaryRecord();
                     }
                 }
             }

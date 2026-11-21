@@ -44,29 +44,29 @@ namespace TiaMcpServer.Siemens
             {
                 if (action != "read") RequireName(name, "name");
                 else if (!string.IsNullOrEmpty(name)) RequireName(name, "name");
-                if (action == "create" || action == "update") RequireKeys(properties, SyslogServerProperties, "propertiesJson");
-                else if (properties.Count != 0) throw new ArgumentException("propertiesJson applies to create/update only.");
+                if (action == "create" || action == "update") RequireKeys(properties, SyslogServerProperties, "properties");
+                else if (properties.Count != 0) throw new ArgumentException("properties applies to create/update only.");
                 if (action == "update" && properties.Count == 0)
-                    throw new ArgumentException("update needs at least one property in propertiesJson (" + string.Join(" / ", SyslogServerProperties) + ").");
+                    throw new ArgumentException("update needs at least one property in properties (" + string.Join(" / ", SyslogServerProperties) + ").");
                 if (properties.TryGetPropertyValue("Port", out var port)
                         && (port is not JsonValue portValue || !portValue.TryGetValue<long>(out var p) || p < 1 || p > 65535))
                     throw new ArgumentException("Port must be an integer 1..65535.");
                 if (action == "assignModule" || action == "unassignModule") ProjectSecurityLogic.ValidateDevicePath(devicePathJson);
                 if (action == "delete") HardwareServicesLogic.RequireConfirmation(confirmDelete, "confirmDelete", dryRun);
                 if (!string.IsNullOrEmpty(serverAddress) || serverPort != 0)
-                    throw new ArgumentException("serverAddress/serverPort belong to scope=plc; use propertiesJson Address/Port for project syslog servers.");
+                    throw new ArgumentException("serverAddress/serverPort belong to scope=plc; use properties Address/Port for project syslog servers.");
             }
             else
             {
                 ProjectSecurityLogic.ValidateDevicePath(devicePathJson);
                 if (action == "update")
                 {
-                    if (properties.Count == 0) throw new ArgumentException("update needs EnableSystemLogging and/or TransportProtocol in propertiesJson.");
-                    RequireKeys(properties, SyslogManagerProperties, "propertiesJson");
+                    if (properties.Count == 0) throw new ArgumentException("update needs EnableSystemLogging and/or TransportProtocol in properties.");
+                    RequireKeys(properties, SyslogManagerProperties, "properties");
                     if (properties.TryGetPropertyValue("TransportProtocol", out var protocol))
                         RequireOneOf(protocol?.ToString() ?? "", SyslogTransportProtocols, "TransportProtocol");
                 }
-                else if (properties.Count != 0) throw new ArgumentException("propertiesJson applies to action=update only.");
+                else if (properties.Count != 0) throw new ArgumentException("properties applies to action=update only.");
                 if (action == "createServer" || action == "deleteServer") RequireName(serverAddress, "serverAddress", 255);
                 if (action == "createServer" && (serverPort < 1 || serverPort > 65535))
                     throw new ArgumentException("serverPort must be 1..65535 for createServer.");
@@ -153,6 +153,8 @@ namespace TiaMcpServer.Siemens
             }
             else
             {
+                if (action is "checkConsistency" or "synchronize")
+                    throw new ArgumentException(action + " requires kind=server.", nameof(action));
                 RequireOneOf(action, UmcMemberActions, "action");
                 request.Reads = action == "read"; request.Creates = action == "createOffline" || action == "importFromServer"; request.Deletes =
                     action == "delete";

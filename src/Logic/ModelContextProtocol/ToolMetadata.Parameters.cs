@@ -1345,7 +1345,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["ManageSinumerikArchive.password"] = new ParameterHint("\"\\u003Cpassword\\u003E\""),
             ["ManageSinumerikSafetyMode.devicePath"] = new ParameterHint("\"\\u003CdevicePath\\u003E\""),
             ["ManageSinumerikSafetyMode.action"] = new ParameterHint("\"read\"", "read", "set"),
-            ["ManageSinumerikSafetyMode.mode"] = new ParameterHint("\"OnlyHardware\"", "OnlyHardware", "HardwareAndAllProgramBlocks"),
+            ["ManageSinumerikSafetyMode.mode"] = new ParameterHint("\"NcSI\"", "None", "NcSI", "DbSI"),
             ["ManageSivarcBlockDefinition.softwarePath"] = new ParameterHint("\"PLC_1\""),
             ["ManageSivarcBlockDefinition.blockPath"] = new ParameterHint("\"Main\""),
             ["ManageSivarcBlockDefinition.kind"] = new ParameterHint("\"tagDefinition\"", "tagDefinition", "textDefinition", "tagMemberSettings", "commonParameters", "blockParameter"),

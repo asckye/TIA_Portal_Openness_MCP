@@ -130,8 +130,12 @@ internal static class SharedReleaseHost
             var data = ReleaseCatalogData.Releases[options.ReleaseKey];
             IReadOnlyList<McpServerTool>? roster = null;
             var (installation, installationSource) = ReadinessInstallation(options);
-            Func<System.Text.Json.Nodes.JsonObject> readiness = () => worker.Readiness(() => FoundationPassiveDiagnostics
-                .Readiness(options.ReleaseKey, installation, installationSource));
+            Func<System.Text.Json.Nodes.JsonObject> readiness = () =>
+            {
+                var report = worker.Readiness(() => FoundationPassiveDiagnostics.Readiness(options.ReleaseKey, installation, installationSource));
+                report["environment"]!["transport"] = options.Transport;
+                return report;
+            };
             var shared = LegacyHostToolRegistry.Create(worker, options.ReleaseKey, options.NativeEnabled, options.ApiDirectory,
                 options.ApiDirectorySource, readiness, () => roster!, data.ExampleProfile, hostPorts: false, presets: options.Presets);
             LocalStabilityTelemetry.StartupStage("session.registry.created");

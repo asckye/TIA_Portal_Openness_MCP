@@ -313,7 +313,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (string.IsNullOrWhiteSpace(offlineReleaseSuiteJsonPath) || !File.Exists(offlineReleaseSuiteJsonPath))
                     throw new FileNotFoundException("Offline release suite JSON report not found.", offlineReleaseSuiteJsonPath);
                 var root = JsonNode.Parse(File.ReadAllText(offlineReleaseSuiteJsonPath)) as JsonObject
-                    ?? throw new InvalidOperationException("Offline release suite JSON root must be an object.");
+                    ?? throw new McpException("Offline release suite JSON root must be an object.", null, McpErrorCode.InvalidParams);
+                if (root["mode"]?.ToString() != "tia-mcp-offline-release-validation-suite" || root["items"] is not JsonArray
+                    || root["ok"] is not JsonValue verdict || !verdict.TryGetValue<bool>(out _))
+                    throw new McpException("Expected an OfflineReleaseValidationSuite report.", null, McpErrorCode.InvalidParams);
                 var data = ReleaseDiagnosticReportBuilder.Build(root);
                 return new ResponseJsonReport
                 {

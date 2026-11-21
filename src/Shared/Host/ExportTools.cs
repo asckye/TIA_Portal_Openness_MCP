@@ -40,6 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var entry = ResponseExports.Get(exportId);
             if (entry == null) return Missing(tool, exportId);
             if (offset > entry.Length) return PlcExchangeContract.Reject(tool, InvalidInput("offset"), current: false);
+            int requested = limit;
             if (limit == 0) limit = ResolvedMaxResponseChars();
             limit = limit <= 0 ? ResponseExports.MaxSliceChars : Math.Min(limit, ResponseExports.MaxSliceChars);
             var slice = ResponseExports.SliceRetained(entry, offset, limit);
@@ -49,7 +50,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 page.Error != null ? Missing(tool, exportId) : PlcExchangeContract.Result(tool,
                     new JsonObject { ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text },
                     paging: new Paging(PagingMode.Offset, offset, limit, page.NextOffset, null, null,
-                        page.TotalLength, page.Eof, PagingUnit.Utf16)));
+                        page.TotalLength, page.Eof, PagingUnit.Utf16),
+                    pageLimit: requested > limit ? new Warning(WarningCode.PageLimitCapped, $"Requested {requested} UTF-16 code units. The limit is {limit}.",
+                        new Dictionary<string, JsonElement> { ["requested"] = JsonSerializer.SerializeToElement(requested),
+                            ["maximum"] = JsonSerializer.SerializeToElement(limit) }) : null));
         }
 
         [McpServerTool(Name = "ListExportHandles"),
@@ -384,7 +388,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult Reject(string tool, Error error, JsonObject? data = null, bool current = true, bool? writes = null)
             => Result(tool, data, error, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None, current: current, writes: writes);
         internal static CallToolResult Result(string tool, JsonObject? data, Error? error = null, Outcome? outcome = null,
-            Execution? execution = null, Completeness? completeness = null, Paging? paging = null, bool current = false, bool? writes = null)
+            Execution? execution = null, Completeness? completeness = null, Paging? paging = null, bool current = false, bool? writes = null,
+            Warning? pageLimit = null)
         {
             if (data != null && (writes.HasValue || data.ContainsKey("executionEvidence")))
             {
@@ -403,6 +408,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         : !write ? "read" : rejected ? "admission" : succeeded ? "completed" : "native-call" };
             }
             var warnings = new List<Warning>();
+            if (pageLimit != null) warnings.Add(pageLimit);
             if (data != null) warnings.AddRange(NativeResultState.Warnings(data, tool));
             if (current) warnings
                 .Add(new Warning(WarningCode.UnverifiedBehavior, BehaviorCapabilities.CurrentDisclosure,

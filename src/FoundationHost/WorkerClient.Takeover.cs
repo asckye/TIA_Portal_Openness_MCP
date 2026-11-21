@@ -65,7 +65,7 @@ internal sealed partial class WorkerClient
                 if ((holder.attachedProcessId ?? holder.attachingProcessId) != pid || holder.process is not { HasExited: false }) continue;
             if (holder.OwnerSession == null) continue;
             if (!holder.serial.Wait(0))
-                throw HeldBySession(holder, "This clears when the active call returns.");
+                throw HeldBySession(holder, "");
             bool reserved = false;
             try
             {
@@ -76,7 +76,7 @@ internal sealed partial class WorkerClient
                     running = holder.CallRunning || holder.UnansweredRequest;
                     owned = holder.ownsPortal;
                 }
-                if (running) throw HeldBySession(holder, "This clears when the active call returns.");
+                if (running) throw HeldBySession(holder, "");
                 if (owned)
                     throw HeldBySession(holder,
                         "This worker started its TIA instance. From the holding session, save and close the project. To discard changes to an owned "
@@ -123,7 +123,8 @@ internal sealed partial class WorkerClient
             }
             else if (!ResetDisconnectedWorker("takeover"))
                 throw RecoveryRefusal("tia-held-by-session", "The holder's worker could not stop. Its TIA attachment could not be handed over.");
-            caller.Unsettled.ImportPreviousOwner(Unsettled.Snapshot());
+            caller.Unsettled.ImportPreviousOwner(Unsettled.Snapshot().Select(call => call with {
+                OriginalElapsedMs = call.OriginalElapsedMs ?? LateResults.RetainedElapsedMs(call.RequestId) }).ToArray());
             lock (stateSync)
             {
                 takenOverBy = sessionKey;
@@ -156,7 +157,7 @@ internal sealed partial class WorkerClient
         {
             if (name != "DisconnectPortal" || takenOverBy == null || (bool?)result.StructuredContent?["ok"] != true) return result;
             var body = (JsonObject)result.StructuredContent!.DeepClone();
-            body["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "NATIVE_WARNING",
+            body["meta"]!["warnings"]!.AsArray().Add(new JsonObject { ["code"] = "SESSION_TAKEN_OVER",
                 ["message"] = $"This session had been taken over by session {takenOverBy}. Its local connection is disconnected.",
                 ["details"] = new JsonObject { ["condition"] = "taken-over", ["sessionKey"] = takenOverBy } });
             return new global::ModelContextProtocol.Protocol.CallToolResult { IsError = result.IsError, StructuredContent = body,

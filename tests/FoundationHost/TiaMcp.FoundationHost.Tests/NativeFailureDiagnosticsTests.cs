@@ -12,6 +12,170 @@ using Xunit;
 public sealed class NativeFailureDiagnosticsTests
 {
     [Fact]
+    public void Known_script_failure_and_unavailable_observations_scrub_private_text()
+    {
+        var meta = new JsonObject { ["after"] = new JsonObject { ["scriptCode"] = "private source" }, ["phase"] = "import" };
+        var error = new WorkerOperationException("Refused private source", -32603, "rejected-before-operation", new JsonObject {
+            ["Value"] = new JsonObject { ["Meta"] = meta } }.ToJsonString());
+        var result = FoundationV4Result.Failure("21", "SetUnifiedGlobalScript", "fixture", true, true, null, error);
+        Assert.DoesNotContain("private source", result.StructuredContent!.ToJsonString());
+        Assert.Equal("import", (string?)result.StructuredContent["data"]?["evidence"]?["phase"]);
+        var data = new JsonObject {
+            ["unavailable"] = new JsonArray("Read failed: password=private-value"),
+            ["item"] = new JsonObject { ["unavailable"] = "Read failed: password=private-value" } };
+        HostBehavior.SanitizeEvidence(data, evidence: false);
+        Assert.DoesNotContain("private-value", data.ToJsonString());
+    }
+
+    [Fact]
+    public void Diagnostic_and_journal_credential_names_agree()
+    {
+        var credential = typeof(NativeFailureDiagnostics).GetMethod("Credential", BindingFlags.NonPublic | BindingFlags.Static)!;
+        foreach (string name in new[] { "password", "oldPasswd", "PWD", "secret", "token", "api-key", "apiKeys", "credentials",
+            "Authorization", "sk", "releaseKey", "turkeyCount", "ordinary" })
+        {
+            bool diagnostic = (bool)credential.Invoke(null, new object[] { name })!;
+            var row = new JsonObject { [name] = "fixture-value" };
+            var journal = TiaOpenness.Shared.CallJournalPayload.Sanitize(row.ToJsonString());
+            Assert.Equal(diagnostic, !journal.Contains("fixture-value", StringComparison.Ordinal));
+        }
+    }
+
+    public static IEnumerable<object[]> CapabilityOrigins() =>
+        from tool in new[] { "ListDriveObjects", "ListDccCharts", "ManageDeviceUsers", "GetClassicHmiScreenTree", "GetDeviceAddressing" }
+        from target in new[] { true, false }
+        select new object[] { tool, target };
+
+    [Fact]
+    public async Task Missing_expected_software_keeps_the_native_not_found_condition()
+    {
+        using var fixture = new Fixture("17");
+        fixture.Worker.Failure = () => {
+            var cause = TiaMcp.Adapters.Contracts.AdapterPreconditionException.NotFound("PLC software not found.", "expectedPlcSoftwarePath");
+            var classified = WorkerFailurePolicy.Classify(cause, true, true);
+            return WorkerOperationException.FromChannelFailure(new TiaMcp.WorkerChannel.ChannelFailureException(
+                cause.Message, classified.Code, classified.Outcome, TiaMcp.PlcWorker.WorkerJson.Evidence(cause)));
+        };
+        var body = (await fixture.Call("ValidateAutomationContext", new JsonObject { ["expectedPlcSoftwarePath"] = "Absent" })).StructuredContent!;
+        Assert.Equal("NOT_FOUND", (string?)body["error"]?["code"]);
+    }
+
+    [Theory, InlineData(true), InlineData(false)]
+    public async Task Entered_read_only_reports_a_capability_when_the_object_refused(bool target)
+    {
+        using var fixture = new Fixture("21");
+        const string reason = "The service could not read this item.";
+        var cause = target ? TiaMcp.Adapters.Contracts.StepFailureStatus.UnsupportedByTarget(reason) : new NotSupportedException(reason);
+        var classification = WorkerFailurePolicy.Classify(cause, enteredOperation: true, readOnly: true);
+        Assert.Equal(TiaMcp.WorkerChannel.ChannelOutcome.ReadFailed, classification.Outcome);
+        WorkerOperationException Failure() => WorkerOperationException.FromChannelFailure(new TiaMcp.WorkerChannel.ChannelFailureException(
+            reason, classification.Code, classification.Outcome, TiaMcp.PlcWorker.WorkerJson.Evidence(cause)));
+        fixture.Worker.Failure = Failure;
+        var direct = FoundationV4Result.Failure("21", "ListDriveObjects", "fixture", true, false, null, Failure());
+        var registered = await fixture.Call("ListDriveObjects", new JsonObject { ["devicePath"] = new JsonArray("PLC"), ["itemPath"] = new JsonArray("CPU") });
+        foreach (var body in new[] { direct.StructuredContent!, registered.StructuredContent! })
+        {
+            Assert.Equal(target ? "UNSUPPORTED_CAPABILITY" : "NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Equal(target ? "rejected-before-operation" : "read-failed", (string?)body["meta"]?["outcome"]);
+            if (target) Assert.Contains("cannot run on the selected object", (string?)body["error"]?["message"]);
+        }
+    }
+
+    [Theory]
+    [InlineData("ListDriveObjects", "startdrive.ExecuteStartdrive")]
+    [InlineData("ListDccCharts", "startdrive.ExecuteDcc")]
+    [InlineData("ManageDeviceUsers", "project-security.ExecuteDeviceUsers")]
+    [InlineData("ManagePasswordPolicy", "project-security.ExecuteSecurityDeep")]
+    [InlineData("GetClassicHmiScreenTree", "hmi-classic.ExecuteHmi")]
+    public async Task Returned_step_refusal_uses_the_selected_object_in_the_registered_contract(string tool, string operation)
+    {
+        using var fixture = new Fixture("21");
+        var args = tool == "GetClassicHmiScreenTree" ? new JsonObject { ["softwarePath"] = "HMI" }
+            : new JsonObject { ["devicePath"] = new JsonArray("PLC"), ["itemPath"] = new JsonArray("CPU") };
+        if (tool == "ManageDeviceUsers") args["family"] = "webserver";
+        if (tool == "ManagePasswordPolicy") args = new JsonObject { ["target"] = "umac" };
+        foreach (bool explicitEffect in new[] { true, false })
+        {
+            var meta = new Dictionary<string, object?> {
+                ["status"] = "NotSupportedOnVersion", ["unsupportedBy"] = "target", ["operationSuccess"] = false,
+                ["apiCallSuccess"] = false, ["nativeMessage"] = "Fixture service is absent." };
+            if (explicitEffect) meta["mayHaveChanged"] = false;
+            object step = tool switch {
+                "GetClassicHmiScreenTree" => new TiaMcp.Adapters.Contracts.HmiReply {
+                    Value = new TiaMcp.Adapters.Contracts.HmiMessage { Message = "Step failed.", Meta = meta } },
+                "ManageDeviceUsers" or "ManagePasswordPolicy" => new TiaMcp.Adapters.Contracts.SecurityResult { Message = "Step failed.", Meta = meta },
+                _ => new TiaMcp.Adapters.Contracts.HardwareAddressingReply { Message = "Step failed.", Meta = meta }
+            };
+            var reply = JsonNode.Parse(TiaMcp.PlcWorker.WorkerJson.Serialize(step))!;
+            var calls = new List<(string Operation, JsonObject Arguments)>();
+            fixture.Worker.Handle = (actual, arguments) => {
+                calls.Add((actual, arguments));
+                return reply.DeepClone();
+            };
+            var body = (await fixture.Call(tool, args)).StructuredContent!;
+            var call = Assert.Single(calls);
+            Assert.Equal(operation, call.Operation);
+            WorkerProtocol.ValidateExchangeResult(call.Operation, call.Arguments, reply);
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+            Assert.Contains("cannot run on the selected object", (string?)body["error"]?["message"]);
+            Assert.Equal(tool, (string?)body["error"]?["details"]?["capability"]);
+        }
+    }
+
+    [Theory, MemberData(nameof(CapabilityOrigins))]
+    public async Task Worker_refusal_origin_survives_each_registered_contract(string tool, bool target)
+    {
+        using var fixture = new Fixture("21");
+        const string reason = "Fixture service unavailable.";
+        fixture.Worker.Failure = () => {
+            var cause = new TargetInvocationException(target ? TiaMcp.Adapters.Contracts.StepFailureStatus.UnsupportedByTarget(reason)
+                : new NotSupportedException(reason));
+            var classified = WorkerFailurePolicy.Classify(cause, enteredOperation: target, readOnly: true);
+            return WorkerOperationException.FromChannelFailure(new TiaMcp.WorkerChannel.ChannelFailureException(
+                reason, classified.Code, classified.Outcome, TiaMcp.PlcWorker.WorkerJson.Evidence(cause)));
+        };
+        var args = tool == "GetClassicHmiScreenTree" ? new JsonObject { ["softwarePath"] = "HMI" }
+            : new JsonObject { ["devicePath"] = new JsonArray("PLC") };
+        if (tool is "ListDriveObjects" or "ListDccCharts" or "ManageDeviceUsers") args["itemPath"] = new JsonArray("CPU");
+        if (tool == "ManageDeviceUsers") args["family"] = "webserver";
+        var body = (await fixture.Call(tool, args)).StructuredContent!;
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.Contains(target ? "cannot run on the selected object" : "is unavailable on TIA V21", (string?)body["error"]?["message"]);
+        Assert.Equal(tool, (string?)body["error"]?["details"]?["capability"]);
+    }
+
+    [Theory]
+    [InlineData("Openness returned: {\"password\":\"ExampleSecret\"}")]
+    [InlineData("Diagnostic: {\"outer\":{\"password\":\"ExampleSecret\"}}")]
+    [InlineData("Config: \"apiKey\" = \"ExampleSecret\"")]
+    [InlineData("Config: \"API Key\" = \"ExampleSecret\"")]
+    [InlineData("\uFEFF{\"password\":\"ExampleSecret\"}")]
+    [InlineData("Reason ExampleSecret\nConfig: \"apiKey\" = \"ExampleSecret\"")]
+    public void Quoted_native_credentials_are_removed_before_cutting_lines(string message)
+    {
+        var text = NativeFailureDiagnostics.Text(message);
+        Assert.DoesNotContain("ExampleSecret", text);
+        Assert.Contains("••••", text);
+    }
+
+    [Fact]
+    public void Later_reply_without_a_native_diagnosis_keeps_the_earlier_cause()
+    {
+        var first = new JsonObject { ["Failure"] = new JsonObject { ["Message"] = "Native read refused." } };
+        var later = new JsonObject { ["Meta"] = new JsonObject { ["Probe"] = new JsonObject { ["nativeMessage"] = "Recovered probe." } } };
+        var retained = FoundationV4Result.NativeDiagnostics(later, FoundationV4Result.NativeDiagnostics(first));
+        Assert.Equal("Native read refused.", (string?)retained?["nativeMessage"]);
+    }
+
+    [Fact]
+    public void Duplicate_nested_evidence_produces_a_masked_error()
+    {
+        var evidence = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>("""{"nested":{"a":"private","a":"again"}}""")!;
+        var details = new NativeOperationFailedDetails(null, "Read failed.", evidence);
+        Assert.Contains("••••", details.Evidence.Values.Single().GetString());
+    }
+
+    [Fact]
     public void Missing_reflection_collection_retains_the_worker_reason_and_parameter()
     {
         using var fixture = new Fixture("21");
@@ -502,8 +666,12 @@ public sealed class NativeFailureDiagnosticsTests
                     Catalog = catalog, Invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, contextWorker, lifetime) });
             var tools = new List<McpServerTool>();
             foreach (var entry in new[] {
+                (Owner: typeof(Host.StartdriveTools), Method: "ReadDriveObjects", Name: "ListDriveObjects"),
+                (Owner: typeof(Host.DccTools), Method: "ReadDccCharts", Name: "ListDccCharts"),
+                (Owner: typeof(Host.ClassicHmiFoldersTools), Method: "GetClassicHmiScreenTree", Name: "GetClassicHmiScreenTree"),
                 (Owner: typeof(Host.AddressesTools), Method: "GetDeviceAddressingV4", Name: "GetDeviceAddressing"),
                 (Owner: typeof(Host.HardwareSecurityTools), Method: "ManageDeviceUsers", Name: "ManageDeviceUsers"),
+                (Owner: typeof(Host.ProjectLifecycleDeviceTools), Method: "ValidateAutomationContextV4", Name: "ValidateAutomationContext"),
                 (Owner: typeof(Host.SecurityDeepTools), Method: "ManagePasswordPolicy", Name: "ManagePasswordPolicy"),
                 (Owner: typeof(Host.ProjectLifecycleProjectTools), Method: "BuildProjectScaffoldV4", Name: "BuildProjectScaffold") })
             {

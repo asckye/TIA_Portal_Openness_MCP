@@ -40,7 +40,7 @@ namespace TiaMcp.Adapters.Native.Security
                 var item = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem
                     ?? throw new ArgumentException("Exact CPU DeviceItem path required.");
                 var manager = item.GetService<WatchAndForceTableAccessManager>()
-                    ?? throw new NotSupportedException("WatchAndForceTableAccessManager unavailable on this DeviceItem.");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("WatchAndForceTableAccessManager unavailable on this DeviceItem.");
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["watchTableRules"] = new HmiArray(manager.WatchtableAccessRules.Select(r => (object?)ReadAccessRule(r, "WatchTable")).ToArray());
                 meta["forceTableRules"] = new HmiArray(manager.ForcetableAccessRules.Select(r => (object?)ReadAccessRule(r, "ForceTable")).ToArray());
@@ -180,11 +180,9 @@ namespace TiaMcp.Adapters.Native.Security
                 meta["before"] = ReadProtectionState(accessProvider, secretProvider, accessControl);
                 if (act == "read") return "PLC protection read (access level, master secret state, access control); no modification.";
 
-                if (PlcProtectionRules.LevelActions.Contains(act) && accessProvider == null)
-                    throw new NotSupportedException("PlcAccessLevelProvider is not available on this device item (not an S7-1200/1500 CPU?).");
+                SecurityRules.RequireAccessLevelProvider(act, accessProvider != null);
                 if (PlcProtectionRules.MasterSecretActions.Contains(act) && secretProvider == null)
-                    throw new NotSupportedException("PlcMasterSecretConfigurator is not available on this device item (needs an S7-1500 FW >= 2.9 / S7-1200 " +
-                        "FW >= 4.5 CPU).");
+                    throw StepFailureStatus.UnsupportedByTarget("The selected device item does not provide PlcMasterSecretConfigurator.");
                 if (act == "setAccessPassword" || act == "resetAccessPassword")
                 {
                     var current = ((HmiObject)meta["before"]!)["accessLevel"]?.ToString() ?? "";

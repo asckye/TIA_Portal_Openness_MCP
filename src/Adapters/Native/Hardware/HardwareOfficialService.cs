@@ -17,10 +17,11 @@ namespace TiaMcp.Adapters.Hardware
                 .FirstOrDefault(t=>t!=null);
             if(type==null) {
                 try { type=Assembly.Load(OpennessAssemblyNames.Sibling(typeof(IEngineeringObject).Assembly.GetName(), assemblyName)).GetType(typeName); }
-                catch(FileNotFoundException ex) { throw new NotSupportedException("Official optional component is not installed/resolvable: "+assemblyName,ex);
+                catch(FileNotFoundException) {
+                    throw StepFailureStatus.UnsupportedByTarget("Official optional component is not installed/resolvable: "+assemblyName);
                 }
                 catch(FileLoadException ex) {
-                    throw new NotSupportedException("Official optional component could not be loaded: " + assemblyName + ". " + ex.Message, ex);
+                    throw StepFailureStatus.UnsupportedByTarget("Official optional component could not be loaded: " + assemblyName + ". " + ex.Message);
                 }
             }
             if(type==null || !typeof(IEngineeringService).IsAssignableFrom(type))

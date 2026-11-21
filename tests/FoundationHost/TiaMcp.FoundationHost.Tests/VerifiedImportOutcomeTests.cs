@@ -21,6 +21,15 @@ public sealed class VerifiedImportOutcomeTests
     public static IEnumerable<object[]> Releases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(key => new object[] { key });
 
+    [Fact]
+    public void Only_discard_close_plans_depend_on_the_owning_process()
+    {
+        string file = Path.GetFullPath("Fixture.ap21");
+        string Hash(bool discard, int process) => TiaMcp.Adapters.MutationIdentityPolicy.ClosePlanHash(file, true, discard, process);
+        Assert.NotEqual(Hash(true, 41), Hash(true, 42));
+        Assert.Equal(Hash(false, 41), Hash(false, 42));
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void Stale_preview_survives_step_dispatch_recovery_and_host_mapping(string release)
     {

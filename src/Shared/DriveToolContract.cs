@@ -107,11 +107,16 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
             else if (!issued && status == "HmiReadSessionBlocked")
             { outcome = writes ? Outcome.Unknown : Outcome.ReadFailed; error = HostBehavior.UnavailableCall(writes); }
-            else if (!issued && (status == "NotFound" || status == "NotSupportedOnVersion" || status == "InvalidParams" || status == "InvalidState"))
+            else if (!issued && status == "NotSupportedOnVersion")
+            {
+                outcome = Outcome.RejectedBeforeOperation;
+                error = UnsupportedCapabilityDetails.ErrorFor(HardwareContract.ReleaseKey, tool, null,
+                    HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) ?? nativeMessage, (string?)evidence["unsupportedBy"]);
+            }
+            else if (!issued && (status == "NotFound" || status == "InvalidParams" || status == "InvalidState"))
             {
                 outcome = Outcome.RejectedBeforeOperation;
                 ErrorDetails details = status == "NotFound" ? McpServer.MissingTargetDetails(tool, evidence: evidence)
-                    : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null)
                     : status == "InvalidParams" ? McpServer.ArgumentDetails(tool, null, evidence)
                     : new PreconditionFailedDetails("option-package-prerequisites", null);
                 error = new Error(nativeMessage ?? "The option-package request was rejected before execution.", details);

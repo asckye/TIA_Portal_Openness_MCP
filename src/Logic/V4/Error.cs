@@ -6,6 +6,11 @@ using System;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
+#if TIA_APPROVAL_PRIVATE_JOURNAL
+using JournalPayload = TiaOpenness.Shared.ApprovalJournalPayload;
+#else
+using JournalPayload = TiaOpenness.Shared.CallJournalPayload;
+#endif
 
 namespace TiaMcp.Logic.V4
 {
@@ -85,13 +90,7 @@ namespace TiaMcp.Logic.V4
             public void Dispose() => Current.Value = previous;
         }
 
-        private static bool Credential(string name)
-        {
-            name = new string(name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
-            return name != "releasekey" && (name.Contains("password") || name.Contains("passwd") || name.Contains("secret")
-                || name.Contains("token") || name.EndsWith("key", StringComparison.Ordinal) || name.EndsWith("keys", StringComparison.Ordinal)
-                || name.Contains("credential") || name.Contains("authorization") || name == "pwd" || name == "sk");
-        }
+        private static bool Credential(string name) => JournalPayload.Sensitive(name);
 
         private static void Collect(JsonElement value, HashSet<string> secrets, bool credential)
         {
@@ -186,6 +185,31 @@ namespace TiaMcp.Logic.V4
             return prefix;
         }
 
+        private static readonly Regex QuotedCredentialValue = new Regex(@"\G(?:""(?:\\.|[^""\\])*""|'(?:\\.|[^'\\])*'|[^\s,;}\]""'{\[]+)",
+            RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+
+        private static bool CollectQuotedCredentials(string text, HashSet<string> secrets)
+        {
+            const string namePattern = @"(?<q>[""'])(?<name>[\w .-]+)\k<q>(?=\s*[:=])";
+            foreach (Match pair in Regex.Matches(text, namePattern, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)))
+            {
+                string name = pair.Groups["name"].Value;
+                if (!Credential(name)) continue;
+                int start = JournalPayload.PairValueStart(text, pair.Index + pair.Length);
+                var value = QuotedCredentialValue.Match(text, start);
+                if (!value.Success) return false;
+                string raw = value.Value;
+                string? secret = raw[0] == '"' ? JsonSerializer.Deserialize<string>(raw)
+                    : raw[0] == '\'' ? raw.Substring(1, raw.Length - 2) : PolicyScalar(name, raw) ? null : raw;
+                if (!string.IsNullOrEmpty(secret) && secret != "••••")
+                {
+                    secrets.Add(secret!);
+                    if (raw[0] == '"') secrets.Add(raw.Substring(1, raw.Length - 2));
+                }
+            }
+            return true;
+        }
+
         public static string? Text(string? text) => Text(text, 0, Array.Empty<string>());
 
         private static string? Text(string? text, int depth, IEnumerable<string> collected)
@@ -195,6 +219,7 @@ namespace TiaMcp.Logic.V4
             {
                 var secrets = new HashSet<string>(collected, StringComparer.Ordinal);
                 if (Current.Value is { } scope) secrets.UnionWith(scope.Secrets);
+                text = text.TrimStart('\uFEFF');
                 var jsonPrefix = ExceptionPrefix(text);
                 if (jsonPrefix.Success)
                 {
@@ -215,6 +240,7 @@ namespace TiaMcp.Logic.V4
                 }
                 text = Regex.Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", "••••",
                     RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                if (!CollectQuotedCredentials(text, secrets)) return "••••";
                 text = ReplaceSecrets(text, secrets);
                 int end = text.IndexOfAny(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' });
                 if (end >= 0) text = text.Substring(0, end);
@@ -251,7 +277,7 @@ namespace TiaMcp.Logic.V4
                 int count = char.IsHighSurrogate(text[4079]) ? 4079 : 4080;
                 return text.Substring(0, count) + "… [truncated]";
             }
-            catch (Exception error) when (error is RegexMatchTimeoutException || error is ArgumentException)
+            catch (Exception error) when (error is RegexMatchTimeoutException || error is ArgumentException || error is JsonException)
             {
                 /* swallow(privacy): retain a value-free native reason when parsing fails or text sanitization times out */
                 return "Native operation failed.";
@@ -278,11 +304,19 @@ namespace TiaMcp.Logic.V4
 
         internal static JsonElement Evidence(JsonElement value)
         {
-            var node = JsonNode.Parse(value.GetRawText());
-            var secrets = new HashSet<string>(StringComparer.Ordinal);
-            Collect(value, secrets, false);
-            Scrub(node, 0, secrets);
-            return JsonSerializer.SerializeToElement(node);
+            try
+            {
+                var node = JsonNode.Parse(value.GetRawText());
+                var secrets = new HashSet<string>(StringComparer.Ordinal);
+                Collect(value, secrets, false);
+                Scrub(node, 0, secrets);
+                return JsonSerializer.SerializeToElement(node);
+            }
+            catch (Exception error) when (error is JsonException || error is ArgumentException)
+            {
+                /* swallow(privacy): ambiguous or malformed evidence cannot be scrubbed structurally */
+                return JsonSerializer.SerializeToElement(new { redacted = "••••" });
+            }
         }
 
         private static void Scrub(JsonNode? node, int depth, IEnumerable<string> secrets)

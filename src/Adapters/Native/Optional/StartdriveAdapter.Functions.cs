@@ -49,7 +49,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var dfi = drive.GetService<DriveFunctionInterface>()
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveFunctionInterface not provided by this drive object.");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("DriveFunctionInterface not provided by this drive object.");
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["dryRun"] = dryRun;
                 meta["mayHaveChanged"] = false;
                 meta["before"] = FunctionInterfaceRow(dfi);
@@ -57,7 +57,7 @@ namespace TiaMcp.Adapters.Native.Optional
                     return "Drive function interface read (drive object type handler, activation, function-in-use / commissioning / safety / hardware " +
                     "projection availability); no modification.";
                 T Need<T>(T? value, string what) where T : class => value
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", what + " is not provided by this drive object.");
+                    ?? throw StepFailureStatus.UnsupportedByTarget(what + " is not provided by this drive object.");
                 HardwareProjection Projection() => Need(dfi.HardwareProjection, "HardwareProjection (G120: needs the Power Module; S120: offline only)");
                 if (action == "readMotorConfiguration") {
                     meta["dataSet"] = r.DataSet; meta["motorConfiguration"] =
@@ -176,7 +176,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 global::Siemens.Engineering.MC.Drives.Security security = drive.Security
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "Security is not provided by this drive object (SINAMICS FW V6.1+).");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("Security is not provided by this drive object (SINAMICS FW V6.1+).");
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["dryRun"] = dryRun;
                 meta["mayHaveChanged"] = false;
                 Safe(meta, "umacConfigurationAvailable", () => security.UmacConfiguration != null);
@@ -188,14 +188,14 @@ namespace TiaMcp.Adapters.Native.Optional
                 if (action == "activateUmac" || action == "deactivateUmac")
                 {
                     UmacConfiguration umac = security.UmacConfiguration
-                        ?? throw new PlcSoftwareException("NotSupportedOnVersion", "UmacConfiguration is not provided by this drive object.");
+                        ?? throw StepFailureStatus.UnsupportedByTarget("UmacConfiguration is not provided by this drive object.");
                     meta["nativeSignature"] = "UmacConfiguration." + (action == "activateUmac" ? "Activate()" : "Deactivate()"); result =
                         action == "activateUmac" ? umac.Activate() : umac.Deactivate();
                 }
                 else
                 {
                     DriveDataEncryption dde = security.DriveDataEncryption
-                        ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveDataEncryption is not provided by this drive object.");
+                        ?? throw StepFailureStatus.UnsupportedByTarget("DriveDataEncryption is not provided by this drive object.");
                     using var secure = EngineeringCredentialRules.ToSecureString(password);
                     meta["nativeSignature"] = "DriveDataEncryption." + (action == "activateEncryption" ? "Activate(SecureString)" : "Deactivate(SecureString)");
                     result = action == "activateEncryption" ? dde.Activate(secure) : dde.Deactivate(secure);
@@ -215,7 +215,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 if (Logic.IsPortalScopedExtensionAction(action))
                 {
                     var provider = (_session.CurrentPortal as IEngineeringServiceProvider)?.GetService<TechnologyExtensionInstallationProvider>()
-                        ?? throw new PlcSoftwareException("NotSupportedOnVersion",
+                        ?? throw StepFailureStatus.UnsupportedByTarget(
                             "TechnologyExtensionInstallationProvider unavailable on this TIA Portal (Startdrive not installed).");
                     HmiArray Packages() =>
                         new HmiArray(EngineeringGroupOperations.Items(provider.TechnologyExtensionPackages).Cast<TechnologyExtensionPackage>()
@@ -254,7 +254,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 using var access = write ? _session.AcquireHmiEditAccess() : null;
                 var drive = _session.ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var container = drive.GetService<TechnologyExtensionContainer>()
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "TechnologyExtensionContainer not provided by this drive object.");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("TechnologyExtensionContainer not provided by this drive object.");
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label;
                 HmiArray Rows() =>
                     new HmiArray(EngineeringGroupOperations.Items(container.TechnologyExtensions).Cast<TechnologyExtension>()
@@ -292,7 +292,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 }
 #if !OPTIONAL_V21
                 if (action == "read")
-                    meta["moduleAccessPointHwIdentifiers"] = ModuleIdentifiers() ?? throw new PlcSoftwareException("NotSupportedOnVersion",
+                    meta["moduleAccessPointHwIdentifiers"] = ModuleIdentifiers() ?? throw StepFailureStatus.UnsupportedByTarget(
                         "Device item '" + meta["deviceItem"] + "' does not provide a module access point.");
                 else Safe(meta, "moduleAccessPointHwIdentifiers", ModuleIdentifiers);
                 meta["hardwareModule"] = null; meta["hardwareModuleNote"] =
@@ -303,7 +303,7 @@ namespace TiaMcp.Adapters.Native.Optional
 #else
                 Safe(meta, "moduleAccessPointHwIdentifiers", ModuleIdentifiers);
                 var module = item.GetService<DriveItemHardwareModule>()
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveItemHardwareModule not provided by device item '" + item.Name
+                    ?? throw StepFailureStatus.UnsupportedByTarget("DriveItemHardwareModule not provided by device item '" + item.Name
                         + "' (drive components only).");
                 meta["before"] = HardwareModuleRow(module);
                 if (action == "read")
@@ -334,7 +334,7 @@ namespace TiaMcp.Adapters.Native.Optional
                         "SafetyAcceptanceTestProvider / SafetyAcceptanceTestReport are V21 additions; absent on V20.");
 #else
                 var provider = item.GetService<SafetyAcceptanceTestProvider>()
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyAcceptanceTestProvider not provided by device item '" + item.Name + "'.");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("SafetyAcceptanceTestProvider not provided by device item '" + item.Name + "'.");
                 HmiArray Rows() =>
                     new HmiArray(EngineeringGroupOperations.Items(provider.TestFunctions).Cast<TestFunction>()
                         .Select(t => (object)new HmiObject { ["identifier"] = t.Identifier, ["active"] = t.Active }).ToArray());
@@ -347,7 +347,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 if (action == "createProtocol")
                 {
                     var report = device?.GetService<SafetyAcceptanceTestReport>()
-                        ?? throw new PlcSoftwareException("NotSupportedOnVersion", "SafetyAcceptanceTestReport not provided by the owning device.");
+                        ?? throw StepFailureStatus.UnsupportedByTarget("SafetyAcceptanceTestReport not provided by the owning device.");
                     var operation = (FileOperations)Enum.Parse(typeof(FileOperations), fileOperation);
                     var file = operation == FileOperations.Overwrite ? new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)) : NativeFileOutput
                         .Plan(filePath);
@@ -411,7 +411,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 var item = _session.ExactDriveItem(devicePathJson, itemPathJson);
                 var drive = ExactOnlineDriveObject(item, Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex));
                 var dfi = drive.GetService<OnlineDriveFunctionInterface>()
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "OnlineDriveFunctionInterface not provided (drive offline or unsupported).");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("OnlineDriveFunctionInterface not provided (drive offline or unsupported).");
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["action"] = action; meta["online"] = true;
                 meta["mayHaveChanged"] = false;
                 HmiObject Row()
@@ -433,19 +433,19 @@ namespace TiaMcp.Adapters.Native.Optional
                 {
                     case "performFactoryReset": {
                         var functions = dfi.DriveDomainFunctions
-                            ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveDomainFunctions not provided (G120: Power Module required).");
+                            ?? throw StepFailureStatus.UnsupportedByTarget("DriveDomainFunctions not provided (G120: Power Module required).");
                         meta["nativeSignature"] = "DriveDomainFunctions.PerformFactoryReset(ResetMode)"; result = functions
                             .PerformFactoryReset((ResetMode)Enum.Parse(typeof(ResetMode), resetMode)); break;
                     }
                     case "performRamToRomCopy": {
                         var functions = dfi.DriveDomainFunctions
-                            ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveDomainFunctions not provided (G120: Power Module required).");
+                            ?? throw StepFailureStatus.UnsupportedByTarget("DriveDomainFunctions not provided (G120: Power Module required).");
                         meta["nativeSignature"] = "DriveDomainFunctions.PerformRAMtoROMCopyAllDriveObject()"; result = functions
                             .PerformRAMtoROMCopyAllDriveObject(); break;
                     }
                     default: {
                         var activation = dfi.DriveObjectFunctions?.DriveObjectActivation
-                            ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveObjectActivation not provided online."); meta["nativeSignature"] =
+                            ?? throw StepFailureStatus.UnsupportedByTarget("DriveObjectActivation not provided online."); meta["nativeSignature"] =
                             "DriveObjectActivation.ChangeActivationState(DriveObjectActivationState)"; result = activation
                             .ChangeActivationState((DriveObjectActivationState)Enum.Parse(typeof(DriveObjectActivationState), activationState)); break;
                     }

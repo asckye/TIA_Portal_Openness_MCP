@@ -204,7 +204,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return AuditBridgeResult(audit, rejected, disabled);
             }
             if (string.Equals(name, "CallTool", StringComparison.Ordinal))
-                return AuditBridgeResult(audit, V4Reject("CallTool", InvalidInput("name")), disabled);
+                return AuditBridgeResult(audit, V4Reject("CallTool", new Error("CallTool cannot invoke itself. Pass the name of the target tool.",
+                    new InvalidArgumentDetails("name", Array.Empty<string>()))), disabled);
             bool issued = false;
             try { return AuditBridgeResult(audit, await BridgeWait.On(ApprovedBridgeCallAsync(name, (arguments ?? EmptyArguments()).Json.GetRawText(),
                 async () =>
@@ -260,8 +261,13 @@ namespace TiaMcpServer.ModelContextProtocol
             if (arguments == null && ProgressRequest.Value?.Params is { } request && request.Name == tool)
                 arguments = JsonSerializer.Serialize(request.Arguments ?? new Dictionary<string, JsonElement>());
 #endif
-            bool preview = arguments != null && TryDryRunDefault(tool, out bool defaultPreview)
-                && HostBehavior.IsPreview(JsonNode.Parse(arguments)!.AsObject(), defaultPreview);
+            JsonNode? supplied;
+            try { supplied = arguments == null ? null : JsonNode.Parse(arguments); }
+            catch (JsonException) /* swallow(parse-fallback): malformed input cannot describe an issued tool's preview mode */
+            { return V4Reject(tool, InvalidInput("/arguments", "object")); }
+            if (arguments != null && supplied is not JsonObject) return V4Reject(tool, InvalidInput("/arguments", "object"));
+            bool preview = supplied is JsonObject input && TryDryRunDefault(tool, out bool defaultPreview)
+                && HostBehavior.IsPreview(input, defaultPreview);
             bool readOnly = ApprovalPreviewDepth.Value > 0 || preview
                 || operation is "READ" or "OFFLINE" || operation == "SESSION"
                 && (classification?.BatchRead ?? fallback?.BatchRead) == true;
@@ -596,14 +602,16 @@ namespace TiaMcpServer.ModelContextProtocol
             return new CallToolResult { IsError = mapped.IsError, StructuredContent = JsonNode.Parse(mapped.StructuredContent.GetRawText()),
                 Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
         }
-        internal static CallToolResult InfrastructureResult(string tool, ResponseMessage response, Paging? paging = null, bool reportOnly = false)
+        internal static CallToolResult InfrastructureResult(string tool, ResponseMessage response, Paging? paging = null, Error? rejection = null)
         {
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
             data.Remove("success"); data.Remove("timestamp");
             data["summary"] = response.Message;
             if (response is ResponseStringList list) data["items"] =
                 new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
-            return reportOnly || response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, paging: paging)
+            if (rejection != null)
+                return V4Result(tool, data, rejection, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None);
+            return response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, paging: paging)
                 : V4Result(tool, data, new Error("Input does not satisfy the declared contract.",
                     new InternalErrorDetails(null)), Outcome.ReadFailed, Execution.ReadOnly, Completeness.None);
         }

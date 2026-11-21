@@ -85,7 +85,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (hasProject && !connectIfNeeded)
                 {
                     Add("project.open", "Open project/session", "pass",
-                        $"Project '{state!.Project}' is bound. Project-specific checks run only with connectIfNeeded=true.");
+                        (string.IsNullOrWhiteSpace(state!.Project) || state.Project == "-"
+                            ? $"Session '{state.Session}' is bound." : $"Project '{state.Project}' is bound.")
+                        + " Project-specific checks run only with connectIfNeeded=true.");
                 }
                 else if (hasProject)
                 {

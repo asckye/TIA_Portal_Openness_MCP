@@ -60,6 +60,10 @@ internal static class FoundationPassiveDiagnostics
             ["tiaVersionInUse"] = release.MajorVersion, ["tiaVersionDetected"] = installed ? release.MajorVersion : null,
             ["opennessGroupOk"] = groupOk, ["tiaInstallPath"] = installed ? installPath : null,
             ["installSource"] = installation.Source,
+            ["serverVersion"] = TiaMcpServer.ModelContextProtocol.UpdateLogic.InstalledVersion(
+                typeof(FoundationPassiveDiagnostics).Assembly.GetName().Version?.ToString(3) ?? "0.0.0",
+                System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(
+                    typeof(FoundationPassiveDiagnostics).Assembly)?.InformationalVersion),
             ["transport"] = Environment.GetEnvironmentVariable("MCP_TRANSPORT") ?? "stdio",
             ["ready"] = ready, ["cause"] = ready ? null : cause,
             ["recommendedFix"] = ready ? null : fix, ["recommendedFixZh"] = ready ? null : fixZh

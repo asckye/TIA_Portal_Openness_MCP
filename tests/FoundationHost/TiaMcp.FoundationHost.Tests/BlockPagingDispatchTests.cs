@@ -46,6 +46,7 @@ public sealed class BlockPagingDispatchTests
             Assert.Equal("cursor", (string?)body["meta"]!["paging"]!["mode"]);
             found.AddRange(body["data"]!["items"]!.AsArray().Select(row => (string)row!["path"]!));
             cursor = (string?)body["meta"]!["paging"]!["nextCursor"] ?? "";
+            Assert.Equal(cursor.Length == 0 ? "complete" : "partial", (string?)body["meta"]!["completeness"]);
         } while (cursor.Length != 0);
         Assert.Equal(7, worker.Calls);
         Assert.Equal(130, found.Distinct().Count());

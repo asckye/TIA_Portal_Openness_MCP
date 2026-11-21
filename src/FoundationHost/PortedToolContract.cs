@@ -369,7 +369,7 @@ internal sealed partial class FoundationTool
         if (!PortedFamilies.Available(portedRelease!, tool.Name) || arguments.ContainsKey("action") && !family.SupportsAction(portedRelease!, actionName))
             return HardwareContract.Unsupported(tool.Name, UnsupportedError("The release capability table excludes this operation."));
         string scope = arguments.TryGetValue("family", out var requestedFamily) ? requestedFamily.GetString() ?? "" : arguments
-            .TryGetValue("kind", out var requestedKind) ? requestedKind.GetString() ?? "" : "";
+            .TryGetValue("kind", out var requestedKind) ? requestedKind.GetString() ?? "" : tool.Name == "ShowObjectInEditor" ? "device" : "";
         if (HardwareCapabilities.Unsupported(portedRelease!, tool.Name, actionName, scope,
             arguments.TryGetValue("positionNumber", out var position) ? position.GetInt32() : -1,
             arguments.TryGetValue("extendedPositionNumber", out var extendedPosition) ? extendedPosition.GetInt32() : -1,
@@ -541,8 +541,9 @@ internal sealed partial class FoundationTool
             if (workerError?.Outcome == "rejected-before-operation" && retained is JsonObject deviceEvidence
                 && deviceEvidence["status"]?.ToString() == "Ambiguous" && deviceEvidence["target"] != null)
                 error.Data["nativeResultEvidence"] = deviceEvidence;
-            nativeDiagnostics = workerError == null ? null : FoundationV4Result.NativeDiagnostics(new JsonObject { ["Failure"] = new JsonObject {
-                ["Message"] = workerError.Message, ["Evidence"] = retained } });
+            if (workerError != null)
+                nativeDiagnostics = FoundationV4Result.NativeDiagnostics(new JsonObject { ["Failure"] = new JsonObject {
+                    ["Message"] = workerError.Message, ["Evidence"] = retained } }, nativeDiagnostics);
             priorMutation |= TiaOpenness.Shared.HostFailurePolicy.PriorMutation(error);
             error.Data["foundationStepKnownNoMutation"] = error is WorkerOperationException { KnownNoMutation: true }
                 || error.Data["foundationRequestSent"] is false;
@@ -564,7 +565,7 @@ internal sealed partial class FoundationTool
                 var reply = worker.Call(operation, input, token).GetAwaiter().GetResult();
                 var objectReply = reply as JsonObject;
                 lastReply = objectReply;
-                nativeDiagnostics = FoundationV4Result.NativeDiagnostics(reply);
+                nativeDiagnostics = FoundationV4Result.NativeDiagnostics(reply, nativeDiagnostics);
                 priorMutation |= mayWrite && (bool?)objectReply?["MayHaveChanged"] != false;
                 return reply;
             }
@@ -691,6 +692,13 @@ internal sealed partial class FoundationTool
             if (claimsNotStarted && workerFailure?.Data["workerReadTimeout"] is true)
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                     true, false, null, workerFailure);
+            if (tool.Name == "ValidateAutomationContext" && workerFailure is WorkerOperationException { KnownNoMutation: true, Condition: "not-found" } missing)
+                return FoundationV4Result.Reject(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                    new Error(HostBehavior.SafeDiagnostic(missing.Message) ?? "Expected software was not found.", new NotFoundDetails(null)), false);
+            if (!priorMutation && result.IsError == true
+                && workerFailure is WorkerOperationException { CapabilityRefused: true })
+                return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
+                    true, mutation, null, workerFailure);
             result = FoundationV4Result
                 .WorkerFailure(result, portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId), mutation, workerFailure);
             // Preserve the tool's step report while retaining evidence of the earlier mutation.

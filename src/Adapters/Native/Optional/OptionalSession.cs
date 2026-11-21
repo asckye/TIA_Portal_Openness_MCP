@@ -34,11 +34,11 @@ internal sealed partial class OptionalSession
     internal object? MultilingualJson(MultilingualText text) => _engine.OptionalMultilingual(text);
     internal object ResolveHmiScreenOrThrow(string software, string screen) => _engine.OptionalHmiScreen(software, screen);
     internal DeviceItem ExactDeviceItem(string[] devices, string[] items) => _engine.PlcB5Session.ExactEngineeringHardware(devices, items) as DeviceItem
-        ?? throw new ArgumentException("itemPathJson must select a device item.");
+        ?? throw new ArgumentException("itemPath must select a device item.");
     internal HardwareObject ExactEngineeringHardware(string devices, string items) => _engine.PlcB5Session
-        .ExactEngineeringHardware(SivarcPolicy.ParseNames(devices, "devicePathJson"), SivarcPolicy.ParseNames(items, "itemPathJson"));
+        .ExactEngineeringHardware(SivarcPolicy.ParseNames(devices, "devicePath"), SivarcPolicy.ParseNames(items, "itemPath"));
     internal Device ExactEngineeringDevice(string[] devices) => _engine.PlcB5Session.ExactEngineeringHardware(devices, Array.Empty<string>()) as Device
-        ?? throw new ArgumentException("devicePathJson must select a device.");
+        ?? throw new ArgumentException("devicePath must select a device.");
     internal static string[] ExactNameList(string raw, string parameter = "namesJson")
     {
         if (raw.Length > 65536) throw new ArgumentException("Name list too large.");

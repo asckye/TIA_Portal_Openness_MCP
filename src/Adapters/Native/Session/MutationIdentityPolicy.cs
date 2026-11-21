@@ -8,9 +8,10 @@ namespace TiaMcp.Adapters
         internal static string Absolute(string path) => Contracts.ProjectFileIdentity.Absolute(path);
         private static void RequireSegment(string segment) => Contracts.ProjectFileIdentity.RequireSegment(segment);
         internal static string AbsoluteFile(string path) => Contracts.ProjectFileIdentity.AbsoluteFile(path);
-        internal static string ClosePlanHash(string file, bool isModified, bool discardChanges)
+        internal static string ClosePlanHash(string file, bool isModified, bool discardChanges, int? processId)
             => Contracts.Candidates.CandidatePrimitives.ByteHash(System.Text.Encoding.UTF8.GetBytes(
-                AbsoluteFile(file).ToUpperInvariant() + "\n" + (isModified ? "1" : "0") + (discardChanges ? "1" : "0")));
+                AbsoluteFile(file).ToUpperInvariant() + "\n" + (isModified ? "1" : "0")
+                    + (discardChanges ? "1\n" + processId?.ToString(System.Globalization.CultureInfo.InvariantCulture) : "0")));
         internal static void RequireConfirmedProject(bool confirm, string expected, string file)
         {
             if (!confirm) throw new Contracts.AdapterPreconditionException("Execution requires confirm=true.", "confirm");

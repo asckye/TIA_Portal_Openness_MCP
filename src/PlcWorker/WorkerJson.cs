@@ -45,8 +45,10 @@ namespace TiaMcp.PlcWorker
                 && deviceError.Data["mayHaveChanged"] is not true;
             bool unchanged = TiaOpenness.Shared.HostFailurePolicy.KnownNoMutation(cause);
             string? nativeReason = cause.Data["nativeMessage"] as string;
-            if (condition == null && !ambiguousDevice && !unchanged && nativeReason == null) return evidence;
+            bool target = cause.GetBaseException().Data["unsupportedBy"] as string == "target";
+            if (condition == null && !ambiguousDevice && !unchanged && nativeReason == null && !target) return evidence;
             var node = System.Text.Json.Nodes.JsonNode.Parse(evidence)!.AsObject();
+            if (target) node["unsupportedBy"] = "target";
             if (unchanged)
             {
                 node["mayHaveChanged"] = false;

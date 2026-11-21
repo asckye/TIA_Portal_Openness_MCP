@@ -58,7 +58,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManageSinumerikSafetyMode([Description("Array of exact device-group/device names.")] string[] devicePath,
                 [Description("read | set. Operation name from the supported actions in the tool description.")] string action = "read",
-                [Description("For archives OnlyHardware | HardwareAndAllProgramBlocks; for SINUMERIK safety None | NcSI | DbSI.")] string mode = "",
+                [Description("For action=set, select None, NcSI or DbSI.")] string mode = "",
                 [Description("true previews without invoking the native mutation/export; false executes.")] bool dryRun = true,
                 [Description("Must be true with dryRun=false for a safety-mode write.")] bool confirmSafetyChange = false)
             => OptionalPackageContract

@@ -33,7 +33,8 @@ internal sealed class PassiveDiagnosticTool : McpServerTool
         properties["limit"] = new JsonObject {
             ["type"] = "integer", ["default"] = FoundationPassiveDiagnostics.RosterPageLimit, ["minimum"] = 1, ["maximum"] = FoundationPassiveDiagnostics
                 .RosterPageLimit, ["description"] =
-                "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded."
+                $"Registered-tool rows per page, 1 through {FoundationPassiveDiagnostics.RosterPageLimit}. "
+                + "Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded."
         };
         if (name == "RunCapabilitySelfTest") foreach (var flag in Flags) properties[flag] = new JsonObject {
             ["type"] = "boolean", ["default"] = false, ["enum"] = new JsonArray(false), ["description"] =
@@ -72,8 +73,9 @@ internal sealed class PassiveDiagnosticTool : McpServerTool
                 else
                     if (tool.Name != "RunCapabilitySelfTest" || !Flags.Contains(pair.Key, StringComparer.Ordinal) || pair.Value.ValueKind != JsonValueKind
                         .False)
-                    throw new McpException("Unsupported passive diagnostic argument. Only offset/limit paging and RunCapabilitySelfTest flags " +
-                        "connectIfNeeded, includeProjectTree and inspectPortalProcesses set to false are supported. Native/selfConnect and " +
+                    throw new McpException("Unsupported passive diagnostic argument. Use offset >= 0, limit 1 through " +
+                        FoundationPassiveDiagnostics.RosterPageLimit + ". RunCapabilitySelfTest supports " +
+                        "connectIfNeeded, includeProjectTree and inspectPortalProcesses only when set to false. Native/selfConnect and " +
                         "automation-context options are unsupported.",
                             null, McpErrorCode.InvalidParams);
             }

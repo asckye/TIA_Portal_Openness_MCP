@@ -293,6 +293,7 @@ namespace TiaMcp.Logic.V4
                     else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text)
                         && (pair.Key.Equals("nativeMessage", StringComparison.OrdinalIgnoreCase)
                             || pair.Key.Equals("workerMessage", StringComparison.OrdinalIgnoreCase)
+                            || pair.Key.Equals("unavailable", StringComparison.OrdinalIgnoreCase)
                             || pair.Key.Equals("message", StringComparison.OrdinalIgnoreCase)
                             || (evidence || diagnostic) && pair.Key.Equals("detailText", StringComparison.OrdinalIgnoreCase)
                             || diagnostic && pair.Key.Equals("text", StringComparison.OrdinalIgnoreCase)
@@ -300,7 +301,8 @@ namespace TiaMcp.Logic.V4
                             || !sourceText && (text.Contains("\n   at ") || text.Contains(" ---> "))))
                         obj[pair.Key] = SafeDiagnostic(text);
                     else SanitizeEvidence(pair.Value, evidence || pair.Key.Equals("evidence", StringComparison.OrdinalIgnoreCase),
-                        diagnostic || pair.Key.Equals("messageData", StringComparison.OrdinalIgnoreCase)
+                        diagnostic || pair.Key.Equals("unavailable", StringComparison.OrdinalIgnoreCase)
+                            || pair.Key.Equals("messageData", StringComparison.OrdinalIgnoreCase)
                             || pair.Key.Equals("detailMessageData", StringComparison.OrdinalIgnoreCase));
                 }
             else if (node is JsonArray rows)

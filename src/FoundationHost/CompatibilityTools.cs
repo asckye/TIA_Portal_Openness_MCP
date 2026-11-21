@@ -252,7 +252,8 @@ internal static class CompatibilityTools
                 return await ReviewedAction(original);
             }
             // Extra confirmation fields apply only to forwarded actions, never silently bypass identity checks on another route.
-            if (ConfirmationFields.Any(field => arguments.TryGetValue(field, out var value) && value.ValueKind != JsonValueKind.Null
+            if (ConfirmationFields.Any(field => !(tool.Name == "ManagePlcTagDefinition" && action == "delete" && Flag("dryRun", true) && field == "confirm")
+                && arguments.TryGetValue(field, out var value) && value.ValueKind != JsonValueKind.Null
                 && (value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.String && value.GetString() != "")))
                 return Reject(new Error("Canonical confirmation fields apply only to forwarded actions.",
                             new InvalidArgumentDetails("action", Array.Empty<string>())));

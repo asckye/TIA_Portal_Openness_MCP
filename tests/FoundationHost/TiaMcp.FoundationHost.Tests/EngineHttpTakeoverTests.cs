@@ -8,6 +8,18 @@ public sealed partial class EngineHttpSessionTestsPlc
     public static IEnumerable<object[]> TakeoverReleases()
         => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(release => new object[] { release });
 
+    [Fact]
+    public async Task Initialize_environment_reports_the_session_transport_and_server_version()
+    {
+        using var host = await Fixture.Start("21");
+        using var session = new Session(host);
+        await session.Initialize();
+        var report = await session.Tool("InitializeEnvironment", new() { ["limit"] = 1 });
+        Assert.Equal("http", (string?)report["data"]?["environment"]?["transport"]);
+        Assert.False(string.IsNullOrWhiteSpace((string?)report["data"]?["environment"]?["serverVersion"]));
+        await session.End();
+    }
+
     [Theory, MemberData(nameof(TakeoverReleases))]
     public async Task Abandoned_session_gives_way_to_connect_portal_without_a_host_restart(string release)
     {
@@ -78,6 +90,9 @@ public sealed partial class EngineHttpSessionTestsPlc
         Assert.Equal("previous-owner", (string?)inherited["origin"]);
         var saved = await newcomer.Tool("SaveProject", new() { ["dryRun"] = true });
         Assert.Contains(saved["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "UNSETTLED_CALLS");
+        var recovered = await newcomer.Tool("GetCallResult", new() { ["requestId"] = id }, ok: false);
+        Assert.Equal("original-call", (string?)recovered["data"]?["elapsedMsSource"]);
+        Assert.Equal((long)unknown["meta"]!["elapsedMs"]!, (long?)recovered["meta"]?["elapsedMs"]);
         await newcomer.Tool("DisconnectPortal"); await holder.End(); await newcomer.End();
     }
 
@@ -132,6 +147,7 @@ public sealed partial class EngineHttpSessionTestsPlc
         {
             var disconnected = await holder.Tool("DisconnectPortal");
             Assert.Equal("disconnected", (string?)disconnected["data"]?["sessionState"]);
+            Assert.Contains(disconnected["meta"]!["warnings"]!.AsArray(), warning => (string?)warning?["code"] == "SESSION_TAKEN_OVER");
             Assert.Contains(disconnected["meta"]!["warnings"]!.AsArray(), warning =>
                 (string?)warning?["details"]?["condition"] == "taken-over" && ((string?)warning?["message"])!.Contains("had been taken over"));
             Assert.Equal(beforeHolder, File.ReadAllText(holderTrace));

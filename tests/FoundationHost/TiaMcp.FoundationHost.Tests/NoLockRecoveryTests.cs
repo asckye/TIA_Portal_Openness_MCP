@@ -135,6 +135,21 @@ public sealed class NoLockRecoveryTests
         Assert.False(scope.Worker.Faulted);
     }
 
+    [Fact]
+    public async Task Completed_secondary_close_releases_the_record_without_a_second_holder_query()
+    {
+        using var scope = new Scope(shared: true, release: "21");
+        string file = await OpenReference(scope, "21");
+        using var holder = Process.GetCurrentProcess();
+        string started = holder.StartTime.ToUniversalTime().ToString("O");
+        scope.Worker.SecondaryProcessObservation = _ => scope.Trace.Any(row => (string?)row["method"] == "adapter.CloseProject")
+            ? (false, null) : (false, started);
+        var result = await scope.Worker.Call("CloseProject", new() { ["secondaryProjectFile"] = file, ["dryRun"] = false,
+            ["confirm"] = true, ["expectedProjectFile"] = file }, CancellationToken.None);
+        Assert.True((bool?)result?["Executed"]);
+        Assert.Null(scope.Worker.OperatorSnapshot()["secondaryProjectFile"]);
+    }
+
     public static IEnumerable<object[]> SecondaryHolderCases()
         => ReleasesAndFlags().Where(row => (string)row[0] != "14sp1");
 

@@ -48,8 +48,8 @@ internal sealed partial class LegacyOptionalAdapter
     private static object Service(object owner, string name) => HardwareOfficialService.Require(owner, "Siemens.Engineering." + name, "Siemens.Engineering");
     private IDisposable? Edit(bool writing) => writing ? _engine.PlcB5Session.AcquireHmiEditAccess() : null;
     private DeviceItem DriveItem() => _engine.PlcB5Session.ExactEngineeringHardware(
-        SivarcPolicy.ParseNames(_request.DevicePathJson, "devicePathJson"), SivarcPolicy.ParseNames(_request.ItemPathJson, "itemPathJson")) as DeviceItem
-        ?? throw new ArgumentException("itemPathJson must select a drive device item.");
+        SivarcPolicy.ParseNames(_request.DevicePathJson, "devicePath"), SivarcPolicy.ParseNames(_request.ItemPathJson, "itemPath")) as DeviceItem
+        ?? throw new ArgumentException("itemPath must select a drive device item.");
     private object Drive()
     {
         var selector = StartdrivePolicy.ParseDriveSelector(_request.DriveObjectNumber, _request.DriveObjectIndex);

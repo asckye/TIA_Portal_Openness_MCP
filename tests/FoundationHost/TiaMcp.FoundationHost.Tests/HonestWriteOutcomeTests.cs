@@ -95,6 +95,16 @@ public sealed class HonestWriteOutcomeTests
     }
 
     [Theory]
+    [InlineData("ListDriveObjects", "21", null, true, "Service is not provided by the selected object.")]
+    [InlineData("ListDriveObjects", "21", null, false, "API member missing on this release.")]
+    [InlineData("ListDccCharts", "21", null, true, "Service is not provided by the selected object.")]
+    [InlineData("ListDccCharts", "21", null, false, "API member missing on this release.")]
+    [InlineData("ManageDeviceUsers", "21", null, true, "Service is not provided by the selected object.")]
+    [InlineData("ManageDeviceUsers", "21", null, false, "API member missing on this release.")]
+    [InlineData("GetClassicHmiScreenTree", "21", null, true, "Service is not provided by the selected object.")]
+    [InlineData("GetClassicHmiScreenTree", "21", null, false, "API member missing on this release.")]
+    [InlineData("GetDeviceAddressing", "21", null, true, "Service is not provided by the selected object.")]
+    [InlineData("GetDeviceAddressing", "21", null, false, "API member missing on this release.")]
     [InlineData("SetDeviceItemChannel", "17", null, true, "ChannelAddress is not writable on this channel per GetAttributeInfos.")]
     [InlineData("SetDeviceItemChannel", "17", null, false, "Channel API unavailable in the installed SDK.")]
     [InlineData("ExchangeMotionCamData", "17", "export", true, "Selected object is not a service provider.")]
@@ -116,6 +126,9 @@ public sealed class HonestWriteOutcomeTests
         Assert.Equal(target, reply.Meta.TryGetValue("unsupportedBy", out var origin) && Equals(origin, "target"));
         var response = new Host.ResponseMessage { Message = reply.Message, Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() };
         var body = (tool switch {
+            "GetDeviceAddressing" => Host.HardwareContract.Map(tool, response, false, true),
+            "GetClassicHmiScreenTree" => Host.ClassicMotionToolContract.Map(tool, response, true, false),
+            "ListDriveObjects" or "ListDccCharts" => Host.DriveToolContract.Map(tool, response, false, false),
             "SetDeviceItemChannel" => Host.HardwareToolContract.MapResult(tool, response, false, true),
             "ExchangeMotionCamData" => Host.ClassicMotionToolContract.Map(tool, response, false, true),
             "ManageSinumerikSafetyMode" => Host.OptionalPackageContract.Map(tool, response, true),

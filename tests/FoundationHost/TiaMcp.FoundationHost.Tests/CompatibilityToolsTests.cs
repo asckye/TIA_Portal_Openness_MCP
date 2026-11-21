@@ -25,6 +25,17 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
     };
 
     [Fact]
+    public async Task Delete_tag_preview_accepts_confirmation_without_forwarding_it()
+    {
+        var source = new ActionSpy("ManagePlcTagDefinition");
+        var forwarder = new CompatibilityTools.ActionForwarder(source, new Dictionary<string, McpServerTool>(), "19");
+        var input = new JsonObject { ["action"] = "delete", ["kind"] = "tag", ["dryRun"] = true, ["confirm"] = true };
+        Assert.Same(source.Result, await forwarder.InvokeAsync(Request(source.ProtocolTool.Name, input)));
+        Assert.True((bool?)source.Arguments?["dryRun"]);
+        Assert.Null(source.Arguments?["confirm"]);
+    }
+
+    [Fact]
     public void Part_A_declared_parameters_have_descriptions_and_preview_provenance()
     {
         var declarations = typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.PlcOrganisationTools).Assembly.GetTypes()

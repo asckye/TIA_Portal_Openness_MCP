@@ -26,7 +26,8 @@ public static class ProjectSecurityPrimitives
 #if SECURITY_UMAC
     public static UmacConfigurator RequireUmac(EngineeringProject project)
         => project.GetService<UmacConfigurator>()
-            ?? throw new NotSupportedException("UmacConfigurator service unavailable on this project: TIA returns it only for a protected project opened " +
+            ?? throw StepFailureStatus
+                .UnsupportedByTarget("UmacConfigurator service unavailable on this project: TIA returns it only for a protected project opened " +
             "with UMAC credentials. Enabling protection is intentionally not exposed.");
     public static Role ExactUmacRole(UmacConfigurator umac, string name)
     {

@@ -12,6 +12,7 @@ namespace TiaMcp.FoundationHost;
 public sealed record UnsettledCall(string RequestId, string Tool, string? Digest, DateTimeOffset Utc, bool FromPreviousOwner = false,
     SettlementTarget? Target = null)
 {
+    internal long? OriginalElapsedMs { get; init; }
     internal (int? Id, string? StartUtc) Process { get; init; }
 }
 
@@ -94,13 +95,13 @@ public sealed class UnsettledCalls
     public void ImportPreviousOwner(IEnumerable<UnsettledCall> previous)
     {
         lock (gate)
-            foreach (var call in previous) AddPreviousOwner(call.RequestId, call.Process);
+            foreach (var call in previous) AddPreviousOwner(call.RequestId, call.Process, call.OriginalElapsedMs);
     }
 
-    private void AddPreviousOwner(string requestId, (int? Id, string? StartUtc) owner)
+    private void AddPreviousOwner(string requestId, (int? Id, string? StartUtc) owner, long? elapsedMs = null)
     {
         if (!settled.ContainsKey(requestId) && ids.Add(requestId))
-            calls.Add(new UnsettledCall(requestId, "previous-owner", null, DateTimeOffset.UtcNow, true) { Process = owner });
+            calls.Add(new UnsettledCall(requestId, "previous-owner", null, DateTimeOffset.UtcNow, true) { Process = owner, OriginalElapsedMs = elapsedMs });
     }
 
     public void Clear()

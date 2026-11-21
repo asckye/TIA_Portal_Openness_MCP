@@ -89,17 +89,17 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
                 error = data.ContainsKey("mayHaveChanged")
-                    ? new Error("Security operation preconditions were not satisfied.", new PreconditionFailedDetails("security-state", null))
+                    ? new Error("Operation preconditions were not satisfied.", new PreconditionFailedDetails("security-state", null))
                     : new Error("No project is bound.", new ProjectNotBoundDetails());
             }
             else if (success != true && (status == "NotSupportedOnVersion" || status == "NotFound" || status == "AccessDenied"))
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
                 error = status == "NotSupportedOnVersion"
-                    ? new Error(nativeMessage ?? "The requested security capability is unavailable.",
-                        new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null))
-                    : status == "NotFound" ? new Error("The requested security target was not found.", McpServer.MissingTargetDetails(tool, evidence: data))
-                    : new Error("Access to the security operation was denied.", new AccessDeniedDetails(tool, null));
+                    ? UnsupportedCapabilityDetails.ErrorFor(HardwareContract.ReleaseKey, tool, null,
+                        (string?)data["nativeMessage"] ?? nativeMessage, (string?)data["unsupportedBy"])
+                    : status == "NotFound" ? new Error("The requested target was not found.", McpServer.MissingTargetDetails(tool, evidence: data))
+                    : new Error("Access to the operation was denied.", new AccessDeniedDetails(tool, null));
             }
             else if (success == true)
             { outcome = Outcome.Succeeded; execution = readOnly ? Execution.ReadOnly : Execution.Completed; }
@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (Flag(data, "mayHaveChanged") == false && Flag(data, "mayHaveWrittenFiles") != true)
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error =
-                    new Error("Security operation preconditions were not satisfied.", new PreconditionFailedDetails("security-before-write", null));
+                    new Error("Operation preconditions were not satisfied.", new PreconditionFailedDetails("security-before-write", null));
             }
             else
             {
@@ -192,10 +192,10 @@ namespace TiaMcpServer.ModelContextProtocol
             secrets.Where(s => !string.IsNullOrEmpty(s) && s.Length > 1 && !(s.Length == 2 && char.IsSurrogatePair(s, 0))).ToArray()));
 
         private static Error NativeFailure(string? nativeMessage = null) =>
-            new Error(nativeMessage ?? "The security operation did not establish a successful result.",
+            new Error(nativeMessage ?? "The operation did not establish a successful result.",
             new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
         private static Error UnknownFailure(IReadOnlyDictionary<string, JsonElement>? evidence = null) =>
-            new Error("The security operation outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. " +
+            new Error("The operation outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. " +
                 "GetSessionState lists unsettled request IDs.",
             new OutcomeUnknownDetails("security-operation", evidence ?? new Dictionary<string, JsonElement>()));
 
@@ -208,7 +208,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         new Dictionary<string, JsonElement>()));
             if (HostBehavior.ReadbackWarning(data, outcome) is Warning warning) warnings.Add(warning);
             else if (completeness == Completeness.Partial) warnings
-                .Add(new Warning(WarningCode.IncompleteData, "The security observation covers only the reported scope and available fields.",
+                .Add(new Warning(WarningCode.IncompleteData, "The observation covers only the reported scope and available fields.",
                         new Dictionary<string, JsonElement>()));
             var meta = new Meta(DateTimeOffset.UtcNow, HardwareContract.ReleaseKey, tool, Meta.Correlate(InvocationJournal.CorrelationId), outcome, execution,
                 current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable, completeness, paging, warnings);

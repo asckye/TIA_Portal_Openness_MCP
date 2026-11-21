@@ -21,6 +21,185 @@ public sealed class PreviewToolCallTruthTests
         new object[] { row[0], "CreateProject" }, new object[] { row[0], "ManageGlobalLibrary" }
     });
 
+    [Fact]
+    public async Task Cached_session_is_named_when_no_project_is_bound()
+    {
+        var report = await toolpipeline::TiaMcpServer.ModelContextProtocol.CapabilitySelfTestLogic.Run(
+            () => true, Array.Empty<string>, () => throw new InvalidOperationException(),
+            () => new() { IsConnected = true, Project = "-", Session = "Session1" }, () => false,
+            (_, _) => throw new InvalidOperationException(), () => "", false, false, false, "", "");
+        Assert.NotNull(report.Items);
+        var check = Assert.Single(report.Items, item => item.Id == "project.open");
+        Assert.Contains("Session 'Session1' is bound", check.Detail);
+    }
+
+    [Fact]
+    public void Update_rate_limit_maps_to_the_external_read_failure()
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var response = new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage { Message = "GitHub API rate limit reached.",
+            Meta = new JsonObject { ["success"] = false, ["releaseApiUrl"] = "https://example.invalid/releases", ["httpStatus"] = 429 } };
+        var body = toolpipeline::TiaMcpServer.ModelContextProtocol.SessionToolContract.Map("CheckProductUpdate", response, false, false).StructuredContent!;
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("read-failed", (string?)body["meta"]?["outcome"]);
+    }
+
+    [Fact]
+    public void Comparison_refusal_identifies_the_operation_without_a_security_label()
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var response = new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage {
+            Meta = new JsonObject { ["operationSuccess"] = false, ["status"] = "InvalidState", ["mayHaveChanged"] = false } };
+        var result = toolpipeline::TiaMcpServer.ModelContextProtocol.SecurityToolContract.MapResult("CompareProjects", response, true, false);
+        Assert.DoesNotContain("security", (string?)result.StructuredContent?["error"]?["message"], StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("security-state", (string?)result.StructuredContent?["error"]?["details"]?["condition"]);
+    }
+
+    [Fact]
+    public void Umc_consistency_requires_server_scope_and_the_v18_api()
+    {
+        var invalid = Assert.Throws<ArgumentException>(() => toolpipeline::TiaMcpServer.Siemens.SecurityDeepLogic
+            .ValidateUmcRequest("user", "checkConsistency", "", "", "", "", "", false, true));
+        Assert.Contains("kind=server", invalid.Message);
+        Assert.Equal("UMC consistency/synchronization requires V18 or later.",
+            TiaMcp.Adapters.Contracts.SecurityCapabilities.Unsupported("17", "ManageUmcUsers", "checkConsistency", "server"));
+        Assert.Null(TiaMcp.Adapters.Contracts.SecurityCapabilities.Unsupported("18", "ManageUmcUsers", "checkConsistency", "server"));
+    }
+
+    [Fact]
+    public void Syslog_validation_uses_public_property_names()
+    {
+        var fault = Assert.Throws<ArgumentException>(() => toolpipeline::TiaMcpServer.Siemens.SecurityDeepLogic.ValidateSyslogRequest(
+            "project", "update", "Station", new JsonObject(), "[]", "", 0, false, true));
+        Assert.Contains("properties", fault.Message);
+        Assert.DoesNotContain("propertiesJson", fault.Message);
+    }
+
+    [Fact]
+    public void Batch_rejects_the_nonadmitted_tool_before_its_arguments()
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var call = new ToolCall("CallTool", new ToolArguments(JsonSerializer.SerializeToElement(new { invalid = true })));
+        var error = Host.ValidateBatch(new[] { call }, false, out _);
+        Assert.Contains("CallTool", error!.Message);
+        Assert.Equal("/operations/0/name", Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(error.Details).Parameter);
+    }
+
+    [Fact]
+    public void Export_page_reports_the_requested_and_effective_limits()
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        string id = toolpipeline::TiaMcp.FoundationHost.SessionExportStore.PutAndSlice("fixture", "fixture", "retained", 4).id;
+        var body = new toolpipeline::TiaMcpServer.ModelContextProtocol.ExportTools().GetExport(id, limit: 20001).StructuredContent!;
+        var warnings = body["meta"]!["warnings"]!.AsArray();
+        Assert.Equal(new[] { "PAGE_LIMIT_CAPPED", "UNVERIFIED_BEHAVIOR" }, warnings.Select(row => (string?)row?["code"]));
+        var warning = Assert.Single(warnings, row => (string?)row?["code"] == "PAGE_LIMIT_CAPPED")!;
+        Assert.Equal(20000, (int?)body["meta"]?["paging"]?["limit"]);
+        Assert.Equal(20001, (int?)warning["details"]?["requested"]);
+    }
+
+    [Fact]
+    public void Sinumerik_safety_mode_describes_the_native_safety_choices()
+    {
+        var mode = TiaMcpServer.ModelContextProtocol.ToolMetadata.Parameter("ManageSinumerikSafetyMode", "mode")!;
+        Assert.Equal(new[] { "None", "NcSI", "DbSI" }, mode.AllowedValues);
+        Assert.Equal("NcSI", JsonSerializer.Deserialize<string>(mode.ExampleJson));
+    }
+
+    [Fact]
+    public void Diagnostic_report_requires_a_suite_and_preserves_its_verdict()
+    {
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.OfflineSuiteTools();
+        string path = Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            File.WriteAllText(path, """{"ok":true,"items":[]}""");
+            var refusal = tools.BuildReleaseDiagnosticReportV4(path).StructuredContent!;
+            Assert.False((bool?)refusal["ok"]);
+            File.WriteAllText(path, """{"mode":"tia-mcp-offline-release-validation-suite","ok":false,"offlineOnly":true,"items":[]}""");
+            var report = tools.BuildReleaseDiagnosticReport(path).Data!;
+            Assert.False((bool?)report["suiteOk"]);
+            Assert.DoesNotContain(report["recommendedNextActions"]!.AsArray(), item => item!.ToString().Contains("离线发布套件已通过"));
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void Recursive_call_explains_the_refusal()
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var call = Host.CallTool("CallTool", new ToolArguments(JsonSerializer.SerializeToElement(new { name = "GetSessionState" })));
+        Assert.Equal("INVALID_ARGUMENT", (string?)call.StructuredContent?["error"]?["code"]);
+        Assert.Contains("cannot invoke itself", (string?)call.StructuredContent?["error"]?["message"]);
+    }
+
+    [Fact]
+    public void Preview_returns_the_form_validator_error_without_dispatch()
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var args = new { form = "blockFilter", mode = "set", fields = new { projectPath = "fixture" } };
+        var result = Host.PreviewToolCall("PrefillWorkbenchForm", new ToolArguments(JsonSerializer.SerializeToElement(args)));
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("/fields", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["data"]?["validationError"]?["code"]);
+        Assert.Equal(0, fixture.Worker.NativeCalls);
+    }
+
+    [Fact]
+    public void V16_test_library_save_points_to_the_missing_declared_title()
+    {
+        using var fixture = new PreviewHostFixture("16");
+        using var session = fixture.Pipeline.EnterSession();
+        var input = JsonSerializer.Deserialize<JsonElement>("""
+            {"action":"save","testCase":{"schemaVersion":1,"id":"interlocks","private-caller-key":1,"kind":"testSuite",
+            "testSuite":{"category":"application","kind":"case","names":["TC_Interlock"],"runAll":false}}}
+            """);
+        var body = Host.PreviewToolCall("ManagePlcTestLibrary", new ToolArguments(input)).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal("/testCase/title", (string?)body["error"]?["details"]?["parameter"]);
+        Assert.DoesNotContain("private-caller-key", body["error"]!.ToJsonString());
+        Assert.Equal(0, fixture.Worker.NativeCalls);
+    }
+
+    [Fact]
+    public void Preview_case_hint_keeps_the_public_binding_error_code()
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var input = new ToolArguments(JsonSerializer.SerializeToElement(new { ExportId = "fixture" }));
+        var preview = Host.PreviewToolCall("GetExportContent", input).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)preview["error"]?["code"]);
+        Assert.Equal("INVALID_ARGUMENT", (string?)preview["data"]?["validationError"]?["code"]);
+        Assert.All(preview["data"]!["validationErrors"]!.AsArray(), error => Assert.Equal("INVALID_ARGUMENT", (string?)error?["code"]));
+        Assert.NotEmpty(preview["data"]!["caseFixes"]!.AsArray());
+        Assert.Equal(0, fixture.Worker.NativeCalls);
+    }
+
+    [Theory, InlineData("ManagePlcCertificate"), InlineData("ManageSyslogServers")]
+    public void Plc_security_configuration_preview_names_the_hardware_compile(string name)
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var data = Preview(name, new { });
+        Assert.Contains("CompileDevice", data["precautions"]!.ToJsonString());
+    }
+
+    [Theory, InlineData("[1]"), InlineData("null"), InlineData("{")]
+    public void A_non_object_on_the_exception_path_returns_the_argument_error(string input)
+    {
+        using var fixture = new PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var result = Host.TargetFailure("ManageDeviceUsers", new ArgumentException("Invalid arguments."), false, input);
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("/arguments", (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+    }
+
     [Theory, MemberData(nameof(UnifiedHmiReleases))]
     public void Hmi_write_names_the_hmi_compile(string release)
     {

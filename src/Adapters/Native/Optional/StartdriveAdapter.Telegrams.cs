@@ -174,20 +174,20 @@ namespace TiaMcp.Adapters.Native.Optional
         private void ConnectTelegramToTechnologyObject(Telegram telegram, Logic.TelegramRequest r, HmiObject meta)
         {
             var target = _session.ExactTechnology(r.SoftwarePath, r.ObjectPath, true);
-            var provider = target as IEngineeringServiceProvider ?? throw new NotSupportedException("Technology object is not a service provider.");
+            var provider = target as IEngineeringServiceProvider ?? throw StepFailureStatus.UnsupportedByTarget("Technology object is not a service provider.");
             meta["technologyObject"] = r.ObjectPath; meta["interfaceKind"] = r.InterfaceKind;
 #if !OPTIONAL_V21
             var option = r.HasConnectOption ? (DriveConnectOption)Enum.Parse(typeof(DriveConnectOption), r.ConnectOption) : DriveConnectOption.Default;
             if (r.InterfaceKind == "encoder")
             {
                 var encoder = provider.GetService<EncoderHardwareConnectionProvider>()
-                    ?? throw new NotSupportedException("EncoderHardwareConnectionProvider not provided by " + target.GetType().Name + ".");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("EncoderHardwareConnectionProvider not provided by " + target.GetType().Name + ".");
                 if (r.HasConnectOption) encoder.SensorInterface.Connect(telegram, option); else encoder.SensorInterface.Connect(telegram);
                 meta["nativeSignature"] = "AxisEncoderHardwareConnectionInterface.Connect(Telegram" + (r.HasConnectOption ? ", ConnectOption" : "") + ")";
                 meta["after"] = _session.InterfaceRow(encoder.SensorInterface); return;
             }
             var axis = provider.GetService<AxisHardwareConnectionProvider>()
-                ?? throw new NotSupportedException("AxisHardwareConnectionProvider not provided by " + target.GetType().Name
+                ?? throw StepFailureStatus.UnsupportedByTarget("AxisHardwareConnectionProvider not provided by " + target.GetType().Name
                     + " (axis technology objects only).");
             if (r.InterfaceKind == "torque") {
                 if (r.HasConnectOption) axis.TorqueInterface.Connect(telegram, option); else axis.TorqueInterface.Connect(telegram); meta["after"] = _session
@@ -204,7 +204,7 @@ namespace TiaMcp.Adapters.Native.Optional
             if (r.InterfaceKind == "encoder")
             {
                 var encoder = provider.GetService<EncoderHardwareConnectionSDRProvider>()
-                    ?? throw new NotSupportedException("EncoderHardwareConnectionSDRProvider not provided by " + target.GetType().Name
+                    ?? throw StepFailureStatus.UnsupportedByTarget("EncoderHardwareConnectionSDRProvider not provided by " + target.GetType().Name
                         + " (external encoder technology objects only).");
                 AxisEncoderHardwareConnectionSDRInterface sensor = encoder.SensorInterface;
                 if (r.HasConnectOption) sensor.Connect(telegram, option); else sensor.Connect(telegram);
@@ -212,7 +212,7 @@ namespace TiaMcp.Adapters.Native.Optional
                 meta["after"] = _session.InterfaceRow(sensor); return;
             }
             var axis = provider.GetService<AxisHardwareConnectionSDRProvider>()
-                ?? throw new NotSupportedException("AxisHardwareConnectionSDRProvider not provided by " + target.GetType().Name
+                ?? throw StepFailureStatus.UnsupportedByTarget("AxisHardwareConnectionSDRProvider not provided by " + target.GetType().Name
                     + " (axis technology objects only).");
             if (r.InterfaceKind == "torque")
             {

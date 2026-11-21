@@ -65,7 +65,7 @@ namespace TiaMcp.Adapters.Native.Security
                 var properties = Properties(false); var attributes = Properties(true);
                 _session.Validate("syslog");
                 if (attributes.Count > 0 && (scope != "plc" || action != "update"))
-                    throw new ArgumentException("attributesJson (SysLogAutoAcceptClient / SysLogClientCertificateId / SysLogTrustedCertificateIds) applies " +
+                    throw new ArgumentException("attributes (SysLogAutoAcceptClient / SysLogClientCertificateId / SysLogTrustedCertificateIds) applies " +
                     "to scope=plc action=update only.");
                 if (scope == "project" && action == "create" && !dryRun) throw new NotSupportedException(SecurityCatalog.ProjectSyslogCreateRefusal);
                 foreach (var attribute in attributes.Keys) SecurityRules.RequireApprovedAttribute(attribute, SecurityAttributePolicy.SyslogNames);
@@ -130,7 +130,8 @@ namespace TiaMcp.Adapters.Native.Security
                 // scope=project: Siemens.Engineering.Security.SyslogServerProvider (project service), servers are global objects assignable to modules.
                 if (_session.IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Attach a project first.");
                 var provider = _session.CurrentProject!.GetService<SyslogServerProvider>()
-                    ?? throw new NotSupportedException("SyslogServerProvider service unavailable on this project (project-global syslog servers need TIA V20 " +
+                    ?? throw StepFailureStatus
+                        .UnsupportedByTarget("SyslogServerProvider service unavailable on this project (project-global syslog servers need TIA V20 " +
                     "or later).");
                 SyslogServerComposition composition = provider.Servers;
                 Func<object> fresh = () => (_session.CurrentProject!.GetService<SyslogServerProvider>() ?? provider).Servers;
@@ -269,7 +270,7 @@ namespace TiaMcp.Adapters.Native.Security
                     "umac" => (object?)_session.CurrentProject!.GetService<PasswordPolicyConfigurator>(),
                     "plc" => _session.CurrentProject!.GetService<PlcPasswordPolicyService>(),
                     _ => _session.CurrentProject!.GetService<LegacyPlcPasswordPolicyService>()
-                }) ?? throw new NotSupportedException("Password policy service for target=" + target + " is unavailable on this project.");
+                }) ?? throw StepFailureStatus.UnsupportedByTarget("Password policy service for target=" + target + " is unavailable on this project.");
                 meta["target"] = target; meta["before"] = PolicyRow(target); meta["requestedProperties"] = properties.DeepClone();
                 var prepared = SecurityProperties.Prepare(service.GetType(), properties);
                 if (!write)
@@ -301,7 +302,8 @@ namespace TiaMcp.Adapters.Native.Security
         }
         private UmcServerConfigurator RequireUmcServerConfigurator()
             => _session.CurrentProject!.GetService<UmcServerConfigurator>()
-                ?? throw new NotSupportedException("UmcServerConfigurator service unavailable on this project (available on protected and unprotected " +
+                ?? throw StepFailureStatus
+                    .UnsupportedByTarget("UmcServerConfigurator service unavailable on this project (available on protected and unprotected " +
                 "projects from TIA V17; one preconfigured UMC server).");
         // UmcServer.GetUserByName / GetUserGroupByName raise the Authentication event; the credentials go in as SecureString and are never echoed.
         private static EventHandler<UmcAuthenticationEventArgs>

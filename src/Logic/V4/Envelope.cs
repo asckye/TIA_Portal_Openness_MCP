@@ -13,7 +13,8 @@ namespace TiaMcp.Logic.V4
     {
         IncompleteData, NativeWarning, CandidateOnly, UnverifiedBehavior, CleanupFailed,
         NativeCapabilityLimit, DiagnosticWriteFailed, ApprovalDisabled, RecoveryGuidance, BackupSkipped,
-        ApprovalPrecheckRefused, StagingFolderRetained, DeprecatedParameter, UnsettledCalls, PreviousOwnerUnclean, WorkerRestarted
+        ApprovalPrecheckRefused, StagingFolderRetained, DeprecatedParameter, UnsettledCalls, PreviousOwnerUnclean, WorkerRestarted, SessionTakenOver,
+            PageLimitCapped
     }
 
     // Data is frozen JSON at the host boundary; domain DTOs enter and leave through V4Json.

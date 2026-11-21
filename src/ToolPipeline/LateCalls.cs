@@ -100,6 +100,12 @@ public sealed class LateCalls
             Trim();
         }
     }
+    internal long? RetainedElapsedMs(string id)
+    {
+        lock (gate)
+            return entries.TryGetValue(id, out var entry) ? (long?)(entry.Result?.StructuredContent ?? entry.Summary)?["meta"]?["elapsedMs"] : null;
+    }
+
     public CallToolResult? Read(string release, string id, UnsettledCalls unsettled)
     {
         var result = ReadStored(release, id, unsettled, out var bytes);
@@ -114,6 +120,7 @@ public sealed class LateCalls
     }
     private CallToolResult? ReadStored(string release, string id, UnsettledCalls unsettled, out byte[]? ordinaryResult)
     {
+        long started = System.Diagnostics.Stopwatch.GetTimestamp();
         ordinaryResult = null;
         lock (gate)
         {
@@ -137,7 +144,14 @@ public sealed class LateCalls
                         new OutcomeUnknownDetails("tool-call", new Dictionary<string, System.Text.Json.JsonElement>())), meta)))!.AsObject();
                 var result = new CallToolResult { StructuredContent = body };
                 unsettled.MarkRead(id);
-                return SummaryResult(OutcomeSummary(result, new JsonObject { ["sinceUtc"] = utc.ToString("O") }));
+                var summary = OutcomeSummary(result, new JsonObject { ["sinceUtc"] = utc.ToString("O") });
+                if (unknown?.FromPreviousOwner == true)
+                {
+                    // A recovered lease can contain only an ID. Identify the measured lookup duration in that case.
+                    summary["data"]!["elapsedMsSource"] = unknown.OriginalElapsedMs.HasValue ? "original-call" : "result-lookup";
+                    summary["meta"]!["elapsedMs"] = unknown.OriginalElapsedMs ?? (long)System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+                }
+                return SummaryResult(summary);
             }
             if (entry.Summary == null)
             {

@@ -67,7 +67,7 @@ namespace TiaMcp.Adapters.Native.Optional
         private static OnlineDriveObject ExactOnlineDriveObject(DeviceItem item, Logic.DriveSelector selector)
         {
             var container = item.GetService<OnlineDriveObjectContainer>()
-                ?? throw new PlcSoftwareException("NotSupportedOnVersion", "OnlineDriveObjectContainer unavailable on device item '" + item.Name
+                ?? throw StepFailureStatus.UnsupportedByTarget("OnlineDriveObjectContainer unavailable on device item '" + item.Name
                     + "' (drive not online, or not a Startdrive drive object host).");
             OnlineDriveObjectComposition objects = container.OnlineDriveObjects;
             if (selector.ByNumber)

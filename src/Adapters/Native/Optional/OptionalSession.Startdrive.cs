@@ -38,10 +38,10 @@ namespace TiaMcp.Adapters.Native.Optional
     {
         internal DeviceItem ExactDriveItem(string devicePathJson, string itemPathJson)
             => ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem
-                ?? throw new ArgumentException("itemPathJson must select a device item (the drive unit / control unit), not the device itself.");
+                ?? throw new ArgumentException("itemPath must select a device item (the drive unit / control unit), not the device itself.");
         internal DriveObjectContainer ExactDriveContainer(DeviceItem item)
             => item.GetService<DriveObjectContainer>()
-                ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DriveObjectContainer unavailable on device item '" + item.Name
+                ?? throw StepFailureStatus.UnsupportedByTarget("DriveObjectContainer unavailable on device item '" + item.Name
                     + "' (not a Startdrive drive object host, or Startdrive not installed).");
         internal static ushort? SafeDriveObjectNumber(DriveObject drive) { try { return drive.DriveObjectNumber; } catch { /* swallow(probe-optional): G120C may not expose DriveObjectNumber; the selector also supports composition index. */ return null; } }
         internal static DriveObject ExactDriveObject(DriveObjectContainer container, Logic.DriveSelector selector)

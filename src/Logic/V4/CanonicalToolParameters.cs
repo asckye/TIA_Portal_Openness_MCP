@@ -77,11 +77,16 @@ namespace TiaMcp.Logic.V4
                 bool output = group.Any(alias => alias.Canonical.StartsWith("export", StringComparison.Ordinal));
                 string rule = (wasRequired && !output ? " Supply exactly one of " : " Supply at most one of ")
                     + string.Join(" or ", new[] { group.Key }.Concat(group.Select(alias => alias.Canonical)))
-                    + "; these parameters are mutually exclusive."
-                    + (output ? " Omit the target to use the session output directory when available; otherwise supply it explicitly." : "");
+                    + "; these parameters are mutually exclusive.";
+                string omission = !output || !HasDefaultTarget(group, wasRequired) ? ""
+                    : IsPlcDocumentExport(tool)
+                        ? $" Omit the target to use a new {tool} subdirectory under the session output directory. The target must not already exist."
+                    : ExportActionOnly(tool)
+                        ? " For export, omit the target to use the session output directory when available; otherwise supply it explicitly."
+                    : " Omit the target to use the session output directory when available; otherwise supply it explicitly.";
                 string description = (string?)legacy["description"] ?? "";
                 legacy["description"] = description + " Deprecated alias; use " + string.Join(" or ", group.Select(alias => alias.Canonical))
-                    + ". Removed in 5.0; its existing file/directory meaning is unchanged." + rule;
+                    + ". Removed in 5.0; its existing file/directory meaning is unchanged." + rule + omission;
                 foreach (var alias in group)
                 {
                     var property = legacy.DeepClone().AsObject();
@@ -93,7 +98,8 @@ namespace TiaMcp.Logic.V4
                         : alias.Canonical == "exportDirectory"
                             ? "Absolute output directory on the TIA host. " + description
                             : "Absolute input directory on the TIA host. " + description;
-                    property["description"] = (string?)property["description"] + rule;
+                    property["description"] = (string?)property["description"] + rule
+                        + (alias.Canonical.StartsWith("export", StringComparison.Ordinal) ? omission : "");
                     properties[alias.Canonical] = property;
                 }
                 if (wasRequired) required!.Remove(required.First(value => (string?)value == group.Key));
@@ -110,6 +116,13 @@ namespace TiaMcp.Logic.V4
             return JsonSerializer.SerializeToElement(schema);
         }
 
+        private static bool IsPlcDocumentExport(string tool) => tool is "ExportPlcBlockDocuments" or "ExportPlcBlocksDocuments";
+
+        private static bool ExportActionOnly(string tool) => tool is "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules";
+
+        private static bool HasDefaultTarget(IGrouping<string, Alias> group, bool required)
+            => required || group.Key == "outputDirectory" && group.Any(alias => alias.Canonical == "exportDirectory");
+
         private static IEnumerable<Alias> DefaultTargets(string tool, JsonObject input, IEnumerable<string> required)
         {
             foreach (var group in Aliases(tool).GroupBy(alias => alias.Legacy))
@@ -117,9 +130,8 @@ namespace TiaMcp.Logic.V4
                 var aliases = group.ToArray();
                 if (!aliases.Any(alias => alias.Canonical.StartsWith("export", StringComparison.Ordinal))
                     || input.ContainsKey(group.Key) || aliases.Any(alias => input.ContainsKey(alias.Canonical))) continue;
-                if (tool is "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules" && (string?)input["action"] != "export") continue;
-                if (!required.Contains(group.Key) && !(group.Any(alias => alias.Canonical == "exportDirectory")
-                    && group.Key == "outputDirectory")) continue;
+                if (ExportActionOnly(tool) && (string?)input["action"] != "export") continue;
+                if (!HasDefaultTarget(group, required.Contains(group.Key))) continue;
                 yield return aliases.FirstOrDefault(alias => alias.Canonical == "exportDirectory") ?? aliases[0];
             }
         }
@@ -164,7 +176,7 @@ namespace TiaMcp.Logic.V4
             var result = input.DeepClone().AsObject();
             foreach (var alias in DefaultTargets(tool, input, required))
                 result[alias.Canonical] = alias.Canonical == "exportDirectory"
-                    ? tool is "ExportPlcBlocksDocuments" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules"
+                    ? IsPlcDocumentExport(tool) || ExportActionOnly(tool)
                         ? Path.Combine(directory, tool) : directory
                     : Path.Combine(directory, tool + Extension(tool));
             return result;

@@ -74,7 +74,7 @@ namespace TiaMcp.Adapters.Native.Optional
         // ---- resolution ----------------------------------------------------------------------------------------------------------
         private static DriveControlChartContainer ExactDccContainer(DriveObject drive)
             => drive.GetService<DriveControlChartContainer>()
-                ?? throw new PlcSoftwareException("NotSupportedOnVersion",
+                ?? throw StepFailureStatus.UnsupportedByTarget(
                     "DriveControlChartContainer not provided by this drive object (device without DCC support, or SINAMICS DCC not installed).");
         private static DriveControlChart ExactDccChart(DriveControlChartContainer container, string[] path)
         {
@@ -542,7 +542,7 @@ namespace TiaMcp.Adapters.Native.Optional
 #else
                 var importer = (_session.CurrentProject!.ProjectLibrary as IEngineeringServiceProvider)?.GetService<DcbLibraryImporter>() ?? _session
                     .CurrentProject.GetService<DcbLibraryImporter>()
-                    ?? throw new PlcSoftwareException("NotSupportedOnVersion", "DcbLibraryImporter unavailable (SINAMICS DCC not installed).");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("DcbLibraryImporter unavailable (SINAMICS DCC not installed).");
                 if (!write) return "DCB extension library import preview; nothing imported into the project library.";
                 meta["mayHaveChanged"] = true; meta["nativeSignature"] = "DcbLibraryImporter.ImportDcbLibrary(string)";
                 importer.ImportDcbLibrary(file.FullName);

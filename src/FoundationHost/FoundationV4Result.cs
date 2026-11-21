@@ -68,9 +68,9 @@ internal static class FoundationV4Result
             Content = new[] { new TextContentBlock { Text = result.Content[0].Text } } };
     }
     internal static readonly JsonElement Schema = EnvelopeSchema.Value;
-    internal static JsonObject? NativeDiagnostics(JsonNode? reply)
+    internal static JsonObject? NativeDiagnostics(JsonNode? reply, JsonObject? previous = null)
     {
-        if (reply is not JsonObject value) return null;
+        if (reply is not JsonObject value) return previous;
         var failure = value["Failure"] as JsonObject;
         var failureEvidence = failure?["Evidence"] as JsonObject;
         string? message = (failureEvidence == null ? null : Text(failureEvidence, "nativeMessage"))
@@ -90,7 +90,7 @@ internal static class FoundationV4Result
         }
         foreach (string member in new[] { "Meta", "Value", "Step", "Import" })
             if (NativeDiagnostics(value[member]) is { } diagnostic) return diagnostic;
-        return null;
+        return previous;
     }
 
     internal static CallToolResult ReconcileWorker(CallToolResult result, JsonObject? diagnostics, string? tool = null,
@@ -102,7 +102,7 @@ internal static class FoundationV4Result
             && body["error"]?["details"]?["evidence"] is JsonObject retained
             && tool != null && HostBehavior.WorkerReplyEvidence(tool, lastFailure) is { } unknownEvidence)
             foreach (var field in unknownEvidence) retained[field.Key] = JsonSerializer.SerializeToNode(field.Value);
-        if (diagnostics != null && body["error"] is JsonObject error && (string?)error["code"] == "NATIVE_OPERATION_FAILED"
+        if (tool != "SetUnifiedGlobalScript" && diagnostics != null && body["error"] is JsonObject error && (string?)error["code"] == "NATIVE_OPERATION_FAILED"
             && error["details"] is JsonObject details)
         {
             var evidence = details["evidence"] as JsonObject ?? new JsonObject();
@@ -237,6 +237,7 @@ internal static class FoundationV4Result
             return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, EarlierMutation(Empty), true);
         }
         var worker = exception as WorkerOperationException;
+        bool scriptRefusal = name == "SetUnifiedGlobalScript" && worker?.KnownNoMutation == true;
         string? exceptionType = worker == null ? exception?.GetType().Name : worker.ExceptionType;
         int? hResult = worker == null ? exception?.HResult : null;
         if (worker?.EvidenceJson != null && worker.EvidenceJson != "null")
@@ -244,7 +245,12 @@ internal static class FoundationV4Result
             var retained = JsonNode.Parse(worker.EvidenceJson);
             if (retained is JsonObject retainedObject && retainedObject["nativeMessage"] is JsonValue nativeMessage)
                 retainedObject["nativeMessage"] = HostBehavior.SafeDiagnostic(nativeMessage.GetValue<string>());
-            HostBehavior.SanitizeEvidence(retained);
+            if (scriptRefusal)
+            {
+                retained = JsonSerializer.SerializeToNode(HostBehavior.WorkerReplyEvidence(name, worker) ?? Empty);
+                data = new JsonObject();
+            }
+            else HostBehavior.SanitizeEvidence(retained);
             data ??= new JsonObject();
             data["evidence"] = retained;
             if (name is ("ImportPlcBlock" or "ImportPlcType") && worker.KnownNoMutation && retained is JsonObject importEvidence
@@ -258,8 +264,11 @@ internal static class FoundationV4Result
                 data["recoveryWarning"] = retained?["recoveryWarning"]?.DeepClone();
                 data["recoverySkipped"] = retained?["recoverySkipped"]?.DeepClone();
             }
-            exceptionType = (string?)retained?["exceptionType"];
-            hResult = NativeHResult(retained?["hResult"]);
+            if (!scriptRefusal)
+            {
+                exceptionType = (string?)retained?["exceptionType"];
+                hResult = NativeHResult(retained?["hResult"]);
+            }
         }
         if (exception?.Data["foundationRequestSent"] is false) dispatched = false;
         if (!dispatched && exception?.Data["workerLimitBytes"] is int workerLimit)
@@ -267,10 +276,11 @@ internal static class FoundationV4Result
                     new Error("Worker request exceeds its byte limit. Nothing was executed.", new LimitExceededDetails("arguments", workerLimit, null)), true);
         if (!dispatched && exception?.GetBaseException() is NotSupportedException unavailable)
             return Reject(release, name, id, UnsupportedCapabilityDetails.ErrorFor(release, name, null,
-                HostBehavior.SafeDiagnostic(unavailable.Message)), true);
-        if (worker is { Outcome: "rejected-before-operation", ExceptionType: nameof(NotSupportedException) })
-            return Reject(release, name, id, UnsupportedCapabilityDetails.ErrorFor(release, name, null, HostBehavior.SafeDiagnostic(worker.Message),
-                (string?)data?["evidence"]?["unsupportedBy"]), true);
+                HostBehavior.SafeDiagnostic(unavailable.Message), unavailable.Data["unsupportedBy"] as string), true);
+        if (worker is { CapabilityRefused: true })
+            return Reject(release, name, id, UnsupportedCapabilityDetails
+                    .ErrorFor(release, name, null, scriptRefusal ? null : HostBehavior.SafeDiagnostic(worker.Message),
+                worker.UnsupportedBy), true);
         exception ??= new InvalidOperationException();
         string? condition = worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition;
         if ((!dispatched || worker?.KnownNoMutation == true) && condition == TiaMcp.Adapters.Contracts.PlcImportOptionPolicy.UnsupportedCondition)
@@ -278,7 +288,7 @@ internal static class FoundationV4Result
                 new UnsupportedCapabilityDetails(release, "PLC-Software", name)), true);
         var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(exception, dispatched, !mutation, worker?.Outcome, worker?.Code, exceptionType);
         string? parameter = worker?.Parameter ?? TiaOpenness.Shared.HostFailurePolicy.Parameter(exception);
-        bool nativeDiagnostic = !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception)
+        bool nativeDiagnostic = !scriptRefusal && !TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception)
             && (worker == null ? exception is IOException : worker.Outcome != "rejected-before-operation");
         bool nativeFailure = kind == TiaOpenness.Shared.HostFailureKind.ReadFailed;
         var details = HostBehavior.FailureEvidence(exceptionType,
@@ -297,7 +307,7 @@ internal static class FoundationV4Result
         return Wire(release, name, id, data, readCancelled ? Outcome.ReadFailed : HostBehavior.OutcomeOf(kind),
             readCancelled ? Execution.ReadOnly : HostBehavior.ExecutionOf(kind), HostBehavior.CompletenessOf(kind),
             HostBehavior.FailureError(kind, parameter, details,
-                TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception) ? null : HostBehavior
+                scriptRefusal || TiaOpenness.Shared.HostFailurePolicy.SuppressAdmissionDiagnostic(exception) ? null : HostBehavior
                     .AdmissionDiagnostic(exception, worker?.Code, worker?.Outcome, worker?.ExceptionType)
                     ?? (dispatched && nativeDiagnostic ? HostBehavior.SafeDiagnostic(exception.Message) : null),
                 reason, dispatched ? "tool-call" : "tool-queue", worker?.Condition ?? TiaOpenness.Shared.HostFailurePolicy.Precondition(exception)?.Condition,
@@ -353,7 +363,7 @@ internal static class FoundationV4Result
             string? next = data["nextCursor"]?.GetValue<string>();
             int total = data["total"]!.GetValue<int>();
             data.Remove("offset"); data.Remove("nextCursor"); data.Remove("total");
-            return Wire(release, name, id, data, Outcome.Succeeded, Execution.ReadOnly, Completeness.Complete, null, true,
+            return Wire(release, name, id, data, Outcome.Succeeded, Execution.ReadOnly, next == null ? Completeness.Complete : Completeness.Partial, null, true,
                 paging
                     : new Paging(PagingMode.Cursor, null, limit, null, string.IsNullOrEmpty((string?)args["cursor"]) ? null : (string?)args["cursor"], next,
                         total, next == null));

@@ -6,6 +6,7 @@ using System.Security;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Protocol;
@@ -266,12 +267,12 @@ internal sealed class CanonicalParameterTool : McpServerTool
         error = PrepareDefault(tool.Name, input, required, defaultDirectory, out var effective);
         error ??= CanonicalToolParameters.ValidateAliases(tool.Name, effective, required, requireOutput: true)
             ?? new InputSchema(implementationSchema).Validate(JsonSerializer.SerializeToElement(effective), "arguments");
-        if (error != null) return Decorate(tool.Name, input, Reject(release, tool.Name, error));
+        if (error != null) return Decorate(tool.Name, effective, Reject(release, tool.Name, error));
         var original = request.Params;
         request.Params = new CallToolRequestParams { Name = tool.Name, Meta = original?.Meta, ProgressToken = original?.ProgressToken,
             Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
                 CanonicalToolParameters.LegacyArguments(tool.Name, effective).ToJsonString()) };
-        try { return Decorate(tool.Name, input, await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)); }
+        try { return Decorate(tool.Name, effective, await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false)); }
         finally { request.Params = original; }
     }
 
@@ -284,15 +285,23 @@ internal sealed class CanonicalParameterTool : McpServerTool
                 .Where(alias => !input.ContainsKey(alias.Legacy) && input.ContainsKey(alias.Canonical)))
             {
                 string legacy = "/" + alias.Legacy, canonical = "/" + alias.Canonical;
-                bool parameter = (string?)details["parameter"] == legacy;
-                bool parameters = details["parameters"] is JsonArray fields && fields.Any(field => (string?)field == legacy);
-                if (!parameter && !parameters) continue;
                 if (ReferenceEquals(body, decorated))
                 {
                     decorated = body!.DeepClone();
                     details = decorated["error"]!["details"]!.AsObject();
                 }
-                if (parameter) details["parameter"] = canonical;
+                if ((string?)details["parameter"] == legacy) details["parameter"] = canonical;
+                if ((string?)details["target"] == legacy) details["target"] = canonical;
+                else if ((string?)details["target"] == alias.Legacy) details["target"] = alias.Canonical;
+                void Rewrite(JsonObject row, string field)
+                {
+                    if (row[field] is JsonValue value && value.TryGetValue<string>(out var text))
+                        row[field] = Regex.Replace(text, @"(?<![\w./\\-])/?"
+                            + Regex.Escape(alias.Legacy) + @"(?![\w/\\-]|\.\w)", match => match.Value.StartsWith("/", StringComparison.Ordinal)
+                                ? canonical : alias.Canonical, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                }
+                Rewrite(decorated!["error"]!.AsObject(), "message");
+                Rewrite(details, "expected");
                 if (details["parameters"] is JsonArray pointers)
                     for (int index = 0; index < pointers.Count; index++)
                         if ((string?)pointers[index] == legacy) pointers[index] = canonical;

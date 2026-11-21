@@ -8,6 +8,11 @@ namespace TiaMcp.Adapters.Native.Security;
 
 internal static class SecurityRules
 {
+    internal static void RequireAccessLevelProvider(string action, bool provided)
+    {
+        if (!provided && System.Array.IndexOf(PlcProtectionRules.LevelActions, action) >= 0)
+            throw StepFailureStatus.UnsupportedByTarget("The selected device item does not provide PlcAccessLevelProvider.");
+    }
     internal static void RequireApprovedAttribute(string name, IEnumerable<string> approved)
     {
         try { SecurityAttributePolicy.RequireApproved(name, approved); }

@@ -228,6 +228,14 @@ namespace TiaOpenness.Shared
                     timeout);
         }
 
+        internal static int PairValueStart(string text, int offset)
+        {
+            while (offset < text.Length && char.IsWhiteSpace(text[offset])) offset++;
+            if (offset == text.Length || text[offset] != '=' && text[offset] != ':') return -1;
+            do { offset++; } while (offset < text.Length && char.IsWhiteSpace(text[offset]));
+            return offset;
+        }
+
         private static string RedactPairs(string text, HashSet<string>? secrets, Func<string, string>? replaceSecret = null)
         {
             StringBuilder? output = null;
@@ -239,11 +247,8 @@ namespace TiaOpenness.Shared
                 while (index < text.Length && NameCharacter(text[index])) index++;
                 string name = text.Substring(start, index - start);
                 if (!IsCredentialPairName(name)) continue;
-                int delimiter = index;
-                while (delimiter < text.Length && char.IsWhiteSpace(text[delimiter])) delimiter++;
-                if (delimiter == text.Length || text[delimiter] != '=' && text[delimiter] != ':') continue;
-                int value = delimiter + 1;
-                while (value < text.Length && char.IsWhiteSpace(text[value])) value++;
+                int value = PairValueStart(text, index);
+                if (value < 0) continue;
                 int end = value;
                 while (end < text.Length && !char.IsWhiteSpace(text[end]) && "&;,\"'<>".IndexOf(text[end]) < 0) end++;
                 if (end == value) continue;

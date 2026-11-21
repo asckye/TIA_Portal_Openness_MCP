@@ -115,7 +115,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "InvalidState": return new Error("No project is bound.", new ProjectNotBoundDetails());
                 case "NotFound": case "NOT_FOUND"
                     : return new Error("The requested target was not found.", McpServer.MissingTargetDetails(tool, evidence: evidence));
-                case "NotSupportedOnVersion": case "NativeCrashRiskBlocked": case "UNSUPPORTED_CAPABILITY"
+                case "NotSupportedOnVersion": case "UNSUPPORTED_CAPABILITY":
+                    return UnsupportedCapabilityDetails.ErrorFor(HardwareContract.ReleaseKey, tool, null,
+                        HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]), (string?)evidence["unsupportedBy"]);
+                case "NativeCrashRiskBlocked"
                     : return new Error("The target or version does not support this capability.",
                         new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null));
                 case "InvalidParams": case "INVALID_ARGUMENT":

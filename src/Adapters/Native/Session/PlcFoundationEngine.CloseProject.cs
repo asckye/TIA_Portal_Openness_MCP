@@ -30,7 +30,7 @@ namespace TiaMcp.Adapters
             bool modified = target.IsModified;
             lifecycle.RequireClose(modified, discardChanges, ownsPortal == true && workerStartedPortal && bindingOwnedByCaller);
             string file = target.Path.FullName;
-            string planHash = MutationIdentityPolicy.ClosePlanHash(file, modified, discardChanges);
+            string planHash = MutationIdentityPolicy.ClosePlanHash(file, modified, discardChanges, lifecycle.ProcessId);
             if (!dryRun)
             {
                 if (discardChanges)

@@ -23,20 +23,18 @@ internal sealed class SecurityDeepPortService
     {
         var properties = new JsonObject();
         Capture(request, attributes ? "attributes" : "properties", () => {
-            properties = HardwareNetworkLogic.ParseObject(json, attributes ? "attributesJson" : "propertiesJson");
+            properties = HardwareNetworkLogic.ParseObject(json, attributes ? "attributes" : "properties");
             if (attributes) request.Attributes = HardwareAddressingService.Scalars(json); else request.Properties = HardwareAddressingService.Scalars(json);
         });
         return properties;
     }
     private ResponseMessage Invoke(SecurityDeepRequest request)
     {
-        if (request.Operation == "ManageUmcUsers"
-            && (request.Action is "createOffline" or "rename" && HardwareContract.ReleaseKey is "17" or "18" or "19"
-                || request.Kind == "server" && request.Action is "checkConsistency" or "synchronize" && HardwareContract.ReleaseKey == "17"))
-            return new ResponseMessage { Message = "The requested UMC action is unavailable on this release.", Meta = new JsonObject {
-                ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false, ["status"] = "NotSupportedOnVersion" } };
-        if (request.Operation == "ManageSyslogServers" && request.Scope == "project" && HardwareContract.ReleaseKey == "19")
-            return new ResponseMessage { Message = "Project-global syslog requires V20 or later.", Meta = new JsonObject {
+        string? unavailable = request.Operation is "ManageUmcUsers" or "ManageSyslogServers"
+            ? SecurityCapabilities.Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Action,
+                request.Operation == "ManageUmcUsers" ? request.Kind : request.Scope) : null;
+        if (unavailable != null)
+            return new ResponseMessage { Message = unavailable, Meta = new JsonObject {
                 ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false, ["status"] = "NotSupportedOnVersion" } };
         if (!hasProject()) return JsonSerializer.Deserialize<ResponseMessage>(HardwarePortPreconditions.NoProject(request.Operation).ToJsonString())!;
         bool writing = !request.DryRun && request.Action != "read" && request.Action != "checkConsistency";

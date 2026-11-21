@@ -185,7 +185,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 result.Add("用临时 TIA V21 工程发现并读回 WinCC Unified 导航/弹窗事件 API，再解除相关配方阻断。");
             }
-            if (failedItems.Count == 0)
+            if (failedItems.Count == 0 && suiteRoot["ok"]?.GetValue<bool>() == true)
             {
                 result.Add("离线发布套件已通过；下一阶段应执行临时 TIA 工程导入、读回、SyntaxCheck/编译诊断验证。");
             }

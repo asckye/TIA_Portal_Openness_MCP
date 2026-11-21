@@ -44,7 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var report = await BridgeWait.On(PreflightToolCallAsync(name, args.Json.GetRawText())).ConfigureAwait(false);
             if (error != null)
             {
-                report.Meta!["validationError"] = JsonSerializer.SerializeToNode(error, V4BindingJson);
+                report.Meta!["validationError"] = JsonNode.Parse(V4Json.Serialize(error));
                 var fields = new InputSchema(CatalogView.Find(name)!.Tool.InputSchema).ValidateFields(args.Json).ToList();
 #if TIA_ENGINE_HOST
                 var target = CatalogView.Find(name)!;
@@ -54,10 +54,18 @@ namespace TiaMcpServer.ModelContextProtocol
                     && !fields.Any(field => field.Details is InvalidArgumentDetails details && details.Parameter == aliasDetails.Parameter))
                     fields.Insert(0, aliasError);
 #endif
-                report.Meta["validationErrors"] = JsonSerializer.SerializeToNode(fields.Count == 0 ? new[] { error } : fields.ToArray(), V4BindingJson);
+                report.Meta["validationErrors"] = JsonNode.Parse(V4Json.Serialize(fields.Count == 0 ? new[] { error } : fields.ToArray()));
                 report.Meta["ok"] = false;
                 report.Message = "NOT READY: " + error.Message;
-                return InfrastructureResult("PreviewToolCall", report, reportOnly: true);
+                return InfrastructureResult("PreviewToolCall", report, rejection: error);
+            }
+            if ((bool?)report.Meta?["ok"] == false)
+            {
+                if (report.Meta?["validationError"] is JsonObject validation)
+                    return InfrastructureResult("PreviewToolCall", report, rejection: V4Json.Deserialize<Error>(validation.ToJsonString()));
+                var reason = report.Meta?["typeProblems"] is JsonArray problems && problems.Count > 0 ? (string?)problems[0] : report.Message;
+                return InfrastructureResult("PreviewToolCall", report, rejection: new Error(reason ?? "Invalid arguments.",
+                    new InvalidArgumentDetails("/arguments", Array.Empty<string>())));
             }
             if (report.Meta?["prerequisites"]?["satisfied"]?.GetValue<bool?>() == false)
                 return V4Reject("PreviewToolCall", new Error("No project is bound.", new ProjectNotBoundDetails()));
@@ -154,7 +162,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 && args["mode"] is JsonValue mode && mode.TryGetValue<string>(out var modeName) && args["fields"] is JsonObject fields)
             {
                 var problem = PreflightLogic.PrefillFieldsProblem(formName, modeName, fields.Select(field => field.Key).ToArray());
-                if (problem != null) report.TypeProblems.Add(problem);
+                if (problem != null)
+                {
+                    report.TypeProblems.Add(problem);
+                    var rejection = new Error(problem, new InvalidArgumentDetails("/fields", Array.Empty<string>()));
+                    meta["validationError"] = JsonNode.Parse(V4Json.Serialize(rejection));
+                }
             }
 #if TIA_ENGINE_HOST
             if (CanonicalToolParameters.ValidateAliases(canonical, args, method.ImplementationRequired) is { } aliasProblem)
@@ -172,7 +185,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var op = ToolTaxonomy.OperationOf(canonical, description);
             bool readOnly = CatalogView.Find(canonical)?.Tool.Annotations?.ReadOnlyHint == true || ToolTaxonomy.IsSessionReader(canonical);
             bool changesState = !readOnly && !report.DryRunEffective;
-            var precautions = PreflightLogic.Precautions(op.Operation, tag.Domain, report, readOnly, specs).ToList();
+            var precautions = PreflightLogic.Precautions(op.Operation, tag.Domain, report, readOnly, specs, canonical).ToList();
             var usageNotes = TiaOpenness.Shared.ToolUsageCatalog.Notes(canonical);
             bool nativeParameterRead = (bool?)usageNotes["nativeReadsPossible"] == true;
             if (usageNotes["precaution"] is JsonValue note) precautions.Add(note.GetValue<string>());

@@ -173,6 +173,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 execution = readOnly ? Execution.ReadOnly : Execution.Unknown;
                 error = HostBehavior.UnavailableCall(!readOnly);
             }
+            else if (readOnly && !issued && status is ("NotSupportedOnVersion" or "UNSUPPORTED_CAPABILITY") && (string?)evidence["unsupportedBy"] == "target")
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
+                error = UnsupportedCapabilityDetails.TargetErrorFor(HardwareContract.ReleaseKey, tool, null,
+                    HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"] ?? response.Message));
+            }
             else if (status == "NOT_FOUND" || status == "UNSUPPORTED_CAPABILITY" || status == "INVALID_ARGUMENT")
             {
                 outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
