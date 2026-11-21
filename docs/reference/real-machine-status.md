@@ -21,10 +21,10 @@ Candidate order uses the first run of each commit. A superscript ᵒ marks evide
 | V15.1 | 328 | 232 | 309 | 177 | 66 | d89d0152 | 2026-11-19 |
 | V16 | 354 | 258 | 349 | 186 | 83 | d89d0152 | 2026-11-19 |
 | V17 | 377 | 280 | 374 | 198 | 69 | 9a4274f2 | 2026-11-20 |
-| V18 | 403 | 305 | 399 | 217 | 83 | d89d0152 | 2026-11-20 |
-| V19 | 479 | 373 | 477 | 284 | 68 | d89d0152 | 2026-11-20 |
-| V20 | 500 | 384 | 498 | 287 | 91 | d89d0152 | 2026-11-20 |
-| V21 | 519 | 397 | 517 | 291 | 117 | 02107734 | 2026-11-19 |
+| V18 | 402 | 304 | 398 | 217 | 82 | d89d0152 | 2026-11-20 |
+| V19 | 478 | 372 | 476 | 284 | 68 | d89d0152 | 2026-11-20 |
+| V20 | 499 | 383 | 497 | 287 | 91 | d89d0152 | 2026-11-20 |
+| V21 | 518 | 396 | 516 | 291 | 117 | 02107734 | 2026-11-19 |
 
 The API count includes only explicit foundation and worker entries in ToolExecution. Tools without an entry are excluded from that count.
 With records counts tools with an executed call.
@@ -365,7 +365,6 @@ All succeeded counts clean passes. With failures counts failed and known issues,
 | ListUnifiedLibraryFolderEntries | READ | — | — | — | — | — | ✅ | ✅ | ✅ | ✅ |
 | ListUnifiedTagDefinitions | READ | — | — | — | — | — | ✅ | ✅ | ✅ | ✅ |
 | ListVersionControlWorkspaces | READ | — | — | ✅ | ⚠ | ✅ | ✅ | ✅ | ✅ | ⚠ |
-| ManageCfcChartProtection | WRITE | — | — | — | — | ⚠ | ⛔ | ⛔ | ⚠ | ⚠ |
 | ManageClassicHmiCycle | WRITE | ⛔ | · | ⚠ | ⚠ | ⚠ | ⚠ | ⚠ | ⚠ | ⚠ |
 | ManageClassicHmiFolder | WRITE | ⛔ | · | ⚠ | ⚠ | ⚠ | ⛔ | ✅ | ⛔ | ⚠ |
 | ManageClassicHmiGraphic | WRITE | ✅ | ⛔ | ✅ | ⚠ | ⚠ | ⛔ | ⚠ | ⚠ | ⚠ |
