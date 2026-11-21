@@ -13,6 +13,25 @@ public sealed class GeneratorTests
     private static string Root => Repository.FindRoot();
 
     [Fact]
+    public void Git_attributes_preserve_LF_for_pattern_inputs_and_generated_files()
+    {
+        var patterns = PlcPatternLibrary.Load(Root).Patterns;
+        var inputs = from pattern in patterns
+                     from variant in pattern!["variants"]!.AsArray()
+                     from file in variant!["files"]!.AsArray()
+                     select Text(file!["path"]);
+        var paths = inputs.Concat(CatalogGenerator.Generate(Root).Keys).Concat(ToolCountGenerator.Targets)
+            .Concat([RealMachineStatusGenerator.Page, RealMachineStatusGenerator.Manifest, ReleaseMigrationGenerator.Output,
+                "src/Shared/ToolUsageData.json", "docs/reference/tool-matrix.md"]).Distinct(StringComparer.Ordinal).ToArray();
+        var result = ReviewChangeSet.Git("git", ["check-attr", "-z", "eol", "text", "--", .. paths], Root);
+        ProcessRunner.RequireSuccess(result, "Check Git attributes for LF inputs");
+        var preserved = result.StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries).Chunk(3)
+            .Where(row => (row[1], row[2]) is ("eol", "lf") or ("text", "unset"))
+            .Select(row => row[0]).ToHashSet(StringComparer.Ordinal);
+        Assert.All(paths, path => Assert.True(preserved.Contains(path), path + " needs eol=lf or -text in .gitattributes"));
+    }
+
+    [Fact]
     public void Siemens_guides_keep_the_refreshed_pin_attribution_and_scope()
     {
         var usage = ToolUsageGenerator.Generate(Root);

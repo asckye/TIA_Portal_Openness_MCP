@@ -16,6 +16,7 @@ public sealed class VersionFeatureMatrixTests
         .Select(release => new object[] { release });
 
     [Theory, MemberData(nameof(Releases))]
+    [Trait("Category", "RequiresSiemensSdk")]
     public void OpennessApiBoundariesMatchTheOfflineSdk(string release)
     {
         var sdk = MergeCheck.ResolvePublicApi(Root, Environment.GetEnvironmentVariable("TIA_MCP_TEST_PUBLIC_API_ROOT"),

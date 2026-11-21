@@ -20,6 +20,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The release tool uses local version tags to recognize frozen, published notes.
+          fetch-depth: 0
       - uses: actions/setup-python@v7
         id: decoder-python
         with:
@@ -38,7 +41,9 @@ jobs:
         run: |
           # Stop at the first failing command; otherwise only the last exit code fails the step.
           $PSNativeCommandUseErrorActionPreference = $true
-          dotnet run --project build-tools/release -- test-suites -ResultsDirectory bin-build/ci-covered-results -Suite release-tool
+          # The host runs the full registered suite against all eight licensed SDKs.
+          dotnet run --project build-tools/release -- test-suites -ResultsDirectory bin-build/ci-covered-results -Suite release-tool `
+            -DotnetArg=--filter '-DotnetArg=Category!=RequiresSiemensSdk'
       - name: Release safety suites and production PLC name fixture
         shell: bash
         run: |

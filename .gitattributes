@@ -37,6 +37,7 @@ scripts/diagnostics/campaign/plans/*.json text eol=lf
 scripts/diagnostics/campaign/ledger-history.json text eol=lf
 
 # Product generators compare raw UTF-8 bytes on Windows and Ubuntu.
+reference/plc-patterns/** text eol=lf
 src/Shared/ToolUsageData.json text eol=lf
 src/Logic/ModelContextProtocol/ToolProfiles.resx text eol=lf
 tests/FoundationHost/TiaMcp.Engine.Tests/FullEngineRejections.json text eol=lf
@@ -44,6 +45,8 @@ reference/tool-catalog/*.json text eol=lf
 reference/version-feature-matrix.json text eol=lf
 docs/reference/version-tool-catalog.md text eol=lf
 docs/reference/real-machine-ledger.md text eol=lf
+docs/reference/real-machine-status.md text eol=lf
+docs/reference/tool-matrix.md text eol=lf
 docs/releases/v4.0.0-tool-migration.md text eol=lf
 
 # Generated tool-count blocks are byte-checked inside these documents.

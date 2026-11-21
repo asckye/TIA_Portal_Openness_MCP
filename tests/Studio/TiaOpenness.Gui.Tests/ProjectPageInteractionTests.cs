@@ -314,6 +314,8 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
             {
                 model.Session.Connect.Execute(null);
                 window.Width = 1366; window.Height = 860;
+                // The desktop can cap a native window's width. Keep the single-row layout at its design width.
+                window.Root.Width = window.Width;
                 WpfContext.ShowWindow(window); WpfContext.Drain();
                 var host = window;
                 var bar = (Border)ProjectPageTestSupport.Find(window, "ProjectToolbar");
