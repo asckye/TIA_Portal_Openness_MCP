@@ -3766,7 +3766,7 @@
       "path": "src/Shared/HardwareDevicesTools.cs",
       "owner": "HardwareDevicesTools",
       "domain": "Hardware",
-      "signature": "public CallToolResult CreateGsdDeviceV4(\n            [Description(\"keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates\")] string keyword,\n            [Description(\"deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'\")] string deviceName,\n            [Description(\"preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'\")] string preferredDap = \"\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult CreateGsdDeviceV4(\n            [Description(\"keyword: exact catalog TypeIdentifier to create; search text (e.g. 'AFM60A') is refused with the ranked candidates\")] string keyword,\n            [Description(\"deviceName: name of the new device and its head item, e.g. 'ENC_AFM60A_1'\")] string deviceName,\n            [Description(\"preferredDap: optional ranking hint for the refusal candidate list, e.g. 'DAP V2.0'\")] string preferredDap = \"\",\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\",\n            [Description(\"Positive maximum number of ranked candidates to return. Defaults to 50.\")] int limit = 50)",
       "parameters": {
         "keyword": {
           "type": "string",
@@ -3801,6 +3801,12 @@
           "default": "\"\"",
           "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
           "value": ""
+        },
+        "limit": {
+          "type": "int",
+          "default": "50",
+          "description": "Positive maximum number of ranked candidates to return. Defaults to 50.",
+          "value": 50
         }
       }
     },
@@ -10858,7 +10864,7 @@
       "path": "src/Shared/PlcTechnologyTools.cs",
       "owner": "PlcTechnologyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ImportTechnologyObjectV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional technology object group path (use empty for root)\")] string folderPath,\n            [Description(\"importPath: full file path of Technology Object XML\")] string importPath,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult ImportTechnologyObjectV4(\n            [Description(\"softwarePath: path in the project structure to the PLC software\")] string softwarePath,\n            [Description(\"folderPath: optional technology object group path (use empty for root)\")] string folderPath,\n            [Description(\"importPath: full file path of Technology Object XML\")] string importPath,\n            [Description(\"dryRun: true (default) previews; false executes.\")] bool dryRun = true,\n            [Description(\"expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedPlanHash = \"\",\n            [Description(\"expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.\")] string expectedProjectFile = \"\",\n            [Description(\"Allow replacement of an existing technology object with the same name.\")] bool overwrite = false)",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -10892,6 +10898,12 @@
           "default": "\"\"",
           "description": "expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when dryRun=false.",
           "value": ""
+        },
+        "overwrite": {
+          "type": "bool",
+          "default": "false",
+          "description": "Allow replacement of an existing technology object with the same name.",
+          "value": false
         }
       }
     },
