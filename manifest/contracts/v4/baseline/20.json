@@ -33109,7 +33109,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c16064087f56be2294db09fa3ddd4f4c0677de2a53042c1c19c0d85d85b21ad6",
+      "descriptionSha256": "c4cd5bbfcc9bbd53e9f91a8e7707327bebeb122dc76378760b8a106f7d33817e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

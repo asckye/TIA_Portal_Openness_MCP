@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-21T18:18:54.9365766+00:00",
+  "generatedAt": "2026-11-21T19:36:29.1384026+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "1d7e1e18767c2fcf3b380eae7349ec8494c5a523b76d7b8dcf57bbe869986cd3",
+  "workerSha256": "a161e409ab30ec0e42b363bc6eeb770a3455dd644f6eb0dfaf1b74931f04e9db",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -4648,7 +4648,7 @@
         "properties",
         "attributes"
       ],
-      "description": "[L2][Security][WRITE] Syslog configuration. scope=project (V20+, Siemens.Engineering.Security.SyslogServerProvider.Servers, project-global servers): read (all or exact name: Name, Address, Port, Tls, Comment, AssignedModules with owner paths), create (PREVIEW ONLY: SyslogServerComposition.Create crashed TIA Portal V21 twice on the reference project, so dryRun=false is refused; create the server in the TIA UI), update (properties), delete (needs confirmDelete, verified absent), assignModule/unassignModule (DeviceItemAssociation.Add/Remove of the exact devicePath/itemPath module). scope=plc (HW.Features.SysLogConfigurationManager on the exact CPU item, S7-1500 FW 3.1+): read (EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows, approved dynamic attributes only; the allow-list is currently empty), update (properties EnableSystemLogging/TransportProtocol None|TLSServerAndClientAuthentication|TLSOnlyServerAuthentication|UDP; dynamic attributes are refused until exact names, types and owner are documented or VM-verified), createServer (serverAddress + serverPort via SysLogServerConfigurationComposition.Create), deleteServer (serverAddress, needs confirmDelete). Default dryRun=true; no save/compile/download. Examples: GetToolUsage(toolName: \"ManageSyslogServers\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Security][WRITE] Syslog configuration. scope=project (V20+, Siemens.Engineering.Security.SyslogServerProvider.Servers, project-global servers): read (all or exact name: Name, Address, Port, Tls, Comment, AssignedModules with owner paths), create (PREVIEW ONLY: SyslogServerComposition.Create crashed TIA Portal V21 twice on the reference project, so dryRun=false is refused; create the server in the TIA UI), update (properties), delete (needs confirmDelete, verified absent), assignModule/unassignModule (DeviceItemAssociation.Add/Remove of the exact devicePath/itemPath module). scope=plc (HW.Features.SysLogConfigurationManager on the exact CPU item, S7-1500 FW 3.1+): read (EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows, approved dynamic attributes only; the allow-list is currently empty), update (properties EnableSystemLogging/TransportProtocol None|TLSServerAndClientAuthentication|TLSOnlyServerAuthentication|UDP; dynamic attributes are refused until exact names, types and owner are documented or VM-verified), createServer (preview-only with serverAddress + serverPort. Real creation is refused because TIA Portal V21 exited during Create. Add the server in the CPU properties), deleteServer (serverAddress, needs confirmDelete). Default dryRun=true; no save/compile/download. Examples: GetToolUsage(toolName: \"ManageSyslogServers\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
