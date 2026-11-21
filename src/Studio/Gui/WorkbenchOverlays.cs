@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Automation;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.Localization;
@@ -25,7 +24,7 @@ public partial class MainWindow
         var invoker = Keyboard.FocusedElement as UIElement;
         void Close() => CloseCommandPalette(invoker);
         var palette = new CommandPalette(new CommandPaletteViewModel(PaletteItems()), Close);
-        palette.Backdrop.Fill = new VisualBrush((Visual)Sider.Parent) { AutoLayoutContent = false };
+        palette.Scrim.Source = ShellFrame;
         OverlayHost.Children.Add(palette);
         OverlayHost.Visibility = Visibility.Visible;
         _paletteFocus = new ModalPane(palette, palette.SearchBox, Close);
@@ -115,6 +114,7 @@ public partial class MainWindow
         var popover = new SessionPopover(_model, NavigateFromSession, () => CloseSessionPopover());
         _sessionPopover = popover;
         popover.AiSettings.IsEnabled = PageUnavailable("Settings") == null;
+        SetServiceHelp(popover.SwitchVersion, AutomationProperties.GetHelpText(RailMcp));
         popover.SwitchVersion.IsEnabled = PageUnavailable("Mcp") == null;
         Root.Children.Add(popover);
         PreviewMouseDown += OnSessionOutsideClick;
@@ -123,6 +123,12 @@ public partial class MainWindow
         popover.LostKeyboardFocus += OnSessionFocusLeft;
         popover.Focusable = true;
         popover.Focus();
+    }
+
+    private static void SetServiceHelp(Button button, string service)
+    {
+        button.ToolTip = service;
+        AutomationProperties.SetHelpText(button, service);
     }
 
     private void NavigateFromSession(string page)

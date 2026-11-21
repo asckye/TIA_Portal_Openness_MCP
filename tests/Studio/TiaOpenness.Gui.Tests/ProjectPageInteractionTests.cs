@@ -380,11 +380,16 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
             {
                 window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment());
                 WpfContext.Drain();
-                var banner = (Border)ProjectPageTestSupport.Find(window, "EnvironmentBanner");
-                Assert.Equal(Visibility.Visible, banner.Visibility);
-                var button = (Button)ProjectPageTestSupport.Find(window, "RunEnvironmentButton");
-                Assert.True(button.IsEnabled);
-                UnifiedDesktopTests.ClickControl(button);
+                WpfContext.ShowWindow(window);
+                var menuButton = window.OperationsContent.ExportMenuButton;
+                UnifiedDesktopTests.ClickControl(menuButton);
+                Assert.True(menuButton.ContextMenu.IsOpen);
+                var item = window.OperationsContent.RunEnvironmentItem;
+                Assert.Equal(Visibility.Visible, item.Visibility);
+                Assert.Equal(window.Features.EnvironmentAttention, item.ToolTip);
+                Assert.True(item.IsEnabled);
+                item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent, item));
+                menuButton.ContextMenu.IsOpen = false;
                 Assert.True(((RadioButton)window.FindName("RailEnvironment")).IsChecked);
             }
             finally { window.Close(); }

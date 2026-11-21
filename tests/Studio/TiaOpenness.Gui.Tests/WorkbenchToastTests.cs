@@ -22,14 +22,14 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
     [Theory]
     [InlineData(ToastKind.Success, 4)]
     [InlineData(ToastKind.Info, 4)]
-    [InlineData(ToastKind.Approval, 4)]
+    [InlineData(ToastKind.Info, 4, true)]
     [InlineData(ToastKind.Warning, 4)]
     [InlineData(ToastKind.Error, 8)]
-    public void Only_visible_unpaused_time_counts(ToastKind kind, int seconds)
+    public void Only_visible_unpaused_time_counts(ToastKind kind, int seconds, bool actionable = false)
     {
         TimeSpan now = TimeSpan.Zero;
         var queue = new ToastQueue(() => now);
-        var notice = new ToastNotice("first", kind, LocalizedText.Literal("first"), default, null, "");
+        var notice = new ToastNotice("first", kind, LocalizedText.Literal("first"), default, actionable ? () => { } : null, "");
         queue.SetPresentation(true, false);
         queue.Show(notice);
         now += TimeSpan.FromHours(1); queue.Tick();
@@ -327,7 +327,14 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
                 if (document == ProjectDocument.Tags) WpfContext.Complete(editor.ReadTagsAsync());
                 else WpfContext.Complete(editor.ReadFocusedBlockAsync());
                 window.UpdateLayout();
-                var panel = DesktopCapture.Descendants<TextBlock>(window).Single(text =>
+                TextBlock panel;
+                if (document == ProjectDocument.Render)
+                {
+                    var state = window.BlocksContent.SourceError;
+                    Assert.Equal(binding, System.Windows.Data.BindingOperations.GetBinding(state, WorkbenchState.DescriptionProperty)?.Path.Path);
+                    panel = DesktopCapture.Descendants<TextBlock>(state).Single(text => text.IsVisible && text.Text == failure);
+                }
+                else panel = DesktopCapture.Descendants<TextBlock>(window).Single(text =>
                     text.IsVisible && System.Windows.Data.BindingOperations.GetBinding(text, TextBlock.TextProperty)?.Path.Path == binding);
                 Assert.Equal(failure, panel.Text);
                 Assert.Equal(Visibility.Visible, window.Toast.Visibility);

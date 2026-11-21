@@ -65,7 +65,12 @@ internal static class FeaturePageFixtures
         public int Copies { get => _copies; set => Set(ref _copies, value); }
         public LocalizedText Coverage => Text("≈ last 3 days", "约保留最近 3 天");
         internal bool Broken { get; set; }
-        public AuditVerification Verify() => new(!Broken, TotalCount, Broken ? 532 : null);
+        internal Action? BeforeVerify { get; set; }
+        public AuditVerification Verify()
+        {
+            BeforeVerify?.Invoke();
+            return new(!Broken, TotalCount, Broken ? 532 : null);
+        }
         internal int OpenCount;
         public LocalizedText OpenFolder() { OpenCount++; return LocalizedText.Empty; }
     }
@@ -113,8 +118,19 @@ internal static class FeaturePageFixtures
     internal sealed class Notification : IApprovalNotification
     {
         internal int Count;
-        internal Action? Activate;
-        public void Show(string title, string message, Action activate) { Count++; Activate = activate; }
-        public void Dispose() { Activate = null; }
+        internal System.Windows.Forms.NotifyIcon? Balloon;
+        private readonly WindowsApprovalNotification _native;
+        internal Notification() => _native = new WindowsApprovalNotification(icon =>
+        {
+            Count++;
+            Balloon = icon;
+            icon.Disposed += (_, _) => Balloon = null;
+        });
+        internal void ClickBalloon() => typeof(System.Windows.Forms.NotifyIcon)
+            .GetMethod("OnBalloonTipClicked", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .Invoke(Balloon, null);
+        public void Show(string title, string message, Action activate) => _native.Show(title, message, activate);
+        public void Hide() => _native.Hide();
+        public void Dispose() => _native.Dispose();
     }
 }

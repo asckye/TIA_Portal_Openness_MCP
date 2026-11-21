@@ -238,7 +238,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
     }
 
     [Fact]
-    public void New_request_shows_badge_toast_and_minimized_notification_then_unsubscribes()
+    public void New_request_shows_badge_and_minimized_notification_then_unsubscribes()
     {
         wpf.Run(() =>
         {
@@ -247,10 +247,11 @@ public sealed class FeaturePageTests(WpfContext wpf)
             window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment(), notification, () => FeaturePageFixtures.Now);
             try
             {
+                WpfContext.ShowWindow(window);
                 approvals.Receive(FeaturePageFixtures.Request("normal")); WpfContext.Drain();
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility); Assert.Equal(0, notification.Count);
-                UnifiedDesktopTests.ClickControl((Button)window.FindName("ToastAction"));
+                Assert.Equal(Visibility.Collapsed, window.Toast.Visibility); Assert.Equal(0, notification.Count);
+                UnifiedDesktopTests.ClickControl(window.PendingBadge);
                 AssertApprovalsPage();
                 window.Navigate("Calls");
                 UnifiedDesktopTests.ClickControl((Button)window.FindName("PendingBadge"));
@@ -261,7 +262,17 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 AssertApprovalsPage();
                 window.WindowState = WindowState.Minimized;
                 approvals.Receive(FeaturePageFixtures.Request("minimized")); Assert.Equal(1, notification.Count);
-                notification.Activate!(); Assert.Equal(WindowState.Normal, window.WindowState);
+                Assert.NotNull(notification.Balloon);
+                Assert.Equal(Loc.Current.T("Approval.ToastTitle", 2), notification.Balloon.BalloonTipTitle);
+                Assert.Equal(Loc.Current["Approval.ToastHelp"], notification.Balloon.BalloonTipText);
+                Assert.Equal(System.Windows.Forms.ToolTipIcon.Warning, notification.Balloon.BalloonTipIcon);
+                notification.ClickBalloon(); WpfContext.Drain();
+                Assert.Equal(WindowState.Normal, window.WindowState);
+                Assert.Equal("minimized", window.Features.SelectedRequest?.Request.Id);
+                Assert.True(approvals.Deny("normal")); WpfContext.Drain();
+                Assert.NotNull(notification.Balloon);
+                Assert.True(approvals.Deny("minimized")); WpfContext.Drain();
+                Assert.Null(notification.Balloon);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsContent")).Visibility);
                 void AssertApprovalsPage()
                 {
@@ -289,7 +300,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
             {
                 window!.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Background);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("Toast")).Visibility);
+                Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
             });
         }
         finally { wpf.Run(() => window!.Close()); }

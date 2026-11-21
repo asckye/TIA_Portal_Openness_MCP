@@ -324,8 +324,8 @@ public sealed class RemoteConfigurationTests(WpfContext wpf) : IDisposable
                         var row = (ListBoxItem)mcp.Clients.ClientChoices.ItemContainerGenerator.ContainerFromItem(selected);
                         var tile = Assert.Single(WorkbenchRenderFeaturePagesTests.Descendants<ToggleButton>(row));
                         var name = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(tile).Single(text => text.Name == "ClientName");
-                        Assert.Equal(SystemColors.HighlightColor, Assert.IsType<SolidColorBrush>(tile.Background).Color);
-                        Assert.Equal(SystemColors.HighlightTextColor, Assert.IsType<SolidColorBrush>(name.Foreground).Color);
+                        Assert.Equal(Colors.Yellow, Assert.IsType<SolidColorBrush>(tile.Background).Color);
+                        Assert.Equal(Colors.Black, Assert.IsType<SolidColorBrush>(name.Foreground).Color);
                     }
                     var output = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
                     if (!string.IsNullOrEmpty(output))

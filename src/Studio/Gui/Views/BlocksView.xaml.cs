@@ -18,6 +18,7 @@ public sealed partial class BlocksView : UserControl, IDisposable
     public BlocksView()
     {
         InitializeComponent();
+        Options.LocalScrim.Source = BlockBackdrop;
         Options.ClearPrefillRequested += (_, form) => ClearPrefillRequested?.Invoke(this, form);
         DataContextChanged += (_, change) =>
         {
@@ -39,14 +40,20 @@ public sealed partial class BlocksView : UserControl, IDisposable
             UpdateEditor();
             ControlSelectionChanged?.Invoke(this, EventArgs.Empty);
         }
-        if (e.PropertyName == nameof(EngineeringViewModel.Document)) UpdateEditor();
+        if (e.PropertyName is nameof(EngineeringViewModel.Document) or nameof(EngineeringViewModel.EmptyBlockList)
+            or nameof(EngineeringViewModel.SourceFailed)) UpdateEditor();
     }
     private void UpdateEditor()
     {
         var doc = Model.Engineering.Document;
-        BlockChooser.Visibility = Model.Engineering.FocusedBlock == null ? Visibility.Visible : Visibility.Collapsed;
-        Editor.Visibility = doc == ProjectDocument.Compile ? Visibility.Collapsed : Visibility.Visible;
-        CodePanel.Visibility = doc == ProjectDocument.Render ? Visibility.Visible : Visibility.Collapsed;
+        bool empty = Model.Engineering.EmptyBlockList && doc == ProjectDocument.Render;
+        bool error = Model.Engineering.SourceFailed && doc == ProjectDocument.Render;
+        EmptyBlocks.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        SourceError.Visibility = error ? Visibility.Visible : Visibility.Collapsed;
+        BlockChooser.Visibility = !empty && Model.Engineering.FocusedBlock == null ? Visibility.Visible : Visibility.Collapsed;
+        BlocksHeaderCard.Visibility = empty || error ? Visibility.Collapsed : Visibility.Visible;
+        Editor.Visibility = doc == ProjectDocument.Compile || empty || error ? Visibility.Collapsed : Visibility.Visible;
+        CodePanel.Visibility = doc == ProjectDocument.Render && !empty && !error ? Visibility.Visible : Visibility.Collapsed;
         InterfacePanel.Visibility = doc == ProjectDocument.Interface ? Visibility.Visible : Visibility.Collapsed;
     }
 

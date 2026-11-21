@@ -5,6 +5,7 @@
     <Canvas DockPanel.Dock="Top" Height="0" Panel.ZIndex="1">
       <views:EngineeringOptionsView x:Name="Options" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=Grid}}" Height="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=Grid}}"/>
     </Canvas>
+    <DockPanel x:Name="ProjectBackdrop">
     <Border DockPanel.Dock="Top" x:Name="ProjectToolbar" Style="{StaticResource Primer.IdeBar}">
       <DockPanel VerticalAlignment="Center">
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -24,6 +25,8 @@
               <MenuItem Header="{l:Tr Pages.ViewLadder}" Click="OnRender" IsEnabled="{Binding Engineering.FocusedBlock.HasLadderOrFbd,FallbackValue=False}"/>
               <MenuItem Header="{l:Tr Toolbar.Inspect}" Click="OnInspect"/>
               <MenuItem Header="{l:Tr Pages.Options}" Click="OnProjectOptions"/>
+              <MenuItem x:Name="RunEnvironmentItem" Header="{l:Tr Pages.ViewEnvironment}" ToolTip="{Binding EnvironmentAttention}"
+                Visibility="{Binding EnvironmentNeedsAction,Converter={StaticResource BoolToVisibility}}" Click="OnEnvironment"/>
               <MenuItem x:Name="SessionItem" Header="{l:Tr Session.Title}" Click="OnSessions"/>
               <MenuItem Header="{l:Tr Pages.Disconnect}" Command="{Binding Session.Disconnect}"/>
             </ContextMenu></Button.ContextMenu>
@@ -77,12 +80,6 @@
       </DockPanel>
     </Border>
     <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
-    <Border x:Name="EnvironmentBanner" DockPanel.Dock="Top" Style="{StaticResource Primer.Alert.Warning}" Margin="0,0,0,12" Visibility="{Binding EnvironmentNeedsAction,Converter={StaticResource BoolToVisibility}}">
-      <ux:PageHeadPanel Spacing="12">
-        <TextBlock Text="{Binding EnvironmentAttention}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap"/>
-        <Button x:Name="RunEnvironmentButton" Content="{l:Tr Pages.ViewEnvironment}" AutomationProperties.Name="{l:Tr Pages.ViewEnvironment}" Click="OnEnvironment" Style="{StaticResource Primer.Secondary}"/>
-      </ux:PageHeadPanel>
-    </Border>
     <Expander x:Name="Sessions" DockPanel.Dock="Top" Header="{l:Tr Session.Title}" AutomationProperties.Name="{l:Tr Session.Title}"
       Style="{StaticResource Primer.ProjectSessions}">
       <StackPanel>
@@ -139,5 +136,6 @@
       </StackPanel>
     </Border>
   </StackPanel>
+    </DockPanel>
   </DockPanel>
 </UserControl>

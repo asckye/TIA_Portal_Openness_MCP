@@ -46,7 +46,7 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 {
                     window.ConfigureFeaturePages(journal, audit, new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
                     window.ShowConfiguration(false);
-                    if (page == "toast") approvals.Receive(FeaturePageFixtures.Request());
+                    if (page == "toast") window.Features.Export();
                     window.Navigate(state.StartsWith("audit", StringComparison.Ordinal) ? "Audit" : state.StartsWith("env", StringComparison.Ordinal) ? "Environment" : "Calls");
                     if (state.StartsWith("audit", StringComparison.Ordinal)) WpfContext.Complete(window.Features.VerifyAsync());
                     if (state.StartsWith("approvals", StringComparison.Ordinal)) window.Features.OpenApprovals();
@@ -318,7 +318,7 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 }
                 CheckButton(window.ApprovalsContent.ApproveRequest, 32);
                 CheckButton(window.ApprovalsContent.DenyRequest, 32);
-                if (width == 1366) Assert.Equal(262, window.ApprovalsContent.RequestListPane.ActualWidth);
+                if (width == 1366) Assert.Equal(260, window.ApprovalsContent.RequestListPane.ActualWidth);
                 Assert.True(approvals.Deny(import.Id));
                 WpfContext.Drain();
                 var destructive = window.Features.SelectedRequest!;
@@ -365,7 +365,7 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 if (width == 1366)
                 {
                     var column = Descendants<StackPanel>(settingsView).Single(panel => panel.MaxWidth == 740);
-                    CheckColumn(column, 461, 740);
+                    CheckColumn(column, 457, 740);
                     Assert.Contains(Descendants<TextBlock>(settingsView.SectionList),
                         text => text.Text == (Loc.Current.IsChinese ? "偏好与安全" : "Settings"));
                 }
@@ -378,7 +378,7 @@ public sealed class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 WpfContext.Drain();
                 Assert.False(policy.IsVisible);
                 Assert.Equal(2, window.SettingsContent.OnlineTargets.Items.Count);
-                if (width == 1366) Assert.Equal(236, ((Border)window.SettingsContent.SectionList.Parent).ActualWidth);
+                if (width == 1366) Assert.Equal(228, ((Border)window.SettingsContent.SectionList.Parent).ActualWidth);
                 Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
             }
             finally

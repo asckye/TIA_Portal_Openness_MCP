@@ -28,6 +28,7 @@
   <sys:Double x:Key="Ui.FontSize.12_5">12.5</sys:Double>
   <sys:Double x:Key="Ui.FontSize.13">13</sys:Double>
   <sys:Double x:Key="Ui.FontSize.14">14</sys:Double>
+  <sys:Double x:Key="Ui.FontSize.14_5">14.5</sys:Double>
   <sys:Double x:Key="Ui.FontSize.15_5">15.5</sys:Double>
   <sys:Double x:Key="Ui.FontSize.18">18</sys:Double>
   <sys:Double x:Key="Ui.FontSize.Caption">12</sys:Double>
@@ -291,7 +292,7 @@
     background and border, so a pressed or hovered solid button keeps its white text.
   -->
   <ControlTemplate x:Key="Primer.ButtonTemplate" TargetType="ButtonBase">
-    <Grid>
+    <Grid x:Name="HitArea">
       <Grid>
         <Border x:Name="RaisedEdge" Margin="0,1,0,-1" Visibility="Collapsed" CornerRadius="{TemplateBinding ux:Ux.CornerRadius}"
           Background="{DynamicResource Ant.boxShadowKey}" IsHitTestVisible="False"/>
@@ -302,9 +303,16 @@
       </Grid>
       <Border x:Name="SelectionBar" Width="3" Height="16" CornerRadius="1.5" HorizontalAlignment="Left" Margin="3,0,0,0"
         Background="{DynamicResource Primer.accent}" Visibility="Collapsed"/>
-      <Border BorderBrush="{DynamicResource Primer.hcOutline}" BorderThickness="1" CornerRadius="{TemplateBinding ux:Ux.CornerRadius}" IsHitTestVisible="False"/>
+      <Border x:Name="Outline" BorderBrush="{DynamicResource Primer.hcOutline}" BorderThickness="1" CornerRadius="{TemplateBinding ux:Ux.CornerRadius}" IsHitTestVisible="False"/>
     </Grid>
     <ControlTemplate.Triggers>
+      <Trigger Property="ux:Ux.Variant" Value="Status">
+        <Setter TargetName="HitArea" Property="Background" Value="Transparent"/>
+        <Setter TargetName="Surface" Property="Height" Value="19"/>
+        <Setter TargetName="Hover" Property="Height" Value="19"/>
+        <Setter TargetName="Outline" Property="Height" Value="19"/>
+        <Setter TargetName="Outline" Property="BorderThickness" Value="0"/>
+      </Trigger>
       <MultiTrigger>
         <MultiTrigger.Conditions>
           <Condition Property="ux:Ux.Variant" Value="SelRow"/>
@@ -343,8 +351,8 @@
         <Setter TargetName="Hover" Property="BorderBrush" Value="{DynamicResource Ant.colorLinkHover}"/>
       </Trigger>
       <Trigger Property="ux:Ux.Variant" Value="Danger">
-        <Setter TargetName="Hover" Property="Background" Value="{DynamicResource Primer.input}"/>
-        <Setter TargetName="Hover" Property="BorderBrush" Value="{DynamicResource Primer.diffRed}"/>
+        <Setter TargetName="Hover" Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/>
+        <Setter TargetName="Hover" Property="BorderBrush" Value="{DynamicResource Ant.colorError}"/>
       </Trigger>
       <Trigger Property="ux:Ux.Variant" Value="DangerSolid">
         <Setter TargetName="Hover" Property="Background" Value="{DynamicResource Ant.colorErrorSolidHover}"/>
@@ -1044,8 +1052,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -1141,8 +1149,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -1210,8 +1218,8 @@
                 <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
                 <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
               </MultiDataTrigger.Conditions>
-              <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-              <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+              <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+              <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
               <Setter Property="ux:ContrastSelection.Active" Value="True"/>
             </MultiDataTrigger>
           </Style.Triggers>
@@ -1313,8 +1321,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -1511,7 +1519,7 @@
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
     <Setter Property="Background" Value="{DynamicResource Ant.colorErrorSolid}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorErrorSolid}"/>
-    <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Primer.onDanger}"/>
   </Style>
   <!-- Card head: transparent over the card, colorBorderSecondary rule. -->
   <Style x:Key="Primer.HeaderStrip" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
@@ -1657,7 +1665,7 @@
   </Style>
   <!-- Notification. -->
   <Style x:Key="Primer.Toast" TargetType="Border" BasedOn="{StaticResource Primer.Drawer}">
-    <Setter Property="BorderBrush" Value="{DynamicResource Primer.cardBorder}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
     <Setter Property="MinHeight" Value="36"/>
     <Setter Property="CornerRadius" Value="9"/>
     <Setter Property="Background" Value="{DynamicResource Ant.colorBgSpotlight}"/>
@@ -1745,8 +1753,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -1805,8 +1813,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -1917,8 +1925,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -2042,8 +2050,8 @@
           <Condition Binding="{Binding Selected}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
       <MultiDataTrigger>
@@ -2051,8 +2059,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -2149,8 +2157,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -2192,8 +2200,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -2274,8 +2282,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -2376,8 +2384,6 @@
   <!-- Modal and Drawer mask: colorBgMask. -->
   <Style x:Key="Primer.Overlay" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
     <Setter Property="Background" Value="{DynamicResource Ant.colorBgMask}"/>
-    <Style.Triggers><DataTrigger Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"><Setter Property="Opacity" Value="0"/></DataTrigger>
-    </Style.Triggers>
   </Style>
   <Style x:Key="Primer.Divider" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
     <Setter Property="BorderThickness" Value="0,0,0,1"/>
@@ -2549,8 +2555,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -2639,8 +2645,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
       </MultiDataTrigger>
     </Style.Triggers>
   </Style>
@@ -2857,8 +2863,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -3158,9 +3164,9 @@
                 <Condition Binding="{Binding IsHighlighted,RelativeSource={RelativeSource Self}}" Value="True"/>
                 <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
               </MultiDataTrigger.Conditions>
-              <Setter TargetName="Surface" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-              <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
-              <Setter TargetName="CheckMark" Property="Stroke" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+              <Setter TargetName="Surface" Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+              <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
+              <Setter TargetName="CheckMark" Property="Stroke" Value="{DynamicResource Primer.onPrimary}"/>
             </MultiDataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -3330,8 +3336,8 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -3362,8 +3368,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -3411,8 +3417,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -3563,8 +3569,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -3647,8 +3653,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>
@@ -3675,8 +3681,8 @@
           <Condition Binding="{Binding IsEnabled,RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
         <Setter Property="ux:ContrastSelection.Active" Value="True"/>
       </MultiDataTrigger>
     </Style.Triggers>

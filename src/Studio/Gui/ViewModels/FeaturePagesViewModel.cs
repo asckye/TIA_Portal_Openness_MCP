@@ -14,7 +14,7 @@ namespace TiaOpenness.Gui.ViewModels;
 
 public enum FeatureTone { Normal, Muted, Accent, Warning, Success, Unchecked }
 
-public enum ToastKind { Success, Approval, Warning, Error, Info }
+public enum ToastKind { Success, Warning, Error, Info }
 public readonly record struct FeatureFeedback(LocalizedText Message, ToastKind Kind = ToastKind.Success, string Source = "feature");
 
 public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
@@ -37,7 +37,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     private AuditRow? _selectedAudit;
     private readonly ObservableCollection<ApprovalRow> _requests = [];
     private readonly ObservableCollection<ApprovalRow> _visibleRequests = [];
-    private ApprovalRow? _selectedRequest;
+    private ApprovalRow? _selectedRequest, _lastDecision;
     private bool _handledRequests;
     private readonly ObservableCollection<CallRow> _calls = [];
     private readonly ObservableCollection<AuditRow> _auditRows = [];
@@ -119,7 +119,19 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public string ApprovalSetting => Approvals.Enabled ? Loc.Current.T("Calls.ApprovalOn", Approvals.TimeoutSeconds) : Loc.Current["Shell.ApprovalOff"];
     public IReadOnlyList<ApprovalRow> Requests => _requests;
     public IReadOnlyList<ApprovalRow> VisibleRequests => _visibleRequests;
-    public ApprovalRow? SelectedRequest { get => _selectedRequest; set => Set(ref _selectedRequest, value); }
+    public ApprovalRow? SelectedRequest
+    {
+        get => _selectedRequest;
+        set { ClearDecisionForSelection(value); Set(ref _selectedRequest, value); }
+    }
+    public string DecisionStatus => _lastDecision?.DecisionMessage ?? "";
+    internal void ClearDecisionForSelection(ApprovalRow? row)
+    {
+        if (_lastDecision == null || row == null || ReferenceEquals(row, _lastDecision)) return;
+        _lastDecision.SetDecision(null);
+        _lastDecision = null;
+        Raise(nameof(DecisionStatus));
+    }
     public bool HandledRequests { get => _handledRequests; set { if (Set(ref _handledRequests, value)) FilterRequests(); } }
     public string WaitingLabel => Loc.Current.T("Approval.Waiting", Approvals.PendingCount);
     public bool RequestsEmpty => VisibleRequests.Count == 0;
@@ -149,8 +161,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     {
         bool accepted = approve ? Approvals.Approve(row.Request.Id) : Approvals.Deny(row.Request.Id);
         if (!accepted) return new(LocalizedText.Key("Approval.NoLongerPending"), ToastKind.Warning);
-        return new(approve ? LocalizedText.Key("Approval.ApprovedToast") : LocalizedText.Key("Approval.RejectedToast", row.Summary));
-    });
+        return new(LocalizedText.Key(approve ? "Approval.ApprovedRequest" : "Approval.RejectedRequest", row.Request.Id));
+    }, decisionRow: row);
 
     public IReadOnlyList<AuditRow> AuditRows => _auditRows;
     public string AuditSearch { get => _auditSearch; set { if (Set(ref _auditSearch, value)) RefreshAudit(); } }
@@ -271,10 +283,23 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         }, "diagnostics", ToastKind.Info);
     public void Run(Func<LocalizedText> action, [System.Runtime.CompilerServices.CallerMemberName] string source = "",
         ToastKind kind = ToastKind.Success) => RunFeedback(() => new(action(), kind), source);
-    private void RunFeedback(Func<FeatureFeedback> action, [System.Runtime.CompilerServices.CallerMemberName] string source = "")
+    private void RunFeedback(Func<FeatureFeedback> action, [System.Runtime.CompilerServices.CallerMemberName] string source = "",
+        ApprovalRow? decisionRow = null)
     {
-        try { var result = action(); if (result.Message.Resolve().Length > 0) Feedback?.Invoke(this, result with { Source = source }); }
-        catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Error, source)); }
+        try { Publish(action() with { Source = source }); }
+        catch (Exception ex) { Publish(new(LocalizedText.Literal(ex.Message), ToastKind.Error, source)); }
+
+        void Publish(FeatureFeedback result)
+        {
+            if (decisionRow != null)
+            {
+                if (_lastDecision != decisionRow) _lastDecision?.SetDecision(null);
+                _lastDecision = decisionRow;
+                decisionRow.SetDecision(result);
+                Raise(nameof(DecisionStatus));
+            }
+            if (result.Message.Resolve().Length > 0) Feedback?.Invoke(this, result);
+        }
     }
     internal static FeatureTone CheckTone(IReadOnlyList<EnvironmentCheck> rows) => rows.Any(r => r.Status == CheckStatus.Checking) ? FeatureTone.Accent
         : rows.Any(r => r.Status is CheckStatus.Warn or CheckStatus.Fail) ? FeatureTone.Warning
@@ -401,6 +426,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     {
         foreach (var row in _callCache.Values) row.RefreshLanguage();
         foreach (var row in _requests) row.RefreshLanguage();
+        Raise(nameof(DecisionStatus));
         _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
         RefreshEnvironmentSelection();
         RefreshCalls(); RefreshAudit(languageChanged: true);
@@ -489,7 +515,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     {
         var selected = SelectedRequest;
         Sync(_visibleRequests, _requests.Where(r => r.Pending != HandledRequests).ToArray());
-        SelectedRequest = selected != null && _visibleRequests.Contains(selected) ? selected : _visibleRequests.FirstOrDefault();
+        // Advancing the queue is automatic. The result stays with the request the operator decided.
+        var next = selected != null && _visibleRequests.Contains(selected) ? selected : _visibleRequests.FirstOrDefault();
+        Set(ref _selectedRequest, next, nameof(SelectedRequest));
         Notify(nameof(RequestsEmpty), nameof(RequestsEmptyTitle), nameof(WaitingLabel));
     }
     private void RefreshAudit(bool languageChanged = false)
@@ -647,7 +675,21 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     public string Timer => $"{Remaining / 60:00}:{Remaining % 60:00}";
     public string TimerLabel => Pending ? Loc.Current.T("Approval.Timer", Timer) : State;
     public string FeedTime => Pending ? Timer : Request.Deadline.AddSeconds(-Request.TimeoutSeconds).ToLocalTime().ToString("HH:mm");
-    public string FeedKind => Pending ? State + " · " + Risk : State;
+    private FeatureFeedback? _decision;
+    public string DecisionMessage => _decision?.Message.Resolve() ?? "";
+    public bool HasDecisionError => _decision?.Kind == ToastKind.Error;
+    public string FeedKind => Request.State switch
+    {
+        ApprovalState.Pending => State + " · " + Risk,
+        ApprovalState.Approved or ApprovalState.Rejected when _decision?.Kind == ToastKind.Success => DecisionMessage,
+        _ => State
+    };
+    public bool ShowDecisionMessage => _decision.HasValue && DecisionMessage != FeedKind;
+    internal void SetDecision(FeatureFeedback? decision)
+    {
+        _decision = decision;
+        Raise(nameof(DecisionMessage)); Raise(nameof(HasDecisionError)); Raise(nameof(FeedKind)); Raise(nameof(ShowDecisionMessage));
+    }
     public string FirstObject => Request.Operations.FirstOrDefault()?.Object ?? "";
     public string ObjectPreview => FirstObject.Length <= 64 ? FirstObject : FirstObject[..63] + "…";
     public string Target => JoinFields(Request.Project, Request.Plc);
@@ -790,7 +832,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     {
         foreach (string name in new[] {
                 nameof(Actor), nameof(Client), nameof(UnverifiedClient), nameof(Risk), nameof(Destructive), nameof(GroupTitle),
-                    nameof(FeedKind), nameof(Summary),
+                    nameof(FeedKind), nameof(ShowDecisionMessage), nameof(DecisionMessage), nameof(Summary),
                     nameof(AccessibleSummary), nameof(ApproveLabel), nameof(ConfirmationTitle), nameof(ConfirmationAction), nameof(ConfirmationAccessible),
                     nameof(ConfirmationConsequence), nameof(Context), nameof(Metadata), nameof(Target), nameof(FirstObject), nameof(ObjectPreview),
                     nameof(Change), nameof(Safeguard), nameof(DecisionHint), nameof(DenyLabel), nameof(DestructiveFields), nameof(TimerLabel),

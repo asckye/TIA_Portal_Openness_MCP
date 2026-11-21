@@ -19,6 +19,12 @@ namespace TiaOpenness.Gui.Controls;
 /// </summary>
 public static class Ux
 {
+    public static readonly DependencyProperty NarrowProperty = DependencyProperty.RegisterAttached(
+        "Narrow", typeof(bool), typeof(Ux), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
+
+    public static bool GetNarrow(DependencyObject element) => (bool)element.GetValue(NarrowProperty);
+    public static void SetNarrow(DependencyObject element, bool value) => element.SetValue(NarrowProperty, value);
+
     public static readonly DependencyProperty LeftPaneOpenProperty = DependencyProperty.RegisterAttached(
         "LeftPaneOpen", typeof(bool), typeof(Ux), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.Inherits));
 

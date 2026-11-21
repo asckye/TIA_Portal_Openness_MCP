@@ -112,6 +112,19 @@ internal sealed class WorkbenchMessageBox : Window
         Content = card;
     }
 
+    internal static void ShowModal(Window dialog)
+    {
+        if (dialog.Owner is not MainWindow workbench)
+        {
+            dialog.ShowDialog();
+            return;
+        }
+        var previous = workbench.OwnedDialogScrim.Visibility;
+        workbench.OwnedDialogScrim.Visibility = Visibility.Visible;
+        try { dialog.ShowDialog(); }
+        finally { workbench.OwnedDialogScrim.Visibility = previous; }
+    }
+
     internal static MessageBoxResult Show(string text, string caption, MessageBoxButton buttons, MessageBoxImage icon)
         => Show(Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive), text, caption, buttons, icon);
 
@@ -124,7 +137,7 @@ internal sealed class WorkbenchMessageBox : Window
         var dialog = new WorkbenchMessageBox(text, caption, buttons, icon, labels);
         if (owner?.IsVisible == true) dialog.Owner = owner;
         else dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        dialog.ShowDialog();
+        ShowModal(dialog);
         return dialog.Result;
     }
 }

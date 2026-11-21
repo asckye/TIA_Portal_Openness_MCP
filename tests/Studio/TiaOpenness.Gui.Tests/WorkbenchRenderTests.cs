@@ -103,12 +103,12 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         window.Navigate("Mcp"); WpfContext.Drain(); host.UpdateLayout();
                     }
                     string serviceStatus = state.Local ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state.Running ? "Config.Running" : "Config.Idle"];
-                    Assert.Equal(Loc.Current.T("Shell.McpStatus", serviceStatus), ((TextBlock)window.FindName("McpStatusText")).Text);
+                    Assert.Equal(Loc.Current.T("Shell.McpStatus", serviceStatus), System.Windows.Automation.AutomationProperties.GetHelpText(window.RailMcp));
                     var release = TiaMcp.Versioning.TiaVersionCatalog.Get(((MainViewModel)window.DataContext).SelectedReleaseKey);
-                    Assert.Equal(release.DisplayName + " · " + release.OwnerApartment + "   " + Loc.Current["Blocks.Empty.Title"],
+                    Assert.Equal(release.DisplayName + " · " + release.OwnerApartment + "   " + Loc.Current["Shell.NoProjectFile"],
                         ((TextBlock)window.FindName("SessionStatus")).Text);
                     Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("PendingBadge")).Visibility);
-                    Assert.Equal(state.Pending ? Visibility.Visible : Visibility.Collapsed, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
+                    Assert.Equal(Loc.Current[state.Pending ? "Shell.ApprovalOffStatus" : "Shell.ApprovalOnStatus"], window.ApprovalStatusText.Text);
                     if (state.Name == "mcp-zh-light")
                     {
                         var metrics = new List<string>();
@@ -117,8 +117,8 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         {
                             var element = (FrameworkElement)window.FindName(name);
                             var point = element.TransformToAncestor(host).Transform(new Point());
-                            Assert.Equal(3, point.X);
-                            Assert.Equal(48, element.ActualHeight);
+                            Assert.Equal(7, point.X);
+                            Assert.Equal(42, element.ActualHeight);
                             var item = (RadioButton)element;
                             var icon = (Border)item.Template.FindName("GlyphBox", item);
                             Assert.Equal(17, icon.ActualWidth);
@@ -221,7 +221,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                             var item = (RadioButton)window.FindName(name);
                             var origin = item.TransformToAncestor(host).Transform(new Point());
                             Assert.InRange(origin.X, 0, sider.ActualWidth - item.ActualWidth);
-                            Assert.Equal(48, item.ActualHeight);
+                            Assert.Equal(42, item.ActualHeight);
                             Assert.False(string.IsNullOrWhiteSpace(System.Windows.Automation.AutomationProperties.GetName(item)));
                             Assert.Equal(Visibility.Visible, ((ContentPresenter)item.Template.FindName("Label", item)).Visibility);
                         }
@@ -229,11 +229,11 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.True(title.TransformToAncestor(host).Transform(new Point()).X > sider.ActualWidth);
                         string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToString().ToLowerInvariant();
                         SaveRender(host, Path.Combine(output, "rail-narrow-" + suffix + ".png"), 960, 700);
-                        Assert.False(Controls.Ux.GetLeftPaneOpen(sider));
+                        Assert.Equal(App.Settings.LeftPaneOpen, Controls.Ux.GetLeftPaneOpen(sider));
                         Resize(1200); Assert.Equal(60, sider.ActualWidth);
                         Assert.Equal(App.Settings.LeftPaneOpen, Controls.Ux.GetLeftPaneOpen(sider));
                         Resize(1199); Assert.Equal(60, sider.ActualWidth);
-                        Resize(1083); Assert.False(Controls.Ux.GetLeftPaneOpen(sider));
+                        Resize(1083); Assert.Equal(App.Settings.LeftPaneOpen, Controls.Ux.GetLeftPaneOpen(sider));
                         Resize(1084); Assert.Equal(App.Settings.LeftPaneOpen, Controls.Ux.GetLeftPaneOpen(sider));
                         SaveRender(host, Path.Combine(output, "rail-wide-" + suffix + ".png"), 1084, 700);
                         void Resize(double width)
@@ -270,14 +270,14 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 var pane = (Border)((ListBox)settings.FindName("SectionList")).Parent;
                 Assert.Equal(Visibility.Collapsed, pane.Visibility);
                 UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout();
-                Assert.True(App.Settings.LeftPaneOpen); Assert.Equal(236, pane.ActualWidth);
+                Assert.True(App.Settings.LeftPaneOpen); Assert.Equal(228, pane.ActualWidth);
                 host.Width = 1024; host.Height = 640;
                 host.Measure(new Size(1024, 640)); host.Arrange(new Rect(0, 0, 1024, 640)); host.UpdateLayout();
-                Assert.True(App.Settings.LeftPaneOpen); Assert.Equal(Visibility.Collapsed, pane.Visibility);
-                Assert.Equal(0, ((Grid)settings.Content).ColumnDefinitions[0].ActualWidth);
+                Assert.True(App.Settings.LeftPaneOpen); Assert.Equal(Visibility.Visible, pane.Visibility);
+                Assert.Equal(214, ((Grid)settings.Content).ColumnDefinitions[0].ActualWidth);
                 window.Navigate("Engineering"); host.UpdateLayout();
-                Assert.Equal(Visibility.Collapsed, tree.Visibility);
-                Assert.Equal(0, ((Grid)window.FindName("EngineeringPage")).ColumnDefinitions[0].ActualWidth);
+                Assert.Equal(Visibility.Visible, tree.Visibility);
+                Assert.Equal(214, ((Grid)window.FindName("EngineeringPage")).ColumnDefinitions[0].ActualWidth);
             }
             finally { window.Close(); App.Settings.LeftPaneOpen = previous; }
         });
@@ -316,7 +316,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         foreach (string name in new[] { "RailMcp", "RailEngineering", "RailAgent", "RailAudit", "RailEnvironment", "RailLog" })
                         {
                             var element = (FrameworkElement)window.FindName(name);
-                            Assert.Equal(48, element.ActualHeight);
+                            Assert.Equal(42, element.ActualHeight);
                         }
                         string suffix = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToLowerInvariant();
                         if (output != null) SaveRender(host, Path.Combine(output, suffix + ".png"), 1366, 860);
@@ -376,7 +376,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                             { "RailEngineering", "RailAgent", "RailMcp", "RailClients", "RailEnvironment", "RailAudit", "RailLog", "SettingsButton" })
                     {
                         var item = (RadioButton)window.FindName(name);
-                        Assert.Equal(48, item.ActualHeight);
+                        Assert.Equal(42, item.ActualHeight);
                         var surface = (Border)item.Template.FindName("Surface", item);
                         if (item.IsChecked != true) Assert.Equal(0, ((SolidColorBrush)surface.Background).Color.A);
                         else
@@ -384,7 +384,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                             var bar = (Border)item.Template.FindName("Bar", item);
                             Assert.Equal(3, bar.Width); Assert.Equal(Visibility.Visible, bar.Visibility);
                             Assert.Equal(FontWeights.SemiBold, item.FontWeight);
-                            if (theme == "HighContrast") Assert.Equal(SystemColors.HighlightTextColor, ((SolidColorBrush)bar.Background).Color);
+                            if (theme == "HighContrast") Assert.Equal(Colors.Yellow, ((SolidColorBrush)bar.Background).Color);
                         }
                         Assert.Equal(System.Windows.Automation.AutomationProperties.GetName(item) + " ("
                             + System.Windows.Automation.AutomationProperties.GetAcceleratorKey(item) + ")", item.ToolTip);
@@ -398,17 +398,23 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                         Assert.True(probe.DesiredSize.Width <= text.ActualWidth + 1, $"{language}: '{text.Text}' is truncated");
                     }
-                    foreach (string name in new[] { "McpStatusButton", "SessionStatusButton", "ApprovalStatusButton" })
+                    UnifiedDesktopTests.ClickControl(window.SessionStatusButton);
+                    var switchVersion = DesktopCapture.Descendants<Controls.SessionPopover>(host).Single().SwitchVersion;
+                    Assert.False(string.IsNullOrWhiteSpace(System.Windows.Automation.AutomationProperties.GetHelpText(switchVersion)));
+                    Assert.Equal(System.Windows.Automation.AutomationProperties.GetHelpText(window.RailMcp), switchVersion.ToolTip);
+                    UnifiedDesktopTests.ClickControl(window.SessionStatusButton);
+                    foreach (string name in new[] { "SessionStatusButton", "ApprovalStatusButton" })
                     {
                         var button = (Button)window.FindName(name);
                         string fullText = System.Windows.Automation.AutomationProperties.GetName(button);
                         Assert.False(string.IsNullOrWhiteSpace(fullText));
                         Assert.Equal(fullText, button.ToolTip);
-                        var text = DesktopCapture.Descendants<TextBlock>(button).Single();
+                        var text = DesktopCapture.Descendants<TextBlock>(button).Single(label => label != window.SessionGlyph);
                         Assert.Equal(TextWrapping.NoWrap, text.TextWrapping);
                         Assert.Equal(TextTrimming.CharacterEllipsis, text.TextTrimming);
                         Assert.Equal(Visibility.Visible, text.Visibility);
-                        var dot = DesktopCapture.Descendants<System.Windows.Shapes.Ellipse>(button).Single();
+                        FrameworkElement dot = name == "SessionStatusButton" ? window.SessionGlyph
+                                : DesktopCapture.Descendants<System.Windows.Shapes.Ellipse>(button).Single();
                         Assert.Equal(fullText, System.Windows.Automation.AutomationProperties.GetName(dot));
                         Assert.Equal(fullText, dot.ToolTip);
                         var origin = button.TransformToAncestor(host).Transform(new Point());
@@ -444,11 +450,11 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                             Assert.False(Bounds(calls).IntersectsWith(Bounds(pending)));
                             if (theme == "HighContrast")
                             {
-                                Assert.Equal(SystemColors.WindowColor, ((SolidColorBrush)calls.Background).Color);
-                                Assert.Equal(SystemColors.WindowTextColor, ((SolidColorBrush)((TextBlock)calls.Child).Foreground).Color);
-                                Assert.Equal(SystemColors.WindowTextColor, ((SolidColorBrush)calls.BorderBrush).Color);
-                                Assert.Equal(SystemColors.WindowColor, ((SolidColorBrush)pending.Background).Color);
-                                Assert.Equal(SystemColors.WindowTextColor, ((SolidColorBrush)pending.Foreground).Color);
+                                Assert.Equal(Colors.Black, ((SolidColorBrush)calls.Background).Color);
+                                Assert.Equal(WorkbenchDesignColors.Get(theme, "textFaint"), ((SolidColorBrush)((TextBlock)calls.Child).Foreground).Color);
+                                Assert.Equal(Colors.White, ((SolidColorBrush)calls.BorderBrush).Color);
+                                Assert.Equal(Colors.Yellow, ((SolidColorBrush)pending.Background).Color);
+                                Assert.Equal(Colors.Black, ((SolidColorBrush)pending.Foreground).Color);
                             }
                         }
                         Save(page);

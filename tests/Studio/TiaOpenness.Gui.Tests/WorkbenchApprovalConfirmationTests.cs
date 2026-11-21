@@ -35,7 +35,7 @@ public sealed class WorkbenchApprovalConfirmationTests(WpfContext wpf)
                 WpfContext.Complete(disabled.Task.WaitAsync(TestDeadlines.Hang));
                 WpfContext.Drain();
                 Assert.False(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
+                Assert.Null(window.FindName("ApprovalOffPill"));
                 Assert.Equal(Loc.Current["Shell.ApprovalOffStatus"], ((TextBlock)window.FindName("ApprovalStatusText")).Text);
 
                 var enabled = new System.Threading.Tasks.TaskCompletionSource();
@@ -47,7 +47,7 @@ public sealed class WorkbenchApprovalConfirmationTests(WpfContext wpf)
                 WpfContext.Complete(enabled.Task.WaitAsync(TestDeadlines.Hang));
                 WpfContext.Drain();
                 Assert.True(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
+                Assert.Equal(Loc.Current["Shell.ApprovalOnStatus"], window.ApprovalStatusText.Text);
                 Assert.Equal(Loc.Current["Shell.ApprovalOnStatus"], ((TextBlock)window.FindName("ApprovalStatusText")).Text);
             }
             finally { window.Close(); }

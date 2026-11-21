@@ -9,6 +9,7 @@ namespace TiaOpenness.Gui.Controls;
 public partial class CommandPalette : UserControl
 {
     private readonly Action _close;
+    internal System.Windows.Shapes.Rectangle Backdrop => Scrim.Backdrop;
 
     internal CommandPalette(CommandPaletteViewModel model, Action close)
     {

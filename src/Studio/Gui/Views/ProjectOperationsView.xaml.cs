@@ -10,6 +10,7 @@ public partial class ProjectOperationsView : UserControl
     public ProjectOperationsView()
     {
         InitializeComponent();
+        Options.LocalScrim.Source = ProjectBackdrop;
         Options.ClearPrefillRequested += (_, form) => ClearPrefillRequested?.Invoke(this, form);
     }
     internal RadioButton TagsTab { get; set; } = null!;
@@ -17,7 +18,7 @@ public partial class ProjectOperationsView : UserControl
     private Action? _environmentRequested;
     internal void SetFeatures(FeaturePagesViewModel? features, Action? environmentRequested)
     {
-        EnvironmentBanner.DataContext = features;
+        RunEnvironmentItem.DataContext = features;
         _environmentRequested = environmentRequested;
     }
     private void OnEnvironment(object sender, RoutedEventArgs e) => _environmentRequested?.Invoke();

@@ -1,6 +1,6 @@
 <UserControl xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.EngineeringOptionsView" x:Name="PageRoot">
-  <Grid x:Name="OptionsOverlay" Visibility="Collapsed" AutomationProperties.Name="{Binding Text,ElementName=OptionsTitle}">
-    <Border Style="{StaticResource Primer.Overlay}"/>
+  <Grid x:Name="OptionsOverlay" Background="Transparent" Visibility="Collapsed" AutomationProperties.Name="{Binding Text,ElementName=OptionsTitle}">
+    <ux:WorkbenchScrim x:Name="LocalScrim" BlurRadius="2"/>
     <Border x:Name="OptionsPanel" Style="{StaticResource Primer.Container}" Width="400" HorizontalAlignment="Right" Margin="0,0,0,0" VerticalAlignment="Stretch">
       <Grid>
         <Grid.RowDefinitions>

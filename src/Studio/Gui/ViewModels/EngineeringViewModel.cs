@@ -99,6 +99,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         _activity.PropertyChanged += OnActivityChanged;
         ((INotifyCollectionChanged)_activity.Entries).CollectionChanged += OnResultEntry;
 
+        RetrySource = new AsyncCommand(ReadFocusedBlockAsync, () => SourceFailed && !_activity.Busy);
         Refresh = new AsyncCommand(RefreshBlocksAsync, () => !_activity.Busy && SelectedDevice is not null);
         Export = Command(ExportAsync, () => !_activity.Busy && SelectedDevice is not null && OutputDirectory.Length > 0);
         Import = Command(ImportAsync, () => !_activity.Busy && SelectedDevice is not null);
@@ -120,6 +121,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     public ObservableCollection<DeviceNode> DeviceTree { get; } = [];
     public IEnumerable<DeviceNode> ProjectDevices => DeviceTree.SelectMany(root => root.Children);
 
+    public AsyncCommand RetrySource { get; }
     public AsyncCommand Refresh { get; }
     private AsyncCommand Command(Func<Task> execute, Func<bool> enabled) => _client is McpProjectClient
         ? new McpPanelCommand(execute, enabled) : new AsyncCommand(execute, enabled);
@@ -161,7 +163,13 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     public bool HasDevices => Devices.Count > 0;
 
     public bool HasBlocks => Blocks.Count > 0;
-    internal string? LoadedDeviceId { get; private set; }
+    private string? _loadedDeviceId;
+    internal string? LoadedDeviceId
+    {
+        get => _loadedDeviceId;
+        private set { if (Set(ref _loadedDeviceId, value)) Raise(nameof(EmptyBlockList)); }
+    }
+    public bool EmptyBlockList => LoadedDeviceId != null && Blocks.Count == 0;
 
     public string BlockFilter
     {
@@ -203,7 +211,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             }
             _activeNode = DeviceTree.SelectMany(root => root.DeviceNodes()).FirstOrDefault(node => node.Device == value);
             if (_activeNode != null) { _activeNode.IsActive = true; _activeNode.IsExpanded = true; }
-            foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save })
+            foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save, RetrySource })
             {
                 command.RaiseCanExecuteChanged();
             }
@@ -228,6 +236,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     private void OnBlocksChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         Raise(nameof(HasBlocks));
+        Raise(nameof(EmptyBlockList));
         Raise(nameof(SelectionSummary));
     }
 
@@ -431,6 +440,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         foreach (var device in ProjectDevices.SelectMany(node => node.DeviceNodes()))
             device.MatchesFilter = BlockFilter.Length == 0 || Matches(device.Name) || Matches(device.Label) || device.IsActive && BlockTree.Count > 0;
         Raise(nameof(HasBlocks));
+        Raise(nameof(EmptyBlockList));
     }
 
     private static IEnumerable<CompileMessage> Flatten(IEnumerable<CompileMessage> messages)
@@ -470,7 +480,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
         Raise(nameof(TagStatus));
-        Raise(nameof(SourceStatus));
+        Raise(nameof(SourceStatus)); Raise(nameof(SourceErrorTitle));
         Raise(nameof(LineCountLabel));
         Raise(nameof(CompileSummary));
         Raise(nameof(SelectionSummary));
@@ -488,7 +498,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             _ = RefreshBlocksAsync();
         }
         Raise(nameof(CanReadTags));
-        foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save }) command.RaiseCanExecuteChanged();
+        foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save, RetrySource }) command.RaiseCanExecuteChanged();
     }
     private void OnResultEntry(object? sender, NotifyCollectionChangedEventArgs e)
     {

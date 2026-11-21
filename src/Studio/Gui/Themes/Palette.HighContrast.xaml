@@ -1,116 +1,122 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- High contrast keeps following the Windows system colours; the shared token set stays interchangeable. -->
-  <SolidColorBrush x:Key="Primer.bg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.card" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.cardSoft" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.cardSel" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.cardBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.divider" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.input" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.inputBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.pill" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.pillHover" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.destructiveText" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.menuBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.text" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.textMuted" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.textFaint" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.checkBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.accent" Color="{DynamicResource {x:Static SystemColors.HotTrackColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.onAccent" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.primaryBg" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.onPrimary" Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.warn" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.warnBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.ok" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.okBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.noteBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.noteBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.noteAccent" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.codeBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.codeText" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.diffGreen" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.diffRed" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.primaryText" Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.warningText" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.countWarningBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.focusOuter" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.focusInner" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.selectedText" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.hoverText" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
+  <!-- Night Sky high contrast from the workbench design (ADR 0036). -->
+  <SolidColorBrush x:Key="Primer.bg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.card" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.cardSoft" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.cardSel" Color="#333300"/>
+  <SolidColorBrush x:Key="Primer.cardBorder" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.divider" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.input" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.inputBorder" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.pill" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.pillHover" Color="#1A1A1A"/>
+  <SolidColorBrush x:Key="Primer.destructiveText" Color="#FF6B6B"/>
+  <SolidColorBrush x:Key="Primer.menuBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.text" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.textMuted" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.textFaint" Color="#D6D6D6"/>
+  <SolidColorBrush x:Key="Primer.checkBorder" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.accent" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.onAccent" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.primaryBg" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.onDanger" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.onPrimary" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.warn" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.warnBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.ok" Color="#3FF23F"/>
+  <SolidColorBrush x:Key="Primer.okBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.noteBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.noteBorder" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.noteAccent" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.codeBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.codeText" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.diffGreen" Color="#3FF23F"/>
+  <SolidColorBrush x:Key="Primer.diffRed" Color="#FF9999"/>
+  <SolidColorBrush x:Key="Primer.primaryText" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.warningText" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.countWarningBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.focusOuter" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.focusInner" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.selectedText" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.hoverText" Color="#FFFFFF"/>
 
   <!-- Ant tokens without a Primer counterpart. Solid buttons, including hover and active,
-       use the system Highlight/HighlightText pair. -->
-  <SolidColorBrush x:Key="Ant.colorPrimary" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorPrimaryHover" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorPrimaryActive" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorLinkHover" Color="{DynamicResource {x:Static SystemColors.HotTrackColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.controlItemBgActiveHover" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorWhite" Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorError" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorErrorBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorErrorBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorErrorSolid" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorErrorSolidHover" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorErrorSolidActive" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorWarningBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorSuccessBorder" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorFillSecondary" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorBgContainerDisabled" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorTextDisabled" Color="{DynamicResource {x:Static SystemColors.GrayTextColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorBgMask" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorBgSpotlight" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.colorTextLightSolid" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.boxShadowKey" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.boxShadowUmbra" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Ant.boxShadowAmbient" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.window" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.sidebar" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.hcOutline" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.titlebar" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.rail" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.statusBar" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.accentSoft" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.accentRing" Color="{DynamicResource {x:Static SystemColors.HotTrackColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkObBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkObFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkFbBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkFbFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkFcBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkFcFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkDbBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkDbFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkFsBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.blkFsFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.syntaxKeyword" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.syntaxComment" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.syntaxString" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.syntaxNumber" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.syntaxVariable" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.diffAddBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.diffDelBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientClaudeBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientClaudeFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientCodexBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientCodexFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientGeminiBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientGeminiFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientCursorBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientCursorFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientVSCodeBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientVSCodeFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientOpenCodeBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientOpenCodeFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientQwenBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientQwenFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientKimiBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientKimiFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientYuanbaoBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientYuanbaoFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientNeutralBg" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.clientNeutralFg" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.brandGradient" Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.windowShadow" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-  <SolidColorBrush x:Key="Primer.floatShadow" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
+       follow the Night Sky accent pair. -->
+  <SolidColorBrush x:Key="Ant.colorPrimary" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Ant.colorPrimaryHover" Color="#FFE600"/>
+  <SolidColorBrush x:Key="Ant.colorPrimaryActive" Color="#FFE600"/>
+  <SolidColorBrush x:Key="Ant.colorLinkHover" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Ant.controlItemBgActiveHover" Color="#333300"/>
+  <SolidColorBrush x:Key="Ant.colorWhite" Color="#000000"/>
+  <SolidColorBrush x:Key="Ant.colorBorder" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Ant.colorError" Color="#FF6B6B"/>
+  <SolidColorBrush x:Key="Ant.colorErrorBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Ant.colorErrorBorder" Color="#FF6B6B"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolid" Color="#FF0000"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolidHover" Color="#FF0000"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolidActive" Color="#FF0000"/>
+  <SolidColorBrush x:Key="Ant.colorWarningBorder" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Ant.colorSuccessBorder" Color="#3FF23F"/>
+  <SolidColorBrush x:Key="Ant.colorFillSecondary" Color="#000000"/>
+  <SolidColorBrush x:Key="Ant.colorBgContainerDisabled" Color="#000000"/>
+  <SolidColorBrush x:Key="Ant.colorTextDisabled" Color="#D6D6D6"/>
+  <SolidColorBrush x:Key="Ant.colorBgMask" Color="#D1000000"/>
+  <SolidColorBrush x:Key="Ant.colorBgSpotlight" Color="#000000"/>
+  <SolidColorBrush x:Key="Ant.colorTextLightSolid" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Ant.boxShadowKey" Color="Transparent"/>
+  <SolidColorBrush x:Key="Ant.boxShadowUmbra" Color="Transparent"/>
+  <SolidColorBrush x:Key="Ant.boxShadowAmbient" Color="Transparent"/>
+  <SolidColorBrush x:Key="Primer.window" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.sidebar" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.hcOutline" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.titlebar" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.rail" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.statusBar" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.accentSoft" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.accentRing" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.blkObBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.blkObFg" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.blkFbBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.blkFbFg" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.blkFcBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.blkFcFg" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.blkDbBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.blkDbFg" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.blkFsBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.blkFsFg" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.syntaxKeyword" Color="#1AEBFF"/>
+  <SolidColorBrush x:Key="Primer.syntaxComment" Color="#D6D6D6"/>
+  <SolidColorBrush x:Key="Primer.syntaxString" Color="#3FF23F"/>
+  <SolidColorBrush x:Key="Primer.syntaxNumber" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.syntaxVariable" Color="#FF99FF"/>
+  <SolidColorBrush x:Key="Primer.diffAddBg" Color="#002800"/>
+  <SolidColorBrush x:Key="Primer.diffDelBg" Color="#3A0000"/>
+  <SolidColorBrush x:Key="Primer.clientClaudeBg" Color="#21D97757"/>
+  <SolidColorBrush x:Key="Primer.clientClaudeFg" Color="#D97757"/>
+  <SolidColorBrush x:Key="Primer.clientCodexBg" Color="#2110A37F"/>
+  <SolidColorBrush x:Key="Primer.clientCodexFg" Color="#10A37F"/>
+  <SolidColorBrush x:Key="Primer.clientGeminiBg" Color="#213B82F6"/>
+  <SolidColorBrush x:Key="Primer.clientGeminiFg" Color="#3B82F6"/>
+  <SolidColorBrush x:Key="Primer.clientCursorBg" Color="#217C3AED"/>
+  <SolidColorBrush x:Key="Primer.clientCursorFg" Color="#7C3AED"/>
+  <SolidColorBrush x:Key="Primer.clientVSCodeBg" Color="#210284C7"/>
+  <SolidColorBrush x:Key="Primer.clientVSCodeFg" Color="#0284C7"/>
+  <SolidColorBrush x:Key="Primer.clientOpenCodeBg" Color="#2164748B"/>
+  <SolidColorBrush x:Key="Primer.clientOpenCodeFg" Color="#64748B"/>
+  <SolidColorBrush x:Key="Primer.clientQwenBg" Color="#216366F1"/>
+  <SolidColorBrush x:Key="Primer.clientQwenFg" Color="#6366F1"/>
+  <SolidColorBrush x:Key="Primer.clientKimiBg" Color="#210D9488"/>
+  <SolidColorBrush x:Key="Primer.clientKimiFg" Color="#0D9488"/>
+  <SolidColorBrush x:Key="Primer.clientYuanbaoBg" Color="#212563EB"/>
+  <SolidColorBrush x:Key="Primer.clientYuanbaoFg" Color="#2563EB"/>
+  <SolidColorBrush x:Key="Primer.clientNeutralBg" Color="#2164748B"/>
+  <SolidColorBrush x:Key="Primer.clientNeutralFg" Color="#64748B"/>
+  <SolidColorBrush x:Key="Primer.brandGradient" Color="#FFFF00"/>
+  <SolidColorBrush x:Key="Primer.windowShadow" Color="Transparent"/>
+  <SolidColorBrush x:Key="Primer.floatOutline" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Primer.floatShadow" Color="Transparent"/>
+  <SolidColorBrush x:Key="Primer.blkSuBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.blkSuFg" Color="#3FF23F"/>
+  <SolidColorBrush x:Key="Primer.blkHmBg" Color="#000000"/>
+  <SolidColorBrush x:Key="Primer.blkHmFg" Color="#1AEBFF"/>
 </ResourceDictionary>

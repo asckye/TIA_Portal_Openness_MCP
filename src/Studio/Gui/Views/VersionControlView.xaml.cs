@@ -7,7 +7,11 @@ namespace TiaOpenness.Gui.Views;
 
 public partial class VersionControlView : UserControl
 {
-    public VersionControlView() => InitializeComponent();
+    public VersionControlView()
+    {
+        InitializeComponent();
+        Options.LocalScrim.Source = WorkspaceBackdrop;
+    }
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void HideOptions() => Options.Hide();
     internal bool OptionsOpen => Options.IsOpen;

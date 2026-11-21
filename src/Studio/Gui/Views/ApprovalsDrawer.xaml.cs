@@ -72,6 +72,13 @@ public partial class ApprovalsDrawer : UserControl
             model.SelectedRequest = row;
         }
     }
+    private void OnRequestPressed(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is DependencyObject target
+            && ItemsControl.ContainerFromElement(RequestList, target) is ListBoxItem { DataContext: ApprovalRow row })
+            Model.ClearDecisionForSelection(row);
+    }
+
     private void SelectRow()
     {
         var next = (DataContext as FeaturePagesViewModel)?.SelectedRequest;
@@ -94,8 +101,10 @@ public partial class ApprovalsDrawer : UserControl
     }
     internal void FocusRequest(string id)
     {
-        Model.HandledRequests = false;
-        Model.SelectedRequest = System.Linq.Enumerable.FirstOrDefault(Model.Requests, r => r.Request.Id == id);
+        var request = System.Linq.Enumerable.FirstOrDefault(Model.Requests, r => r.Request.Id == id);
+        if (request == null) return;
+        Model.HandledRequests = !request.Pending;
+        Model.SelectedRequest = request;
         Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => { if (IsVisible && _row?.Request.Id == id) RequestTitle.Focus(); }));
     }
     private void OnLoaded(object sender, RoutedEventArgs e)

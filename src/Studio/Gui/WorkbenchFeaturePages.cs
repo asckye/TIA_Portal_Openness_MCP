@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
@@ -50,6 +51,7 @@ public partial class MainWindow
 
     private void OnFeatureReleaseChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(MainViewModel.Busy)) UpdateSessionGlyph();
         if (e.PropertyName == nameof(MainViewModel.SelectedReleaseKey))
         {
             Features.Release = _model.SelectedReleaseKey;
@@ -59,7 +61,14 @@ public partial class MainWindow
 
     private void OnFeatureDrawer(object? sender, string drawer) => OpenDrawer(drawer);
     private void OnFeatureFeedback(object? sender, FeatureFeedback feedback)
-        => ShowToast(feedback.Kind, feedback.Message, feedback.Source);
+    {
+        if (feedback.Source == nameof(FeaturePagesViewModel.Decide))
+        {
+            Controls.AccessibleStatus.Announce(ApprovalsContent);
+            return;
+        }
+        ShowToast(feedback.Kind, feedback.Message, feedback.Source);
+    }
 
     private void OnCallCompleted(CallRecord call)
     {
@@ -81,21 +90,23 @@ public partial class MainWindow
     private void OnNewApproval(object? sender, ApprovalRequest request)
     {
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => OnNewApproval(sender, request)); return; }
-        if (_featuresDisposed) return;
+        if (_featuresDisposed || !Approvals.Requests.Any(row => row.Id == request.Id && row.State == ApprovalState.Pending)) return;
         var title = LocalizedText.Key("Approval.ToastTitle", request.Operations.Count);
         var help = LocalizedText.Key("Approval.ToastHelp");
         if (request.Actor == "workbench" && request.OperatorCallId != null && _model.Panel?.Attached == true)
         { OpenDrawer("Approvals"); ApprovalsContent.FocusRequest(request.Id); }
-        ShowToast(ToastKind.Approval, help, "approval", () => { Navigate("Approvals"); ApprovalsContent.FocusRequest(request.Id); }, title);
         if (WindowState == WindowState.Minimized)
         {
-            try {
-                _approvalNotification
-                    .Show(title.Resolve(), help.Resolve(), () => Dispatcher
-                        .Invoke(() => {
-                            if (_featuresDisposed) return; WindowState = WindowState.Normal; Activate(); OpenDrawer("Approvals"); ApprovalsContent
-                                .FocusRequest(request.Id);
-                        }));
+            try
+            {
+                _approvalNotification.Show(title.Resolve(), help.Resolve(), () => Dispatcher.Invoke(() =>
+                {
+                    if (_featuresDisposed) return;
+                    WindowState = WindowState.Normal;
+                    Activate();
+                    OpenDrawer("Approvals");
+                    ApprovalsContent.FocusRequest(request.Id);
+                }));
             }
             catch (Exception ex) { System.Diagnostics.Trace.TraceWarning("Approval notification failed: {0}", ex.Message); }
         }

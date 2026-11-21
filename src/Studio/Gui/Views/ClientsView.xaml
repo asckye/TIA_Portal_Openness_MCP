@@ -96,8 +96,8 @@
                         <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True"/>
                         <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
                       </MultiDataTrigger.Conditions>
-                      <Setter TargetName="ClientTile" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-                      <Setter TargetName="ClientTile" Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+                      <Setter TargetName="ClientTile" Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+                      <Setter TargetName="ClientTile" Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
                     </MultiDataTrigger>
                   </DataTemplate.Triggers>
                 </DataTemplate>

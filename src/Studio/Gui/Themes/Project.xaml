@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls"
                     xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:views="clr-namespace:TiaOpenness.Gui.Views">
   <views:SourceLineNumberConverter x:Key="Project.LineNumber"/>
   <Style x:Key="Primer.ProjectContextToggle" TargetType="ToggleButton" BasedOn="{StaticResource Primer.ContextToggle}">
@@ -54,6 +55,10 @@
           <Trigger Property="Tag" Value="Device">
             <Setter TargetName="Branch" Property="Margin" Value="11,4,0,0"/>
             <Setter TargetName="Switcher" Property="Width" Value="11"/>
+          </Trigger>
+          <Trigger Property="ux:Ux.Narrow" Value="True">
+            <Setter TargetName="Branch" Property="Margin" Value="4,2,0,0"/>
+            <Setter TargetName="Branch" Property="Padding" Value="2,0,0,0"/>
           </Trigger>
           <Trigger Property="IsExpanded" Value="True"><Setter TargetName="Branch" Property="Visibility" Value="Visible"/></Trigger>
           <Trigger Property="HasItems" Value="False">

@@ -1,29 +1,12 @@
 <UserControl x:Class="TiaOpenness.Gui.Controls.CommandPalette"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization"
-    xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes"
+    xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls"
     Focusable="False" IsTabStop="False" AutomationProperties.Name="{l:Tr Shell.CommandPalette}" PreviewKeyDown="OnPaletteKey">
   <Grid MouseLeftButtonDown="OnBackdrop">
-    <Rectangle x:Name="Backdrop" IsHitTestVisible="False">
-      <Rectangle.Style>
-        <Style TargetType="Rectangle">
-          <Setter Property="Visibility" Value="Collapsed"/>
-          <Style.Triggers>
-            <MultiDataTrigger>
-              <MultiDataTrigger.Conditions>
-                <Condition Binding="{Binding UseLowEffects,Source={x:Static themes:ThemeManager.Current}}" Value="False"/>
-                <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="False"/>
-              </MultiDataTrigger.Conditions>
-              <Setter Property="Visibility" Value="Visible"/>
-              <Setter Property="Effect"><Setter.Value><BlurEffect Radius="6"/></Setter.Value></Setter>
-            </MultiDataTrigger>
-          </Style.Triggers>
-        </Style>
-      </Rectangle.Style>
-    </Rectangle>
+    <ux:WorkbenchScrim x:Name="Scrim"/>
     <ContentControl Style="{StaticResource Primer.Shadow}" Width="{Binding ActualWidth,ElementName=Surface}"
         Height="{Binding ActualHeight,ElementName=Surface}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,64,0,0"/>
-    <Border x:Name="Scrim" Background="{DynamicResource Ant.colorBgMask}"/>
     <Border x:Name="Surface" MaxWidth="490" VerticalAlignment="Top" Margin="16,64,16,0"
         CornerRadius="{StaticResource Ui.Radius.Large}" Background="{DynamicResource Primer.window}"
         BorderBrush="{DynamicResource Primer.inputBorder}" BorderThickness="1">

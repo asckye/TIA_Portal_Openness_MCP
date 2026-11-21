@@ -39,7 +39,7 @@ internal sealed partial class PortalProcessPicker : Window
         var owner = Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
         if (owner?.IsVisible == true) dialog.Owner = owner;
         else dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        dialog.ShowDialog();
+        WorkbenchMessageBox.ShowModal(dialog);
         return model.ResultProcessId;
     }
 }

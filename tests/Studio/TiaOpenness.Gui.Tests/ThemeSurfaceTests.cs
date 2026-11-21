@@ -41,7 +41,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     {
         var literal = new Regex(@"#[\da-fA-F]{3,8}\b|\b(?:Colors|Brushes)\.(?!Transparent\b)\w+|\bColor\.From\w+");
         // The warning-count colour stays exact; its brush is defined in the light palette.
-        const string countVariant = "<SolidColorBrush x:Key=\"Primer.countWarningBg\" Color=\"#FFF4E5\"/>";
+        const string countVariant = "<SolidColorBrush x:Key=\"Primer.countWarningBg\" Color=\"#1CB45309\"/>";
         var lightPalette = SourceScan.Markup.Single(file => file.Name.EndsWith(".Themes.Palette.Light.xaml", StringComparison.Ordinal));
         Assert.Single(Regex.Matches(lightPalette.Text, Regex.Escape(countVariant)));
         var brushesOutsidePalettes = SourceScan.Markup
@@ -58,47 +58,34 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
     }
 
     [Theory]
-    [InlineData("Light",
-        "#F8FAFD #FFFFFF #F3F6FA #EBEBED #DBDCDF #EBEBED #EAEFF6 #7B8797 #EAEFF6 #F2F2F3 #FFFFFF #0F172A #475569 #57657A " +
-        "#7B8797 #1D4ED8 #FFFFFF #2563EB #9A5504 #F8EEE6 #0E7A50 #E8F2EC #EFF6FF #1D4ED8 #1D4ED8 #F6F8FC #0F172A #0E7A50 " +
-        "#B91C1C #FFFFFF #FFFFFF #FFF4E5 #1D4ED8 #FFFFFF #0F172A #0F172A #2563EB #1D4ED8 #1E40AF #1E40AF #EBEBED #FFFFFF " +
-        "#DBDCDF #DC2626 #FCEBEB #DC2626 #DC2626 #B91C1C #991B1B #9A5504 #0E7A50 #EAEFF6 #F3F6FA #8B97A8 #0F172A #FFFFFF " +
-        "#0F172A #EAECF0 #EFF1F5 Transparent")]
-    [InlineData("Dark",
-        "#141B26 #1B2332 #101620 #222E42 #363F4F #2A3242 #232E40 #6D7D94 #232E40 #272F3D #1B2332 #F1F5F9 #94A3B8 #8B9BB2 " +
-        "#6D7D94 #7BB4FF #0B0F15 #2563EB #FBBF24 #2D220E #34D399 #0F2920 #132139 #60A5FA #60A5FA #0C1017 #F1F5F9 #6EE7B7 " +
-        "#FDA4AF #FFFFFF #0B0F15 #2D220E #60A5FA #0B0F15 #F1F5FA #F1F5FA #2563EB #1D4ED8 #1E40AF #93C5FD #2F3745 #FFFFFF " +
-        "#363F4F #FB7185 #362C3C #FB7185 #E11D48 #B91C1C #991B1B #D97706 #10B981 #232E40 #1A2332 #6B7B91 #070A0F #1B2332 " +
-        "#F1F5F9 #0D1219 #0F141C Transparent")]
-    [InlineData("Light.Petrol",
-        "#F8FAFD #FFFFFF #F3F6FA #EBEBED #DBDCDF #EBEBED #EAEFF6 #7B8797 #EAEFF6 #F2F2F3 #FFFFFF #0F172A #475569 #57657A " +
-        "#7B8797 #0B656E #FFFFFF #0E7C86 #9A5504 #F8EEE6 #0E7A50 #E8F2EC #EBF7F8 #0B656E #0B656E #F6F8FC #0F172A #0E7A50 " +
-        "#B91C1C #FFFFFF #FFFFFF #FFF4E5 #0B656E #FFFFFF #0F172A #0F172A #0E7C86 #0B656E #084F56 #084F56 #EBEBED #FFFFFF " +
-        "#DBDCDF #DC2626 #FCEBEB #DC2626 #DC2626 #B91C1C #991B1B #9A5504 #0E7A50 #EAEFF6 #F3F6FA #8B97A8 #0F172A #FFFFFF " +
-        "#0F172A #EAECF0 #EFF1F5 Transparent")]
-    [InlineData("Dark.Petrol",
-        "#141B26 #1B2332 #101620 #222E42 #363F4F #2A3242 #232E40 #6D7D94 #232E40 #272F3D #1B2332 #F1F5F9 #94A3B8 #8B9BB2 " +
-        "#6D7D94 #5EEAD4 #0B0F15 #0E7C86 #FBBF24 #2D220E #34D399 #0F2920 #0C2A2C #2DD4BF #2DD4BF #0C1017 #F1F5F9 #6EE7B7 " +
-        "#FDA4AF #FFFFFF #0B0F15 #2D220E #2DD4BF #0B0F15 #F1F5FA #F1F5FA #0E7C86 #0B656E #084F56 #5EEAD4 #2F3745 #FFFFFF " +
-        "#363F4F #FB7185 #362C3C #FB7185 #E11D48 #B91C1C #991B1B #D97706 #10B981 #232E40 #1A2332 #6B7B91 #070A0F #1B2332 " +
-        "#F1F5F9 #0D1219 #0F141C Transparent")]
-    public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme, string colors)
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    [InlineData("Light.Petrol")]
+    [InlineData("Dark.Petrol")]
+    [InlineData("HighContrast")]
+    public void Handoff_surface_text_and_semantic_tokens_are_preserved(string theme)
     {
         wpf.Run(() =>
         {
             var palette = new ResourceDictionary { Source = new Uri(ThemeManager.PackPrefix + "Palette." + theme + ".xaml") };
-            string[] keys = ["bg", "card", "cardSoft", "cardSel", "cardBorder", "divider", "input", "inputBorder", "pill", "pillHover", "menuBg", "text", "textMuted", "textFaint", "checkBorder", "accent", "onAccent", "primaryBg", "warn", "warnBg", "ok", "okBg", "noteBg", "noteBorder", "noteAccent", "codeBg", "codeText", "diffGreen", "diffRed", "primaryText", "warningText", "countWarningBg", "focusOuter", "focusInner", "selectedText", "hoverText", "Ant.colorPrimary", "Ant.colorPrimaryHover", "Ant.colorPrimaryActive", "Ant.colorLinkHover", "Ant.controlItemBgActiveHover", "Ant.colorWhite", "Ant.colorBorder", "Ant.colorError", "Ant.colorErrorBg", "Ant.colorErrorBorder", "Ant.colorErrorSolid", "Ant.colorErrorSolidHover", "Ant.colorErrorSolidActive", "Ant.colorWarningBorder", "Ant.colorSuccessBorder", "Ant.colorFillSecondary", "Ant.colorBgContainerDisabled", "Ant.colorTextDisabled", "Ant.colorBgMask", "Ant.colorBgSpotlight", "Ant.colorTextLightSolid", "Ant.boxShadowKey", "Ant.boxShadowUmbra", "Ant.boxShadowAmbient"];
-            string[] expected = colors.Split(' ');
-            bool light = theme.StartsWith("Light", StringComparison.Ordinal);
-            Assert.Equal(keys.Length + 50, palette.Count);
-            Assert.Equal(light ? "#FFB91C1C" : "#FFFCA5A5",
-                ((SolidColorBrush)palette["Primer.destructiveText"]).Color.ToString());
-            Assert.Equal(Colors.White, ((SolidColorBrush)palette["Primer.onPrimary"]).Color);
-            Assert.Equal(light ? "#FFFFFFFF" : "#FF1B2332", ((SolidColorBrush)palette["Primer.window"]).Color.ToString());
-            Assert.Equal(light ? "#FFF3F6FA" : "#FF101620", ((SolidColorBrush)palette["Primer.sidebar"]).Color.ToString());
-            Assert.Equal(0, ((SolidColorBrush)palette["Primer.hcOutline"]).Color.A);
-            for (int i = 0; i < keys.Length; i++)
-                Assert.Equal((Color)ColorConverter.ConvertFromString(expected[i]), ((SolidColorBrush)palette[keys[i].StartsWith("Ant.", StringComparison.Ordinal) ? keys[i] : "Primer." + keys[i]]).Color);
+            Assert.Equal(WorkbenchDesignColors.Keys.Count() + 1, palette.Count);
+            foreach (string key in WorkbenchDesignColors.Keys)
+            {
+                var brush = (SolidColorBrush)palette[key.StartsWith("Ant.") ? key : "Primer." + key];
+                Assert.Equal(WorkbenchDesignColors.Get(theme, key), brush.Color);
+                Assert.Equal(1, brush.Opacity);
+            }
+            if (theme == "HighContrast") Assert.Equal(Colors.Yellow, ((SolidColorBrush)palette["Primer.brandGradient"]).Color);
+            else
+            {
+                string[] stops = theme switch
+                {
+                    "Light" => ["#2563EB", "#0891B2"], "Dark" => ["#3B82F6", "#06B6D4"],
+                    "Light.Petrol" => ["#0D9488", "#0284C7"], _ => ["#14B8A6", "#0EA5E9"]
+                };
+                Assert.Equal(stops.Select(s => (Color)ColorConverter.ConvertFromString(s)),
+                    ((LinearGradientBrush)palette["Primer.brandGradient"]).GradientStops.Select(stop => stop.Color));
+            }
         });
     }
 
@@ -120,7 +107,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 var foreground = Composite(Token(text), background);
                 double first = Luminance(foreground), second = Luminance(background);
                 double contrast = (Math.Max(first, second) + 0.05) / (Math.Min(first, second) + 0.05);
-                Assert.True(contrast >= minimum, $"{theme}: {text} on {surface} = {contrast:F2}, expected {minimum}");
+                WorkbenchDesignColors.AssertContrast(theme, text, surface, "bg", contrast, minimum);
             }
             foreach (string surface in new[] { "bg", "card", "input" })
                 foreach (string text in new[] { "text", "textMuted" }) Check(text, surface);
@@ -155,10 +142,10 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 var foreground = Composite(Token(boundary), background);
                 double first = Luminance(foreground), second = Luminance(background);
                 double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
-                Assert.True(ratio >= 3, $"{theme}: {boundary} on {surface} = {ratio:F2}, expected 3");
+                WorkbenchDesignColors.AssertContrast(theme, boundary, surface, "window", ratio, 3);
             }
             if (theme != "HighContrast") Assert.Equal(0, Token("hcOutline").A);
-            else Assert.Equal(SystemColors.WindowTextColor, Token("hcOutline"));
+            else Assert.Equal(Colors.White, Token("hcOutline"));
         });
     }
 
@@ -244,7 +231,9 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                     var foreground = Composite(((SolidColorBrush)foregroundBrush).Color, background);
                     double first = Luminance(foreground), second = Luminance(background);
                     double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
-                    Assert.True(ratio >= 4.5, $"{theme}: {role} contrast {ratio:F2} < 4.5");
+                    if (role == "WarningAction")
+                        WorkbenchDesignColors.AssertContrast(theme, "onDanger", "Ant.colorErrorSolid", "window", ratio, 4.5);
+                    else Assert.True(ratio >= 4.5, $"{theme}: {role} contrast {ratio:F2} < 4.5");
                 }
                 foreach (string key in new[] { "Run", "Primary", "WarningAction", "Secondary", "OutlinedAccent", "Danger" })
                 {
@@ -265,8 +254,8 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 Check(blockText.Foreground, block.Background, "checked block row");
                 if (theme == "HighContrast")
                 {
-                    Assert.Equal(SystemColors.HighlightColor, ((SolidColorBrush)block.Background).Color);
-                    Assert.Equal(SystemColors.HighlightTextColor, ((SolidColorBrush)blockText.Foreground).Color);
+                    Assert.Equal(Colors.Yellow, ((SolidColorBrush)block.Background).Color);
+                    Assert.Equal(Colors.Black, ((SolidColorBrush)blockText.Foreground).Color);
                 }
                 var label = new TextBlock { Text = "Info", Tag = ViewModels.FeatureTone.Accent,
                     Style = (Style)Application.Current.FindResource("Primer.ToneText") };
@@ -360,6 +349,9 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 ("Primer.onPrimary", "Ant.colorErrorSolid"),
                 ("Primer.onPrimary", "Ant.colorErrorSolidHover"),
                 ("Primer.onPrimary", "Ant.colorErrorSolidActive"),
+                ("Primer.onDanger", "Ant.colorErrorSolid"),
+                ("Primer.onDanger", "Ant.colorErrorSolidHover"),
+                ("Primer.onDanger", "Ant.colorErrorSolidActive"),
             ];
             foreach (var pair in pairs)
             {
@@ -367,7 +359,7 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 var foreground = Composite(Token(pair.Foreground), background);
                 double first = Luminance(foreground), second = Luminance(background);
                 double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
-                Assert.True(ratio >= 4.5, $"{theme}: {pair.Foreground}/{pair.Background} {ratio:F2} < 4.5");
+                WorkbenchDesignColors.AssertContrast(theme, pair.Foreground.Replace("Primer.", ""), pair.Background.Replace("Primer.", ""), "bg", ratio, 4.5);
             }
 
             var previous = ThemeManager.Current.Theme;

@@ -203,6 +203,26 @@ public class MainWindowTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Connected_portal_without_an_open_project_keeps_the_session_and_project_states_distinct()
+    {
+        wpf.Run(() =>
+        {
+            var model = ProjectPageTestSupport.Model(connected: false, configure: client => client.AttachedProject = null);
+            var window = new MainWindow(model, false);
+            try
+            {
+                model.Session.Connect.Execute(null);
+                WpfContext.Drain();
+                Assert.True(model.Session.IsConnected);
+                Assert.Equal(Loc.Current["Shell.Engineering"], window.CurrentPageTitle.Text);
+                Assert.EndsWith(Loc.Current["Shell.NoProjectFile"], window.SessionStatus.Text);
+                Assert.Equal("✓", window.SessionGlyph.Text);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Ide_toolbar_controls_use_shared_sizes_and_selection_boundaries()
     {
         wpf.Run(() =>
@@ -216,8 +236,10 @@ public class MainWindowTests(WpfContext wpf)
                 Assert.Equal(24, button.ActualWidth); Assert.Equal(24, button.ActualHeight);
             }
             Assert.Equal(26, ((Border)window.FindName("IdeStatusBar")).MinHeight);
-            foreach (string name in new[] { "SessionStatusButton", "McpStatusButton", "ApprovalStatusButton" })
-                Assert.Equal(24, ((Button)window.FindName(name)).ActualHeight);
+            foreach (string name in new[] { "SessionStatusButton", "CompileStatusButton", "ApprovalStatusButton" })
+                Assert.Equal(24, ((Button)window.FindName(name)).Height);
+            Assert.Equal(24, window.SessionStatusButton.ActualHeight);
+            Assert.Equal(24, window.ApprovalStatusButton.ActualHeight);
 
             FrameworkElement Styled(FrameworkElement element, string style)
             {
@@ -257,7 +279,8 @@ public class MainWindowTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var model = ProjectPageTestSupport.Model();
+            FakeProjectClient client = null!;
+            var model = ProjectPageTestSupport.Model(configure: fixture => client = fixture);
             var window = new MainWindow(model, false, FeaturePageFixtures.Approvals(false));
             try
             {
@@ -269,8 +292,16 @@ public class MainWindowTests(WpfContext wpf)
                 model.Engineering.Compile.Execute(null); WpfContext.Drain();
                 Assert.NotNull(model.Engineering.LastCompile);
                 Assert.Equal(Visibility.Visible, compile.Visibility);
-                Assert.Equal("0 Err · 0 Warn", compile.Text);
+                Assert.Equal("✓ 0 ! 0", compile.Text);
                 Assert.Equal(Loc.Current.T("Shell.CompileCounts", 0, 0), compile.Tag);
+                Assert.Equal(1, window.CompileOkGlyph.PositionCount);
+                client.CompileResult = new() { State = "Error", ErrorCount = 12, WarningCount = 3 };
+                model.Engineering.Compile.Execute(null); WpfContext.Drain();
+                Assert.Equal("✕ 12 ! 3", compile.Text);
+                Assert.Equal(Loc.Current.T("Shell.CompileCounts", 12, 3), compile.Tag);
+                Assert.Equal(0, window.CompileOkGlyph.PositionCount);
+                Assert.Equal(1, window.CompileErrorGlyph.PositionCount);
+                Assert.Equal(5, window.CompileWarningGlyph.PositionStart);
                 window.Navigate("Calls");
                 UnifiedDesktopTests.ClickControl(window.CompileStatusButton);
                 Assert.Equal("Engineering", window.CurrentPage);

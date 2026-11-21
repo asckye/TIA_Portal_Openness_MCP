@@ -15,6 +15,8 @@ public sealed partial class EngineeringViewModel
     private LocalizedText _sourceStatus = LocalizedText.Key("Project.FocusBlock");
     public int? TagCount { get => _tagCount; private set => Set(ref _tagCount, value); }
     public IReadOnlyList<string> SourceLines { get; private set; } = [];
+    public bool SourceFailed { get; private set; }
+    public string SourceErrorTitle => Loc.Current.T("Shell.SourceError", FocusedBlock?.Name ?? "");
     public string SourceStatus => _sourceStatus.Resolve();
     public string SourcePath => FocusedBlock is { } row
         ? string.Join("/", new[] { SelectedDevice?.Name, row.Info.FolderPath, row.FileName }.Where(s => !string.IsNullOrEmpty(s))) : "";
@@ -41,11 +43,14 @@ public sealed partial class EngineeringViewModel
         _sourceRequest++;
         _readBlock = null;
         SetSource([], FocusedBlock == null ? LocalizedText.Key("Project.FocusBlock") : LocalizedText.Key("Project.ReadCode"));
-        Raise(nameof(SourcePath));
+        Raise(nameof(SourcePath)); Raise(nameof(SourceErrorTitle));
     }
 
-    private void SetSource(IReadOnlyList<string> lines, LocalizedText status)
+    private void SetSource(IReadOnlyList<string> lines, LocalizedText status, bool failed = false)
     {
+        SourceFailed = failed;
+        Raise(nameof(SourceFailed));
+        RetrySource.RaiseCanExecuteChanged();
         SourceLines = lines;
         _sourceStatus = status;
         Raise(nameof(SourceLines)); Raise(nameof(SourceStatus)); Raise(nameof(LineCountLabel));
@@ -85,7 +90,7 @@ public sealed partial class EngineeringViewModel
             {
                 if (request != _sourceRequest) return;
                 _readBlock = null;
-                SetSource([], LocalizedText.Literal(error.Message));
+                SetSource([], LocalizedText.Literal(error.Message), failed: true);
                 throw;
             }
         });

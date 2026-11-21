@@ -187,7 +187,7 @@ public sealed partial class ProjectPageInteractionTests
                 window.Width = 1024;
                 window.Navigate("VersionControl");
                 WpfContext.Drain();
-                UnifiedDesktopTests.ClickControl(window.LeftPaneToggle);
+                Assert.Equal(214, window.ProjectTree.ActualWidth);
                 var second = (TreeViewItem)window.ProjectExplorer.Nodes.ItemContainerGenerator.ContainerFromIndex(1);
                 client.BlockHandler = _ => blocks.Task;
                 ClickNode(second);

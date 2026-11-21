@@ -76,7 +76,12 @@ public interface IAuditLogService : INotifyPropertyChanged
 }
 
 public sealed record EnvironmentCheck(string Id, CheckStatus Status, LocalizedText Name, LocalizedText Result,
-    LocalizedText FixAction, LocalizedText Detail);
+    LocalizedText FixAction, LocalizedText Detail)
+{
+    internal EnvironmentIssue? Issue { get; init; }
+}
+
+internal sealed record EnvironmentIssue(string Id, Uri? Endpoint, LocalizedText Title, LocalizedText Description, LocalizedText Action);
 public sealed record EnvironmentGroup(LocalizedText Name, IReadOnlyList<EnvironmentCheck> Rows);
 
 public interface IEnvironmentCheckService : INotifyPropertyChanged

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using TiaOpenness.Gui.Localization;
@@ -28,10 +29,22 @@ public partial class MainWindow
     partial void ToggleSessionPopover();
     private bool _shellQueued;
     private Controls.ModalPane? _drawerFocus;
+    private bool ConnectionLost => !_model.Session.IsConnected && !string.IsNullOrEmpty(_model.Session.OpenProjectFile);
     private bool HasProject => _model.Session.IsConnected && !string.IsNullOrEmpty(_model.Session.ProjectName);
 
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
     {
+        foreach (var (scrim, view) in new[] { (ProjectOptionsRailScrim, OperationsContent.Options),
+            (BlockOptionsRailScrim, BlocksContent.Options), (WorkspaceOptionsScrim, VersionControlContent.Options) })
+        {
+            // The workbench covers the full frame. Standalone views use their own page-sized scrim.
+            view.LocalScrim.Visibility = Visibility.Collapsed;
+            scrim.ForegroundSurface = view.OptionsPanel;
+            scrim.SetBinding(VisibilityProperty, new Binding(nameof(Visibility)) { Source = view.OptionsOverlay });
+        }
+        ApprovalsContent.LocalScrim.Visibility = Visibility.Collapsed;
+        ConfirmationFrameScrim.ForegroundSurface = ApprovalsContent.ConfirmationCard;
+        ConfirmationFrameScrim.SetBinding(VisibilityProperty, new Binding(nameof(Visibility)) { Source = ApprovalsContent.ConfirmationSheet });
         Approvals = approvals ?? (_model.OfflineDemo ? new ApprovalServiceStub() : new Services.ApprovalService());
         _diagnostics = diagnostics ?? new Services.DiagnosticBundleService();
         CallsContent.DataContextChanged += OnFeatureContextChanged;
@@ -93,32 +106,25 @@ public partial class MainWindow
     }
 
     private bool _leftPaneFlyoutOpen;
-    private bool NarrowContent => Root.ActualWidth > 0 && Root.ActualWidth - Sider.Width < 1024;
+    private bool NarrowContent => Root.ActualWidth > 0 && Root.ActualWidth <= 1024;
 
     private void UpdateLeftPane()
     {
         LeftPaneToggle.IsEnabled = _page is "Engineering" or "VersionControl" or "Approvals" or "Settings";
         if (!NarrowContent || !LeftPaneToggle.IsEnabled) _leftPaneFlyoutOpen = false;
-        bool open = NarrowContent ? _leftPaneFlyoutOpen : App.Settings.LeftPaneOpen;
-        int column = _leftPaneFlyoutOpen ? 1 : 0;
-        Grid.SetColumn(ProjectTree, column);
-        Grid.SetColumn(ApprovalsContent.RequestListPane, column);
-        Grid.SetColumn((Border)SettingsContent.SectionList.Parent, column);
-        Controls.Ux.SetLeftPaneOpen(Root, open);
+        Controls.Ux.SetLeftPaneOpen(Root, App.Settings.LeftPaneOpen);
+        Controls.Ux.SetNarrow(Root, NarrowContent);
+        var secondary = NarrowContent ? Visibility.Collapsed : Visibility.Visible;
+        BrandVersion.Visibility = EnvironmentDescription.Visibility = secondary;
+        ParticipantStatus.Visibility = !NarrowContent && _model.Panel?.Attached == true ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnLeftPaneToggle(object sender, RoutedEventArgs e)
     {
-        if (!NarrowContent)
-        {
-            App.Settings.LeftPaneOpen = !App.Settings.LeftPaneOpen;
-            UpdateLeftPane();
-            return;
-        }
-        if (_leftPaneFlyoutOpen) { CloseLeftPaneFlyout(); return; }
-
-        _leftPaneFlyoutOpen = true;
+        App.Settings.LeftPaneOpen = !App.Settings.LeftPaneOpen;
+        _leftPaneFlyoutOpen = NarrowContent && App.Settings.LeftPaneOpen;
         UpdateLeftPane();
+        if (!_leftPaneFlyoutOpen) return;
         Root.UpdateLayout();
         if (_page == "Settings")
         {
@@ -133,6 +139,7 @@ public partial class MainWindow
     private void CloseLeftPaneFlyout()
     {
         _leftPaneFlyoutOpen = false;
+        App.Settings.LeftPaneOpen = false;
         UpdateLeftPane();
         LeftPaneToggle.Focus();
     }
@@ -152,11 +159,13 @@ public partial class MainWindow
             current.PropertyChanged += OnVerificationChanged;
             current.Audit.PropertyChanged += OnAuditChanged;
             UpdateAuditHead();
+            UpdateEnvironmentBanner();
         }
     }
 
     private void OnVerificationChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(Features.EnvironmentRows)) UpdateEnvironmentBanner();
         if (e.PropertyName == nameof(Features.Verifying) && Features.Verifying)
         {
             _verificationStartHead = AuditIndex;
@@ -204,6 +213,7 @@ public partial class MainWindow
     private void UpdateShell()
     {
         if (_featuresDisposed) return;
+        if (Approvals.PendingCount == 0) _approvalNotification.Hide();
         PendingBadge.Content = Approvals.PendingCount.ToString(System.Globalization.CultureInfo.CurrentCulture);
         string pending = Loc.Current.T("Shell.Pending", Approvals.PendingCount);
         string agent = Loc.Current["Rail.Agent"];
@@ -216,8 +226,13 @@ public partial class MainWindow
             if (Approvals.PendingCount > 0) Controls.AccessibleStatus.Announce(PendingBadge);
         }
         UpdateMcpStatus();
-        ApprovalStatusText.Text = Loc.Current[Approvals.Enabled ? "Shell.ApprovalOnStatus" : "Shell.ApprovalOffStatus"];
-        SessionStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, HasProject ? "Primer.ok" : "Primer.textMuted");
+        string mode = Loc.Current[Approvals.Enabled ? "Shell.ApprovalOnStatus" : "Shell.ApprovalOffStatus"];
+        if (ApprovalStatusText.Text != mode)
+        {
+            ApprovalStatusText.Text = mode;
+            Controls.AccessibleStatus.Announce(ApprovalStatusText);
+        }
+        UpdateSessionGlyph();
         ApprovalStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, Approvals.Enabled ? "Primer.ok" : "Primer.warn");
         foreach (var item in RailItems)
         {
@@ -232,16 +247,15 @@ public partial class MainWindow
         CompileStatus.Visibility = result == null ? Visibility.Collapsed : Visibility.Visible;
         if (result != null)
         {
-            CompileStatus.Text = $"{result.ErrorCount} Err · {result.WarningCount} Warn";
-            CompileWarningMarker.PositionStart = CompileStatus.Text.IndexOf('·');
+            string glyph = result.ErrorCount > 0 ? "✕" : "✓";
+            CompileStatus.Text = $"{glyph} {result.ErrorCount} ! {result.WarningCount}";
+            CompileWarningGlyph.PositionStart = CompileStatus.Text.IndexOf('!');
             CompileStatus.Tag = Loc.Current.T("Shell.CompileCounts", result.ErrorCount, result.WarningCount);
-            CompileErrorDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, result.ErrorCount > 0 ? "Ant.colorError" : "Primer.ok");
+            CompileOkGlyph.PositionCount = result.ErrorCount == 0 ? 1 : 0;
+            CompileErrorGlyph.PositionCount = result.ErrorCount > 0 ? 1 : 0;
         }
-        else CompileStatus.Text = "";
         var panel = _model.Panel;
-        ParticipantStatus.Visibility = panel?.Attached == true ? Visibility.Visible : Visibility.Collapsed;
         ClientStatus.Text = panel?.ClientStatus ?? "";
-        McpStatusButton.Visibility = ParticipantStatus.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         TiaProcessStatus.Text = Loc.Current.T("Shell.TiaProcessStatus", _model.Session.ProcessId.ToString());
         TiaProcessStatus.Visibility = _model.Session.IsConnected && _model.Session.ProcessId > 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateAuditHead();
@@ -254,15 +268,24 @@ public partial class MainWindow
             "Calls" => "Shell.Approvals", "Audit" => "Shell.Audit", "Environment" => "Shell.Environment", "Log" => "Shell.Logs",
             _ => "Shell.Engineering",
         }];
-        CurrentPageTitle.Text = HasProject && _page is ("Engineering" or "VersionControl") ? crumb + " · " + ProjectFileName : crumb;
+        CurrentPageTitle.Text = HasProject && _page is ("Engineering" or "VersionControl") ? crumb + " · " + ProjectFileName
+            : _page == "Engineering" && !_model.Session.IsConnected ? crumb + " · " + Loc.Current["Shell.Disconnected"] : crumb;
         Title = CurrentPageTitle.Text + " – " + Loc.Current["App.Title"];
-        UpdateSafetyBanner();
+        UpdateControlHint();
+        UpdateEnvironmentBanner();
         if (_drawer != null || DetailDocked)
         {
             DrawerTitle.Text = Features.SelectedCall?.Tool ?? Loc.Current["Calls.Detail"];
             DrawerTitle.SetResourceReference(TextBlock.FontFamilyProperty, "Ui.FontMono");
         }
         Features.Release = _model.SelectedReleaseKey;
+    }
+
+    private void UpdateSessionGlyph()
+    {
+        SessionGlyph.Text = !_model.Session.IsConnected ? "✕" : _model.Busy ? "◌" : "✓";
+        SessionGlyph.SetResourceReference(TextBlock.ForegroundProperty,
+            !_model.Session.IsConnected ? "Ant.colorError" : _model.Busy ? "Primer.warn" : "Primer.ok");
     }
 
     private LocalizedText? PageUnavailable(string page)
@@ -368,7 +391,6 @@ public partial class MainWindow
         if (_page == "Engineering") BlocksContent.ShowCompileTab();
     }
 
-    private void OnMcpStatus(object sender, RoutedEventArgs e) => NavigateGuarded("Mcp");
     private void OnProjectStatus(object sender, RoutedEventArgs e) => ToggleSessionPopover();
     private void OnApprovalStatus(object sender, RoutedEventArgs e)
     {

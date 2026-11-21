@@ -18,6 +18,7 @@
     <KeyBinding Key="OemComma" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Settings"/>
   </Window.InputBindings>
   <Window.CommandBindings>
+    <CommandBinding Command="{x:Static ux:WorkbenchCommands.ExportDiagnostics}" Executed="OnDiagnostics"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.ToastAction}" Executed="OnToastClick" CanExecute="OnCanInvokeToastAction"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.CommandPalette}" Executed="OnCommandPalette" CanExecute="OnCanOpenPalette"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Open}" Executed="OnOpenExecuted"/>
@@ -25,11 +26,12 @@
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Configuration}" Executed="OnPageExecuted"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Navigate}" Executed="OnNavigateExecuted" CanExecute="OnCanNavigate"/>
   </Window.CommandBindings>
+  <Grid>
   <Grid x:Name="Root" ux:ResponsiveLayout.WindowWidth="{Binding ActualWidth,RelativeSource={RelativeSource Self}}" Background="{DynamicResource Primer.bg}" ClipToBounds="True" TextElement.FontFamily="{DynamicResource Ui.Font}" TextElement.FontSize="{DynamicResource Ui.FontSize.Control}" TextElement.Foreground="{DynamicResource Primer.text}">
-    <Border Style="{StaticResource Primer.Frame}">
+    <Border x:Name="ShellFrame" Style="{StaticResource Primer.Frame}">
       <Grid>
         <Grid.RowDefinitions>
-          <RowDefinition Height="38"/><RowDefinition/><RowDefinition Height="Auto"/>
+          <RowDefinition Height="38"/><RowDefinition Height="Auto"/><RowDefinition/><RowDefinition Height="26"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions><ColumnDefinition Width="60"/><ColumnDefinition/></Grid.ColumnDefinitions>
         <Border Grid.ColumnSpan="2" Style="{StaticResource Primer.HeaderBar}">
@@ -49,7 +51,7 @@
             <Button x:Name="CommandPaletteButton" Grid.Column="1" shell:WindowChrome.IsHitTestVisibleInChrome="True"
               AutomationProperties.Name="{l:Tr Shell.CommandPalette}" AutomationProperties.AcceleratorKey="Ctrl+K"
               Style="{StaticResource Primer.Workbench.Search}" Command="{x:Static ux:WorkbenchCommands.CommandPalette}"
-              HorizontalAlignment="Center" VerticalAlignment="Center" Width="380">
+              HorizontalAlignment="Center" VerticalAlignment="Center">
               <DockPanel>
                 <Path DockPanel.Dock="Left" Width="12" Height="12" Data="{StaticResource Icon.Search}" Style="{StaticResource Primer.Icon}" Margin="0,0,8,0"/>
                 <Border DockPanel.Dock="Right" Style="{StaticResource Primer.Workbench.KeyCap}">
@@ -75,8 +77,29 @@
             </StackPanel>
           </Grid>
         </Border>
-        <Border x:Name="Sider" Grid.Row="1" Width="60" Style="{StaticResource Primer.Workbench.Sider}">
-          <Grid x:Name="SiderMenu" Margin="0,7" KeyboardNavigation.TabNavigation="Once" PreviewKeyDown="OnRailKeyDown">
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="2">
+          <Control x:Name="BusyHairline" Style="{StaticResource Primer.Workbench.Hairline}"
+            Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" AutomationProperties.Name="{Binding Activity.ProgressLabel}"/>
+          <Border x:Name="GlobalEnvironmentBanner" Visibility="Collapsed" Style="{StaticResource Primer.Workbench.EnvironmentBanner}">
+            <DockPanel>
+              <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <Button x:Name="EnvironmentAction" Content="" Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnEnvironmentAction"
+                  AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self}}"/>
+                <Button Content="×" Margin="6,0,0,0" Style="{StaticResource Primer.IdeToolButton}" Click="OnDismissEnvironment"
+                  AutomationProperties.Name="{l:Tr Access.Dismiss}"/>
+              </StackPanel>
+              <TextBlock x:Name="EnvironmentGlyph" DockPanel.Dock="Left" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <DockPanel VerticalAlignment="Center">
+                <TextBlock x:Name="EnvironmentTitle" DockPanel.Dock="Left" FontWeight="SemiBold" FontSize="{DynamicResource Ui.FontSize.12}"
+                  AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+                <TextBlock x:Name="EnvironmentDescription" TextTrimming="CharacterEllipsis" Margin="8,0" Foreground="{DynamicResource Primer.textMuted}"
+                  FontSize="{DynamicResource Ui.FontSize.12}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
+              </DockPanel>
+            </DockPanel>
+          </Border>
+        </StackPanel>
+        <Border x:Name="Sider" Grid.Row="2" Width="60" Style="{StaticResource Primer.Workbench.Sider}">
+          <Grid x:Name="SiderMenu" Margin="0,10" KeyboardNavigation.TabNavigation="Once" PreviewKeyDown="OnRailKeyDown">
             <Grid.RowDefinitions>
               <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
               <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
@@ -97,8 +120,9 @@
                   AutomationProperties.LiveSetting="Polite" AutomationProperties.Name="{l:Tr Shell.PendingTitle}"
                   Style="{StaticResource Primer.Workbench.PendingBadge}" Click="OnApprovals"/>
             </Grid>
-            <Rectangle Grid.Row="2" Width="24" Height="1" Margin="0,4,0,0" VerticalAlignment="Top" Fill="{DynamicResource Primer.cardBorder}"/>
-            <RadioButton Margin="2,10,2,0" x:Name="RailMcp" Grid.Row="2" GroupName="Pages" Tag="Mcp" AutomationProperties.HelpText="{l:Tr Desktop.Configuration}"
+            <Rectangle Grid.Row="2" Width="24" Height="1" Margin="0,4,0,0" VerticalAlignment="Top" Fill="{DynamicResource Primer.inputBorder}"/>
+            <RadioButton Margin="6,13,6,4" x:Name="RailMcp" Grid.Row="2" GroupName="Pages" Tag="Mcp" AutomationProperties.HelpText="{l:Tr Desktop.Configuration}"
+              AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Path=(AutomationProperties.HelpText),RelativeSource={RelativeSource Self}}"
               AutomationProperties.AcceleratorKey="Ctrl+3" AutomationProperties.Name="{x:Static l:Strings.McpRailLabel}"
               AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="3" Content="{x:Static l:Strings.McpRailLabel}"
               ux:Ux.Icon="{DynamicResource Icon.WorkbenchMcp}" Style="{StaticResource Primer.Workbench.NavItem}"
@@ -108,8 +132,8 @@
               AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="4" Content="{l:Tr Rail.Clients}"
               ux:Ux.Icon="{DynamicResource Icon.WorkbenchClients}" Style="{StaticResource Primer.Workbench.NavItem}"
               Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Clients"/>
-            <Rectangle Grid.Row="4" Width="24" Height="1" Margin="0,4,0,0" VerticalAlignment="Top" Fill="{DynamicResource Primer.cardBorder}"/>
-            <RadioButton Margin="2,10,2,0" x:Name="RailEnvironment" Grid.Row="4" GroupName="Pages" Tag="Environment"
+            <Rectangle Grid.Row="4" Width="24" Height="1" Margin="0,4,0,0" VerticalAlignment="Top" Fill="{DynamicResource Primer.inputBorder}"/>
+            <RadioButton Margin="6,13,6,4" x:Name="RailEnvironment" Grid.Row="4" GroupName="Pages" Tag="Environment"
               AutomationProperties.AcceleratorKey="Ctrl+5" AutomationProperties.Name="{l:Tr Rail.Doctor}"
               AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="5" Content="{l:Tr Rail.Doctor}"
               ux:Ux.Icon="{DynamicResource Icon.WorkbenchDoctor}" Style="{StaticResource Primer.Workbench.NavItem}"
@@ -125,27 +149,23 @@
               ux:Ux.Icon="{DynamicResource Icon.WorkbenchLogs}" Style="{StaticResource Primer.Workbench.NavItem}"
               Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Log"/>
             <Rectangle Grid.Row="8" Height="1" VerticalAlignment="Top" Fill="{DynamicResource Primer.divider}"/>
-            <RadioButton x:Name="SettingsButton" Grid.Row="8" Margin="2,8,2,0" GroupName="Pages" Tag="Settings"
+            <RadioButton x:Name="SettingsButton" Grid.Row="8" Margin="6,8,6,0" GroupName="Pages" Tag="Settings"
               AutomationProperties.AcceleratorKey="Ctrl+," AutomationProperties.Name="{l:Tr Rail.Settings}"
               AutomationProperties.SizeOfSet="8" AutomationProperties.PositionInSet="8" Content="{l:Tr Rail.Settings}"
               ux:Ux.Icon="{DynamicResource Icon.WorkbenchSettings}" Style="{StaticResource Primer.Workbench.NavItem}"
               Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Settings"/>
-            <Border x:Name="EnvironmentCountBadge" Grid.Row="4" Margin="0,15,6,0" Style="{StaticResource Primer.Workbench.AttentionBadge}"
+            <Border x:Name="EnvironmentCountBadge" Grid.Row="4" Margin="0,17,10,0" Style="{StaticResource Primer.Workbench.AttentionBadge}"
               Tag="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}"
               AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}"
               ToolTip="{Binding Path=(AutomationProperties.Name),ElementName=RailEnvironment}">
-              <TextBlock Text="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}" FontSize="{DynamicResource Ui.FontSize.9_5}" Style="{StaticResource Primer.CountText}"/>
+              <TextBlock Text="{Binding DataContext.EnvironmentAttentionCount,ElementName=EnvironmentContent}" Foreground="{DynamicResource Primer.onDanger}" FontSize="{DynamicResource Ui.FontSize.9_5}" Style="{StaticResource Primer.CountText}"/>
             </Border>
           </Grid>
         </Border>
-        <Grid Grid.Row="1" Grid.Column="1">
+        <Grid Grid.Row="2" Grid.Column="1">
           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
           <Border x:Name="SafetyBanner" Style="{StaticResource Primer.Workbench.SafetyBanner}" Visibility="Collapsed">
             <Grid>
-              <Border Style="{StaticResource Primer.Plain}" x:Name="ApprovalOffPill" AutomationProperties.Name="{l:Tr Shell.ApprovalOff}"
-                Visibility="Collapsed">
-                <TextBlock x:Name="ApprovalOffText" AutomationProperties.LiveSetting="Polite" Text="{l:Tr Shell.ApprovalOff}"/>
-              </Border>
               <StackPanel x:Name="ControlPrefillHint" Orientation="Horizontal" Visibility="Collapsed">
                 <TextBlock x:Name="ControlPrefillText" Text="{l:Tr Control.Prefilled}" AutomationProperties.LiveSetting="Polite" VerticalAlignment="Center"/>
                 <Button AutomationProperties.Name="{l:Tr Control.Confirm}" Content="{l:Tr Control.Confirm}" Style="{StaticResource Primer.Quiet}" Click="OnConfirmControlPrefill" Margin="12,0,0,0"/>
@@ -202,11 +222,10 @@
             <views:LogView x:Name="LogContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
           </Grid>
         </Grid>
-        <Border x:Name="IdeStatusBar" Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource Primer.Workbench.StatusBar}">
+        <Border x:Name="IdeStatusBar" Grid.Row="3" Grid.ColumnSpan="2" Style="{StaticResource Primer.Workbench.StatusBar}">
           <Grid x:Name="StatusInformation">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" MaxWidth="350"/>
-              <ColumnDefinition Width="Auto" MaxWidth="200"/>
               <ColumnDefinition Width="*"/>
               <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="Auto"/>
@@ -217,65 +236,80 @@
               AutomationProperties.Name="{Binding Text,ElementName=SessionStatus}" ToolTip="{Binding Text,ElementName=SessionStatus}"
               Click="OnProjectStatus">
               <DockPanel>
-                <Ellipse x:Name="SessionStatusDot" AutomationProperties.Name="{Binding Text,ElementName=SessionStatus}" ToolTip="{Binding Text,ElementName=SessionStatus}" Style="{StaticResource Primer.StatusDot}" DockPanel.Dock="Left" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                <TextBlock AutomationProperties.Name="{Binding Text,ElementName=SessionStatus}" ToolTip="{Binding Text,ElementName=SessionStatus}"
+                  x:Name="SessionGlyph" FontWeight="SemiBold" FontSize="{DynamicResource Ui.FontSize.10}" DockPanel.Dock="Left"
+                  Margin="0,0,6,0" VerticalAlignment="Center"/>
                 <TextBlock x:Name="SessionStatus" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.Workbench.StatusText}" AutomationProperties.LiveSetting="Polite"
                   ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}"/>
               </DockPanel>
             </Button>
-            <Button x:Name="McpStatusButton" Grid.Column="1" HorizontalAlignment="Left" Margin="8,0,0,0" Style="{StaticResource Primer.Workbench.StatusButton}"
-              AutomationProperties.Name="{Binding Text,ElementName=McpStatusText}" ToolTip="{Binding Text,ElementName=McpStatusText}" Click="OnMcpStatus">
-              <DockPanel>
-                <Ellipse x:Name="McpStatusDot" AutomationProperties.Name="{Binding Text,ElementName=McpStatusText}" ToolTip="{Binding Text,ElementName=McpStatusText}" Style="{StaticResource Primer.StatusDot}" DockPanel.Dock="Left" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                <TextBlock x:Name="McpStatusText" Style="{StaticResource Primer.Workbench.StatusText}" AutomationProperties.LiveSetting="Polite"
-                  ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}"/>
-              </DockPanel>
-            </Button>
-            <Button x:Name="ApprovalStatusButton" Grid.Column="3" HorizontalAlignment="Right" Margin="8,0,0,0" Style="{StaticResource Primer.Workbench.StatusButton}"
+            <Button x:Name="ApprovalStatusButton" Grid.Column="2" HorizontalAlignment="Right" Margin="8,0,0,0" Style="{StaticResource Primer.Workbench.StatusButton}"
               AutomationProperties.Name="{Binding Text,ElementName=ApprovalStatusText}" ToolTip="{Binding Text,ElementName=ApprovalStatusText}"
               Click="OnApprovalStatus">
               <DockPanel>
                 <Ellipse x:Name="ApprovalStatusDot" AutomationProperties.Name="{Binding Text,ElementName=ApprovalStatusText}" ToolTip="{Binding Text,ElementName=ApprovalStatusText}" Style="{StaticResource Primer.StatusDot}" DockPanel.Dock="Left" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                <TextBlock x:Name="ApprovalStatusText" Style="{StaticResource Primer.Workbench.StatusText}"/>
+                <TextBlock AutomationProperties.LiveSetting="Polite" x:Name="ApprovalStatusText" Style="{StaticResource Primer.Workbench.StatusText}"/>
               </DockPanel>
             </Button>
-            <DockPanel x:Name="ParticipantStatus" Grid.Column="2" HorizontalAlignment="Left" Margin="8,0">
+            <DockPanel x:Name="ParticipantStatus" Grid.Column="1" HorizontalAlignment="Left" Margin="8,0">
+              <TextBlock DockPanel.Dock="Left" Text="·" Style="{StaticResource Primer.Workbench.StatusText}" Margin="0,0,8,0"/>
               <TextBlock x:Name="TiaProcessStatus" DockPanel.Dock="Right" Style="{StaticResource Primer.Workbench.StatusText}" Margin="4,0,0,0"/>
               <TextBlock x:Name="ClientStatus" Style="{StaticResource Primer.Workbench.StatusText}" MaxWidth="220"
                 ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
             </DockPanel>
-            <Button x:Name="CompileStatusButton" Grid.Column="4" Style="{StaticResource Primer.Workbench.StatusButton}"
+            <Button x:Name="CompileStatusButton" Grid.Column="3" Style="{StaticResource Primer.Workbench.StatusButton}"
               Visibility="{Binding Visibility,ElementName=CompileStatus}" AutomationProperties.Name="{Binding Tag,ElementName=CompileStatus}" ToolTip="{Binding Tag,ElementName=CompileStatus}" Click="OnCompileStatus">
               <StackPanel Orientation="Horizontal">
-                <Ellipse x:Name="CompileErrorDot" Style="{StaticResource Primer.StatusDot}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                 <TextBlock x:Name="CompileStatus" Tag="" Style="{StaticResource Primer.Workbench.StatusText}" FontFamily="{DynamicResource Ui.FontMono}">
                   <TextBlock.TextEffects>
-                    <TextEffect x:Name="CompileWarningMarker" Foreground="{DynamicResource Primer.warn}" PositionCount="1"/>
+                    <TextEffect x:Name="CompileOkGlyph" PositionStart="0" Foreground="{DynamicResource Primer.ok}"/>
+                    <TextEffect x:Name="CompileErrorGlyph" PositionStart="0" Foreground="{DynamicResource Ant.colorError}"/>
+                    <TextEffect x:Name="CompileWarningGlyph" Foreground="{DynamicResource Primer.warn}" PositionCount="1"/>
                   </TextBlock.TextEffects>
                 </TextBlock>
               </StackPanel>
             </Button>
-            <Button x:Name="AuditHeadButton" Grid.Column="5" Style="{StaticResource Primer.Workbench.StatusButton}"
+            <Button x:Name="AuditHeadButton" Grid.Column="4" Style="{StaticResource Primer.Workbench.StatusButton}"
               Visibility="{Binding Visibility,ElementName=AuditHead}" AutomationProperties.Name="{Binding Tag,ElementName=AuditHead}" ToolTip="{Binding Tag,ElementName=AuditHead}"
               Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Audit">
               <TextBlock x:Name="AuditHead" Tag="" Style="{StaticResource Primer.Workbench.StatusText}" FontFamily="{DynamicResource Ui.FontMono}"/>
             </Button>
-            <TextBlock x:Name="BrandVersion" FontFamily="{DynamicResource Ui.FontMono}" Grid.Column="6" Style="{StaticResource Primer.Workbench.StatusText}" Margin="8,0">
+            <TextBlock x:Name="BrandVersion" FontFamily="{DynamicResource Ui.FontMono}" Grid.Column="5" Style="{StaticResource Primer.Workbench.StatusText}" Margin="8,0">
               <Run x:Name="RailVersion"/>
             </TextBlock>
           </Grid>
         </Border>
       </Grid>
     </Border>
-    <Border VerticalAlignment="Bottom" Margin="80,0,24,36"
-      Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Container}">
+    <ux:WorkbenchScrim Source="{Binding ElementName=ShellFrame}" x:Name="ProjectOptionsRailScrim" Visibility="Collapsed" Style="{StaticResource Primer.Workbench.DrawerRailScrim}"/>
+    <ux:WorkbenchScrim Source="{Binding ElementName=ShellFrame}" x:Name="BlockOptionsRailScrim" Visibility="Collapsed" Style="{StaticResource Primer.Workbench.DrawerRailScrim}"/>
+    <ux:WorkbenchScrim Source="{Binding ElementName=ShellFrame}" x:Name="WorkspaceOptionsScrim" Visibility="Collapsed" Style="{StaticResource Primer.Workbench.DrawerRailScrim}"/>
+    <ux:WorkbenchScrim Source="{Binding ElementName=ShellFrame}" x:Name="ConfirmationFrameScrim" Visibility="Collapsed" Style="{StaticResource Primer.Workbench.ConfirmationFrameScrim}"/>
+    <ContentControl Style="{StaticResource Primer.Workbench.FloatShadow}" Width="{Binding ActualWidth,ElementName=BusyCard}"
+      Height="{Binding ActualHeight,ElementName=BusyCard}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+      Margin="{Binding Margin,ElementName=BusyCard}" Visibility="{Binding Visibility,ElementName=BusyCard}"/>
+    <Border x:Name="BusyCard" Width="340" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16,0,16,34"
+      Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Workbench.BusyCard}">
       <StackPanel>
-        <TextBlock Text="{Binding Activity.ProgressLabel}" Style="{StaticResource Primer.Muted}" AutomationProperties.LiveSetting="Polite"
-          ux:AccessibleStatus.Text="{Binding Activity.ProgressLabel}"/>
-        <ProgressBar Height="3" Margin="0,6,0,0" IsIndeterminate="{Binding Activity.ProgressIndeterminate}" Maximum="{Binding Activity.ProgressMax}" Value="{Binding Activity.ProgressValue,Mode=OneWay}"/>
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Right" Margin="8,0,0,0" Style="{StaticResource Primer.Mono}" Foreground="{DynamicResource Primer.accent}"
+            FontSize="{DynamicResource Ui.FontSize.11}" Visibility="{Binding Activity.ProgressIndeterminate,Converter={StaticResource NotBoolToVisibility}}">
+            <Run Text="{Binding Activity.ProgressValue,Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding Activity.ProgressMax,Mode=OneWay}"/>
+          </TextBlock>
+          <TextBlock Text="{Binding Activity.BusyTitle}" ToolTip="{Binding Activity.ProgressLabel}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold"
+            FontSize="{DynamicResource Ui.FontSize.12}" AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Activity.ProgressLabel}"/>
+        </DockPanel>
+        <ProgressBar Margin="0,8" Style="{StaticResource Primer.Progress}" IsIndeterminate="{Binding Activity.ProgressIndeterminate}"
+          Maximum="{Binding Activity.ProgressMax}" Value="{Binding Activity.ProgressValue,Mode=OneWay}"/>
+        <DockPanel>
+          <Button DockPanel.Dock="Right" Command="{Binding Panel.Cancel}" Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}"
+            Style="{StaticResource Primer.Link}" Visibility="{Binding Panel.Attached,Converter={StaticResource BoolToVisibility},FallbackValue=Collapsed}"/>
+          <TextBlock Text="{Binding Text,ElementName=SessionStatus}" Style="{StaticResource Primer.Workbench.StatusText}" FontFamily="{DynamicResource Ui.FontMono}"/>
+        </DockPanel>
       </StackPanel>
     </Border>
     <Grid x:Name="DrawerOverlay" AutomationProperties.Name="{Binding Text,ElementName=DrawerTitle}" Visibility="Collapsed">
-      <Border MouseLeftButtonUp="OnDrawerBackdrop" Style="{StaticResource Primer.Overlay}"/>
+      <ux:WorkbenchScrim x:Name="CallDrawerScrim" Source="{Binding ElementName=ShellFrame}" BlurRadius="2" MouseLeftButtonUp="OnDrawerBackdrop"/>
       <ContentControl Style="{StaticResource Primer.Shadow}" Width="{Binding Width,ElementName=DrawerPanel}" Margin="{Binding Margin,ElementName=DrawerPanel}" HorizontalAlignment="Right"/>
       <Border x:Name="DrawerPanel" Width="520" Margin="0,8,8,8" HorizontalAlignment="Right" Style="{StaticResource Primer.Drawer}">
         <Grid>
@@ -303,7 +337,7 @@
         </Grid>
       </Border>
     </Grid>
-    <ContentControl Style="{StaticResource Primer.Shadow}" Width="{Binding ActualWidth,ElementName=Toast}" Height="{Binding ActualHeight,ElementName=Toast}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="{Binding Margin,ElementName=Toast}" Visibility="{Binding Visibility,ElementName=Toast}"/>
+    <ContentControl Style="{StaticResource Primer.Workbench.FloatShadow}" Width="{Binding ActualWidth,ElementName=Toast}" Height="{Binding ActualHeight,ElementName=Toast}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="{Binding Margin,ElementName=Toast}" Visibility="{Binding Visibility,ElementName=Toast}"/>
     <Border x:Name="Toast" HorizontalAlignment="Center" VerticalAlignment="Bottom" MinWidth="240" MaxWidth="560" Height="36" Margin="16,0,16,36"
       Visibility="Collapsed" Style="{StaticResource Primer.Toast}">
       <local:ToastPanel x:Name="ToastLine" xmlns:local="clr-namespace:TiaOpenness.Gui" VerticalAlignment="Center">
@@ -316,9 +350,11 @@
         <TextBlock x:Name="ToastTitle" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="{DynamicResource Ui.FontSize.12_5}"
           TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" Margin="0,0,8,0"/>
         <TextBlock x:Name="ToastMessage" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"
-          Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.12_5}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+          Foreground="{DynamicResource Primer.text}" FontWeight="Medium" FontSize="{DynamicResource Ui.FontSize.12_5}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
       </local:ToastPanel>
     </Border>
     <Grid x:Name="OverlayHost" Visibility="Collapsed"/>
+  </Grid>
+    <ux:WorkbenchScrim x:Name="OwnedDialogScrim" Source="{Binding ElementName=Root}" Visibility="Collapsed" IsHitTestVisible="False"/>
   </Grid>
 </Window>

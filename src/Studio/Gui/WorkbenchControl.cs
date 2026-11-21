@@ -440,7 +440,7 @@ public partial class MainWindow
     }
     private void UpdateControlPrefill()
     {
-        UpdateSafetyBanner();
+        UpdateControlHint();
         ControlPrefillHint.ToolTip = _prefills.Latest is { } pending
             ? pending.Form + " · " + string.Join(", ", PrefillRegistry.Targets.Single(target => target.Form == pending.Form).Fields) : null;
         BlocksContent.SetControlPrefillMarker(_prefills.Contains(WorkbenchPrefillForm.BlockFilter), _prefills.Contains(WorkbenchPrefillForm.BlockSelection));
@@ -510,27 +510,21 @@ public partial class MainWindow
     }
     private void OnControlHintTick(object? sender, EventArgs e) => UpdateControlHint();
     private void OnControlLanguageChanged(object? sender, EventArgs e) { UpdateControlHint(); UpdateControlPrefill(); UpdateControlDetail(); }
-    private void UpdateControlHint() => UpdateSafetyBanner();
-    private void UpdateSafetyBanner()
+    private void UpdateControlHint()
     {
-        bool approvalOff = !Approvals.Enabled;
-        bool unavailable = !approvalOff && _controlUnavailable;
-        bool prefill = !approvalOff && !unavailable && _prefills.Latest != null;
+        bool unavailable = _controlUnavailable;
+        bool prefill = !unavailable && _prefills.Latest != null;
         int age = Math.Max(0, (int)(ControlNow() - _lastControlUtc).TotalSeconds);
-        bool activity = !approvalOff && !unavailable && !prefill && _lastControl != null && age < 10;
-        var approvalVisibility = approvalOff ? Visibility.Visible : Visibility.Collapsed;
+        bool activity = !unavailable && !prefill && _lastControl != null && age < 10;
         var prefillVisibility = prefill ? Visibility.Visible : Visibility.Collapsed;
-        bool announceApprovalOff = ApprovalOffPill.Visibility != approvalVisibility && approvalOff;
         bool announcePrefill = ControlPrefillHint.Visibility != prefillVisibility && prefill;
         bool announceUnavailable = unavailable && (ControlStatus.Visibility != Visibility.Visible || ControlStatus.Text != Loc.Current["Control.Unavailable"]);
-        SafetyBanner.Tag = approvalOff || unavailable ? "Warning" : "Information";
-        SafetyBanner.Visibility = approvalOff || unavailable || prefill || activity ? Visibility.Visible : Visibility.Collapsed;
-        ApprovalOffPill.Visibility = approvalVisibility;
+        SafetyBanner.Tag = unavailable ? "Warning" : "Information";
+        SafetyBanner.Visibility = unavailable || prefill || activity ? Visibility.Visible : Visibility.Collapsed;
         ControlPrefillHint.Visibility = prefillVisibility;
         ControlStatus.Text = _controlUnavailable ? Loc.Current["Control.Unavailable"] : _lastControl != null && age < 10
             ? Loc.Current.T("Control.Activity", ControlTool(_lastControl.Operation), _lastControl.Origin.ClientName, age) : "";
         ControlStatus.Visibility = unavailable || activity ? Visibility.Visible : Visibility.Collapsed;
-        if (announceApprovalOff) Controls.AccessibleStatus.Announce(ApprovalOffText);
         if (announcePrefill) Controls.AccessibleStatus.Announce(ControlPrefillText);
         if (announceUnavailable) Controls.AccessibleStatus.Announce(ControlStatus);
         if (_lastControl != null && age >= 10) _controlHintTimer.Stop();

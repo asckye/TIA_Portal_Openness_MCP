@@ -91,9 +91,11 @@ public partial class MainWindow
         var state = Configuration?.ServiceStateKey ?? "Config.Idle";
         var release = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey);
         var status = state == "Config.Local" ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state];
-        McpStatusText.Text = Loc.Current.T("Shell.McpStatus", status);
+        string service = Loc.Current.T("Shell.McpStatus", status);
+        System.Windows.Automation.AutomationProperties.SetHelpText(RailMcp, service);
+        if (_sessionPopover != null) SetServiceHelp(_sessionPopover.SwitchVersion, service);
         string prefix = release.DisplayName + " · " + release.OwnerApartment + "   ";
-        string file = HasProject ? ProjectFileName : Loc.Current["Blocks.Empty.Title"];
+        string file = HasProject ? ProjectFileName : Loc.Current[ConnectionLost ? "Shell.SessionLost" : "Shell.NoProjectFile"];
         string fullText = prefix + file;
         if (SessionStatus.Text != fullText)
         {
@@ -112,9 +114,7 @@ public partial class MainWindow
             SessionStatus.MaxWidth = prefixWidth + 170;
             SessionStatus.Width = prefixWidth + Math.Min(170, MeasureSessionRun(name));
         }
-        McpStatusText.ToolTip = McpStatusText.Text;
         SessionStatus.ToolTip = SessionStatus.Text;
-        McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Primer.accent" : "Primer.textMuted");
     }
 
     private double MeasureSessionRun(Run run)

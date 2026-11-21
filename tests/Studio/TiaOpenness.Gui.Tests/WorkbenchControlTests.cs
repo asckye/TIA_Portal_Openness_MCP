@@ -263,7 +263,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             {
                 var status = (TextBlock)window.FindName("ControlStatus");
                 var prefill = (FrameworkElement)window.FindName("ControlPrefillHint");
-                var off = (FrameworkElement)window.FindName("ApprovalOffPill");
+                Assert.Null(window.FindName("ApprovalOffPill"));
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm)).Status);
                 Assert.Equal(Visibility.Visible, prefill.Visibility);
                 Assert.Equal(Visibility.Collapsed, status.Visibility);
@@ -274,10 +274,10 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
                 Assert.Equal(Visibility.Visible, badge.Visibility);
                 Assert.Equal(Loc.Current.T("Shell.Pending", 1), System.Windows.Automation.AutomationProperties.GetName(badge));
                 window.Approvals.Enabled = false; WpfContext.Drain();
-                Assert.Equal(Visibility.Visible, off.Visibility);
-                Assert.Equal(Visibility.Collapsed, prefill.Visibility);
+                Assert.Equal(Loc.Current["Shell.ApprovalOffStatus"], window.ApprovalStatusText.Text);
+                Assert.Equal(Visibility.Visible, prefill.Visibility);
                 Assert.Equal(Visibility.Collapsed, status.Visibility);
-                Assert.Contains(window.FindName("ApprovalOffText"), announcements);
+                Assert.Contains(window.ApprovalStatusText, announcements);
                 typeof(MainWindow).GetField("_controlUnavailable", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(window, true);
                 window.Approvals.Enabled = true; WpfContext.Drain();
                 Assert.Equal(Visibility.Visible, status.Visibility);

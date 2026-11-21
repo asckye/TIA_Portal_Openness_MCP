@@ -3,29 +3,30 @@
   <SolidColorBrush x:Key="Primer.bg" Color="#141B26"/>
   <SolidColorBrush x:Key="Primer.card" Color="#1B2332"/>
   <SolidColorBrush x:Key="Primer.cardSoft" Color="#101620"/>
-  <SolidColorBrush x:Key="Primer.cardSel" Color="#222E42"/>
-  <SolidColorBrush x:Key="Primer.cardBorder" Color="#363F4F"/>
-  <SolidColorBrush x:Key="Primer.divider" Color="#2A3242"/>
+  <SolidColorBrush x:Key="Primer.cardSel" Color="#1AE2E8F0"/>
+  <SolidColorBrush x:Key="Primer.cardBorder" Color="#2194A3B8"/>
+  <SolidColorBrush x:Key="Primer.divider" Color="#2194A3B8"/>
   <SolidColorBrush x:Key="Primer.input" Color="#232E40"/>
-  <SolidColorBrush x:Key="Primer.inputBorder" Color="#6D7D94"/>
+  <SolidColorBrush x:Key="Primer.inputBorder" Color="#3D94A3B8"/>
   <SolidColorBrush x:Key="Primer.pill" Color="#232E40"/>
-  <SolidColorBrush x:Key="Primer.pillHover" Color="#272F3D"/>
-  <SolidColorBrush x:Key="Primer.destructiveText" Color="#FCA5A5"/>
+  <SolidColorBrush x:Key="Primer.pillHover" Color="#0FE2E8F0"/>
+  <SolidColorBrush x:Key="Primer.destructiveText" Color="#FB7185"/>
   <SolidColorBrush x:Key="Primer.menuBg" Color="#1B2332"/>
   <SolidColorBrush x:Key="Primer.text" Color="#F1F5F9"/>
   <SolidColorBrush x:Key="Primer.textMuted" Color="#94A3B8"/>
-  <SolidColorBrush x:Key="Primer.textFaint" Color="#8B9BB2"/>
-  <SolidColorBrush x:Key="Primer.checkBorder" Color="#6D7D94"/>
-  <SolidColorBrush x:Key="Primer.accent" Color="#5EEAD4"/>
-  <SolidColorBrush x:Key="Primer.onAccent" Color="#0B0F15"/>
+  <SolidColorBrush x:Key="Primer.textFaint" Color="#7A8CA3"/>
+  <SolidColorBrush x:Key="Primer.checkBorder" Color="#3D94A3B8"/>
+  <SolidColorBrush x:Key="Primer.accent" Color="#2DD4BF"/>
+  <SolidColorBrush x:Key="Primer.onAccent" Color="#FFFFFF"/>
   <SolidColorBrush x:Key="Primer.primaryBg" Color="#0E7C86"/>
+  <SolidColorBrush x:Key="Primer.onDanger" Color="#FFFFFF"/>
   <SolidColorBrush x:Key="Primer.onPrimary" Color="#FFFFFF"/>
   <SolidColorBrush x:Key="Primer.warn" Color="#FBBF24"/>
-  <SolidColorBrush x:Key="Primer.warnBg" Color="#2D220E"/>
+  <SolidColorBrush x:Key="Primer.warnBg" Color="#21FBBF24"/>
   <SolidColorBrush x:Key="Primer.ok" Color="#34D399"/>
-  <SolidColorBrush x:Key="Primer.okBg" Color="#0F2920"/>
-  <SolidColorBrush x:Key="Primer.noteBg" Color="#0C2A2C"/>
-  <SolidColorBrush x:Key="Primer.noteBorder" Color="#2DD4BF"/>
+  <SolidColorBrush x:Key="Primer.okBg" Color="#1F34D399"/>
+  <SolidColorBrush x:Key="Primer.noteBg" Color="#2914B8A6"/>
+  <SolidColorBrush x:Key="Primer.noteBorder" Color="#572DD4BF"/>
   <SolidColorBrush x:Key="Primer.noteAccent" Color="#2DD4BF"/>
   <SolidColorBrush x:Key="Primer.codeBg" Color="#0C1017"/>
   <SolidColorBrush x:Key="Primer.codeText" Color="#F1F5F9"/>
@@ -33,34 +34,34 @@
   <SolidColorBrush x:Key="Primer.diffRed" Color="#FDA4AF"/>
   <SolidColorBrush x:Key="Primer.primaryText" Color="#FFFFFF"/>
   <SolidColorBrush x:Key="Primer.warningText" Color="#0B0F15"/>
-  <SolidColorBrush x:Key="Primer.countWarningBg" Color="#2D220E"/>
-  <SolidColorBrush x:Key="Primer.focusOuter" Color="#2DD4BF"/>
+  <SolidColorBrush x:Key="Primer.countWarningBg" Color="#21FBBF24"/>
+  <SolidColorBrush x:Key="Primer.focusOuter" Color="#0E7C86"/>
   <SolidColorBrush x:Key="Primer.focusInner" Color="#0B0F15"/>
-  <SolidColorBrush x:Key="Primer.selectedText" Color="#F1F5FA"/>
-  <SolidColorBrush x:Key="Primer.hoverText" Color="#F1F5FA"/>
+  <SolidColorBrush x:Key="Primer.selectedText" Color="#F1F5F9"/>
+  <SolidColorBrush x:Key="Primer.hoverText" Color="#F1F5F9"/>
   <SolidColorBrush x:Key="Ant.colorPrimary" Color="#0E7C86"/>
   <SolidColorBrush x:Key="Ant.colorPrimaryHover" Color="#0B656E"/>
-  <SolidColorBrush x:Key="Ant.colorPrimaryActive" Color="#084F56"/>
-  <SolidColorBrush x:Key="Ant.colorLinkHover" Color="#5EEAD4"/>
-  <SolidColorBrush x:Key="Ant.controlItemBgActiveHover" Color="#2F3745"/>
+  <SolidColorBrush x:Key="Ant.colorPrimaryActive" Color="#0B656E"/>
+  <SolidColorBrush x:Key="Ant.colorLinkHover" Color="#2DD4BF"/>
+  <SolidColorBrush x:Key="Ant.controlItemBgActiveHover" Color="#1AE2E8F0"/>
   <SolidColorBrush x:Key="Ant.colorWhite" Color="#FFFFFF"/>
-  <SolidColorBrush x:Key="Ant.colorBorder" Color="#363F4F"/>
+  <SolidColorBrush x:Key="Ant.colorBorder" Color="#2194A3B8"/>
   <SolidColorBrush x:Key="Ant.colorError" Color="#FB7185"/>
-  <SolidColorBrush x:Key="Ant.colorErrorBg" Color="#362C3C"/>
+  <SolidColorBrush x:Key="Ant.colorErrorBg" Color="#21FB7185"/>
   <SolidColorBrush x:Key="Ant.colorErrorBorder" Color="#FB7185"/>
   <SolidColorBrush x:Key="Ant.colorErrorSolid" Color="#E11D48"/>
-  <SolidColorBrush x:Key="Ant.colorErrorSolidHover" Color="#B91C1C"/>
-  <SolidColorBrush x:Key="Ant.colorErrorSolidActive" Color="#991B1B"/>
-  <SolidColorBrush x:Key="Ant.colorWarningBorder" Color="#D97706"/>
-  <SolidColorBrush x:Key="Ant.colorSuccessBorder" Color="#10B981"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolidHover" Color="#F31F4E"/>
+  <SolidColorBrush x:Key="Ant.colorErrorSolidActive" Color="#F31F4E"/>
+  <SolidColorBrush x:Key="Ant.colorWarningBorder" Color="#FBBF24"/>
+  <SolidColorBrush x:Key="Ant.colorSuccessBorder" Color="#34D399"/>
   <SolidColorBrush x:Key="Ant.colorFillSecondary" Color="#232E40"/>
-  <SolidColorBrush x:Key="Ant.colorBgContainerDisabled" Color="#1A2332"/>
-  <SolidColorBrush x:Key="Ant.colorTextDisabled" Color="#6B7B91"/>
-  <SolidColorBrush x:Key="Ant.colorBgMask" Opacity="0.68" Color="#070A0F"/>
+  <SolidColorBrush x:Key="Ant.colorBgContainerDisabled" Color="#101620"/>
+  <SolidColorBrush x:Key="Ant.colorTextDisabled" Color="#7A8CA3"/>
+  <SolidColorBrush x:Key="Ant.colorBgMask" Color="#AD070A0F"/>
   <SolidColorBrush x:Key="Ant.colorBgSpotlight" Color="#1B2332"/>
   <SolidColorBrush x:Key="Ant.colorTextLightSolid" Color="#F1F5F9"/>
-  <SolidColorBrush x:Key="Ant.boxShadowKey" Color="#0D1219"/>
-  <SolidColorBrush x:Key="Ant.boxShadowUmbra" Color="#0F141C"/>
+  <SolidColorBrush x:Key="Ant.boxShadowKey" Color="#59000000"/>
+  <SolidColorBrush x:Key="Ant.boxShadowUmbra" Color="#42000000"/>
   <SolidColorBrush x:Key="Ant.boxShadowAmbient" Color="Transparent"/>
   <SolidColorBrush x:Key="Primer.window" Color="#1B2332"/>
   <SolidColorBrush x:Key="Primer.sidebar" Color="#101620"/>
@@ -69,48 +70,53 @@
   <SolidColorBrush x:Key="Primer.titlebar" Color="#0B0F15"/>
   <SolidColorBrush x:Key="Primer.rail" Color="#0B0F15"/>
   <SolidColorBrush x:Key="Primer.statusBar" Color="#0B0F15"/>
-  <SolidColorBrush x:Key="Primer.accentSoft" Color="#0C2A2C"/>
-  <SolidColorBrush x:Key="Primer.accentRing" Color="#215F62"/>
-  <SolidColorBrush x:Key="Primer.blkObBg" Color="#2E1F5E"/>
+  <SolidColorBrush x:Key="Primer.accentSoft" Color="#2914B8A6"/>
+  <SolidColorBrush x:Key="Primer.accentRing" Color="#572DD4BF"/>
+  <SolidColorBrush x:Key="Primer.blkObBg" Color="#29A78BFA"/>
   <SolidColorBrush x:Key="Primer.blkObFg" Color="#C4B5FD"/>
-  <SolidColorBrush x:Key="Primer.blkFbBg" Color="#172D54"/>
+  <SolidColorBrush x:Key="Primer.blkFbBg" Color="#2960A5FA"/>
   <SolidColorBrush x:Key="Primer.blkFbFg" Color="#93C5FD"/>
-  <SolidColorBrush x:Key="Primer.blkFcBg" Color="#12362B"/>
+  <SolidColorBrush x:Key="Primer.blkFcBg" Color="#2634D399"/>
   <SolidColorBrush x:Key="Primer.blkFcFg" Color="#6EE7B7"/>
-  <SolidColorBrush x:Key="Primer.blkDbBg" Color="#113344"/>
+  <SolidColorBrush x:Key="Primer.blkDbBg" Color="#2622D3EE"/>
   <SolidColorBrush x:Key="Primer.blkDbFg" Color="#67E8F9"/>
-  <SolidColorBrush x:Key="Primer.blkFsBg" Color="#382810"/>
+  <SolidColorBrush x:Key="Primer.blkFsBg" Color="#29FBBF24"/>
   <SolidColorBrush x:Key="Primer.blkFsFg" Color="#FDE68A"/>
   <SolidColorBrush x:Key="Primer.syntaxKeyword" Color="#7BB4FF"/>
-  <SolidColorBrush x:Key="Primer.syntaxComment" Color="#8B9BB2"/>
+  <SolidColorBrush x:Key="Primer.syntaxComment" Color="#7A8CA3"/>
   <SolidColorBrush x:Key="Primer.syntaxString" Color="#6EE7B7"/>
   <SolidColorBrush x:Key="Primer.syntaxNumber" Color="#FDE68A"/>
   <SolidColorBrush x:Key="Primer.syntaxVariable" Color="#C4B5FD"/>
-  <SolidColorBrush x:Key="Primer.diffAddBg" Color="#1E363D"/>
-  <SolidColorBrush x:Key="Primer.diffDelBg" Color="#342C3B"/>
-  <SolidColorBrush x:Key="Primer.clientClaudeBg" Color="#342E37"/>
-  <SolidColorBrush x:Key="Primer.clientClaudeFg" Color="#DB7F61"/>
-  <SolidColorBrush x:Key="Primer.clientCodexBg" Color="#1A343C"/>
-  <SolidColorBrush x:Key="Primer.clientCodexFg" Color="#25AC8B"/>
-  <SolidColorBrush x:Key="Primer.clientGeminiBg" Color="#1F2F4B"/>
-  <SolidColorBrush x:Key="Primer.clientGeminiFg" Color="#5C97F6"/>
-  <SolidColorBrush x:Key="Primer.clientCursorBg" Color="#28264A"/>
-  <SolidColorBrush x:Key="Primer.clientCursorFg" Color="#A77AEF"/>
-  <SolidColorBrush x:Key="Primer.clientVSCodeBg" Color="#183045"/>
-  <SolidColorBrush x:Key="Primer.clientVSCodeFg" Color="#399ED2"/>
-  <SolidColorBrush x:Key="Primer.clientOpenCodeBg" Color="#242E3E"/>
-  <SolidColorBrush x:Key="Primer.clientOpenCodeFg" Color="#8A95A6"/>
-  <SolidColorBrush x:Key="Primer.clientQwenBg" Color="#242C4B"/>
-  <SolidColorBrush x:Key="Primer.clientQwenFg" Color="#898BF1"/>
-  <SolidColorBrush x:Key="Primer.clientKimiBg" Color="#19323D"/>
-  <SolidColorBrush x:Key="Primer.clientKimiFg" Color="#35A69B"/>
-  <SolidColorBrush x:Key="Primer.clientYuanbaoBg" Color="#1C2B4A"/>
-  <SolidColorBrush x:Key="Primer.clientYuanbaoFg" Color="#6390EF"/>
-  <SolidColorBrush x:Key="Primer.clientNeutralBg" Color="#242E3E"/>
-  <SolidColorBrush x:Key="Primer.clientNeutralFg" Color="#8A95A6"/>
+  <SolidColorBrush x:Key="Primer.diffAddBg" Color="#1C34D399"/>
+  <SolidColorBrush x:Key="Primer.diffDelBg" Color="#1CFB7185"/>
+  <SolidColorBrush x:Key="Primer.clientClaudeBg" Color="#21D97757"/>
+  <SolidColorBrush x:Key="Primer.clientClaudeFg" Color="#D97757"/>
+  <SolidColorBrush x:Key="Primer.clientCodexBg" Color="#2110A37F"/>
+  <SolidColorBrush x:Key="Primer.clientCodexFg" Color="#10A37F"/>
+  <SolidColorBrush x:Key="Primer.clientGeminiBg" Color="#213B82F6"/>
+  <SolidColorBrush x:Key="Primer.clientGeminiFg" Color="#3B82F6"/>
+  <SolidColorBrush x:Key="Primer.clientCursorBg" Color="#217C3AED"/>
+  <SolidColorBrush x:Key="Primer.clientCursorFg" Color="#7C3AED"/>
+  <SolidColorBrush x:Key="Primer.clientVSCodeBg" Color="#210284C7"/>
+  <SolidColorBrush x:Key="Primer.clientVSCodeFg" Color="#0284C7"/>
+  <SolidColorBrush x:Key="Primer.clientOpenCodeBg" Color="#2164748B"/>
+  <SolidColorBrush x:Key="Primer.clientOpenCodeFg" Color="#64748B"/>
+  <SolidColorBrush x:Key="Primer.clientQwenBg" Color="#216366F1"/>
+  <SolidColorBrush x:Key="Primer.clientQwenFg" Color="#6366F1"/>
+  <SolidColorBrush x:Key="Primer.clientKimiBg" Color="#210D9488"/>
+  <SolidColorBrush x:Key="Primer.clientKimiFg" Color="#0D9488"/>
+  <SolidColorBrush x:Key="Primer.clientYuanbaoBg" Color="#212563EB"/>
+  <SolidColorBrush x:Key="Primer.clientYuanbaoFg" Color="#2563EB"/>
+  <SolidColorBrush x:Key="Primer.clientNeutralBg" Color="#2164748B"/>
+  <SolidColorBrush x:Key="Primer.clientNeutralFg" Color="#64748B"/>
   <LinearGradientBrush x:Key="Primer.brandGradient" StartPoint="0,0" EndPoint="1,1">
     <GradientStop Offset="0" Color="#14B8A6"/><GradientStop Offset="1" Color="#0EA5E9"/>
   </LinearGradientBrush>
-  <SolidColorBrush x:Key="Primer.windowShadow" Color="#07090D"/>
-  <SolidColorBrush x:Key="Primer.floatShadow" Color="#06080B"/>
+  <SolidColorBrush x:Key="Primer.windowShadow" Color="#A6000000"/>
+  <SolidColorBrush x:Key="Primer.floatOutline" Color="#2E94A3B8"/>
+  <SolidColorBrush x:Key="Primer.floatShadow" Color="#B8000000"/>
+  <SolidColorBrush x:Key="Primer.blkSuBg" Color="#262DD4BF"/>
+  <SolidColorBrush x:Key="Primer.blkSuFg" Color="#5EEAD4"/>
+  <SolidColorBrush x:Key="Primer.blkHmBg" Color="#29F472B6"/>
+  <SolidColorBrush x:Key="Primer.blkHmFg" Color="#F9A8D4"/>
 </ResourceDictionary>

@@ -83,6 +83,9 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             var confirm = fixture.Button("ConfirmDestructive");
             var cancel = fixture.Button("CancelDestructive");
             Open();
+            Assert.True(fixture.View.LocalScrim.IsVisible);
+            Assert.Same(fixture.View.ApprovalBackdrop, fixture.View.LocalScrim.Source);
+            Assert.Equal(5, fixture.View.LocalScrim.BlurRadius);
             Assert.True(cancel.IsDefault); Assert.True(cancel.IsCancel);
             Assert.Equal(36, cancel.ActualHeight); Assert.Equal(36, confirm.ActualHeight);
             Assert.Same(cancel, Keyboard.FocusedElement);
@@ -135,17 +138,30 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                 UnifiedDesktopTests.ClickControl(fixture.Button("ApproveRequest")); WpfContext.Drain();
                 var confirm = fixture.Button("ConfirmDestructive");
                 var label = DesktopCapture.Descendants<AccessText>(confirm).Single();
-                Assert.Same(Application.Current.FindResource("Primer.onPrimary"), label.Foreground);
+                Assert.Same(Application.Current.FindResource("Primer.onDanger"), label.Foreground);
                 CheckContrast(confirm);
                 void CheckContrast(Button button)
                 {
+                    var palette = theme + (accent == AppAccent.Petrol ? ".Petrol" : "");
+                    var (text, fill, hover) = Ux.GetVariant(button) switch
+                    {
+                        "Danger" => ("destructiveText", "card", "Ant.colorErrorBg"),
+                        "DangerSolid" => ("onDanger", "Ant.colorErrorSolid", "Ant.colorErrorSolidHover"),
+                        "Primary" => ("onPrimary", "primaryBg", "Ant.colorPrimaryHover"),
+                        var variant => throw new InvalidOperationException(variant)
+                    };
                     var foreground = ((SolidColorBrush)button.Foreground).Color;
                     double textLum = ThemeSurfaceTests.Luminance(foreground);
-                    double fillLum = ThemeSurfaceTests.Luminance(((SolidColorBrush)button.Background).Color);
-                    Assert.True((Math.Max(textLum, fillLum) + .05) / (Math.Min(textLum, fillLum) + .05) >= 4.5, theme + ": " + accent + ": " + button.Name);
-                    var hover = ((SolidColorBrush)((Border)button.Template.FindName("Hover", button)).Background).Color;
-                    double first = ThemeSurfaceTests.Luminance(foreground), second = ThemeSurfaceTests.Luminance(hover);
-                    Assert.True((Math.Max(first, second) + .05) / (Math.Min(first, second) + .05) >= 4.5, theme + ": " + button.Name);
+                    var background = ((SolidColorBrush)button.Background).Color;
+                    double Ratio(Color color)
+                    {
+                        double other = ThemeSurfaceTests.Luminance(color);
+                        return (Math.Max(textLum, other) + .05) / (Math.Min(textLum, other) + .05);
+                    }
+                    WorkbenchDesignColors.AssertContrast(palette, text, fill, "card", Ratio(background), 4.5);
+                    var hoverBrush = ((Border)button.Template.FindName("Hover", button)).Background;
+                    var surface = ThemeSurfaceTests.Composite(((SolidColorBrush)hoverBrush).Color, background);
+                    WorkbenchDesignColors.AssertContrast(palette, text, hover, fill, Ratio(surface), 4.5);
                 }
             }
             finally { (ThemeManager.Current.Theme, ThemeManager.Current.Accent, ThemeManager.Current.HighContrastOverride) = previous; }
@@ -224,7 +240,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             Assert.False(fixture.Model.SelectedRequest!.CanDecide);
             fixture.Model.HandledRequests = false;
             fixture.Model.Decide(fixture.Model.SelectedRequest!, true); WpfContext.Drain();
-            Assert.Equal(Loc.Current["Approval.ApprovedToast"], feedback.Last());
+            Assert.Equal(Loc.Current.T("Approval.ApprovedRequest", "second"), feedback.Last());
         });
     }
 
@@ -301,10 +317,10 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                     var view = (ApprovalsDrawer)window.FindName("ApprovalsContent");
                     if (width == 1024)
                     {
-                        Assert.Equal(Visibility.Collapsed, view.RequestListPane.Visibility);
-                        UnifiedDesktopTests.ClickControl(window.LeftPaneToggle); host.UpdateLayout();
+                        Assert.Equal(Visibility.Visible, view.RequestListPane.Visibility);
+                        Assert.Equal(214, view.RequestListPane.ActualWidth);
                     }
-                    Assert.Equal(262, view.RequestListPane.ActualWidth);
+                    Assert.Equal(width == 1024 ? 214 : 260, view.RequestListPane.ActualWidth);
                     var caption = (TextBlock)view.FindName("CountdownCaption");
                     var chip = (Border)view.FindName("TimerChip");
                     Assert.Equal(Loc.Current.T("Approval.Timer", "01:58"), caption.Text);
@@ -335,10 +351,10 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                     if (theme == "HighContrast")
                     {
                         var item = (ListBoxItem)((ListBox)view.FindName("RequestList")).ItemContainerGenerator.ContainerFromIndex(0);
-                        Assert.Equal(SystemColors.HighlightColor, ((SolidColorBrush)item.Background).Color);
-                        Assert.Equal(SystemColors.HighlightTextColor, ((SolidColorBrush)item.Foreground).Color);
+                        Assert.Equal(Colors.Yellow, ((SolidColorBrush)item.Background).Color);
+                        Assert.Equal(Colors.Black, ((SolidColorBrush)item.Foreground).Color);
                         Assert.Contains(DesktopCapture.Descendants<Border>(item), b => b.BorderThickness == new Thickness(1)
-                            && b.BorderBrush is SolidColorBrush brush && brush.Color == SystemColors.WindowTextColor);
+                            && b.BorderBrush is SolidColorBrush brush && brush.Color == Colors.White);
                     }
                     string output = Path.GetFullPath("bin-build/ui2c-renders"); Directory.CreateDirectory(output);
                     string suffix = $"{language}-{theme}-{risk}-{width}x{height}";

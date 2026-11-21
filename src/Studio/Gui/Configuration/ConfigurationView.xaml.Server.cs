@@ -51,6 +51,15 @@ namespace TiaMcpConfigurator
                     TiaPath = Text("TiaPath")
             };
         }
+        internal async Task ReviewNetworkIssue(bool firewall, Uri? checkedEndpoint)
+        {
+            RemoteNav.IsChecked = true;
+            if (firewall && checkedEndpoint != null && Network.IsEnabled && int.TryParse(ServerPort.Text, out var port)
+                && port == checkedEndpoint.Port && string.Equals(Text("ServerAddress"), checkedEndpoint.Host, StringComparison.OrdinalIgnoreCase))
+                await OnNetwork();
+            else ServerPort.Focus();
+        }
+
         private async Task OnNetwork()
         {
             if (busy) return;

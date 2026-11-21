@@ -175,7 +175,7 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 var state = fixture.Snapshot();
                 state["binding"]!["processId"] = 43210;
                 WpfContext.Complete(model.Session.ApplySharedStateAsync(state));
-                var host = WorkbenchRenderTests.CreateHost(window, 1024, 640);
+                var host = WorkbenchRenderTests.CreateHost(window, 1360, 812);
                 var panel = (DockPanel)window.FindName("ParticipantStatus");
                 var clientText = (TextBlock)window.FindName("ClientStatus");
                 var pid = (TextBlock)window.FindName("TiaProcessStatus");
@@ -187,6 +187,10 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 Assert.True(pid.ActualWidth >= probe.DesiredSize.Width);
                 Assert.True(new Rect(host.RenderSize).Contains(pid.TransformToAncestor(host).TransformBounds(new Rect(pid.RenderSize))));
+                host.Width = 1024; host.Height = 640;
+                host.Measure(new Size(1024, 640)); host.Arrange(new Rect(0, 0, 1024, 640)); host.UpdateLayout();
+                Assert.Equal(Visibility.Collapsed, panel.Visibility);
+                Assert.Contains("fixture AI", clientText.Text);
             }
             finally { window.Close(); }
         });

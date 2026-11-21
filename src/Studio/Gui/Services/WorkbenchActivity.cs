@@ -38,7 +38,8 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public bool Busy { get => _busy; private set { if (Set(ref _busy, value)) Raise(nameof(ProgressIndeterminate)); } }
 
-    private LocalizedText _progressLabel;
+    private LocalizedText _progressLabel, _busyTitle;
+    public string BusyTitle => _busyTitle.Resolve();
     public string ProgressLabel => _progressLabel.Resolve();
     public event EventHandler<FeatureFeedback>? Feedback;
     public void Notify(ToastKind kind, LocalizedText text, string source) => Feedback?.Invoke(this, new(text, kind, source));
@@ -97,7 +98,8 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
         _operationSource.Value = workingKey;
         _activeOperations++;
         Busy = true;
-        _progressLabel = _status = LocalizedText.Working(workingKey, workingArgs);
+        _busyTitle = _progressLabel = _status = LocalizedText.Working(workingKey, workingArgs);
+        Raise(nameof(BusyTitle));
         Raise(nameof(ProgressLabel));
         Raise(nameof(Status));
 
@@ -180,7 +182,7 @@ public sealed class WorkbenchActivity : ObservableObject, IDisposable
 
     public void ClearLog() { while (_pendingEntries.TryDequeue(out _)) { } _entries.Clear(); Log = string.Empty; }
 
-    private void OnLanguageChanged(object? sender, EventArgs e) { Raise(nameof(Status)); Raise(nameof(ProgressLabel)); }
+    private void OnLanguageChanged(object? sender, EventArgs e) { Raise(nameof(Status)); Raise(nameof(ProgressLabel)); Raise(nameof(BusyTitle)); }
 
     public void Dispose() { _disposed = true; Loc.Current.LanguageChanged -= OnLanguageChanged; }
 }

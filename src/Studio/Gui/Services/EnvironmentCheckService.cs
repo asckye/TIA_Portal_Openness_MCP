@@ -283,7 +283,26 @@ public static class EnvironmentCheckCatalogue
             LocalizedText
                 .Key(finding.Id == "proxy-remote" ? "Env.ProxyFixButton" : finding.Id == "membership" && finding.Result != "NewLogon" && status == CheckStatus
                     .Fail ? "Env.FixButton" : "Env.ManualButton"),
-            LocalizedText.Key("Env.CheckDetail", result, Fix(finding.Id, finding.Result == "NewLogon"), evidence));
+            LocalizedText.Key("Env.CheckDetail", result, Fix(finding.Id, finding.Result == "NewLogon"), evidence))
+            { Issue = BannerIssue(finding) };
+    }
+
+    private static EnvironmentIssue? BannerIssue(EnvironmentFinding finding)
+    {
+        if (finding.Status != EnvironmentFindingStatus.Fail) return null;
+        if (finding.Id == "membership" && finding.Result is "Fail" or "NewLogon")
+            return new(finding.Id, null, LocalizedText.Key(finding.Result == "NewLogon" ? "Shell.GroupLogon" : "Shell.GroupMissing"),
+                LocalizedText.Key(finding.Result == "NewLogon" ? "Shell.GroupLogonHelp" : "Shell.GroupHelp"), LocalizedText.Key("Shell.OpenDoctor"));
+        if ((finding.Id, finding.Result) is not (("port", "PortUsed") or ("firewall", "Fail"))) return null;
+        // The first evidence line is the checked endpoint. Never substitute the editable port on the MCP page.
+        var lines = (finding.Evidence ?? "").Split('\n');
+        if (!Uri.TryCreate(lines[0].Trim(), UriKind.Absolute, out var endpoint) || endpoint.Port <= 0) return null;
+        bool port = finding.Id == "port";
+        var description = port && lines.Length > 2
+            ? LocalizedText.Key("Shell.PortOwners", new DiagnosticRedactor().Redact(string.Join(", ", lines.Skip(2))).Text, endpoint.Port)
+            : LocalizedText.Key(port ? "Shell.PortHelp" : "Shell.FirewallHelp");
+        return new(finding.Id, endpoint, LocalizedText.Key(port ? "Shell.PortUsed" : "Shell.FirewallBlocked", endpoint.Port),
+            description, LocalizedText.Key(port ? "Shell.ChangePort" : "Config.Network"));
     }
 
     public static string ResultKey(EnvironmentFinding finding) => finding.Result switch

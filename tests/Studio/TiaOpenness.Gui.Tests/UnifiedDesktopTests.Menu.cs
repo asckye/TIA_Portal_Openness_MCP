@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
@@ -71,7 +72,7 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Null(window.FindName("MenuBar"));
                 Assert.Null(window.FindName("SidebarCard"));
                 Assert.Null(window.FindName("RailCard"));
-                Assert.Equal(48, ((RadioButton)window.FindName("RailEngineering")).Height);
+                Assert.Equal(42, ((RadioButton)window.FindName("RailEngineering")).Height);
                 var pages = new[] { "Engineering", "Agent", "Mcp", "Clients", "Environment", "Audit", "Log" };
                 for (int i = 0; i < pages.Length; i++)
                 {
@@ -104,7 +105,7 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Equal(Visibility.Visible, settings.Visibility);
                 Assert.Equal(3, ((ListBox)settings.FindName("SectionList")).Items.Count);
                 var sectionList = (ListBox)settings.FindName("SectionList");
-                Assert.Equal(236, ((Border)sectionList.Parent).Width);
+                Assert.Equal(228, ((Border)sectionList.Parent).Width);
                 foreach (string name in new[] { "CheckUpdate", "RunUpdate", "OpenReleases", "OpenProjectPage", "OpenConfig", "OpenLog", "OpenData" })
                     Assert.IsType<Button>(settings.FindName(name));
                 ClickControl((RadioButton)settings.FindName("Chinese"));
@@ -132,7 +133,12 @@ public sealed partial class UnifiedDesktopTests
                 var settingsShortcut = window.InputBindings.OfType<KeyBinding>().Single(binding => binding.Key == Key.OemComma);
                 Assert.Equal(ModifierKeys.Control, settingsShortcut.Modifiers);
                 Assert.Equal("Settings", settingsShortcut.CommandParameter);
-                ClickControl((Button)window.FindName("McpStatusButton")); AssertPage(window, true);
+                ClickControl(window.SessionStatusButton);
+                var service = DesktopCapture.Descendants<SessionPopover>(window.Root).Single().SwitchVersion;
+                Assert.Equal(AutomationLiveSetting.Polite, AutomationProperties.GetLiveSetting(window.RailMcp));
+                Assert.Equal(AccessibleStatus.GetText(window.RailMcp), service.ToolTip);
+                Assert.Equal(AutomationProperties.GetHelpText(window.RailMcp), service.ToolTip);
+                ClickControl(service); AssertPage(window, true);
                 ClickControl((Button)window.FindName("SessionStatusButton")); AssertPage(window, true);
                 bool approvalEnabled = window.Approvals.Enabled, controlEnabled = App.Settings.WorkbenchControlEnabled;
                 ClickControl((Button)window.FindName("ApprovalStatusButton"));
@@ -214,9 +220,9 @@ public sealed partial class UnifiedDesktopTests
                 WpfContext.PressSpace(toggle);
                 Assert.Equal(Visibility.Visible, pane.Visibility);
                 Assert.True(pane.IsKeyboardFocusWithin);
-                Assert.Equal(page == "Settings" ? 236 : 262, pane.ActualWidth);
-                Assert.Equal(width, detail.ActualWidth);
-                Assert.Equal(0, pane.TranslatePoint(new Point(), detail).X);
+                Assert.Equal(214, pane.ActualWidth);
+                Assert.Equal(width - 214, detail.ActualWidth);
+                Assert.Equal(-214, pane.TranslatePoint(new Point(), detail).X);
                 Assert.True(Panel.GetZIndex(pane) > Panel.GetZIndex(detail));
                 Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("OverlayHost")).Visibility);
                 if (Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR") is { Length: > 0 } output)
@@ -338,7 +344,7 @@ public sealed partial class UnifiedDesktopTests
                 ClickApprovalControl((RadioButton)settings.FindName("ApprovalOff"), window.Approvals, nameof(window.Approvals.Enabled));
                 WpfContext.Drain();
                 Assert.False(window.Approvals.Enabled);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalOffPill")).Visibility);
+                Assert.Equal(Loc.Current["Shell.ApprovalOffStatus"], window.ApprovalStatusText.Text);
                 ClickApprovalControl((RadioButton)settings.FindName("Timeout300"), window.Approvals, nameof(window.Approvals.TimeoutSeconds));
                 Assert.Equal(300, window.Approvals.TimeoutSeconds);
                 ClickApprovalControl((RadioButton)settings.FindName("ApprovalOn"), window.Approvals, nameof(window.Approvals.Enabled));

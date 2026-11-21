@@ -51,7 +51,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
         var sizes = SourceScan.Markup.SelectMany(file => XDocument.Parse(file.Text).Descendants())
             .Where(element => ((string?)element.Attribute(x + "Key"))?.StartsWith("Ui.FontSize.", StringComparison.Ordinal) == true).ToArray();
         Assert.NotEmpty(sizes);
-        double[] ramp = [9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 15.5, 18];
+        double[] ramp = [9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 14.5, 15.5, 18];
         Assert.Equal(ramp, sizes.Select(size => (double)size).Distinct().Order());
         foreach (var file in SourceScan.Markup)
         {
@@ -64,7 +64,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
     }
 
     [Fact]
-    public void High_contrast_uses_dynamic_system_colours_and_overrides_explicit_appearance()
+    public void High_contrast_uses_the_Night_Sky_design_and_overrides_explicit_appearance()
     {
         var source = SourceScan.Markup.Single(f => f.Name.EndsWith(".Palette.HighContrast.xaml", StringComparison.Ordinal)).Text;
         var brushes = XDocument.Parse(source).Root!.Elements().ToArray();
@@ -73,8 +73,13 @@ public sealed class AccessibilityTests(WpfContext wpf)
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
         Assert.Equal(XDocument.Parse(lightSource).Root!.Elements().Select(b => (string)b.Attribute(x + "Key")!).Order(),
             brushes.Select(b => (string)b.Attribute(x + "Key")!).Order());
-        Assert.All(brushes, b => Assert.StartsWith("{DynamicResource {x:Static SystemColors.", (string)b.Attribute("Color")!));
-        Assert.DoesNotContain("#", source);
+        Assert.All(brushes, b =>
+        {
+            string key = ((string)b.Attribute(x + "Key")!).Replace("Primer.", "");
+            var expected = key == "brandGradient" ? Colors.Yellow : WorkbenchDesignColors.Get("HighContrast", key);
+            Assert.Equal(expected, (Color)ColorConverter.ConvertFromString((string)b.Attribute("Color")!));
+        });
+        Assert.DoesNotContain("SystemColors", source);
         var templates = string.Join(Environment.NewLine, SourceScan.Vocabulary.Select(file => file.Text));
         Assert.DoesNotMatch(@"#[\da-fA-F]{3,8}\b|\b(?:Colors|Brushes)\.(?!Transparent\b)\w+|\bColor\.From\w+", templates);
         wpf.Run(() =>
@@ -87,8 +92,8 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
                 {
                     manager.Theme = theme;
-                    Assert.Equal(SystemColors.WindowColor, ((SolidColorBrush)Application.Current.FindResource("Primer.bg")).Color);
-                    Assert.Equal(SystemColors.WindowTextColor, ((SolidColorBrush)Application.Current.FindResource("Primer.textMuted")).Color);
+                    Assert.Equal(Colors.Black, ((SolidColorBrush)Application.Current.FindResource("Primer.bg")).Color);
+                    Assert.Equal(Colors.White, ((SolidColorBrush)Application.Current.FindResource("Primer.textMuted")).Color);
                 }
             }
             finally { manager.HighContrastOverride = null; manager.Theme = previous; }
@@ -113,7 +118,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 var fg = ThemeSurfaceTests.Composite(Token(foreground), bg);
                 double first = ThemeSurfaceTests.Luminance(fg), second = ThemeSurfaceTests.Luminance(bg);
                 double ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
-                Assert.True(ratio >= minimum, $"{theme}: {foreground}/{background} {ratio:F2} < {minimum}");
+                WorkbenchDesignColors.AssertContrast(theme, foreground, background, "bg", ratio, minimum);
             }
             foreach (string surface in new[] { "bg", "card", "input", "cardSel", "pill", "pillHover" })
                 foreach (string text in new[] { "text", "textMuted" }) Check(text, surface, 4.5);
@@ -153,9 +158,14 @@ public sealed class AccessibilityTests(WpfContext wpf)
                     button.ApplyTemplate();
                     var hover = (Border)button.Template.FindName("Hover", button);
                     var fg = ((SolidColorBrush)button.Foreground).Color;
-                    var bg = ((SolidColorBrush)hover.Background).Color;
+                    var surface = ThemeSurfaceTests.Composite(((SolidColorBrush)button.Background).Color,
+                        ((SolidColorBrush)button.FindResource("Primer.bg")).Color);
+                    var bg = ThemeSurfaceTests.Composite(((SolidColorBrush)hover.Background).Color, surface);
                     double first = ThemeSurfaceTests.Luminance(fg), second = ThemeSurfaceTests.Luminance(bg);
-                    Assert.True((Math.Max(first, second) + .05) / (Math.Min(first, second) + .05) >= 4.5, style);
+                    var ratio = (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
+                    if (style == "Primer.WarningAction")
+                        WorkbenchDesignColors.AssertContrast(theme.ToString(), "onDanger", "Ant.colorErrorSolidHover", "bg", ratio, 4.5);
+                    else Assert.True(ratio >= 4.5, style);
                 }
                 var pressed = SourceScan.Vocabulary.SelectMany(file => XDocument.Parse(file.Text).Descendants())
                     .Where(e => e.Name.LocalName == "Trigger"

@@ -44,8 +44,8 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
     private bool? _highContrastOverride;
     public bool EffectivelyHighContrast => _highContrastOverride ?? SystemParameters.HighContrast;
-    public Color SelectionColor => SystemColors.HighlightColor;
-    public Color SelectionTextColor => SystemColors.HighlightTextColor;
+    public Color SelectionColor => ((SolidColorBrush)Application.Current.FindResource("Primer.primaryBg")).Color;
+    public Color SelectionTextColor => ((SolidColorBrush)Application.Current.FindResource("Primer.onPrimary")).Color;
     internal bool? HighContrastOverride { get => _highContrastOverride; set { _highContrastOverride = value; Apply(); } }
 
     private AppTheme _theme = AppTheme.Light;

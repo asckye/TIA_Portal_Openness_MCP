@@ -100,7 +100,7 @@
                 <Ellipse DockPanel.Dock="Right" Style="{StaticResource Project.Dot}" Fill="{DynamicResource Primer.destructiveText}"
                   ToolTip="{Binding Status}" Visibility="{Binding Row.Info.IsConsistent,Converter={StaticResource NotBoolToVisibility}}"/>
                 <StackPanel VerticalAlignment="Center">
-                  <TextBlock x:Name="BlockName" FontWeight="Medium" Text="{Binding Name}" ToolTip="{Binding Name}" Style="{StaticResource Primer.Mono}"
+                  <TextBlock x:Name="BlockName" TextWrapping="Wrap" FontWeight="Medium" Text="{Binding Name}" ToolTip="{Binding Name}" Style="{StaticResource Primer.Mono}"
                     FontSize="{DynamicResource Ui.FontSize.12}" LineHeight="18" LineStackingStrategy="BlockLineHeight"/>
                   <TextBlock Text="{Binding Row.Subtitle}" Style="{StaticResource Project.Caption}"
                     FontSize="{DynamicResource Ui.FontSize.10}" LineHeight="15" LineStackingStrategy="BlockLineHeight"/>

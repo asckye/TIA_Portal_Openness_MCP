@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes">
   <Style x:Key="Primer.Workbench.Sider" TargetType="Border" BasedOn="{StaticResource Primer.Sider}">
     <Setter Property="Background" Value="{DynamicResource Primer.rail}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
@@ -7,9 +7,9 @@
     <Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="Foreground" Value="{DynamicResource Primer.textMuted}"/>
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Height" Value="48"/>
-    <Setter Property="MinHeight" Value="48"/>
-    <Setter Property="Margin" Value="2,0"/>
+    <Setter Property="Height" Value="42"/>
+    <Setter Property="MinHeight" Value="42"/>
+    <Setter Property="Margin" Value="6,0,6,4"/>
     <Setter Property="Padding" Value="0"/>
     <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.10}"/>
     <Setter Property="ToolTip" Value="{Binding Path=(AutomationProperties.Name),RelativeSource={RelativeSource Self}}"/>
@@ -18,8 +18,8 @@
       <Setter.Value>
         <ControlTemplate TargetType="RadioButton">
           <Grid>
-            <Border x:Name="Surface" Margin="3,3" Background="{TemplateBinding Background}" CornerRadius="9"/>
-            <Border x:Name="Bar" Margin="-2,0,0,0" Width="3" Height="24" VerticalAlignment="Center" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource Primer.accent}" Visibility="Hidden"/>
+            <Border x:Name="Surface" Margin="0" Background="{TemplateBinding Background}" CornerRadius="9"/>
+            <Border x:Name="Bar" Margin="-6,0,0,0" Width="3" Height="24" VerticalAlignment="Center" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource Primer.primaryBg}" Visibility="Hidden"/>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
               <Border x:Name="GlyphBox" Width="17" Height="17">
                 <Path x:Name="Glyph" Style="{StaticResource Primer.Icon}" Data="{TemplateBinding ux:Ux.Icon}"
@@ -29,12 +29,9 @@
               </Border>
               <ContentPresenter x:Name="Label" HorizontalAlignment="Center" Margin="0,3,0,0"/>
             </StackPanel>
-            <Border BorderBrush="{DynamicResource Primer.hcOutline}" BorderThickness="1" CornerRadius="6" IsHitTestVisible="False"/>
           </Grid>
           <ControlTemplate.Triggers>
-            <Trigger Property="Tag" Value="Agent">
-              <Setter TargetName="GlyphBox" Property="Margin" Value="-10,0,0,0"/>
-            </Trigger>
+            <Trigger Property="Tag" Value="Agent"><Setter TargetName="GlyphBox" Property="Margin" Value="-8,0,0,0"/></Trigger>
             <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource Primer.pillHover}"/></Trigger>
             <Trigger Property="IsChecked" Value="True">
               <Setter TargetName="Surface" Property="Background" Value="{DynamicResource Primer.accentSoft}"/>
@@ -49,10 +46,10 @@
                 <Condition Binding="{Binding IsChecked,RelativeSource={RelativeSource Self}}" Value="True"/>
                 <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
               </MultiDataTrigger.Conditions>
-              <Setter TargetName="Surface" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-              <Setter TargetName="Bar" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
-              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
-              <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+              <Setter TargetName="Surface" Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+              <Setter TargetName="Bar" Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource Primer.onPrimary}"/>
+              <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
             </MultiDataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -89,9 +86,9 @@
                 <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
                 <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
               </MultiDataTrigger.Conditions>
-              <Setter TargetName="Surface" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-              <Setter TargetName="Bar" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
-              <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+              <Setter TargetName="Surface" Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+              <Setter TargetName="Bar" Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+              <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
             </MultiDataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -116,7 +113,7 @@
       <Grid Background="Transparent">
         <Border MinWidth="15" Height="15" CornerRadius="8" Padding="3,0" Background="{TemplateBinding Background}"
           BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-          HorizontalAlignment="Center" VerticalAlignment="Center">
+          HorizontalAlignment="Left" VerticalAlignment="Center">
           <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
         </Border>
       </Grid>
@@ -129,12 +126,14 @@
       <DataTrigger Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True">
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Primer.hcOutline}"/>
-        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
       </DataTrigger>
     </Style.Triggers>
   </Style>
   <Style x:Key="Primer.Workbench.AttentionBadge" TargetType="Border" BasedOn="{StaticResource Primer.PendingCountBadge}">
+    <Setter Property="Background" Value="{DynamicResource Ant.colorErrorSolid}"/>
+    <Setter Property="BorderThickness" Value="0"/>
     <Setter Property="Padding" Value="3,0"/>
     <Setter Property="CornerRadius" Value="8"/>
     <Setter Property="MinWidth" Value="15"/>
@@ -156,6 +155,8 @@
     <Setter Property="MinHeight" Value="24"/>
     <Setter Property="Padding" Value="6,0"/>
     <Setter Property="ContentTemplate" Value="{x:Null}"/>
+    <Setter Property="ux:Ux.Variant" Value="Status"/>
+    <Setter Property="ux:Ux.CornerRadius" Value="5"/>
   </Style>
   <Style x:Key="Primer.Workbench.StatusText" TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -169,6 +170,63 @@
     <Setter Property="BorderThickness" Value="0,0,0,1"/>
     <Setter Property="Padding" Value="20,6"/>
     <Style.Triggers><Trigger Property="Tag" Value="Warning"><Setter Property="Background" Value="{DynamicResource Primer.warnBg}"/><Setter Property="BorderBrush" Value="{DynamicResource Ant.colorWarningBorder}"/></Trigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.Workbench.EnvironmentBanner" TargetType="Border">
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    <Setter Property="Padding" Value="16,8"/>
+  </Style>
+  <Style x:Key="Primer.Workbench.Hairline" TargetType="Control">
+    <Setter Property="Height" Value="2"/>
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="IsHitTestVisible" Value="False"/>
+    <Setter Property="Template"><Setter.Value>
+      <ControlTemplate TargetType="Control">
+        <Viewbox Stretch="Fill" ClipToBounds="True">
+          <Canvas Width="100" Height="2" Background="{DynamicResource Primer.input}" ClipToBounds="True">
+            <Rectangle x:Name="Segment" Width="40" Height="2" Fill="{DynamicResource Primer.primaryBg}"/>
+          </Canvas>
+        </Viewbox>
+        <ControlTemplate.Triggers>
+          <Trigger Property="Visibility" Value="Visible">
+            <Trigger.EnterActions><BeginStoryboard x:Name="Slide"><Storyboard>
+              <DoubleAnimation Storyboard.TargetName="Segment" Storyboard.TargetProperty="(Canvas.Left)" From="-40" To="100"
+                Duration="0:0:1.4" RepeatBehavior="Forever"/>
+            </Storyboard></BeginStoryboard></Trigger.EnterActions>
+            <Trigger.ExitActions><RemoveStoryboard BeginStoryboardName="Slide"/></Trigger.ExitActions>
+          </Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate>
+    </Setter.Value></Setter>
+  </Style>
+  <Style x:Key="Primer.Workbench.FloatShadow" TargetType="ContentControl" BasedOn="{StaticResource Primer.Shadow}">
+    <Setter Property="Template"><Setter.Value>
+      <ControlTemplate TargetType="ContentControl">
+        <Grid>
+          <Grid x:Name="Shade">
+            <Border Margin="-12,-2,-12,-18" CornerRadius="22" Background="{DynamicResource Primer.floatShadow}" Opacity="0.12"/>
+            <Border Margin="-7,-1,-7,-12" CornerRadius="17" Background="{DynamicResource Primer.floatShadow}" Opacity="0.20"/>
+            <Border Margin="-3,0,-3,-6" CornerRadius="13" Background="{DynamicResource Primer.floatShadow}" Opacity="0.40"/>
+          </Grid>
+          <Border x:Name="Edge" Margin="-1" CornerRadius="10" BorderThickness="1" BorderBrush="{DynamicResource Primer.floatOutline}"/>
+        </Grid>
+        <ControlTemplate.Triggers>
+          <DataTrigger Binding="{Binding UseLowEffects,Source={x:Static themes:ThemeManager.Current}}" Value="True">
+            <Setter TargetName="Shade" Property="Visibility" Value="Collapsed"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True">
+            <Setter TargetName="Shade" Property="Visibility" Value="Collapsed"/>
+            <Setter TargetName="Edge" Property="Margin" Value="-2"/>
+            <Setter TargetName="Edge" Property="BorderThickness" Value="2"/>
+          </DataTrigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate>
+    </Setter.Value></Setter>
+  </Style>
+  <Style x:Key="Primer.Workbench.BusyCard" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="Padding" Value="12"/>
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
   </Style>
   <Style x:Key="Primer.Workbench.PageTitle" TargetType="TextBlock">
     <Setter Property="Foreground" Value="{DynamicResource Primer.textMuted}"/>
@@ -185,7 +243,7 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ContentControl">
-          <Border Background="{DynamicResource Primer.sidebar}" BorderBrush="{DynamicResource Primer.inputBorder}" BorderThickness="0,0,1,0">
+          <Border Background="{DynamicResource Primer.sidebar}" BorderBrush="{DynamicResource Primer.divider}" BorderThickness="0,0,1,0">
             <ContentPresenter x:Name="PaneContent" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
           </Border>
@@ -205,17 +263,19 @@
         <MultiTrigger.Conditions><Condition Property="HasContent" Value="False"/><Condition Property="Grid.Column" Value="0"/></MultiTrigger.Conditions>
         <Setter Property="Visibility" Value="Collapsed"/>
       </MultiTrigger>
+      <Trigger Property="ux:Ux.Narrow" Value="True"><Setter Property="Width" Value="214"/></Trigger>
       <Trigger Property="ux:Ux.LeftPaneOpen" Value="False"><Setter Property="Visibility" Value="Collapsed"/></Trigger>
     </Style.Triggers>
   </Style>
   <Style x:Key="Primer.Workbench.SettingsPane" TargetType="Border">
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
     <Setter Property="BorderThickness" Value="0,0,1,0"/>
-    <Setter Property="Background" Value="{DynamicResource Primer.rail}"/>
-    <Setter Property="Width" Value="236"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
+    <Setter Property="Width" Value="228"/>
     <Setter Property="Panel.ZIndex" Value="2"/>
     <Setter Property="HorizontalAlignment" Value="Left"/>
     <Style.Triggers>
+      <Trigger Property="ux:Ux.Narrow" Value="True"><Setter Property="Width" Value="214"/></Trigger>
       <Trigger Property="ux:Ux.LeftPaneOpen" Value="False"><Setter Property="Visibility" Value="Collapsed"/></Trigger>
     </Style.Triggers>
   </Style>
@@ -236,10 +296,14 @@
     <Setter Property="MinHeight" Value="26"/>
     <Setter Property="Padding" Value="10,0"/>
     <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
     <Setter Property="Foreground" Value="{DynamicResource Primer.textFaint}"/>
     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.11_5}"/>
+    <Setter Property="Width" Value="350"/>
+    <Style.Triggers>
+      <Trigger Property="ux:Ux.Narrow" Value="True"><Setter Property="Width" Value="240"/></Trigger>
+    </Style.Triggers>
   </Style>
   <Style x:Key="Primer.Workbench.KeyCap" TargetType="Border" BasedOn="{StaticResource Primer.Plain}">
     <Setter Property="Padding" Value="4,0"/>
@@ -279,5 +343,87 @@
         <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
       </MultiDataTrigger>
     </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.Workbench.EmptyState" TargetType="ux:WorkbenchState">
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="ux:Ux.Icon" Value="{DynamicResource Icon.WorkbenchProject}"/>
+    <Setter Property="MinHeight" Value="260"/>
+    <Setter Property="Padding" Value="32"/>
+    <Setter Property="Template"><Setter.Value>
+      <ControlTemplate TargetType="ux:WorkbenchState">
+        <Grid Margin="{TemplateBinding Padding}">
+          <StackPanel MaxWidth="400" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border Width="48" Height="48" CornerRadius="12" Background="{DynamicResource Primer.input}"
+              BorderBrush="{DynamicResource Primer.divider}" BorderThickness="1" HorizontalAlignment="Center">
+              <Path Width="22" Height="22" Style="{StaticResource Primer.Icon}" Data="{TemplateBinding ux:Ux.Icon}" Stroke="{DynamicResource Primer.textFaint}"/>
+            </Border>
+            <TextBlock Text="{TemplateBinding Title}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,14,0,0"
+              FontWeight="SemiBold" FontSize="{DynamicResource Ui.FontSize.14_5}" AutomationProperties.HeadingLevel="Level2"/>
+            <TextBlock Text="{TemplateBinding Description}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,6,0,0"
+              Foreground="{DynamicResource Primer.textMuted}" FontSize="{DynamicResource Ui.FontSize.12_5}"/>
+            <Button x:Name="Action" HorizontalAlignment="Center" Margin="0,16,0,0" Content="{TemplateBinding ActionLabel}"
+              AutomationProperties.Name="{TemplateBinding ActionLabel}" Command="{TemplateBinding ActionCommand}" Style="{StaticResource Primer.Button.Primary.Medium}"/>
+          </StackPanel>
+        </Grid>
+        <ControlTemplate.Triggers>
+          <Trigger Property="ActionCommand" Value="{x:Null}"><Setter TargetName="Action" Property="Visibility" Value="Collapsed"/></Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate>
+    </Setter.Value></Setter>
+  </Style>
+  <Style x:Key="Primer.Workbench.ErrorState" TargetType="ux:WorkbenchState">
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="VerticalAlignment" Value="Top"/>
+    <Setter Property="Margin" Value="24"/>
+    <Setter Property="Template"><Setter.Value>
+      <ControlTemplate TargetType="ux:WorkbenchState">
+        <Grid>
+          <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="720"/><ColumnDefinition Width="0"/></Grid.ColumnDefinitions>
+          <Border Style="{StaticResource Primer.Container}" CornerRadius="12" Padding="24">
+            <StackPanel>
+              <DockPanel>
+                <Border DockPanel.Dock="Left" VerticalAlignment="Top" Width="32" Height="32" Margin="0,0,12,0" CornerRadius="8"
+                  BorderThickness="1" BorderBrush="{DynamicResource Ant.colorError}" Background="{DynamicResource Ant.colorErrorBg}">
+                  <TextBlock Text="✕" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource Ant.colorError}"/>
+                </Border>
+                <StackPanel>
+                  <WrapPanel>
+                    <TextBlock Text="{TemplateBinding Title}" FontWeight="SemiBold" FontSize="{DynamicResource Ui.FontSize.14_5}" AutomationProperties.HeadingLevel="Level2"/>
+                    <Border Style="{StaticResource Primer.Tag}" Margin="8,0"><TextBlock Text="{l:Tr Shell.ErrorTag}"/></Border>
+                  </WrapPanel>
+                  <TextBlock Text="{TemplateBinding Description}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                  <TextBlock x:Name="Hint" Text="{TemplateBinding Hint}" TextWrapping="Wrap" Foreground="{DynamicResource Primer.textMuted}" Margin="0,4,0,0"/>
+                </StackPanel>
+              </DockPanel>
+              <Border x:Name="DetailsBox" Margin="0,16,0,0" Padding="12,4" CornerRadius="10"
+                Background="{DynamicResource Primer.codeBg}" BorderBrush="{DynamicResource Primer.divider}" BorderThickness="1">
+                <Expander Header="{l:Tr Shell.ErrorDetails}" AutomationProperties.Name="{l:Tr Shell.ErrorDetails}" Style="{StaticResource Primer.Expander}">
+                  <TextBlock Text="{TemplateBinding Details}" FontFamily="{DynamicResource Ui.FontMono}" TextWrapping="Wrap" Margin="4,8"/>
+                </Expander>
+              </Border>
+              <WrapPanel>
+                <Button x:Name="Action" Margin="0,16,8,0" Content="{TemplateBinding ActionLabel}" Command="{TemplateBinding ActionCommand}"
+                  AutomationProperties.Name="{TemplateBinding ActionLabel}" Style="{StaticResource Primer.Button.Primary.Medium}"/>
+                <Button x:Name="Export" Margin="0,16,0,0" Content="{l:Tr Shell.Diagnostics}" Command="{TemplateBinding ExportCommand}"
+                  AutomationProperties.Name="{l:Tr Shell.Diagnostics}" Style="{StaticResource Primer.Button.Secondary.Medium}"/>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+        </Grid>
+        <ControlTemplate.Triggers>
+          <Trigger Property="Details" Value=""><Setter TargetName="DetailsBox" Property="Visibility" Value="Collapsed"/></Trigger>
+          <Trigger Property="Hint" Value=""><Setter TargetName="Hint" Property="Visibility" Value="Collapsed"/></Trigger>
+          <Trigger Property="ActionCommand" Value="{x:Null}"><Setter TargetName="Action" Property="Visibility" Value="Collapsed"/></Trigger>
+          <Trigger Property="ExportCommand" Value="{x:Null}"><Setter TargetName="Export" Property="Visibility" Value="Collapsed"/></Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate>
+    </Setter.Value></Setter>
+  </Style>
+  <Style x:Key="Primer.Workbench.ConfirmationFrameScrim" TargetType="ux:WorkbenchScrim">
+    <Setter Property="IsHitTestVisible" Value="False"/>
+  </Style>
+  <Style x:Key="Primer.Workbench.DrawerRailScrim" TargetType="ux:WorkbenchScrim" BasedOn="{StaticResource Primer.Workbench.ConfirmationFrameScrim}">
+    <Setter Property="BlurRadius" Value="2"/>
+    <Setter Property="Margin" Value="0,38,0,26"/>
   </Style>
 </ResourceDictionary>

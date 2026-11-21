@@ -50,60 +50,62 @@ token 名称取自设计系统与 [ADR 0035](decisions/0035-workbench-native-ide
 
 ### 2.1 颜色
 
-浅色采用冷调浅色（Cool Crisp Light），深色采用午夜板岩深色（Midnight-Slate Dark，全界面无 `#000000`）；两套明暗主题各提供精密钴蓝（Cobalt，默认）与西门子青碧（Petrol）两套品牌强调色。高对比列是运行时映射的 `SystemColors` 键（[ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md)、[ADR 0035](decisions/0035-workbench-native-ide-dual-accent.md)），不是固定色值。
+冷调浅色、午夜板岩深色各有钴蓝和青碧两种强调色。系统进入高对比模式时使用 Night Sky。下表使用 WPF 的 RGB／ARGB 顺序，透明通道按设计值四舍五入到字节。
 
 | token | 浅色（钴蓝 / 青碧） | 深色（钴蓝 / 青碧） | 高对比 | 实现键 | 用途 |
 |---|---|---|---|---|---|
-| bg-window | #FFFFFF | #1B2332 | Window | `Primer.window` | 窗口主体 |
-| bg-grouped | #F8FAFD | #141B26 | Window | `Primer.bg` | 页面内容底色 |
-| bg-elevated | #FFFFFF | #1B2332 | Window | `Primer.card` | 卡片、确认面板 |
-| menu | #FFFFFF | #1B2332 | Window | `Primer.menuBg` | 菜单 |
-| titlebar | #E9EEF5 | #0B0F15 | Window | `Primer.titlebar` | 标题栏 |
-| rail | #E9EEF5 | #0B0F15 | Window | `Primer.rail` | 活动栏 |
-| statusbar | #E9EEF5 | #0B0F15 | Window | `Primer.statusBar` | 状态栏 |
-| sidebar | #F3F6FA | #101620 | Window | `Primer.sidebar` | 上下文左栏 |
-| card-soft | #F3F6FA | #101620 | Window | `Primer.cardSoft` | 卡片次级表面 |
-| code | #F6F8FC | #0C1017 | Window | `Primer.codeBg` | 代码与结构化数据 |
-| fill-control | #EAEFF6 | #232E40 | Window | `Primer.pill` | 次级填充表面 |
-| input | #EAEFF6 | #232E40 | Window | `Primer.input` | 输入框底色 |
-| selection | #EBEBED | #222E42 | Window | `Primer.cardSel` | 选中行 |
-| divider | #EBEBED | #2A3242 | WindowText | `Primer.divider` | 装饰性分隔线 |
-| card-border | #DBDCDF | #363F4F | WindowText | `Primer.cardBorder` | 卡片边界 |
-| border-control | #7B8797 | #6D7D94 | WindowText | `Primer.inputBorder` | 控件边界，≥ 3:1 |
-| focus-ring | #1D4ED8 / #0B656E | #60A5FA / #2DD4BF | WindowText | `Primer.focusOuter` | 键盘焦点环 |
-| hc-outline | #00000000 | #00000000 | WindowText | `Primer.hcOutline` | 高对比边界 |
-| label | #0F172A | #F1F5F9 | WindowText | `Primer.text` | 正文与标题 |
-| label-secondary | #475569 | #94A3B8 | WindowText | `Primer.textMuted` | 说明与元数据，在所有背景上对比度均 ≥ 4.5:1 |
-| label-faint | #57657A | #8B9BB2 | WindowText | `Primer.textFaint` | 占位文字，≥ 4.5:1 |
-| label-disabled | #8B97A8 | #6B7B91 | GrayText | `Ant.colorTextDisabled` | 仅用于禁用态和装饰图标；必须读懂的文字使用正文或次级文字色 |
-| label-on-primary | #FFFFFF | #FFFFFF | HighlightText | `Primer.onPrimary` | 主按钮文字 |
-| accent | #2563EB / #0E7C86 | #2563EB / #0E7C86 | Highlight | `Primer.primaryBg` | 主按钮实底，白色文字对比度 ≥ 4.5:1 |
-| accent-hover | #1D4ED8 / #0B656E | #1D4ED8 / #0B656E | Highlight | `Ant.colorPrimaryHover` | 主按钮悬停实底，白色文字对比度 ≥ 4.5:1 |
-| accent-text | #1D4ED8 / #0B656E | #7BB4FF / #5EEAD4 | HotTrack | `Primer.accent` | 文字与选中指示条 |
-| accent-tint | #E9EFFD / #E7F2F3 | #132139 / #0C2A2C | Window | `Primer.accentSoft` | 选中底色 |
-| destructive | #DC2626 | #E11D48 | Highlight | `Ant.colorErrorSolid` | 危险操作实底，白色文字对比度 ≥ 4.5:1 |
-| destructive-text | #B91C1C | #FCA5A5 | WindowText | `Primer.destructiveText` | 危险操作文字，在普通与悬停背景上对比度均 ≥ 4.5:1 |
-| destructive-tint | #FCEBEB | #362C3C | Window | `Ant.colorErrorBg` | 错误提示底 |
-| warning-text | #9A5504 | #FBBF24 | WindowText | `Primer.warn` | 警告文字 |
-| warning-tint | #F8EEE6 | #2D220E | Window | `Primer.warnBg` | 警告提示底 |
-| success-text | #0E7A50 | #34D399 | WindowText | `Primer.ok` | 成功文字 |
-| success-tint | #E8F2EC | #0F2920 | Window | `Primer.okBg` | 成功提示底 |
-| OB 徽标文字 | #5B21B6 | #C4B5FD | WindowText | `Primer.blkObFg` | 程序块类型 |
-| OB 徽标底色 | #EDE9FE | #2E1F5E | Window | `Primer.blkObBg` | 程序块类型 |
-| FB 徽标文字 | #1D4ED8 | #93C5FD | WindowText | `Primer.blkFbFg` | 程序块类型 |
-| FB 徽标底色 | #DBEAFE | #172D54 | Window | `Primer.blkFbBg` | 程序块类型 |
-| FC 徽标文字 | #065F46 | #6EE7B7 | WindowText | `Primer.blkFcFg` | 程序块类型 |
-| FC 徽标底色 | #D1FAE5 | #12362B | Window | `Primer.blkFcBg` | 程序块类型 |
-| DB 徽标文字 | #155E75 | #67E8F9 | WindowText | `Primer.blkDbFg` | 程序块类型 |
-| DB 徽标底色 | #CFFAFE | #113344 | Window | `Primer.blkDbBg` | 程序块类型 |
-| FS 徽标文字 | #92400E | #FDE68A | WindowText | `Primer.blkFsFg` | 程序块类型 |
-| FS 徽标底色 | #FEF3C7 | #382810 | Window | `Primer.blkFsBg` | 程序块类型 |
-| scrim | #0F172A | #070A0F | Window | `Ant.colorBgMask` | 模态遮罩，浅色 30%，深色 68% |
-| toast-bg | #FFFFFF | #1B2332 | Window | `Ant.colorBgSpotlight` | 提示条与工具提示底色 |
+| bg-window | #FFFFFF | #1B2332 | #000000 | `Primer.window` | 窗口主体 |
+| bg-grouped | #F8FAFD | #141B26 | #000000 | `Primer.bg` | 页面内容底色 |
+| bg-elevated | #FFFFFF | #1B2332 | #000000 | `Primer.card` | 卡片、确认面板 |
+| menu | #FFFFFF | #1B2332 | #000000 | `Primer.menuBg` | 菜单 |
+| titlebar | #E9EEF5 | #0B0F15 | #000000 | `Primer.titlebar` | 标题栏 |
+| rail | #E9EEF5 | #0B0F15 | #000000 | `Primer.rail` | 活动栏 |
+| statusbar | #E9EEF5 | #0B0F15 | #000000 | `Primer.statusBar` | 状态栏 |
+| sidebar | #F3F6FA | #101620 | #000000 | `Primer.sidebar` | 上下文左栏 |
+| card-soft | #F3F6FA | #101620 | #000000 | `Primer.cardSoft` | 卡片次级表面 |
+| code | #F6F8FC | #0C1017 | #000000 | `Primer.codeBg` | 代码与结构化数据 |
+| fill-control | #EAEFF6 | #232E40 | #000000 | `Primer.pill` | 次级填充表面 |
+| input | #EAEFF6 | #232E40 | #000000 | `Primer.input` | 输入框底色 |
+| selection | #160F172A | #1AE2E8F0 | #333300 | `Primer.cardSel` | 选中行 |
+| divider | #170F172A | #2194A3B8 | #FFFFFF | `Primer.divider` | 装饰性分隔线 |
+| card-border | #170F172A | #2194A3B8 | #FFFFFF | `Primer.cardBorder` | 卡片边界 |
+| border-control | #290F172A | #3D94A3B8 | #FFFFFF | `Primer.inputBorder` | 控件边界 |
+| focus-ring | #2563EB / #0E7C86 | #2563EB / #0E7C86 | #FFFF00 | `Primer.focusOuter` | 键盘焦点环 |
+| hc-outline | #00000000 | #00000000 | #FFFFFF | `Primer.hcOutline` | 高对比边界 |
+| label | #0F172A | #F1F5F9 | #FFFFFF | `Primer.text` | 正文与标题 |
+| label-secondary | #475569 | #94A3B8 | #FFFFFF | `Primer.textMuted` | 说明与元数据 |
+| label-faint | #64748B | #7A8CA3 | #D6D6D6 | `Primer.textFaint` | 占位文字 |
+| label-disabled | #64748B | #7A8CA3 | #D6D6D6 | `Ant.colorTextDisabled` | 仅用于禁用态和装饰图标；必须读懂的文字使用正文或次级文字色 |
+| label-on-primary | #FFFFFF | #FFFFFF | #000000 | `Primer.onPrimary` | 主按钮文字 |
+| accent | #2563EB / #0E7C86 | #2563EB / #0E7C86 | #FFFF00 | `Primer.primaryBg` | 主按钮实底 |
+| accent-hover | #1D4ED8 / #0B656E | #1D4ED8 / #0B656E | #FFE600 | `Ant.colorPrimaryHover` | 主按钮悬停实底 |
+| accent-text | #1D4ED8 / #0B656E | #60A5FA / #2DD4BF | #FFFF00 | `Primer.accent` | 文字与选中指示条 |
+| accent-tint | #1A2563EB / #1A0E7C86 | #293B82F6 / #2914B8A6 | #000000 | `Primer.accentSoft` | 选中底色 |
+| destructive | #DC2626 | #E11D48 | #FF0000 | `Ant.colorErrorSolid` | 危险操作实底 |
+| destructive-text | #DC2626 | #FB7185 | #FF6B6B | `Primer.destructiveText` | 危险操作文字，取设计稿的 --bad |
+| destructive-tint | #17DC2626 | #21FB7185 | #000000 | `Ant.colorErrorBg` | 错误提示底 |
+| warning-text | #B45309 | #FBBF24 | #FFFF00 | `Primer.warn` | 警告文字 |
+| warning-tint | #1CB45309 | #21FBBF24 | #000000 | `Primer.warnBg` | 警告提示底 |
+| success-text | #15803D | #34D399 | #3FF23F | `Primer.ok` | 成功文字 |
+| success-tint | #1A15803D | #1F34D399 | #000000 | `Primer.okBg` | 成功提示底 |
+| OB 徽标文字 | #6D28D9 | #C4B5FD | #FFFFFF | `Primer.blkObFg` | 程序块类型 |
+| OB 徽标底色 | #1C7C3AED | #29A78BFA | #000000 | `Primer.blkObBg` | 程序块类型 |
+| FB 徽标文字 | #1D4ED8 | #93C5FD | #FFFFFF | `Primer.blkFbFg` | 程序块类型 |
+| FB 徽标底色 | #1C2563EB | #2960A5FA | #000000 | `Primer.blkFbBg` | 程序块类型 |
+| FC 徽标文字 | #047857 | #6EE7B7 | #FFFFFF | `Primer.blkFcFg` | 程序块类型 |
+| FC 徽标底色 | #1C059669 | #2634D399 | #000000 | `Primer.blkFcBg` | 程序块类型 |
+| DB 徽标文字 | #0E7490 | #67E8F9 | #FFFFFF | `Primer.blkDbFg` | 程序块类型 |
+| DB 徽标底色 | #1C0891B2 | #2622D3EE | #000000 | `Primer.blkDbBg` | 程序块类型 |
+| FS 徽标文字 | #B45309 | #FDE68A | #FFFF00 | `Primer.blkFsFg` | 程序块类型 |
+| FS 徽标底色 | #1FD97706 | #29FBBF24 | #000000 | `Primer.blkFsBg` | 程序块类型 |
+| SU 徽标文字 / 底色 | #0E7C86 / #1C0E7C86 | #5EEAD4 / #262DD4BF | #3FF23F / #000000 | `Primer.blkSuFg` / `Primer.blkSuBg` | 软件单元 |
+| HM 徽标文字 / 底色 | #BE185D / #1ABE185D | #F9A8D4 / #29F472B6 | #1AEBFF / #000000 | `Primer.blkHmFg` / `Primer.blkHmBg` | HMI |
+| scrim | #4D0F172A | #AD070A0F | #D1000000 | `Ant.colorBgMask` | 模态遮罩，浅色 30%，深色 68% |
+| toast-bg | #FFFFFF | #1B2332 | #000000 | `Ant.colorBgSpotlight` | 提示条与工具提示底色 |
 
-各主题将软背景合成在使用的表面上。浅色强调底和深色选中、成功、警告底使用满足三级文字对比度的颜色。遮罩通过画刷透明度与实际内容混合。
+半透明背景、分隔线与遮罩按各自表面合成。对比度测试按最终设计的颜色和透明度计算期望值。
 
-破坏性按钮文字使用独立的 `Primer.destructiveText`：原亮色 `#D70015` 在 `Primer.pill`（`#E5E5EA`）上只有 4.29:1，低于普通文字要求的 4.5:1。表中的亮色与暗色值由 [ThemeSurfaceTests](../../tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs) 固定，并由 [AccessibilityTests](../../tests/Studio/TiaOpenness.Gui.Tests/AccessibilityTests.cs) 检查普通与悬停底色上的对比度。`Primer.diffRed`、`Ant.colorError` 仍表示差异删除与错误说明，不能代替破坏性按钮文字的专用令牌。
+五套令牌、品牌渐变与实际表面的组合由 [ThemeSurfaceTests](../../tests/Studio/TiaOpenness.Gui.Tests/ThemeSurfaceTests.cs) 和 [AccessibilityTests](../../tests/Studio/TiaOpenness.Gui.Tests/AccessibilityTests.cs) 验证。
 
 ### 2.2 字体
 
@@ -111,7 +113,7 @@ token 名称取自设计系统与 [ADR 0035](decisions/0035-workbench-native-ide
 |---|---|---|
 | TYP-01 | MUST | `Ui.Font` 为 Segoe UI Variable Text、Segoe UI、Microsoft YaHei UI；`Ui.FontMono` 为 Cascadia Mono、Consolas、Microsoft YaHei UI（显式中文回退，避免日文字形）。只用系统字体，不随包、不安装、不加载网络字体；Maple Mono CN 及其随包文件已移除（C9）。等宽只用于工具名、路径、标识、日志、时间和数值。 |
 | TYP-02 | MUST | 字号引用下表的设计阶梯；旧语义键映射到同一阶梯。 |
-| TYP-04 | MUST | 活动栏标签 10 epx，普通按钮 12.5 epx。最小 9 epx 仅用于微型标记；文字与底色的对比度至少 4.5:1。 |
+| TYP-04 | MUST | 活动栏标签 10 epx，普通按钮 12.5 epx。最小 9 epx 仅用于微型标记。颜色按 §2.1 验证。 |
 | TYP-05 | MUST | 英文用句首大写，不用全大写表达强调或表头；不用斜体，强调用 SemiBold。 |
 | TYP-06 | MUST | 允许省略号截断，但完整内容必须能用键盘取得（可聚焦的单元格、详情区或包含全文的 UIA 名称）；不可聚焦元素上的 ToolTip 不能是唯一途径。 |
 | TYP-08 | MUST | 技术标识（MCP 工具名、V4 错误码、路径、哈希、请求 ID、参数名）用 mono 或 mono-small 原样显示，不翻译；数字用等宽数字。 |
@@ -142,7 +144,7 @@ token 名称取自设计系统与 [ADR 0035](decisions/0035-workbench-native-ide
 | control-lg | 36 | `Ui.ControlHeight.Large` | 确认面板按钮 |
 | 行高（项目值） | 36 | 无 | 表格与列表行最小高度；不采用设计系统的 row-min 44（C11） |
 | 活动栏 | 60 | `Sider` | 固定宽度，按钮高 48，17 epx 图标下保留 10 epx 短标签 |
-| 上下文左栏 | 项目与审批 262，设置 236 | `Ux.LeftPaneOpen` | 记住停靠偏好。内容宽度小于 1024 epx 时默认收起，标题栏按钮可在内容上方打开无蒙层的左栏。焦点进入左栏，按 Esc 或再次按按钮关闭并将焦点还给按钮 |
+| 上下文左栏 | 项目 262、审批 260、设置 228，窄窗 214 | `Ux.LeftPaneOpen` | 标题栏按钮控制停靠栏，窄窗隐藏次要状态信息，搜索框从 350 缩至 240 epx |
 | 页面工具栏 / 筛选条 | 44 / 38 | `Primer.IdeBar` / `Primer.IdeSubBar` | 最小高度，随内容增高 |
 | sheet-width | 420 | 随 UI-2c | 确认面板 |
 
@@ -159,13 +161,13 @@ token 名称取自设计系统与 [ADR 0035](decisions/0035-workbench-native-ide
 
 ### 2.5 阴影与时长
 
-WPF 用圆角边框叠出阴影层级。颜色按所在表面预合成为不透明 RGB，常规主题的浮层使用 `Primer.Shadow`。高对比主题通过系统描边区分层级。
+WPF 将透明色与当前背景合成。忙碌卡和 toast 共用 `Primer.Workbench.FloatShadow`，以三层圆角边框绘制浮层阴影色和外缘线。低特效模式保留描边，Night Sky 浮层用 2 epx 白线。
 
 | 用途 | 资源键 | 浅色设计阴影 | 深色设计阴影 |
 |---|---|---|---|
 | 分组盒、常规图块 | `Ant.boxShadowUmbra` | 0 1px 2px，4% | 0 1px 3px，26% |
 | 选中行 | `Ant.boxShadowKey` | 0 1px 2px，6% | 0 1px 2px，35% |
-| 浮层 | `Primer.floatShadow` | 0 16px 42px，14% | 0 24px 64px，72% |
+| 浮层 | `Primer.floatShadow` | 0 16px 42px，16% | 0 24px 64px，72% |
 | 窗口外缘（原生窗口由系统绘制） | `Primer.windowShadow` | 0 28px 80px，13% | 0 32px 96px，65% |
 
 | 动效 | 时长 | 深色 | 高对比 | 用途 |
@@ -189,16 +191,27 @@ WPF 用圆角边框叠出阴影层级。颜色按所在表面预合成为不透�
 
 - Ctrl+1…7 依次打开项目、协作、MCP、客户端、检查、审计、日志。Ctrl+, 打开设置。项目包含版本控制，协作包含审批与 AI 调用；协作入口优先显示待批审批，否则回到上次子页，首次进入显示调用。
 - `WorkbenchPage` 保留原协议枚举，`Blocks` 定位项目页。人或 AI 发起的导航都经过 `MainWindow.Navigate`，页面控件使用 `WorkbenchCommands.Navigate` 并传入目标页。
-- 审批状态项显示“写操作审批 · 开/关”，点击打开设置中的 AI 控制区。客户端配置由客户端页承载；服务与传输配置在 MCP 页。
+- 审批状态项显示“人工审批 / 自动放行”，点击打开设置中的 AI 控制区。客户端配置由客户端页承载；服务与传输配置在 MCP 页。
 - 设置是页面，分三区：外观（主题、语言）；服务（版本、更新、目录、关于）；AI 控制（允许 AI 控制工作台界面、写操作审批与超时），AI 控制区只有人能改。
-- 安全提示同时出现时合并为一条提示条，只显示最高的一条并标出其余数量：1 待批计数（侧边栏徽标，永不隐藏）> 2 审批已关 > 3 工作台控制通道不可用 > 4 AI 预填，待确认 > 5 “AI 操作了界面”（短暂显示）。
+- 新请求更新协作徽标并播报。批准、拒绝和无法决定的反馈显示在所操作请求的状态位置。队列自动前进时保留反馈，操作者选择其他记录时清除。审批模式由状态栏入口播报，打开设置后由人修改。AI 预填、控制通道故障及短时活动提示独立于审批模式。
+
+### 页面共用状态（UI-0036GA）
+
+- 页面从根控件继承 `Ux.Narrow`（窗口内容宽度 ≤ 1024 epx）和 `Ux.LeftPaneOpen`。窄窗保留已打开的左栏，协作徽标与审批入口始终可见。
+- [WorkbenchState](../../src/Studio/Gui/Controls/WorkbenchState.cs) 的 `Primer.Workbench.EmptyState` 样式接受 `Title`、`Description`、`Ux.Icon`、`ActionLabel` 和 `ActionCommand`。在数据读取成功且集合为空时使用。按钮执行调用方已有命令。
+- `Primer.Workbench.ErrorState` 同时支持 `Hint`、`Details` 和 `ExportCommand`。原因来自失败的操作，详情按需展开。可以绑定现有诊断命令 `WorkbenchCommands.ExportDiagnostics`。缺失的详情与操作自动隐藏。
+- `Primer.Workbench.Hairline` 为 2 epx 的活动指示，`Primer.Workbench.BusyCard` 显示当前操作与真实进度。只有可取消的已附着会话显示取消入口。
+- 全局环境条使用 `Border` 样式 `Primer.Workbench.EnvironmentBanner`，读取 Doctor 的已确认结果，分别打开环境检查、MCP 端口或既有网络权限确认。操作异常通过错误 toast 显示。一般操作沿用底部 toast 的队列、暂停、详情与键盘行为。
+- 浮层下方的 `ContentControl` 使用 `Primer.Workbench.FloatShadow`。描边与阴影颜色分别来自 `Primer.floatOutline` 和 `Primer.floatShadow`。低效果和高对比度模式隐藏阴影。空状态与错误标题共用 `Ui.FontSize.14_5`。
+- [WorkbenchScrim](../../src/Studio/Gui/Controls/WorkbenchScrim.cs) 用 `VisualBrush` 绘制下层界面，再叠加 `Ant.colorBgMask`。模态确认、进程选择窗和命令面板的模糊半径是 5 epx，抽屉是 2 epx。低效果及高对比度模式只保留遮罩色。内嵌抽屉和危险确认沿用 `Primer.Workbench.DrawerRailScrim` 与 `Primer.Workbench.ConfirmationFrameScrim` 样式。独立 WPF 确认窗与进程选择窗通过 `WorkbenchMessageBox.ShowModal` 显示，关闭后恢复原外框。危险实底按钮与检查徽标的文字用 `Primer.onDanger`。
+- 状态栏按钮的可点击高度为 24 epx，内部悬停面高 19 epx。MCP 图标的辅助说明与会话弹出层的切换版本按钮呈现当前服务状态。
 
 ### 3.3 规则
 
 | ID | 级别 | 规则 |
 |---|---|---|
 | LAY-01 | MUST | 窗口最小尺寸不超过 1024 × 640 epx，在此尺寸下所有功能可用（允许滚动）。 |
-| LAY-02 | SHOULD | 最小宽度不超过 960 epx，使窗口能贴靠到 1920 宽屏幕的一半，与 TIA Portal 并排（维护者 2026-11-03：保持 960，不采用设计系统的 1024）。 |
+| LAY-02 | SHOULD | 窄窗按 1024 × 640 epx 核对，搜索入口缩为 240 epx，项目、审批与设置的左栏宽 214 epx，可用标题栏按钮收起。 |
 | LAY-03 | MUST | 窄窗口：活动栏保持 60 epx，取消按 1200 epx 折叠活动栏的规则；上下文左栏按 §2.3 切换为浮层；带右栏的页面在宽度不足时把右栏移到内容下方；数据表格属于二维内容，允许横向滚动。 |
 | LAY-05 | SHOULD | 间距按 §2.3 的用途取值；一致的间距本身表达分组。 |
 | LAY-06 | MUST | 承载文字的行和容器不用固定高度，用 `Auto`、`MinHeight` 或 `*`。 |
@@ -232,7 +245,7 @@ WPF 用圆角边框叠出阴影层级。颜色按所在表面预合成为不透�
 | 开关 | `ToggleButton` + 开关模板（UIA Toggle 模式） |
 | 不确定进度 | `ProgressBar IsIndeterminate="True"`；倒计时环随 UI-2c |
 | 焦点视觉 | 全局 `FocusVisualStyle`（`SystemParameters.FocusVisualStyleKey`） |
-| 高对比 | `ThemeManager` 检测 `SystemParameters.HighContrast`，换入映射到 `SystemColors` 的 `Palette.HighContrast.xaml` |
+| 高对比 | `ThemeManager` 检测 `SystemParameters.HighContrast`，换入 Night Sky `Palette.HighContrast.xaml` |
 | 访问键 | `_` 助记符 + `AccessText`（模板 `RecognizesAccessKey="True"`） |
 | 快捷键 | `KeyBinding` + `AutomationProperties.AcceleratorKey` |
 | 标题与对话框语义 | `AutomationProperties.HeadingLevel`、`AutomationProperties.IsDialog` |
@@ -301,7 +314,7 @@ WPF 用圆角边框叠出阴影层级。颜色按所在表面预合成为不透�
 | STS-03 | MUST | 长操作显示进度：已知总量用确定进度，否则用不确定进度，旁边有说明当前操作的文字；进度放在发起处附近。 |
 | STS-04 | SHOULD | 后端支持取消的长操作（MCP 面板请求、图集生成、诊断包）提供“取消”。 |
 | STS-05 | MUST | 被阻止的操作说明原因与办法（如忙碌时关闭窗口：“正在执行 <操作>，完成或取消后再关闭”），不静默无效。 |
-| STS-06 | MUST | 持续的全局状态（审批已关、控制通道不可用、离线演示、环境问题）用提示条或侧边栏状态行显示，带严重级别图标与文字，不用会自动消失的 toast。 |
+| STS-06 | MUST | 已确认的用户组、端口和防火墙问题用全宽环境提示条呈现，可关闭并通过操作入口处理。审批模式通过状态栏显示和播报。 |
 | STS-07 | SHOULD | toast 只作短暂反馈：排队逐条显示，不遮挡审批按钮与焦点元素，可用键盘关闭。 |
 | STS-08 | MUST | 提示条、提示与徽标不闪烁；短时间内多次变化时合并显示。 |
 | STS-09 | SHOULD | 系统通知文字本地化；激活时还原窗口并打开对应页面。 |
@@ -337,9 +350,9 @@ WPF 用圆角边框叠出阴影层级。颜色按所在表面预合成为不透�
 | APR-02 | MUST | 面板（人）发起的写请求自动在审批页打开对应请求，仍须人单独批准；自动打开时焦点放在请求标题上，MUST NOT 放在“批准”或“拒绝”上。AI 切页后的 500 ms 输入保护覆盖两个决策按钮（AI-02）。 |
 | APR-03 | MUST | 请求详情显示：客户端名（标“（未验证）”）、传输方式、宿主 / 版本、目标项目、PLC、操作清单（动作 / 对象 / 工具）、风险等级文字、人 / AI 来源、剩余时间；脱敏参数或生成计划放在默认收起的区域，来自项目的数据标明只作数据显示。密码、密钥、凭据和令牌按调用日志的共用规则换成固定占位符后才计算参数与长文本摘要；详情不携带原值或其无盐哈希；只更换敏感值不改变审批绑定，实际操作仍用原值。 |
 | APR-04 | MUST | 决策按钮按 §5.1：写入请求左拒绝、右批准，批准使用强调色实底。两键标签为纯文本，没有访问键（C4），既不是默认按钮也不是取消按钮（`IsDefault=False`、`IsCancel=False`）；长标签换行，两者一起增高。破坏性请求的“拒绝”是默认按钮。 |
-| APR-05 | MUST | 写操作审批开关可在 设置 › AI 控制 直接切换（[ADR 0035](decisions/0035-workbench-native-ide-dual-accent.md)）；审批开启时状态栏显示“人工审批”，关闭时显示“自动放行”。审批关闭期间，提示条显示带图标与文字的“审批已关”，变化时以 live region 播报。物理 PLC 下载与破坏性操作仍强制双重确认且 Enter 键永不批准。 |
+| APR-05 | MUST | 写操作审批开关可在 设置 › AI 控制 直接切换（[ADR 0035](decisions/0035-workbench-native-ide-dual-accent.md)）；审批开启时状态栏显示“人工审批”，关闭时显示“自动放行”。状态栏文字变化时以 live region 播报。物理 PLC 下载与破坏性操作仍强制双重确认且 Enter 键永不批准。 |
 | APR-06 | MUST | 审批超时即拒绝。倒计时用计时标签（mm:ss · 待确认），少于 30 秒显示 warning；读屏只在 30 秒和 10 秒时播报。在设置 › 安全与 AI 控制中可选 60 / 120 / 300 秒预设，或输入 1–3600 秒的自定义值；按 WCAG 2.2.1 的“必要”例外处理（偏差 UI-24）。 |
-| APR-07 | MUST | 新的待批请求：侧边栏徽标计数立即更新并以 live region 播报；窗口最小化时发系统通知；激活通知或徽标打开审批页；通知文字本地化。 |
+| APR-07 | MUST | 新的待批请求立即更新侧边栏徽标并以 live region 播报。窗口最小化时显示本地化的 Windows 气泡通知。点击气泡还原窗口并打开对应请求。待批数归零即移除托盘图标。 |
 | APR-08 | MUST | AI 不能把人引向审批：`display.call` 拒绝待批请求；AI 页面白名单不含审批页（NAV-08）。 |
 | APR-09 | MUST | 断开共享会话：确认写出 AI 客户端名与后果（AI 需新建会话重连），提供“仅分离面板”作替代，默认按钮为取消。 |
 | APR-10 | MUST | 决定立即生效，拒绝后不提供撤销（C8）：MCP 调用立即返回，审计链立即记录；界面只给一条短提示“已拒绝……”或“已批准，正在 TIA Portal 中执行”。 |
@@ -366,9 +379,9 @@ WCAG 2.2 A/AA 是必须达到的底线，按 WCAG2ICT 对非 Web 软件的解释
 | ID | 级别 | 规则 |
 |---|---|---|
 | COL-02 | MUST | 常规界面仅提供浅色与深色两套主题（不设“自动”选项），并支持精密钴蓝与西门子青碧双强调色（[ADR 0035](decisions/0035-workbench-native-ide-dual-accent.md)）。`SystemParameters.HighContrast` 为真时自动启用高对比字典，优先于用户选择；运行中切换（`SystemParameters.StaticPropertyChanged`）即时重绘，不提供手动高对比开关。 |
-| COL-03 | MUST | 高对比配对：Window / WindowText 用于面与文字；Highlight / HighlightText 用于选中、按下、进行中；ButtonFace / ButtonText 用于可交互元素；HotTrack 只用于链接；GrayText 只用于禁用。所有卡片、按钮、输入框和提示条加 1 px WindowText 描边（hc-outline），阴影为无，状态只靠图标形状和文字；列表项文字继承项容器的前景色。 |
-| COL-04 | MUST | 浅色与深色主题中，每一对实际使用的文字与底色对比 ≥ 4.5:1（含次要文字、占位符、时间戳、徽标文字）；只有禁用态豁免。 |
-| COL-05 | MUST | 非文字对比 ≥ 3:1：焦点环、状态指示（选中、勾选、按下、开关）、识别控件所需的边界（border-control）；separator 是装饰，不在此列。 |
+| COL-03 | MUST | 高对比为 Night Sky 黑底白字。选中面为黄底黑字，分隔线为白色，成功为绿、错误为红。用形状和文字同时表达状态。 |
+| COL-04 | MUST | 各主题逐值采用 §2.1 的文字与底色。按实际 alpha 合成检查文字对比，并固定最终设计的比值。 |
+| COL-05 | MUST | 焦点、控件边界与选择标记使用设计指定的颜色、透明度和形状。设计采用低对比分隔线的位置按令牌精确比对。 |
 | COL-06 | MUST | 不只靠颜色传达信息：状态配图标和文字；日志级别带文字标签；差异行带“+ / −”前缀；开关与筛选的状态另有形状、字重或勾选标记。 |
 | COL-07 | SHOULD | accent 只用于默认按钮、获得焦点的选中行、开关和进度；链接和文字按钮用 accent-text，不把 accent 直接当文字色。强调色由用户在精密钴蓝（#2563EB）与西门子青碧（#0E7C86）间选择，不跟随 Windows 强调色（ADR 0035）。 |
 | COL-08 | MUST | 状态色只有带 -text 的 token 能放文字，其余只给图标和圆点；语义色作实底时，上面文字对比 ≥ 4.5:1。 |
