@@ -46,6 +46,12 @@ namespace TiaMcp.Adapters
                     meta["typePath"] = typePath; meta["libraryName"] = libraryName; meta["action"] = action;
                     return InstantiateLibraryVersion(sourceType, sourceVersion, targetSoftwarePath, targetGroupPath, updatePathsMode, dryRun, meta);
                 }
+#if LIBRARY_V20
+                CreateOrReleaseDependenciesMode mode = default;
+                if (action == "release" && (!Enum.TryParse(dependenciesMode, out mode) || !Enum.IsDefined(typeof(CreateOrReleaseDependenciesMode), mode)))
+                    throw new ArgumentException("Select a release dependency mode: " + string.Join(", ", Enum.GetNames(typeof(CreateOrReleaseDependenciesMode)))
+                        + ".", nameof(dependenciesMode));
+#endif
                 bool writing = action != "read" && action != "findInstances" && !dryRun;
                 using var access = writing && action != "edit" && action != "discard" ? HardwareEditAccess() : null;
                 var library = ExactOpenEngineeringLibrary(libraryName);
@@ -57,7 +63,6 @@ namespace TiaMcp.Adapters
                 meta["typePath"] = typePath; meta["libraryName"] = libraryName; meta["action"] = action;
 #if LIBRARY_V20
                 LibraryTypeInstanceInfo? editInstance = null;
-                CreateOrReleaseDependenciesMode mode = default;
 #endif
                 Version? releaseVersion = null;
                 IUpdateProjectScope? scope = null;
@@ -74,12 +79,7 @@ namespace TiaMcp.Adapters
                             + ". Use a software scope with a single matching instance; ambiguous edits are refused.");
                     editInstance = instances[0];
                 }
-                if (action == "release")
-                {
-                    mode = (CreateOrReleaseDependenciesMode)HardwareAddressingPolicy
-                        .ConvertValue(new HardwareScalar { Kind = "string", Text = dependenciesMode }, typeof(CreateOrReleaseDependenciesMode))!;
-                    releaseVersion = Version.Parse(newVersion);
-                }
+                if (action == "release") releaseVersion = Version.Parse(newVersion);
 #endif
                 if (action == "updateInstances")
                 {

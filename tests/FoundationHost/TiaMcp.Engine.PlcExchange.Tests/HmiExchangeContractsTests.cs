@@ -105,6 +105,119 @@ namespace PlcExchangeTests
             Assert.True(JsonNode.DeepEquals(JsonNode.Parse(text), result.StructuredContent));
             return result.StructuredContent!.AsObject();
         }
+        public class InspectionSessionProxy : DispatchProxy
+        {
+            protected override object? Invoke(MethodInfo? method, object?[]? args)
+            {
+                if (method!.Name == "ResolveHmiSoftwareOrThrow")
+                    return new { ScreenGroups = new[] { new { Name = "Line", Screens = new[] { new { Name = "Overview" } }, Groups = Array.Empty<object>() } }
+                    };
+                if (method.Name == "RunHmiStepTool")
+                {
+                    var action = (Delegate)args![1]!;
+                    var meta = Activator.CreateInstance(action.Method.GetParameters()[0].ParameterType, nonPublic: true);
+                    return action.DynamicInvoke(meta);
+                }
+                throw new InvalidOperationException("Unexpected inspection method " + method.Name);
+            }
+        }
+
+        [Fact]
+        public void Nonempty_screen_group_refuses_deletion_before_writing()
+        {
+            var type = PlcExchangeTarget.Adapter.GetType("TiaMcp.Adapters.Native.Hmi.UnifiedHmiInspectionAdapter", true)!;
+            var session = DispatchProxy.Create(type.GetConstructors().Single().GetParameters()[0].ParameterType, typeof(InspectionSessionProxy));
+            var adapter = Activator.CreateInstance(type, session);
+            var failure = Assert.Throws<TargetInvocationException>(() =>
+                type.GetMethod("DeleteEmptyUnifiedHmiScreenGroup")!.Invoke(adapter, new object[] { "Panel", "/Line", true }));
+            var refusal = Assert.IsType<AdapterPreconditionException>(failure.GetBaseException());
+            Assert.Equal("target-not-empty", refusal.Condition);
+        }
+
+        public sealed class ScriptFolder
+        {
+            public void Delete() => throw new InvalidOperationException("The preview attempted a deletion.");
+        }
+
+        [Fact]
+        public void Classic_script_folder_preview_ignores_confirmation_and_apply_names_it()
+        {
+            var adapter = PlcExchangeTarget.Adapter.GetType("TiaMcp.Adapters.Native.Hmi.MotionProDiagClassicHmiAdapter", true)!;
+            var method = adapter.GetMethod("ClassicDelete", All)!;
+            var meta = Activator.CreateInstance(method.GetParameters()[4].ParameterType, nonPublic: true);
+            var args = new object?[] { new ScriptFolder(), Array.Empty<object>(), "Scripts", false, meta, false };
+            Assert.Contains("preview", (string?)method.Invoke(null, args));
+            args[5] = true;
+            var error = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, args));
+            var argument = Assert.IsType<ArgumentException>(error.InnerException);
+            Assert.Equal("confirmDelete", argument.ParamName);
+            var reply = new ResponseMessage { Meta = new JsonObject {
+                ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false,
+                ["status"] = StepFailureStatus.Of(argument), ["v4FailureCode"] = MutationEvidence.StepFailureCode(argument),
+                ["nativeMessage"] = argument.Message, ["parameter"] = StepFailureStatus.Parameter(argument) } };
+            var body = Body(ClassicMotionToolContract.Map("ManageClassicHmiScript", reply, false, true));
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+            Assert.Equal("/confirmDelete", (string?)body["error"]?["details"]?["parameter"]);
+        }
+
+        [Fact]
+        public void Connection_preview_rejects_tag_table_XML_before_worker_dispatch()
+        {
+            string file = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllText(file, "<Document><Hmi.Tag.TagTable ID='0'><AttributeList><Name>Tags</Name></AttributeList></Hmi.Tag.TagTable></Document>");
+                var service = new HmiExchangeService((_, _) => throw new InvalidOperationException("Unexpected worker call"), () => "panel.ap21");
+                var result = Body(new HmiExchangeTools(service).ImportHmiConnectionV4("Panel", file));
+                Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
+                Assert.Contains("Hmi.Communication.Connection", (string?)result["error"]?["message"]);
+                Assert.Null(result["data"]?["planHash"]);
+            }
+            finally { File.Delete(file); }
+        }
+
+        [Fact]
+        public void Directory_import_names_the_destination_when_every_item_loses_the_same_folder()
+        {
+            const string folder = "/Line/Area";
+            var assembly = PlcExchangeTarget.Adapter;
+            var policy = assembly.GetType("TiaMcp.Adapters.Native.Hmi.HmiExchangePolicy", true)!;
+            var root = new { Folders = Array.Empty<object>() };
+            var failure = Assert.Throws<TargetInvocationException>(() =>
+                policy.GetMethod("Folder", All)!.Invoke(null, new object[] { root, folder, "Folders" })).InnerException;
+            var adapter = assembly.GetType("TiaMcp.Adapters.Native.Hmi.HmiExchangeAdapter", true)!;
+            var item = adapter.GetMethod("ImportItem", All)!.Invoke(null, new object?[] { "Main.xml", false, failure, null });
+            var result = Body(Map("ImportHmiScreensFromDirectory", new ResponseMessage { Meta = new JsonObject {
+                ["success"] = false, ["items"] = new JsonArray(JsonSerializer.SerializeToNode(item)) } }, true, true));
+            Assert.Equal("NOT_FOUND", (string?)result["error"]?["code"]);
+            Assert.Equal(folder, (string?)result["error"]?["details"]?["target"]);
+            Assert.Contains(folder, (string?)result["error"]?["message"]);
+        }
+
+        [Fact]
+        public void Connection_preview_accepts_an_exported_classic_connection()
+        {
+            string file = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllText(file, "<Document><Engineering version='V21'/><Hmi.Communication.Connection ID='0'>"
+                    + "<AttributeList><Name>PLC connection</Name></AttributeList></Hmi.Communication.Connection></Document>");
+                var service = new HmiExchangeService((_, _) => throw new InvalidOperationException("Unexpected worker call"), () => "");
+                var body = Body(new HmiExchangeTools(service).ImportHmiConnectionV4("Panel", file));
+                Assert.True((bool?)body["ok"]);
+            }
+            finally { File.Delete(file); }
+        }
+
+        [Theory]
+        [InlineData("ExportHmiScreen", "Overview")]
+        [InlineData("ExportHmiConnection", "S7 connection")]
+        public void Exchange_refusal_names_the_missing_target(string tool, string name)
+        {
+            var reply = HmiExchangeContract.Run(tool, true, true, () => throw new PortalException(PortalErrorCode.NotFound, "Missing: " + name));
+            Assert.Contains(name, (string?)Body(reply)["error"]?["message"]);
+        }
+
         [Fact]
         public void ClassicXmlExportsExposeTheOfficialDefaultAndExplicitOption()
         {

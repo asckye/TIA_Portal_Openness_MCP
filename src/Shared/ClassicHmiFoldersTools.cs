@@ -59,7 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("folderKind: screens | popups | templates | tags | scripts.")] string folderKind,
             string folderPath="",
             [Description("action: the operation to perform - read | create | delete.")] string action="read",
-            string newName="",
+            [Description("Name of the child folder to create under folderPath. Used only for create.")] string newName="",
             bool confirmDelete=false,
             bool dryRun=true)
             => ClassicMotionToolContract.Invoke("ManageClassicHmiFolder", dryRun || action == "read", action != "read",

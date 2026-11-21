@@ -26,8 +26,9 @@ namespace TiaMcp.Adapters
             string[] Parts(string value) => PlcObjectPath.Parts(value, true, "targetGroupPath");
             if (kind == "device")
             {
-                var group = HardwareGroupOperations.Group(Project(), path, "DeviceGroups", Parts);
-                return group is Project bound ? bound.Devices : ((DeviceUserGroup)group).Devices;
+                var project = Project();
+                var group = HardwareGroupOperations.Group(project, path, "DeviceGroups", Parts);
+                return ReferenceEquals(group, project) ? project.Devices : ((DeviceUserGroup)group).Devices;
             }
             if (kind == "classicScreen" || kind == "classicTagTable")
             {

@@ -134,6 +134,15 @@ namespace TiaMcp.Adapters.Native.Hmi
                     .ToArray())
             { Release(sessions[id]); sessions.Remove(id); }
         }
+        internal HmiMessage ReleaseCursor(string cursor)
+        {
+            bool released = Cancel(cursor);
+            string message = released ? "Collection state released." : "Cursor already released or unknown.";
+            var meta = HmiMeta.Unstamped(true, ("readOnly", true), ("released", released));
+            if (!released) meta["reason"] = message;
+            return new HmiMessage { Message = message, Meta = meta };
+        }
+
         internal bool Cancel(string cursor)
         {
             lock (gate) { var id = cursor.Split(':')[0]; if (!sessions.TryGetValue(id, out var s)) return false; Release(s); sessions.Remove(id); return true; }

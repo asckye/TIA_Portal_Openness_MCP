@@ -68,6 +68,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             data["summary"] = data["message"]?.DeepClone();
             data.Remove("message");
+            if (tool == "EnsureUnifiedHmiButtonAction"
+                && (Flag(evidence["ensureMeta"], "mayHaveChanged") == true || Flag(evidence["setMeta"], "mayHaveChanged") == true))
+                evidence["mayHaveChanged"] = true;
             data["evidence"] = evidence;
             if (evidence["records"] is JsonArray records) data["items"] = records.DeepClone();
             else if (evidence["itemResults"] is JsonArray results) data["items"] = results.DeepClone();

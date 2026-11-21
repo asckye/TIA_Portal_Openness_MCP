@@ -277,7 +277,8 @@ namespace TiaMcpServer.ModelContextProtocol
                                 ["item"] = itemName,
                                 ["property"] = dyn.Key,
                                 ["tag"] = HmiTemplateJson.Get(dyn.Value as JsonObject, "Tag")?.ToString() ?? "",
-                                ["readOnly"] = HmiTemplateJson.Get(dyn.Value as JsonObject, "ReadOnly")?.ToString() ?? ""
+                                ["readOnly"] = bool.TryParse(HmiTemplateJson.Get(dyn.Value as JsonObject, "ReadOnly")?.ToString(), out bool readOnly)
+                                    && readOnly
                             });
                         }
                     }

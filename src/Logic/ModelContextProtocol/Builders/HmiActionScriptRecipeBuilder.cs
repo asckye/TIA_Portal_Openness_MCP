@@ -71,8 +71,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         warnings.Add(applyBlockedReason);
                     break;
                 case "goto-screen":
-                    script = BuildGotoScreenScript(targetScreen, errors);
-                    requiresApiDiscovery = !string.IsNullOrWhiteSpace(script);
+                    requiresApiDiscovery = !string.IsNullOrWhiteSpace(targetScreen);
+                    if (!requiresApiDiscovery) errors.Add("GotoScreen requires TargetScreen.");
                     applyBlockedReason = requiresApiDiscovery ? "Screen navigation API is not verified from local TIA export/reference yet." : "";
                     if (requiresApiDiscovery)
                         warnings.Add(applyBlockedReason);
@@ -239,18 +239,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
             return "// 打开弹窗：" + targetPopup + Environment.NewLine +
                    "// TODO: bind to the verified WinCC Unified popup-open API for this project version.";
-        }
-
-        private static string BuildGotoScreenScript(string targetScreen, JsonArray errors)
-        {
-            if (string.IsNullOrWhiteSpace(targetScreen))
-            {
-                errors.Add("GotoScreen requires TargetScreen.");
-                return "";
-            }
-
-            return "// 切换画面：" + targetScreen + Environment.NewLine +
-                   "// TODO: bind to the verified WinCC Unified screen-navigation API for this project version.";
         }
 
         private static (string[] Warnings, string[] Errors) AnalyzeGeneratedScript(string script)

@@ -47,14 +47,15 @@ namespace TiaMcp.Adapters
                             return "Global library infos read (GetGlobalLibraryInfos); nothing opened.";
                         }
                     }
-                    catch (NullReferenceException error)
+                    catch (Exception error) when (error is NullReferenceException or NotSupportedException)
                     {
-                        meta["nativeExceptionType"] = error.GetType().FullName;
+                        meta["nativeMessage"] = NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
                     }
                     const string reason = "TIA could not enumerate its known global libraries (GetGlobalLibraryInfos). "
                         + "Use action=list to inspect open libraries.";
                     meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
-                    meta["status"] = "ReadOrWriteFailed"; meta["nativeMessage"] = reason;
+                    meta["status"] = "ReadOrWriteFailed";
+                    meta["nativeMessage"] = meta.TryGetValue("nativeMessage", out var detail) ? reason + " " + detail : reason;
                     return reason;
                 }
                 if (action == "openInfo") {

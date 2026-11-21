@@ -43,8 +43,8 @@ namespace TiaMcpServer.ModelContextProtocol
         =>_hmiInspection.ReadHmiScreenSnapshot(softwarePath,screenPath,maxDepth,maxNodes);
 
         [McpServerTool(Name="ListHmiScreenPaths"),
-                Description("[L2][HMI]List full screen group paths, including nested folders. Paths start with / and URI-escape each name segment. " +
-                "offset/limit paginate the list; exact paths disambiguate same-named screens.")]
+                Description("[L2][HMI]List full screen group paths, including nested folders. Paths start with /. Within each name, percent-encode " +
+                "%, /, backslash and ASCII controls (e.g. /Area%2F1/Main). offset/limit paginate the list. Exact paths disambiguate same-named screens.")]
         public CallToolResult ListHmiScreenPathsV4(string softwarePath,int offset=0,int limit=100)
             => HmiInspectionContract
                 .Run("ListHmiScreenPaths", false, false, () => ListHmiScreenPaths(softwarePath, offset, limit), offset: offset, pageSize: limit);

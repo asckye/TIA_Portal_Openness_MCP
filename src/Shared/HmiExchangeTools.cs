@@ -330,15 +330,31 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => ScreenImportPreview(McpServer
+            => ScreenImportPreview("ImportHmiScreen", softwarePath, folderPath, McpServer
                 .RunWritePreview("ImportHmiScreen", dryRun, new { softwarePath, folderPath, importPath, overwrite }, () => HmiExchangeContract
                     .Run("ImportHmiScreen", true, true, () => ImportHmiScreen(softwarePath, folderPath, importPath, overwrite)), expectedPlanHash,
                     expectedProjectFile));
 
-        private static CallToolResult ScreenImportPreview(CallToolResult result)
+        private CallToolResult ScreenImportPreview(string tool, string softwarePath, string folderPath, CallToolResult result)
         {
             if (result.StructuredContent?["data"] is JsonObject data && (bool?)data["dryRun"] == true && (bool?)result.StructuredContent["ok"] == true)
             {
+                if ((bool?)data["targetBound"] == true)
+                {
+                    var admission = HmiExchangeContract.Run(tool, false, true, () =>
+                    {
+                        _service.CheckScreenImportTarget(softwarePath, folderPath);
+                        return new ResponseMessage { Meta = ResponseMeta.Basic(DateTime.Now, true) };
+                    });
+                    if (admission.IsError == true) return admission;
+                    data["targetVerified"] = true;
+                    data["scope"] = "The bound Classic HMI software and destination screen folder were checked.";
+                }
+                else
+                {
+                    data.Remove("planHash");
+                    data["scope"] = "Bind a project and preview again to verify the Classic HMI destination folder.";
+                }
                 data["scope"] = (string?)data["scope"] + " The Classic panel screen size is checked when the import is applied.";
                 result.Content = new[] { new TextContentBlock { Text = V4Json.Serialize(result.StructuredContent) } };
             }
@@ -438,10 +454,28 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => McpServer
+        {
+            var result = McpServer
                 .RunWritePreview("ImportHmiConnection", dryRun, new { softwarePath, importPath, overwrite }, () => HmiExchangeContract
                     .Run("ImportHmiConnection", true, true, () => ImportHmiConnection(softwarePath, importPath, overwrite)), expectedPlanHash,
                     expectedProjectFile);
+            if (!dryRun || result.IsError == true) return result;
+            try
+            {
+                var document = XDocument.Load(importPath);
+                var objects = document.Root?.Elements().Select(e => e.Name.LocalName)
+                    .Where(name => name.StartsWith("Hmi.", StringComparison.Ordinal)).ToArray();
+                if (document.Root?.Name.LocalName == "Document" && objects?.Length > 0
+                    && objects.All(name => name == "Hmi.Communication.Connection")) return result;
+                return McpServer.V4Reject("ImportHmiConnection", new Error("Expected a Classic Hmi.Communication.Connection export.",
+                    McpServer.ArgumentDetails("ImportHmiConnection", "importPath")));
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Xml.XmlException)
+            {
+                return McpServer.V4Reject("ImportHmiConnection", new Error("Cannot read the connection XML: " + HostBehavior.SafeDiagnostic(error.Message),
+                    McpServer.ArgumentDetails("ImportHmiConnection", "importPath")));
+            }
+        }
 
         public ResponseMessage ImportHmiConnection(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
@@ -486,7 +520,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => ScreenImportPreview(McpServer
+            => ScreenImportPreview("ImportHmiScreensFromDirectory", softwarePath, folderPath, McpServer
                 .RunWritePreview("ImportHmiScreensFromDirectory", dryRun, new { softwarePath, folderPath, dir, regexName, overwrite }, () => HmiExchangeContract
                 .Run("ImportHmiScreensFromDirectory", true, true, () => ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite)),
                     expectedPlanHash, expectedProjectFile));

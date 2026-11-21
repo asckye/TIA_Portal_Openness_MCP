@@ -33,7 +33,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var screen = root["Screen"] as JsonObject ?? root["screen"] as JsonObject ?? new JsonObject();
             var screenOut = new JsonObject();
-            if (screen["Properties"] is JsonObject screenProps)
+            if (HmiTemplateJson.Get(screen, "BackColor") is JsonNode background)
+                screenOut["BackColor"] = background.DeepClone();
+            if (HmiTemplateJson.Get(screen, "Properties") is JsonObject screenProps)
             {
                 foreach (var prop in screenProps)
                 {
@@ -85,6 +87,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         item["font"] = new JsonObject { ["Size"] = fontSize.DeepClone() };
                     }
                 }
+
+                if (HmiTemplateJson.Get(node, "Font") is JsonObject font)
+                    item["font"] = font.DeepClone();
 
                 itemsOut.Add(item);
             }

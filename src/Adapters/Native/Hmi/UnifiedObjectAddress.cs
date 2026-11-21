@@ -31,8 +31,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var key = step.ContainsKey("key") ? step["key"]!.GetValue<string>() : "Name";
                     var name = step["name"]!.GetValue<string>();
-                    var matches = PlcGroupOperations.Items(target).Where(item => string.Equals(
-                        PlcGroupOperations.Get(item, key).ToString(), name, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
+                    var matches = PlcGroupOperations.Items(target).Where(item =>
+                    {
+                        if (item.GetType().GetProperty(key) == null)
+                            throw StepFailureStatus.UnsupportedByTarget("Selected collection item has no " + key + " property: " + item.GetType().Name);
+                        return string.Equals(PlcGroupOperations.Get(item, key).ToString(), name, StringComparison.OrdinalIgnoreCase);
+                    }).Take(2).ToArray();
                     if (matches.Length != 1) throw new PlcSoftwareException(matches.Length == 0 ? "NotFound" : "Ambiguous",
                         (matches.Length == 0 ? "Exact named object not found at " : "Ambiguous exact object at ") + property.Name + "/" + name)
                         { Data = { ["parameter"] = parameter } };

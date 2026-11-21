@@ -53,6 +53,19 @@ public sealed class UnifiedScriptModuleCreateTests : IDisposable, IUnifiedCodecs
     }
 
     [Fact]
+    public void Preview_discards_the_temporary_script_candidate()
+    {
+        string? directory = null;
+        ComposeUnifiedScriptPair = (path, name, code) => { directory = path; return UnifiedScriptFileCodec.ComposePair(path, name, code); };
+        var preview = Create(true);
+        Assert.NotNull(directory);
+        Assert.False(Directory.Exists(directory));
+        Assert.Equal("Preview", preview["status"]);
+        Assert.Null(preview["candidateDirectoryRelativeToTemp"]);
+        Assert.NotNull(preview["token"]);
+    }
+
+    [Fact]
     public void Missing_script_module_reports_the_exact_name_and_parameter()
     {
         var error = Assert.Throws<PlcSoftwareException>(() => UnifiedScriptAccess.Module(software, "Missing"));

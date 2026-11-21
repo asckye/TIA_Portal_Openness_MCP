@@ -50,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
 
                 var ok = data["ok"]?.GetValue<bool>() == true;
-                var exists = data["exists"]?.GetValue<bool>() == true;
+                var exists = data["libraryFiles"] is JsonArray { Count: > 0 };
                 data["packageComplete"] = ok;
                 data.Remove("ok");
                 return new ResponseJsonReport
@@ -59,7 +59,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = ok ? "Global library package offline analysis completed" : "Global library package offline analysis completed with findings",
                     Data = data,
                     Meta = exists ? ResponseMeta.Basic(DateTime.Now, true)
-                        : ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
+                        : ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false),
+                            ("nativeMessage", "No global library package found at the selected path."))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -192,15 +193,18 @@ namespace TiaMcpServer.ModelContextProtocol
                 var data = HmiTemplateReferenceAnalyzer.Analyze(templateDirectory, referenceProjectPath, referenceGlobalLibraryPath);
                 var ok = data["ok"]?.GetValue<bool>() == true;
                 var exists = Directory.Exists(templateDirectory);
+                bool missingLibrary = !string.IsNullOrWhiteSpace(referenceGlobalLibraryPath) && (bool?)data["referenceHints"]?["globalLibraryExists"] != true;
                 data["templatesFound"] = ok;
                 data.Remove("ok");
                 return new ResponseJsonReport
                 {
-                    Ok = exists,
-                    Message = ok ? "HMI template/reference offline analysis completed" : "HMI template/reference offline analysis completed with findings",
+                    Ok = exists && !missingLibrary,
+                    Message = missingLibrary ? "No global library package found at the selected reference path." : ok
+                        ? "HMI template/reference offline analysis completed" : "HMI template/reference offline analysis completed with findings",
                     Data = data,
-                    Meta = exists ? ResponseMeta.Basic(DateTime.Now, true)
-                        : ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
+                    Meta = exists && !missingLibrary ? ResponseMeta.Basic(DateTime.Now, true)
+                        : ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false),
+                            ("nativeMessage", !exists ? "Template directory not found." : "No global library package found at the selected reference path."))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -268,7 +272,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "BuildUnifiedHmiButtonActionScript"),
                 Description("[L2][HMI-Unified]Build a safe Unified HMI button action script from a high-level action recipe without connecting to TIA.")]
         public CallToolResult BuildUnifiedHmiButtonActionScriptV4(
-            [Description("actionKind: set-bit, reset-bit, toggle-bit, open-popup, goto-screen, confirm-write")] string actionKind,
+            [Description("actionKind: set-bit, reset-bit, toggle-bit, open-popup, goto-screen, confirm-write. goto-screen is refused until its runtime call " +
+                "is verified.")] string actionKind,
             [Description("eventType: HmiButtonEventType value, e.g. Down (press), Up (release), Tapped — NOT Pressed/Released")] string eventType,
             [Description("targetTag: target HMI tag for set/reset/toggle actions")] string targetTag = "",
             [Description("targetScreen: target screen for goto-screen actions")] string targetScreen = "",

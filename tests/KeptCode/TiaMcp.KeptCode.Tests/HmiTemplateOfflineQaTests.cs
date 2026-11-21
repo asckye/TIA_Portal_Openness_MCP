@@ -18,6 +18,43 @@ public sealed class HmiTemplateOfflineQaTests : IDisposable
     public HmiTemplateOfflineQaTests() => Directory.CreateDirectory(directory);
 
     [Fact]
+    public void Classic_package_validation_uses_English_for_policy_and_next_steps()
+    {
+        Write("Line_manifest.json", """{"packageName":"Line","files":[]}""");
+        var result = ClassicHmiMinimalPackageBuilder.ValidateFilesWithPlcSymbols(directory, """["DB.Status"]""");
+        foreach (var validation in new[] { result, ClassicHmiMinimalPackageBuilder.ValidateFiles(directory) })
+            foreach (var field in new[] { "safetyPolicy", "nextValidation" })
+                Assert.DoesNotMatch(@"[\p{IsCJKUnifiedIdeographs}]", validation[field]!.ToString());
+    }
+
+    [Fact]
+    public void Dashboard_conversion_preserves_background_and_title_font()
+    {
+        var file = Path.Combine(RepositoryRoot, "templates/standards/tiamcp.basic/sources/hmi/unified_basic_dashboard_1024x768.json");
+        var design = HmiTemplateDesignJsonBuilder.BuildApplyDesign(file, 800, 480);
+        Assert.Equal("0xFFF4F7FB", (string?)design["screen"]?["BackColor"]);
+        var title = design["items"]!.AsArray().Single(row => (string?)row!["name"] == "Title");
+        Assert.Equal(23, (int?)title!["font"]?["Size"]);
+    }
+
+    [Fact]
+    public void Template_reference_exposes_required_bindings_and_a_missing_reference_package()
+    {
+        Write("screen.json", """{"screen":{"name":"Overview"},"items":[{"Name":"Lamp","binding":{"plcSymbol":"DB.Ready","direction":"read"}}]}""");
+        var result = HmiTemplateReferenceAnalyzer.Analyze(directory, "", directory);
+        Assert.False((bool)result["referenceHints"]!["globalLibraryExists"]!);
+        Assert.Equal(1, (int)result["templates"]![0]!["requiredTagCount"]!);
+    }
+
+    [Fact]
+    public void Native_dynamizations_and_template_bindings_use_boolean_read_only_flags()
+    {
+        Write("screen.json", """{"Screen":{"Name":"Panel"},"Items":[{"Name":"Lamp","Dynamizations":{"Color":{"Tag":"Ready","ReadOnly":"true"}}}]}""");
+        var row = HmiTemplateReferenceAnalyzer.Analyze(directory, "", "")["templates"]![0]!["dynamizations"]![0]!;
+        Assert.True(row["readOnly"]!.GetValue<bool>());
+    }
+
+    [Fact]
     public void Reference_analysis_counts_shipped_screens_and_plc_bindings()
     {
         var folder = Path.Combine(RepositoryRoot, "templates/standards/tiamcp.basic/sources/hmi");

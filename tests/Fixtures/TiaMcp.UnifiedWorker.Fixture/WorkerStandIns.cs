@@ -118,6 +118,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         public object GetHmiTagTables(params object?[] args) => session.Invoke();
         public object GetHmiTags(params object?[] args) => session.Invoke();
         public object ImportHmiConnection(params object?[] args) => session.Invoke();
+        public void CheckScreenImportTarget(string softwarePath, string folderPath) => session.Invoke();
         public object ImportHmiScreen(params object?[] args) => session.Invoke();
         public object ImportHmiScreensFromDirectory(params object?[] args) => session.Invoke();
         public object ImportHmiTagTable(params object?[] args) => session.Invoke();

@@ -114,6 +114,23 @@ public sealed class WriteRefusalTests
         Assert.Equal("The type has an InWork version.", reply.Meta["nativeMessage"]);
     }
 
+    [Fact]
+    public void Tag_snapshot_exports_to_an_absolute_session_output_directory()
+    {
+        string? destination = null;
+        var fingerprint = UnifiedExchangeLogic.ExportFingerprint(directory => {
+            destination = directory.ToString();
+            var file = new FileInfo(Path.Combine(directory.FullName, "Tags.hmi.yml"));
+            File.WriteAllText(file.FullName, "Tags:\n  - Name: Counter\n");
+            return new[] { file };
+        });
+        Assert.NotNull(destination);
+        Assert.True(Path.IsPathFullyQualified(destination));
+        Assert.Equal(Path.GetFullPath(TiaOpenness.Shared.DataLocations.Current.OutputRoot), Directory.GetParent(destination)!.FullName);
+        Assert.NotEmpty(fingerprint);
+        Assert.False(Directory.Exists(destination));
+    }
+
     [Theory, InlineData("unchanged"), InlineData("overwritten"), InlineData("missingSideFile"), InlineData("beforeFailed"),
         InlineData("afterFailed"), InlineData("onlySideFiles")]
     public void Tag_import_needs_the_same_complete_table_export_after_a_native_failure(string outcome)

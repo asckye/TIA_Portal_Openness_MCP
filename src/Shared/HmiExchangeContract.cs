@@ -37,7 +37,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     : cause is PortalException portal ? Rejection(tool, portal.Code.ToString(), portal.Message,
                         parameter: TiaOpenness.Shared.HostFailurePolicy.Parameter(portal))
                     : cause is NotSupportedException ? Rejection(tool, "NotSupportedOnVersion", cause.Message)
-                    : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", parameter: argument.ParamName)
+                    : cause is ArgumentException argument ? Rejection(tool, "InvalidParams", argument.Message, parameter: argument.ParamName)
                     : HostBehavior.KnownAdapterRefusal(ex);
                 var outcome = rejection != null ? Outcome.RejectedBeforeOperation : writes ? Outcome.Unknown : Outcome.ReadFailed;
                 if (cause is TiaMcp.Adapters.Contracts.AdapterPreconditionException && rejection?.Details is PreconditionFailedDetails)
@@ -60,7 +60,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "NotFound" ? McpServer.MissingTargetDetails(tool, parameter, evidence)
                 : status == "NotSupportedOnVersion" ? new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "HMI exchange", null) : null;
             return details == null ? null
-                : new Error(status == "NotSupportedOnVersion" && message != null ? message : "The HMI request could not start.", details);
+                : new Error(HostBehavior.SafeDiagnostic(message ?? evidence?["nativeMessage"]?.ToString()) ?? "The HMI request could not start.", details);
         }
 
         internal static CallToolResult Map(string tool, object response, bool writes, bool current)
@@ -132,10 +132,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 if ((string?)evidence["capability"] == "unsupported")
                 {
                     outcome = Outcome.RejectedBeforeOperation;
-                error = Rejection(tool, "NotSupportedOnVersion");
+                    error = Rejection(tool, "NotSupportedOnVersion", evidence: evidence);
                 }
                 if (outcome == Outcome.RejectedBeforeOperation && error == null)
-                    error = new Error("The HMI request was rejected before the operation.", new PreconditionFailedDetails("HMI operation prerequisites", null));
+                    error =
+                        new Error(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? "The HMI request was rejected before the operation.",
+                        new PreconditionFailedDetails("HMI operation prerequisites", null));
             }
             else outcome = Outcome.Succeeded;
 
@@ -161,7 +163,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     error = new Error("Some HMI operations did not complete.", succeeded > 0 && failed > 0
                         ? new PartialFailureDetails(succeeded, failed, 0) : new PartialFailureDetails(0, 0, 0));
                 }
-                else if (failed > 0) outcome = outcomes.All(o => o == "rejected-before-operation") ? Outcome.RejectedBeforeOperation : Outcome.Failed;
+                else if (failed > 0)
+                {
+                    outcome = outcomes.All(o => o == "rejected-before-operation") ? Outcome.RejectedBeforeOperation : Outcome.Failed;
+                    if (tool == "ImportHmiScreensFromDirectory" && outcome == Outcome.RejectedBeforeOperation
+                        && rows[0]?["evidence"]?["missingFolderPath"] is JsonValue missing && missing.TryGetValue<string>(out var folder)
+                        && rows.All(row => (string?)row?["evidence"]?["missingFolderPath"] == folder))
+                        error = new Error("HMI folder not found: " + folder, new NotFoundDetails(folder));
+                }
                 if (failed > 0 || items.Any(i => (string?)i!["result"]!["meta"]!["completeness"] == "partial")) incomplete = true;
             }
             else if ((data["failed"] as JsonArray)?.Count > 0)

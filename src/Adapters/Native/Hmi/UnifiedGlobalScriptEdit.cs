@@ -49,6 +49,54 @@ namespace TiaMcp.Adapters.Native.Hmi
                 throw new NotSupportedException("Native returned paths do not match the exported JS/YAML pair.");
             return pair;
         }
+        private sealed class ScriptEditFiles : IDisposable
+        {
+            private readonly HmiObject meta;
+            private readonly string work;
+            private string DirectoryPath { get; }
+
+            internal ScriptEditFiles(string work, HmiObject meta)
+            {
+                this.meta = meta;
+                this.work = work;
+                DirectoryPath = Path.Combine(work, "candidate");
+            }
+
+            internal string CreateCandidate()
+            {
+                Directory.CreateDirectory(DirectoryPath);
+                return DirectoryPath;
+            }
+
+            public void Dispose()
+            {
+                bool attempted = meta["importAttempted"] is true;
+                if (attempted && meta["verificationSuccess"] is not true) return;
+                try
+                {
+                    if (!attempted)
+                    {
+                        if (Directory.Exists(work)) Directory.Delete(work, true);
+                        meta.Remove("backupDirectory");
+                        meta.Remove("backupRetention");
+                    }
+                    else
+                    {
+                        Directory.Delete(DirectoryPath, true);
+                        if (!Directory.EnumerateFileSystemEntries(work).Any()) Directory.Delete(work);
+                    }
+                }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                {
+                    meta["candidateRetention"] = "Candidate cleanup failed. Inspect the local script edit directory.";
+                    return;
+                }
+                meta.Remove("candidateDirectory");
+                meta.Remove("candidateDirectoryRelativeToTemp");
+                meta.Remove("candidateRetention");
+            }
+        }
+
         private static object RequireAbsent(Func<object> resolveHmi, string moduleName, out int count)
         {
             var scripts = UnifiedScriptAccess.Scripts(resolveHmi());
@@ -80,7 +128,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["syntaxValidation"] = "Esprima parse only; no script execution or TIA SyntaxCheck. Runtime references remain unverified.";
             var relativeWork = Path.Combine("TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
             var work = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, relativeWork);
-            var candidate = Path.Combine(work, "candidate"); Directory.CreateDirectory(candidate);
+            using var files = new ScriptEditFiles(work, meta);
+            string candidate = files.CreateCandidate();
             var pair = UnifiedCodecs.ComposePair(candidate, moduleName, scriptCode);
             meta["candidateDirectory"] = "<path>";
             meta["candidateDirectoryRelativeToTemp"] = Path.Combine(relativeWork, "candidate");
@@ -178,6 +227,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             meta["syntaxValidation"] = "Esprima parse only; no script execution or TIA SyntaxCheck. Runtime references remain unverified.";
             if (!dryRun && string.IsNullOrWhiteSpace(expectedToken)) throw new InvalidOperationException("A preview previewToken is required before import.");
             var work = Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "TiaMcpServer", "GlobalScriptEdits", Guid.NewGuid().ToString("N"));
+            using var editFiles = new ScriptEditFiles(work, meta);
             var backup = Path.Combine(work, "before");
             meta["backupDirectory"] = backup;
             meta["backupRetention"] =
@@ -203,7 +253,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["status"] = "Unchanged"; meta["operationSuccess"] = true; meta["verificationSuccess"] = true;
                 return "Exact module already contains the requested text; no import performed.";
             }
-            var candidate = Path.Combine(work, "candidate"); Directory.CreateDirectory(candidate);
+            string candidate = editFiles.CreateCandidate();
             File.WriteAllBytes(Path.Combine(candidate, before.YamlName), before.Yaml);
             File.WriteAllBytes(Path.Combine(candidate, before.JsName), candidateBytes);
             ReadPair(candidate, moduleName);

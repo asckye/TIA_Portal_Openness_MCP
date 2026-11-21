@@ -52,7 +52,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ManageSivarcRuleContainer"),
                 Description("[L2][HMI][WRITE] SiVArc rule folders and rule tables of one family: kind folder (*RuleFolderComposition.Create / Delete, empty " +
                 "folders only) or table (*RuleTableComposition.Create(name), createFromType with typePath + typeVersion of a *RuleTableType in the project " +
-                "or an open global library (libraryName), Delete of non-default tables). path is Folder/Sub/Name relative to the family's system folder; " +
+                "or an open global library (libraryName), Delete of empty non-default tables). path is Folder/Sub/Name relative to the family root. " +
                 "read returns the typed row. delete needs confirmDelete=true when dryRun=false. Default preview; real edits need the SiVArc licence; never " +
                 "generates or saves. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageSivarcRuleContainerV4(
@@ -65,12 +65,17 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("typeVersion: version string of the rule table type ('' = default).")] string typeVersion="",
             bool confirmDelete=false,
             bool dryRun=true)
-            => LibraryToolContract.Run("ManageSivarcRuleContainer", !dryRun && !(action == "read"), true, () =>
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return McpServer.V4TargetReject("ManageSivarcRuleContainer", new Error("Supply the container path relative to the SiVArc family root.",
+                    McpServer.ArgumentDetails("ManageSivarcRuleContainer", nameof(path))), true);
+            return LibraryToolContract.Run("ManageSivarcRuleContainer", !dryRun && action != "read", true, () =>
             {
                 LibraryToolContract
                     .Check(() => { SivarcLogic.ValidateContainerRequest(category, kind, path, action, typePath, typeVersion, confirmDelete, dryRun); });
                 return ManageSivarcRuleContainer(category, kind, path, action, libraryName, typePath, typeVersion, confirmDelete, dryRun);
             });
+        }
 
         internal ResponseMessage ManageSivarcRuleContainer(
             string category,
@@ -259,7 +264,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][HMI][WRITE] Preview or apply a SiVArc layout export or import on a classic WinCC or Unified screen. " +
                 "Both actions preview by default. Export writes a new YML file on apply and verifies size and SHA-256. " +
                 "Import replaces the screen content with the file's layouts. Preview lists current items at risk. " +
-                "Apply requires allowRemoveScreenItems when items exist or cannot be read, and reports removed and added items when readable. " +
+                "Classic import always requires allowRemoveScreenItems and provides no item diff. " +
+                "Unified import requires consent when items exist or cannot be read. " +
                 "screenName accepts an exact name or /Group/Screen path. Requires V21 and the SiVArc option. No project save. Native acceptance pending.")]
         public CallToolResult ManageSivarcScreenLayoutV4(
             string softwarePath,

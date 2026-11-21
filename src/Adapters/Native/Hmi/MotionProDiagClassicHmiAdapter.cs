@@ -72,12 +72,12 @@ namespace TiaMcp.Adapters.Native.Hmi
             var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));
             if (!file.Exists) throw new FileNotFoundException("Import input not found.");
             var options = (ImportOptions)HmiScalar.ConvertValue(HmiValues.Value(importOptions), typeof(ImportOptions))!;
-            Logic.RequireImportConfirmation(options.ToString(), confirmDelete);
+            if (writing) Logic.RequireImportConfirmation(options.ToString(), confirmDelete);
             var signature = new[] { typeof(FileInfo), typeof(ImportOptions) };
             if (composition.GetType().GetMethod("Import", signature) == null)
                 throw new NotSupportedException("Native Import(FileInfo, ImportOptions) unavailable on " + composition.GetType().FullName + ".");
             meta["importOptions"] = options.ToString();
-            HmiExchangePolicy.BeforeImport(composition, filePath, objectType, options == ImportOptions.Override);
+            HmiExchangePolicy.BeforeImport(composition, filePath, objectType, options == ImportOptions.Override, "importOptions=Override");
             if (!writing) return "Native import preview; no changes.";
             meta["mayHaveChanged"] = true;
             var result = PlcGroupOperations.Call(composition, "Import", signature, file, options);
@@ -88,7 +88,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         private static string ClassicDelete(object target, object composition, string name, bool confirmDelete, HmiObject meta, bool writing)
         {
-            if (!confirmDelete) throw new ArgumentException("confirmDelete=true is required for delete.");
+            if (writing && !confirmDelete) throw new ArgumentException("confirmDelete=true is required for delete.", nameof(confirmDelete));
             if (target.GetType().GetMethod("Delete", Type.EmptyTypes) == null)
                 throw new NotSupportedException("Native Delete unavailable on " + target.GetType().FullName + ".");
             if (!writing) return "Native deletion preview; no changes.";
@@ -209,7 +209,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                         if (script is global::Siemens.Engineering.Hmi.RuntimeScripting.VBScript deletable && scripts is global::Siemens.Engineering.Hmi
                                 .RuntimeScripting.VBScriptComposition typedScripts)
                         {
-                            if (!confirmDelete) throw new ArgumentException("confirmDelete=true is required to delete a VB script.");
+                            if (writing && !confirmDelete)
+                                throw new ArgumentException("confirmDelete=true is required to delete a VB script.", nameof(confirmDelete));
                             if (!writing) return "VB script deletion preview; no changes.";
                             meta["mayHaveChanged"] = true; deletable.Delete(); meta["apiCallSuccess"] = true;
                             if (typedScripts.Find(name) != null) throw new InvalidOperationException("VB script remains after Delete.");
@@ -341,7 +342,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 _session.Attributes(attributesJson, false); Logic.RequireName(entryName, "entryName");
                 var entry = HmiDynamic.FindByName(composition, entryName);
                 meta["before"] = ClassicRow(entry);
-                if (!confirmDelete) throw new ArgumentException("confirmDelete=true is required to delete an entry.");
+                if (writing && !confirmDelete) throw new ArgumentException("confirmDelete=true is required to delete an entry.", nameof(confirmDelete));
                 if (!HmiDynamic.CanDelete(entry)) throw new NotSupportedException("Native Delete is not advertised for this entry type.");
                 if (!writing) return "List entry deletion preview; no changes.";
                 meta["mayHaveChanged"] = true;
@@ -355,6 +356,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         public HmiMessage ReadClassicHmiGlobalization(string softwarePath, int offset = 0, int limit = 100)
             => RunTool("GetClassicHmiGlobalization", meta => {
                 Logic.RequirePagination(offset, limit);
+                _session.ExactClassicHmi(softwarePath);
                 var graphics = _session.ClassicGraphics();
                 meta["softwarePath"] = softwarePath; meta["provider"] = "Project graphics";
                 ClassicPage(meta, PlcGroupOperations.Items(graphics).ToArray(), offset, limit, g => ClassicRow(g));

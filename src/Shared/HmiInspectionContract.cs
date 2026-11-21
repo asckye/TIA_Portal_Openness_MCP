@@ -54,10 +54,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool == "ListObjectChildren")
                 return new Error(HostBehavior.SafeDiagnostic(message ?? evidence?["nativeMessage"]?.ToString())
                     ?? "The collection could not be read. Check the target and collectionProperty.", details);
-            return new Error(status == "NATIVE_OPERATION_FAILED" ? HostBehavior.SafeDiagnostic((string?)evidence?["nativeMessage"] ?? message)
-                    ?? "Native metadata could not be read."
-                : (status == "NotSupportedOnVersion" || status == "PRECONDITION_FAILED") && message != null ? message
-                : "The request could not be admitted; inspect the retained evidence.", details);
+            var reason = status is "NotFound" or "NOT_FOUND" or "NotSupportedOnVersion" or "PRECONDITION_FAILED" or "NATIVE_OPERATION_FAILED"
+                ? HostBehavior.SafeDiagnostic(message ?? evidence?["nativeMessage"]?.ToString()) : null;
+            return new Error(reason ?? (status == "NATIVE_OPERATION_FAILED" ? "Native metadata could not be read."
+                : "The request could not be admitted; inspect the retained evidence."), details);
         }
 
         private static Error Failure(bool writes, IReadOnlyDictionary<string, JsonElement>? evidence = null, string? tool = null)
@@ -107,6 +107,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.Partial; error = new Error("The script was imported but its readback differs.", new PartialFailureDetails(0, 0, 0)); }
             else if (!issued && (error = Rejection(tool, status, evidence: evidence)) != null) outcome = Outcome.RejectedBeforeOperation;
             else if (success == true) outcome = Outcome.Succeeded;
+            else if (tool == "GetUnifiedFaceplateInstance" && !writes && evidence["failures"] is JsonArray failures
+                && failures.OfType<JsonObject>().Select(row => HostBehavior.SafeDiagnostic(row["reason"]?.ToString()))
+                    .FirstOrDefault(r => r != null) is string reason)
+            {
+                outcome = Outcome.ReadFailed;
+                error = new Error(reason, new NativeOperationFailedDetails(null, reason, new Dictionary<string, JsonElement>()));
+            }
             else if (writes && Flag(evidence, "mayHaveChanged") == false)
             {
                 outcome = Outcome.RejectedBeforeOperation; error =
@@ -134,6 +141,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 int? total = Number(evidence, "total") ?? Number(evidence, "expectedCount");
                 if (total >= 0) paging = McpServer.OffsetPage(offset.Value, pageSize, total.Value);
             }
+            if (tool == "GetUnifiedGlobalScript" && evidence["records"] is JsonArray scriptRows)
+                foreach (var analysis in scriptRows.OfType<JsonObject>().Where(row => (string?)row["kind"] == "scriptAnalysis"))
+                {
+                    analysis.Remove("rawText");
+                    foreach (var field in new[] { "functions", "globalDefinitions" })
+                        if (analysis[field] is JsonArray nodes)
+                            foreach (var node in nodes.OfType<JsonObject>()) { node.Remove("rawText"); node.Remove("body"); }
+                    if (analysis.ContainsKey("globalDefinitionsBasis"))
+                        analysis["globalDefinitionsBasis"] = "Offsets refer to the nativeFile record with the same path.";
+                }
             Clean(evidence);
             var nativeFailure = NativeResultState.FindUnsuccessful(evidence, tool);
             if (nativeFailure != null && NativeResultState.TryUnsuccessful(nativeFailure, writes, out var nativeOutcome, out var nativeError, tool))

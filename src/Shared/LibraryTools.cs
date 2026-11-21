@@ -281,13 +281,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 "chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic " +
                 "validity/dependency impact determined by native TIA. Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ManageLibraryTypeVersionV4(
-            string typePath,
-            string version,
+            [Description("Exact library type path, including its type folders.")] string typePath,
+            [Description("Exact existing library type version in Major.Minor.Build form.")] string version,
             [Description("action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | " +
                 "findInstances | instantiate.")] string action,
             string libraryName="",
             [Description("newVersion: version string of the new type version, e.g. '1.0.1'.")] string newVersion="",
-            [Description("dependenciesMode: how dependent types are handled by the action ('' = default).")] string dependenciesMode="",
+            [Description("dependenciesMode: native dependency mode required for release. Leave empty for other actions.")] string dependenciesMode="",
             [Description("author: author text of the version.")] string author="",
             [Description("comment: comment text.")] string comment="",
             string targetSoftwarePath="",
@@ -520,9 +520,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ImportMasterCopyFromGlobalLibrary"),
                 Description("[L2][HMI-Library] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document " +
                 "import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen " +
-                "item is modified. Current native policy; V4 native acceptance is pending." +
-            " Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
-                "from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain.")]
+                "item is modified. Preview and apply both report this refusal.")]
         public CallToolResult ImportMasterCopyFromGlobalLibraryV4(
             [Description("libraryPath: full path to .al21 file or its containing folder")] string libraryPath,
             [Description("masterCopyName: exact or suffix path/name from ProbeGlobalLibrary MasterCopies readback")] string masterCopyName,
@@ -531,18 +529,12 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("importedItemName: optional expected item name after import; empty means use masterCopyName leaf")] string importedItemName = "",
             [Description("left: retained input; master-copy screen-item instantiation is refused")] int left = 0,
             [Description("top: retained input; master-copy screen-item instantiation is refused")] int top = 0,
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
-            [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
-            [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
-                "dryRun=false.")] string expectedProjectFile =
-                "")
-            => McpServer
-                .RunWritePreview("ImportMasterCopyFromGlobalLibrary", dryRun, new {
-                    libraryPath, masterCopyName, hmiSoftwarePath, screenName, importedItemName, left, top }, () => LibraryToolContract
-                    .Run("ImportMasterCopyFromGlobalLibrary", true, true, () =>
-            {
-                return ImportMasterCopyFromGlobalLibrary(libraryPath, masterCopyName, hmiSoftwarePath, screenName, importedItemName, left, top);
-            }), expectedPlanHash, expectedProjectFile);
+            [Description("Both preview and apply report the native capability refusal.")] bool dryRun = true,
+            [Description("No plan hash is issued for this operation.")] string expectedPlanHash = "",
+            [Description("Retained project identity input for apply.")] string expectedProjectFile = "")
+            => McpServer.V4TargetReject("ImportMasterCopyFromGlobalLibrary",
+                new Error(TiaMcp.Adapters.Contracts.LibraryCapabilities.ScreenItemMasterCopyRefusal,
+                    new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, "ImportMasterCopyFromGlobalLibrary", null)), true);
 
         internal ResponseGlobalLibraryImport ImportMasterCopyFromGlobalLibrary(
             string libraryPath,

@@ -61,7 +61,8 @@ namespace TiaMcpServer.Siemens.Services
                     _ when code == nameof(NotSupportedException) => new NotSupportedException(message),
                     _ => throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure(message, reply)
                 };
-                error.Data["foundationKnownNoMutation"] = true;
+                if (error is AdapterPreconditionException or ArgumentException or NotSupportedException || code == "NotFound")
+                    error.Data["foundationKnownNoMutation"] = true;
                 throw error;
             }
             return reply["Value"] == null ? default! : JsonSerializer.Deserialize<T>(reply["Value"]!.ToJsonString())!;

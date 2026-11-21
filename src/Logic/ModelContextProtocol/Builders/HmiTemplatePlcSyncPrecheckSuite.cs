@@ -162,10 +162,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["status"] = blocked ? "blocked" : noBindings ? "no-bindings" : "ready",
                     ["gate"] = blocked ? "do-not-apply" : noBindings ? "no-bindings-to-check" : "ready-for-temporary-project-validation",
                     ["note"] = blocked
-                        ? "模板仍可用于设计分析，但不能执行 HMI 变量创建、动态化绑定或事件写入。"
+                        ? "The template can be analyzed. Resolve the reported bindings before creating HMI tags, binding dynamizations or writing events."
                         : noBindings
                             ? "No RequiredTags are declared and no action bindings are missing; there are no bindings to check offline."
-                            : "离线符号预检通过，下一步仍需临时 TIA 工程导入/读回/诊断验证。"
+                            : "The offline symbol check passed. Verify the import, readback and diagnostics in a temporary TIA project."
                 });
             }
 

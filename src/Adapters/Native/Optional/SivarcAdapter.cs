@@ -258,7 +258,12 @@ namespace TiaMcp.Adapters.Native.Optional
                         throw new InvalidOperationException("The default rule table cannot be deleted.");
                     if (kind == "folder"
                             && (meta["before"]!.Field("tables")!.Array().Count > 0 || meta["before"]!.Field("folderCount")!.OptionalValue<int>() > 0))
-                        throw new InvalidOperationException("Nonempty rule folder deletion refused; delete its tables and sub-folders first.");
+                        throw AdapterPreconditionException
+                            .Failed("Nonempty rule folder: " + path + ". Delete its tables and sub-folders first.", "target-not-empty", nameof(path));
+                    if (kind == "table"
+                        && (meta["before"]!.Field("ruleCount")!.OptionalValue<int>() > 0 || meta["before"]!.Field("groupCount")!.OptionalValue<int>() > 0))
+                        throw AdapterPreconditionException.Failed("Nonempty rule table: " + path + ". Delete its rules and groups first.",
+                            "target-not-empty", nameof(path));
                     if (!write) return "Delete preview of an empty SiVArc rule " + kind + "; nothing changed.";
                     meta["mayHaveChanged"] = true; SivarcDelete(existing);
                     meta["verifiedAbsent"] = EngineeringGroupOperations

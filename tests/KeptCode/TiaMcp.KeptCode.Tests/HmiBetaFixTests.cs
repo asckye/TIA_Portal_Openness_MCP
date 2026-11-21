@@ -78,6 +78,48 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Equal("NOT_FOUND", (string?)body["error"]?["code"]);
         }
 
+        [Theory, InlineData(true, false), InlineData(false, true)]
+        public void Applied_button_action_preserves_child_messages_and_mutation_evidence(bool ensureChanged, bool setChanged)
+        {
+            var response = new TiaMcpServer.ModelContextProtocol.ResponseMessage { Meta = new JsonObject {
+                ["operationSuccess"] = true, ["mayHaveChanged"] = false,
+                ["ensureMeta"] = new JsonObject { ["operationSuccess"] = true, ["mayHaveChanged"] = ensureChanged },
+                ["setMeta"] = new JsonObject { ["operationSuccess"] = true, ["mayHaveChanged"] = setChanged },
+                ["ensureMessage"] = "Button event handler exists.", ["setMessage"] = "Script verified."
+            } };
+            var body = TiaMcpServer.ModelContextProtocol.UnifiedHmiContract.Map("EnsureUnifiedHmiButtonAction", response, true, true).StructuredContent!;
+            var evidence = body["data"]!["evidence"]!;
+            Assert.True((bool?)evidence["mayHaveChanged"]);
+            Assert.Equal("Button event handler exists.", (string?)evidence["ensureMessage"]);
+            Assert.Equal("Script verified.", (string?)evidence["setMessage"]);
+        }
+
+        [Fact]
+        public void Missing_connection_identifies_the_supported_creation_workflow()
+        {
+            var error = Assert.Throws<PlcSoftwareException>(() =>
+                HmiExchangePolicy.UnifiedTagConnection(Array.Empty<TagConnection>(), "CPU", "Line"));
+            Assert.Contains("Create the connection in TIA Portal", error.Message);
+            Assert.DoesNotContain("can inspect existing connections", error.Message);
+        }
+
+        [Fact]
+        public void Slidein_import_uses_the_exported_side_as_its_identity()
+        {
+            string file = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllText(file, "<Document><Hmi.Screen.ScreenSlidein ID='0'><AttributeList><SlideinType>Left</SlideinType>"
+                    + "</AttributeList></Hmi.Screen.ScreenSlidein></Document>");
+                var composition = new[] { new { SlideinType = "Left" } };
+                var exists = Assert.Throws<PlcSoftwareException>(() =>
+                    HmiExchangePolicy.BeforeImport(composition, file, "Hmi.Screen.ScreenSlidein", false));
+                Assert.Equal("InvalidState", exists.Code);
+                HmiExchangePolicy.BeforeImport(composition, file, "Hmi.Screen.ScreenSlidein", true);
+            }
+            finally { File.Delete(file); }
+        }
+
         public sealed class BoundTag
         {
             public string PlcName => "DerivedFromConnection";

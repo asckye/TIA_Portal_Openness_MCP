@@ -109,7 +109,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var groups = Get(current, i == 0 ? rootGroups : rootGroups == "Folders" ? "Folders" : "Groups")
                     ?? throw new PlcSoftwareException("NotFound", "HMI folder collection unavailable: " + path);
                 current = Find(groups, ObjectPathEncoding.DecodeSegment(parts[i]))
-                    ?? throw new PlcSoftwareException("NotFound", "HMI folder not found: " + path);
+                    ?? throw new PlcSoftwareException("NotFound", "HMI folder not found: " + path) { Data = { ["missingFolderPath"] = path } };
             }
             return current;
         }
@@ -185,14 +185,18 @@ namespace TiaMcp.Adapters.Native.Hmi
             { throw new InvalidOperationException(error.InnerException.GetType().FullName + ": " + error.InnerException.Message, error.InnerException); }
         }
 
-        internal static void BeforeImport(object collection, string path, string objectType, bool overwrite)
+        internal static void BeforeImport(object collection, string path, string objectType, bool overwrite,
+            string replaceOption = "overwrite=true")
         {
             // Read the exported identities, never infer object names from the filename.
             var document = XDocument.Load(path);
+            bool slidein = objectType == "Hmi.Screen.ScreenSlidein";
+            string identity = slidein ? "SlideinType" : "Name";
             var names = document.Descendants().Where(e => e.Name.LocalName == objectType)
                 .Select(e => e.Elements().SingleOrDefault(a => a.Name.LocalName == "AttributeList")?
-                    .Elements().SingleOrDefault(a => a.Name.LocalName == "Name")?.Value).ToArray();
-            if (names.Length == 0 || names.Any(string.IsNullOrWhiteSpace))
+                    .Elements().SingleOrDefault(a => a.Name.LocalName == identity)?.Value).ToArray();
+            if (names.Length == 0 || names.Any(string.IsNullOrWhiteSpace)
+                || slidein && names.Any(n => n is not ("Top" or "Bottom" or "Left" or "Right")))
                 throw new PlcSoftwareException("InvalidParams", "Cannot verify the import target identities for " + objectType
                         + ". Use an official exported XML file.");
             if (names.Any(n => n!.IndexOfAny(new[] { '/', '\\' }) >= 0))
@@ -201,9 +205,9 @@ namespace TiaMcp.Adapters.Native.Hmi
                         "/Group/Sub; do not put /Group/Sub/Table in the XML Name.");
             if (!overwrite)
                 foreach (var name in names)
-                    if (Find(collection, name!) != null)
+                    if (slidein ? Items(collection).Any(item => Get(item, identity)?.ToString() == name) : Find(collection, name!) != null)
                         throw new PlcSoftwareException("InvalidState", "HMI import target already exists: " + name
-                                + ". Set overwrite=true explicitly to replace it.");
+                                + ". Set " + replaceOption + " explicitly to replace it.");
         }
 
         internal static void WriteScalars(object target, IDictionary<string, object?> changes, Action beforeWrite)
@@ -241,7 +245,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
         }
 
-        private static string NormalizeScriptLines(string source) => source.Replace("\r\n", "\n").Replace('\r', '\n');
+        private static string NormalizeScriptLines(string source) => Regex.Replace(source, "\r\n?", "\n", RegexOptions.CultureInvariant);
 
         internal static void UpdateScript(object script, string code, string? globals, bool? async, Action beforeWrite)
         {
@@ -304,8 +308,8 @@ namespace TiaMcp.Adapters.Native.Hmi
 
         internal static string UnifiedTagConnection(object connections, string expectedPartner, string connectionName)
         {
-            const string Guidance = "Configure it in TIA Portal (Devices & networks) by creating the connection for the PLC partner. " +
-                "Verify it with EnsureUnifiedHmiConnection. ManageUnifiedEngineeringObject can inspect existing connections.";
+            const string Guidance = "Create the connection in TIA Portal for the PLC partner. Configure it in TIA Portal under Devices & networks. " +
+                "Verify it with EnsureUnifiedHmiConnection. ManageUnifiedEngineeringObject supports deletion of existing connections.";
             object connection;
             if (!string.IsNullOrWhiteSpace(connectionName))
                 connection = Find(connections, connectionName)

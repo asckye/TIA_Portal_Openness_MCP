@@ -20,12 +20,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][HMI][READ] Exact SiVArc rule category and property-only path; live scalar pagination with schema, complex values excluded. " +
                 "Native behaviorPolicy=current; V4 native acceptance is pending. No generation.")]
         public CallToolResult ListSivarcRules(string category, PropertyStep[] objectPath = null!, int offset=0, int limit=100)
-            => OptionalPackageContract.Run("ListSivarcRules", false, () =>
+        {
+            if (Array.IndexOf(SivarcLogic.Categories, category) < 0)
+                return McpServer.V4TargetReject("ListSivarcRules", new Error("Select a declared SiVArc rule category.",
+                    new InvalidArgumentDetails("category", SivarcLogic.Categories)), true);
+            return OptionalPackageContract.Run("ListSivarcRules", false, () =>
             {
                 string path = V4Json.Serialize(objectPath ?? Array.Empty<PropertyStep>());
                 EngineeringObjectPath.Parse(path);
                 return _optionalEngineering.ReadSiVArcRules(category, path, offset, limit);
             }, offset, limit);
+        }
         [McpServerTool(Name="ManageSivarcRule"),
                 Description("[L2][HMI][WRITE] Native SiVArc rule/folder/table composition create/update/delete with exact collection path and name. Nonempty " +
                 "container deletion refused. Native behaviorPolicy=current; V4 native acceptance is pending. Default preview; no " +

@@ -42,7 +42,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     || (data["ScriptCode"]?.ToString()==""
                         && !HmiExchangePolicy.EventDefinitionHasCode(data["GlobalDefinitionAreaScriptCode"]?.ToString()));
                 meta["empty"]=empty;
-                if(onlyIfEmpty&&!empty) throw new PlcSoftwareException("InvalidState","Event contains script code; deletion refused by onlyIfEmpty.");
+                if(onlyIfEmpty&&!empty) throw AdapterPreconditionException
+                    .Failed("Event contains script code; deletion refused by onlyIfEmpty.", "event-not-empty", nameof(onlyIfEmpty));
                 if(dryRun)return "Preview only; event has not been deleted.";
                 HmiExactAccess.RequireToken(expectedToken,token);
                 meta["mayHaveChanged"]=true;
@@ -98,7 +99,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["screens"]=new HmiArray(screens.Select(x=>HmiValues.Value(HmiExactAccess.Get(x,"Name")?.ToString())).ToArray());
                 meta["groups"]=new HmiArray(groups.Select(x=>HmiValues.Value(HmiExactAccess.Get(x,"Name")?.ToString())).ToArray());
                 meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
-                if(screens.Count!=0||groups.Count!=0)throw new PlcSoftwareException("InvalidState","Group is not empty; recursive deletion is not supported.");
+                if(screens.Count!=0||groups.Count!=0)throw AdapterPreconditionException
+                    .Failed("Group is not empty: " + groupPath, "target-not-empty", nameof(groupPath));
                 if(dryRun)return "Empty group preview; nothing deleted.";
                 meta["mayHaveChanged"]=true;HmiExactAccess.Delete(group);
                 try {

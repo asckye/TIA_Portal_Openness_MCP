@@ -140,7 +140,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var items = HmiTemplateJson.Items(json);
                     if (screen == null && items == null) continue;
                     items ??= new JsonArray();
-                    var requiredTags = HmiTemplateJson.Get(json, "RequiredTags") as JsonArray ?? new JsonArray();
+                    var requiredTags = (HmiTemplateJson.Get(json, "RequiredTags") as JsonArray)?.DeepClone().AsArray() ?? new JsonArray();
                     var dyn = new JsonArray();
                     var actions = new JsonArray();
 
@@ -199,6 +199,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         .Select(HmiTemplateJson.Name)
                         .Where(x => !string.IsNullOrWhiteSpace(x))
                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    foreach (var binding in dyn.OfType<JsonObject>())
+                        if ((string?)binding["tag"] is string tag && !string.IsNullOrWhiteSpace(tag) && tagNames.Add(tag))
+                            requiredTags.Add(new JsonObject { ["Name"] = tag, ["PlcTag"] = (string?)binding["property"] == "binding" ? tag : null });
                     var templateObjectNames = BuildTemplateObjectNameSet(json, items);
                     var actionTags = actions
                         .OfType<JsonObject>()
@@ -252,11 +255,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 : null;
             var screenDir = runtimeRoot == null ? "" : Path.Combine(runtimeRoot, "screens");
             var faceplateDir = runtimeRoot == null ? "" : Path.Combine(runtimeRoot, "faceplates");
-            var libraryRoot = string.IsNullOrWhiteSpace(referenceGlobalLibraryPath)
-                ? ""
+            int libraryFiles = File.Exists(referenceGlobalLibraryPath)
+                ? (GlobalLibraryPackageAnalyzer.IsLibraryFile(referenceGlobalLibraryPath) ? 1 : 0)
                 : Directory.Exists(referenceGlobalLibraryPath)
-                ? referenceGlobalLibraryPath
-                : Path.GetDirectoryName(referenceGlobalLibraryPath) ?? referenceGlobalLibraryPath;
+                    ? Directory.EnumerateFiles(referenceGlobalLibraryPath, "*.al*").Count(GlobalLibraryPackageAnalyzer.IsLibraryFile) : 0;
 
             var sampleStrings = new JsonArray();
             if (!string.IsNullOrWhiteSpace(runtimeRoot) && Directory.Exists(runtimeRoot))
@@ -293,9 +295,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["runtimeRoot"] = runtimeRoot ?? "",
                 ["screenRdfCount"] = Directory.Exists(screenDir) ? Directory.EnumerateFiles(screenDir, "*.rdf").Count() : 0,
                 ["faceplateRdfCount"] = Directory.Exists(faceplateDir) ? Directory.EnumerateFiles(faceplateDir, "*.rdf").Count() : 0,
-                ["globalLibraryExists"] = !string.IsNullOrWhiteSpace(libraryRoot) && (Directory.Exists(libraryRoot) || File.Exists(referenceGlobalLibraryPath)),
-                ["globalLibraryFileCount"] = Directory.Exists(libraryRoot) ? Directory.EnumerateFiles(libraryRoot, "*.al*", SearchOption.TopDirectoryOnly)
-                    .Count() : 0,
+                ["globalLibraryExists"] = libraryFiles > 0,
+                ["globalLibraryFileCount"] = libraryFiles,
                 ["sampleRuntimeStringHints"] = sampleStrings
             };
         }

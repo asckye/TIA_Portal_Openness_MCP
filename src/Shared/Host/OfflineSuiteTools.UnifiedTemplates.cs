@@ -26,16 +26,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 "ApplyUnifiedHmiScreenDesign, with layout QA attached. It does not connect to TIA Portal or modify projects.")]
         public CallToolResult BuildUnifiedHmiTemplateApplyDesignJsonV4(
             [Description("templateFile: full path to a Unified HMI template JSON file")] string templateFile,
-            [Description("fallbackWidth: width used only if the template omits Screen.Width")] int fallbackWidth = 800,
-            [Description("fallbackHeight: height used only if the template omits Screen.Height")] int fallbackHeight = 480)
+            [Description("fallbackWidth: width used when both Screen.Width and a _WIDTHxHEIGHT filename suffix are absent")] int fallbackWidth = 800,
+            [Description("fallbackHeight: height used when both Screen.Height and a _WIDTHxHEIGHT filename suffix are absent")] int fallbackHeight = 480)
             => OfflineContracts
                 .Run("BuildUnifiedHmiTemplateApplyDesign", () => BuildUnifiedHmiTemplateApplyDesignJson(templateFile, fallbackWidth, fallbackHeight), writes
                     : false, current: false);
 
         public ResponseJsonReport BuildUnifiedHmiTemplateApplyDesignJson(
             [Description("templateFile: full path to a Unified HMI template JSON file")] string templateFile,
-            [Description("fallbackWidth: width used only if the template omits Screen.Width")] int fallbackWidth = 800,
-            [Description("fallbackHeight: height used only if the template omits Screen.Height")] int fallbackHeight = 480)
+            [Description("fallbackWidth: width used when both Screen.Width and a _WIDTHxHEIGHT filename suffix are absent")] int fallbackWidth = 800,
+            [Description("fallbackHeight: height used when both Screen.Height and a _WIDTHxHEIGHT filename suffix are absent")] int fallbackHeight = 480)
         {
             try
             {
@@ -82,16 +82,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 "modify projects.")]
         public CallToolResult BuildUnifiedHmiTemplateApplyDesignManifestV4(
             [Description("templateDirectory: directory containing Unified HMI JSON templates")] string templateDirectory,
-            [Description("fallbackWidth: width used only if a template omits Screen.Width")] int fallbackWidth = 800,
-            [Description("fallbackHeight: height used only if a template omits Screen.Height")] int fallbackHeight = 480)
+            [Description("fallbackWidth: width used when both Screen.Width and a _WIDTHxHEIGHT filename suffix are absent")] int fallbackWidth = 800,
+            [Description("fallbackHeight: height used when both Screen.Height and a _WIDTHxHEIGHT filename suffix are absent")] int fallbackHeight = 480)
             => OfflineContracts
                 .Run("BuildUnifiedHmiTemplateApplyDesignManifest", () =>
                     BuildUnifiedHmiTemplateApplyDesignManifest(templateDirectory, fallbackWidth, fallbackHeight), writes: false, current: false);
 
         public ResponseJsonReport BuildUnifiedHmiTemplateApplyDesignManifest(
             [Description("templateDirectory: directory containing Unified HMI JSON templates")] string templateDirectory,
-            [Description("fallbackWidth: width used only if a template omits Screen.Width")] int fallbackWidth = 800,
-            [Description("fallbackHeight: height used only if a template omits Screen.Height")] int fallbackHeight = 480)
+            [Description("fallbackWidth: width used when both Screen.Width and a _WIDTHxHEIGHT filename suffix are absent")] int fallbackWidth = 800,
+            [Description("fallbackHeight: height used when both Screen.Height and a _WIDTHxHEIGHT filename suffix are absent")] int fallbackHeight = 480)
         {
             try
             {

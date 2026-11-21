@@ -167,9 +167,6 @@ namespace TiaMcp.Adapters.Native.Hmi
             foreach (var row in UnifiedNativeRead.LibraryVersion(linkedVersion!, path + "/$connectedLibraryVersion")) yield return row;
         }
         public HmiMessage ReleaseUnifiedReadCursor(string cursor)
-            => new HmiMessage {
-                Message = "Collection state released; no TIA project or process was closed.", Meta = HmiMeta
-                    .Unstamped(true, ("readOnly", true), ("released", _session.MigrationPages.Cancel(cursor)))
-            };
+            => _session.MigrationPages.ReleaseCursor(cursor);
     }
 }

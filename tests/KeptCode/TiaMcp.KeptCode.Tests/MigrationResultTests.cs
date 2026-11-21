@@ -48,6 +48,30 @@ public sealed class MigrationResultTests
         Assert.Empty(result["errors"]!.AsArray());
     }
 
+    [Fact]
+    public void Screen_branch_reports_the_culture_name_and_omits_its_calendar()
+    {
+        var culture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+        var rows = System.Linq.Enumerable.ToArray(MigrationRead.Graph(new { Language = culture, culture.Calendar }, "/Part"));
+        Assert.Contains(rows, row => Equals(row["path"], "/Part/Language") && Equals(row["value"], "en-US"));
+        Assert.DoesNotContain(rows, row => row["path"]?.ToString()?.StartsWith("/Part/Calendar", StringComparison.Ordinal) == true);
+    }
+
+    [Fact]
+    public void Releasing_a_cursor_twice_reports_why_the_second_release_did_nothing()
+    {
+        using var session = new Session();
+        var adapter = new MigrationReadAdapter(session);
+        var page = adapter.MigrationPage("GetUnifiedGlobalScript", "HMI", "Fixture", new HmiObject(), "", 1, 5000,
+            _ => new[] { new HmiObject(), new HmiObject() });
+        var cursor = Assert.IsType<string>(page.Meta["nextCursor"]);
+        Assert.Equal(true, adapter.ReleaseUnifiedReadCursor(cursor).Meta["released"]);
+        var second = adapter.ReleaseUnifiedReadCursor(cursor);
+        Assert.Equal(false, second.Meta["released"]);
+        Assert.Contains("already released or unknown", second.Message);
+        Assert.NotNull(second.Meta["reason"]);
+    }
+
     public static IEnumerable<object[]> Tools()
     {
         foreach (string release in new[] { "19", "20", "21" })

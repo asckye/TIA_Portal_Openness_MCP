@@ -207,7 +207,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (collection == null && options == ImportOptions.None)
                         throw new PlcSoftwareException("InvalidState",
                                 "The singleton HMI target already exists; select importOptions=Override and confirmDelete=true explicitly.");
-                    if (collection != null) HmiExchangePolicy.BeforeImport(collection, filePath, objectType, options == ImportOptions.Override);
+                    if (collection != null) HmiExchangePolicy
+                        .BeforeImport(collection, filePath, objectType, options == ImportOptions.Override, "importOptions=Override");
                     if (!writing) return label + " import preview; no changes.";
                     meta["mayHaveChanged"] = true; var imported = import(source, options); meta["apiCallSuccess"] = true; meta["imported"] =
                         ImportedNames(imported);
@@ -215,7 +216,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 }
                 if (objectKind == "overview")
                 {
-                    ScreenOverview overview = hmi.ScreenOverview ?? throw new NotSupportedException("ScreenOverview unavailable on this HMI device.");
+                    ScreenOverview overview = hmi.ScreenOverview ?? throw StepFailureStatus
+                        .UnsupportedByTarget("ScreenOverview unavailable on this HMI device.");
                     if (action == "read") {
                         meta["object"] = new HmiObject { ["screenClass"] = overview.GetType().Name };
                         return "Screen overview present; export it for its content.";
@@ -226,7 +228,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (objectKind == "globalElements")
                 {
                     ScreenGlobalElements elements = hmi.ScreenGlobalElements
-                        ?? throw new NotSupportedException("ScreenGlobalElements unavailable on this HMI device.");
+                        ?? throw StepFailureStatus.UnsupportedByTarget("ScreenGlobalElements unavailable on this HMI device.");
                     if (action == "read") {
                         meta["object"] = new HmiObject { ["screenClass"] = elements.GetType().Name };
                         return "Global screen elements present; export them for their content.";
@@ -237,7 +239,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 if (objectKind == "slidein")
                 {
                     ScreenSlideinSystemFolder folder = hmi.ScreenSlideinFolder
-                        ?? throw new NotSupportedException("ScreenSlideinFolder unavailable on this HMI device.");
+                        ?? throw StepFailureStatus.UnsupportedByTarget("ScreenSlideinFolder unavailable on this HMI device.");
                     ScreenSlideinComposition slideins = folder.ScreenSlideins;
                     if (action == "import") return Import((f, o) => slideins.Import(f, o), "Slide-in screen", slideins, "Hmi.Screen.ScreenSlidein");
                     var type = (SlideinType)Enum.Parse(typeof(SlideinType), objectPath);
@@ -392,7 +394,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 {
                     var source = HmiFiles.RequireExistingInputFile(filePath, "filePath"); meta["sourceFile"] = HmiFiles.FileRow(source);
                     var options = (ImportOptions)Enum.Parse(typeof(ImportOptions), importOptions);
-                    HmiExchangePolicy.BeforeImport(graphics, filePath, "Hmi.Globalization.MultiLingualGraphic", options == ImportOptions.Override);
+                    HmiExchangePolicy
+                        .BeforeImport(graphics, filePath, "Hmi.Globalization.MultiLingualGraphic", options == ImportOptions.Override, "importOptions=Override");
                     if (!writing) return "Graphics import preview; no changes.";
                     meta["mayHaveChanged"] = true; var imported = graphics.Import(source, options); meta["apiCallSuccess"] = true; meta["imported"] =
                         ImportedNames(imported);

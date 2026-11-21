@@ -98,6 +98,12 @@ namespace TiaMcp.Adapters
                 foreach (string name in names)
                     if (copyMode == "Replace" && before.ContainsKey(name))
                         EngineeringWriteJournal.Unrestored("Restore replaced library instance " + Path(name));
+                if (meta.TryGetValue("libraryName", out var library) && library is string sourceLibrary && sourceLibrary.Length > 0)
+                {
+                    const string dependencies = "Inspect the project library for dependency types added by global-library CreateFrom.";
+                    meta["rollbackScope"] = "Created target objects only. " + dependencies;
+                    EngineeringWriteJournal.Unrestored(dependencies);
+                }
                 meta["mayHaveChanged"] = true; meta["instantiationAttempted"] = true;
                 Dictionary<string, (object Item, string Name, string Path)[]> after = new(StringComparer.OrdinalIgnoreCase);
                 Dictionary<string, (object Item, string Name, string Path)[]> created = new(StringComparer.OrdinalIgnoreCase);

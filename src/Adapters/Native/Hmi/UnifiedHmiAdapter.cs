@@ -351,10 +351,14 @@ namespace TiaMcp.Adapters.Native.Hmi
             => _session.RunHmiStepTool("EnsureUnifiedHmiButtonAction", meta => {
                 HmiExchangePolicy.RequireTag(_session.ResolveHmiSoftwareOrThrow(software), targetTag, "targetTag");
                 var ensure = EnsureUnifiedHmiButtonEventHandler(software, screen, button, eventType);
+                meta["ensureMessage"] = ensure.Message;
+                if (ensure.Meta.TryGetValue("mayHaveChanged", out var created) && created is true) meta["mayHaveChanged"] = true;
                 meta["ensureMeta"] = ensure.Meta;
                 if (!ensure.Meta.TryGetValue("operationSuccess", out var ensured) || ensured is not true)
                     throw new InvalidOperationException("Event creation did not complete.");
                 var set = SetUnifiedHmiButtonEventScriptCode(software, screen, button, eventType, scriptCode, null, null, syntaxCheck);
+                meta["setMessage"] = set.Message;
+                if (set.Meta.TryGetValue("mayHaveChanged", out var changed) && changed is true) meta["mayHaveChanged"] = true;
                 meta["setMeta"] = set.Meta;
                 if (!set.Meta.TryGetValue("operationSuccess", out var written) || written is not true)
                     throw new InvalidOperationException("Event script write did not complete"

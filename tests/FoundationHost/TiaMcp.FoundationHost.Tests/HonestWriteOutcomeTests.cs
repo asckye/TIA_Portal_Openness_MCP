@@ -17,6 +17,122 @@ using Foundation = foundationhost::TiaMcp.FoundationHost;
 
 public sealed class HonestWriteOutcomeTests
 {
+    [Theory, InlineData("DeleteEmptyUnifiedHmiScreenGroup", "groupPath"), InlineData("ManageSivarcRuleContainer", "path")]
+    public void Nonempty_container_retains_the_documented_native_refusal(string tool, string parameter)
+    {
+        var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.MutationEvidenceTests.RunStep("21", tool, _ =>
+            throw AdapterPreconditionException.Failed("Nonempty container: Line", "target-not-empty", parameter));
+        var response = new Host.ResponseMessage { Message = reply.Message, Meta = JsonSerializer.SerializeToNode(reply.Meta)!.AsObject() };
+        var body = Body(tool == "ManageSivarcRuleContainer" ? Host.LibraryToolContract.Map(tool, response, false, true)
+            : Host.HmiInspectionContract.Map(tool, response, false, true));
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("target-not-empty", (string?)body["error"]?["details"]?["condition"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+    }
+
+    [Fact]
+    public void Goto_screen_recipe_refuses_without_emitting_placeholder_script()
+    {
+        var body = Body(new Host.HmiOfflineTools().BuildUnifiedHmiButtonActionScriptV4("goto-screen", "Tapped", targetScreen: "Main"));
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+        Assert.DoesNotContain("TODO", body.ToJsonString());
+    }
+
+    [Fact]
+    public void Classic_graphic_conflict_surfaces_the_actual_replacement_option()
+    {
+        const string reason = "HMI import target already exists: Home. Set importOptions=Override explicitly to replace it.";
+        var reply = new Host.ResponseMessage { Meta = new JsonObject {
+            ["operationSuccess"] = false, ["apiCallSuccess"] = false, ["mayHaveChanged"] = false, ["mayHaveWrittenFiles"] = false,
+            ["status"] = "InvalidState", ["v4FailureCode"] = "PRECONDITION_FAILED", ["nativeMessage"] = reason } };
+        var body = Body(Host.ClassicMotionToolContract.Map("ManageClassicHmiGraphic", reply, true, false));
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Contains("importOptions=Override", (string?)body["error"]?["message"]);
+    }
+
+    [Fact]
+    public void Global_script_text_occurs_once_with_analysis_locations_preserved()
+    {
+        const string path = "/Scripts/Line/Line.hmi.js";
+        const string script = "export function start() { return 42; }";
+        var location = new JsonObject { ["path"] = path, ["start"] = 0, ["end"] = script.Length };
+        var records = new JsonArray(
+            new JsonObject { ["kind"] = "nativeFile", ["path"] = path, ["rawText"] = script },
+            new JsonObject { ["kind"] = "scriptAnalysis", ["path"] = path, ["rawText"] = script, ["functions"] = new JsonArray(
+                new JsonObject { ["name"] = "start", ["rawText"] = script, ["body"] = "{ return 42; }", ["evidence"] = location.DeepClone() }) });
+        var reply = new Host.ResponseMessage { Meta = new JsonObject { ["operationSuccess"] = true, ["records"] = records } };
+        var body = Body(Host.HmiInspectionContract.Map("GetUnifiedGlobalScript", reply, false, false));
+        Assert.True((bool?)body["ok"]);
+        var rows = body["data"]!["records"]!.AsArray();
+        Assert.Equal(script, (string?)rows[0]!["rawText"]);
+        Assert.Null(rows[1]!["rawText"]);
+        Assert.Null(rows[1]!["functions"]![0]!["body"]);
+        Assert.Null(rows[1]!["functions"]![0]!["rawText"]);
+        Assert.True(JsonNode.DeepEquals(location, rows[1]!["functions"]![0]!["evidence"]));
+    }
+
+    [Fact]
+    public void Cwc_manifest_refusal_names_the_canonical_source_directory()
+    {
+        using var scope = EngineHostParity.EnterScope();
+        string directory = Directory.CreateTempSubdirectory("cwc-missing-manifest-").FullName;
+        try
+        {
+            var body = Body(new Host.V21EcosystemTools().ManageUnifiedCwcPackageV4(directory));
+            Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+            Assert.Equal("/sourceDirectory", (string?)body["error"]?["details"]?["parameter"]);
+            Assert.Contains("sourceDirectory", (string?)body["error"]?["message"]);
+            Assert.DoesNotContain("'directory'", (string?)body["error"]?["message"]);
+        }
+        finally { Directory.Delete(directory); }
+    }
+
+    [Fact]
+    public void V20_graphic_list_admission_names_the_missing_public_API()
+    {
+        const string name = "ListUnifiedEngineeringObjects";
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var scope = new HardwareAddressingAdmissionTests.SessionFixture(worker, "20");
+        var tool = PortedToolContract.Create(worker, "20").OfType<FoundationTool>().Single(t => t.ProtocolTool.Name == name);
+        var args = new Dictionary<string, JsonElement> {
+            ["softwarePath"] = JsonSerializer.SerializeToElement("HMI"), ["category"] = JsonSerializer.SerializeToElement("graphicLists") };
+        var result = Body(tool.RefusePortedCapability(args)!);
+        Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result["error"]?["code"]);
+        Assert.Contains("HmiGraphicLists", (string?)result["error"]?["message"]);
+        Assert.Contains("V21", (string?)result["error"]?["message"]);
+    }
+
+    [Fact]
+    public void Empty_sivarc_container_path_names_the_missing_input()
+    {
+        using var scope = EngineHostParity.EnterScope();
+        var body = Body(new Host.SivarcTools(null!).ManageSivarcRuleContainerV4("screens", "folder", ""));
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal("/path", (string?)body["error"]?["details"]?["parameter"]);
+    }
+
+    [Fact]
+    public void Invalid_sivarc_category_lists_the_declared_values()
+    {
+        using var scope = EngineHostParity.EnterScope();
+        var body = Body(new Host.OptionalEngineeringTools(null!).ListSivarcRules("invalid"));
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal("/category", (string?)body["error"]?["details"]?["parameter"]);
+        Assert.Equal(new[] { "screens", "tags", "advancedTags", "alarms", "copies", "textLists" },
+            body["error"]!["details"]!["allowedValues"]!.AsArray().Select(value => (string)value!));
+    }
+
+    [Fact]
+    public void Faceplate_read_surfaces_the_failed_traversal_reason()
+    {
+        const string reason = "Selected screen item is not a Unified faceplate container.";
+        var reply = new Host.ResponseMessage { Meta = new JsonObject {
+            ["apiCallSuccess"] = false, ["failures"] = new JsonArray(new JsonObject { ["reason"] = reason, ["code"] = "TraversalFailed" }) } };
+        var body = Body(Host.HmiInspectionContract.Map("GetUnifiedFaceplateInstance", reply, false, false));
+        Assert.Contains(reason, (string?)body["error"]?["message"]);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+    }
+
     [Theory]
     [InlineData(true, false, "OUTCOME_UNKNOWN", "unknown")]
     [InlineData(true, true, "PRECONDITION_FAILED", "not-started")]

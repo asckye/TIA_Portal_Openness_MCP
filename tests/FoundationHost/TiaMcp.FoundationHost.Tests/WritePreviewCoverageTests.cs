@@ -695,6 +695,38 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.Equal(0, worker.Calls);
     }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public void Bound_classic_screen_preview_rejects_an_unusable_destination(bool directoryImport)
+    {
+        using var worker = new PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        string source = Directory.CreateTempSubdirectory("classic-preview-").FullName;
+        try
+        {
+            string file = Path.Combine(source, "Main.xml");
+            File.WriteAllText(file, "<Document><Hmi.Screen.Screen><AttributeList><Name>Main</Name></AttributeList></Hmi.Screen.Screen></Document>");
+            int checks = 0;
+            var service = new toolpipeline::TiaMcpServer.Siemens.Services.HmiExchangeService((_, arguments) => {
+                checks++;
+                Assert.True((bool?)arguments["dryRun"]);
+                Assert.Equal("/Missing", (string?)arguments["request"]?["FolderPath"]);
+                return new JsonObject { ["MayHaveChanged"] = false, ["OutcomeUnknown"] = false,
+                    ["Failure"] = new JsonObject { ["Code"] = directoryImport ? "NotFound" : "NotSupportedOnVersion",
+                        ["Message"] = directoryImport ? "HMI folder not found: /Missing" : "A Classic HMI target is required." } };
+            }, () => "Line.ap21");
+            var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HmiExchangeTools(service);
+            var result = directoryImport ? tools.ImportHmiScreensFromDirectoryV4("HMI", "/Missing", source)
+                : tools.ImportHmiScreenV4("HMI", "/Missing", file);
+            var body = result.StructuredContent!;
+            Assert.Equal(1, checks);
+            Assert.Equal(directoryImport ? "NOT_FOUND" : "UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+            Assert.Contains(directoryImport ? "/Missing" : "Classic", (string?)body["error"]?["message"]);
+            Assert.Null(body["data"]?["planHash"]);
+        }
+        finally { Directory.Delete(source, true); }
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public async Task Bound_preview_keeps_its_scope_and_hash(string release)
     {
@@ -1387,7 +1419,6 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
     [InlineData("ImportHmiScreensFromDirectory")]
     [InlineData("ImportHmiTagTable")]
     [InlineData("ImportHmiTagTablesFromDirectory")]
-    [InlineData("ImportMasterCopyFromGlobalLibrary")]
     [InlineData("ImportOpcUaInterface")]
     [InlineData("ImportTechnologyObject")]
     [InlineData("ImportTechnologyObjectsFromDirectory")]
@@ -1413,7 +1444,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         var names = new[] { "AttachDeviceNodeToSubnet", "ConnectDeviceNodesToProfinetSubnet", "CreateDevice", "CreateGsdDevice",
             "CompileDevice", "CreateVersionControlWorkspace", "DownloadPlc", "EnsureSubnet", "ImportAlarmClasses", "ImportAlarmTextLists",
             "ImportHmiConnection", "ImportHmiScreen", "ImportHmiScreensFromDirectory", "ImportHmiTagTable", "ImportHmiTagTablesFromDirectory",
-            "ImportMasterCopyFromGlobalLibrary", "ImportOpcUaInterface", "ImportTechnologyObject", "ImportTechnologyObjectsFromDirectory",
+            "ImportOpcUaInterface", "ImportTechnologyObject", "ImportTechnologyObjectsFromDirectory",
             "InvokeObject", "InvokeService", "ManageOnlineDriveFunctions", "SeedProjectFromReference", "SetDeviceItemAttribute",
             "SetOpcUaInterfaceEnabled", "SetPlcCpuSettings", "SetPlcWatchTableModifyValue", "SetUnifiedHmiButtonEventScriptCode",
             "SetUnifiedHmiRuntimeState" };
@@ -1429,10 +1460,11 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         var method = typeof(Host).Assembly.GetTypes().SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             .Single(candidate => candidate.GetCustomAttributesData().Any(attribute => attribute.AttributeType.Name == "McpServerToolAttribute"
                 && attribute.NamedArguments.Any(argument => argument.MemberName == "Name" && (string?)argument.TypedValue.Value == name)));
-        // Only workspace creation reads native state during these previews.
         var constructor = method.DeclaringType!.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Single();
         var services = new object?[constructor.GetParameters().Length];
         int workspaceReads = 0;
+        bool screenImport = name is "ImportHmiScreen" or "ImportHmiScreensFromDirectory";
+        var screenChecks = new List<JsonObject>();
         if (name == "CreateVersionControlWorkspace")
             services[0] = new toolpipeline::TiaMcpServer.Siemens.Services.VersionControlPortService((operation, args) => {
                 Assert.Equal("version-control.ExecuteVersionControl", operation);
@@ -1442,6 +1474,12 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
                 Assert.Null(args["confirm"]);
                 workspaceReads++;
                 return new JsonObject { ["Message"] = "Workspace name is available.", ["Meta"] = new JsonObject { ["success"] = true } };
+            }, () => "C:/Projects/original.ap21");
+        else if (screenImport)
+            services[0] = new toolpipeline::TiaMcpServer.Siemens.Services.HmiExchangeService((operation, args) => {
+                Assert.Equal("hmi-generic.ExecuteHmi", operation);
+                screenChecks.Add(args);
+                return new JsonObject();
             }, () => "C:/Projects/original.ap21");
         var target = constructor.Invoke(services);
         var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), release);
@@ -1468,6 +1506,19 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         {
             Assert.Equal(1, workspaceReads);
             Assert.Equal("Workspace name is available.", (string?)result.StructuredContent?["data"]?["summary"]);
+        }
+        else if (screenImport)
+        {
+            var check = Assert.Single(screenChecks);
+            var request = check["request"]!;
+            Assert.True((bool?)check["dryRun"]);
+            Assert.True((bool?)request["DryRun"]);
+            Assert.Equal("ImportHmiScreen", (string?)request["Operation"]);
+            Assert.Equal((string?)arguments["softwarePath"], (string?)request["SoftwarePath"]);
+            Assert.Equal((string?)arguments["folderPath"], (string?)request["FolderPath"]);
+            Assert.True((bool?)result.StructuredContent?["data"]?["targetVerified"]);
+            Assert.Contains("The bound Classic HMI software and destination screen folder were checked.",
+                (string?)result.StructuredContent?["data"]?["scope"]);
         }
         else
         {
@@ -1556,7 +1607,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             Directory.CreateDirectory(root);
             if (tool == "CreateVersionControlWorkspace") arguments["folderPath"] = root;
             // These previews read caller bytes but never invoke the native format parser.
-            // Use the maintained SIMATIC XML fixture for the file contents.
+            // Use the maintained tag table unless the preview validates a specific document kind.
             string xml = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
                 "templates", "mcp-full-e2e-verify", "import", "MCP_E2E_Tags.xml");
             if (tool == "ImportTechnologyObject")
@@ -1564,6 +1615,12 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
                 xml = Path.Combine(root, "MCP_B5_Axis.xml");
                 File.WriteAllText(xml, "<Document><SW.TechnologicalObjects.TechnologicalInstanceDB ID='0'><AttributeList><Name>MCP_B5_Axis</Name>" +
                     "</AttributeList></SW.TechnologicalObjects.TechnologicalInstanceDB></Document>");
+            }
+            else if (tool == "ImportHmiConnection")
+            {
+                xml = Path.Combine(root, "PLC_Connection.xml");
+                File.WriteAllText(xml, "<Document><Engineering version='V21'/><Hmi.Communication.Connection ID='0'>"
+                    + "<AttributeList><Name>PLC connection</Name></AttributeList></Hmi.Communication.Connection></Document>");
             }
             if (arguments.ContainsKey("importPath")) arguments["importPath"] = xml;
             var inputDirectories = new[] { "dir", "referenceDir", "libraryPath" }.Concat(

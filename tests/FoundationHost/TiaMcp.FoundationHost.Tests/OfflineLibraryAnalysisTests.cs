@@ -11,6 +11,22 @@ public sealed class OfflineLibraryAnalysisTests : IDisposable
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(release => new object[] { release });
 
+    [Theory, InlineData("19"), InlineData("21")]
+    public void Unsupported_master_copy_import_refuses_preview_and_apply(string release)
+    {
+        using var worker = new WritePreviewCoverageTests.PlanWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost
+            .EngineHostPipeline(release, worker, Array.Empty<ModelContextProtocol.Server.McpServerTool>());
+        using var scope = pipeline.EnterSession();
+        var tools = new Host.LibraryTools(null!);
+        foreach (bool preview in new[] { true, false })
+        {
+            var body = tools.ImportMasterCopyFromGlobalLibraryV4("Lib.al21", "Valve", "Panel", "Main", dryRun: preview).StructuredContent!;
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+            Assert.Null(body["data"]?["planHash"]);
+        }
+    }
+
     private string NewLibrary(bool peData = true)
     {
         string library = Path.Combine(root, "Library");
@@ -26,6 +42,17 @@ public sealed class OfflineLibraryAnalysisTests : IDisposable
     }
 
     private static JsonObject Analyze(string path) => new Host.HmiOfflineTools().AnalyzeGlobalLibraryPackageV4(path).StructuredContent!.AsObject();
+
+    [Fact]
+    public void Outer_folder_does_not_claim_to_be_a_global_library_package()
+    {
+        using var scope = Host.HardwareContract.UseRelease("21");
+        NewLibrary();
+        var body = Analyze(root);
+        Assert.False((bool)body["ok"]!);
+        Assert.Equal("NOT_FOUND", (string?)body["error"]?["code"]);
+        Assert.Contains("package", (string?)body["error"]?["message"]);
+    }
 
     [Theory, MemberData(nameof(Releases))]
     public void New_library_without_xref_database_completes(string release)

@@ -177,6 +177,15 @@ namespace TiaMcp.Adapters.Native.Hmi
             return new HmiExportProgram { Exported = exported, Failed = failed, Items = items };
         }
 
+        internal void CheckScreenImportTarget(string softwarePath, string folderPath)
+        {
+            var software = _session.ResolveHmiSoftwareOrThrow(softwarePath);
+            HmiExchangePolicy.RequireClassic(software);
+            var root = TryGetPropertyValue(software, "ScreenFolder")
+                ?? throw new PlcSoftwareException("NotFound", "Screen folder unavailable on " + softwarePath + ": " + folderPath);
+            HmiExchangePolicy.Folder(root, folderPath);
+        }
+
         public void ImportHmiScreen(string softwarePath, string folderPath, string importPath, bool overwrite = false)
         {
             if (_session.IsProjectNull())
@@ -416,8 +425,12 @@ namespace TiaMcp.Adapters.Native.Hmi
             var evidence = new HmiObject { ["operationSuccess"] = success };
             if (status != null) evidence["status"] = status;
             if (exception is PlcSoftwareException portal && (portal.Code == "InvalidState" || portal.Code == "NotFound"))
+            {
                 evidence["status"] = portal.Code == "InvalidState" && portal.Message.StartsWith("HMI import target already exists:", StringComparison.Ordinal)
-                    ? "ImportTargetExists" : portal.Code.ToString();
+                    ? "ImportTargetExists" : portal.Code;
+                evidence["nativeMessage"] = portal.Message;
+                if (portal.Data["missingFolderPath"] is string folder) evidence["missingFolderPath"] = folder;
+            }
             if (exception is PlcSoftwareException { Code: "PreconditionFailed" } refusal && refusal.Data["mayHaveChanged"] is false)
             {
                 evidence["mayHaveChanged"] = false;

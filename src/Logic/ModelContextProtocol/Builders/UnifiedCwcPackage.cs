@@ -12,6 +12,8 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static class UnifiedCwcPackage
     {
+        private const string SourceDirectoryParameter = "sourceDirectory";
+
         private static void NoLinks(string path, string parameter)
         {
             for (FileSystemInfo? p = new DirectoryInfo(path); p != null; p = p is DirectoryInfo d ? d.Parent : ((FileInfo)p).Directory)
@@ -23,7 +25,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (e.ValueKind == JsonValueKind.Object) {
                 var names = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var p in e.EnumerateObject()) {
-                    if (!names.Add(p.Name)) throw new AdapterPreconditionException("Remove duplicate properties from the package manifest.", "directory");
+                    if (!names.Add(p.Name))
+                        throw new AdapterPreconditionException("Remove duplicate properties from the package manifest.", SourceDirectoryParameter);
                     UniqueKeys(p.Value); }
             } else if (e.ValueKind == JsonValueKind.Array) foreach (var p in e.EnumerateArray()) UniqueKeys(p);
         }
@@ -31,68 +34,71 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (action != "inspect" && action != "build") throw new AdapterPreconditionException("Set action to inspect or build.", "action");
             if (!Path.IsPathRooted(directory) || !Directory.Exists(directory))
-                throw new AdapterPreconditionException("Supply an existing absolute CWC source directory.", "directory");
-            var root = new DirectoryInfo(Path.GetFullPath(directory)); NoLinks(root.FullName, "directory");
+                throw new AdapterPreconditionException("Supply an existing absolute CWC source directory.", SourceDirectoryParameter);
+            var root = new DirectoryInfo(Path.GetFullPath(directory)); NoLinks(root.FullName, SourceDirectoryParameter);
             var files = new SortedDictionary<string, byte[]>(StringComparer.Ordinal); var queue = new Queue<DirectoryInfo>(); queue.Enqueue(root);
             long total = 0; int directories = 0;
             while (queue.Count > 0)
             {
                 var current = queue.Dequeue(); if (++directories > 256)
-                    throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", "directory");
+                    throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", SourceDirectoryParameter);
                 foreach (var item in current.EnumerateFileSystemInfos())
                 {
                     if ((item.Attributes & FileAttributes.ReparsePoint) != 0)
-                        throw new AdapterPreconditionException("Remove reparse entries from the CWC source.", "directory");
+                        throw new AdapterPreconditionException("Remove reparse entries from the CWC source.", SourceDirectoryParameter);
                     if (item is DirectoryInfo child) {
-                        if (queue.Count >= 256) throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", "directory"); queue
+                        if (queue.Count >= 256)
+                            throw new AdapterPreconditionException("Reduce the CWC source to at most 256 directories.", SourceDirectoryParameter); queue
                             .Enqueue(child); continue; }
                     var file = (FileInfo)item;
                     if (files.Count >= 1024 || file.Length > 16 * 1024 * 1024 || total + file.Length > 64 * 1024 * 1024)
-                        throw new AdapterPreconditionException("Reduce the CWC source to <=1024 files, <=16 MiB each and <=64 MiB total.", "directory");
+                        throw new AdapterPreconditionException("Reduce the CWC source to <=1024 files, <=16 MiB each and <=64 MiB total.",
+                                SourceDirectoryParameter);
                     using var input = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
                     using var content = new MemoryStream(); var buffer = new byte[8192]; int n;
                     while ((n = input.Read(buffer, 0, buffer.Length)) > 0) {
                         total += n; if (content.Length + n > 16 * 1024 * 1024 || total > 64 * 1024 * 1024)
-                            throw new AdapterPreconditionException("Reduce the CWC source to <=16 MiB per file and <=64 MiB total.", "directory"); content
+                            throw new AdapterPreconditionException("Reduce the CWC source to <=16 MiB per file and <=64 MiB total.", SourceDirectoryParameter);
+                            content
                                 .Write(buffer, 0, n);
                     }
                     files.Add(file.FullName.Substring(root.FullName.TrimEnd('\\', '/').Length + 1).Replace('\\', '/'), content.ToArray());
                 }
             }
             if (!files.TryGetValue("manifest.json", out var manifest) || manifest.Length > 1024 * 1024)
-                throw new AdapterPreconditionException("Supply root manifest.json of at most 1 MiB in the CWC source.", "directory");
+                throw new AdapterPreconditionException("Supply root manifest.json of at most 1 MiB in the CWC source.", SourceDirectoryParameter);
             JsonObject doc;
             try
             {
                 var jsonText = new UTF8Encoding(false, true).GetString(manifest).TrimStart('\uFEFF');
                 using var json = JsonDocument.Parse(jsonText); UniqueKeys(json.RootElement);
                 doc = JsonNode.Parse(jsonText) as JsonObject
-                    ?? throw new AdapterPreconditionException("Supply a valid UTF-8 JSON object in the package manifest.", "directory");
+                    ?? throw new AdapterPreconditionException("Supply a valid UTF-8 JSON object in the package manifest.", SourceDirectoryParameter);
             }
             catch (Exception ex) when (ex is ArgumentException || ex is JsonException)
-            { throw new AdapterPreconditionException("Supply a valid UTF-8 JSON object in the package manifest.", "directory"); }
+            { throw new AdapterPreconditionException("Supply a valid UTF-8 JSON object in the package manifest.", SourceDirectoryParameter); }
             string Required(JsonNode? value, string name) {
                 return value is JsonValue scalar && scalar.TryGetValue<string>(out var text) && !string.IsNullOrWhiteSpace(text) ? text
-                    : throw new AdapterPreconditionException("Supply a nonempty string for manifest " + name + ".", "directory");
+                    : throw new AdapterPreconditionException("Supply a nonempty string for manifest " + name + ".", SourceDirectoryParameter);
             }
             Required(doc["mver"], "mver");
             var identity = (doc["control"] as JsonObject)?["identity"] as JsonObject
-                ?? throw new AdapterPreconditionException("Supply control.identity as an object in the package manifest.", "directory");
+                ?? throw new AdapterPreconditionException("Supply control.identity as an object in the package manifest.", SourceDirectoryParameter);
             var name = Required(identity["name"], "name"); var version = Required(identity["version"], "version");
             Required(identity["displayname"], "displayname");
             var type = Required(identity["type"], "type");
             if (!type.StartsWith("guid://", StringComparison.Ordinal) || !Guid.TryParseExact(type.Substring(7), "D", out var guid))
-                throw new AdapterPreconditionException("Set manifest identity.type to guid:// followed by an 8-4-4-4-12 GUID.", "directory");
+                throw new AdapterPreconditionException("Set manifest identity.type to guid:// followed by an 8-4-4-4-12 GUID.", SourceDirectoryParameter);
             string LocalReference(string value)
             {
                 if (!value.StartsWith("./", StringComparison.Ordinal))
-                    throw new AdapterPreconditionException("Start local manifest references with ./.", "directory");
+                    throw new AdapterPreconditionException("Start local manifest references with ./.", SourceDirectoryParameter);
                 var relative = value.Substring(2);
                 if (relative.Split('/').Any(p => p == ".." || p == "." || p.Length == 0) || relative.IndexOfAny(new[] { '\\', ':', '?', '#', '\0' }) >= 0
                         || !files.ContainsKey(relative))
                     throw new AdapterPreconditionException("Supply local manifest references to existing package files without traversal or reserved " +
                         "characters.",
-                            "directory");
+                            SourceDirectoryParameter);
                 return relative;
             }
             var start = LocalReference(identity["start"] == null ? "./control/index.html" : Required(identity["start"], "identity.start"));
@@ -101,13 +107,13 @@ namespace TiaMcpServer.ModelContextProtocol
             if (identity["icon"] != null)
             {
                 if (identity["icon"] is not JsonValue iconValue || !iconValue.TryGetValue<string>(out icon))
-                    throw new AdapterPreconditionException("Supply a string for manifest identity.icon.", "directory");
+                    throw new AdapterPreconditionException("Supply a string for manifest identity.icon.", SourceDirectoryParameter);
             }
             if (!string.IsNullOrEmpty(icon)) {
                 if (icon!.StartsWith("./", StringComparison.Ordinal)) LocalReference(icon); else warnings.Add("External/data icon was not fetched or decoded.");
             }
             if (!files.Keys.Any(p => p.StartsWith("control/", StringComparison.Ordinal)))
-                throw new AdapterPreconditionException("Supply control directory content in the CWC source.", "directory");
+                throw new AdapterPreconditionException("Supply control directory content in the CWC source.", SourceDirectoryParameter);
             if (!files.Keys.Any(p => p.StartsWith("assets/", StringComparison.Ordinal))) warnings
                 .Add("No assets files; icon is optional in the manifest contract.");
             var inventory =

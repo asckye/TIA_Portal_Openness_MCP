@@ -230,12 +230,7 @@ namespace TiaMcp.Adapters
                     }
                 }
                 meta["kind"] = kind; meta["left"] = leftName; meta["right"] = rightName; meta["resultType"] = result.GetType().FullName;
-                var rows = PlcGroupOperations.Items(result.Properties).Cast<DetailedCompareResultElement>()
-                    .Select(e => new Dictionary<string, object?> {
-                            ["description"] = e.Description, ["status"] = e.DetailCompareStatus.ToString(), ["leftValue"] = LibraryValue(e.LeftValue),
-                                ["rightValue"] = LibraryValue(e.RightValue)
-                        })
-                        .ToArray();
+                var rows = DetailedComparisonRows(result);
                 meta["summary"] = rows.GroupBy(r => (string)r["status"]!).ToDictionary(g => g.Key, g => (object?)g.Count());
                 var selected = includeIdentical ? rows : rows.Where(r => (string)r["status"]! != "ObjectsIdentical").ToArray();
                 LibraryPage(selected.Cast<object>().ToArray(), offset, limit, meta);
@@ -245,6 +240,14 @@ namespace TiaMcp.Adapters
                     "by default per the official note. Read-only.";
                 return "Detailed comparison completed; " + rows.Length + " properties compared.";
             }, requiresProject: false);
+
+        private Dictionary<string, object?>[] DetailedComparisonRows(DetailedCompareResult result)
+            => PlcGroupOperations.Items(result.Properties).Cast<DetailedCompareResultElement>()
+                .Select(e => new Dictionary<string, object?> {
+                        ["description"] = e.Description, ["status"] = e.DetailCompareStatus.ToString(), ["leftValue"] = LibraryValue(e.LeftValue),
+                            ["rightValue"] = LibraryValue(e.RightValue)
+                    })
+                    .ToArray();
 #endif
         public HardwareAddressingReply ManageLibraryMasterCopy(string sourcePath,string action,string libraryName="",string destinationLibraryName="",
                 string destinationPath="",bool dryRun=true, string targetKind="", string targetSoftwarePath="", string targetGroupPath="", string copyMode="")
@@ -255,12 +258,18 @@ namespace TiaMcp.Adapters
                 var source=ExactMasterCopy(libraryName,sourcePath);meta["before"]=LibraryObjectAddress(source);meta["dryRun"]=dryRun;meta["mayHaveChanged"]=
                     false;
                 if (action == "instantiate")
+                {
+                    meta["libraryName"] = libraryName;
                     return InstantiateLibraryMasterCopy(source, targetKind, targetSoftwarePath, targetGroupPath, copyMode, dryRun, meta);
+                }
                 if(action=="read")return "Master copy scalar properties read.";
                 #if LIBRARY_COMPARE
                 if(action=="compare") {
-                    var other=ExactMasterCopy(destinationLibraryName,destinationPath);meta["comparison"]=HardwareOfficialService
-                        .Result(source.CompareTo(other));return "Native comparison returned; inspect differences and exclusions.";
+                    var other = ExactMasterCopy(destinationLibraryName, destinationPath);
+                    var comparison = source.CompareTo(other);
+                    meta["comparison"] = HardwareOfficialService.Result(comparison);
+                    meta["records"] = DetailedComparisonRows(comparison);
+                    return "Native master-copy comparison returned property differences.";
                 }
 #endif
                 MasterCopyFolder? folder=null;

@@ -25,8 +25,7 @@ namespace TiaMcp.Adapters
         public HmiReply ReleaseUnifiedReadCursor(string cursor)
         {
             Check();
-            return new HmiReply { Value = new HmiMessage { Message = "Collection state released; no TIA project or process was closed.",
-                Meta = HmiMeta.Unstamped(true, ("readOnly", true), ("released", UnifiedPages.Cancel(cursor))) } };
+            return new HmiReply { Value = UnifiedPages.ReleaseCursor(cursor) };
         }
         public HmiReply ExecuteUnified(UnifiedRequest request, bool dryRun = true)
         {

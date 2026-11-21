@@ -33,7 +33,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             var software = session.ResolveSoftwareContainerUncached(path)?.Software
                 ?? throw new PlcSoftwareException("NotFound", "Exact HMI software not found: " + path);
             return software as HmiTarget
-                ?? throw new NotSupportedException("Selected software is not a classic WinCC HmiTarget (" + software.GetType().FullName
+                ?? throw StepFailureStatus.UnsupportedByTarget("Selected software is not a classic WinCC HmiTarget (" + software.GetType().FullName
                     + "); Unified targets use the Unified tools.");
         }
         internal VBScriptFolder ExactVbScriptFolder(HmiTarget hmi, IEnumerable<string> path) => HmiAccessHelpers.ExactVbScriptFolder(hmi, path);

@@ -426,8 +426,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "EnsureUnifiedHmiButtonAction"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
                 "[L2][HMI-Unified]Generate and apply a deterministic Unified HMI button action. Only set-bit/reset-bit/toggle-bit are applied; high-risk or " +
-                "TODO recipes are rejected. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). Current native policy; V4 safety behavior is " +
-                "not yet accepted.")]
+                "TODO recipes are rejected. The target tag is checked on apply. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). " +
+                "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult EnsureUnifiedHmiButtonActionV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
             [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +
@@ -465,8 +465,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "BindUnifiedHmiTagDynamization"),
                 Description("Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. " +
-                "[L2][HMI-Unified]Ensure a Unified HMI TagDynamization exists for an item property and bind it to an HMI tag. Current native policy; V4 " +
-                "safety behavior is not yet accepted.")]
+                "[L2][HMI-Unified]Ensure a Unified HMI TagDynamization exists for an item property and bind it to an HMI tag. The tag is checked on apply. " +
+                "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult BindUnifiedHmiTagDynamizationV4(
             [Description("hmiSoftwarePath: path to HMI software (e.g. 'HMI_RT_1')")] string hmiSoftwarePath,
             [Description("screenName: unique plain name or absolute /Group/Sub/Screen with readable segments; escape %, /, backslash and ASCII controls " +

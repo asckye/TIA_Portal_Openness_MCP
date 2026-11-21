@@ -170,6 +170,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         }
         internal static IEnumerable<HmiObject> Graph(object? root, string path, int depth = 0, HashSet<object>? ancestors = null)
         {
+            if (root is Calendar) yield break;
+            if (root is CultureInfo culture) { yield return Scalar(path, culture.Name); yield break; }
             if (IsScalar(root))
             {
                 yield return Scalar(path, root);

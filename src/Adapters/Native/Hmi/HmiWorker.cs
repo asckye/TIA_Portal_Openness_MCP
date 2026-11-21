@@ -60,8 +60,11 @@ namespace TiaMcp.Adapters
                     case "ExportHmiProgram": reply.Value = new HmiExchangeAdapter(session)
                         .ExportHmiProgram(request.SoftwarePath, request.ExportDir, request.ExportScreens, request.ExportTagTables, request.ExportOptions);
                     break;
-                    case "ImportHmiScreen": new HmiExchangeAdapter(session)
-                        .ImportHmiScreen(request.SoftwarePath, request.FolderPath, request.ImportPath, request.Overwrite); break;
+                    case "ImportHmiScreen":
+                        var exchange = new HmiExchangeAdapter(session);
+                        if (request.DryRun) exchange.CheckScreenImportTarget(request.SoftwarePath, request.FolderPath);
+                        else exchange.ImportHmiScreen(request.SoftwarePath, request.FolderPath, request.ImportPath, request.Overwrite);
+                        break;
                     case "ImportHmiTagTable": new HmiExchangeAdapter(session)
                         .ImportHmiTagTable(request.SoftwarePath, request.FolderPath, request.ImportPath, request.Overwrite); break;
                     case "ImportHmiConnection": new HmiExchangeAdapter(session)

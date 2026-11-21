@@ -45,7 +45,7 @@ internal static void RequirePagination(int offset, int limit)
 internal static void RequireImportConfirmation(string importOptions, bool confirmDelete)
         {
             if (importOptions == "Override" && !confirmDelete)
-                throw new ArgumentException("importOptions=Override replaces existing objects; confirmDelete=true is required.");
+                throw new ArgumentException("importOptions=Override replaces existing objects; confirmDelete=true is required.", nameof(confirmDelete));
         }
 internal static (string[] Folder, string Name) SplitObjectPath(string path)
         {

@@ -240,9 +240,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["baseFileValidationOk"] = fileValidation["ok"]?.GetValue<bool>() == true,
                 ["safetyPolicy"] = new JsonObject
                 {
-                    ["tia"] = "离线 PLC-HMI 同步校验：不连接 TIA Portal，不打开工程，不导入 HMI 文件。",
-                    ["write"] = "只读取 HMI 文件包和调用方提供的 PLC 符号清单，不修改工程、reference 或交付包。",
-                    ["binding"] = "要求 HMI tag table 中的 ControllerTag/PlcTag 精确存在于 PLC 符号清单；缺失即阻止继续导入真实工程。"
+                    ["tia"] = "Offline PLC-HMI validation reads the package without opening TIA Portal or importing HMI files.",
+                    ["write"] = "Reads the HMI package and supplied PLC symbol list. Project, reference and delivery files are unchanged.",
+                    ["binding"] = "Every ControllerTag or PlcTag must exactly match a supplied PLC symbol before project import."
                 },
                 ["declaredHmiTagCount"] = fileValidation["declaredTagCount"]?.GetValue<int>() ?? 0,
                 ["referencedHmiTagCount"] = fileValidation["referencedTagCount"]?.GetValue<int>() ?? 0,
@@ -259,8 +259,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["errors"] = errors,
                 ["warnings"] = warnings,
                 ["nextValidation"] = errors.Count == 0
-                    ? "PLC-HMI 离线同步自检通过。下一步仍需导入临时工程，读回 HMI tags 的 ControllerTag，并编译诊断。"
-                    : "先补齐 PLC 符号或修正 HMI 变量表绑定，不要导入真实工程。"
+                    ? "Import into a temporary project, read back each ControllerTag, and compile to inspect diagnostics."
+                    : "Supply the missing PLC symbols or correct the HMI tag table bindings before import."
             };
         }
 
@@ -367,9 +367,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["ok"] = errors.Count == 0,
                 ["safetyPolicy"] = new JsonObject
                 {
-                    ["tia"] = "离线文件包校验：不连接 TIA Portal，不打开工程，不执行导入。",
-                    ["write"] = "只读取 manifest/XML 文件，不修改工程、reference 或交付包。",
-                    ["binding"] = "校验 HMI 控件/事件引用的 HMI tag 是否在变量表 XML 中声明；PLC 侧真实符号仍需临时工程导入读回确认。"
+                    ["tia"] = "Offline package validation reads files without opening TIA Portal or importing into a project.",
+                    ["write"] = "Reads the manifest and XML files. Project, reference and delivery files are unchanged.",
+                    ["binding"] =
+                        "Checks control and event references against the tag table XML. Verify PLC symbols by importing into a temporary project and reading " +
+                        "them back."
                 },
                 ["fileChecks"] = new JsonObject
                 {
@@ -390,8 +392,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["errors"] = errors,
                 ["warnings"] = warnings,
                 ["nextValidation"] = errors.Count == 0
-                    ? "文件包离线自检通过。下一步仍需导入临时 Classic/Basic HMI 工程，读回 tags/items/bindings/events 并编译诊断。"
-                    : "先修复 manifest、XML 或 HMI tag 引用问题，不要导入真实工程。"
+                    ? "Import into a temporary Classic or Basic HMI project, read back tags, items, bindings and events, and inspect compile diagnostics."
+                    : "Correct the manifest, XML files or HMI tag references before project import."
             };
         }
 

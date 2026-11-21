@@ -123,8 +123,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         new UnsupportedCapabilityDetails(HardwareContract.ReleaseKey, tool, null));
                 case "InvalidParams": case "INVALID_ARGUMENT":
                     return new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, evidence));
-                case "PRECONDITION_FAILED"
-                    : return new Error("The operation's preconditions were not satisfied.", new PreconditionFailedDetails(Family(tool), null));
+                case "PRECONDITION_FAILED":
+                    return new Error(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? "The operation's preconditions were not satisfied.",
+                        new PreconditionFailedDetails(Family(tool), null));
                 default: return null;
             }
         }

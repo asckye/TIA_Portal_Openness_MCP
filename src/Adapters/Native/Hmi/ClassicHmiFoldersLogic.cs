@@ -74,9 +74,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (action == "import") RequireOneOf(importOptions, ImportOptionNames, "importOptions");
             else if (!string.IsNullOrEmpty(importOptions) && importOptions != "None") throw new ArgumentException("importOptions applies to import only.");
             bool writing = (action == "import" || action == "delete") && !dryRun;
-            if (action == "delete" && writing && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
+            if (action == "delete" && writing && !confirmDelete)
+                throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.", nameof(confirmDelete));
             if (action == "import" && writing && importOptions == "Override" && !confirmDelete)
-                throw new ArgumentException("Import with Override replaces existing objects; confirmDelete=true is required.");
+                throw new ArgumentException("Import with Override replaces existing objects; confirmDelete=true is required.", nameof(confirmDelete));
             return writing;
         }
 
@@ -96,7 +97,8 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (action == "delete" && EngineeringInputValidation.HmiFolderParts(folderPath).Length == 0)
                 throw new ArgumentException("The system folder cannot be deleted; folderPath must name a user folder.");
             bool writing = action != "read" && !dryRun;
-            if (action == "delete" && writing && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
+            if (action == "delete" && writing && !confirmDelete)
+                throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.", nameof(confirmDelete));
             return writing;
         }
 
@@ -112,9 +114,10 @@ namespace TiaMcp.Adapters.Native.Hmi
             if (action == "import") RequireOneOf(importOptions, ImportOptionNames, "importOptions");
             else if (!string.IsNullOrEmpty(importOptions) && importOptions != "None") throw new ArgumentException("importOptions applies to import only.");
             bool writing = (action == "import" || action == "delete") && !dryRun;
-            if (action == "delete" && writing && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
+            if (action == "delete" && writing && !confirmDelete)
+                throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.", nameof(confirmDelete));
             if (action == "import" && writing && importOptions == "Override" && !confirmDelete)
-                throw new ArgumentException("Import with Override replaces existing graphics; confirmDelete=true is required.");
+                throw new ArgumentException("Import with Override replaces existing graphics; confirmDelete=true is required.", nameof(confirmDelete));
             return writing;
         }
     }

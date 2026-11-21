@@ -9,10 +9,14 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static class GlobalLibraryPackageAnalyzer
     {
+        internal static bool IsLibraryFile(string path)
+            => System.Text.RegularExpressions.Regex.IsMatch(Path.GetExtension(path), @"^\.al[0-9]+(?:_[0-9]+)?$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
         public static JsonObject Analyze(string libraryPath)
         {
-            var rootDir = File.Exists(libraryPath)
-                ? Path.GetDirectoryName(libraryPath) ?? libraryPath
+            var rootDir = File.Exists(libraryPath) && IsLibraryFile(libraryPath)
+                ? Path.GetDirectoryName(Path.GetFullPath(libraryPath)) ?? libraryPath
                 : libraryPath;
             var info = new JsonObject
             {
@@ -30,7 +34,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             var alFiles = Directory.EnumerateFiles(rootDir, "*.al*", SearchOption.TopDirectoryOnly)
-                .Select(x => new FileInfo(x))
+                .Where(IsLibraryFile).Select(x => new FileInfo(x))
                 .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
             var systemDir = Path.Combine(rootDir, "System");

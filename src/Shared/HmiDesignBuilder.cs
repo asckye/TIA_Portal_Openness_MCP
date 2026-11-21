@@ -78,6 +78,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     ? Array.Empty<string>()
                     : new[] { targetTag };
                 var recipe = HmiActionScriptRecipeBuilder.Build(actionKind, eventType, tags, targetScreen, targetPopup);
+                if ((string?)recipe["recipeKind"] == "goto-screen" && (bool?)recipe["requiresApiDiscovery"] == true)
+                    return new ResponseMessage {
+                        Message = (string?)recipe["applyBlockedReason"], Meta = new JsonObject {
+                            ["operationSuccess"] = false, ["mayHaveChanged"] = false, ["v4Rejection"] = "UNSUPPORTED_CAPABILITY",
+                            ["nativeMessage"] = recipe["applyBlockedReason"]?.DeepClone() } };
                 return new ResponseMessage
                 {
                     Message = recipe["ok"]?.GetValue<bool>() == true

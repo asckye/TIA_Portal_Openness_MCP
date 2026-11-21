@@ -8,6 +8,22 @@ namespace TiaMcp.Engine.Tests;
 
 public sealed class UnifiedObjectServicesAdapterTests
 {
+    [Fact]
+    public void Named_lookup_on_a_keyless_part_reports_target_scope()
+    {
+        const string path = """[{"property":"Parts","name":"Ready"}]""";
+        var previous = UnifiedRequestValues.Inputs;
+        UnifiedRequestValues.Inputs = new Dictionary<string, object?> {
+            [path] = new HmiArray(new HmiObject { ["property"] = "Parts", ["name"] = "Ready" }) };
+        try
+        {
+            var root = new { Parts = new[] { new { Enabled = true } } };
+            var error = Assert.Throws<NotSupportedException>(() => UnifiedObjectAddress.Resolve(root, path));
+            Assert.Equal("target", error.Data["unsupportedBy"]);
+        }
+        finally { UnifiedRequestValues.Inputs = previous; }
+    }
+
     [Theory]
     [InlineData(false, false, false)]
     [InlineData(false, false, true)]

@@ -126,6 +126,19 @@ namespace TiaMcp.Adapters.Contracts.Tests
         }
 
         [Fact]
+        public void Global_library_create_failure_keeps_dependency_types_in_cleanup_scope()
+        {
+            var fixture = new Fixture("block");
+            fixture.Meta["libraryName"] = "Global";
+            fixture.Create = _ => fixture.Add(fixture.Target, "Motor");
+            fixture.Run(false, "", new[] { "Motor", "Missing" });
+            Assert.Empty(fixture.Target);
+            Assert.Equal(false, fixture.Meta["rollbackCompleted"]);
+            var cleanup = Assert.IsType<List<object?>>(fixture.Meta["cleanupRequired"]);
+            Assert.Contains(cleanup.OfType<Dictionary<string, object?>>(), item => ((string)item["target"]!).Contains("dependency types"));
+        }
+
+        [Fact]
         public void Execution_rechecks_the_wider_scope_after_a_successful_preview()
         {
             var fixture = new Fixture("block");

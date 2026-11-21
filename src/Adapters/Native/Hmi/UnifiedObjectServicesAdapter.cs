@@ -215,7 +215,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 var target = UnifiedObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), durationPathJson);
                 var expected = "Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon." + (kind == "log" ? "LogDuration" : "SegmentDuration");
-                if (target.GetType().FullName != expected) throw new NotSupportedException("Path must identify " + expected);
+                if (target.GetType().FullName != expected) throw StepFailureStatus.UnsupportedByTarget("Path must identify " + expected);
                 string suffix = kind == "log" ? "LogDuration" : "SegmentDuration";
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["before"] = UnifiedRequestScalar.Json(PlcGroupOperations.Call(target, "GetString" + suffix, Type.EmptyTypes));
