@@ -7927,6 +7927,33 @@
           "identifier": "TiaMcp.Updater.Tests.PrereleaseChannelTests/Prerelease_install_is_offered_the_plain_release_that_follows_it( ):5ac69e575e2af0544c86b6bf1da05d11115a950270c6949ec0cc8004d8db4c1e:1"
         }
       ]
+    },
+    {
+      "task": "LOW-A",
+      "maintainerDate": "2026-11-21",
+      "reason": "Maintainer approved 2026-11-21: ManageCfcChartProtection unregistered under ADR 0014 (counts 402/478/499/518, union 523) and the DownloadPlc example binds the PG/PC interface instead of PLCSIM",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/OptionalProductTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.OptionalProductTests/Cfc_crash_policy_refuses_every_unsafe_action_on_every_enabled_release( int major ):23f506362d9f31770764d653a6137e635b2ccbf24eca566c099929fa26310192:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/DownloadSafetyHostTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "DownloadSafetyHostTests/Download_guides_are_served_with_exact_release_availability( string release ):3b712db516cf479df4227cf69d638296d4196c8ab7913e92063972ba7ce7b05b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):746c7130dfad90f178a2cb5cb3231907ca22f819158b615c4ab2b2e0aad68350:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationV4ContractsTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "FoundationV4ContractsTests/EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection( string release , int count ):d423665d64def7fe5d168ca50bd8ba2fc462ac29e18c05a5caed9f8b37b2e008:1"
+        }
+      ]
     }
   ]
 }
