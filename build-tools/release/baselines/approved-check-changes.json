@@ -7865,6 +7865,68 @@
           "identifier": "TiaMcp.Adapters.Contracts.Tests.WriteRefusalTests/Syslog_create_checks_the_selected_CPU_in_preview_and_apply( bool enabled , bool dryRun ):a77d09e3c5f478d0cd4249d82bfe89bad0942e03814426ab92924a849614fef4:1"
         }
       ]
+    },
+    {
+      "task": "REL-GA",
+      "maintainerDate": "2026-11-21",
+      "reason": "Maintainer approved 2026-11-21: tests parameterized for both package names or renamed with all assertions kept; final versions are now publishable as latest by decision (REL-GA)",
+      "items": [
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrepareTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrepareTests/ArchiveContainsExactlyTheInventoriedBytesAndCannotBeOverwritten( ):91354db4da17264b120e7577e576c98f54732a80ad18d58462b54ed316df12a6"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/PlainReleaseRequestBodiesAreUnchanged( ):abb212e6e2cb1f71c62ba717ed92822cbd2ce75f88b55a0d8b14fdf1014abe01:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/PrereleaseRequestBodiesAreNeverLatest( ):d780427ba1ebbb464eba4180f0ad7d460c3321023b6a7368f533960d8378f1ea:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PublishPreparedTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PublishPreparedTests/FailedUploadRetriesAndVerifiedZipIsNotUploadedAgain( ):0e8b5c0fba936cd6369199fcc824007cde0f286cfc11f7e57275d2829b489969:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PublishPreparedTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PublishPreparedTests/FailedUploadRetriesAndVerifiedZipIsNotUploadedAgain( ):d55c7e4d5e4d522a8b2b074cf376dbd01a079207df8f0ef3eb88fb434d5d29af:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PublishPreparedTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PublishPreparedTests/FirstZipUploadFailureIsRetriedAndBothAssetsAreVerified( ):62f4501760ea02c062a4dbd68f7e89674a2cbfd97aa828f4edf49f6806846b65:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PublishPreparedTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PublishPreparedTests/FirstZipUploadFailureIsRetriedAndBothAssetsAreVerified( ):dd24b9ba9a31236498b7396007fda1a5a83c33f08defc6ac0e716471ec827fc8:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PublishPreparedTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PublishPreparedTests/UploadCreatesOrReusesADraftAndRemovesStaleDuplicates( bool reuse ):da8c4bc8549111864f2237e69549c9f64618b602c0fed0f350503501ca028c42:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PublishPreparedTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PublishPreparedTests/PlainVersionsAreRejectedByBothCommandsBeforeAnyIo( ):771c27dba89b615bd1e3d93c98d957f435ebb127bec2fa986e4504dab266dbfc"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/ScorecardTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.ScorecardTests/AdapterSearchPrefersWorktreeThenPrimaryThenNewestPrepared( ):1403d9515fe77fce985d9b5ed13aa4836dabb4fb05fd1ca34edfb2d693538540"
+        },
+        {
+          "path": "tests/Updater/TiaMcp.Updater.Tests/PrereleaseChannelTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Updater.Tests.PrereleaseChannelTests/Prerelease_install_is_offered_the_plain_release_that_follows_it( ):5ac69e575e2af0544c86b6bf1da05d11115a950270c6949ec0cc8004d8db4c1e:1"
+        }
+      ]
     }
   ]
 }
