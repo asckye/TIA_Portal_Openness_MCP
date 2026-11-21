@@ -22,8 +22,40 @@
       </DockPanel>
     </Border>
     <Border DockPanel.Dock="Top" x:Name="ProjectToolbar" Style="{StaticResource Primer.IdeBar}">
-      <DockPanel VerticalAlignment="Center">
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+      <ux:PageHeadPanel Spacing="4" VerticalAlignment="Center">
+        <WrapPanel VerticalAlignment="Center">
+          <StackPanel x:Name="BlockIdentity" Orientation="Horizontal" MaxWidth="230" Margin="0,0,8,0">
+            <Border DataContext="{Binding Engineering.FocusedBlock}" Style="{StaticResource Primer.BlkBadge}" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.BlkBadgeText}"/>
+            </Border>
+            <TextBlock Text="{Binding Engineering.FocusedBlock.Name}" Style="{StaticResource Primer.Mono}"
+              MaxWidth="170" FontWeight="SemiBold" Margin="6,0,0,0" ToolTip="{Binding Engineering.FocusedBlock.Path}"/>
+            <Ellipse Style="{StaticResource Project.Dot}" Visibility="{Binding Engineering.FocusedBlock.IsModified,
+              Converter={StaticResource BoolToVisibility},FallbackValue=Collapsed}"/>
+            <Border Style="{StaticResource Primer.ProjectDivider}" Width="1" Margin="8,4,0,4"/>
+          </StackPanel>
+          <RadioButton x:Name="RenderTab" AutomationProperties.Name="{l:Tr Project.Render}" GroupName="ProjectDocument"
+            Style="{StaticResource Primer.ProjectRenderTab}" Click="OnRender">
+            <StackPanel Orientation="Horizontal"><Path Data="M6,3 L1,8 6,13 M10,3 L15,8 10,13" Style="{StaticResource Project.ButtonGlyph}"/>
+              <TextBlock Text="{l:Tr Project.NetworkTab}"/></StackPanel>
+          </RadioButton>
+          <RadioButton x:Name="InterfaceTab" AutomationProperties.Name="{l:Tr Project.Interface}" GroupName="ProjectDocument"
+            Margin="4,0" Style="{StaticResource Primer.ProjectInterfaceTab}" Click="OnInterface">
+            <StackPanel Orientation="Horizontal"><Path Data="{StaticResource Icon.FileText}" Style="{StaticResource Project.ButtonGlyph}"/>
+              <TextBlock Text="{l:Tr Project.Interface}"/></StackPanel>
+          </RadioButton>
+          <RadioButton x:Name="CompileTab" ToolTip="{l:Tr Pages.CompileDescription}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" GroupName="ProjectDocument"
+            Style="{StaticResource Primer.ProjectCompileTab}" Click="OnCompileResults">
+            <StackPanel Orientation="Horizontal">
+              <Path Data="{StaticResource Icon.Warning}" Style="{StaticResource Project.ButtonGlyph}"/>
+              <TextBlock Text="{l:Tr Project.DiagnosticTab}"/>
+              <Border Style="{StaticResource Primer.ProjectCompileCount}" Margin="4,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Engineering.DiagnosticCount}"/>
+              </Border>
+            </StackPanel>
+          </RadioButton>
+        </WrapPanel>
+        <StackPanel Orientation="Horizontal">
           <Button x:Name="ExportMenuButton" Style="{StaticResource Primer.IdeToolButton}" AutomationProperties.Name="{l:Tr Blocks.Export}"
             Click="OnExportMenu" ToolTip="{l:Tr Pages.TransferDescription}">
             <StackPanel Orientation="Horizontal">
@@ -63,39 +95,7 @@
             </StackPanel>
           </Button>
         </StackPanel>
-        <DockPanel LastChildFill="False">
-          <StackPanel x:Name="BlockIdentity" Orientation="Horizontal" MaxWidth="230" Margin="0,0,8,0">
-            <Border DataContext="{Binding Engineering.FocusedBlock}" Style="{StaticResource Primer.BlkBadge}" VerticalAlignment="Center">
-              <TextBlock Text="{Binding Kind}" Style="{StaticResource Primer.BlkBadgeText}"/>
-            </Border>
-            <TextBlock Text="{Binding Engineering.FocusedBlock.Name}" Style="{StaticResource Primer.Mono}"
-              MaxWidth="170" FontWeight="SemiBold" Margin="6,0,0,0" ToolTip="{Binding Engineering.FocusedBlock.Path}"/>
-            <Ellipse Style="{StaticResource Project.Dot}" Visibility="{Binding Engineering.FocusedBlock.IsModified,
-              Converter={StaticResource BoolToVisibility},FallbackValue=Collapsed}"/>
-            <Border Style="{StaticResource Primer.ProjectDivider}" Width="1" Margin="8,4,0,4"/>
-          </StackPanel>
-          <RadioButton x:Name="RenderTab" AutomationProperties.Name="{l:Tr Project.Render}" GroupName="ProjectDocument"
-            Style="{StaticResource Primer.ProjectRenderTab}" Click="OnRender">
-            <StackPanel Orientation="Horizontal"><Path Data="M6,3 L1,8 6,13 M10,3 L15,8 10,13" Style="{StaticResource Project.ButtonGlyph}"/>
-              <TextBlock Text="{l:Tr Project.NetworkTab}"/></StackPanel>
-          </RadioButton>
-          <RadioButton x:Name="InterfaceTab" AutomationProperties.Name="{l:Tr Project.Interface}" GroupName="ProjectDocument"
-            Margin="4,0" Style="{StaticResource Primer.ProjectInterfaceTab}" Click="OnInterface">
-            <StackPanel Orientation="Horizontal"><Path Data="{StaticResource Icon.FileText}" Style="{StaticResource Project.ButtonGlyph}"/>
-              <TextBlock Text="{l:Tr Project.Interface}"/></StackPanel>
-          </RadioButton>
-          <RadioButton x:Name="CompileTab" ToolTip="{l:Tr Pages.CompileDescription}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" GroupName="ProjectDocument"
-            Style="{StaticResource Primer.ProjectCompileTab}" Click="OnCompileResults">
-            <StackPanel Orientation="Horizontal">
-              <Path Data="{StaticResource Icon.Warning}" Style="{StaticResource Project.ButtonGlyph}"/>
-              <TextBlock Text="{l:Tr Project.DiagnosticTab}"/>
-              <Border Style="{StaticResource Primer.ProjectCompileCount}" Margin="4,0,0,0" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Engineering.DiagnosticCount}"/>
-              </Border>
-            </StackPanel>
-          </RadioButton>
-        </DockPanel>
-      </DockPanel>
+      </ux:PageHeadPanel>
     </Border>
     <Border x:Name="EmptyToolbar" DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}" Visibility="Collapsed">
       <DockPanel><Button DockPanel.Dock="Right" Click="OnProjectOptions" Content="{l:Tr Project.OptionsTitle}"

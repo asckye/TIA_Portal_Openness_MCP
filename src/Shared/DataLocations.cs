@@ -44,6 +44,8 @@ namespace TiaOpenness.Shared
         internal string RecoveryAttemptedPath => Path.Combine(Root ?? primaryDataRoot ?? AppContext.BaseDirectory, "recovery");
         internal string WorkbenchDataDirectory => Root ?? Path.Combine(localApplicationData, "TiaOpennessStudio", "data");
         internal string LocalApplicationDataDirectory => localApplicationData;
+        internal static string RoamingApplicationDataDirectory => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        internal static string UserProfileDirectory => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         internal string SystemTempDirectory => temporaryDirectory;
 
         private DataLocations(string root, string localApplicationData, string temporaryDirectory, bool explicitDataRoot = false, string primaryDataRoot = null)

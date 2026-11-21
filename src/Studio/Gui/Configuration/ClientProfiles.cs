@@ -2,6 +2,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Windows;
 using TiaOpenness.Gui.Localization;
+using TiaOpenness.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,10 +53,9 @@ namespace TiaMcpConfigurator
             get
             {
                 if (string.IsNullOrEmpty(Path)) return "";
-                var folders = new[] { (Environment.SpecialFolder.ApplicationData, "%APPDATA%"), (Environment.SpecialFolder.UserProfile, "~") };
-                foreach (var (folder, prefix) in folders)
+                var folders = new[] { (DataLocations.RoamingApplicationDataDirectory, "%APPDATA%"), (DataLocations.UserProfileDirectory, "~") };
+                foreach (var (directory, prefix) in folders)
                 {
-                    string directory = Environment.GetFolderPath(folder);
                     if (directory.Length > 0 && Path.StartsWith(directory + "\\", StringComparison.OrdinalIgnoreCase))
                         return prefix + Path[directory.Length..].Replace('\\', '/');
                 }
@@ -135,8 +135,8 @@ namespace TiaMcpConfigurator
         // Order is the on-screen order: CLIs first, Claude Code and Codex on top, IDEs last.
         public static List<ClientProfile> All()
         {
-            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string app = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string home = DataLocations.UserProfileDirectory;
+            string app = DataLocations.RoamingApplicationDataDirectory;
             string codex = Environment.GetEnvironmentVariable("CODEX_HOME");
             if (string.IsNullOrWhiteSpace(codex)) codex = System.IO.Path.Combine(home, ".codex");
             string kimi = Environment.GetEnvironmentVariable("KIMI_CODE_HOME");
@@ -218,7 +218,7 @@ namespace TiaMcpConfigurator
 
         private static string[] InstallFolders(string client)
         {
-            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string local = DataLocations.Current.LocalApplicationDataDirectory;
             string programs = System.IO.Path.Combine(local, "Programs");
             string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             switch (client)

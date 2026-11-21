@@ -23,7 +23,7 @@
         </DockPanel>
       </Border>
       <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
-              <Border x:Name="SyncCard" DockPanel.Dock="Top" Padding="16,4" Style="{StaticResource Primer.ProjectHeaderLine}">
+              <Border x:Name="SyncCard" DockPanel.Dock="Top" MinHeight="44" Padding="16,4" Style="{StaticResource Primer.IdeSubBar}">
                 <DockPanel VerticalAlignment="Center">
                   <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}" Padding="2">
                     <UniformGrid Columns="2" x:Name="SyncStrip">
