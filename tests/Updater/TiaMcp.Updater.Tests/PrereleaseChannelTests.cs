@@ -58,7 +58,10 @@ namespace TiaMcp.Updater.Tests
         {
             using var f = new ChannelFixture("4.0.0-beta.1")
             {
-                List = new[] { Release("v3.3.0"), Release("v4.0.0-beta.1", prerelease: true), Release("v4.0.0-beta.2", prerelease: true), Release("v4.0.0-beta.3", prerelease: true, draft: true), Release("latest") }
+                List = new[] {
+                    Release("v3.3.0"), Release("v4.0.0-beta.1", prerelease: true), Release("v4.0.0-beta.2", prerelease: true),
+                        Release("v4.0.0-beta.3", prerelease: true, draft: true), Release("latest")
+                }
             };
             var lines = f.Check();
             Assert.Equal(new[] { "/api/repos/owner/repo/releases?per_page=100" }, f.Urls);
@@ -72,7 +75,9 @@ namespace TiaMcp.Updater.Tests
             using var f = new ChannelFixture("4.0.0-rc.1") { List = new[] { Release("v4.0.0-rc.1", prerelease: true),
                 Release("v4.0.0", prefix: "TIA_MCP_v"), Release("v4.0.1", prefix: "TIA_MCP_Debug_v"), Release("v3.3.0") } };
             var lines = f.Check();
-            Assert.Contains(lines, line => line.Contains("4.0.0-rc.1 -> 4.0.0", StringComparison.Ordinal) && !line.Contains("4.0.0-rc.1 -> 4.0.0-", StringComparison.Ordinal));
+            Assert
+                .Contains(lines, line => line.Contains("4.0.0-rc.1 -> 4.0.0", StringComparison.Ordinal) && !line
+                    .Contains("4.0.0-rc.1 -> 4.0.0-", StringComparison.Ordinal));
             Assert.Contains(lines, line => line.EndsWith("/TIA_MCP_v4.0.0_20261021.zip", StringComparison.Ordinal));
         }
 
@@ -83,8 +88,12 @@ namespace TiaMcp.Updater.Tests
             var lines = f.Check("v4.0.0-beta.2");
             Assert.Equal(new[] { "/api/repos/owner/repo/releases/tags/v4.0.0-beta.2" }, f.Urls);
             Assert.Contains(lines, line => line.Contains("3.3.0 -> 4.0.0-beta.2", StringComparison.Ordinal));
-            int warning = lines.FindIndex(line => line.Contains("the selected release is a pre-release", StringComparison.Ordinal) && line.EndsWith("v4.0.0-beta.2", StringComparison.Ordinal));
-            Assert.True(warning >= 0 && warning < lines.FindIndex(line => line.Contains("TIA_MCP_Delivery_v4.0.0-beta.2_20261021.zip", StringComparison.Ordinal)), "the pre-release warning comes before the asset");
+            int warning = lines
+                .FindIndex(line => line.Contains("the selected release is a pre-release", StringComparison.Ordinal) && line
+                    .EndsWith("v4.0.0-beta.2", StringComparison.Ordinal));
+            Assert
+                .True(warning >= 0 && warning < lines.FindIndex(line => line.Contains("TIA_MCP_Delivery_v4.0.0-beta.2_20261021.zip", StringComparison.Ordinal)),
+                    "the pre-release warning comes before the asset");
             Assert.Throws<InvalidOperationException>(() => f.Check("v4.0.0-alpha.1"));
         }
 
@@ -135,7 +144,10 @@ namespace TiaMcp.Updater.Tests
             return new
             {
                 tag_name = tag, published_at = "2026-10-21T00:00:00Z", prerelease, draft,
-                assets = new[] { new { name = package + ".zip", browser_download_url = "https://fixture.invalid/download/" + package + ".zip" }, new { name = package + ".sha256", browser_download_url = "https://fixture.invalid/download/" + package + ".sha256" } }
+                assets = new[] {
+                    new { name = package + ".zip", browser_download_url = "https://fixture.invalid/download/" + package + ".zip" }, new {
+                        name = package + ".sha256", browser_download_url = "https://fixture.invalid/download/" + package + ".sha256" }
+                }
             };
         }
 
@@ -147,12 +159,16 @@ namespace TiaMcp.Updater.Tests
             internal object[] List { get; set; } = Array.Empty<object>();
             internal List<string> Urls { get; } = new List<string>();
             internal bool FailApi { get; set; }
-            internal string ExpandedAssets { get; set; } = "<a href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.zip\">zip</a><a href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.sha256\">sha</a>";
+            internal string ExpandedAssets { get; set; } =
+                "<a href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.zip\">zip</a><a " +
+                "href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.sha256\">sha</a>";
 
             internal ChannelFixture(string installed)
             {
                 Directory.CreateDirectory(Path.Combine(root, "manifest"));
-                File.WriteAllText(Path.Combine(root, "manifest/delivery.json"), JsonSerializer.Serialize(new { release = installed, package = "TIA_MCP_Delivery_v" + installed + "_20261020", engineRelease = installed }));
+                File
+                    .WriteAllText(Path.Combine(root, "manifest/delivery.json"), JsonSerializer
+                        .Serialize(new { release = installed, package = "TIA_MCP_Delivery_v" + installed + "_20261020", engineRelease = installed }));
             }
 
             internal List<string> Check(string version = null)
@@ -174,7 +190,8 @@ namespace TiaMcp.Updater.Tests
                         if (url.Contains("/releases/tags/", StringComparison.Ordinal) && Tagged != null) return JsonSerializer.Serialize(Tagged);
                         throw new IOException("unexpected request: " + url);
                     },
-                    ReadRedirectForTest = (url, _) => FailApi ? "https://fixture.invalid/github/releases/tag/v3.3.0" : throw new IOException("the release page is not used here: " + url)
+                    ReadRedirectForTest = (url, _) => FailApi ? "https://fixture.invalid/github/releases/tag/v3.3.0"
+                        : throw new IOException("the release page is not used here: " + url)
                 };
                 UpdaterEngine.Run(options, lines.Add, _ => new List<string>());
                 return lines;

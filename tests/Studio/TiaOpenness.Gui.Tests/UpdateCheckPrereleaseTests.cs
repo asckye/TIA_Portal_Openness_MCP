@@ -9,7 +9,8 @@ public sealed class UpdateCheckPrereleaseTests
 {
     private static string Release(string tag, bool prerelease, bool draft = false, string prefix = "TIA_MCP_Delivery_") =>
         "{\"tag_name\":\"" + tag + "\",\"prerelease\":" + (prerelease ? "true" : "false") + ",\"draft\":" + (draft ? "true" : "false") +
-        ",\"html_url\":\"https://github.com/o/r/releases/tag/" + tag + "\",\"assets\":[{\"name\":\"" + prefix + tag + "_20261021.zip\",\"size\":1048576},{\"name\":\"" + prefix + tag + "_20261021.sha256\",\"size\":80}]}";
+        ",\"html_url\":\"https://github.com/o/r/releases/tag/" + tag + "\",\"assets\":[{\"name\":\"" + prefix + tag
+            + "_20261021.zip\",\"size\":1048576},{\"name\":\"" + prefix + tag + "_20261021.sha256\",\"size\":80}]}";
 
     [Theory]
     [InlineData("4.0.0-beta.2", "4.0.0-beta.1", 1)]
@@ -44,14 +45,16 @@ public sealed class UpdateCheckPrereleaseTests
     [Fact]
     public void PrereleaseInstallTakesTheNewestPublishedReleaseFromTheList()
     {
-        var list = "[" + Release("v3.3.0", false) + "," + Release("v4.0.0-beta.2", true) + "," + Release("v4.0.0-beta.1", true) + "," + Release("v4.0.0-beta.3", true, draft: true) + "]";
+        var list = "[" + Release("v3.3.0", false) + "," + Release("v4.0.0-beta.2", true) + "," + Release("v4.0.0-beta.1", true) + ","
+            + Release("v4.0.0-beta.3", true, draft: true) + "]";
         var info = UpdateCheck.ParseReleaseList(list, "4.0.0-beta.1", "o/r");
         Assert.Equal("v4.0.0-beta.2", info.Tag);
         Assert.Equal("4.0.0-beta.2", info.Latest);
         Assert.True(info.UpdateAvailable);
         Assert.Equal("TIA_MCP_Delivery_v4.0.0-beta.2_20261021.zip", info.ZipName);
         Assert.True(info.HasSha256);
-        var plain = UpdateCheck.ParseReleaseList("[" + Release("v4.0.0-rc.1", true) + "," + Release("v4.0.0", false, prefix: "TIA_MCP_") + "]", "4.0.0-rc.1", "o/r");
+        var plain = UpdateCheck
+            .ParseReleaseList("[" + Release("v4.0.0-rc.1", true) + "," + Release("v4.0.0", false, prefix: "TIA_MCP_") + "]", "4.0.0-rc.1", "o/r");
         Assert.Equal("4.0.0", plain.Latest);
         Assert.True(plain.UpdateAvailable);
         Assert.Equal("TIA_MCP_v4.0.0_20261021.zip", plain.ZipName);
