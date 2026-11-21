@@ -19,6 +19,104 @@ public sealed class ServedExamplesTests(Xunit.Abstractions.ITestOutputHelper out
         where TiaOpenness.Shared.ToolUsageCatalog.IsRegistered(name, release)
         select new object[] { release, name };
 
+    [Theory, MemberData(nameof(Releases))]
+    public async Task Every_registered_operation_serves_a_call_example_unless_refused_by_the_release_guard(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var failures = new List<string>();
+        int checkedOperations = 0;
+        int unavailable = 0;
+        foreach (var tool in fixture.Tools)
+        {
+            string name = tool.ProtocolTool.Name;
+            var schema = tool.ProtocolTool.InputSchema;
+            var properties = schema.GetProperty("properties");
+            var usage = await fixture.Call("GetToolUsage", new { toolName = name });
+            if (usage["data"]?["operations"] is not JsonArray operations)
+            {
+                failures.Add($"{release}/{name}: missing operations list. {usage["error"]}");
+                continue;
+            }
+            string[] listed = operations.Select(row => (string)row!["operation"]!).ToArray();
+            string? selector = properties.TryGetProperty("action", out var field) ? "action"
+                : name != "GetToolUsage" && properties.TryGetProperty("operation", out field) ? "operation" : null;
+            var choices = listed;
+            if (selector != null)
+            {
+                var advertised = field.TryGetProperty("enum", out var alternatives)
+                    ? alternatives.EnumerateArray().Select(value => value.GetString()!).Where(value => value.Length > 0).ToArray()
+                    : Array.Empty<string>();
+                if (advertised.Length == 0 || !listed.SequenceEqual(advertised))
+                    failures.Add($"{release}/{name}: operation list differs from {selector}.");
+                choices = advertised.Union(listed, StringComparer.Ordinal).ToArray();
+            }
+            var validator = new InputSchema(schema);
+            foreach (string operation in choices)
+            {
+                checkedOperations++;
+                var selected = await fixture.Call("GetToolUsage", new { toolName = name, operation });
+                var example = selected["data"]?["example"];
+                var request = example?["request"];
+                var args = request?["params"]?["arguments"] as JsonObject;
+                var error = args == null ? "Missing arguments." : validator.Validate(JsonSerializer.SerializeToElement(args), "arguments")?.Message;
+                string? kind = (string?)example?["kind"];
+                var option = operations.SingleOrDefault(row => (string?)row!["operation"] == operation);
+                string? selectedField = selector ?? (string?)option?["selector"];
+                if ((string?)request?["method"] != "tools/call" || (string?)request?["params"]?["name"] != name)
+                    error = $"Expected a tools/call request for {name}. {error}";
+                if (selectedField != null && (string?)args?[selectedField] != operation)
+                    error = $"Expected {selectedField}={operation}. {error}";
+                bool refused = false;
+                bool hasGuard = option?["refusedByReleaseGuard"] is JsonValue guard && guard.TryGetValue(out refused);
+                bool guardedExample = kind == "unavailable" && refused && !string.IsNullOrWhiteSpace((string?)example?["releaseProblem"]);
+                bool callExample = kind == "parameterized-call-example" && example?["releaseProblem"] == null;
+                if (guardedExample) unavailable++;
+                if (!hasGuard || (!callExample && !guardedExample) || error != null)
+                    failures.Add($"{release}/{name}/{operation}: {kind ?? "missing example"}, refusedByReleaseGuard={option?["refusedByReleaseGuard"]}. " +
+                        $"{example?["releaseProblem"] ?? selected["error"]} {error}");
+            }
+        }
+        output.WriteLine($"{release}: {fixture.Tools.Count} tools, {checkedOperations} operations, {unavailable} unavailable under the release guard.");
+        Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
+    }
+
+    [Theory]
+    [InlineData("19", "ManageUmcUsers", "createOffline", true)]
+    [InlineData("20", "ManageUmcUsers", "createOffline", false)]
+    [InlineData("18", "ManagePlcUserGroup", "rename", true)]
+    [InlineData("19", "ManagePlcUserGroup", "rename", false)]
+    [InlineData("20", "ManageDeviceServiceObjects", "setDefault", true)]
+    [InlineData("20", "ManageDeviceServiceObjects", "export", false)]
+    [InlineData("16", "ManagePlcCertificate", "export", false)]
+    [InlineData("19", "ManageSyslogServers", "read", false)]
+    [InlineData("21", "ManageTechnologyObject", "create", false)]
+    [InlineData("21", "ExchangeCfcCharts", "selectiveExport", true)]
+    [InlineData("21", "ExchangeCfcCharts", "import", false)]
+    public void Operation_guard_is_independent_of_a_rejected_example(string release, string name, string operation, bool refused)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var schema = fixture.Tools.Single(tool => tool.ProtocolTool.Name == name).ProtocolTool.InputSchema;
+        var usage = TiaOpenness.Shared.ToolUsageCatalog.Describe(name, release, "plc-foundation", "", JsonNode.Parse(schema.GetRawText())!.AsObject(),
+            operation: operation, callProblem: _ => "This example's arguments were refused.");
+        Assert.Equal(refused ? "unavailable" : "parameterized-call-example", (string?)usage["example"]?["kind"]);
+        Assert.False(string.IsNullOrWhiteSpace((string?)usage["example"]?["releaseProblem"]));
+        var choice = usage["operations"]!.AsArray().Single(row => (string?)row!["operation"] == operation);
+        Assert.Equal(refused, (bool?)choice!["refusedByReleaseGuard"]);
+    }
+
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Application_test_set_import_example_passes_exchange_validation(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var usage = await fixture.Call("GetToolUsage", new { toolName = "ExchangeTestSuiteCase", operation = "importTestSets" });
+        var args = usage["data"]!["example"]!["request"]!["params"]!["arguments"]!;
+        var plan = TiaMcpServer.Siemens.TestSuiteLogic.ValidateExchangeRequest((string)args["category"]!, (string)args["action"]!,
+            (string)args["name"]!, (string)args["filePath"]!, (string?)args["importOptions"] ?? "None", (string?)args["loadOptions"] ?? "",
+            (string)args["kind"]!, (bool)args["dryRun"]!);
+        Assert.Equal("testSet", plan.Kind);
+        Assert.False(plan.Writes);
+    }
+
     [Theory, MemberData(nameof(LargeSchemas))]
     public async Task Large_usage_schemas_preserve_the_registered_schema(string release, string name)
     {

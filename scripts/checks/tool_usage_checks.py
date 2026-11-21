@@ -152,14 +152,22 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False, r
             assert choices, name + ': action alternatives are missing'
             assert [o['operation'] for o in usage['operations']] == choices
             if exhaustive:
-                for choice in choices:
+                for option in usage['operations']:
+                    choice = option['operation']
                     selected_usage = unwrap_usage(call('GetToolUsage', {'toolName': name, 'operation': choice}))
-                    selected_args = selected_usage['example']['request']['params']['arguments']
-                    assert selected_usage['example']['kind'] == 'parameterized-call-example', (release, name, choice, 'missing operation example')
+                    example_for_choice = selected_usage['example']
+                    selected_args = example_for_choice['request']['params']['arguments']
+                    refused = option['refusedByReleaseGuard']
+                    assert type(refused) is bool, (release, name, choice, 'invalid release guard marker')
+                    kind = example_for_choice['kind']
+                    problem = example_for_choice['releaseProblem']
+                    if kind == 'unavailable':
+                        assert refused and isinstance(problem, str) and problem.strip(), (release, name, choice, kind, problem)
+                    else:
+                        assert kind == 'parameterized-call-example' and problem is None, (release, name, choice, kind, problem)
                     assert selected_args[selector] == choice, (name, choice)
                     assert set(schema.get('required', [])) <= set(selected_args) <= set(props), (name, choice)
-                    operation_records.append({'operation': choice, 'exampleKind': selected_usage['example']['kind'],
-                        'releaseProblem': selected_usage['example']['releaseProblem']})
+                    operation_records.append({'operation': choice, 'exampleKind': kind, 'releaseProblem': problem})
         records.append({'toolName': name, 'usageProfile': usage['profile'], 'exampleKind': example['kind'], 'relationship': reference['relationship'], 'documents': reference['documents'], 'operations': operation_records})
         if exhaustive and name in GENERATION_EXAMPLES:
             check_generation_example(call, name, args)

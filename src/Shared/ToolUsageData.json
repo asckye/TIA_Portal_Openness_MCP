@@ -11926,7 +11926,28 @@
           "exampleValue": 100
         }
       },
-      "operations": {},
+      "operations": {
+        "softwareToLibrary": {
+          "arguments": {
+            "kind": "softwareToLibrary",
+            "softwarePath": "PLC_1",
+            "targetLibraryName": ""
+          },
+          "argumentsMode": "complete"
+        },
+        "hardware": {
+          "arguments": {
+            "kind": "hardware",
+            "devicePath": [
+              "<source station from GetProjectTree>"
+            ],
+            "targetDevicePath": [
+              "<different target station from GetProjectTree>"
+            ]
+          },
+          "argumentsMode": "complete"
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
     },
     "CompareSoftwareToOnline": {
@@ -13367,7 +13388,11 @@
         },
         "importTestSets": {
           "arguments": {
-            "action": "importTestSets"
+            "action": "importTestSets",
+            "category": "application",
+            "kind": "testSet",
+            "name": "",
+            "filePath": "C:\\Examples\\imports\\ApplicationTests.tat"
           }
         }
       },
@@ -16013,7 +16038,7 @@
           "arguments": {
             "action": "update",
             "properties": {
-              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              "Name": "Chart_1_Renamed"
             },
             "chartName": "Chart_1"
           }
@@ -16958,15 +16983,17 @@
         "check": {
           "arguments": {
             "action": "check",
-            "telegramType": "MainTelegram",
-            "telegramNumber": 1
+            "telegramType": "AdditionalTelegram",
+            "inputSize": 2,
+            "outputSize": 4
           }
         },
         "insert": {
           "arguments": {
             "action": "insert",
-            "telegramType": "MainTelegram",
-            "telegramNumber": 1
+            "telegramType": "AdditionalTelegram",
+            "inputSize": 2,
+            "outputSize": 4
           }
         },
         "erase": {
@@ -18497,7 +18524,8 @@
         "export": {
           "arguments": {
             "action": "export",
-            "filePath": "C:\\Examples\\exports\\Main.xml"
+            "filePath": "C:\\Examples\\exports\\PlcCertificate.cer",
+            "certificateId": "<exact certificate ID from ManagePlcCertificate list>"
           }
         },
         "delete": {
@@ -22963,7 +22991,13 @@
           "exampleValue": 100
         }
       },
-      "operations": {},
+      "operations": {
+        "write": {
+          "arguments": {
+            "source": "write"
+          }
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "inline": true
     },
@@ -26379,7 +26413,116 @@
           "exampleValue": true
         }
       },
-      "operations": {},
+      "operations": {
+        "udt": {
+          "arguments": {
+            "kind": "udt",
+            "spec": {
+              "name": "Motor",
+              "members": [
+                {
+                  "name": "Ready",
+                  "datatype": "Bool"
+                }
+              ]
+            }
+          }
+        },
+        "tagtable": {
+          "arguments": {
+            "kind": "tagtable",
+            "spec": {
+              "tableName": "ExampleTags",
+              "tags": [
+                {
+                  "name": "Ready",
+                  "dataTypeName": "Bool",
+                  "logicalAddress": "%M0.0"
+                }
+              ]
+            }
+          }
+        },
+        "globaldb": {
+          "arguments": {
+            "kind": "globaldb",
+            "spec": {
+              "dbName": "DB_Status",
+              "dbNumber": 10,
+              "staticMembers": [
+                {
+                  "name": "Ready",
+                  "datatype": "Bool",
+                  "startValue": "FALSE"
+                }
+              ]
+            }
+          }
+        },
+        "fc": {
+          "arguments": {
+            "kind": "fc",
+            "spec": {
+              "blockName": "FC_DryRun",
+              "blockNumber": 12,
+              "inputs": [
+                {
+                  "name": "Start",
+                  "datatype": "Bool"
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "Run",
+                  "datatype": "Bool"
+                }
+              ],
+              "structuredText": {
+                "operations": [
+                  {
+                    "op": "if",
+                    "condition": "Start"
+                  },
+                  {
+                    "op": "assign",
+                    "target": "Run",
+                    "indent": 2,
+                    "literalValue": "TRUE"
+                  },
+                  {
+                    "op": "endif"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "fb": {
+          "arguments": {
+            "kind": "fb",
+            "spec": {
+              "blockName": "FB_Ready",
+              "blockNumber": 11,
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "Ready",
+                  "datatype": "Bool"
+                }
+              ],
+              "structuredText": {
+                "operations": [
+                  {
+                    "op": "assign",
+                    "target": "#Ready",
+                    "literalValue": "TRUE"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
       "inline": true,
       "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
@@ -37656,7 +37799,116 @@
               "exampleValue": false
             }
           },
-          "operations": {},
+          "operations": {
+            "udt": {
+              "arguments": {
+                "kind": "udt",
+                "spec": {
+                  "name": "Motor",
+                  "members": [
+                    {
+                      "name": "Ready",
+                      "datatype": "Bool"
+                    }
+                  ]
+                }
+              }
+            },
+            "tagtable": {
+              "arguments": {
+                "kind": "tagtable",
+                "spec": {
+                  "tableName": "ExampleTags",
+                  "tags": [
+                    {
+                      "name": "Ready",
+                      "dataTypeName": "Bool",
+                      "logicalAddress": "%M0.0"
+                    }
+                  ]
+                }
+              }
+            },
+            "globaldb": {
+              "arguments": {
+                "kind": "globaldb",
+                "spec": {
+                  "dbName": "DB_Status",
+                  "dbNumber": 10,
+                  "staticMembers": [
+                    {
+                      "name": "Ready",
+                      "datatype": "Bool",
+                      "startValue": "FALSE"
+                    }
+                  ]
+                }
+              }
+            },
+            "fc": {
+              "arguments": {
+                "kind": "fc",
+                "spec": {
+                  "blockName": "FC_DryRun",
+                  "blockNumber": 12,
+                  "inputs": [
+                    {
+                      "name": "Start",
+                      "datatype": "Bool"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "name": "Run",
+                      "datatype": "Bool"
+                    }
+                  ],
+                  "structuredText": {
+                    "operations": [
+                      {
+                        "op": "if",
+                        "condition": "Start"
+                      },
+                      {
+                        "op": "assign",
+                        "target": "Run",
+                        "indent": 2,
+                        "literalValue": "TRUE"
+                      },
+                      {
+                        "op": "endif"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "fb": {
+              "arguments": {
+                "kind": "fb",
+                "spec": {
+                  "blockName": "FB_Ready",
+                  "blockNumber": 11,
+                  "inputs": [],
+                  "outputs": [
+                    {
+                      "name": "Ready",
+                      "datatype": "Bool"
+                    }
+                  ],
+                  "structuredText": {
+                    "operations": [
+                      {
+                        "op": "assign",
+                        "target": "#Ready",
+                        "literalValue": "TRUE"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true,
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. The UDT example applies through V20. FC and FB builders require V21.",
@@ -39546,7 +39798,28 @@
               "exampleValue": 100
             }
           },
-          "operations": {},
+          "operations": {
+            "softwareToLibrary": {
+              "arguments": {
+                "kind": "softwareToLibrary",
+                "softwarePath": "PLC_1",
+                "targetLibraryName": ""
+              },
+              "argumentsMode": "complete"
+            },
+            "hardware": {
+              "arguments": {
+                "kind": "hardware",
+                "devicePath": [
+                  "<source station from GetProjectTree>"
+                ],
+                "targetDevicePath": [
+                  "<different target station from GetProjectTree>"
+                ]
+              },
+              "argumentsMode": "complete"
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "note": "Hardware comparison requires V15.1; software comparisons remain available on V14 SP1. "
         },
@@ -43281,7 +43554,8 @@
             "export": {
               "arguments": {
                 "action": "export",
-                "filePath": "C:\\Examples\\exports\\Main.xml"
+                "filePath": "C:\\Examples\\exports\\PlcCertificate.cer",
+                "certificateId": "<exact certificate ID from ManagePlcCertificate list>"
               }
             },
             "delete": {
@@ -45893,7 +46167,13 @@
               "exampleValue": 100
             }
           },
-          "operations": {},
+          "operations": {
+            "write": {
+              "arguments": {
+                "source": "write"
+              }
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true,
           "notes": [
@@ -46023,15 +46303,17 @@
             "check": {
               "arguments": {
                 "action": "check",
-                "telegramType": "MainTelegram",
-                "telegramNumber": 1
+                "telegramType": "AdditionalTelegram",
+                "inputSize": 2,
+                "outputSize": 4
               }
             },
             "insert": {
               "arguments": {
                 "action": "insert",
-                "telegramType": "MainTelegram",
-                "telegramNumber": 1
+                "telegramType": "AdditionalTelegram",
+                "inputSize": 2,
+                "outputSize": 4
               }
             },
             "erase": {
@@ -46640,7 +46922,7 @@
               "arguments": {
                 "action": "update",
                 "properties": {
-                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                  "Name": "Chart_1_Renamed"
                 },
                 "chartName": "Chart_1"
               }
@@ -47566,7 +47848,11 @@
             },
             "importTestSets": {
               "arguments": {
-                "action": "importTestSets"
+                "action": "importTestSets",
+                "category": "application",
+                "kind": "testSet",
+                "name": "",
+                "filePath": "C:\\Examples\\imports\\ApplicationTests.tat"
               }
             }
           },
@@ -50847,7 +51133,28 @@
               "exampleValue": 100
             }
           },
-          "operations": {},
+          "operations": {
+            "softwareToLibrary": {
+              "arguments": {
+                "kind": "softwareToLibrary",
+                "softwarePath": "PLC_1",
+                "targetLibraryName": ""
+              },
+              "argumentsMode": "complete"
+            },
+            "hardware": {
+              "arguments": {
+                "kind": "hardware",
+                "devicePath": [
+                  "<source station from GetProjectTree>"
+                ],
+                "targetDevicePath": [
+                  "<different target station from GetProjectTree>"
+                ]
+              },
+              "argumentsMode": "complete"
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "CompareSoftwareToOnline": {
@@ -52664,7 +52971,11 @@
             },
             "importTestSets": {
               "arguments": {
-                "action": "importTestSets"
+                "action": "importTestSets",
+                "category": "application",
+                "kind": "testSet",
+                "name": "",
+                "filePath": "C:\\Examples\\imports\\ApplicationTests.tat"
               }
             }
           },
@@ -56690,7 +57001,7 @@
               "arguments": {
                 "action": "update",
                 "properties": {
-                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                  "Name": "Chart_1_Renamed"
                 },
                 "chartName": "Chart_1"
               }
@@ -57635,15 +57946,17 @@
             "check": {
               "arguments": {
                 "action": "check",
-                "telegramType": "MainTelegram",
-                "telegramNumber": 1
+                "telegramType": "AdditionalTelegram",
+                "inputSize": 2,
+                "outputSize": 4
               }
             },
             "insert": {
               "arguments": {
                 "action": "insert",
-                "telegramType": "MainTelegram",
-                "telegramNumber": 1
+                "telegramType": "AdditionalTelegram",
+                "inputSize": 2,
+                "outputSize": 4
               }
             },
             "erase": {
@@ -59356,7 +59669,8 @@
             "export": {
               "arguments": {
                 "action": "export",
-                "filePath": "C:\\Examples\\exports\\Main.xml"
+                "filePath": "C:\\Examples\\exports\\PlcCertificate.cer",
+                "certificateId": "<exact certificate ID from ManagePlcCertificate list>"
               }
             },
             "delete": {
@@ -64017,7 +64331,13 @@
               "exampleValue": 100
             }
           },
-          "operations": {},
+          "operations": {
+            "write": {
+              "arguments": {
+                "source": "write"
+              }
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true,
           "note": " V14 SP1 uses Startdrive PilotAccess APIs (not available for public use): reads remain available; writes, including previews of write actions, refuse pending VM evidence. V14 parameter numbers use UInt16 (0..65535)."
@@ -68040,7 +68360,116 @@
               "exampleValue": false
             }
           },
-          "operations": {},
+          "operations": {
+            "udt": {
+              "arguments": {
+                "kind": "udt",
+                "spec": {
+                  "name": "Motor",
+                  "members": [
+                    {
+                      "name": "Ready",
+                      "datatype": "Bool"
+                    }
+                  ]
+                }
+              }
+            },
+            "tagtable": {
+              "arguments": {
+                "kind": "tagtable",
+                "spec": {
+                  "tableName": "ExampleTags",
+                  "tags": [
+                    {
+                      "name": "Ready",
+                      "dataTypeName": "Bool",
+                      "logicalAddress": "%M0.0"
+                    }
+                  ]
+                }
+              }
+            },
+            "globaldb": {
+              "arguments": {
+                "kind": "globaldb",
+                "spec": {
+                  "dbName": "DB_Status",
+                  "dbNumber": 10,
+                  "staticMembers": [
+                    {
+                      "name": "Ready",
+                      "datatype": "Bool",
+                      "startValue": "FALSE"
+                    }
+                  ]
+                }
+              }
+            },
+            "fc": {
+              "arguments": {
+                "kind": "fc",
+                "spec": {
+                  "blockName": "FC_DryRun",
+                  "blockNumber": 12,
+                  "inputs": [
+                    {
+                      "name": "Start",
+                      "datatype": "Bool"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "name": "Run",
+                      "datatype": "Bool"
+                    }
+                  ],
+                  "structuredText": {
+                    "operations": [
+                      {
+                        "op": "if",
+                        "condition": "Start"
+                      },
+                      {
+                        "op": "assign",
+                        "target": "Run",
+                        "indent": 2,
+                        "literalValue": "TRUE"
+                      },
+                      {
+                        "op": "endif"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "fb": {
+              "arguments": {
+                "kind": "fb",
+                "spec": {
+                  "blockName": "FB_Ready",
+                  "blockNumber": 11,
+                  "inputs": [],
+                  "outputs": [
+                    {
+                      "name": "Ready",
+                      "datatype": "Bool"
+                    }
+                  ],
+                  "structuredText": {
+                    "operations": [
+                      {
+                        "op": "assign",
+                        "target": "#Ready",
+                        "literalValue": "TRUE"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "inline": true,
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. The UDT example applies through V20. FC and FB builders require V21.",

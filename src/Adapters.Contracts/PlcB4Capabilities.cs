@@ -4,6 +4,17 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class PlcB4Capabilities
     {
+        private const string InterpreterMappings = "InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21.";
+
+        public static string? UnsupportedOperation(int version, string tool, string action)
+        {
+            if (tool == "ManagePlcTableEntries" && version < 17 && action != "createComment" && action != "createTable")
+                return "Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release.";
+            if (tool == "ManageMotionAxis" && version < 21 && (action.EndsWith("Mapping", StringComparison.Ordinal) || action == "connectIdent"))
+                return InterpreterMappings;
+            return null;
+        }
+
         public static string? Unsupported(string release, PlcSoftwareRequest request)
         {
             int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
@@ -16,14 +27,10 @@ namespace TiaMcp.Adapters.Contracts
                     "verified pairs can be added after native verification.";
             if (request.Operation == "ManagePlcSoftwareUnit" && version < 18 && request.Properties.ContainsKey("NamespacePreset"))
                 return "PlcUnitBase.NamespacePreset requires V18.";
-            if (request.Operation == "ManagePlcTableEntries" && version < 17 && request.Action != "createComment" && request.Action != "createTable")
-                return "Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release.";
+            if (UnsupportedOperation(version, request.Operation, request.Action) is string reason) return reason;
             if (request.Operation == "ManageMotionAxis")
             {
-                if (version < 21
-                        && (request.Action.EndsWith("Mapping", StringComparison.Ordinal) || request.Action == "connectIdent" || request
-                            .Aspect == "superimposingSetPoint"))
-                    return "InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes require V21.";
+                if (version < 21 && request.Aspect == "superimposingSetPoint") return InterpreterMappings;
                 if (version < 16 && (request.Aspect.StartsWith("conveyor", StringComparison.Ordinal) || request.Aspect == "synchronousDelayed"))
                     return "ConveyorTrackingLeadingValues and DelayedCoupling require V16.";
                 if (version < 15 && request.Aspect == "torque") return "TorqueHardwareConnectionInterface requires V15.1.";

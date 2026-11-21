@@ -38,6 +38,24 @@ public static class ReleaseCapabilityQuery
         return reason == null ? null : Error(name, release, args, reason).Message;
     }
 
+    // A named recipe has no fixed selector. For a discriminated action every schema
+    // alternative must be refused. Never use recipe arguments or their defaults here.
+    internal static bool RefusesOperation(string name, string release, string selector, string operation, string discriminator, JsonArray? contexts)
+    {
+        if (selector.Length == 0) return false;
+        var fixedInputs = new JsonObject { [selector] = operation };
+        bool Refused() => Reason(name, release, fixedInputs, operationOnly: true) != null
+            || TiaMcpServer.Siemens.ToolVersionPolicy.CallProblem(release, name, key => (string?)fixedInputs[key]).Length != 0;
+        if (discriminator.Length == 0) return Refused();
+        if (contexts == null || contexts.Count == 0) return false;
+        foreach (var context in contexts)
+        {
+            fixedInputs[discriminator] = context?.DeepClone();
+            if (!Refused()) return false;
+        }
+        return true;
+    }
+
     public static Error Error(string name, string release, JsonObject args, string reason)
         => UnsupportedCapabilityDetails.ErrorFor(release, name, Selector(args), Explain(release, reason, key => Reason(name, key, args) == null));
 
@@ -63,7 +81,7 @@ public static class ReleaseCapabilityQuery
         return reason + " Minimum release for this request is " + TiaVersionCatalog.Get(releases[first]).DisplayName + ".";
     }
 
-    private static string? Reason(string name, string release, JsonObject args)
+    private static string? Reason(string name, string release, JsonObject args, bool operationOnly = false)
     {
         string Text(string key, string fallback = "") => args[key] is JsonValue value && value.TryGetValue<string>(out var text) ? text : fallback;
         int Number(string key, int fallback = 0) => args[key] is JsonValue value && value.TryGetValue<int>(out int number) ? number : fallback;
@@ -101,8 +119,10 @@ public static class ReleaseCapabilityQuery
                 unified.Inputs[Raw(field.Key)] = CapabilityInput.Unified(JsonSerializer.SerializeToElement(field.Value));
             return UnifiedCapabilities.Unsupported(release, unified);
         }
-        if (port.Name == "F07") reason ??= SecurityCapabilities.Unsupported(release, name, action,
-            name == "ManageSyslogServers" ? Text("scope", "project") : family, Text("category"), Text("filePath"));
+        if (port.Name == "F07") reason ??= operationOnly
+            ? SecurityCapabilities.UnsupportedOperation(TiaVersionCatalog.Get(release).MajorVersion, name, action)
+            : SecurityCapabilities.Unsupported(release, name, action,
+                name == "ManageSyslogServers" ? Text("scope", "project") : family, Text("category"), Text("filePath"));
         if (port.Name is "F10" or "F14" or "F15") reason ??= PlcB5Capabilities.Unsupported(release, new PlcB5Request {
             Operation = name, Action = action, UnitName = Text("unitName"), UnitKind = Text("unitKind"), InterfaceType = Text("interfaceType"),
             ObjectKind = Text("objectKind", "document"), CopyMode = Text("copyMode") });
@@ -111,13 +131,16 @@ public static class ReleaseCapabilityQuery
             GroupPath = Path(name.StartsWith("ImportTechnologyObject", StringComparison.Ordinal) ? "folderPath" : "groupPath") };
         if (name == "ManagePlcSoftwareUnit" && args["properties"] is JsonObject fields && fields.ContainsKey("NamespacePreset"))
             b4.Properties["NamespacePreset"] = new HardwareScalar();
-        reason ??= HmiCapabilities.Unsupported(release, name) ?? PlcB4Capabilities.Unsupported(release, b4)
+        reason ??= HmiCapabilities.Unsupported(release, name) ?? (operationOnly
+            ? PlcB4Capabilities.UnsupportedOperation(TiaVersionCatalog.Get(release).MajorVersion, name, action) : PlcB4Capabilities.Unsupported(release, b4))
             ?? OptionalProductCapabilities.Unsupported(release, name, Text("category"), kind, action, Text("executionMode"), Text("password"))
             ?? EngineeringServicesCapabilities.Unsupported(release, name, family, Text("customIdentityKey"), properties, Text("view"))
             ?? LibraryCapabilities.Unsupported(release, name, action, Text("sourceKind"), properties,
                 Text("forceUpdateMode", "SetOnlyHigherUpdatedVersionAsDefault"),
                 Text("deleteUnusedVersionsMode", "DoNotDelete"), Text("structureConflictResolutionMode", "RetainStructure"),
                 Text("copyMode"), Text("updatePathsMode"));
+        if (reason == null && name == "ExchangeCfcCharts" && action.Length != 0 && action != "import")
+            reason = CfcSafetyPolicy.ChartInventoryProblem(TiaVersionCatalog.Get(release).MajorVersion, "CFC " + action);
         if (reason == null && port.Name is ("F29" or "F31"))
         {
             var optional = new OptionalEngineeringRequest {

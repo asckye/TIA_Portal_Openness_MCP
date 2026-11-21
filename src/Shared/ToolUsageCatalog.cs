@@ -395,6 +395,10 @@ namespace TiaOpenness.Shared
                         new JsonArray(originTools.Where(t => available.Contains((string)t!)).Select(t => t!.DeepClone()).ToArray());
             }
             var operations = new JsonArray();
+            bool selectedOperationRefused = false;
+            string discriminator = name is "ManageDeviceServiceObjects" or "ManagePlcUserGroup" ? "family" : name == "ManagePlcDocuments" ? "objectKind"
+                : name == "ManageSivarcBlockDefinition" ? "kind" : "";
+            var contexts = discriminator.Length > 0 ? properties[discriminator]?["enum"] as JsonArray : null;
             foreach (var choice in choices)
             {
                 var recipe = call?["operations"]?[(string)choice!];
@@ -407,9 +411,6 @@ namespace TiaOpenness.Shared
                 }
                 if (selector.Length > 0) candidate[selector] = choice!.DeepClone();
                 var variants = new JsonArray();
-                string discriminator = name is "ManageDeviceServiceObjects" or "ManagePlcUserGroup" ? "family" : name == "ManagePlcDocuments" ? "objectKind"
-                    : name == "ManageSivarcBlockDefinition" ? "kind" : "";
-                var contexts = discriminator.Length > 0 ? properties[discriminator]?["enum"] as JsonArray : null;
                 bool chosenContext = discriminator.Length > 0 && candidate[discriminator] != null && Problem(candidate).Length == 0;
                 foreach (var context in contexts ?? new JsonArray(new JsonNode?[] { null }))
                 {
@@ -421,7 +422,9 @@ namespace TiaOpenness.Shared
                     if (operation == (string?)choice && reason.Length == 0 && context != null && !chosenContext)
                     { args[discriminator] = context.DeepClone(); chosenContext = true; }
                 }
-                var option = new JsonObject { ["operation"] = choice!.DeepClone() };
+                bool refused = ReleaseCapabilityQuery.RefusesOperation(name, release, selector, (string)choice!, discriminator, contexts);
+                if (operation == (string?)choice) selectedOperationRefused = refused;
+                var option = new JsonObject { ["operation"] = choice!.DeepClone(), ["refusedByReleaseGuard"] = refused };
                 if (selector.Length > 0) option["selector"] = selector;
                 option["variants"] = variants;
                 option["exampleQuery"] = new JsonObject { ["toolName"] = name, ["operation"] = choice.DeepClone() };
@@ -470,8 +473,12 @@ namespace TiaOpenness.Shared
             if (selectedProblem.Length > 0)
             {
                 var example = response["example"]!.AsObject();
-                example["kind"] = "unavailable";
-                example["validation"] = "This operation is unavailable on the selected release. " + selectedProblem;
+                if (operation.Length == 0 || selectedOperationRefused)
+                {
+                    example["kind"] = "unavailable";
+                    example["validation"] = "This operation is unavailable on the selected release. " + selectedProblem;
+                }
+                else example["validation"] = "The example arguments are refused on the selected release. " + selectedProblem;
             }
             return response;
         }
