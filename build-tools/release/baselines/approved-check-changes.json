@@ -7843,6 +7843,28 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):e5e12283d6c5d9f03cbb2377f0da9ad3f380672c744f7abfe835287a6d74468f:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-19",
+      "maintainerDate": "2026-11-21",
+      "reason": "Maintainer approved 2026-11-21: PLC syslog createServer real apply is preview-only after the V21 crash; real-apply cases now assert the early refusal with no Create call and no rollback",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/WriteRefusalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.WriteRefusalTests/Syslog_create_checks_the_selected_CPU_in_preview_and_apply( bool enabled , bool dryRun ):0e80927cfb45919cbf6ee1a0fe68a3f5483a670f290cb9972caa0f87ee4316a7:1"
+        },
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/WriteRefusalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.WriteRefusalTests/Syslog_create_checks_the_selected_CPU_in_preview_and_apply( bool enabled , bool dryRun ):31acf3d9568c005dc041d9fa3a0280986bc34b5ae49e6745729b978827844e2a:1"
+        },
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/WriteRefusalTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Adapters.Contracts.Tests.WriteRefusalTests/Syslog_create_checks_the_selected_CPU_in_preview_and_apply( bool enabled , bool dryRun ):a77d09e3c5f478d0cd4249d82bfe89bad0942e03814426ab92924a849614fef4:1"
+        }
+      ]
     }
   ]
 }
