@@ -7495,6 +7495,18 @@
           "identifier": "TiaOpenness.Gui.Tests.PrimerInteractionTests/Count_badges_hide_zero_and_pending_counts_use_the_warning_palette( ):9f949867b049c5a9e9ef3c3f73517d9e4e8bbecc06afd92f0f3072545807b29f:1"
         }
       ]
+    },
+    {
+      "task": "LOW-C",
+      "maintainerDate": "2026-11-21",
+      "reason": "Maintainer approved 2026-11-21 (explicit yes): ImportMasterCopyFromGlobalLibrary leaves the maintained preview success lists because preview and apply now refuse it on V21; its refusal test stays",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Maintained_write_examples_preview_without_native_dispatch( string name ):fbee0155e51d61b1cb0cabd3d10c7e83c219f6a391a20b5283a7112fdd321274:1"
+        }
+      ]
     }
   ]
 }
