@@ -1,6 +1,7 @@
 extern alias foundationhost;
 extern alias toolpipeline;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
@@ -15,6 +16,43 @@ using Xunit;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class PackagedNoTiaReadinessTests
 {
+    [Fact]
+    public void Standalone_protocol_simulator_keeps_its_own_admission()
+    {
+        using var files = new ApiFiles("20");
+        var simulator = Path.Combine(files.Bundle, "TiaMcp.PlcWorker.20.exe");
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe"), simulator);
+        using var client = new WorkerClient("20", simulator, files.Api, true) { Bundled = false };
+        Assert.False(client.IsReleasePlcWorker());
+    }
+
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Explicit_plc_worker_refuses_native_apply_before_approval(string release)
+    {
+        using var files = new ApiFiles(release);
+        var worker = Path.Combine(files.Bundle, "explicit-worker.exe");
+        var assembly = new PersistedAssemblyBuilder(new AssemblyName("TiaMcp.PlcWorker." + release), typeof(object).Assembly);
+        assembly.DefineDynamicModule("worker");
+        assembly.Save(worker);
+        using var host = new Host(release, worker);
+        const string name = "SetDeviceItemAttribute";
+        var arguments = new JsonObject {
+            ["deviceItemPath"] = "PLC_1/CPU_1", ["attributeName"] = "Name", ["value"] = "ApprovalProbe",
+            ["dryRun"] = false, ["expectedPlanHash"] = new string('a', 64), ["expectedProjectFile"] = "C:/Projects/ApprovalProbe.ap21"
+        };
+        foreach (var route in new[] { name, "CallTool" })
+        {
+            var input = route == name ? arguments : new JsonObject { ["name"] = name, ["arguments"] = arguments };
+            var reply = await host.Call(route, input);
+            Assert.Equal("RESOURCE_UNAVAILABLE", (string?)reply["error"]?["code"]);
+            Assert.Equal("tia-openness-environment", (string?)reply["error"]?["details"]?["resource"]);
+            Assert.Equal("rejected-before-operation", (string?)reply["meta"]?["outcome"]);
+            Assert.Equal("not-started", (string?)reply["meta"]?["execution"]);
+        }
+        Assert.False(host.Worker.WorkerFaulted);
+        Assert.Null(host.Worker.OperatorSnapshot()["pid"]);
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
     [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Write_preview_stops_at_readiness_and_does_not_start_or_fault_the_worker(string release)
@@ -135,15 +173,14 @@ public sealed class PackagedNoTiaReadinessTests
         private readonly string scratch = Path.Combine(Path.GetTempPath(), "packaged-no-tia-" + Guid.NewGuid().ToString("N"));
         private readonly Pipeline pipeline;
         internal readonly WorkerClient Worker;
-        internal Host(string release)
+        internal Host(string release, string? workerExe = null)
         {
             // As EngineReleaseHost does before it builds the registry: the version policy that wraps the ported tools reads the
             // process release key. Without it a V21 case depended on the key an earlier test left (the beta.1 release run failed
             // the five V21 cases when a V20 test ran before them in the same shard).
             toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey = release;
-            // The packaged layout's bundled worker path, with neither the worker nor any PublicAPI directory present.
-            Worker = new WorkerClient(release, Path.Combine(scratch, "runtime", "v" + release, "worker", "TiaMcp.PlcWorker." + release + ".exe"), "", true)
-            { Bundled = true, SharedSession = true };
+            var bundledPath = Path.Combine(scratch, "runtime", "v" + release, "worker", "TiaMcp.PlcWorker." + release + ".exe");
+            Worker = new WorkerClient(release, workerExe ?? bundledPath, "", true) { Bundled = workerExe == null, SharedSession = true };
             // The host's no-TIA answer: no installation found (the engine's "not found" cause).
             Func<JsonObject> environment = () => FoundationPassiveDiagnostics.Readiness(release, _ => null, () => false);
             Func<JsonObject> readiness = () => Worker.Readiness(environment);

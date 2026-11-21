@@ -15,6 +15,8 @@ using ImportStagingTools = TiaMcpServer.ModelContextProtocol.ImportStagingTools;
 using ResponseGuardTool = TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
 #endif
 using System.Diagnostics;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.WorkerChannel;
@@ -286,8 +288,20 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
             if ((bool?)status["session"]?["isConnected"] == true) sessionDisconnected = false;
         }
     }
-    // Only the bundled worker gets the pre-dispatch readiness gate; an explicit --worker-exe (fixture) reports its own failures.
     internal bool Bundled { get; init; } = true;
+    // An explicit path can name the real PLC worker or a standalone protocol simulator.
+    internal bool IsReleasePlcWorker()
+    {
+        if (!File.Exists(workerExe)) return false;
+        using var stream = File.OpenRead(workerExe);
+        if (stream.ReadByte() != 'M' || stream.ReadByte() != 'Z') return false;
+        stream.Position = 0;
+        using var image = new PEReader(stream);
+        if (!image.HasMetadata) return false;
+        var metadata = image.GetMetadataReader();
+        return metadata.IsAssembly && metadata.StringComparer.Equals(metadata.GetAssemblyDefinition().Name, "TiaMcp.PlcWorker." + releaseKey);
+    }
+
     internal string? PresetProjectFile { get; init; }
     string IFoundationSessionWorker.ApprovalIdentity => ApprovalIdentity;
     bool IFoundationSessionWorker.Faulted => Faulted;

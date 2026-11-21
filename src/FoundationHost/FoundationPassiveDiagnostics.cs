@@ -325,10 +325,10 @@ internal static class LegacyHostToolRegistry
         tools.AddRange(FoundationPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, usageRoster ?? (() => tools), readiness));
         tools.Add(new ToolUsageTool(releaseKey, usageRoster ?? (() => tools), exampleProfile ?? ReleaseCatalogData.Releases[releaseKey].ExampleProfile));
         var wrapped = new McpServerTool[tools.Count];
+        bool checkReadiness = worker is IFoundationSessionWorker { Bundled: true } || worker is WorkerClient client && client.IsReleasePlcWorker();
+        Func<JsonObject>? readinessForTool = checkReadiness ? readiness : null;
         Parallel.For(0, tools.Count, new ParallelOptions { MaxDegreeOfParallelism = 4 }, i =>
         {
-            // Gate only the bundled worker: an explicit --worker-exe fixture must reach its own dispatch path.
-            Func<JsonObject>? readinessForTool = worker is IFoundationSessionWorker { Bundled: true } ? readiness : null;
             wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, readinessForTest: readinessForTool,
                 sharedSession: worker is IFoundationSessionWorker { SharedSession: true }));
         });
