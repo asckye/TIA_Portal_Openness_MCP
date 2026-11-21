@@ -95,7 +95,8 @@ internal static partial class MergeCheck
                 var sdk = Path.Combine(api, ReleaseCommands.PlcWorkerApi(key).Directory);
                 Py(name, "Test-ReleaseApprovalGate.py", false, "--product", "engine", "--major", key, "--exe", host,
                     "--portal-root", sdk, "--public-api", sdk, "--plc-worker", ReleaseCommands.ReleasePlcFixture(output, key),
-                    "--temp-root", Path.Combine(output, "checks", name, "temp"), "--output", Path.Combine(output, name));
+                    // Short temp root: the gate copies the whole PublicAPI tree below it, and long worktree names otherwise exceed MAX_PATH.
+                    "--temp-root", Path.Combine(output, "ag" + key), "--output", Path.Combine(output, name));
             }
         }
         if (transport)
