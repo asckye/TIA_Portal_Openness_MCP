@@ -149,9 +149,10 @@ internal static partial class MergeCheck
         if (!job.Isolated) return result;
         var directory = Path.GetFullPath(Path.Combine(output, "checks", job.Name));
         foreach (var child in new[] { "config", "temp", "local-app-data", "app-data" }) Directory.CreateDirectory(Path.Combine(directory, child));
-        // Scripts that take an explicit short --temp-root require it to exist, like the isolated temp folder above.
+        // The approval host checks take a short --temp-root that must already exist (other scripts create their own and refuse an existing one).
         int tempRoot = Array.IndexOf(job.Arguments, "--temp-root");
-        if (tempRoot >= 0 && tempRoot + 1 < job.Arguments.Length) Directory.CreateDirectory(job.Arguments[tempRoot + 1]);
+        if (job.Name.StartsWith("approval-v", StringComparison.Ordinal) && job.Name.EndsWith("-host", StringComparison.Ordinal)
+            && tempRoot >= 0 && tempRoot + 1 < job.Arguments.Length) Directory.CreateDirectory(job.Arguments[tempRoot + 1]);
         File.WriteAllText(Path.Combine(directory, "config/approval.settings"), "enabled=true\ntimeoutSeconds=120\n");
         result["TIA_MCP_DATA_DIRECTORY"] = directory;
         result["TIA_MCP_DIAGNOSTICS_DIRECTORY"] = Path.Combine(directory, "diagnostics");
