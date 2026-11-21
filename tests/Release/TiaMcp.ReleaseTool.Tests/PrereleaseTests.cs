@@ -128,14 +128,14 @@ public sealed class PrereleaseTests
     public void PlainReleaseRequestBodiesAreUnchanged()
     {
         Assert.Equal("{\"tag_name\":\"v4.0.0\",\"target_commitish\":\"abc\",\"name\":\"v4.0.0\",\"body\":\"notes\",\"draft\":true,\"prerelease\":false,\"make_latest\":\"false\"}",
-            JsonSerializer.Serialize(ReleaseRequestBodies.Draft("v4.0.0", "abc", "notes", prerelease: false)));
+            JsonSerializer.Serialize(ReleaseRequestBodies.Draft(ProductReleaseVersion.Parse("4.0.0"), "abc", "notes")));
     }
 
     [Fact]
     public void PrereleaseRequestBodiesAreNeverLatest()
     {
         Assert.Equal("{\"tag_name\":\"v4.0.0-beta.1\",\"target_commitish\":\"abc\",\"name\":\"v4.0.0-beta.1\",\"body\":\"notes\",\"draft\":true,\"prerelease\":true,\"make_latest\":\"false\"}",
-            JsonSerializer.Serialize(ReleaseRequestBodies.Draft("v4.0.0-beta.1", "abc", "notes", prerelease: true)));
+            JsonSerializer.Serialize(ReleaseRequestBodies.Draft(ProductReleaseVersion.Parse("4.0.0-beta.1"), "abc", "notes")));
     }
 
     private const string Ledger = "# Ledger\n\n## 未发布改动的验收边界\n\nintro\n\n| 改动 | 验收 |\n|---|---|\n| A item | **NOT RUN**；check A |\n\n" +

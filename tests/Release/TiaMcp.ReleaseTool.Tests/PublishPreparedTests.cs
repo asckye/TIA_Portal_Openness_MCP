@@ -30,7 +30,7 @@ public sealed class PublishPreparedTests
         using var f = new Fixture { Fault = fault };
         if (fault == "missing") File.Delete(f.CandidatePath);
         if (fault == "hash") { var bytes = File.ReadAllBytes(f.ZipPath); bytes[0] ^= 1; File.WriteAllBytes(f.ZipPath, bytes); }
-        if (fault == "local-sidecar") File.WriteAllText(f.Sidecar, new string('0', 64) + "  pkg.zip\n");
+        if (fault == "local-sidecar") File.WriteAllText(f.Sidecar, new string('0', 64) + "  " + f.ZipName + "\n");
         if (fault == "no-draft") f.SaveCandidate(false);
         var error = await Assert.ThrowsAsync<ReleaseException>(f.Publish);
         Assert.Contains(message, error.Message, StringComparison.Ordinal);
@@ -246,13 +246,14 @@ public sealed class PublishPreparedTests
     public async Task UploadCreatesOrReusesADraftAndRemovesStaleDuplicates(bool reuse)
     {
         using var f = new Fixture { Reuse = reuse };
-        f.Assets.Add(f.Asset(10, "pkg.zip", [1]));
-        f.Assets.Add(f.Asset(11, "pkg.zip", [2]));
+        f.Assets.Add(f.Asset(10, f.ZipName, [1]));
+        f.Assets.Add(f.Asset(11, f.ZipName, [2]));
         f.Assets.Add(f.Asset(12, "unrelated.txt", [3]));
         await f.Upload();
-        Assert.Equal(new[] { "pkg.zip", "pkg.sha256" }, f.Assets.Select(a => a["name"]!.GetValue<string>()));
+        Assert.Equal(new[] { f.ZipName, Path.GetFileName(f.Sidecar) }, f.Assets.Select(a => a["name"]!.GetValue<string>()));
         Assert.Equal("master", f.DraftBody!["target_commitish"]!.GetValue<string>());
         Assert.True(f.DraftBody["draft"]!.GetValue<bool>());
+        Assert.True(f.DraftBody["prerelease"]!.GetValue<bool>());
         Assert.Equal("false", f.DraftBody["make_latest"]!.GetValue<string>());
         Assert.Contains("https://fixture.invalid/acme/project/blob/" + Fixture.Commit + "/docs/releases/../guides/check.md", f.DraftBody["body"]!.GetValue<string>(), StringComparison.Ordinal);
         Assert.Contains(Fixture.Hash(File.ReadAllBytes(f.ZipPath)), f.DraftBody["body"]!.GetValue<string>(), StringComparison.Ordinal);
@@ -269,10 +270,10 @@ public sealed class PublishPreparedTests
     public async Task FailedUploadRetriesAndVerifiedZipIsNotUploadedAgain()
     {
         using var f = new Fixture { Reuse = true, UploadFailures = 1 };
-        f.Assets.Add(f.Asset(50, "pkg.zip", File.ReadAllBytes(f.ZipPath)));
+        f.Assets.Add(f.Asset(50, f.ZipName, File.ReadAllBytes(f.ZipPath)));
         await f.Upload();
-        Assert.DoesNotContain("upload:pkg.zip", f.Events);
-        Assert.Equal(2, f.Events.Count(e => e == "upload:pkg.sha256"));
+        Assert.DoesNotContain("upload:" + f.ZipName, f.Events);
+        Assert.Equal(2, f.Events.Count(e => e == "upload:" + Path.GetFileName(f.Sidecar)));
         Assert.Equal(2, f.Assets.Count);
         Assert.All(f.Assets, asset => Assert.Equal("uploaded", asset["state"]!.GetValue<string>()));
     }
@@ -282,8 +283,8 @@ public sealed class PublishPreparedTests
     {
         using var f = new Fixture { UploadFailures = 1 };
         await f.Upload();
-        Assert.Equal(2, f.Events.Count(e => e == "upload:pkg.zip"));
-        Assert.Single(f.Events, e => e == "upload:pkg.sha256");
+        Assert.Equal(2, f.Events.Count(e => e == "upload:" + f.ZipName));
+        Assert.Single(f.Events, e => e == "upload:" + Path.GetFileName(f.Sidecar));
         Assert.Equal(2, f.Assets.Count);
         Assert.All(f.Assets, asset => Assert.Equal("uploaded", asset["state"]!.GetValue<string>()));
     }
@@ -292,9 +293,9 @@ public sealed class PublishPreparedTests
     public async Task VerifiedDuplicatesAreRemovedWithoutReuploadingTheVerifiedFiles()
     {
         using var f = new Fixture { Reuse = true };
-        f.Assets.Add(f.Asset(50, "pkg.zip", File.ReadAllBytes(f.ZipPath)));
-        f.Assets.Add(f.Asset(51, "pkg.zip", File.ReadAllBytes(f.ZipPath)));
-        f.Assets.Add(f.Asset(52, "pkg.sha256", File.ReadAllBytes(f.Sidecar)));
+        f.Assets.Add(f.Asset(50, f.ZipName, File.ReadAllBytes(f.ZipPath)));
+        f.Assets.Add(f.Asset(51, f.ZipName, File.ReadAllBytes(f.ZipPath)));
+        f.Assets.Add(f.Asset(52, Path.GetFileName(f.Sidecar), File.ReadAllBytes(f.Sidecar)));
         await f.Upload();
         Assert.Equal(2, f.Assets.Count);
         Assert.DoesNotContain(f.Events, e => e.StartsWith("upload:", StringComparison.Ordinal));
@@ -311,14 +312,74 @@ public sealed class PublishPreparedTests
         Assert.Empty(f.Events);
     }
 
+    [Theory]
+    [InlineData("TIA_MCP_Delivery_v4.0.0_20261103")]
+    [InlineData("TIA_MCP_v4.0.1_20261103")]
+    [InlineData("TIA_MCP_v4.0.0_20261303")]
+    public async Task BothCommandsRefuseFinalWithWrongPackageBeforeGitOrGitHub(string package)
+    {
+        using var f = new Fixture("4.0.0", package);
+        Assert.Contains("Invalid final release package name", (await Assert.ThrowsAsync<ReleaseException>(f.Publish)).Message, StringComparison.Ordinal);
+        Assert.Contains("Invalid final release package name", (await Assert.ThrowsAsync<ReleaseException>(f.Upload)).Message, StringComparison.Ordinal);
+        Assert.Empty(f.GitCommands);
+        Assert.Equal(0, f.Requests);
+        Assert.Empty(f.Events);
+    }
+
     [Fact]
-    public async Task PlainVersionsAreRejectedByBothCommandsBeforeAnyIo()
+    public async Task InvalidVersionIsRejectedByBothCommandsBeforeCandidateLookup()
     {
         using var f = new Fixture();
-        var options = f.Options with { Version = "4.0.0" };
-        Assert.Contains("pre-releases only", (await Assert.ThrowsAsync<ReleaseException>(() => PublishPrepared.RunAsync(f.Root, options, f.Client, elapsed: () => TimeSpan.Zero))).Message, StringComparison.Ordinal);
-        Assert.Contains("pre-releases only", (await Assert.ThrowsAsync<ReleaseException>(() => ReleasePublisher.UploadDraftAsync(f.Root, f.CandidatePath, options, f.Client))).Message, StringComparison.Ordinal);
-        Assert.Empty(f.Events);
+        var options = f.Options with { Version = "4.0.0-alpha.1" };
+        var publish = await Assert.ThrowsAsync<ReleaseException>(() => PublishPrepared.RunAsync(f.Root, options, f.Client, elapsed: () => TimeSpan.Zero));
+        var upload = await Assert.ThrowsAsync<ReleaseException>(() => ReleasePublisher.UploadDraftAsync(f.Root, f.CandidatePath, options, f.Client));
+        Assert.Contains("-Version must be", publish.Message, StringComparison.Ordinal);
+        Assert.Contains("-Version must be", upload.Message, StringComparison.Ordinal);
+        Assert.Equal(0, f.Requests);
+    }
+
+    [Theory]
+    [InlineData(null, "Missing release notes")]
+    [InlineData("## English\nEnglish only.", "require ## 中文 followed by ## English")]
+    [InlineData("## 中文\n仅中文。", "require ## 中文 followed by ## English")]
+    public async Task BothCommandsRequireBilingualLocalFinalNotes(string? notes, string error)
+    {
+        using var f = new Fixture("4.0.0", "TIA_MCP_v4.0.0_20261103");
+        if (notes == null) File.Delete(f.Notes); else File.WriteAllText(f.Notes, notes);
+        Assert.Contains(error, (await Assert.ThrowsAsync<ReleaseException>(f.Upload)).Message, StringComparison.Ordinal);
+        Assert.Contains(error, (await Assert.ThrowsAsync<ReleaseException>(f.Publish)).Message, StringComparison.Ordinal);
+        Assert.Empty(f.GitCommands);
+        Assert.Equal(0, f.Requests);
+    }
+
+    [Fact]
+    public async Task FinalPublishesAsLatestFromThePreparedDraft()
+    {
+        using var f = new Fixture("4.0.0", "TIA_MCP_v4.0.0_20261103");
+        await f.Upload();
+        Assert.True(f.DraftBody!["draft"]!.GetValue<bool>());
+        Assert.False(f.DraftBody["prerelease"]!.GetValue<bool>());
+        Assert.Equal("false", f.DraftBody["make_latest"]!.GetValue<string>());
+        Assert.Equal(new[] { "TIA_MCP_v4.0.0_20261103.zip", "TIA_MCP_v4.0.0_20261103.sha256" },
+            f.Assets.Select(a => a["name"]!.GetValue<string>()));
+        Assert.Equal(0, await f.Publish());
+        Assert.Equal("refs/tags/v4.0.0", f.Tag!["ref"]!.GetValue<string>());
+        Assert.False(f.Patch!["draft"]!.GetValue<bool>());
+        Assert.False(f.Patch["prerelease"]!.GetValue<bool>());
+        Assert.Equal("true", f.Patch["make_latest"]!.GetValue<string>());
+        Assert.Equal("reachable", f.Events.Last());
+        f.Events.Clear();
+        Assert.Equal(0, await f.Publish());
+        Assert.Equal(new[] { "head", "status", "release", "ref", "reachable" }, f.Events);
+    }
+
+    [Fact]
+    public async Task FinalWithSingleLanguageDraftRefusesBeforePush()
+    {
+        using var f = new Fixture("4.0.0", "TIA_MCP_v4.0.0_20261103") { Fault = "old-draft-body" };
+        var error = await Assert.ThrowsAsync<ReleaseException>(f.Publish);
+        Assert.Contains("require ## 中文 followed by ## English", error.Message, StringComparison.Ordinal);
+        Assert.Equal(new[] { "head", "status", "release" }, f.Events);
     }
 
     [Fact]
@@ -352,11 +413,13 @@ public sealed class PublishPreparedTests
     {
         internal const string Commit = "0123456789abcdef0123456789abcdef01234567";
         internal string Root { get; } = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory), "bin-build/refactor", "publish-prepared-" + Guid.NewGuid().ToString("N"));
-        internal string CandidatePath => Path.Combine(Root, "bin-build/prepared/4.0.0-beta.3/candidate.json");
-        internal string ZipPath => Path.Combine(Path.GetDirectoryName(CandidatePath)!, "pkg.zip");
+        internal string CandidatePath => Path.Combine(Root, "bin-build/prepared", Options.Version, "candidate.json");
+        internal string ZipName { get; }
+        internal string ZipPath => Path.Combine(Path.GetDirectoryName(CandidatePath)!, ZipName);
         internal string Sidecar => Path.ChangeExtension(ZipPath, ".sha256");
-        internal string Notes => Path.Combine(Root, "docs/releases/v4.0.0-beta.3.md");
-        internal PublishOptions Options { get; } = new("4.0.0-beta.3", "fake-token", "acme/project", "https://fixture.invalid", false, false, RetryDelaySeconds: 0);
+        internal string Notes => Path.Combine(Root, PrereleaseNotes.NotesPath(Options.Version));
+        internal PublishOptions Options { get; }
+        internal int Requests { get; private set; }
         internal HttpClient Client { get; }
         internal List<string> Events { get; } = [];
         internal List<string> GitCommands { get; } = [];
@@ -378,22 +441,25 @@ public sealed class PublishPreparedTests
         internal double FirstFlipSeconds { get; set; }
         private bool uploading;
 
-        internal Fixture()
+        internal Fixture(string version = "4.0.0-beta.3", string package = "TIA_MCP_Delivery_v4.0.0-beta.3_20261103")
         {
+            Options = new(version, "fake-token", "acme/project", "https://fixture.invalid", false, false, RetryDelaySeconds: 0);
+            ZipName = package + ".zip";
             Directory.CreateDirectory(Path.GetDirectoryName(CandidatePath)!);
             Directory.CreateDirectory(Path.GetDirectoryName(Notes)!);
-            File.WriteAllText(Notes, "# Release\n## 中文\n" + PrereleaseNotes.Begin + "\n" + PrereleaseNotes.ChineseHeading
+            File.WriteAllText(Notes, version == "4.0.0" ? "# v4.0.0\n## 中文\n正式版。\n## English\nFinal release.\n"
+                : "# Release\n## 中文\n" + PrereleaseNotes.Begin + "\n" + PrereleaseNotes.ChineseHeading
                 + "\n1. 未验收。\n" + PrereleaseNotes.End + "\n## English\n[Checklist](../guides/check.md)\n" + PrereleaseNotes.Begin + "\n" + PrereleaseNotes
                     .Heading + "\n\n1. Not run.\n" + PrereleaseNotes.End + "\n");
             File.WriteAllBytes(ZipPath, [0x50, 0x4b, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-            File.WriteAllText(Sidecar, Hash(File.ReadAllBytes(ZipPath)) + "  pkg.zip\n");
+            File.WriteAllText(Sidecar, Hash(File.ReadAllBytes(ZipPath)) + "  " + ZipName + "\n");
             SaveCandidate(true);
             Client = new HttpClient(this);
         }
 
         internal void SaveCandidate(bool draft) => File.WriteAllText(CandidatePath, JsonSerializer.Serialize(new
         {
-            version = Options.Version, commit = Commit, zip = "pkg.zip", zipSha256 = Hash(File.ReadAllBytes(ZipPath)), zipSize = new FileInfo(ZipPath).Length, fileCount = 123,
+            version = Options.Version, commit = Commit, zip = ZipName, zipSha256 = Hash(File.ReadAllBytes(ZipPath)), zipSize = new FileInfo(ZipPath).Length, fileCount = 123,
             suites = new { unit = new { passed = 10, skipped = 0 } }, checks = new[] { "preflight" }, finishedUtc = "2026-11-03T00:00:00Z",
             draftReleaseId = draft ? 42 : (int?)null, draftAssetId = draft ? 50 : (int?)null
         }));
@@ -417,7 +483,7 @@ public sealed class PublishPreparedTests
         private void EnsureAssets()
         {
             if (Assets.Count != 0 || uploading) return;
-            Assets.Add(Asset(50, "pkg.zip", File.ReadAllBytes(ZipPath))); Assets.Add(Asset(51, "pkg.sha256", File.ReadAllBytes(Sidecar)));
+            Assets.Add(Asset(50, ZipName, File.ReadAllBytes(ZipPath))); Assets.Add(Asset(51, Path.GetFileName(Sidecar), File.ReadAllBytes(Sidecar)));
             if (Fault == "size") Assets[0]["size"] = 999;
             if (Fault == "digest") Assets[0]["digest"] = "sha256:bad";
             if (Fault == "sidecar") Assets[1]["digest"] = "sha256:bad";
@@ -430,14 +496,16 @@ public sealed class PublishPreparedTests
             var assets = Assets.Select(a => (JsonObject)a.DeepClone()).ToArray();
             if (Public) foreach (var a in assets) a["browser_download_url"] = "https://fixture.invalid/download/published-" + a["name"]!.GetValue<string>();
             var body = Fault == "old-draft-body" ? "Single-language notes" : (string?)DraftBody?["body"] ?? File.ReadAllText(Notes);
-            return new { id = 42, tag_name = "v4.0.0-beta.3", draft = !Public, prerelease = true,
+            return new { id = 42, tag_name = "v" + Options.Version, draft = !Public,
+                prerelease = (bool?)(Patch ?? DraftBody)?["prerelease"] ?? Options.Version.Contains('-'),
                 upload_url = "https://fixture.invalid/upload{?name,label}", body, assets };
         }
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
         {
+            Requests++;
             var path = request.RequestUri!.AbsolutePath; var method = request.Method.Method;
             if (path.StartsWith("/download/untagged-", StringComparison.Ordinal)) { Record("dead-draft-url"); return Reply(new { }, HttpStatusCode.NotFound); }
-            if (path == "/download/published-pkg.zip") { Record("reachable"); Assert.True(token.CanBeCanceled); return Reply(new { }, DownloadFailures-- > 0 ? HttpStatusCode.NotFound : HttpStatusCode.OK); }
+            if (path == "/download/published-" + ZipName) { Record("reachable"); Assert.True(token.CanBeCanceled); return Reply(new { }, DownloadFailures-- > 0 ? HttpStatusCode.NotFound : HttpStatusCode.OK); }
             if (path.Contains("/git/ref/tags/", StringComparison.Ordinal)) { Record("ref"); return TagCommit == null ? Reply(new { }, HttpStatusCode.NotFound) : Reply(new { @object = new { type = Annotated ? "tag" : "commit", sha = Annotated ? "annotated-object" : TagCommit } }); }
             if (path.EndsWith("/git/tags/annotated-object", StringComparison.Ordinal)) return Reply(new { @object = new { type = "commit", sha = TagCommit } });
             if (path.EndsWith("/git/refs", StringComparison.Ordinal))

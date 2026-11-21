@@ -9,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ProductReleaseVersion = PlcRendering::TiaMcp.Versioning.ProductReleaseVersion;
+using DeliveryPackage = PlcRendering::TiaMcp.Versioning.DeliveryPackage;
 
 namespace TiaMcpConfigurator
 {
@@ -152,12 +153,12 @@ namespace TiaMcpConfigurator
                 foreach (var asset in assets.OfType<Dictionary<string, object>>())
                 {
                     object nameValue; string name = asset.TryGetValue("name", out nameValue) ? Convert.ToString(nameValue) : "";
-                    if (name.StartsWith("TIA_MCP_Delivery_", StringComparison.OrdinalIgnoreCase) && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    if (DeliveryPackage.IsZip(name))
                     {
                         info.ZipName = name;
                         object size; info.ZipSize = asset.TryGetValue("size", out size) && size != null ? Convert.ToInt64(size) : 0;
                     }
-                    else if (name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)) info.HasSha256 = true;
+                    else if (DeliveryPackage.IsSidecar(name)) info.HasSha256 = true;
                 }
             return info;
         }

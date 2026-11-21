@@ -8,13 +8,15 @@
 - 当前维护者版权：**Copyright (c) 2026 asckye**。
 - 完整 MIT 许可证、原始版权声明和当前维护者版权声明保存在根目录 [LICENSE](LICENSE)，必须随软件的复制件或实质性部分一同保留。随包分发的第三方程序集及其许可证逐项列于 [第三方组件许可证清单](docs/licenses/THIRD-PARTY-NOTICES.md)，原文在 [docs/licenses](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/licenses)。4.0 起交付包不再包含 `Siemens.Collaboration.Net.*` 程序集（自有用户组代码取代，P8-76）；该清单保留其许可原文和说明，供 3.x 交付包参考。
 
+4.0 交付包不含西门子 TIA Portal 程序集，Openness 从用户自己的 TIA 安装中加载。独立的 S7 Webserver API 运行库按 MIT 许可证随包分发。3.x 已发布附件保持原样。
+
 独立维护、仓库所有者、插件发布者以及 Git 快照导入者均不等于全部原始代码的作者。新的 Git 根提交表示现有许可代码的导入和独立维护起点，不宣称全部代码为重新创作，也不代表原作者对本项目的背书。
 
 本项目使用自己的 `master`、问题反馈、安全报告、构建及 Release 发布流程。以上原项目链接仅用于来源和版权说明，不是同步源、发布入口或维护联系方式。
 
 ## 名称与商标
 
-公开名称自 4.0 起改为“自动化工程工作台”（Automation Engineering Workbench）。可执行文件（`TiaOpenness.exe`、`TiaMcp.*`）、程序集、命名空间、交付包 ZIP、Claude Code 插件 ID `tia-portal-openness-mcp`、MCP 服务名 `tia-portal` 和 GitHub 仓库地址暂保留原名，以兼容现有配置。
+公开名称自 4.0 起改为“自动化工程工作台”（Automation Engineering Workbench）。可执行文件（`TiaOpenness.exe`、`TiaMcp.*`）、程序集、命名空间、Claude Code 插件 ID `tia-portal-openness-mcp`、MCP 服务名 `tia-portal` 和 GitHub 仓库地址暂保留原名，以兼容现有配置。
 
 TIA Portal、SIMATIC、STEP 7、WinCC 和 Openness 是 Siemens AG 的商标；本项目与 Siemens 无关联，也未获得 Siemens 的认可或背书。
 

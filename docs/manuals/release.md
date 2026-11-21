@@ -1,8 +1,8 @@
 # 准备和发布版本
 
-状态：现行 · 最后核对：2026-11-18，beta.6 源码已准备（基线 `6715172e`）
+状态：现行 · 最后核对：2026-11-21
 
-本文说明维护者如何提前构建、检查和上传候选，再在确认后公开预发布，依据 [ADR 0031](../standards/decisions/0031-release-path.md)。
+本文说明维护者如何提前构建、检查和上传候选，再在维护者确认后公开。4.0 正式版须满足任务合并、检查通过、无未决 blocker、已生成 rc 和维护者确认等放行条件。见 [ADR 0023](../standards/decisions/0023-release-4-0-final-criteria.md) 和 [ADR 0031](../standards/decisions/0031-release-path.md)。
 
 每个发布候选前，先在主机手动运行 `dotnet run --project build-tools/release -- merge-check -All`，完成全部 38 个注册套件和源码检查；数量门槛保持不变。发布分为两个阶段：`prepare` 完成所有耗时工作；`publish-prepared` 使用已上传的候选，在 300 秒内核对、推送提交、打标签并公开。发布阶段不构建、不测试、不打包。
 
@@ -17,7 +17,7 @@
 完整准备和公开从 Windows 上的 master 检出根目录运行；`prepare -BuildOnly` 可在任意分支的干净 worktree 中运行。准备前核对：
 
 - 工作树干净；完整准备时，所有待发布改动已经过审查并在 master；跟踪文件的实际字节符合 `.gitattributes`。仅 `git status` 干净不足以证明行尾正确。
-- `Version.props`、`.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json` 和 `CHANGELOG.md` 最新版本条目一致；日期为有效 ISO 日期；`docs/releases/v<版本>.md` 存在，生成的未验收清单是最新的。
+- `Version.props`、`.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json` 和 `CHANGELOG.md` 最新版本条目一致；日期为有效 ISO 日期；`docs/releases/v<版本>.md` 含中英文两节。预发布还须核对生成的未验收清单。
 - .NET SDK 与依赖缓存可用；八版 Siemens PublicAPI 在 `sdk/`，或由 `-PublicApiRoot` 指向其父目录。可用 `-NuGetConfig` 指定已有的离线配置。
 - 解码器使用固定 CPython，必要时由 `-Python` 或 `TIA_MCP_DECODER_PYTHON` 指定；PLC Tools 伴随 Python 的依赖导入检查通过。伴随解释器按 `-CompanionPython`、`TIA_MCP_PLC_TOOLS_PYTHON`、已有的 `TiaMcp_Output/ecosystem-python/Scripts/python.exe` 解析。
 - 本机已有校验过的随包 .NET 压缩包缓存 `bin-build/cache/dotnet-10.0.12/`；SDK、缓存、密钥和私人项目均不随包分发。
@@ -47,7 +47,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-beta.6
 
 成功产物位于 `bin-build/prepared/<版本>/`：
 
-- `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip` 和同名 `.sha256`，只生成一次，检查和上传使用相同字节。
+- 4.0 起的正式版生成 `TIA_MCP_v<版本>_<YYYYMMDD>.zip`，预发布沿用 `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip`。两者均附同名 `.sha256` 文件，检查和上传使用同一份 ZIP。
 - `candidate.json`：版本、提交、ZIP 路径、SHA-256、大小、文件数、检查名称和完成时间；上传成功后还含草稿与资产 ID。
 - 暂存包及 `logs/`。候选记录和日志留在本机，不提交 Git。
 
@@ -71,11 +71,23 @@ dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0
 dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0-beta.6
 ```
 
-命令先核对候选、HEAD、干净工作树、ZIP 与 sidecar、草稿资产的大小与摘要以及已有标签的目标。核对通过后推送候选提交到 `origin/master`，按需创建 `v<版本>` 标签，将草稿公开为 GitHub 预发布，设置 `make_latest=false`，最后确认公开资产可下载。它不等待 GitHub CI。
+命令先核对候选、HEAD、干净工作树、ZIP 与 sidecar、草稿资产的大小与摘要以及已有标签的目标。核对通过后推送候选提交到 `origin/master`，按需创建 `v<版本>` 标签，公开草稿，再确认公开资产可下载。正式版设置 `prerelease=false`、`make_latest=true`，成为 GitHub **Latest**。beta 和 rc 设置 `prerelease=true`、`make_latest=false`。它不等待 GitHub CI。
 
 300 秒是从发布工具进程启动起的硬性要求。超过 150 秒不再开始标签步骤；标签步骤后仍先尝试公开草稿，其余请求和重试受剩余预算约束。所有结果均打印总秒数。超时或网络故障不会变成成功；已创建标签或已公开的状态必须由重跑核实。
 
-`upload-draft` 与 `publish-prepared` 当前只接受 beta/rc 预发布版本。正式版本的公开规则须在 4.0 前决定，不能直接把示例版本替换为 `4.0.0`。
+### 发布 4.0.0 正式版
+
+将版本文件、CHANGELOG 和双语发布说明准备为正式版本后，沿用同一流程：
+
+```powershell
+dotnet run --project build-tools/release -- prepare -Version 4.0.0
+# 需要补传或刷新草稿时
+dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0.0
+# 维护者确认后
+dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0
+```
+
+正式版上传和公开前均核对候选 ZIP 的版本和包名，以及 `docs/releases/v4.0.0.md` 的中英文两节。3.3 更新器无法识别正式版的新包名，现有安装会停留在 3.3。要升级，请手动下载并按[从 3.3 迁移到 4.0](../guides/migrate-3.3-to-4.0.md)并排安装。
 
 ## 失败后恢复
 

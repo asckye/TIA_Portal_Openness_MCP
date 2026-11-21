@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
+using TiaMcp.Versioning;
 
 namespace TiaMcp.ReleaseTool;
 
@@ -50,7 +51,8 @@ internal sealed class Scorecard(string root, string primary, string api)
         string directory = Path.Combine(primary, "bin-build/prepared");
         if (!Directory.Exists(directory)) return null;
         return Directory.EnumerateDirectories(directory).SelectMany(path => delivery
-                ? Directory.EnumerateDirectories(path, "TIA_MCP_Delivery_*").Select(folder => Path.Combine(folder, relative))
+                ? Directory.EnumerateDirectories(path).Where(folder => DeliveryPackage.IsPackageName(Path.GetFileName(folder)))
+                    .Select(folder => Path.Combine(folder, relative))
                 : new[] { Path.Combine(path, relative) })
             .Where(File.Exists).OrderByDescending(File.GetLastWriteTimeUtc).ThenBy(path => path, StringComparer.Ordinal).FirstOrDefault();
     }

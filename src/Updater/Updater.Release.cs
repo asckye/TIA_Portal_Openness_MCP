@@ -77,8 +77,7 @@ namespace TiaMcp.Updater
                 }
                 else release = GetJson<ReleaseInfo>(url, "application/vnd.github+json", options.TimeoutSeconds, options);
                 NormalizeVersion(release.Tag);
-                if (SelectAsset(release, true) == null || SelectAsset(release, false) == null)
-                    throw new InvalidOperationException("The release does not contain both delivery ZIP and .sha256 assets.");
+                RequireAssets(release);
                 say(UpdaterText.Bilingual("GitHubApi", "GitHub API") + ": " + release.Tag + " (" + (release.PublishedAt ?? "") + ")");
                 return release;
             }
@@ -101,17 +100,23 @@ namespace TiaMcp.Updater
                 string html = GetText(pageBase.TrimEnd('/') + "/releases/expanded_assets/" + Uri.EscapeDataString(tag), options.TimeoutSeconds, options);
                 foreach (Match asset in Regex
                         .Matches(html, @"/releases/download/" + Regex.Escape(tag)
-                            + @"/(?<name>TIA_MCP_Delivery_v\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?_\d{8}\.(?:zip|sha256))"))
+                            + @"/(?<name>[^""'<>\s]+)"))
                 {
                     string name = Uri.UnescapeDataString(asset.Groups["name"].Value);
+                    if (!DeliveryPackage.IsZip(name) && !DeliveryPackage.IsSidecar(name)) continue;
                     if (!fallback.Assets.Any(a => string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase)))
                         fallback.Assets.Add(new ReleaseAsset { Name = name, Url = pageBase.TrimEnd('/') + asset.Value });
                 }
-                SelectAsset(fallback, true);
-                SelectAsset(fallback, false);
+                RequireAssets(fallback);
                 say(UpdaterText.Bilingual("ReleasePage", "release page") + ": " + tag);
                 return fallback;
             }
+        }
+
+        private static void RequireAssets(ReleaseInfo release)
+        {
+            if (SelectAsset(release, true) == null || SelectAsset(release, false) == null)
+                throw new InvalidOperationException("The release does not contain both delivery ZIP and .sha256 assets.");
         }
 
         private static ReleaseAsset SelectAsset(ReleaseInfo release, bool zip)
@@ -119,8 +124,7 @@ namespace TiaMcp.Updater
             if (release == null || release.Assets == null) return null;
             return release.Assets
                 .FirstOrDefault(a => a != null && a.Name != null
-                    && (zip ? ZipPattern.IsMatch(a.Name) : ZipPattern.IsMatch(a.Name.Replace(".sha256", ".zip")) && a.Name
-                        .EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)));
+                    && (zip ? DeliveryPackage.IsZip(a.Name) : DeliveryPackage.IsSidecar(a.Name)));
         }
 
         private static void Download(string url, string destination, int timeoutSeconds, UpdaterOptions options)

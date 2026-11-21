@@ -7,20 +7,22 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using TiaMcp.Versioning;
 
 namespace TiaMcp.ReleaseTool;
 
 internal sealed record PublishOptions(string Version, string Token, string Repository, string ApiBaseUrl,
     bool DraftOnly, bool DeleteDraft, int RetryCount = 6, int RetryDelaySeconds = 15, string GitExecutable = "git", string? CandidatePath = null);
 
-// The JSON bodies of the two release writes. A plain release is drafted with prerelease=false and make_latest="false", then
-// published as the latest release. A pre-release (X.Y.Z-beta.N, X.Y.Z-rc.N) carries prerelease=true and make_latest="false" in both
-// writes, so GitHub's "latest release" (and the updater of every plain install) keeps pointing at the newest plain release.
 internal static class ReleaseRequestBodies
 {
-    internal static object Draft(string tag, string commit, string body, bool prerelease) =>
-        new { tag_name = tag, target_commitish = commit, name = tag, body, draft = true, prerelease, make_latest = "false" };
+    // A private draft cannot be Latest. Promote the final release in the same request that makes it public.
+    internal static object Draft(ProductReleaseVersion version, string commit, string body) =>
+        new { tag_name = version.Tag, target_commitish = commit, name = version.Tag, body, draft = true,
+            prerelease = version.IsPrerelease, make_latest = "false" };
 
+    internal static object Publish(ProductReleaseVersion version, string commit) =>
+        new { draft = false, prerelease = version.IsPrerelease, make_latest = version.IsPrerelease ? "false" : "true", target_commitish = commit };
 }
 
 internal static class ReleasePublisher
@@ -35,14 +37,10 @@ internal static class ReleasePublisher
     internal static async Task UploadDraftAsync(string root, string candidatePath, PublishOptions options,
         HttpClient? client = null, CancellationToken cancellationToken = default)
     {
-        PublishPrepared.RequirePrerelease(options.Version);
-        var version = ReleaseVersions.Require(options.Version, "Invalid prepared version");
         var package = PreparedCandidate.Read(root, candidatePath, options.Version);
+        var version = package.Version;
         await package.VerifyAsync(cancellationToken);
-        var notes = await File.ReadAllTextAsync(Path.Combine(root, "docs/releases", version.Tag + ".md"), cancellationToken);
-        if (!PrereleaseNotes.HasBilingualSections(notes))
-            throw new ReleaseException(version.Tag
-                    + " needs the generated Not verified on a real TIA Portal section in Chinese and English (generate-prerelease-notes)");
+        var notes = await ReadNotesAsync(root, version, cancellationToken);
         using var ownedClient = client is null ? new HttpClient { Timeout = Timeout.InfiniteTimeSpan } : null;
         var api = PreparedApi(root, options, client ?? ownedClient!);
         var releases = "repos/" + api.Repository + "/releases";
@@ -59,7 +57,7 @@ internal static class ReleasePublisher
         var notesBody = ComposeBody(notes, webBase, options.Repository, package.Commit, Path.GetFileName(package.Zip),
             package.Candidate["fileCount"]!.GetValue<long>(), package.Size, package.Digest);
         // The prepared SHA need not exist on origin yet. A draft targets the existing master branch.
-        var body = ReleaseRequestBodies.Draft(version.Tag, "master", notesBody, prerelease: true);
+        var body = ReleaseRequestBodies.Draft(version, "master", notesBody);
         using var draft = await api.SendJsonRequiredAsync(existing is null ? HttpMethod.Post : HttpMethod.Patch,
             releases + (existing is null ? "" : "/" + JsonLong(existing.Value, "id").ToString(CultureInfo.InvariantCulture)), body, cancellationToken);
         var id = JsonLong(draft.RootElement, "id");
@@ -91,11 +89,28 @@ internal static class ReleasePublisher
 
     internal sealed record PreparedRelease(bool Public, JsonElement ZipAsset);
 
+    internal static async Task<string> ReadNotesAsync(string root, ProductReleaseVersion version, CancellationToken cancellationToken)
+    {
+        var path = Path.Combine(root, PrereleaseNotes.NotesPath(version.Label));
+        if (!File.Exists(path)) throw new ReleaseException("Missing release notes: " + path);
+        var notes = await File.ReadAllTextAsync(path, cancellationToken);
+        RequireNotes(version, notes);
+        return notes;
+    }
+
+    private static void RequireNotes(ProductReleaseVersion version, string notes)
+    {
+        if (!version.IsPrerelease) PrereleaseNotes.RequireLanguages(notes);
+        else if (!PrereleaseNotes.HasBilingualSections(notes))
+            throw new ReleaseException(version.Tag + " needs the generated Not verified on a real TIA Portal section in Chinese and English"
+                + " (generate-prerelease-notes); run upload-draft to refresh the draft.");
+    }
+
     internal static async Task<PreparedRelease> ReadPreparedReleaseAsync(GitHubApi api, PreparedCandidate package, CancellationToken cancellationToken)
     {
         var path = "repos/" + api.Repository + "/releases/" + package.ReleaseId.ToString(CultureInfo.InvariantCulture);
         using var release = await api.GetReleaseByTagOrNullAsync(path, cancellationToken);
-        if (release is null || JsonString(release.RootElement, "tag_name") != "v" + package.Version)
+        if (release is null || JsonString(release.RootElement, "tag_name") != package.Version.Tag)
             throw new ReleaseException("no draft or public release for prepared version");
         var assets = release.RootElement.GetProperty("assets");
         var zip = FindAssets(assets, Path.GetFileName(package.Zip)).ToArray();
@@ -107,14 +122,14 @@ internal static class ReleasePublisher
             !Matches(zip[0], package.Size, package.Digest) || !Matches(sidecar[0], sidecarBytes.LongLength, Sha256Digest(sidecarBytes)))
             throw new ReleaseException("release asset size or digest differs from prepared ZIP or .sha256");
         bool draft = JsonBool(release.RootElement, "draft");
-        if (draft && !PrereleaseNotes.HasBilingualSections(JsonString(release.RootElement, "body")))
-            throw new ReleaseException("Prepared draft needs Chinese and English release notes; run upload-draft to refresh it.");
+        if (draft) RequireNotes(package.Version, JsonString(release.RootElement, "body"));
+        else RequirePublishedVersion(release.RootElement, package.Version);
         return new(!draft, zip[0].Clone());
     }
 
     internal static async Task<bool> PreparedTagExistsAsync(GitHubApi api, PreparedCandidate package, CancellationToken cancellationToken)
     {
-        using var reference = await api.GetReleaseByTagOrNullAsync("repos/" + api.Repository + "/git/ref/tags/" + Uri.EscapeDataString("v" + package.Version), cancellationToken);
+        using var reference = await api.GetReleaseByTagOrNullAsync("repos/" + api.Repository + "/git/ref/tags/" + Uri.EscapeDataString(package.Version.Tag), cancellationToken);
         if (reference is null) return false;
         var target = reference.RootElement.GetProperty("object");
         if (JsonString(target, "type") == "tag")
@@ -138,9 +153,8 @@ internal static class ReleasePublisher
                 using var deadline = budget.BeginAttempt(firstFlip: attempt == 1);
                 using var response = await api.SendJsonRequiredAsync(HttpMethod.Patch,
                     "repos/" + api.Repository + "/releases/" + package.ReleaseId.ToString(CultureInfo.InvariantCulture),
-                    new { draft = false, prerelease = true, make_latest = "false", target_commitish = package.Commit }, deadline.Token);
-                if (JsonBool(response.RootElement, "draft") || !JsonBool(response.RootElement, "prerelease"))
-                    throw new ReleaseException("draft did not become a published pre-release");
+                    ReleaseRequestBodies.Publish(package.Version, package.Commit), deadline.Token);
+                RequirePublishedVersion(response.RootElement, package.Version);
                 budget.State = PublicationBudget.PublicState;
                 published = response.RootElement.Clone();
                 break;
@@ -154,6 +168,14 @@ internal static class ReleasePublisher
             .SingleOrDefault(asset => JsonLong(asset, "id") == package.AssetId);
         if (zip.ValueKind == JsonValueKind.Undefined) throw new ReleaseException("published response has no prepared ZIP asset");
         await ConfirmPreparedDownloadAsync(http, zip, budget);
+    }
+
+    private static void RequirePublishedVersion(JsonElement release, ProductReleaseVersion version)
+    {
+        if (!release.TryGetProperty("draft", out var draft) || draft.ValueKind != JsonValueKind.False
+            || !release.TryGetProperty("prerelease", out var prerelease)
+            || prerelease.ValueKind != (version.IsPrerelease ? JsonValueKind.True : JsonValueKind.False))
+            throw new ReleaseException("Published release flags do not match " + version.Tag);
     }
 
     internal static async Task ConfirmPreparedDownloadAsync(HttpClient http, JsonElement zipAsset, PublicationBudget budget)

@@ -28,8 +28,6 @@ namespace TiaMcp.Updater
 
     public static partial class UpdaterEngine
     {
-        private static readonly Regex ZipPattern =
-            new Regex(@"^TIA_MCP_Delivery_v\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?_\d{8}\.zip$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private const string UpdaterPath = "runtime/tools/TiaMcp.Updater.exe";
         private const string UpdaterConfigPath = UpdaterPath + ".config";
 

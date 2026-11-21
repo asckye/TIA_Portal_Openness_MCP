@@ -215,13 +215,20 @@ public sealed class PrepareTests
         Assert.False(File.Exists(Path.Combine(context.OutputDirectory, context.PackageName + ".zip")));
     }
 
-    [Fact]
-    public void ArchiveContainsExactlyTheInventoriedBytesAndCannotBeOverwritten()
+    [Theory]
+    [InlineData("4.0.0-beta.6", "TIA_MCP_Delivery_v4.0.0-beta.6_20261102")]
+    [InlineData("4.0.0-rc.1", "TIA_MCP_Delivery_v4.0.0-rc.1_20261102")]
+    [InlineData("4.0.0", "TIA_MCP_v4.0.0_20261102")]
+    [InlineData("5.1.2", "TIA_MCP_v5.1.2_20261102")]
+    [InlineData("3.3.0", "TIA_MCP_Delivery_v3.3.0_20261102")]
+    public void ArchiveContainsExactlyTheInventoriedBytesAndCannotBeOverwritten(string version, string package)
     {
-        using var tree = ManifestTree();
-        var context = Context(tree.Root);
+        using var tree = ManifestTree(version);
+        var context = Context(tree.Root, version);
         Prepare.GenerateManifests(context);
         var result = Prepare.Archive(context);
+        Assert.Equal(package, context.PackageName);
+        Assert.Equal(package + ".zip", Path.GetFileName(result.ZipPath));
         Assert.Equal(FileHash.Sha256(result.ZipPath), result.Sha256);
         Assert.Equal(new FileInfo(result.ZipPath).Length, result.Size);
         Assert.Equal(context.StageDirectory, result.StageDirectory);
@@ -559,16 +566,29 @@ public sealed class PrepareTests
         return tree;
     }
 
-    private static PrepareContext Context(string root) => new(root, "4.0.0-beta.6", Path.Combine(root, "sdk"), null,
-        "python.exe", "companion.exe", Path.Combine(root, "bin-build/prepared/4.0.0-beta.6"), new(2026, 11, 2));
+    [Theory]
+    [InlineData("3.3.0", true)]
+    [InlineData("4.0.0", false)]
+    public void LegacyInstallersRecognizeOnlyTheLegacyFinalPackage(string version, bool recognized)
+    {
+        var zip = Context("fixture", version).PackageName + ".zip";
+        // v3.3.0 scripts/operations/Update-Engine.ps1 uses PowerShell's case-insensitive -match.
+        Assert.Equal(recognized, Regex.IsMatch(zip, @"^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.zip$", RegexOptions.IgnoreCase));
+        // v3.3.0 tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs
+        Assert.Equal(recognized, zip.StartsWith("TIA_MCP_Delivery_", StringComparison.OrdinalIgnoreCase)
+            && zip.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
+    }
 
-    private static StaticTree ManifestTree()
+    private static PrepareContext Context(string root, string version = "4.0.0-beta.6") => new(root, version, Path.Combine(root, "sdk"), null,
+        "python.exe", "companion.exe", Path.Combine(root, "bin-build/prepared", version), new(2026, 11, 2));
+
+    private static StaticTree ManifestTree(string version = "4.0.0-beta.6")
     {
         var tree = VersionTree();
         tree.Copy("manifest/package-manifest.json");
         tree.Copy("manifest/tools-list.json");
         tree.Copy("src/Logic/ModelContextProtocol/ToolProfiles.resx");
-        var context = Context(tree.Root);
+        var context = Context(tree.Root, version);
         tree.Write(Path.GetRelativePath(tree.Root, Path.Combine(context.StageDirectory, "manifest/tools-list.json")),
             File.ReadAllText(Path.Combine(tree.Root, "manifest/tools-list.json")));
         return tree;

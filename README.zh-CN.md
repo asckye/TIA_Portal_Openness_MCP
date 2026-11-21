@@ -20,7 +20,9 @@
 ## 快速开始
 
 > [!IMPORTANT]
-> 从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) 下载完整的 **TIA_MCP_Delivery** ZIP 及其 `.sha256` 校验文件，完整解压到较短的固定目录。GitHub 的 `Source code` 压缩包不含运行二进制。试用 4.0 请选择标有 **Pre-release** 的条目（预发布不会出现在 Latest 中）。可执行文件尚未签名，首次运行时 Windows SmartScreen 可能提示警告。
+> 从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) 下载交付 ZIP 及其 `.sha256` 校验文件，完整解压到较短的固定目录。试用 4.0 beta 或 rc 请选择标有 **Pre-release** 的条目。4.0.0 正式发布后，**Latest** 下的交付包名为 `TIA_MCP_v4.0.0_<日期>.zip`。GitHub 的 `Source code` 压缩包不含运行二进制。可执行文件尚未签名，首次运行时 Windows SmartScreen 可能提示警告。
+
+4.0 交付包不含西门子 TIA Portal 程序集，Openness 从用户自己的 TIA 安装中加载。3.x 已发布附件保持原样。
 
 交付包包含运行文件、用户文档、模板、Claude Code 插件和生态资源；开发源码、构建脚本与验证工具保留在源码仓库。
 

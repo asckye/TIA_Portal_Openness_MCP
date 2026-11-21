@@ -20,7 +20,9 @@ An MCP server and Windows desktop Workbench for Siemens TIA Portal Openness acro
 ## Get started
 
 > [!IMPORTANT]
-> Download the complete **TIA_MCP_Delivery** ZIP and its `.sha256` sidecar from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases), then extract the entire archive to a short, permanent directory. GitHub's `Source code` archives contain no runtime binaries. For 4.0, select the entry marked **Pre-release** (it does not appear under Latest). Because executables are unsigned, Windows SmartScreen may warn on first launch.
+> Download the delivery ZIP and its `.sha256` sidecar from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases), then extract the entire archive to a short, permanent directory. For a 4.0 beta or rc, select the entry marked **Pre-release**. The 4.0.0 final ZIP will appear under **Latest** as `TIA_MCP_v4.0.0_<date>.zip`. GitHub's `Source code` archives contain no runtime binaries. Because executables are unsigned, Windows SmartScreen may warn on first launch.
+
+4.0 packages omit Siemens TIA Portal assemblies and load Openness from your own TIA installation. Existing 3.x release assets stay as published.
 
 The delivery package bundles runtime binaries, user documentation, templates, the Claude Code plugin, and ecosystem resources. Development sources, build scripts, and validation tools stay in this repository.
 

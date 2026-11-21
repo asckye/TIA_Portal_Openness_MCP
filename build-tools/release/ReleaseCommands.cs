@@ -48,7 +48,6 @@ internal static partial class ReleaseCommands
     private static int UploadPreparedDraft(Options options)
     {
         var publish = PreparedPublishOptions(options);
-        PublishPrepared.RequirePrerelease(publish.Version);
         ReleasePublisher.UploadDraftAsync(Root, Path.Combine(Root, "bin-build/prepared", publish.Version, "candidate.json"), publish).GetAwaiter().GetResult();
         return 0;
     }

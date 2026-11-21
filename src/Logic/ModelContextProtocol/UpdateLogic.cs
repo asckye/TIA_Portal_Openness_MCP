@@ -38,9 +38,9 @@ namespace TiaMcpServer.ModelContextProtocol
             public bool Draft { get; set; }
             public List<Asset> Assets { get; } = new List<Asset>();
             public Asset? Zip => Assets
-                .FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v" + DeliveryVersionPattern + @"_\d{8}\.zip$", RegexOptions.IgnoreCase));
+                .FirstOrDefault(a => DeliveryPackage.IsZip(a.Name));
             public Asset? Sha256 => Assets
-                .FirstOrDefault(a => Regex.IsMatch(a.Name, @"^TIA_MCP_Delivery_v" + DeliveryVersionPattern + @"_\d{8}\.sha256$", RegexOptions.IgnoreCase));
+                .FirstOrDefault(a => DeliveryPackage.IsSidecar(a.Name));
             /// <summary>X.Y.Z of the tag (X.Y.Z-beta.N / X.Y.Z-rc.N for a pre-release tag), or null when the tag is not a release tag.</summary>
             public string? Version => ParseVersion(Tag) is int[] v ? string.Join(".", v) : ProductReleaseVersion.TryParseTag(Tag.Trim(), out var label)
                 && label != null ? label.Label : null;
@@ -49,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         /// <summary>The version part of a delivery asset name: X.Y.Z, optionally -beta.N or -rc.N.</summary>
-        public const string DeliveryVersionPattern = @"\d+\.\d+\.\d+(?:-(?:beta|rc)\.\d+)?";
+        public const string DeliveryVersionPattern = DeliveryPackage.VersionPattern;
 
         private static readonly Regex VersionPattern = new Regex(@"^v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$", RegexOptions.Compiled);
 

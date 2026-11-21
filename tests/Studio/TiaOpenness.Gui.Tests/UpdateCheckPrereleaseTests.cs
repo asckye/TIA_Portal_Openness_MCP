@@ -7,9 +7,9 @@ namespace TiaOpenness.Gui.Tests;
 // P8-90: the Workbench update band follows the same channel rule as the updater.
 public sealed class UpdateCheckPrereleaseTests
 {
-    private static string Release(string tag, bool prerelease, bool draft = false) =>
+    private static string Release(string tag, bool prerelease, bool draft = false, string prefix = "TIA_MCP_Delivery_") =>
         "{\"tag_name\":\"" + tag + "\",\"prerelease\":" + (prerelease ? "true" : "false") + ",\"draft\":" + (draft ? "true" : "false") +
-        ",\"html_url\":\"https://github.com/o/r/releases/tag/" + tag + "\",\"assets\":[{\"name\":\"TIA_MCP_Delivery_" + tag + "_20261021.zip\",\"size\":1048576},{\"name\":\"TIA_MCP_Delivery_" + tag + "_20261021.sha256\",\"size\":80}]}";
+        ",\"html_url\":\"https://github.com/o/r/releases/tag/" + tag + "\",\"assets\":[{\"name\":\"" + prefix + tag + "_20261021.zip\",\"size\":1048576},{\"name\":\"" + prefix + tag + "_20261021.sha256\",\"size\":80}]}";
 
     [Theory]
     [InlineData("4.0.0-beta.2", "4.0.0-beta.1", 1)]
@@ -50,8 +50,19 @@ public sealed class UpdateCheckPrereleaseTests
         Assert.Equal("4.0.0-beta.2", info.Latest);
         Assert.True(info.UpdateAvailable);
         Assert.Equal("TIA_MCP_Delivery_v4.0.0-beta.2_20261021.zip", info.ZipName);
-        var plain = UpdateCheck.ParseReleaseList("[" + Release("v4.0.0-rc.1", true) + "," + Release("v4.0.0", false) + "]", "4.0.0-rc.1", "o/r");
+        Assert.True(info.HasSha256);
+        var plain = UpdateCheck.ParseReleaseList("[" + Release("v4.0.0-rc.1", true) + "," + Release("v4.0.0", false, prefix: "TIA_MCP_") + "]", "4.0.0-rc.1", "o/r");
         Assert.Equal("4.0.0", plain.Latest);
         Assert.True(plain.UpdateAvailable);
+        Assert.Equal("TIA_MCP_v4.0.0_20261021.zip", plain.ZipName);
+        Assert.True(plain.HasSha256);
+    }
+
+    [Fact]
+    public void OtherPrefixesProvideNeitherZipNorSidecar()
+    {
+        var info = UpdateCheck.ParseRelease(Release("v4.0.0", false, prefix: "TIA_MCP_Debug_"), "4.0.0-rc.1", "o/r");
+        Assert.Null(info.ZipName);
+        Assert.False(info.HasSha256);
     }
 }

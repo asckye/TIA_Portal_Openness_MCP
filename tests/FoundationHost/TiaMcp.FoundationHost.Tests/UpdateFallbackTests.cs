@@ -1,5 +1,6 @@
 extern alias toolpipeline;
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using Xunit;
@@ -43,13 +44,34 @@ public sealed class UpdateFallbackTests
         Assert.DoesNotContain(" MB", result.Items!.First());
     }
 
-    private sealed class RecordingHandler(bool size) : HttpMessageHandler
+    [Theory]
+    [InlineData("v4.0.0-rc.1", "TIA_MCP_Delivery_v4.0.0-rc.1_20261103")]
+    [InlineData("v4.0.0", "TIA_MCP_v4.0.0_20261103")]
+    public async Task UpdateCheckReportsBothDeliveryAssets(string tag, string package)
+    {
+        var names = new[] { "TIA_MCP_Debug_v4.0.0_20261103.zip", "TIA_MCP_Debug_v4.0.0_20261103.sha256", package + ".zip", package + ".sha256" };
+        var release = new { tag_name = tag, assets = names.Select(name => new { name, browser_download_url = "https://fixture.invalid/" + name }) };
+        using var handler = new RecordingHandler(false, JsonSerializer.Serialize(new[] { release }));
+        using var http = new HttpClient(handler);
+        var result = await Host.CheckForUpdate("owner/repo", 15, "4.0.0-beta.6", http);
+        Assert.True((bool?)result.Meta!["success"]);
+        Assert.Equal(package + ".zip", (string?)result.Meta["zip"]!["name"]);
+        Assert.Equal(package + ".sha256", (string?)result.Meta["sha256"]!["name"]);
+        Assert.Single(handler.Requests);
+    }
+
+    private sealed class RecordingHandler(bool size, string? releases = null) : HttpMessageHandler
     {
         internal List<string> Requests { get; } = [];
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
         {
             string url = request.RequestUri!.ToString();
             Requests.Add(url);
+            if (releases != null)
+            {
+                Assert.EndsWith("/releases?per_page=100", url, StringComparison.Ordinal);
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(releases) });
+            }
             if (request.RequestUri.Host == "api.github.com")
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden) { RequestMessage = request,
                     Content = new StringContent("{\"message\":\"API rate limit exceeded for 203.0.113.5.\","

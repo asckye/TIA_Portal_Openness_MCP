@@ -69,8 +69,11 @@ namespace TiaMcp.Updater.Tests
         [Fact]
         public void Prerelease_install_is_offered_the_plain_release_that_follows_it()
         {
-            using var f = new ChannelFixture("4.0.0-rc.1") { List = new[] { Release("v4.0.0-rc.1", prerelease: true), Release("v4.0.0"), Release("v3.3.0") } };
-            Assert.Contains(f.Check(), line => line.Contains("4.0.0-rc.1 -> 4.0.0", StringComparison.Ordinal) && !line.Contains("4.0.0-rc.1 -> 4.0.0-", StringComparison.Ordinal));
+            using var f = new ChannelFixture("4.0.0-rc.1") { List = new[] { Release("v4.0.0-rc.1", prerelease: true),
+                Release("v4.0.0", prefix: "TIA_MCP_v"), Release("v4.0.1", prefix: "TIA_MCP_Debug_v"), Release("v3.3.0") } };
+            var lines = f.Check();
+            Assert.Contains(lines, line => line.Contains("4.0.0-rc.1 -> 4.0.0", StringComparison.Ordinal) && !line.Contains("4.0.0-rc.1 -> 4.0.0-", StringComparison.Ordinal));
+            Assert.Contains(lines, line => line.EndsWith("/TIA_MCP_v4.0.0_20261021.zip", StringComparison.Ordinal));
         }
 
         [Fact]
@@ -103,10 +106,32 @@ namespace TiaMcp.Updater.Tests
             Assert.DoesNotContain(plain.Check(), line => line.Contains("the release page shows only", StringComparison.Ordinal));
         }
 
-        private static object Release(string tag, bool prerelease = false, bool draft = false)
+        [Theory]
+        [InlineData("4.0.0-rc.1", "TIA_MCP_Delivery_v4.0.0-rc.1_20261021")]
+        [InlineData("4.0.0", "TIA_MCP_v4.0.0_20261021")]
+        public void ExpandedAssetsRecognizesBothPackageNames(string version, string package)
+        {
+            using var f = new ChannelFixture("4.0.0-rc.1") { FailApi = true, ExpandedAssets =
+                $"<a href=\"/releases/download/v{version}/{package}.zip.bak\">backup</a>" +
+                $"<a href=\"/releases/download/v{version}/{package}.zip\">ZIP</a>" +
+                $"<a href=\"/releases/download/v{version}/{package}.sha256\">SHA-256</a>" };
+            Assert.Contains(f.Check(version), line => line.EndsWith("/" + package + ".zip", StringComparison.Ordinal));
+        }
+
+        [Theory]
+        [InlineData("TIA_MCP_v4.0.0_20261021.zip.bak", "TIA_MCP_v4.0.0_20261021.sha256")]
+        [InlineData("TIA_MCP_v4.0.0_20261021.zip", "TIA_MCP_Debug_v4.0.0_20261021.sha256")]
+        public void ExpandedAssetsRequiresRecognizedZipAndSidecar(string zip, string sidecar)
+        {
+            using var f = new ChannelFixture("4.0.0-rc.1") { FailApi = true, ExpandedAssets =
+                $"<a href=\"/releases/download/v4.0.0/{zip}\">ZIP</a><a href=\"/releases/download/v4.0.0/{sidecar}\">SHA-256</a>" };
+            Assert.Contains("both delivery ZIP and .sha256", Assert.Throws<InvalidOperationException>(() => f.Check("4.0.0")).Message);
+        }
+
+        private static object Release(string tag, bool prerelease = false, bool draft = false, string prefix = "TIA_MCP_Delivery_v")
         {
             string version = tag.TrimStart('v');
-            string package = "TIA_MCP_Delivery_v" + version + "_20261021";
+            string package = prefix + version + "_20261021";
             return new
             {
                 tag_name = tag, published_at = "2026-10-21T00:00:00Z", prerelease, draft,
@@ -122,6 +147,7 @@ namespace TiaMcp.Updater.Tests
             internal object[] List { get; set; } = Array.Empty<object>();
             internal List<string> Urls { get; } = new List<string>();
             internal bool FailApi { get; set; }
+            internal string ExpandedAssets { get; set; } = "<a href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.zip\">zip</a><a href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.sha256\">sha</a>";
 
             internal ChannelFixture(string installed)
             {
@@ -141,7 +167,7 @@ namespace TiaMcp.Updater.Tests
                     {
                         Urls.Add(new Uri(url).PathAndQuery);
                         if (url.Contains("/expanded_assets/", StringComparison.Ordinal))
-                            return "<a href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.zip\">zip</a><a href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.sha256\">sha</a>";
+                            return ExpandedAssets;
                         if (FailApi) throw new IOException("synthetic rate limit");
                         if (url.EndsWith("/releases/latest", StringComparison.Ordinal)) return JsonSerializer.Serialize(Latest);
                         if (url.EndsWith("/releases?per_page=100", StringComparison.Ordinal)) return JsonSerializer.Serialize(List);

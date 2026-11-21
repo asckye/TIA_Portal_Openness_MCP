@@ -186,7 +186,7 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["zip"] = zip == null ? null : new JsonObject {
                 ["name"] = zip.Name, ["url"] = zip.Url, ["size"] = zip.Size, ["digest"] = zip.Digest.Length > 0 ? zip.Digest : null };
             meta["sha256"] = sha == null ? null : new JsonObject { ["name"] = sha.Name, ["url"] = sha.Url };
-            if (zip == null) lines.Insert(0, "The latest release carries no TIA_MCP_Delivery ZIP asset - check the release page before updating.");
+            if (zip == null) lines.Insert(0, "The latest release carries no delivery ZIP asset - check the release page before updating.");
             else lines.Insert(0, UpdateLogic.DeliveryLine(zip, sha));
             meta["success"] = true;
             return new ResponseStringList { Message = UpdateLogic.Summary(current, release, comparison), Items = lines, Meta = meta };

@@ -463,11 +463,13 @@ public sealed partial class ScorecardTests
         Assert.Equal("partial", Assert.Single(context.Report.Dimensions, row => row.Release == "").State);
     }
 
-    [Fact]
-    public void AdapterSearchPrefersWorktreeThenPrimaryThenNewestPrepared()
+    [Theory]
+    [InlineData("TIA_MCP_Delivery_v4.0.0-rc.1_20261101")]
+    [InlineData("TIA_MCP_v4.0.0_20261102")]
+    public void AdapterSearchPrefersWorktreeThenPrimaryThenNewestPrepared(string package)
     {
         using var tree = new StaticTree();
-        string prepared = tree.Write("primary/bin-build/prepared/candidate/TIA_MCP_Delivery_test/runtime/v21/worker/TiaMcp.Adapter.21.dll", "");
+        string prepared = tree.Write($"primary/bin-build/prepared/candidate/{package}/runtime/v21/worker/TiaMcp.Adapter.21.dll", "");
         string primary = tree.Write("primary/src/PlcWorker/bin/21/Release/net48/TiaMcp.Adapter.21.dll", "");
         string current = tree.Write("worktree/src/PlcWorker/bin/21/Release/net48/TiaMcp.Adapter.21.dll", "");
         string root = Path.Combine(tree.Root, "worktree"), main = Path.Combine(tree.Root, "primary");

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.Versioning;
 
 namespace TiaMcp.ReleaseTool;
 
@@ -20,8 +21,9 @@ internal static class PublishPrepared
         try
         {
             budget.RemainingMilliseconds();
-            RequirePrerelease(options.Version);
             var package = PreparedCandidate.Read(root, Path.Combine(root, "bin-build/prepared", options.Version, "candidate.json"), options.Version);
+            using var deadline = budget.BeginAttempt();
+            if (!package.Version.IsPrerelease) await ReleasePublisher.ReadNotesAsync(root, package.Version, deadline.Token);
             git ??= (args, timeout) => ProcessRunner.Run(options.GitExecutable, args, root,
                 new Dictionary<string, string?> { ["GIT_TERMINAL_PROMPT"] = "0", ["GCM_INTERACTIVE"] = "Never" }, timeoutMilliseconds: timeout);
             var head = git(["rev-parse", "HEAD"], budget.RemainingMilliseconds());
@@ -30,7 +32,6 @@ internal static class PublishPrepared
             var status = git(["status", "--porcelain", "--untracked-files=all"], budget.RemainingMilliseconds());
             ProcessRunner.RequireSuccess(status, "git status");
             if (!string.IsNullOrWhiteSpace(status.StandardOutput)) throw new ReleaseException("dirty tree; prepare and commit the source first");
-            using var deadline = budget.BeginAttempt();
             await package.VerifyAsync(deadline.Token);
             if (package.ReleaseId <= 0 || package.AssetId <= 0) throw new ReleaseException("no draft recorded in candidate.json; upload the draft first");
             using var ownedClient = client is null ? new HttpClient { Timeout = TimeSpan.FromSeconds(30) } : null;
@@ -63,19 +64,13 @@ internal static class PublishPrepared
         finally { Console.WriteLine("Total seconds: " + budget.Elapsed.TotalSeconds.ToString("F1", CultureInfo.InvariantCulture)); }
     }
 
-    internal static void RequirePrerelease(string version)
-    {
-        if (!ReleaseVersions.Require(version, "-Version must be X.Y.Z-beta.N or X.Y.Z-rc.N").IsPrerelease)
-            throw new ReleaseException("publish-prepared publishes pre-releases only; upload-draft also requires a pre-release");
-    }
-
     private static async Task EnsureTagAsync(ReleasePublisher.GitHubApi api, PreparedCandidate package, PublicationBudget budget)
     {
         using var attempt = budget.BeginAttempt();
         try
         {
             using var created = await api.SendJsonRequiredAsync(HttpMethod.Post, "repos/" + api.Repository + "/git/refs",
-                new { @ref = "refs/tags/v" + package.Version, sha = package.Commit }, attempt.Token);
+                new { @ref = "refs/tags/" + package.Version.Tag, sha = package.Commit }, attempt.Token);
         }
         catch (Exception error) when (error is ReleaseException or HttpRequestException or OperationCanceledException)
         {
@@ -110,25 +105,28 @@ internal sealed class PublicationBudget(Func<TimeSpan> elapsed, Func<TimeSpan, C
 }
 
 internal sealed record PreparedCandidate(string CandidatePath, JsonObject Candidate, string Zip, string Digest,
-    long Size, string Commit, string Version, long ReleaseId, long AssetId)
+    long Size, string Commit, ProductReleaseVersion Version, long ReleaseId, long AssetId)
 {
     internal string Sidecar => Path.ChangeExtension(Zip, ".sha256");
 
     internal static PreparedCandidate Read(string root, string path, string version)
     {
+        var parsed = ReleaseVersions.Require(version, "-Version must be X.Y.Z, X.Y.Z-beta.N or X.Y.Z-rc.N");
         if (!File.Exists(path)) throw new ReleaseException("no candidate: " + path);
         var candidate = JsonNode.Parse(File.ReadAllText(path, Encoding.UTF8))?.AsObject() ?? throw new ReleaseException("Invalid candidate.json");
         string Text(string name) => candidate[name]?.GetValue<string>() ?? "";
         long Number(string name) => candidate[name]?.GetValue<long>() ?? 0;
         if (Text("version") != version) throw new ReleaseException("candidate version differs from -Version");
         var zip = Text("zip");
+        if (!parsed.IsPrerelease && !DeliveryPackage.IsCanonicalZip(Path.GetFileName(zip), parsed))
+            throw new ReleaseException("Invalid final release package name for " + parsed.Tag + ": " + Path.GetFileName(zip));
         if (!Path.IsPathRooted(zip))
         {
             var beside = Path.Combine(Path.GetDirectoryName(path)!, zip);
             zip = File.Exists(beside) ? beside : Path.Combine(root, zip);
         }
         if (Text("commit").Length != 40 || Text("commit").Any(c => !char.IsAsciiHexDigit(c))) throw new ReleaseException("Invalid candidate commit");
-        return new(path, candidate, Path.GetFullPath(zip), Text("zipSha256"), Number("zipSize"), Text("commit"), version,
+        return new(path, candidate, Path.GetFullPath(zip), Text("zipSha256"), Number("zipSize"), Text("commit"), parsed,
             Number("draftReleaseId"), Number("draftAssetId"));
     }
 

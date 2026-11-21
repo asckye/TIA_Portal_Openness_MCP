@@ -8,13 +8,14 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using TiaMcp.BuildCommon;
+using TiaMcp.Versioning;
 
 namespace TiaMcp.ReleaseTool;
 
 internal sealed record PrepareContext(string Root, string Version, string PublicApiRoot, string? NuGetConfig,
     string Python, string CompanionPython, string OutputDirectory, DateOnly ReleaseDate, int MaxParallelism = 6, int TestParallelism = 0)
 {
-    internal string PackageName => $"TIA_MCP_Delivery_v{Version}_" + ReleaseDate.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+    internal string PackageName => DeliveryPackage.Name(ProductReleaseVersion.Parse(Version), ReleaseDate.ToDateTime(TimeOnly.MinValue));
     internal string StageDirectory => Path.Combine(OutputDirectory, PackageName);
     internal string Logs => Path.Combine(OutputDirectory, "logs");
 }
@@ -460,23 +461,25 @@ internal static class Prepare
 
     internal static PreparedPackage Archive(PrepareContext context)
     {
-        var inventoryErrors = InventoryErrors(context.StageDirectory);
+        var packageName = context.PackageName;
+        var stage = context.StageDirectory;
+        var inventoryErrors = InventoryErrors(stage);
         if (inventoryErrors.Count != 0) throw new ReleaseException(string.Join("\n", inventoryErrors));
-        var files = Inventory(context.StageDirectory);
-        files.Add(InventoryPath, FileHash.Sha256(Path.Combine(context.StageDirectory, InventoryPath)));
-        var zipPath = Path.Combine(context.OutputDirectory, context.PackageName + ".zip");
+        var files = Inventory(stage);
+        files.Add(InventoryPath, FileHash.Sha256(Path.Combine(stage, InventoryPath)));
+        var zipPath = Path.Combine(context.OutputDirectory, packageName + ".zip");
         if (File.Exists(zipPath) || File.Exists(Path.ChangeExtension(zipPath, ".sha256")))
             throw new IOException("Prepared package already exists: " + zipPath);
         using (var stream = new FileStream(zipPath, FileMode.CreateNew, FileAccess.Write))
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create))
             foreach (var path in files.Keys)
-                zip.CreateEntryFromFile(Path.Combine(context.StageDirectory, path), context.PackageName + "/" + path, CompressionLevel.Optimal);
+                zip.CreateEntryFromFile(Path.Combine(stage, path), packageName + "/" + path, CompressionLevel.Optimal);
         using (var zip = ZipFile.OpenRead(zipPath))
         {
             if (zip.Entries.Count != files.Count) throw new ReleaseException("ZIP file count differs from stage");
             foreach (var entry in zip.Entries)
             {
-                var path = entry.FullName[(context.PackageName.Length + 1)..];
+                var path = entry.FullName[(packageName.Length + 1)..];
                 using var stream = entry.Open();
                 if (!files.TryGetValue(path, out var hash) || Convert.ToHexStringLower(SHA256.HashData(stream)) != hash)
                     throw new ReleaseException("ZIP bytes differ from stage: " + path);
@@ -484,7 +487,7 @@ internal static class Prepare
         }
         var sha = FileHash.Sha256(zipPath);
         File.WriteAllText(Path.ChangeExtension(zipPath, ".sha256"), sha + "  " + Path.GetFileName(zipPath) + "\n", Encoding.ASCII);
-        return new(zipPath, sha, files.Count, new FileInfo(zipPath).Length, context.StageDirectory);
+        return new(zipPath, sha, files.Count, new FileInfo(zipPath).Length, stage);
     }
 
     internal static void WriteJson<T>(string path, T value)
