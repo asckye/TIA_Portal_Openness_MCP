@@ -5282,7 +5282,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ff1a74fbc3cd9b613dcc145c3913c0c0fa4154485154aeb8535657b2803f5bda",
+      "descriptionSha256": "09714ce45531328c792d8bcd5fbbe927d0992e1a53b81842cbdc73b030ca4801",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -5297,7 +5297,7 @@
           "spec": {
             "description": "spec: JSON object describing the project to generate. See tool description for keys.",
             "examples": [
-              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}"
+              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 511-1AK01-0AB0\",\"plcVersion\":\"V2.1\"}"
             ],
             "type": "string"
           }
@@ -6184,7 +6184,7 @@
           },
           "takeOver": {
             "default": false,
-            "description": "Exact foundation argument: takeOver",
+            "description": "Set true to take over an eligible idle non-owning attachment in this host.",
             "type": "boolean"
           }
         },
@@ -9782,7 +9782,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "6e90a70b505784f8c9062077f0103dba663e32bd3862067e7d82b226abb3c318",
+      "descriptionSha256": "11c3e063370b5dd2a843cf1c87e7a2c46f51cb28c5d2b06d6adaf7dc03101a7a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

@@ -5419,7 +5419,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ff1a74fbc3cd9b613dcc145c3913c0c0fa4154485154aeb8535657b2803f5bda",
+      "descriptionSha256": "4318195bcd650369c241529e81c003df38fce5607e99009e53b340cb0e827e71",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -5434,7 +5434,7 @@
           "spec": {
             "description": "spec: JSON object describing the project to generate. See tool description for keys.",
             "examples": [
-              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AM03-0AB0\",\"plcVersion\":\"V3.0\"}"
+              "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AL02-0AB0\",\"plcVersion\":\"V2.8\"}"
             ],
             "type": "string"
           }
@@ -6343,7 +6343,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7923a9eb5c2446940277bd2bea112096e5670f0117dc62b51fded03353859925",
+      "descriptionSha256": "2663e5092032aa6e87105fd414e938dd8af7cdff0dbd569049ae39d12e40421e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6355,7 +6355,7 @@
           "ipAddress": {
             "description": "ipAddress: required explicit IPv4 address, e.g. '192.168.1.10'.",
             "examples": [
-              "192.168.0.3"
+              "<PLC IPv4 address from the allow-list>"
             ],
             "type": "string"
           },
@@ -6368,7 +6368,7 @@
             "default": "",
             "description": "pgPcInterface: optional PG/PC adapter name substring (as listed by ListTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).",
             "examples": [
-              "PLCSIM"
+              "<exact PG/PC interface name from ListTransferRoutes>"
             ],
             "type": "string"
           },
@@ -6426,7 +6426,7 @@
           },
           "takeOver": {
             "default": false,
-            "description": "Exact foundation argument: takeOver",
+            "description": "Set true to take over an eligible idle non-owning attachment in this host.",
             "type": "boolean"
           }
         },
@@ -7807,7 +7807,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e8af1366711b76dcaa0ca1f8d7271865fd781bf37a5fe812c03cf5e34d993246",
+      "descriptionSha256": "7ac91d573586d00c4aa933f8e8dab509edce47f93922d1226965ea5addff06f6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7903,7 +7903,7 @@
             "default": "",
             "description": "pgPcInterface: PG/PC interface name (substring, case-insensitive) from ListTransferRoutes. PLCSIM downloads must explicitly name the PLCSIM virtual adapter or PLCSIM/Softbus interface. Empty enables automatic route selection and is always physical, requiring confirmPhysicalTarget=true and Workbench approval for execution.",
             "examples": [
-              "PLCSIM"
+              "<exact PG/PC interface name from ListTransferRoutes>"
             ],
             "type": "string"
           },
@@ -7940,7 +7940,7 @@
           "targetIpAddress": {
             "description": "targetIpAddress: required explicit IPv4 address of the CPU, e.g. '192.168.0.1'.",
             "examples": [
-              "192.168.0.3"
+              "<PLC IPv4 address from the allow-list>"
             ],
             "type": "string"
           },
@@ -11011,7 +11011,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "6e90a70b505784f8c9062077f0103dba663e32bd3862067e7d82b226abb3c318",
+      "descriptionSha256": "11c3e063370b5dd2a843cf1c87e7a2c46f51cb28c5d2b06d6adaf7dc03101a7a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

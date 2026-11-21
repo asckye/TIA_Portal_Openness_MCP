@@ -206,8 +206,7 @@
     },
     {
       "entries": [
-        "ExchangeCfcCharts",
-        "ManageCfcChartProtection"
+        "ExchangeCfcCharts"
       ],
       "family": "F32",
       "l5": "NOT RUN",
@@ -12657,7 +12656,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "7923a9eb5c2446940277bd2bea112096e5670f0117dc62b51fded03353859925",
+      "descriptionSha256": "2663e5092032aa6e87105fd414e938dd8af7cdff0dbd569049ae39d12e40421e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12669,7 +12668,7 @@
           "ipAddress": {
             "description": "ipAddress: required explicit IPv4 address, e.g. '192.168.1.10'.",
             "examples": [
-              "192.168.0.3"
+              "<PLC IPv4 address from the allow-list>"
             ],
             "type": "string"
           },
@@ -12682,7 +12681,7 @@
             "default": "",
             "description": "pgPcInterface: optional PG/PC adapter name substring (as listed by ListTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).",
             "examples": [
-              "PLCSIM"
+              "<exact PG/PC interface name from ListTransferRoutes>"
             ],
             "type": "string"
           },
@@ -12740,7 +12739,7 @@
           },
           "takeOver": {
             "default": false,
-            "description": "Exact foundation argument: takeOver",
+            "description": "Set true to take over an eligible idle non-owning attachment in this host.",
             "type": "boolean"
           }
         },
@@ -14530,7 +14529,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e8af1366711b76dcaa0ca1f8d7271865fd781bf37a5fe812c03cf5e34d993246",
+      "descriptionSha256": "7ac91d573586d00c4aa933f8e8dab509edce47f93922d1226965ea5addff06f6",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14626,7 +14625,7 @@
             "default": "",
             "description": "pgPcInterface: PG/PC interface name (substring, case-insensitive) from ListTransferRoutes. PLCSIM downloads must explicitly name the PLCSIM virtual adapter or PLCSIM/Softbus interface. Empty enables automatic route selection and is always physical, requiring confirmPhysicalTarget=true and Workbench approval for execution.",
             "examples": [
-              "PLCSIM"
+              "<exact PG/PC interface name from ListTransferRoutes>"
             ],
             "type": "string"
           },
@@ -14663,7 +14662,7 @@
           "targetIpAddress": {
             "description": "targetIpAddress: required explicit IPv4 address of the CPU, e.g. '192.168.0.1'.",
             "examples": [
-              "192.168.0.3"
+              "<PLC IPv4 address from the allow-list>"
             ],
             "type": "string"
           },
@@ -18932,7 +18931,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "6e90a70b505784f8c9062077f0103dba663e32bd3862067e7d82b226abb3c318",
+      "descriptionSha256": "11c3e063370b5dd2a843cf1c87e7a2c46f51cb28c5d2b06d6adaf7dc03101a7a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -25451,71 +25450,6 @@
         "type": "object"
       },
       "name": "ListVersionControlWorkspaces",
-      "outputSchemaSha256": "bdb806480fd874285783070e82f1081361c23d82a247c73d890f893c92e2d464"
-    },
-    {
-      "annotations": {
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false,
-        "readOnlyHint": false
-      },
-      "descriptionSha256": "0fd4992cf69365526a2578ebaf92501fdcc8cccdb23116c84b08b5cb641aab44",
-      "inputSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "action": {
-            "default": "read",
-            "description": "action: the operation to perform - read | add | change | remove.",
-            "enum": [
-              "read",
-              "add",
-              "change",
-              "remove"
-            ],
-            "type": "string"
-          },
-          "chartName": {
-            "description": "chartName: chart path 'Root/Sub' (exact names).",
-            "type": "string"
-          },
-          "currentPassword": {
-            "default": "",
-            "description": "currentPassword: the password currently set; never logged.",
-            "type": "string"
-          },
-          "dryRun": {
-            "default": true,
-            "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
-            "type": "boolean"
-          },
-          "modelVersion": {
-            "default": "V2.0",
-            "description": "modelVersion: CFC data-model version string, e.g. 'V2.0'.",
-            "type": "string"
-          },
-          "newHashedPassword": {
-            "default": "",
-            "description": "newHashedPassword: the new password value as the CFC API expects it; never logged.",
-            "type": "string"
-          },
-          "skipChartPreflight": {
-            "default": false,
-            "description": "skipChartPreflight: retained for compatibility; cannot bypass the V18-and-later crash guard.",
-            "type": "boolean"
-          },
-          "softwarePath": {
-            "description": "softwarePath: the PLC or HMI software path exactly as GetProjectTree shows it (e.g. 'PLC_1', 'HMI_RT_1'); the software name, not the station name.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "softwarePath",
-          "chartName"
-        ],
-        "type": "object"
-      },
-      "name": "ManageCfcChartProtection",
       "outputSchemaSha256": "bdb806480fd874285783070e82f1081361c23d82a247c73d890f893c92e2d464"
     },
     {
