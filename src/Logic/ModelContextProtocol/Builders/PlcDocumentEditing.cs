@@ -213,7 +213,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (current.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections"))
                         throw new ArgumentException("Select a scalar member.");
                     target = current.Elements().SingleOrDefault(e => e.Name.LocalName == "StartValue")
-                        ?? throw new ArgumentException("Selected member has no explicit StartValue.");
+                        ?? throw new InvalidOperationException("Selected member has no explicit StartValue.");
                     if (!used.Add((target, ""))) throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
                     SetMemberStartValue(d, section, path, Get("expectedValue"), Get("value"));
                     continue;
