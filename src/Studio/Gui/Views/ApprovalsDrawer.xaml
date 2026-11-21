@@ -5,20 +5,23 @@
     <Border Style="{StaticResource Primer.IdeBar}">
       <ux:PageHeadPanel VerticalAlignment="Center">
         <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource Pages.AgentTabs}"/>
-        <Border Style="{StaticResource Primer.Chip}" Height="26">
+        <Border Style="{StaticResource Primer.SegmentGroup}">
           <StackPanel Orientation="Horizontal">
-            <Ellipse Style="{StaticResource Primer.StatusDot}" Tag="{Binding ApprovalPolicyTone}" Margin="0,0,6,0"/>
-            <TextBlock Text="{Binding ApprovalPolicy}" VerticalAlignment="Center"/>
+            <RadioButton x:Name="PendingTab" GroupName="ApprovalTab" Style="{StaticResource Primer.Segment}"
+              Content="{Binding QueueLabel}" AutomationProperties.Name="{Binding QueueLabel}" IsChecked="{Binding PendingTab, Mode=OneWay}" Click="OnPendingTab"/>
+            <RadioButton x:Name="HistoryTab" GroupName="ApprovalTab" Style="{StaticResource Primer.Segment}"
+              Content="{Binding HistoryLabel}" AutomationProperties.Name="{Binding HistoryLabel}" IsChecked="{Binding HandledRequests, Mode=OneWay}" Click="OnHistoryTab"/>
           </StackPanel>
         </Border>
       </ux:PageHeadPanel>
     </Border>
     <Grid Grid.Row="1" x:Name="PageBody">
+      <Grid Visibility="{Binding ShowApprovalDetail, Converter={StaticResource BoolToVisibility}}">
       <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
-      <Border x:Name="RequestListPane" Panel.ZIndex="2" HorizontalAlignment="Left" Style="{StaticResource Primer.ApprovalListPane}">
+      <Border x:Name="RequestListPane" Panel.ZIndex="2" HorizontalAlignment="Left" Style="{StaticResource Primer.ApprovalReviewPane}">
         <ListBox x:Name="RequestList" Margin="10" AutomationProperties.Name="{l:Tr Shell.PendingTitle}"
           Style="{StaticResource Primer.VirtualList}" ItemContainerStyle="{StaticResource Primer.ApprovalItem}"
-          ItemsSource="{Binding Requests}" SelectedItem="{Binding SelectedRequest, Mode=OneWay}" SelectionChanged="OnSelectionChanged" PreviewMouseLeftButtonDown="OnRequestPressed"
+          ItemsSource="{Binding QueueRows}" SelectedItem="{Binding SelectedRequest, Mode=OneWay}" SelectionChanged="OnSelectionChanged" PreviewMouseLeftButtonDown="OnRequestPressed"
           ScrollViewer.HorizontalScrollBarVisibility="Disabled">
           <ListBox.ItemTemplate>
             <DataTemplate>
@@ -30,17 +33,21 @@
                 </DockPanel>
                 <TextBlock Text="{Binding DecisionMessage}" Visibility="{Binding ShowDecisionMessage,Converter={StaticResource BoolToVisibility}}"
                   TextWrapping="Wrap" Style="{StaticResource Primer.FeedMetadata}"/>
-                <TextBlock Text="{Binding Summary}" ToolTip="{Binding Summary}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" FontWeight="SemiBold" Margin="0,4,0,2"/>
-                <TextBlock Text="{Binding ObjectPreview}" ToolTip="{Binding FirstObject}" Style="{StaticResource Primer.FeedMetadata}"/>
+                <TextBlock Text="{Binding ObjectPreview}" ToolTip="{Binding Summary}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" FontWeight="SemiBold" Margin="0,4,0,2"/>
+                <TextBlock Text="{Binding FeedSummary}" ToolTip="{Binding FeedSummary}" Style="{StaticResource Primer.FeedMetadata}" TextTrimming="CharacterEllipsis"/>
               </StackPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
       </Border>
-      <Grid Grid.Column="1" MaxWidth="820" Margin="28" VerticalAlignment="Top">
+      <Grid Grid.Column="1" Margin="24">
+      <Grid MaxWidth="780" HorizontalAlignment="Left" VerticalAlignment="Top" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}">
         <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <ScrollViewer x:Name="DetailScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
           Visibility="{Binding RequestsEmpty, Converter={StaticResource NotBoolToVisibility}}">
+          <StackPanel>
+            <Button HorizontalAlignment="Left" Content="{l:Tr Approval.BackToHistory}" AutomationProperties.Name="{l:Tr Approval.BackToHistory}"
+              Visibility="{Binding HistoryDetailOpen, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,12" Click="OnHistoryTab" Style="{StaticResource Primer.Link}"/>
           <StackPanel x:Name="Detail" DataContext="{Binding SelectedRequest}">
             <DockPanel Margin="0,0,0,16">
               <Border x:Name="TimerChip" DockPanel.Dock="Right" VerticalAlignment="Top" Style="{StaticResource Primer.ApprovalTimerChip}" Margin="12,0,0,0">
@@ -52,50 +59,72 @@
               </Border>
               <StackPanel>
                 <TextBlock Text="{Binding Metadata}" ToolTip="{Binding Context}" Style="{StaticResource Primer.Mono.textFaint}" TextWrapping="Wrap"/>
-                <TextBlock x:Name="RequestTitle" Text="{Binding Summary}" AutomationProperties.Name="{Binding Summary}" Focusable="True"
+                <TextBlock x:Name="RequestTitle" Text="{Binding DetailTitle}" ToolTip="{Binding Summary}" AutomationProperties.Name="{Binding Summary}" Focusable="True"
                   FontSize="{DynamicResource Ui.FontSize.18}" FontWeight="SemiBold" TextWrapping="Wrap" TextTrimming="None" Margin="0,4,0,0"/>
               </StackPanel>
             </DockPanel>
-            <Border Style="{StaticResource Primer.Container}" Padding="0" Margin="0,0,0,16">
-              <UniformGrid Rows="1">
-                <Border Style="{StaticResource Primer.FeatureCell}">
-                  <StackPanel>
-                    <TextBlock Text="{l:Tr Approval.Controller}" Style="{StaticResource Primer.Muted}"/>
-                    <TextBlock Text="{Binding Target}" TextWrapping="Wrap" FontWeight="Medium" Margin="0,3,0,0" ToolTip="{Binding Request.ProjectIdentity}"/>
-                  </StackPanel>
-                </Border>
-                <Border Style="{StaticResource Primer.FeatureCell}">
-                  <StackPanel>
-                    <TextBlock Text="{l:Tr Approval.Change}" Style="{StaticResource Primer.Muted}"/>
-                    <TextBlock Text="{Binding Change}" TextWrapping="Wrap" FontWeight="Medium" Margin="0,3,0,0"/>
-                  </StackPanel>
-                </Border>
-                <Border Style="{StaticResource Primer.Plain}" Padding="16,10">
-                  <StackPanel>
-                    <TextBlock Text="{l:Tr Approval.Safeguard}" Style="{StaticResource Primer.Muted}"/>
-                    <TextBlock Text="{Binding Safeguard}" TextWrapping="Wrap" FontWeight="Medium" Margin="0,3,0,0"/>
-                  </StackPanel>
-                </Border>
-              </UniformGrid>
-            </Border>
             <Border Style="{StaticResource Primer.Container}" Padding="0">
               <StackPanel>
                 <Border Style="{StaticResource Primer.IdeSubBar}" Padding="16,0">
-                  <TextBlock Text="{l:Tr Approval.Operations}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding AddedLinesLabel}" Style="{StaticResource Primer.Mono.text}" Foreground="{DynamicResource Primer.diffGreen}"/>
+                      <TextBlock Text="{Binding RemovedLinesLabel}" Style="{StaticResource Primer.Mono.text}" Foreground="{DynamicResource Primer.diffRed}" Margin="6,0,0,0"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding ComparisonTitle}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  </DockPanel>
                 </Border>
-                <ItemsControl x:Name="ToolOperations" ItemsSource="{Binding Request.Operations}" Margin="16,8"
-                  Visibility="{Binding IsToolRequest, Converter={StaticResource BoolToVisibility}}">
+                <ItemsControl x:Name="DiffLines" ItemsSource="{Binding SourceChanges}" Margin="0,6">
                   <ItemsControl.ItemTemplate><DataTemplate>
-                    <Grid Margin="0,4">
-                      <Grid.ColumnDefinitions><ColumnDefinition Width="1*"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
-                      <TextBlock Text="{Binding Action}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,12,0"/>
-                      <StackPanel Grid.Column="1">
-                        <TextBlock Text="{Binding Object}" TextTrimming="None" Style="{StaticResource Primer.Mono.text}" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding Tool}" Style="{StaticResource Primer.Mono.textFaint}" TextWrapping="Wrap"/>
-                      </StackPanel>
-                    </Grid>
+                    <Border Padding="16,2" Style="{StaticResource Primer.ApprovalDiffRow}">
+
+                      <DockPanel TextElement.FontFamily="{DynamicResource Ui.FontMono}">
+                        <TextBlock Width="32" Text="{Binding Number}"/><TextBlock Width="16" Text="{Binding Sign}"/>
+                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" TextTrimming="None"/>
+                      </DockPanel>
+                    </Border>
                   </DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <TextBlock Text="{l:Tr Approval.NoDiff}" Margin="16,2" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"
+                  Visibility="{Binding HasItems, ElementName=DiffLines, Converter={StaticResource NotBoolToVisibility}}"/>
+                <StackPanel Visibility="{Binding ShowOperationDetails, Converter={StaticResource BoolToVisibility}}">
+                  <Border Style="{StaticResource Primer.Container}" Padding="0" Margin="0,8,0,4">
+                    <UniformGrid Rows="1">
+                      <Border Style="{StaticResource Primer.FeatureCell}">
+                        <StackPanel>
+                          <TextBlock Text="{l:Tr Approval.Controller}" Style="{StaticResource Primer.Muted}"/>
+                          <TextBlock Text="{Binding Target}" TextWrapping="Wrap" FontWeight="Medium" Margin="0,3,0,0" ToolTip="{Binding Request.ProjectIdentity}"/>
+                        </StackPanel>
+                      </Border>
+                      <Border Style="{StaticResource Primer.FeatureCell}">
+                        <StackPanel>
+                          <TextBlock Text="{l:Tr Approval.Change}" Style="{StaticResource Primer.Muted}"/>
+                          <TextBlock Text="{Binding Change}" TextWrapping="Wrap" FontWeight="Medium" Margin="0,3,0,0"/>
+                        </StackPanel>
+                      </Border>
+                      <Border Style="{StaticResource Primer.Plain}" Padding="16,10">
+                        <StackPanel>
+                          <TextBlock Text="{l:Tr Approval.Safeguard}" Style="{StaticResource Primer.Muted}"/>
+                          <TextBlock Text="{Binding Safeguard}" TextWrapping="Wrap" FontWeight="Medium" Margin="0,3,0,0"/>
+                        </StackPanel>
+                      </Border>
+                    </UniformGrid>
+                  </Border>
+                  <ItemsControl x:Name="ToolOperations" ItemsSource="{Binding Request.Operations}" Margin="16,8"
+                    Visibility="{Binding IsToolRequest, Converter={StaticResource BoolToVisibility}}">
+                    <ItemsControl.ItemTemplate><DataTemplate>
+                      <Grid Margin="0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="1*"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Action}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,12,0"/>
+                        <StackPanel Grid.Column="1">
+                          <TextBlock Text="{Binding Object}" TextTrimming="None" Style="{StaticResource Primer.Mono.text}" TextWrapping="Wrap"/>
+                          <TextBlock Text="{Binding Tool}" Style="{StaticResource Primer.Mono.textFaint}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate></ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+
                 <ItemsControl ItemsSource="{Binding DestructiveFields}" Margin="16,0" ItemTemplate="{StaticResource Approval.FieldRow}"/>
                 <StackPanel Margin="0,8,0,0" Visibility="{Binding IsGenerationPlan, Converter={StaticResource BoolToVisibility}}">
                   <TreeView AutomationProperties.Name="{l:Tr Approval.CompletePlan}" ItemsSource="{Binding GenerationDifferences}" MaxHeight="180" Background="Transparent" BorderThickness="0">
@@ -140,6 +169,7 @@
             </Border>
             <Border Padding="12" Margin="0,12,0,0" Style="{StaticResource Primer.Inset}" Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}"><TextBlock Text="{Binding Note}" TextWrapping="Wrap"/></Border>
           </StackPanel>
+          </StackPanel>
         </ScrollViewer>
         <Border Grid.Row="1" Padding="16,12" Style="{StaticResource Primer.ApprovalDecisionPane}"
           Visibility="{Binding SelectedRequest.Pending, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
@@ -155,13 +185,48 @@
           </Grid>
         </Border>
       </Grid>
-      <Border Grid.Column="1" Margin="24" Padding="32" Style="{StaticResource Primer.Inset}" Visibility="{Binding RequestsEmpty, Converter={StaticResource BoolToVisibility}}">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-          <TextBlock Text="✓" HorizontalAlignment="Center" FontSize="{DynamicResource Ui.FontSize.Heading}"/>
-          <TextBlock Text="{Binding RequestsEmptyTitle}" FontSize="{DynamicResource Ui.FontSize.SmallTitle}" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,12,0,8"/>
-          <TextBlock Text="{l:Tr Shell.NoPendingDescription}" Visibility="{Binding HandledRequests, Converter={StaticResource NotBoolToVisibility}}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" MaxWidth="400" TextAlignment="Center"/>
-        </StackPanel>
-      </Border>
+      </Grid>
+      </Grid>
+      <Grid Visibility="{Binding ShowHistoryTable, Converter={StaticResource BoolToVisibility}}" Margin="24">
+        <Border Style="{StaticResource Primer.Container}" MaxWidth="960" HorizontalAlignment="Left" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}" VerticalAlignment="Top" Padding="0"
+          Visibility="{Binding RequestsEmpty, Converter={StaticResource NotBoolToVisibility}}">
+          <ListView x:Name="HistoryList" ItemContainerStyle="{StaticResource Primer.ApprovalHistoryItem}" AutomationProperties.Name="{Binding HistoryLabel}" ItemsSource="{Binding VisibleRequests}"
+            BorderThickness="0" Background="{DynamicResource Primer.card}">
+
+            <ListView.View><GridView AllowsColumnReorder="False" ColumnHeaderContainerStyle="{StaticResource Primer.ApprovalHistoryHeader}">
+              <GridViewColumn Header="{l:Tr Calls.Time}" Width="76" DisplayMemberBinding="{Binding FeedTime}"/>
+              <GridViewColumn Header="{l:Tr Approval.HistoryTool}" Width="218">
+                <GridViewColumn.CellTemplate><DataTemplate><StackPanel Margin="4,6">
+                  <Button Style="{StaticResource Primer.Link}" Click="OnHistoryReview" AutomationProperties.Name="{Binding AccessibleSummary}"
+                    Content="{Binding HistoryTools}" FontFamily="{DynamicResource Ui.FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource Primer.text}"
+                    HorizontalAlignment="Left" ToolTip="{Binding HistoryTools}" Padding="0"/>
+                  <TextBlock Text="{Binding ObjectPreview}" Style="{StaticResource Primer.Muted}" ToolTip="{Binding FirstObject}"/>
+                </StackPanel></DataTemplate></GridViewColumn.CellTemplate>
+              </GridViewColumn>
+              <GridViewColumn Header="{l:Tr Approval.HistoryClient}" Width="145" DisplayMemberBinding="{Binding UnverifiedClient}"/>
+              <GridViewColumn Header="{l:Tr Approval.HistoryResult}" Width="150">
+                <GridViewColumn.CellTemplate><DataTemplate>
+                  <Border Style="{StaticResource Primer.Tag}" HorizontalAlignment="Left"><TextBlock Text="{Binding State}"/></Border>
+                </DataTemplate></GridViewColumn.CellTemplate>
+              </GridViewColumn>
+              <GridViewColumn Header="{l:Tr Approval.HistoryAudit}" Width="80">
+                <GridViewColumn.CellTemplate><DataTemplate>
+                  <Button Style="{StaticResource Primer.Link}" Content="{Binding AuditDecision.Index, StringFormat={}{0}, TargetNullValue=—, FallbackValue=—}"
+                    AutomationProperties.Name="{l:Tr Approval.HistoryAudit}" IsEnabled="{Binding HasAuditDecision}" CommandParameter="Audit" Click="OnHistoryAudit"/>
+                </DataTemplate></GridViewColumn.CellTemplate>
+              </GridViewColumn>
+              <GridViewColumn Header="{l:Tr Approval.HistoryNote}" Width="220">
+                <GridViewColumn.CellTemplate><DataTemplate>
+                  <TextBlock Text="{Binding Note}" ToolTip="{Binding Note}" TextWrapping="Wrap" Style="{StaticResource Primer.Muted}" Margin="4,6"/>
+                </DataTemplate></GridViewColumn.CellTemplate>
+              </GridViewColumn>
+            </GridView></ListView.View>
+          </ListView>
+        </Border>
+      </Grid>
+      <ux:WorkbenchState x:Name="EmptyRequests" Style="{StaticResource Primer.ApprovalEmpty}"
+        ux:Ux.Icon="{DynamicResource Icon.Success}" Title="{Binding RequestsEmptyTitle}" Description="{Binding RequestsEmptyDescription}"
+        ActionLabel="{l:Tr Approval.ViewHistory}" Visibility="{Binding ShowRequestEmpty, Converter={StaticResource BoolToVisibility}}"/>
     </Grid>
     </Grid>
     <Grid x:Name="ConfirmationSheet" Visibility="Collapsed" Background="Transparent" DataContext="{Binding SelectedRequest}" AutomationProperties.Name="{Binding ConfirmationTitle}">

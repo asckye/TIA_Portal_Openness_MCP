@@ -393,6 +393,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Gui.Tests.SafetySettingsViewTests"] = new[] {
                 "Presets_and_custom_seconds_round_trip_through_the_approval_settings_file",
                 "Adding_and_removing_the_last_chip_distinguishes_unconfigured_from_saved_empty",
+                "Cancelling_a_new_target_keeps_the_editor_and_disk_unchanged",
                 "The_write_approval_switch_uses_its_whole_track_and_Space_changes_the_setting_once"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchRenderFeaturePagesTests"] = new[] {

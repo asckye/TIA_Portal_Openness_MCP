@@ -77,7 +77,13 @@ public sealed class AuditLogServiceTests(WpfContext wpf)
             Assert.Equal(partial, row.Result);
             Directory.CreateDirectory(Path.Combine(root, "diagnostics"));
             File.WriteAllText(Path.Combine(root, "diagnostics", "calls-test.jsonl"), "{\"utc\":\"2026-10-05T08:00:00.0000000+00:00\"}\n{\"utc\":\"2026-10-05T16:00:00.0000000+00:00\"}\n");
-            WpfContext.Complete(service.RefreshAsync()); Assert.DoesNotContain(empty, service.Coverage.Resolve()); Assert.Contains("2026-10-05", service.Coverage.Resolve());
+            string active = Path.Combine(root, "diagnostics", "calls-test.jsonl");
+            File.Copy(active, active + ".1");
+            File.Copy(active, Path.Combine(root, "diagnostics", "calls-other.jsonl"));
+            File.WriteAllText(active + ".lock", "excluded");
+            WpfContext.Complete(service.RefreshAsync());
+            Assert.Equal((new FileInfo(active).Length * 3, 3, 2), service.Usage);
+            Assert.DoesNotContain(empty, service.Coverage.Resolve()); Assert.Contains("2026-10-05", service.Coverage.Resolve());
         });
     }
 }

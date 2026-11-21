@@ -53,6 +53,8 @@ public interface ICallJournalService : INotifyPropertyChanged
 public sealed record AuditEvent(long Index, DateTimeOffset Time, AuditEventType Type, string ToolObject,
     string Result, string Hash)
 {
+    public string RecordedPreviousHash { get; init; } = "";
+    public string RequestId { get; init; } = "";
     public string Chain { get; init; } = "";
     public string? Actor { get; init; }
 }
@@ -71,6 +73,7 @@ public interface IAuditLogService : INotifyPropertyChanged
     public int FileSizeMb { get; set; }
     public int Copies { get; set; }
     public LocalizedText Coverage { get; }
+    public (long Bytes, int Files, int Journals)? Usage => null;
     public AuditVerification Verify();
     public LocalizedText OpenFolder();
 }

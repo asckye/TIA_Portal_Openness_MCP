@@ -242,6 +242,34 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Cancelling_a_new_target_keeps_the_editor_and_disk_unchanged()
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new SafetySettingsServiceTests.Fixture();
+            var view = new SettingsView();
+            view.SetSafetyService(fixture.Service);
+            int confirmations = 0;
+            view.SafetyConfirmationForTests = key => { Assert.Equal("Settings.ApplySafety", key); confirmations++; return false; };
+            var window = new Window { Content = view, Width = 1024, Height = 640 };
+            try
+            {
+                WpfContext.ShowWindow(window);
+                WpfContext.Complete(view.LoadSafetyAsync());
+                view.OnlineTargetInput.Text = "192.0.2.10";
+                UnifiedDesktopTests.ClickControl(view.AddTarget);
+                Assert.Equal(1, confirmations);
+                Assert.Empty(view.OnlineTargets.Items);
+                Assert.Equal("192.0.2.10", view.OnlineTargetInput.Text);
+                Assert.Equal(Loc.Current["Settings.TargetsUnconfigured"], view.SafetyStatus.Text);
+                Assert.False(File.Exists(fixture.TargetsPath));
+                Assert.Empty(fixture.Audit.Read());
+            }
+            finally { window.Close(); view.Dispose(); }
+        });
+    }
+
+    [Fact]
     public void Adding_and_removing_the_last_chip_distinguishes_unconfigured_from_saved_empty()
     {
         wpf.Run(() =>
@@ -249,6 +277,7 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
             using var fixture = new SafetySettingsServiceTests.Fixture();
             var view = new SettingsView();
             view.SetSafetyService(fixture.Service);
+            view.SafetyConfirmationForTests = key => { Assert.Equal("Settings.ApplySafety", key); return true; };
             string? saveError = null;
             view.SafetyErrorForTests = key => saveError = key;
             var window = new Window { Content = view, Width = 1024, Height = 640 };

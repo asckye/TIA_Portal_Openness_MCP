@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,10 +19,34 @@ public partial class ApprovalsDrawer : UserControl
     public ApprovalsDrawer()
     {
         InitializeComponent(); DataContext = null;
+        CommandBindings.Add(new CommandBinding(_openHistory, (_, _) => Model.HandledRequests = true));
         DataContextChanged += OnModelChanged;
         Unloaded += OnUnloaded;
         Loaded += OnLoaded;
         IsVisibleChanged += (_, e) => { if (!(bool)e.NewValue) CloseConfirmation(); };
+    }
+    private readonly RoutedCommand _openHistory = new();
+    private void OnPendingTab(object sender, RoutedEventArgs e) => Model.HandledRequests = false;
+    private void OnHistoryTab(object sender, RoutedEventArgs e)
+    {
+        Model.HandledRequests = true;
+        Model.HistoryDetailOpen = false;
+    }
+    private void OnHistoryReview(object sender, RoutedEventArgs e)
+    {
+        if (((Button)sender).DataContext is ApprovalRow { Pending: false } row) FocusRequest(row.Request.Id);
+    }
+    private void OnHistoryAudit(object sender, RoutedEventArgs e)
+    {
+        var button = (Button)sender;
+        if (button.DataContext is not ApprovalRow { AuditDecision: { } record }) return;
+        WorkbenchCommands.Navigate.Execute(button.CommandParameter, button);
+        if (Window.GetWindow(this) is not MainWindow { CurrentPage: "Audit" } window) return;
+        Model.AuditSearch = "";
+        if (Model.AuditRows.FirstOrDefault(row => row.Record == record) is not { } found) return;
+        Model.SelectedAudit = found;
+        window.AuditContent.DetailsToggle.IsChecked = true;
+        window.AuditContent.AuditList.ScrollIntoView(found);
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
     private bool Guarded => (Window.GetWindow(this) as MainWindow)?.ControlGuard.ClickGuardActive == true;
@@ -53,23 +78,29 @@ public partial class ApprovalsDrawer : UserControl
         if (e.Key != Key.Enter && !(e.Key == Key.System && e.SystemKey == Key.Enter)) return;
         // Enter always takes the safe path, even with focus on either approval button.
         if (_confirming != null) { e.Handled = true; CloseConfirmation(); }
-        else if (_row is { Pending: true })
+        else if (!Model.HandledRequests && _row is { Pending: true })
         { e.Handled = true; if ((_row.Destructive || DenyRequest.IsKeyboardFocusWithin) && !Guarded) Model.Decide(_row, false); }
     }
     private void OnModelChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.OldValue is FeaturePagesViewModel previous) previous.PropertyChanged -= OnModelPropertyChanged;
         if (e.NewValue is FeaturePagesViewModel model) model.PropertyChanged += OnModelPropertyChanged;
+        EmptyRequests.ActionCommand = e.NewValue is FeaturePagesViewModel { HandledRequests: false } ? _openHistory : null;
         SelectRow();
     }
     private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    { if (e.PropertyName == nameof(FeaturePagesViewModel.SelectedRequest)) SelectRow(); }
+    {
+        if (e.PropertyName == nameof(FeaturePagesViewModel.SelectedRequest)) SelectRow();
+        if (e.PropertyName == nameof(FeaturePagesViewModel.HandledRequests))
+            EmptyRequests.ActionCommand = Model.HandledRequests ? null : _openHistory;
+    }
     private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (RequestList.SelectedItem is ApprovalRow row && DataContext is FeaturePagesViewModel model && row != model.SelectedRequest)
         {
             model.HandledRequests = !row.Pending;
             model.SelectedRequest = row;
+            model.HistoryDetailOpen = !row.Pending;
         }
     }
     private void OnRequestPressed(object sender, MouseButtonEventArgs e)
@@ -105,6 +136,7 @@ public partial class ApprovalsDrawer : UserControl
         if (request == null) return;
         Model.HandledRequests = !request.Pending;
         Model.SelectedRequest = request;
+        Model.HistoryDetailOpen = !request.Pending;
         Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => { if (IsVisible && _row?.Request.Id == id) RequestTitle.Focus(); }));
     }
     private void OnLoaded(object sender, RoutedEventArgs e)

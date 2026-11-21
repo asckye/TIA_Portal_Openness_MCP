@@ -175,7 +175,7 @@ internal static partial class Strings
         ("Settings.CheckUpdate", "Check updates", "检查更新"),
         ("Settings.Releases", "GitHub Releases", "GitHub Releases"),
         ("Settings.ConfigDirectory", "Config folder", "配置目录"),
-        ("Settings.LogDirectory", "Runtime logs", "运行日志"),
+        ("Settings.LogDirectory", "Runtime log directory", "运行日志目录"),
         ("Settings.About", "About", "关于"),
         ("Settings.Homepage", "Project home", "项目主页"),
         ("Settings.PathMissing", "The folder does not exist yet: {0}", "目录尚不存在：{0}"),

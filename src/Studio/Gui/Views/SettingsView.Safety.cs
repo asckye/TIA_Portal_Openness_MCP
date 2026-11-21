@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
@@ -87,11 +88,10 @@ public partial class SettingsView
         try
         {
             string entry = SafetySettingsService.ValidateTarget(OnlineTargetInput.Text.Trim());
-            if (!targets.Contains(entry))
-            {
-                targets.Add(entry);
-                SaveTargetChanges.Visibility = Visibility.Visible;
-            }
+            bool add = !targets.Contains(entry);
+            if (!ConfirmTargets(add ? targets.Append(entry) : targets)) return;
+            if (add) targets.Add(entry);
+            SaveTargetChanges.Visibility = Visibility.Visible;
             if (await SaveTargetsAsync())
             {
                 OnlineTargetInput.Clear();
@@ -111,7 +111,20 @@ public partial class SettingsView
         SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding("Settings.TargetsUnsaved"));
     }
 
-    private async void OnSaveTargets(object sender, RoutedEventArgs e) => await SaveTargetsAsync();
+    private bool ConfirmTargets(IEnumerable<string> proposed)
+    {
+        if (SafetyConfirmationForTests != null) return SafetyConfirmationForTests("Settings.ApplySafety");
+        string entries = string.Join(", ", proposed);
+        var dialog = new FeatureConfirmation(Loc.Current["Settings.ApplySafety"], Loc.Current["Settings.ApplySafetyHelp"], Loc.Current["Settings.ApplyAndSave"],
+            new(Loc.Current["Settings.OnlineTargets"], entries.Length == 0 ? Loc.Current["Settings.TargetsEmpty"] : entries),
+            new(Loc.Current["Settings.Timeout"], _approvals == null ? "—" : Loc.Current.T("Common.Seconds", _approvals.TimeoutSeconds)));
+        return dialog.Confirm(this);
+    }
+
+    private async void OnSaveTargets(object sender, RoutedEventArgs e)
+    {
+        if (ConfirmTargets(targets)) await SaveTargetsAsync();
+    }
 
     internal async Task<bool> SaveTargetsAsync()
     {

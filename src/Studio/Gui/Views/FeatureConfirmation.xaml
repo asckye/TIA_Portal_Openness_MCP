@@ -1,0 +1,33 @@
+<Window x:ClassModifier="internal" x:Class="TiaOpenness.Gui.Views.FeatureConfirmation"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:l="clr-namespace:TiaOpenness.Gui.Localization"
+    Style="{StaticResource Ui.Window}" Width="440" SizeToContent="Height" WindowStyle="None" ResizeMode="NoResize"
+    AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
+    AutomationProperties.Name="{Binding Title,RelativeSource={RelativeSource Self}}">
+  <Border Style="{StaticResource Primer.ActionDialog}" Padding="24">
+    <StackPanel>
+      <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <Border Style="{StaticResource Primer.ActionDialogIcon}" Height="28" VerticalAlignment="Top">
+          <TextBlock Text="i" FontWeight="SemiBold" Foreground="{DynamicResource Primer.accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+        <StackPanel Grid.Column="2">
+          <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="{DynamicResource Ui.FontSize.DialogTitle}"
+            FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.HeadingLevel="Level2"/>
+          <TextBlock x:Name="Body" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None" Margin="0,6,0,0"/>
+        </StackPanel>
+      </Grid>
+      <Border Style="{StaticResource Primer.CodeBlock}" Padding="12" Margin="0,16">
+        <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto">
+          <ItemsControl x:Name="Fields" ItemTemplate="{StaticResource Approval.FieldRow}"/>
+        </ScrollViewer>
+      </Border>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button x:Name="CancelAction" Content="{l:Tr Dialog.Cancel}" AutomationProperties.Name="{l:Tr Dialog.Cancel}"
+          Style="{StaticResource Primer.Button.Secondary.Medium}" IsDefault="True" IsCancel="True" Click="OnCancel"/>
+        <Button x:Name="ApplyAction" AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"
+          Style="{StaticResource Primer.Button.Primary.Medium}" Margin="8,0,0,0" Click="OnApply"/>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>

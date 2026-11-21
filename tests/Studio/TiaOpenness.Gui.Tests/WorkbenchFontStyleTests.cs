@@ -196,13 +196,13 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                         Layout();
                         var approve = Descendants<Button>(host).Single(button => button.Name == "ApproveRequest" && ((ApprovalRow)button.DataContext).Pending);
                         var deny = Descendants<Button>(host).Single(button => button.Name == "DenyRequest" && ((ApprovalRow)button.DataContext).Pending);
-                        Assert.Same(Application.Current.FindResource("Primer.primaryBg"), approve.Background);
+                        Assert.Same(Application.Current.FindResource("Primer.card"), approve.Background);
                         Assert.Same(Application.Current.FindResource("Primer.card"), deny.Background);
                         Assert.Same(Application.Current.FindResource("Primer.Answer"), approve.Style.BasedOn);
                         foreach (var button in new[] { deny, approve })
                         {
                             Assert.False(button.IsDefault); Assert.False(button.IsCancel);
-                            Assert.Equal(button == approve ? "Primary" : "", Ux.GetVariant(button));
+                            Assert.Equal("", Ux.GetVariant(button));
                             Assert.Empty(Descendants<AccessText>(button));
                             Assert.DoesNotContain('_', Assert.IsType<string>(button.Content));
                         }

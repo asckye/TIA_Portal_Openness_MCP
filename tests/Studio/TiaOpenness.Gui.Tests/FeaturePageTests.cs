@@ -189,6 +189,13 @@ public sealed class FeaturePageTests(WpfContext wpf)
             Assert.Equal(532, model.JumpToBreak()!.Record.Index); Assert.Single(model.AuditRows, r => r.Selected);
             WpfContext.Complete(model.SetRetentionAsync(50, true)); WpfContext.Complete(model.SetRetentionAsync(10, false)); Assert.Equal(50, audit.FileSizeMb); Assert.Equal(10, audit.Copies);
             model.Run(audit.OpenFolder); Assert.Equal(1, audit.OpenCount);
+            model.SetVisibility(false, false, false);
+            audit.Events = [];
+            model.SetVisibility(false, true, false);
+            Assert.False(model.ShowVerification);
+            Assert.False(model.CanVerify);
+            Assert.False(model.CanJumpToBreak);
+            Assert.Null(model.JumpToBreak());
         });
     }
 

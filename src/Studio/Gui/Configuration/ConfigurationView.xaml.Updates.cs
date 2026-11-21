@@ -32,33 +32,18 @@ namespace TiaMcpConfigurator
         // Check for updates, then hand over to the existing updater with this window closed.
         private void ShowInstalledVersion()
         {
-            Find<TextBlock>("PackageText").Text = TiaOpenness.Gui.Views.SettingsView.ReadPackageName(root);
-            if (preview != null)
-            {
-                SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", TiaOpenness.Gui.ViewModels.MainViewModel.AppVersion
-                        .TrimStart('v'));
-                SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.NotChecked");
-                return;
-            }
-            string installed = UpdateCheck.Installed(root);
-            if (installed == null) {
-                SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Config.EngineOutsideBundle"); Find<Button>("CheckUpdate").IsEnabled = false;
-                return;
-            }
-            SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", installed);
-            if (UpdateCheck.IsSourceRepository(root))
-            {
-                SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.SourceRepositoryUpdate");
-                Find<Button>("CheckUpdate").IsEnabled = false;
-            }
+            var settings = (TiaOpenness.Gui.Views.SettingsView)Window.FindName("SettingsContent");
+            settings.PackageText.Text = TiaOpenness.Gui.Views.SettingsView.ReadPackageName(root);
+            string installed = preview == null ? UpdateCheck.Installed(root) : MainViewModel.AppVersion.TrimStart('v');
+            settings.SetUpdateAvailability(installed != null, preview == null && UpdateCheck.IsSourceRepository(root));
+            if (installed == null)
+                SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Config.EngineOutsideBundle");
+            else
+                SetLocalizedText("UpdateInstalledItem", TextBlock.TextProperty, "Settings.EngineVersion", installed);
         }
         private async Task OnCheckUpdate(bool explicitRequest)
         {
-            if (UpdateCheck.IsSourceRepository(root))
-            {
-                SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.SourceRepositoryUpdate");
-                return;
-            }
+            if (UpdateCheck.IsSourceRepository(root)) return;
             string installed = UpdateCheck.Installed(root);
             if (installed == null) return;
             await CheckUpdateAsync(explicitRequest, installed, () => UpdateCheck.Latest(installed, UpdateCheck.Repository));
@@ -67,6 +52,7 @@ namespace TiaMcpConfigurator
         internal async Task CheckUpdateAsync(bool explicitRequest, string installed, Func<UpdateInfo> fetch)
         {
             var check = Find<Button>("CheckUpdate");
+            Find<TextBlock>("UpdateStateItem").Visibility = Visibility.Visible;
             check.IsEnabled = false; SetLocalizedText("UpdateStateItem", TextBlock.TextProperty, "Config.CheckingUpdate");
             try
             {

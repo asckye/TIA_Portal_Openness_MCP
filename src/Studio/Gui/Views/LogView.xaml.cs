@@ -18,6 +18,7 @@ public partial class LogView : UserControl
 {
     private bool _followQueued;
     private int _level;
+    private readonly System.Windows.Input.RoutedCommand _storage = new();
     private FeaturePagesViewModel? _features;
     public static readonly DependencyProperty LogRowsProperty = DependencyProperty.Register(
         nameof(LogRows), typeof(ICollectionView), typeof(LogView));
@@ -25,6 +26,9 @@ public partial class LogView : UserControl
     public LogView()
     {
         InitializeComponent();
+        CommandBindings.Add(new System.Windows.Input.CommandBinding(_storage, (_, _) => OpenStorageSettings()));
+        Loaded += (_, _) => Loc.Current.LanguageChanged += OnLanguageChanged;
+        Unloaded += (_, _) => Loc.Current.LanguageChanged -= OnLanguageChanged;
         IsVisibleChanged += OnLogVisibility;
     }
     private async void OnLogVisibility(object sender, DependencyPropertyChangedEventArgs e)
@@ -47,6 +51,7 @@ public partial class LogView : UserControl
             StorageSize.Text = "—";
         }
     }
+    private void OnLanguageChanged(object? sender, EventArgs e) => UpdateCounts();
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void SetFeatures(FeaturePagesViewModel? features)
     {
@@ -87,6 +92,11 @@ public partial class LogView : UserControl
     {
         if (Tag is not ResultPresentation results) return;
         var rows = results.LogRows;
+        bool empty = rows.Count == 0;
+        EmptyLog.Title = empty ? Loc.Current["Log.Empty"] : Loc.Current["Log.FilterEmpty"];
+        EmptyLog.Description = empty ? Loc.Current.T("Log.EmptyHelp", TiaOpenness.Shared.DataLocations.Current.LogsDirectory) : Loc.Current["Log.FilterHint"];
+        EmptyLog.ActionCommand = empty ? _storage : null;
+        ClearLogButton.IsEnabled = !empty;
         AllLevelsCount.Text = rows.Count.ToString();
         WarningsOnlyCount.Text = rows.Count(row => row.Level == LogLevel.Warning).ToString();
         ErrorsOnlyCount.Text = rows.Count(row => row.Level == LogLevel.Error).ToString();
@@ -133,10 +143,14 @@ public partial class LogView : UserControl
     }
 
     internal Func<bool>? ConfirmClear { get; set; }
+    internal FeatureConfirmation ClearConfirmation() => new(Loc.Current["Log.ClearTitle"],
+        Loc.Current.T("Log.ClearBody", TiaOpenness.Shared.DataLocations.Current.LogsDirectory), Loc.Current["Log.ClearAction"],
+        new(Loc.Current["Log.Scope"], Loc.Current.T("Log.MemoryCount", Model.Activity.Entries.Count)),
+        new(Loc.Current["Log.Disk"], Loc.Current["Log.Retained"]));
+
     private void OnClearLog(object sender, RoutedEventArgs e)
     {
-        bool confirmed = ConfirmClear?.Invoke() ?? WorkbenchMessageBox.Show(Window.GetWindow(this),
-            Loc.Current["Pages.ClearLogPrompt"], Loc.Current["Pages.ClearLog"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK;
+        bool confirmed = ConfirmClear?.Invoke() ?? ClearConfirmation().Confirm(this);
         if (confirmed)
         {
             Model.Activity.ClearLog();
@@ -145,10 +159,10 @@ public partial class LogView : UserControl
     }
     private void OnGenerate(object sender, RoutedEventArgs e) => _features?.Export();
     private void OnOpenFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Diagnostics.OpenFolder); }
-    private void OnOpenStorageSettings(object sender, RoutedEventArgs e)
+    private void OnOpenStorageSettings(object sender, RoutedEventArgs e) => OpenStorageSettings();
+    private void OpenStorageSettings()
     {
-        var button = (Button)sender;
-        WorkbenchCommands.Navigate.Execute(button.CommandParameter, button);
+        WorkbenchCommands.Navigate.Execute(StorageSettingsButton.CommandParameter, this);
         if (Window.GetWindow(this) is MainWindow { CurrentPage: "Settings" } window) window.SettingsContent.ShowSection("Service");
     }
 }

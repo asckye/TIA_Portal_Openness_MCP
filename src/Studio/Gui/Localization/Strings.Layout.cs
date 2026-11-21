@@ -71,7 +71,7 @@ internal static partial class Strings
         ("Settings.Sections", "Settings", "偏好与安全"),
         ("Settings.HumanOnly", "Human only", "仅限人工操作"),
         ("Settings.Folders", "Folders", "目录"),
-        ("Settings.DataDirectory", "Data folder", "数据目录"),
+        ("Settings.DataDirectory", "Data root directory", "数据根目录"),
         ("Calls.Subtitle", "Recent tool calls; select a row for the full arguments and result.", "最近的工具调用；点击一行查看完整参数与返回。"),
         ("Calls.All", "All", "全部"),
         ("Calls.AllReleases", "All releases", "全部版本"),

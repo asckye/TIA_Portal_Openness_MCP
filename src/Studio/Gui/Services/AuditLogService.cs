@@ -24,7 +24,7 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
     private ChangeMonitor? _monitor;
     private AuditTailReader _reader;
     private IReadOnlyList<AuditEvent> _events = Array.Empty<AuditEvent>();
-    private JournalCoverage _coverage = new(null, null);
+    private JournalCoverage _coverage = new(null, null, null);
     private JournalRetention _retention = new();
     private volatile bool _disposed, _active = true;
     private int _total;
@@ -59,6 +59,14 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
     public int TotalCount => Volatile.Read(ref _total);
     public int FileSizeMb { get => _retention.FileSizeMb; set => SaveRetention(value, null); }
     public int Copies { get => _retention.Copies; set => SaveRetention(null, value); }
+    public (long Bytes, int Files, int Journals)? Usage
+    {
+        get
+        {
+            var snapshot = _coverage;
+            return snapshot.Bytes is { } bytes ? (bytes, snapshot.Files, snapshot.Journals) : null;
+        }
+    }
     public LocalizedText Coverage => _coverage.Start.HasValue && _coverage.End.HasValue
         ? LocalizedText
             .Key("Audit.Window", _coverage.Start.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"), _coverage.End.Value.ToLocalTime()
@@ -133,7 +141,11 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
                 { Volatile.Write(ref _events, events); Raise(nameof(Events)); Raise(nameof(HasOlder)); Raise(nameof(IsLatest)); }
                 if (_total != _reader.TotalCount) { Volatile.Write(ref _total, _reader.TotalCount); Raise(nameof(TotalCount)); }
                 var coverage = JournalRetention.Coverage(_diagnostics);
-                if (_coverage.Start != coverage.Start || _coverage.End != coverage.End) { _coverage = coverage; Raise(nameof(Coverage)); }
+                var previousCoverage = _coverage;
+                _coverage = coverage;
+                if (previousCoverage.Start != coverage.Start || previousCoverage.End != coverage.End) Raise(nameof(Coverage));
+                if (previousCoverage.Bytes != coverage.Bytes || previousCoverage.Files != coverage.Files || previousCoverage.Journals != coverage.Journals)
+                    Raise(nameof(Usage));
                 lock (_saveSync)
                 {
                     var retention = UiSettings.LoadRetention(_settingsPath);

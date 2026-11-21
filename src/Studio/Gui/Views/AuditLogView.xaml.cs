@@ -13,12 +13,9 @@ public partial class AuditLogView : UserControl
     {
         // The shell's content starts after the 60 epx activity rail, before the page margins.
         var windowWidth = ResponsiveLayout.GetWindowWidth(this);
-        bool docked = (windowWidth > 0 ? windowWidth - 60 : ActualWidth) >= 1200;
-        Grid.SetColumn(AuditInspector, docked ? 1 : 0);
-        Grid.SetRow(AuditInspector, docked ? 0 : 1);
-        AuditInspector.Width = docked ? 336 : double.NaN;
-        AuditInspector.MaxHeight = docked ? double.PositiveInfinity : e.NewSize.Height * 0.38;
+        AuditInspector.Width = (windowWidth > 0 ? windowWidth - 60 : ActualWidth) >= 1200 ? 320 : 280;
     }
+    private void OnCloseInspector(object sender, RoutedEventArgs e) => DetailsToggle.IsChecked = false;
     private void OnVerify(object sender, RoutedEventArgs e) => Model.Verify();
     private void OnJump(object sender, RoutedEventArgs e)
     {

@@ -1,3 +1,5 @@
+extern alias PlcRendering;
+using DiffEngine = PlcRendering::TiaMcpServer.ModelContextProtocol.OfflineAnalysisLogic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -38,7 +40,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     private readonly ObservableCollection<ApprovalRow> _requests = [];
     private readonly ObservableCollection<ApprovalRow> _visibleRequests = [];
     private ApprovalRow? _selectedRequest, _lastDecision;
-    private bool _handledRequests;
+    private bool _handledRequests, _historyDetailOpen;
     private readonly ObservableCollection<CallRow> _calls = [];
     private readonly ObservableCollection<AuditRow> _auditRows = [];
     private readonly Dictionary<string, CallRow> _callCache = new(StringComparer.Ordinal);
@@ -101,6 +103,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public IReadOnlyList<CallRow> Calls => _calls;
     public bool CallsEmpty => _calls.Count == 0;
     public string CallsCount => Loc.Current.T("Calls.Count", _snapshotCount, Approvals.PendingCount);
+    public bool JournalEmpty => _snapshotCount == 0;
+    public string CallEmptyDescription => Loc.Current[JournalEmpty ? "Calls.EmptyHelp" : "Calls.FilterHelp"];
     public string CallEmptyTitle => Loc.Current[_snapshotCount == 0 ? "Calls.EmptyTitle" : "Calls.NoMatches"];
     // Statistic cards over the same snapshot the count line uses: the journal plus pending approvals, before filters.
     public int WriteCount { get; private set; }
@@ -130,12 +134,42 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         if (_lastDecision == null || row == null || ReferenceEquals(row, _lastDecision)) return;
         _lastDecision.SetDecision(null);
         _lastDecision = null;
-        Raise(nameof(DecisionStatus));
+        NotifyDecision();
     }
-    public bool HandledRequests { get => _handledRequests; set { if (Set(ref _handledRequests, value)) FilterRequests(); } }
+    private void NotifyDecision() => Notify(nameof(DecisionStatus), nameof(ShowPendingFeed), nameof(ShowApprovalDetail),
+        nameof(ShowHistoryTable), nameof(ShowRequestEmpty), nameof(QueueRows));
+    public bool HandledRequests
+    {
+        get => _handledRequests;
+        set
+        {
+            if (!Set(ref _handledRequests, value)) return;
+            HistoryDetailOpen = false;
+            if (Audit is AuditLogService log) log.SetActive(_auditVisible || _drawerVisible && value);
+            FilterRequests();
+        }
+    }
+    public bool HistoryDetailOpen
+    {
+        get => _historyDetailOpen;
+        set
+        {
+            if (Set(ref _historyDetailOpen, value)) Notify(nameof(ShowApprovalDetail), nameof(ShowHistoryTable));
+        }
+    }
+    public bool ShowApprovalDetail => ShowPendingFeed || HistoryDetailOpen;
+    public bool ShowHistoryTable => HandledRequests && !HistoryDetailOpen;
+    // Keep recent rows selectable while the operator is reviewing a local decision receipt.
+    public IReadOnlyList<ApprovalRow> QueueRows => _lastDecision == null ? VisibleRequests : Requests;
+    public string RequestsEmptyDescription => Loc.Current[HandledRequests ? "Approval.HistoryHelp" : "Shell.NoPendingDescription"];
+    public bool PendingTab => !HandledRequests;
+    public string QueueLabel => Loc.Current.T("Approval.Queue", Approvals.PendingCount);
+    public string HistoryLabel => Loc.Current.T("Approval.History", _requests.Count(r => !r.Pending));
+    public bool ShowPendingFeed => PendingTab && (Approvals.PendingCount > 0 || DecisionStatus.Length > 0);
+    public bool ShowRequestEmpty => RequestsEmpty;
     public string WaitingLabel => Loc.Current.T("Approval.Waiting", Approvals.PendingCount);
     public bool RequestsEmpty => VisibleRequests.Count == 0;
-    public string RequestsEmptyTitle => Loc.Current[HandledRequests ? "Approval.NoHistory" : "Shell.NoPending"];
+    public string RequestsEmptyTitle => Loc.Current[HandledRequests ? "Approval.NoHistory" : "Approval.QueueEmpty"];
     public string PendingCount => Loc.Current.T("Feature.Count", Approvals.PendingCount);
     public string PendingSummary => Approvals.Requests.FirstOrDefault(r => r.State == ApprovalState.Pending) is { } request
         ? Loc.Current.T("Calls.PendingSummary", ActorDisplay.Client(request.Actor), request.Operations.Count, Remaining(request)) : Loc
@@ -172,15 +206,24 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         set { if (!ReferenceEquals(_selectedAudit, value)) { _selectedAudit = value; Raise(nameof(SelectedAudit)); } }
     }
     public bool AuditEmpty => _auditRows.Count == 0;
+    public string AuditEmptyDescription => Loc.Current[Audit.Events.Count == 0 ? "Audit.EmptyHelp" : "Calls.FilterHelp"];
+    public bool CanVerify => Audit.Events.Count > 0 && !Verifying;
+    public bool ShowVerification => _verification?.Passed.HasValue == true && !Verifying;
     public string AuditEmptyText => Loc.Current[Audit.Events.Count == 0 ? "Shell.AuditEmpty" : "Audit.NoMatches"];
     public string AuditCount => Loc.Current.T("Feature.Count", Audit.TotalCount.ToString("N0"));
     public bool LatestAuditPage => Audit is not AuditLogService log || log.IsLatest;
     public bool OlderAuditPage => !LatestAuditPage;
     public bool CanPageOlder => Audit is AuditLogService { HasOlder: true };
-    public string AuditHead => Audit.Events.LastOrDefault() is { } last ? $"SHA-256 · #{last.Index}" : "SHA-256";
+    public string AuditHead => Audit.Events.MaxBy(record => record.Index) is { } last ? $"SHA-256 · #{last.Index}" : "SHA-256";
     public bool HasVerification => _verification != null;
     public bool VerificationBroken => _verification?.Passed == false;
     public FeatureTone VerificationTone => _verification?.Passed switch { true => FeatureTone.Success, false => FeatureTone.Warning, _ => FeatureTone.Muted };
+    public string VerificationSummary => _verification?.Passed switch
+    {
+        true => Loc.Current.T("Audit.Pass", _verification.Count.ToString("N0")),
+        false => Loc.Current.T("Audit.Break", _verification.BreakIndex),
+        _ => ""
+    };
     public string VerificationText => _verification?.Chains.Count > 0
         ? string.Join(" · ", _verification.Chains.Select(chain => (chain.Passed
             ? Loc.Current.T("Audit.Pass", chain.Count.ToString("N0")) : Loc.Current.T("Audit.Break", chain.BreakIndex))
@@ -192,6 +235,15 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             _ => Loc.Current["Feature.NotConnected"],
         };
     public long? BreakIndex => _verification?.BreakIndex;
+    private AuditEvent? BrokenRecord => Audit.Events.TakeLast(AuditLogService.PageSize).FirstOrDefault(entry => entry.Index == BreakIndex
+        && (_verification?.Chain == null || entry.Chain == _verification.Chain));
+    public bool CanJumpToBreak => VerificationBroken && BrokenRecord != null;
+    private int JournalSlots => Math.Max(1, Audit.Usage?.Journals ?? 0) * RetentionCopies;
+    public bool HasJournalUsage => Audit.Usage.HasValue;
+    public double JournalPercent => Audit.Usage is { } usage ? Math.Min(100, usage.Bytes * 100d / (1048576d * RetentionSize * JournalSlots)) : 0;
+    public string JournalUsageLabel => Audit.Usage is { } usage
+        ? Loc.Current.T("Settings.JournalUsage", usage.Bytes / 1048576d, (long)RetentionSize * JournalSlots, usage.Files, JournalSlots)
+        : Loc.Current["Settings.JournalUnavailable"];
     public string Coverage => Audit.Coverage.Resolve();
     public int RetentionSize => Audit.FileSizeMb;
     public int RetentionCopies => Audit.Copies;
@@ -201,23 +253,24 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public Task VerifyAsync() => _verificationTask is { IsCompleted: false } ? _verificationTask : _verificationTask = VerifyCoreAsync();
     private async Task VerifyCoreAsync()
     {
-        _verifying = true; VerificationProgress = 0; Notify(nameof(Verifying), nameof(VerificationProgress));
+        _verifying = true; VerificationProgress = 0; Notify(nameof(Verifying), nameof(VerificationProgress), nameof(CanVerify), nameof(ShowVerification));
         try
         {
             _verification = await Task.Run(() => Audit is AuditLogService service
                 ? service.Verify(percent => Dispatch(() => { VerificationProgress = percent; Raise(nameof(VerificationProgress)); })) : Audit.Verify());
             _verifiedEvents = Audit.Events;
-            _auditBreak = null; RefreshAudit(); NotifyVerification();
+            var broken = BrokenRecord;
+            _auditBreak = broken == null ? null : (broken.Chain, broken.Index);
+            RefreshAudit(); NotifyVerification();
             Feedback?.Invoke(this, new(LocalizedText.Literal(VerificationText),
                 _verification.Passed switch { true => ToastKind.Success, false => ToastKind.Error, null => ToastKind.Info }, "verify"));
         }
         catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Error, "verify")); }
-        finally { _verifying = false; Notify(nameof(Verifying)); }
+        finally { _verifying = false; Notify(nameof(Verifying), nameof(CanVerify), nameof(ShowVerification)); }
     }
     public AuditRow? JumpToBreak()
     {
-        var broken = Audit.Events.TakeLast(AuditLogService.PageSize)
-            .FirstOrDefault(e => e.Index == BreakIndex && (_verification?.Chain == null || e.Chain == _verification.Chain));
+        var broken = BrokenRecord;
         if (broken == null) return null;
         _auditBreak = (broken.Chain, broken.Index);
         if (_auditSearch.Length != 0) { _auditSearch = ""; Raise(nameof(AuditSearch)); }
@@ -240,6 +293,11 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public bool HasEnvironmentStats => _groups.Any(g => g.Group.Rows.Count > 0);
     public IReadOnlyList<EnvironmentGroupRow> EnvironmentStats => _groups.Where(g => g.Group.Rows.Count > 0).ToArray();
     public IReadOnlyList<EnvironmentRow> EnvironmentRows => _groups.SelectMany(g => g.Rows).ToArray();
+    public IReadOnlyList<EnvironmentRow> FailedChecks => EnvironmentRows.Where(r => r.Warning).ToArray();
+    public IReadOnlyList<EnvironmentRow> PendingChecks => EnvironmentRows.Where(r => !r.Warning && !r.Passed).ToArray();
+    public string FailedHeader => Loc.Current.T("Env.AttentionCount", EnvironmentAttentionCount);
+    public string PassedHeader => Loc.Current.T("Env.PassedCount", EnvironmentPassedCount);
+    public string PendingHeader => Loc.Current.T("Env.PendingCount", EnvironmentPendingCount);
     public IReadOnlyList<EnvironmentRow> AttentionChecks => _groups.SelectMany(g => g.Rows).Where(r => r.Check.Status != CheckStatus.Pass).ToArray();
     public IReadOnlyList<EnvironmentRow> PassedChecks => _groups.SelectMany(g => g.Rows).Where(r => r.Check.Status == CheckStatus.Pass).ToArray();
     public EnvironmentRow? SelectedEnvironment { get => _selectedEnvironment; set { if (value != null) Set(ref _selectedEnvironment, value); } }
@@ -248,13 +306,15 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         string? id = _selectedEnvironment?.Check.Id;
         _selectedEnvironment = _groups.SelectMany(g => g.Rows).FirstOrDefault(r => r.Check.Id == id)
             ?? AttentionChecks.FirstOrDefault(row => row.Warning) ?? AttentionChecks.FirstOrDefault() ?? PassedChecks.FirstOrDefault();
+        Notify(nameof(FailedChecks), nameof(PendingChecks), nameof(FailedHeader), nameof(PassedHeader), nameof(PendingHeader));
         Notify(nameof(HasEnvironmentStats), nameof(EnvironmentStats), nameof(EnvironmentRows), nameof(AttentionChecks), nameof(PassedChecks),
             nameof(SelectedEnvironment));
     }
     public int EnvironmentCheckCount => _groups.Sum(g => g.Group.Rows.Count);
     public int EnvironmentPassedCount => _groups.Sum(g => g.Group.Rows.Count(r => r.Status == CheckStatus.Pass));
     public int EnvironmentPendingCount => _groups.Sum(g => g.Group.Rows.Count(r => r.Status is CheckStatus.Unchecked or CheckStatus.Checking));
-    public string EnvironmentSummary => CheckSummary(Environment.Groups.SelectMany(g => g.Rows).ToArray());
+    public string EnvironmentSummary => EnvironmentTone == FeatureTone.Success
+        ? Loc.Current.T("Env.AllPassedCount", EnvironmentPassedCount) : CheckSummary(Environment.Groups.SelectMany(g => g.Rows).ToArray());
     public FeatureTone EnvironmentTone => CheckTone(Environment.Groups.SelectMany(g => g.Rows).ToArray());
     /// <summary>Shows the warning Alert above the groups while any check warns or fails.</summary>
     public bool EnvironmentNeedsAction => EnvironmentAttentionCount > 0;
@@ -296,7 +356,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
                 if (_lastDecision != decisionRow) _lastDecision?.SetDecision(null);
                 _lastDecision = decisionRow;
                 decisionRow.SetDecision(result);
-                Raise(nameof(DecisionStatus));
+                NotifyDecision();
             }
             if (result.Message.Resolve().Length > 0) Feedback?.Invoke(this, result);
         }
@@ -316,7 +376,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         _callsVisible = calls; _auditVisible = audit; _drawerVisible = drawer; _detailVisible = detail;
         Notify(nameof(OnApprovalsPage), nameof(OnCallsPage));
         if (Journal is CallJournalService journal) journal.SetActive(calls || detail || drawer);
-        if (Audit is AuditLogService log) log.SetActive(audit);
+        if (Audit is AuditLogService log) log.SetActive(audit || drawer && HandledRequests);
         if (calls || detail) { RefreshCalls(); RefreshConnection(); }
         else if (drawer) RefreshAgentCount();
         if (audit) { RefreshAudit(); Notify(nameof(Coverage), nameof(RetentionSize), nameof(RetentionCopies)); }
@@ -379,19 +439,17 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         else if (_drawerVisible && Changed(Journal, nameof(ICallJournalService.Calls))) RefreshAgentCount();
         if (_dirty.ContainsKey(Audit))
         {
+            if (_drawerVisible && HandledRequests && Changed(Audit, nameof(IAuditLogService.Events)))
+                foreach (var row in VisibleRequests) row.RefreshAuditLink();
             if (_auditVisible && Changed(Audit, nameof(IAuditLogService.Events)))
             {
-                if (_verification != null && !ReferenceEquals(_verifiedEvents, Audit.Events))
-                {
-                    _verification = null;
-                    _auditBreak = null;
-                    NotifyVerification();
-                }
                 RefreshAudit();
             }
             if (Changed(Audit, nameof(IAuditLogService.TotalCount))) Raise(nameof(AuditCount));
             if (Changed(Audit, nameof(IAuditLogService.Coverage))) Raise(nameof(Coverage));
             if (Changed(Audit, nameof(IAuditLogService.FileSizeMb), nameof(IAuditLogService.Copies))) Notify(nameof(RetentionSize), nameof(RetentionCopies));
+            if (Changed(Audit, nameof(IAuditLogService.Usage), nameof(IAuditLogService.FileSizeMb), nameof(IAuditLogService.Copies)))
+                Notify(nameof(JournalUsageLabel), nameof(JournalPercent), nameof(HasJournalUsage));
         }
         if (_dirty.ContainsKey(Environment))
         {
@@ -426,14 +484,16 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     {
         foreach (var row in _callCache.Values) row.RefreshLanguage();
         foreach (var row in _requests) row.RefreshLanguage();
-        Raise(nameof(DecisionStatus));
+        NotifyDecision();
         _groups = Environment.Groups.Select(g => new EnvironmentGroupRow(g)).ToArray();
         RefreshEnvironmentSelection();
         RefreshCalls(); RefreshAudit(languageChanged: true);
+        Notify(nameof(CallEmptyTitle), nameof(CallEmptyDescription));
         Notify(nameof(EnvironmentGroups), nameof(EnvironmentSummary), nameof(EnvironmentTone), nameof(EnvironmentNeedsAction), nameof(EnvironmentAttention),
             nameof(EnvironmentAttentionCount), nameof(PendingSummary), nameof(ApprovalSetting), nameof(ApprovalPolicy),
-            nameof(PendingCount), nameof(WaitingLabel), nameof(RequestsEmptyTitle), nameof(ApprovalsTabLabel),
-            nameof(CallsTabLabel), nameof(AuditCount), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
+            nameof(PendingCount), nameof(WaitingLabel), nameof(RequestsEmptyDescription), nameof(RequestsEmptyTitle), nameof(ApprovalsTabLabel),
+            nameof(CallsTabLabel), nameof(QueueLabel), nameof(HistoryLabel), nameof(AuditCount),
+            nameof(JournalUsageLabel), nameof(Coverage), nameof(FollowLabel), nameof(ReleaseFilter));
         NotifyVerification();
     });
     private void Dispatch(Action action)
@@ -452,7 +512,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     {
         if (_snapshotCount == count) return;
         _snapshotCount = count;
-        Notify(nameof(CallsCount), nameof(CallEmptyTitle), nameof(CallStatTotal), nameof(CallsTabLabel));
+        Notify(nameof(CallsCount), nameof(CallEmptyTitle), nameof(JournalEmpty), nameof(CallEmptyDescription), nameof(CallStatTotal), nameof(CallsTabLabel));
     }
     private void RefreshCalls()
     {
@@ -518,13 +578,22 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         // Advancing the queue is automatic. The result stays with the request the operator decided.
         var next = selected != null && _visibleRequests.Contains(selected) ? selected : _visibleRequests.FirstOrDefault();
         Set(ref _selectedRequest, next, nameof(SelectedRequest));
-        Notify(nameof(RequestsEmpty), nameof(RequestsEmptyTitle), nameof(WaitingLabel));
+        Notify(nameof(RequestsEmpty), nameof(RequestsEmptyDescription), nameof(RequestsEmptyTitle),
+            nameof(WaitingLabel), nameof(PendingTab), nameof(QueueLabel),
+            nameof(HistoryLabel), nameof(ShowPendingFeed), nameof(ShowApprovalDetail), nameof(ShowHistoryTable), nameof(ShowRequestEmpty), nameof(QueueRows));
     }
     private void RefreshAudit(bool languageChanged = false)
     {
         var selection = SelectedAudit?.Record;
         if (languageChanged) _auditRows.Clear();
-        var page = Audit.Events.TakeLast(AuditLogService.PageSize).ToArray();
+        var events = Audit.Events;
+        if (_verification != null && !ReferenceEquals(_verifiedEvents, events))
+        {
+            _verification = null;
+            _auditBreak = null;
+            NotifyVerification();
+        }
+        var page = events.TakeLast(AuditLogService.PageSize).ToArray();
         // Resolve the actual predecessor before filtering. The link claimed by a record is not proof that its predecessor is loaded.
         var byIndex = page.ToDictionary(e => (e.Chain, e.Index));
         var old = _auditRows.ToDictionary(r => (r.Record.Chain, r.Record.Index));
@@ -542,7 +611,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         }
         Sync(_auditRows, next);
         SelectedAudit = next.FirstOrDefault(r => r.Record.Chain == selection?.Chain && r.Record.Index == selection?.Index) ?? next.FirstOrDefault();
-        Notify(nameof(AuditEmpty), nameof(AuditEmptyText), nameof(AuditCount), nameof(AuditHead),
+        Notify(nameof(CanVerify), nameof(AuditEmpty), nameof(AuditEmptyText), nameof(AuditEmptyDescription), nameof(AuditCount), nameof(AuditHead),
             nameof(LatestAuditPage), nameof(OlderAuditPage), nameof(CanPageOlder));
     }
     private void RefreshConnection()
@@ -564,7 +633,8 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     }
     private void Notify(params string[] names) { foreach (string name in names) Raise(name); }
     private void NotifyVerification() =>
-        Notify(nameof(HasVerification), nameof(VerificationBroken), nameof(VerificationTone), nameof(VerificationText), nameof(BreakIndex));
+        Notify(nameof(ShowVerification), nameof(HasVerification), nameof(VerificationBroken),
+            nameof(VerificationTone), nameof(VerificationText), nameof(VerificationSummary), nameof(BreakIndex), nameof(CanJumpToBreak));
     private void UpdateTimer()
     {
         if (Approvals.PendingCount > 0 && (_callsVisible || _drawerVisible)) _timer.Start(); else _timer.Stop();
@@ -674,7 +744,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     }
     public string Timer => $"{Remaining / 60:00}:{Remaining % 60:00}";
     public string TimerLabel => Pending ? Loc.Current.T("Approval.Timer", Timer) : State;
-    public string FeedTime => Pending ? Timer : Request.Deadline.AddSeconds(-Request.TimeoutSeconds).ToLocalTime().ToString("HH:mm");
+    public string FeedTime => Pending ? Timer : Request.Deadline.AddSeconds(-Request.TimeoutSeconds).ToLocalTime().ToString("HH:mm:ss");
     private FeatureFeedback? _decision;
     public string DecisionMessage => _decision?.Message.Resolve() ?? "";
     public bool HasDecisionError => _decision?.Kind == ToastKind.Error;
@@ -691,6 +761,27 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         Raise(nameof(DecisionMessage)); Raise(nameof(HasDecisionError)); Raise(nameof(FeedKind)); Raise(nameof(ShowDecisionMessage));
     }
     public string FirstObject => Request.Operations.FirstOrDefault()?.Object ?? "";
+    public AuditEvent? AuditDecision => owner.Audit.Events.LastOrDefault(e => e.RequestId.Length > 0 && e.RequestId == Request.Id
+        && e.Type is AuditEventType.Approve or AuditEventType.Reject or AuditEventType.Timeout);
+    internal void RefreshAuditLink() { Raise(nameof(AuditDecision)); Raise(nameof(HasAuditDecision)); }
+    public bool HasAuditDecision => AuditDecision != null;
+    public string HistoryTools => string.Join(" / ", Request.Operations.Select(op => op.Tool)
+        .Where(tool => !string.IsNullOrWhiteSpace(tool)).Distinct().DefaultIfEmpty(Request.Id));
+    public string DetailTitle => Request.Operations.Count == 1
+        ? JoinFields(Request.Operations[0].Action.Resolve(), FirstObject) : Summary;
+    public string FeedSummary
+    {
+        get
+        {
+            if (HasSourceComparison) return Loc.Current.T("Approval.SourceChangeSummary", AddedLinesLabel, RemovedLinesLabel);
+            var fields = TargetParameters;
+            string address = Field(fields?["onlineTarget"] as System.Text.Json.Nodes.JsonObject, "targetIpAddress");
+            if (address.Length == 0) address = Field(fields, "targetIpAddress");
+            if (address.Length != 0) return Request.Plc.Length == 0 ? address : Request.Plc + " → " + address;
+            if (Change.Length != 0 && Change != HistoryTools) return Change;
+            return Target.Length != 0 ? Target : Change;
+        }
+    }
     public string ObjectPreview => FirstObject.Length <= 64 ? FirstObject : FirstObject[..63] + "…";
     public string Target => JoinFields(Request.Project, Request.Plc);
     public string Change => Request.Operations.FirstOrDefault() is { } op
@@ -698,7 +789,8 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         : "";
     public string Safeguard => JoinFields(Request.Risks.Select(r => r.Resolve()).ToArray());
     public string DenyLabel => Loc.Current[Destructive ? "Approval.DenyDefault" : "Approval.Deny"];
-    public string DecisionHint => Loc.Current[Destructive ? "Approval.DestructiveHint" : "Approval.WriteHint"];
+    public string DecisionHint => Loc.Current[!Destructive ? "Approval.WriteHint"
+        : Request.RiskAction == "online" ? "Approval.OnlineHint" : "Approval.DestructiveHint"];
     private static string JoinFields(params string[] values) => string.Join(" · ", values.Where(v => !string.IsNullOrWhiteSpace(v)));
 
     public string Summary => Request.Operations.Count == 1
@@ -760,6 +852,25 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
             }
         }
     }
+    // Only compare explicit text supplied with this request, after the normal display redaction.
+    private IReadOnlyList<ApprovalDiffLine>? _sourceChanges;
+    public IReadOnlyList<ApprovalDiffLine> SourceChanges => _sourceChanges ??= CompareSource();
+    public bool ShowOperationDetails => !HasSourceComparison || JsonOpen;
+    public bool HasSourceComparison => SourceChanges.Count > 0;
+    public string ComparisonTitle => HasSourceComparison ? FirstObject : Loc.Current["Approval.Operations"];
+    public string AddedLinesLabel => HasSourceComparison ? "+" + SourceChanges.Count(line => line.Sign == "+") : "";
+    public string RemovedLinesLabel => HasSourceComparison ? "−" + SourceChanges.Count(line => line.Sign == "−") : "";
+    private IReadOnlyList<ApprovalDiffLine> CompareSource()
+    {
+        var fields = TargetParameters;
+        if (fields?["before"] is not System.Text.Json.Nodes.JsonValue before || !before.TryGetValue<string>(out var oldText)
+            || fields["after"] is not System.Text.Json.Nodes.JsonValue after || !after.TryGetValue<string>(out var newText))
+            return [];
+        static string[] Lines(string text) => text.Length == 0 ? [] : text.ReplaceLineEndings("\n").Split('\n');
+        return DiffEngine.Diff(Lines(oldText), Lines(newText)).Select(line => new ApprovalDiffLine(
+            line.Op == DiffEngine.DiffOp.Delete ? line.LeftLine : line.RightLine,
+            line.Op switch { DiffEngine.DiffOp.Delete => "−", DiffEngine.DiffOp.Insert => "+", _ => "" }, line.Text)).ToArray();
+    }
     public string Context => JoinFields(Actor, Request.Transport, Request.Host, Request.Release);
     public event EventHandler<int>? CountdownThreshold;
     public bool Pending => Request.State == ApprovalState.Pending;
@@ -767,7 +878,11 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     public int Remaining => owner.Remaining(Request);
     public string RemainingText => Loc.Current.T("Common.Seconds", Remaining);
     public FeatureTone CountdownTone => Remaining < 30 ? FeatureTone.Warning : FeatureTone.Accent;
-    public bool JsonOpen { get => _jsonOpen; set => Set(ref _jsonOpen, value); }
+    public bool JsonOpen
+    {
+        get => _jsonOpen;
+        set { if (Set(ref _jsonOpen, value)) Raise(nameof(ShowOperationDetails)); }
+    }
     public string Parameters => _parameters ??= FeatureJson.Redact(Request.ParametersJson);
     public bool IsGenerationPlan => Request.GenerationPlan != null;
     public bool IsToolRequest => !IsGenerationPlan;
@@ -825,21 +940,25 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         if (Request == request) return;
         bool changed = Request.ParametersJson != request.ParametersJson;
         Request = request;
-        if (changed) { _parameters = null; Raise(nameof(Parameters)); }
+        if (changed) { _sourceChanges = null; _parameters = null; Raise(nameof(Parameters)); }
         Raise(nameof(Request)); RefreshLanguage(); RefreshCountdown();
     }
     internal void RefreshLanguage()
     {
         foreach (string name in new[] {
-                nameof(Actor), nameof(Client), nameof(UnverifiedClient), nameof(Risk), nameof(Destructive), nameof(GroupTitle),
-                    nameof(FeedKind), nameof(ShowDecisionMessage), nameof(DecisionMessage), nameof(Summary),
-                    nameof(AccessibleSummary), nameof(ApproveLabel), nameof(ConfirmationTitle), nameof(ConfirmationAction), nameof(ConfirmationAccessible),
-                    nameof(ConfirmationConsequence), nameof(Context), nameof(Metadata), nameof(Target), nameof(FirstObject), nameof(ObjectPreview),
-                    nameof(Change), nameof(Safeguard), nameof(DecisionHint), nameof(DenyLabel), nameof(DestructiveFields), nameof(TimerLabel),
-                    nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note),
-                    nameof(HasNote), nameof(IsGenerationPlan), nameof(IsToolRequest), nameof(GenerationDifferences), nameof(GenerationSteps),
-                    nameof(CompletePlan)
-            })
+            nameof(Actor), nameof(Client), nameof(UnverifiedClient), nameof(Risk), nameof(Destructive), nameof(GroupTitle),
+            nameof(AuditDecision), nameof(HasAuditDecision), nameof(HistoryTools),
+            nameof(FeedKind), nameof(ShowDecisionMessage), nameof(DecisionMessage), nameof(Summary),
+            nameof(AccessibleSummary), nameof(ApproveLabel), nameof(ConfirmationTitle), nameof(ConfirmationAction), nameof(ConfirmationAccessible),
+            nameof(ConfirmationConsequence), nameof(Context), nameof(Metadata), nameof(Target), nameof(FirstObject), nameof(ObjectPreview),
+            nameof(DetailTitle), nameof(ComparisonTitle), nameof(ShowOperationDetails), nameof(FeedSummary),
+            nameof(AddedLinesLabel), nameof(RemovedLinesLabel), nameof(HasSourceComparison), nameof(Change), nameof(Safeguard),
+            nameof(DecisionHint), nameof(DenyLabel), nameof(DestructiveFields), nameof(TimerLabel),
+            nameof(Pending), nameof(CanDecide), nameof(Tone), nameof(State), nameof(Note),
+            nameof(HasNote), nameof(IsGenerationPlan), nameof(IsToolRequest),
+            nameof(GenerationDifferences), nameof(GenerationSteps), nameof(SourceChanges),
+            nameof(CompletePlan)
+        })
             Raise(name);
     }
     public void RefreshCountdown()
@@ -862,6 +981,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
 public sealed record AuditRow(AuditEvent Record, bool Selected)
 {
     public string PreviousHash { get; init; } = "—";
+    public bool HasMismatchedLink => PreviousHash != "—" && Record.RecordedPreviousHash.Length > 0 && Record.RecordedPreviousHash != PreviousHash;
     public string Hash => string.IsNullOrEmpty(Record.Hash) ? "—" : Record.Hash;
     public string ShortHash => Hash[..Math.Min(8, Hash.Length)];
     public DateTimeOffset LocalTime => Record.Time.ToLocalTime();
@@ -891,6 +1011,8 @@ public sealed record AuditRow(AuditEvent Record, bool Selected)
         AuditEventType.Reject or AuditEventType.Timeout => FeatureTone.Muted, _ => FeatureTone.Normal,
     };
 }
+
+public sealed record ApprovalDiffLine(int Number, string Sign, string Text);
 
 public sealed record GenerationDifferenceRow(string Text, IReadOnlyList<GenerationDifferenceRow> Children);
 public sealed record GenerationStepRow(string Id, string Phase, string Key, string Tool);
@@ -923,6 +1045,7 @@ public sealed record EnvironmentRow(EnvironmentCheck Check)
     }];
     public string Fix => Check.FixAction.Resolve();
     public string Detail => Check.Detail.Resolve();
+    public bool ShowManual => Detail.Length > 0;
     public bool HasFix => Fix.Length > 0 && Check.Status != CheckStatus.Checking;
     public FeatureTone ResultTone => Warning ? FeatureTone.Warning : FeatureTone.Muted;
     public bool Warning => Check.Status is CheckStatus.Warn or CheckStatus.Fail;

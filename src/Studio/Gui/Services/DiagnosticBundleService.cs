@@ -37,6 +37,8 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
         Func<EnvironmentCheckContext, IReadOnlyList<DiagnosticInput>> inputs, Action<string> open)
     { _context = context; _checks = checks; _inputs = inputs; _open = open; }
 
+    internal static string OutputDirectory(string dataRoot) => Path.Combine(dataRoot, "reports");
+
     public string Export()
     {
         if (Interlocked.CompareExchange(ref _running, 1, 0) != 0) return "";
@@ -72,7 +74,7 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
                     { manifest.Add(Item(input, "unreadable", false, new Dictionary<string, int>())); }
                 }
                 Update(new(DiagnosticState.Running, LocalizedText.Key("Env.BundleRedact"), 40));
-                var reports = Path.Combine(context.DataRoot, "reports");
+                var reports = OutputDirectory(context.DataRoot);
                 Directory.CreateDirectory(reports);
                 string final = Path
                     .Combine(reports, "diagnostics-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..8] + ".zip");

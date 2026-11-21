@@ -11,10 +11,12 @@ namespace TiaOpenness.Gui.Views;
 
 public partial class AiCallsView : UserControl
 {
+    private readonly System.Windows.Input.RoutedCommand _configureClients = new();
     private bool _atTop = true, _followQueued;
     public AiCallsView()
     {
         InitializeComponent(); DataContext = null; DataContextChanged += OnModelChanged;
+        CommandBindings.Add(new System.Windows.Input.CommandBinding(_configureClients, (_, _) => WorkbenchCommands.Navigate.Execute("Clients", this)));
         AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnScrollChanged));
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
@@ -25,6 +27,7 @@ public partial class AiCallsView : UserControl
     }
     private void OnModelChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
+        EmptyCalls.ActionCommand = e.NewValue is FeaturePagesViewModel { JournalEmpty: true } ? _configureClients : null;
         if (e.OldValue is FeaturePagesViewModel old) {
             old.PropertyChanged -= OnChanged; ((INotifyCollectionChanged)old.Calls).CollectionChanged -= OnRowsChanged; }
         if (e.NewValue is FeaturePagesViewModel model) {
@@ -32,6 +35,7 @@ public partial class AiCallsView : UserControl
     }
     private void OnChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(Model.JournalEmpty)) EmptyCalls.ActionCommand = Model.JournalEmpty ? _configureClients : null;
         if (e.PropertyName == nameof(Model.FollowLatest) && Model.FollowLatest && Model.Calls.Count > 0)
             CallList.ScrollIntoView(Model.Calls[0]);
     }

@@ -10,7 +10,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
           </Grid.RowDefinitions>
-          <Border Style="{StaticResource Primer.TableHeaderBand}">
+          <Border Style="{StaticResource Primer.TableHeaderBand}" Visibility="{Binding AuditEmpty, Converter={StaticResource NotBoolToVisibility}}">
             <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="125"/>
@@ -33,54 +33,57 @@
               <TextBlock Grid.Column="10" Text="{l:Tr Actor.Title}" Style="{StaticResource Primer.TableHeader}" Margin="0"/>
             </Grid>
           </Border>
-          <ListBox AutomationProperties.Name="{l:Tr Shell.Audit}" x:Name="AuditList" Grid.Row="1" Style="{StaticResource Primer.VirtualList}" ItemContainerStyle="{StaticResource Primer.TableItem}" ItemsSource="{Binding AuditRows}" SelectedItem="{Binding SelectedAudit, Mode=TwoWay}">
+          <ListBox AutomationProperties.Name="{l:Tr Shell.Audit}" x:Name="AuditList" Grid.Row="1" Style="{StaticResource Primer.VirtualList}" ItemContainerStyle="{StaticResource Primer.AuditTableItem}" ItemsSource="{Binding AuditRows}" SelectedItem="{Binding SelectedAudit, Mode=TwoWay}">
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <Border Padding="2,10" MinHeight="{DynamicResource Ui.RowHeight}" Style="{StaticResource Primer.AuditSelectionRow}">
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="125"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="1.1*" MinWidth="116"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="1.6*"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width=".8*"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="70"/>
-                      <ColumnDefinition Width="10"/>
-                      <ColumnDefinition Width="74"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                      <TextBlock Text="{Binding Sequence}" Style="{StaticResource Primer.Mono.text}"/>
-                      <TextBlock Text=" · " Style="{StaticResource Primer.Muted}"/>
-                      <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
-                    </StackPanel>
-                    <DockPanel Grid.Column="2">
-                      <Ellipse Style="{StaticResource Primer.StatusDot}" Tag="{Binding Tone}" Margin="0,0,6,0"/>
-                      <TextBlock Text="{Binding Type}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
-                    </DockPanel>
-                    <TextBlock Grid.Column="4" Text="{Binding Record.ToolObject}" Style="{StaticResource Primer.Mono}" ToolTip="{Binding Record.ToolObject}"/>
-                    <TextBlock Grid.Column="6" Text="{Binding Result}" Style="{StaticResource Primer.Muted}"/>
-                    <TextBlock Grid.Column="8" Text="{Binding ShortHash}" Style="{StaticResource Primer.Mono.textFaint}"/>
-                    <TextBlock Grid.Column="10" Text="{Binding Actor}" Style="{StaticResource Primer.Muted}"/>
-                  </Grid>
-                </Border>
+                <Grid Margin="14,10">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="125"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="1.1*" MinWidth="116"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="1.6*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width=".8*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="74"/>
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Sequence}" Style="{StaticResource Primer.Mono.text}"/>
+                    <TextBlock Text=" · " Style="{StaticResource Primer.Muted}"/>
+                    <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}"/>
+                  </StackPanel>
+                  <DockPanel Grid.Column="2">
+                    <Ellipse Style="{StaticResource Primer.StatusDot}" Tag="{Binding Tone}" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding Type}" Style="{StaticResource Primer.ToneText}" Tag="{Binding Tone}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold"/>
+                  </DockPanel>
+                  <TextBlock Grid.Column="4" Text="{Binding Record.ToolObject}" Style="{StaticResource Primer.Mono}" ToolTip="{Binding Record.ToolObject}"/>
+                  <TextBlock Grid.Column="6" Text="{Binding Result}" Style="{StaticResource Primer.Muted}"/>
+                  <TextBlock Grid.Column="8" Text="{Binding ShortHash}" Style="{StaticResource Primer.Mono.textFaint}"/>
+                  <TextBlock Grid.Column="10" Text="{Binding Actor}" Style="{StaticResource Primer.Muted}"/>
+                </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
-          <ContentControl Grid.Row="1" Style="{StaticResource Primer.Empty}" Content="{Binding AuditEmptyText}" Visibility="{Binding AuditEmpty, Converter={StaticResource BoolToVisibility}}"/>
+          <ux:WorkbenchState Grid.RowSpan="2" Style="{StaticResource Primer.Workbench.EmptyState}" ux:Ux.Icon="{DynamicResource Icon.WorkbenchAudit}"
+            Title="{Binding AuditEmptyText}" Description="{Binding AuditEmptyDescription}" Visibility="{Binding AuditEmpty, Converter={StaticResource BoolToVisibility}}"/>
         </Grid>
       </Border>
-      <Border x:Name="AuditInspector" Grid.Row="1" Style="{StaticResource Primer.AuditInspector}"
+      <Border x:Name="AuditInspector" Grid.Column="1" Style="{StaticResource Primer.AuditInspector}"
         AutomationProperties.Name="{l:Tr Audit.Inspector}">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="True" IsTabStop="True" AutomationProperties.Name="{l:Tr Audit.Inspector}">
           <Border Style="{StaticResource Primer.Container}" Padding="16" VerticalAlignment="Top">
             <StackPanel DataContext="{Binding SelectedAudit}">
-              <WrapPanel>
+              <DockPanel>
+                <Button DockPanel.Dock="Right" Content="×" AutomationProperties.Name="{l:Tr Access.Dismiss}" Click="OnCloseInspector"
+                  Style="{StaticResource Primer.IdeToolButton}"/>
+                <WrapPanel>
                 <Border Style="{StaticResource Primer.Tag.Accent}" Margin="0,0,8,0"><TextBlock Text="{Binding Sequence}" FontFamily="{DynamicResource Ui.FontMono}" FontWeight="SemiBold"/></Border>
                 <Border Style="{StaticResource Primer.ToneChip}" Tag="{Binding Tone}"><TextBlock Text="{Binding Type}"/></Border>
-              </WrapPanel>
+                </WrapPanel>
+              </DockPanel>
               <TextBlock Text="{Binding Record.ToolObject}" Style="{StaticResource Primer.Mono.text}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12"/>
               <DockPanel Margin="0,3">
                 <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.Muted}" Margin="0,0,12,0"/>
@@ -98,6 +101,11 @@
                 <StackPanel>
                   <TextBlock Text="{l:Tr Audit.PreviousHash}" Style="{StaticResource Primer.Muted}"/>
                   <TextBlock x:Name="PreviousHashText" Text="{Binding PreviousHash}" Style="{StaticResource Primer.Mono.text}" TextWrapping="Wrap" TextTrimming="None"/>
+                  <StackPanel Visibility="{Binding HasMismatchedLink, Converter={StaticResource BoolToVisibility}}" Margin="0,8,0,0">
+                    <TextBlock Text="{l:Tr Audit.RecordedLink}" Style="{StaticResource Primer.Muted}"/>
+                    <TextBlock Text="{Binding Record.RecordedPreviousHash}" Style="{StaticResource Primer.Mono.text}" Foreground="{DynamicResource Primer.diffRed}"
+                      TextWrapping="Wrap" TextTrimming="None"/>
+                  </StackPanel>
                   <TextBlock Text="{l:Tr Audit.CurrentHash}" Style="{StaticResource Primer.Muted}" Margin="0,8,0,0"/>
                   <TextBlock x:Name="HashText" Text="{Binding Hash}" Style="{StaticResource Primer.Mono.text}" TextWrapping="Wrap" TextTrimming="None"/>
                 </StackPanel>
@@ -121,18 +129,35 @@
             <TextBox x:Name="AuditSearchBox" AutomationProperties.Name="{l:Tr Audit.Search}" AutomationProperties.LabeledBy="{Binding ElementName=AuditSearchLabel}"
               Tag="{l:Tr Audit.Search}" Style="{StaticResource Primer.IdeSearch}" Width="200" Height="28" Text="{Binding AuditSearch, UpdateSourceTrigger=PropertyChanged}"/>
             <ToggleButton x:Name="DetailsToggle" AutomationProperties.Name="{l:Tr Audit.Inspector}" Content="{l:Tr Audit.Inspector}" Style="{StaticResource Primer.IdeChipButton}" IsChecked="True" Margin="4,0"/>
-            <Button AutomationProperties.Name="{l:Tr Audit.Verify}" x:Name="VerifyButton" ToolTip="{l:Tr Pages.AuditPurpose}" AutomationProperties.HelpText="{l:Tr Pages.AuditPurpose}" Content="{l:Tr Audit.Verify}" Style="{StaticResource Primer.Button.Primary.Small}" ContentTemplate="{StaticResource Primer.CommandText}" Click="OnVerify"/>
+            <Button AutomationProperties.Name="{l:Tr Audit.Verify}" x:Name="VerifyButton" ToolTip="{l:Tr Pages.AuditPurpose}" AutomationProperties.HelpText="{l:Tr Pages.AuditPurpose}" Content="{l:Tr Audit.Verify}" Style="{StaticResource Primer.Button.Primary.Small}" ContentTemplate="{StaticResource Primer.CommandText}" Click="OnVerify" IsEnabled="{Binding CanVerify}"/>
           </WrapPanel>
         </ux:PageHeadPanel>
       </Border>
       <Border x:Name="ChainHint" Style="{StaticResource Primer.IdeSubBar}" Padding="12,8" Visibility="{Binding IsChecked, ElementName=ChainToggle, Converter={StaticResource BoolToVisibility}}">
         <StackPanel>
           <TextBlock Text="{l:Tr Audit.AboutText}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+          <TextBlock Text="{Binding VerificationText}" TextWrapping="Wrap" Style="{StaticResource Primer.Mono.textFaint}"/>
           <TextBlock Text="{l:Tr Audit.Limitation}" Style="{StaticResource Primer.Muted.textFaint}" TextWrapping="Wrap"/>
         </StackPanel>
       </Border>
-      <Button AutomationProperties.Name="{l:Tr Audit.Jump}" x:Name="JumpButton" HorizontalAlignment="Right" Content="{l:Tr Audit.Jump}" Style="{StaticResource Primer.Quiet}" MinHeight="24" Visibility="{Binding VerificationBroken, Converter={StaticResource BoolToVisibility}}" Click="OnJump"/>
-      <ProgressBar Value="{Binding VerificationProgress, Mode=OneWay}" Maximum="100" Height="4" Margin="0,8,0,0" IsIndeterminate="True" Visibility="{Binding Verifying, Converter={StaticResource BoolToVisibility}}"/>
+      <Border Padding="16,8" Style="{StaticResource Primer.AuditProgressBand}"
+        Visibility="{Binding Verifying, Converter={StaticResource BoolToVisibility}}">
+        <WrapPanel VerticalAlignment="Center">
+          <TextBlock Text="{l:Tr Audit.Verifying}" AutomationProperties.LiveSetting="Polite" VerticalAlignment="Center"/>
+          <ProgressBar Style="{StaticResource Primer.Progress}" Width="260" Height="6" Margin="16,0"
+            Maximum="100" Value="{Binding VerificationProgress, Mode=OneWay}"/>
+          <TextBlock Text="{Binding VerificationProgress, StringFormat={}{0}%}" Style="{StaticResource Primer.Mono.text}"/>
+        </WrapPanel>
+      </Border>
+      <Border Padding="16,8" Visibility="{Binding ShowVerification, Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.AuditVerificationResult}">
+
+        <DockPanel>
+          <Button AutomationProperties.Name="{l:Tr Audit.Jump}" x:Name="JumpButton" IsEnabled="{Binding CanJumpToBreak}" DockPanel.Dock="Right" Content="{l:Tr Audit.Jump}"
+            Style="{StaticResource Primer.Button.DangerSolid.Small}" Visibility="{Binding VerificationBroken, Converter={StaticResource BoolToVisibility}}" Click="OnJump"/>
+          <TextBlock Text="{Binding VerificationSummary}" ToolTip="{Binding VerificationText}" VerticalAlignment="Center" TextWrapping="Wrap" FontWeight="SemiBold"
+            AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding VerificationText}"/>
+        </DockPanel>
+      </Border>
     </StackPanel>
   </Grid>
 </UserControl>

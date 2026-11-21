@@ -60,7 +60,7 @@ internal static class FeaturePageFixtures
             new(532, Now.AddMinutes(-2), AuditEventType.Toggle, "approval", "on", "7c1e9a"),
         ];
         private int _size = 10, _copies = 5;
-        public int TotalCount => 1239;
+        public int TotalCount => Events.Count == 0 ? 0 : 1239;
         public int FileSizeMb { get => _size; set => Set(ref _size, value); }
         public int Copies { get => _copies; set => Set(ref _copies, value); }
         public LocalizedText Coverage => Text("≈ last 3 days", "约保留最近 3 天");

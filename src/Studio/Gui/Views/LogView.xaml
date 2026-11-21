@@ -36,17 +36,18 @@
             IsChecked="True" Style="{StaticResource Primer.IdeToolToggle}" Click="OnFollow"/>
           <Button x:Name="CopyLogButton" Content="{l:Tr Feature.Copy}" AutomationProperties.Name="{l:Tr Pages.CopyLog}" Click="OnCopyLog"
             Style="{StaticResource Primer.IdeToolButton}" Margin="4,0"/>
-          <Button x:Name="ClearLogButton" Content="{l:Tr Pages.ClearLog}" AutomationProperties.Name="{l:Tr Pages.ClearLog}" Click="OnClearLog"
-            Style="{StaticResource Primer.IdeToolButton}" ContentTemplate="{StaticResource Primer.CommandText}" Margin="0,0,8,0"/>
           <Button x:Name="GenerateButton" Content="{l:Tr Env.Generate}" AutomationProperties.Name="{l:Tr Env.Generate}" Click="OnGenerate"
             Style="{StaticResource Primer.Button.Primary.Small}" ContentTemplate="{StaticResource Primer.CommandText}"/>
+          <Button x:Name="ClearLogButton" ToolTip="{l:Tr Pages.ClearLogPrompt}" Content="{l:Tr Pages.ClearLog}" AutomationProperties.Name="{l:Tr Pages.ClearLog}" Click="OnClearLog"
+            Style="{StaticResource Primer.Button.Secondary.Small}" ContentTemplate="{StaticResource Primer.CommandText}" Margin="6,0,0,0"/>
+          <Button x:Name="StorageSettingsButton" Content="{l:Tr Log.StorageLink}" AutomationProperties.Name="{l:Tr Log.StorageLink}"
+          Margin="6,0,0,0" Click="OnOpenStorageSettings" ToolTip="{l:Tr Pages.LogStorageSettings}" CommandParameter="Settings" Style="{StaticResource Primer.Link}"/>
         </WrapPanel>
       </ux:PageHeadPanel>
     </Border>
     <Border DockPanel.Dock="Bottom" Style="{StaticResource Primer.FooterStrip}" Padding="14,3">
       <DockPanel>
-        <Button x:Name="StorageSettingsButton" Content="{l:Tr Log.StorageLink}" AutomationProperties.Name="{l:Tr Log.StorageLink}"
-          DockPanel.Dock="Right" Click="OnOpenStorageSettings" ToolTip="{l:Tr Pages.LogStorageSettings}" CommandParameter="Settings" Style="{StaticResource Primer.Link}"/>
+
         <TextBlock x:Name="StorageSize" DockPanel.Dock="Right" Style="{StaticResource Primer.Mono.textFaint}" Margin="8,0" VerticalAlignment="Center"/>
         <TextBlock VerticalAlignment="Center" Style="{StaticResource Primer.Mono.textFaint}" Margin="0,0,12,0">
           <Run Text="{Binding Items.Count, ElementName=LogList, Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding Text, ElementName=AllLevelsCount, Mode=OneWay}"/>
@@ -84,33 +85,31 @@
       </Border>
     </StackPanel>
     <Border x:Name="LogCard" Style="{StaticResource Primer.TableContainer}">
-      <DockPanel>
-        <Border DockPanel.Dock="Top" Style="{StaticResource Primer.TableHeaderBand}">
-          <Grid>
-            <Grid.ColumnDefinitions><ColumnDefinition Width="82"/><ColumnDefinition Width="100"/><ColumnDefinition/></Grid.ColumnDefinitions>
-            <TextBlock Text="{l:Tr Calls.Time}" Style="{StaticResource Primer.TableHeader}"/>
-            <TextBlock Grid.Column="1" Text="{l:Tr Pages.LogLevel}" Style="{StaticResource Primer.TableHeader}"/>
-            <TextBlock Grid.Column="2" Text="{l:Tr Pages.LogMessage}" Style="{StaticResource Primer.TableHeader}"/>
-          </Grid>
-        </Border>
+      <Grid>
         <ListBox AutomationProperties.Name="{l:Tr Log.Title}" x:Name="LogList" Style="{StaticResource Primer.VirtualList}" ItemsSource="{Binding LogRows,ElementName=PageRoot}" ScrollViewer.ScrollChanged="OnLogScrollChanged">
           <ListBox.ItemTemplate>
             <DataTemplate>
               <Border Style="{StaticResource Primer.LogEntryRow}">
                 <Grid>
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="82"/><ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="78"/><ColumnDefinition Width="70"/>
                     <ColumnDefinition Width="*"/>
                   </Grid.ColumnDefinitions>
                   <TextBlock Text="{Binding Time}" Style="{StaticResource Primer.Mono.textFaint}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-                  <TextBlock Grid.Column="1" Style="{StaticResource Primer.LogLevelText}" FontWeight="SemiBold"><TextBlock.Text><MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="logLevel"><Binding Path="Level"/><Binding Source="{x:Static l:Loc.Current}" Path="Language"/></MultiBinding></TextBlock.Text></TextBlock>
-                  <TextBlock Grid.Column="2" Text="{Binding Message}" ToolTip="{Binding Message}" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.LogLevelText}"/>
+                  <TextBlock Grid.Column="1" AutomationProperties.Name="{l:Tr Pages.LogLevel}" Style="{StaticResource Primer.LogLevelToken}" FontWeight="SemiBold">
+                    <TextBlock.ToolTip><MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="logLevel">
+                      <Binding Path="Level"/><Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
+                    </MultiBinding></TextBlock.ToolTip>
+                  </TextBlock>
+                  <TextBlock Grid.Column="2" AutomationProperties.Name="{l:Tr Pages.LogMessage}" Text="{Binding Message}" ToolTip="{Binding Message}" FontSize="{DynamicResource Ui.FontSize.Caption}" Style="{StaticResource Primer.Mono.text}" TextWrapping="Wrap" TextTrimming="None"/>
                 </Grid>
               </Border>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
-      </DockPanel>
+        <ux:WorkbenchState x:Name="EmptyLog" Style="{StaticResource Primer.Workbench.EmptyState}" ux:Ux.Icon="{DynamicResource Icon.WorkbenchLogs}"
+          ActionLabel="{l:Tr Log.OpenDirectory}" Visibility="{Binding HasItems, ElementName=LogList, Converter={StaticResource NotBoolToVisibility}}"/>
+      </Grid>
     </Border>
   </DockPanel>
 </UserControl>

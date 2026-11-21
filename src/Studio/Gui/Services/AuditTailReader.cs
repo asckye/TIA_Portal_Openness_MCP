@@ -109,7 +109,7 @@ internal sealed class AuditTailReader(string directory)
                 "approval-granted" => AuditEventType.Approve, "approval-denied" => AuditEventType.Reject,
                 "approval-timeout" => AuditEventType.Timeout, _ => AuditEventType.Toggle,
             }, row.Tool, row.Outcome ?? (row.ApprovalEnabled.HasValue ? (row.ApprovalEnabled.Value ? "enabled" : "disabled") : ""), AuditLog.Hash(row))
-            { Chain = directory, Actor = row.Actor };
+            { Chain = directory, Actor = row.Actor, RequestId = row.RequestId, RecordedPreviousHash = row.PreviousHash };
         }
         catch (Exception ex) when (ex is JsonException or FormatException or InvalidDataException or OverflowException)
         { return new AuditEvent(index, DateTimeOffset.MinValue, AuditEventType.End, "", "invalid-record", "") { Chain = directory }; }

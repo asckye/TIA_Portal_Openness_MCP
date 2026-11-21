@@ -24,9 +24,16 @@ public partial class SettingsView : UserControl
     {
         InitializeComponent();
         InitializeSafetyEditors();
+        foreach (var (key, button) in new[] { ("D", OpenLog), ("O", OpenExports), ("G", SettingsGenerateButton) })
+        {
+            button.Loaded += (_, _) => AccessKeyManager.Register(key, button);
+            button.Unloaded += (_, _) => AccessKeyManager.Unregister(key, button);
+        }
         ShowSection("AI");
-        IsVisibleChanged += (_, _) => { if (IsVisible && AiSection.IsSelected) _ = LoadSafetyAsync(); };
-        VersionText.Text = Loc.Current.T("Common.WorkbenchVersion", MainViewModel.AppVersion).TrimStart('v');
+        IsVisibleChanged += (_, _) => RefreshVisibleSection();
+        VersionText.Text = MainViewModel.AppVersion;
+        RuntimeText.Text = $".NET {Environment.Version.Major} WPF";
+        VersionText.ToolTip = Loc.Current.T("Common.WorkbenchVersion", MainViewModel.AppVersion);
         LoadPaths();
     }
 
@@ -47,6 +54,7 @@ public partial class SettingsView : UserControl
         {
             features.PropertyChanged += OnFeatureChanged;
             UpdateRetention();
+            if (ServiceSection.IsSelected) RefreshVisibleSection();
         }
     }
 
@@ -69,6 +77,7 @@ public partial class SettingsView : UserControl
     {
         ConfigPath.Text = DataLocations.Current.ConfigDirectory;
         LogPath.Text = DataLocations.Current.LogsDirectory;
+        ExportsPath.Text = Services.DiagnosticBundleService.OutputDirectory(DataLocations.Current.WorkbenchDataDirectory);
         DataPath.Text = DataLocations.Current.WorkbenchDataDirectory;
     }
 
@@ -89,7 +98,20 @@ public partial class SettingsView : UserControl
         SectionSubtitle.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(section switch
             { "Service" => "Settings.StorageSubtitle", "AI" => "Settings.SafetySubtitle", _ => "Settings.AppearanceSubtitle" }));
         DetailScroll.ScrollToTop();
-        if (section == "AI" && IsVisible) _ = LoadSafetyAsync();
+        RefreshVisibleSection();
+    }
+
+    private void RefreshVisibleSection()
+    {
+        if (!IsVisible) return;
+        if (AiSection.IsSelected) _ = LoadSafetyAsync();
+        else if (ServiceSection.IsSelected && _features?.Audit is Services.AuditLogService audit) _ = audit.RefreshAsync();
+    }
+
+    internal void SetUpdateAvailability(bool hasInstalledVersion, bool sourceCheckout)
+    {
+        CheckUpdate.IsEnabled = hasInstalledVersion && !sourceCheckout;
+        SourceCheckoutHint.Visibility = sourceCheckout ? Visibility.Visible : Visibility.Collapsed;
     }
 
     internal static string ReadPackageName(string bundleRoot)
@@ -207,7 +229,7 @@ public partial class SettingsView : UserControl
 
     private void OnOpenPath(object sender, RoutedEventArgs e)
     {
-        string path = sender == OpenConfig ? ConfigPath.Text : sender == OpenLog ? LogPath.Text : DataPath.Text;
+        string path = sender == OpenConfig ? ConfigPath.Text : sender == OpenLog ? LogPath.Text : sender == OpenExports ? ExportsPath.Text : DataPath.Text;
         try
         {
             if (!Directory.Exists(path)) throw new DirectoryNotFoundException(Loc.Current.T("Settings.PathMissing", path));

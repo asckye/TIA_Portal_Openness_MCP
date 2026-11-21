@@ -336,8 +336,8 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                     var selectedItem = (ListBoxItem)((ListBox)view.FindName("RequestList")).ItemContainerGenerator.ContainerFromIndex(0);
                     Assert.Contains(window.Features.SelectedRequest!.Risk, AutomationProperties.GetName(selectedItem));
                     Assert.True(reject.TranslatePoint(new Point(), host).X + reject.ActualWidth <= approve.TranslatePoint(new Point(), host).X);
-                    Assert.Equal(risk == ApprovalRisk.Destructive ? "Danger" : "Primary", Ux.GetVariant(approve));
-                    Assert.Same(Application.Current.FindResource(risk == ApprovalRisk.Destructive ? "Ant.colorErrorBorder" : "Primer.primaryBg"),
+                    Assert.Equal(risk == ApprovalRisk.Destructive ? "Danger" : "", Ux.GetVariant(approve));
+                    Assert.Same(Application.Current.FindResource(risk == ApprovalRisk.Destructive ? "Ant.colorErrorBorder" : "Primer.inputBorder"),
                         approve.BorderBrush);
                     Assert.Equal(32, approve.ActualHeight); Assert.Equal(32, reject.ActualHeight);
                     foreach (var button in new[] { approve, reject })
@@ -351,10 +351,10 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                     if (theme == "HighContrast")
                     {
                         var item = (ListBoxItem)((ListBox)view.FindName("RequestList")).ItemContainerGenerator.ContainerFromIndex(0);
-                        Assert.Equal(Colors.Yellow, ((SolidColorBrush)item.Background).Color);
-                        Assert.Equal(Colors.Black, ((SolidColorBrush)item.Foreground).Color);
-                        Assert.Contains(DesktopCapture.Descendants<Border>(item), b => b.BorderThickness == new Thickness(1)
-                            && b.BorderBrush is SolidColorBrush brush && brush.Color == Colors.White);
+                        Assert.Equal(Colors.Black, ((SolidColorBrush)item.Background).Color);
+                        Assert.Equal(Colors.White, ((SolidColorBrush)item.Foreground).Color);
+                        Assert.Contains(DesktopCapture.Descendants<Border>(item), b => b.BorderThickness == new Thickness(2)
+                            && b.BorderBrush is SolidColorBrush brush && brush.Color == Colors.Yellow);
                     }
                     string output = Path.GetFullPath("bin-build/ui2c-renders"); Directory.CreateDirectory(output);
                     string suffix = $"{language}-{theme}-{risk}-{width}x{height}";

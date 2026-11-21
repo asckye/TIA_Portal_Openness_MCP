@@ -2,6 +2,8 @@
   <Style x:Key="Primer.ApprovalItem" TargetType="ListBoxItem" BasedOn="{StaticResource Primer.TableItem}">
     <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleSummary}"/>
     <Setter Property="AutomationProperties.ItemStatus" Value="{Binding DecisionMessage}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
     <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
       <StackPanel Margin="0,0,0,3">
         <DockPanel x:Name="FeedHeader" Margin="4,10,4,8" Visibility="Collapsed">
@@ -10,24 +12,33 @@
         </DockPanel>
         <Grid>
           <Border x:Name="Card" Background="{TemplateBinding Background}" CornerRadius="7" Padding="12,8"
-            BorderBrush="{DynamicResource Primer.hcOutline}" BorderThickness="1"><ContentPresenter/></Border>
+            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"><ContentPresenter/></Border>
           <Border x:Name="Bar" Width="3" CornerRadius="2" Height="26" HorizontalAlignment="Left"
             VerticalAlignment="Center" Background="{DynamicResource Primer.accent}" Visibility="Hidden"/>
         </Grid>
       </StackPanel>
       <ControlTemplate.Triggers>
-        <MultiDataTrigger>
-          <MultiDataTrigger.Conditions>
-            <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource TemplatedParent}}" Value="True"/>
-            <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="False"/>
-          </MultiDataTrigger.Conditions>
-          <Setter TargetName="Card" Property="Background" Value="{DynamicResource Primer.card}"/>
-          <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
-        </MultiDataTrigger>
         <DataTrigger Binding="{Binding StartsGroup}" Value="True"><Setter TargetName="FeedHeader" Property="Visibility" Value="Visible"/></DataTrigger>
         <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bar" Property="Visibility" Value="Visible"/></Trigger>
       </ControlTemplate.Triggers>
     </ControlTemplate></Setter.Value></Setter>
+    <Style.Triggers>
+      <Trigger Property="IsSelected" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+      </Trigger>
+      <MultiDataTrigger>
+        <MultiDataTrigger.Conditions>
+          <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
+          <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
+        </MultiDataTrigger.Conditions>
+        <Setter Property="ux:ContrastSelection.Active" Value="False"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
+      </MultiDataTrigger>
+    </Style.Triggers>
   </Style>
   <Style x:Key="Primer.FeedMetadata" TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
     <Style.Triggers>
@@ -36,7 +47,7 @@
           <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True"/>
           <Condition Binding="{Binding EffectivelyHighContrast,Source={x:Static themes:ThemeManager.Current}}" Value="True"/>
         </MultiDataTrigger.Conditions>
-        <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.textMuted}"/>
       </MultiDataTrigger>
     </Style.Triggers>
   </Style>
@@ -56,17 +67,12 @@
     </Style.Triggers>
   </Style>
   <Style x:Key="Primer.ApprovalDecisionPane" TargetType="Border">
-    <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
     <Setter Property="CornerRadius" Value="0,0,8,8"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
     <Setter Property="BorderThickness" Value="1,0,1,1"/>
   </Style>
   <Style x:Key="Primer.ApproveRequest" TargetType="Button" BasedOn="{StaticResource Primer.Answer}">
-    <Setter Property="ux:Ux.Variant" Value="Primary"/>
-    <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
-    <Setter Property="Foreground" Value="{DynamicResource Primer.onPrimary}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource Primer.primaryBg}"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding Destructive}" Value="True">
         <Setter Property="ux:Ux.Variant" Value="Danger"/>
@@ -90,6 +96,7 @@
   <Style x:Key="Primer.ApprovalTimerChip" TargetType="Border" BasedOn="{StaticResource Primer.Tag}">
     <Setter Property="Height" Value="Auto"/>
     <Setter Property="MinHeight" Value="22"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.input}"/>
     <Style.Triggers>
       <MultiDataTrigger>
         <MultiDataTrigger.Conditions>
@@ -117,6 +124,7 @@
     </Grid>
   </DataTemplate>
   <Style x:Key="Primer.DangerSheet" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
     <Setter Property="CornerRadius" Value="14"/>
   </Style>
   <Style x:Key="Primer.DestructiveFields" TargetType="ItemsControl">
@@ -124,5 +132,59 @@
       <Border Style="{StaticResource Primer.CodeBlock}" Padding="14"><ItemsPresenter/></Border>
     </ControlTemplate></Setter.Value></Setter>
     <Style.Triggers><Trigger Property="HasItems" Value="False"><Setter Property="Visibility" Value="Collapsed"/></Trigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ApprovalReviewPane" TargetType="Border" BasedOn="{StaticResource Primer.ApprovalListPane}"><Style.Triggers>
+            <DataTrigger Binding="{Binding HistoryDetailOpen}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+          </Style.Triggers></Style>
+  <Style x:Key="Primer.ApprovalDiffRow" TargetType="Border"><Style.Triggers>
+            <DataTrigger Binding="{Binding Sign}" Value="+">
+              <Setter Property="Background" Value="{DynamicResource Primer.diffAddBg}"/>
+              <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.diffGreen}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Sign}" Value="−">
+              <Setter Property="Background" Value="{DynamicResource Primer.diffDelBg}"/>
+              <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.diffRed}"/>
+            </DataTrigger>
+          </Style.Triggers></Style>
+  <Style x:Key="Primer.ApprovalHistoryHeader" TargetType="GridViewColumnHeader">
+    <Setter Property="Foreground" Value="{DynamicResource Primer.textMuted}"/>
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Caption}"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="GridViewColumnHeader">
+      <Border Height="34" Background="{DynamicResource Primer.sidebar}" BorderBrush="{DynamicResource Primer.divider}" BorderThickness="0,0,0,1" Padding="10,0">
+        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left"/>
+      </Border>
+    </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style x:Key="Primer.ApprovalHistoryItem" TargetType="ListViewItem">
+    <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleSummary}"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListViewItem">
+      <Border Background="{TemplateBinding Background}" Padding="6,0" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+        <GridViewRowPresenter Columns="{Binding View.Columns, RelativeSource={RelativeSource AncestorType=ListView}}" Content="{TemplateBinding Content}" VerticalAlignment="Center"/>
+      </Border>
+    </ControlTemplate></Setter.Value></Setter>
+    <Style.Triggers>
+      <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource Primer.accentSoft}"/></Trigger>
+      <Trigger Property="IsKeyboardFocusWithin" Value="True">
+        <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/><Setter Property="BorderThickness" Value="1"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ApprovalEmpty" TargetType="ux:WorkbenchState" BasedOn="{StaticResource Primer.Workbench.EmptyState}">
+    <Style.Triggers>
+      <MultiDataTrigger><MultiDataTrigger.Conditions>
+        <Condition Binding="{Binding ShowPendingFeed}" Value="True"/>
+        <Condition Binding="{Binding Path=(ux:Ux.LeftPaneOpen), RelativeSource={RelativeSource Self}}" Value="True"/>
+      </MultiDataTrigger.Conditions><Setter Property="Margin" Value="260,0,0,0"/></MultiDataTrigger>
+      <MultiDataTrigger><MultiDataTrigger.Conditions>
+        <Condition Binding="{Binding ShowPendingFeed}" Value="True"/>
+        <Condition Binding="{Binding Path=(ux:Ux.LeftPaneOpen), RelativeSource={RelativeSource Self}}" Value="True"/>
+        <Condition Binding="{Binding Path=(ux:Ux.Narrow), RelativeSource={RelativeSource Self}}" Value="True"/>
+      </MultiDataTrigger.Conditions><Setter Property="Margin" Value="214,0,0,0"/></MultiDataTrigger>
+    </Style.Triggers>
   </Style>
 </ResourceDictionary>

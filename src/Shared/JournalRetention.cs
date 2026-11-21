@@ -87,12 +87,20 @@ namespace TiaOpenness.Shared
         {
             DateTimeOffset? first = null, last = null;
             if (!Directory.Exists(directory)) return new JournalCoverage(first, last);
+            long bytes = 0;
+            int files = 0;
+            bool complete = true;
+            var journals = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (string file in Directory.GetFiles(directory, "calls-*.jsonl*").Where(IsJournal))
             {
                 try
                 {
                     using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                     {
+                        bytes += stream.Length;
+                        files++;
+                        string name = Path.GetFileName(file);
+                        journals.Add(name.Substring(0, name.LastIndexOf(".jsonl", StringComparison.OrdinalIgnoreCase)));
                         using (var reader = new StreamReader(stream, Encoding.UTF8, false, 1024, true))
                         {
                             string? row;
@@ -104,9 +112,9 @@ namespace TiaOpenness.Shared
                     }
                 }
                 catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
-                { Trace.TraceInformation("Journal changed while reading coverage: " + ex.GetType().Name); }
+                { complete = false; Trace.TraceInformation("Journal changed while reading coverage: " + ex.GetType().Name); }
             }
-            return new JournalCoverage(first, last);
+            return new JournalCoverage(first, last, complete ? bytes : (long?)null, files, journals.Count);
         }
 
         private static bool IsJournal(string path)
@@ -154,6 +162,12 @@ namespace TiaOpenness.Shared
     {
         internal DateTimeOffset? Start { get; }
         internal DateTimeOffset? End { get; }
-        internal JournalCoverage(DateTimeOffset? start, DateTimeOffset? end) { Start = start; End = end; }
+        internal long? Bytes { get; }
+        internal int Files { get; }
+        internal int Journals { get; }
+        internal JournalCoverage(DateTimeOffset? start, DateTimeOffset? end, long? bytes = 0, int files = 0, int journals = 0)
+        {
+            Start = start; End = end; Bytes = bytes; Files = files; Journals = journals;
+        }
     }
 }

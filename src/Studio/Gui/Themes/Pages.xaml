@@ -23,8 +23,6 @@
         <views:AgentPagePill.ContentTemplate>
           <DataTemplate>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <Path Data="M6,1 L11,3 11,7 Q11,10 6,13 Q1,10 1,7 L1,3 Z M3.5,6.5 L5.5,8.5 8.5,5"
-                Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=RadioButton}}" StrokeThickness="1.3" Margin="0,0,5,0"/>
               <TextBlock Text="{l:Tr Shell.ApprovalsPill}" VerticalAlignment="Center"/>
               <Border x:Name="ApprovalsCountBadge" Style="{StaticResource Primer.IdePillCount}" Margin="6,0,0,0"
                 Tag="{Binding DataContext.Approvals.PendingCount,RelativeSource={RelativeSource AncestorType=RadioButton}}">
@@ -40,8 +38,6 @@
         <views:AgentPagePill.ContentTemplate>
           <DataTemplate>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <Path Data="M0,7 L3,7 5,2 8,12 10,7 13,7" StrokeThickness="1.3" Margin="0,0,5,0"
-                Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
               <TextBlock Text="{l:Tr Shell.CallsPill}" VerticalAlignment="Center"/>
               <Border x:Name="CallsCountBadge" Style="{StaticResource Primer.IdePillCount}" Margin="6,0,0,0"
                 Tag="{Binding DataContext.CallStatTotal,RelativeSource={RelativeSource AncestorType=RadioButton}}">
@@ -85,23 +81,44 @@
     <Setter Property="BorderThickness" Value="0,0,1,0"/>
     <Setter Property="Padding" Value="16,10"/>
   </Style>
-  <Style x:Key="Primer.CallButton" TargetType="Button" BasedOn="{StaticResource Primer.TableButton}">
-    <Setter Property="Padding" Value="14,10"/>
+  <Style x:Key="Primer.JournalTableItem" TargetType="ListBoxItem" BasedOn="{StaticResource Primer.TableItem}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBoxItem">
+          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+            <ContentPresenter VerticalAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
     <Style.Triggers>
-      <DataTrigger Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+      <Trigger Property="IsSelected" Value="True">
+        <Setter Property="ux:ContrastSelection.Active" Value="False"/>
         <Setter Property="Background" Value="{DynamicResource Primer.accentSoft}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
-        <Setter Property="BorderThickness" Value="2,0,0,1"/>
+        <Setter Property="BorderThickness" Value="3,0,0,0"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.AuditTableItem" TargetType="ListBoxItem" BasedOn="{StaticResource Primer.JournalTableItem}">
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Selected}" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorErrorSolid}"/>
+        <Setter Property="BorderThickness" Value="3,0,0,0"/>
       </DataTrigger>
     </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.CallButton" TargetType="Button" BasedOn="{StaticResource Primer.TableButton}">
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="14,10"/>
   </Style>
   <Style x:Key="Primer.LogEntryRow" TargetType="Border">
     <Setter Property="Padding" Value="14,10"/>
     <Setter Property="MinHeight" Value="{DynamicResource Ui.RowHeight}"/>
-    <Style.Triggers>
-      <DataTrigger Binding="{Binding Level}" Value="Warning"><Setter Property="Background" Value="{DynamicResource Primer.warnBg}"/></DataTrigger>
-      <DataTrigger Binding="{Binding Level}" Value="Error"><Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/></DataTrigger>
-    </Style.Triggers>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
   </Style>
   <Style x:Key="Primer.PolicySwitchTrack" TargetType="Border">
     <Setter Property="Width" Value="36"/><Setter Property="Height" Value="20"/>
@@ -143,45 +160,144 @@
     </ControlTemplate></Setter.Value></Setter>
   </Style>
   <DataTemplate x:Key="Pages.SettingsSectionLabel">
-    <DockPanel>
-      <Path x:Name="Icon" DockPanel.Dock="Left" Data="{StaticResource Icon.WorkbenchAgent}"
-        Width="14" Height="14" Stretch="Uniform" StrokeThickness="1.4" Margin="0,0,8,0" VerticalAlignment="Center"
-        Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
-      <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-    </DockPanel>
-    <DataTemplate.Triggers>
-      <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="Appearance">
-        <Setter TargetName="Icon" Property="Data" Value="{StaticResource Icon.WorkbenchSun}"/>
-      </DataTrigger>
-      <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="Service">
-        <Setter TargetName="Icon" Property="Data" Value="{StaticResource Icon.WorkbenchProject}"/>
-      </DataTrigger>
-    </DataTemplate.Triggers>
+    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
   </DataTemplate>
-  <DataTemplate x:Key="Pages.ThemePreview">
-    <Border Height="76" BorderThickness="1" BorderBrush="{DynamicResource Primer.inputBorder}"
-      Background="{DynamicResource Primer.bg}" CornerRadius="5" Padding="3">
-      <Grid>
-        <Grid.ColumnDefinitions><ColumnDefinition Width="13"/><ColumnDefinition Width="34"/><ColumnDefinition/></Grid.ColumnDefinitions>
-        <Border Background="{DynamicResource Primer.rail}" Padding="3,8">
-          <StackPanel>
-            <Rectangle Height="6" Fill="{Binding Tag,RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
-            <Rectangle Height="5" Fill="{DynamicResource Primer.textMuted}" Margin="0,5"/>
-            <Rectangle Height="5" Fill="{DynamicResource Primer.textFaint}"/>
-          </StackPanel>
-        </Border>
-        <Border Grid.Column="1" Background="{DynamicResource Primer.sidebar}" Padding="6,10">
-          <StackPanel><Rectangle Height="3" Fill="{DynamicResource Primer.textMuted}"/>
-            <Rectangle Height="3" Fill="{DynamicResource Primer.inputBorder}" Margin="0,5,6,0"/></StackPanel>
-        </Border>
-        <Border Grid.Column="2" CornerRadius="3" Margin="5" Background="{DynamicResource Primer.card}" Padding="7">
-          <StackPanel>
-            <Rectangle Height="4" Width="30" HorizontalAlignment="Left" Fill="{Binding Tag,RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
-            <Rectangle Height="3" Margin="0,6,12,0" Fill="{DynamicResource Primer.inputBorder}"/>
-            <Rectangle Height="3" Margin="0,4,32,0" Fill="{DynamicResource Primer.divider}"/>
-          </StackPanel>
-        </Border>
-      </Grid>
-    </Border>
+  <Style x:Key="Primer.AuditVerificationResult" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Primer.okBg}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    <Style.Triggers><DataTrigger Binding="{Binding VerificationBroken}" Value="True">
+      <Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorErrorBorder}"/>
+    </DataTrigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.AuditProgressBand" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+  </Style>
+  <Style x:Key="Primer.DoctorRow" TargetType="ListBoxItem" BasedOn="{StaticResource Primer.TableItem}">
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+      <ContentPresenter HorizontalAlignment="Stretch"/>
+    </ControlTemplate></Setter.Value></Setter>
+    <Setter Property="AutomationProperties.HelpText" Value="{Binding Detail}"/>
+    <Setter Property="ToolTip" Value="{Binding Detail}"/>
+    <Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="ux:ContrastSelection.Active" Value="False"/></Trigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.DoctorRowSurface" TargetType="Border">
+    <Setter Property="BorderThickness" Value="0,0,0,1"/><Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Style.Triggers><DataTrigger Binding="{Binding Warning}" Value="True">
+      <Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/>
+    </DataTrigger></Style.Triggers>
+  </Style>
+  <DataTemplate x:Key="Pages.DisclosureHeading">
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">
+        <TextBlock.Style>
+          <Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+            <Setter Property="Text" Value="▸"/>
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" Value="True">
+                <Setter Property="Text" Value="▾"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </TextBlock.Style>
+      </TextBlock>
+      <TextBlock Text="{Binding}" Style="{StaticResource Primer.Muted}" FontWeight="Medium" VerticalAlignment="Center"/>
+    </StackPanel>
   </DataTemplate>
+  <Style x:Key="Primer.DoctorEvidence" TargetType="Expander" BasedOn="{StaticResource Primer.Expander}">
+    <Setter Property="HeaderTemplate" Value="{StaticResource Pages.DisclosureHeading}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Expander">
+          <StackPanel>
+            <ToggleButton Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}"
+              AutomationProperties.Name="{Binding Path=(AutomationProperties.Name), RelativeSource={RelativeSource TemplatedParent}}"
+              IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+              FocusVisualStyle="{StaticResource Primer.Focus}" HorizontalAlignment="Left" Cursor="Hand">
+              <ToggleButton.Template>
+                <ControlTemplate TargetType="ToggleButton">
+                  <Border x:Name="LinkSurface" Background="Transparent" Padding="0,2">
+                    <ContentPresenter/>
+                  </Border>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="LinkSurface" Property="Background" Value="{DynamicResource Primer.cardSoft}"/>
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </ToggleButton.Template>
+            </ToggleButton>
+            <ContentPresenter x:Name="Manual" Visibility="Collapsed" Margin="0,4,0,0"/>
+          </StackPanel>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsExpanded" Value="True"><Setter TargetName="Manual" Property="Visibility" Value="Visible"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="Margin" Value="0,6,0,0"/>
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Style.Triggers>
+      <MultiDataTrigger><MultiDataTrigger.Conditions><Condition Binding="{Binding Warning}" Value="True"/>
+        <Condition Binding="{Binding ShowManual}" Value="True"/></MultiDataTrigger.Conditions><Setter Property="Visibility" Value="Visible"/></MultiDataTrigger>
+      <MultiDataTrigger><MultiDataTrigger.Conditions><Condition Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True"/>
+        <Condition Binding="{Binding ShowManual}" Value="True"/></MultiDataTrigger.Conditions><Setter Property="Visibility" Value="Visible"/></MultiDataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.DoctorFailedGroup" TargetType="StackPanel"><Style.Triggers>
+                <DataTrigger Binding="{Binding EnvironmentAttentionCount}" Value="0"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+              </Style.Triggers></Style>
+  <Style x:Key="Primer.DoctorPendingGroup" TargetType="StackPanel"><Style.Triggers>
+                <DataTrigger Binding="{Binding EnvironmentPendingCount}" Value="0"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+              </Style.Triggers></Style>
+  <Style x:Key="Primer.DoctorPassedGroup" TargetType="StackPanel"><Style.Triggers>
+                <DataTrigger Binding="{Binding EnvironmentPassedCount}" Value="0"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+              </Style.Triggers></Style>
+  <Style x:Key="Primer.DoctorFailureIcon" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Ant.colorErrorSolid}"/>
+    <Setter Property="CornerRadius" Value="7"/>
+  </Style>
+  <Style x:Key="Primer.DoctorIssueGroup" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorErrorBorder}"/>
+  </Style>
+  <Style x:Key="Primer.SettingsSubtitle" TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}"><Style.Triggers>
+              <Trigger Property="ux:Ux.Narrow" Value="True"><Setter Property="Visibility" Value="Collapsed"/></Trigger>
+            </Style.Triggers></Style>
+  <Style x:Key="Primer.SafetyReview" TargetType="Button" BasedOn="{StaticResource Primer.Button.Primary.Small}"><Style.Triggers>
+                    <DataTrigger Binding="{Binding Visibility, ElementName=SaveTargetChanges}" Value="Visible"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                  </Style.Triggers></Style>
+  <Style x:Key="Primer.StorageRow" TargetType="Border">
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    <Setter Property="Padding" Value="20,12"/>
+  </Style>
+  <Style x:Key="Primer.SettingsDivider" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Primer.divider}"/>
+  </Style>
+  <Style x:Key="Primer.ProductIcon" TargetType="Border">
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
+  </Style>
+  <Style x:Key="Primer.ActionDialog" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+    <Setter Property="CornerRadius" Value="14"/>
+  </Style>
+  <Style x:Key="Primer.ActionDialogIcon" TargetType="Border" BasedOn="{StaticResource Primer.Tag.Accent}">
+    <Setter Property="CornerRadius" Value="7"/>
+  </Style>
+  <Style x:Key="Primer.LogLevelToken" TargetType="TextBlock" BasedOn="{StaticResource Primer.LogLevelText}">
+    <Setter Property="Text" Value="—"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Level}" Value="{x:Static ux:LogLevel.Info}">
+        <Setter Property="Text" Value="INFO"/><Setter Property="Foreground" Value="{DynamicResource Primer.textMuted}"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Level}" Value="{x:Static ux:LogLevel.Warning}"><Setter Property="Text" Value="WARN"/></DataTrigger>
+      <DataTrigger Binding="{Binding Level}" Value="{x:Static ux:LogLevel.Error}"><Setter Property="Text" Value="ERROR"/></DataTrigger>
+      <DataTrigger Binding="{Binding Level}" Value="{x:Static ux:LogLevel.Debug}"><Setter Property="Text" Value="DEBUG"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
 </ResourceDictionary>

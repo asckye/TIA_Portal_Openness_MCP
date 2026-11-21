@@ -139,10 +139,14 @@ public sealed class LogPresentationTests(WpfContext wpf)
                     var messages = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(view)
                         .Where(t => t.DataContext is ResultPresentation.LogRow row && t.Text == row.Message).ToArray();
                     Assert.Equal(5, messages.Length);
-                    string[] tokens = ["Primer.accent", "Primer.warn", "Primer.diffRed", "Primer.textMuted", "Primer.text"];
+                    string[] tokens = ["Primer.textMuted", "Primer.warn", "Primer.diffRed", "Primer.textMuted", "Primer.text"];
                     for (int i = 0; i < messages.Length; i++)
-                        Assert.Equal(((SolidColorBrush)Application.Current.FindResource(tokens[i])).Color,
-                            ((SolidColorBrush)messages[i].Foreground).Color);
+                    {
+                        var level = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>((Grid)messages[i].Parent)
+                            .Single(text => Grid.GetColumn(text) == 1);
+                        Assert.Equal(((SolidColorBrush)Application.Current.FindResource(tokens[i])).Color, ((SolidColorBrush)level.Foreground).Color);
+                        Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Primer.text")).Color, ((SolidColorBrush)messages[i].Foreground).Color);
+                    }
                 }
             }
             finally { window.Close(); ThemeManager.Current.Theme = previous; }
