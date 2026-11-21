@@ -80,6 +80,19 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
         IsRunning = true;
         IsMock = forceMock;
     }
+    public IReadOnlyList<PortalProcessInfo> Processes { get; set; } = [];
+    public Dictionary<int, ProjectLeaseState> ProcessLeases { get; } = [];
+    public Task<IReadOnlyList<ProjectProcessObservation>> ListProcessesAsync() => Task.FromResult<IReadOnlyList<ProjectProcessObservation>>(
+        Processes.Select(p => new ProjectProcessObservation(p, ProcessLeases.GetValueOrDefault(p.ProcessId))).ToArray());
+    public IReadOnlyList<SoftwareUnitInfo> Units { get; set; } = [];
+    public Task<IReadOnlyList<SoftwareUnitInfo>> ListUnitsAsync(string plc) => Task.FromResult(Units);
+    public IReadOnlyList<string> Screens { get; set; } = [];
+    public Task<IReadOnlyList<string>?> ListScreensAsync(string hmi) => Task.FromResult<IReadOnlyList<string>?>(Screens);
+    public List<string> HmiTagNames { get; } = [];
+    public List<string> AlarmNames { get; } = [];
+    public Task<(int? Tags, int? Alarms)> HmiCountsAsync(DeviceInfo hmi) => Task.FromResult<(int?, int?)>((HmiTagNames.Count, AlarmNames.Count));
+    public IReadOnlyList<BlockMember> Members { get; set; } = [];
+    public Task<IReadOnlyList<BlockMember>> ReadInterfaceAsync(string plc, string block) => Task.FromResult(Members);
     public Func<int?, Task<SessionState>>? ConnectHandler { get; set; }
     public Task<SessionState> ConnectAsync(bool withUserInterface, int? processId = null)
     {
@@ -135,9 +148,16 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
     public Task<WorkspaceStatusReport> VcStatusAsync(string? workspaceName, bool changedOnly)
         => Reply("VcStatus", new WorkspaceStatusReport { Items = StatusItems, Total = StatusItems.Count, Differing = DifferingItems },
             workspaceName, changedOnly);
+    public WorkspaceDiff? DiffFixture { get; set; }
     public Task<WorkspaceDiff> VcDiffAsync(string? workspaceName, string? file)
-        => Reply("VcDiff", new WorkspaceDiff { Available = true, Lines = [new() { Kind = DiffLineKind.Added, Text = "+fixture" }] }, workspaceName, file);
+        => Reply("VcDiff", DiffFixture ?? new WorkspaceDiff { Available = true, Lines = [new() { Kind = DiffLineKind.Added, Text = "+fixture" }] },
+            workspaceName, file);
+    public Func<SyncDirection, bool, Task<SyncResult>>? SyncHandler { get; set; }
     public Task<SyncResult> VcSyncAsync(string? workspaceName, SyncDirection direction, bool dryRun)
-        => Reply("VcSync", new SyncResult { DryRun = dryRun, Direction = direction, Failed = FailedSynchronizations }, workspaceName, direction, dryRun);
+    {
+        Record("VcSync", workspaceName, direction, dryRun);
+        return SyncHandler?.Invoke(direction, dryRun)
+            ?? Task.FromResult(new SyncResult { DryRun = dryRun, Direction = direction, Failed = FailedSynchronizations });
+    }
     public void Dispose() => Disposed = true;
 }

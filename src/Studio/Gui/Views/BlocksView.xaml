@@ -3,11 +3,17 @@
   xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization">
   <Grid>
     <Grid x:Name="BlockBackdrop">
-    <Border Style="{StaticResource Primer.Plain}" Margin="28,28,28,0" MaxWidth="920" x:Name="BlocksCard">
+    <Grid><Grid.ColumnDefinitions><ColumnDefinition MaxWidth="968"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions>
+    <Border Style="{StaticResource Primer.ProjectLayoutSurface}" Margin="24,24,24,0" MaxWidth="920" x:Name="BlocksCard">
       <Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <Border Style="{StaticResource Primer.Plain}" x:Name="BlocksHeaderCard" MinHeight="44">
-          <StackPanel>
+        <Border Style="{StaticResource Primer.ProjectLayoutSurface}" x:Name="BlocksHeaderCard" MinHeight="44">
+          <DockPanel>
+            <Button x:Name="BlockReviewButton" DockPanel.Dock="Right" VerticalAlignment="Top" Content="{l:Tr Project.PendingReview}"
+              AutomationProperties.Name="{l:Tr Project.PendingReview}" Style="{StaticResource Primer.Link}" Visibility="Collapsed"/>
+            <Button DockPanel.Dock="Right" VerticalAlignment="Top" Content="{l:Tr Project.DownloadOptions}" Click="OnDownload"
+              AutomationProperties.Name="{l:Tr Project.DownloadOptions}" Style="{StaticResource Primer.IdeToolButton}"/>
+            <StackPanel>
             <WrapPanel VerticalAlignment="Center">
               <Border DataContext="{Binding Engineering.FocusedBlock}" Style="{StaticResource Primer.BlkBadge}" Margin="0,0,8,0"
                 Visibility="{Binding IsFocused,Converter={StaticResource BoolToVisibility},FallbackValue=Collapsed}">
@@ -33,7 +39,9 @@
             </WrapPanel>
             <TextBlock x:Name="BlocksSummary" Text="{Binding Tag.BlocksSummary,ElementName=PageRoot}" Style="{StaticResource Project.Caption}"
               TextWrapping="Wrap" TextTrimming="None" Margin="0,4,0,0" Visibility="{Binding Tag.HasSelection,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
-          </StackPanel>
+            <TextBlock Style="{StaticResource Project.Caption}" Text="{Binding Engineering.DocumentComment}" TextWrapping="Wrap"/>
+            </StackPanel>
+          </DockPanel>
         </Border>
         <StackPanel Grid.Row="1">
           <ListBox x:Name="BlockChooser" ItemsSource="{Binding Engineering.BlocksView}" AutomationProperties.Name="{l:Tr Tree.ProgramBlocks}"
@@ -52,19 +60,160 @@
           <ux:PrefillMarker x:Name="FilterMarker" Tag="BlockFilter" ClearRequested="OnClearPrefill"/>
           <ux:PrefillMarker x:Name="SelectionMarker" Tag="BlockSelection" ClearRequested="OnClearPrefill"/>
         </StackPanel>
-        <Grid Grid.Row="2" x:Name="Editor" Margin="0,8,0,20">
-          <Border Style="{StaticResource Primer.ProjectCodePanel}" x:Name="CodePanel" Padding="0"
+        <Grid Grid.Row="2" x:Name="Editor" Margin="0,20,0,20">
+          <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
+            <Border x:Name="LadderToolbar" Style="{StaticResource Primer.ProjectLadderHead}" Padding="14,10" Margin="0,0,0,12">
+              <ux:PageHeadPanel Spacing="8">
+                <WrapPanel VerticalAlignment="Center">
+                  <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
+                    <TextBlock Text="{Binding Engineering.FocusedBlock.Language}" FontWeight="SemiBold" Margin="0,0,4,0"/>
+                    <TextBlock Text="{l:Tr Project.GraphTitle}" FontWeight="SemiBold"/>
+                  </StackPanel>
+                  <DockPanel VerticalAlignment="Center">
+                    <TextBlock DockPanel.Dock="Left" Text="·" Style="{StaticResource Primer.Muted.textFaint}" Margin="0,0,4,0"/>
+                    <TextBlock Text="{l:Tr Project.LadHelp}" Style="{StaticResource Primer.Muted.textFaint}" TextWrapping="Wrap"/>
+                  </DockPanel>
+                </WrapPanel>
+                <WrapPanel VerticalAlignment="Center">
+                  <Border Style="{StaticResource Primer.SegmentGroup}" VerticalAlignment="Center" Margin="0,2,8,2">
+                    <StackPanel Orientation="Horizontal">
+                      <RadioButton x:Name="VisualTab" Content="{l:Tr Project.LadVisual}" AutomationProperties.Name="{l:Tr Project.LadVisual}"
+                        Click="OnLadderMode" IsChecked="True" Style="{StaticResource Primer.Segment}"/>
+                      <RadioButton x:Name="XmlTab" Content="{Binding Engineering.LogicModeLabel}" AutomationProperties.Name="{Binding Engineering.LogicModeLabel}"
+                        Click="OnLadderMode" Style="{StaticResource Primer.Segment}"/>
+                    </StackPanel>
+                  </Border>
+                  <Button x:Name="ViewLadderAtlas" Click="OnViewLadderAtlas" Content="{l:Tr Project.GenerateViewAtlas}"
+                    IsEnabled="{Binding Atlas.CanViewBlock,ElementName=PageRoot}" AutomationProperties.Name="{l:Tr Project.GenerateViewAtlas}"
+                    Style="{StaticResource Primer.Button.Secondary.Small}" Margin="0,2"/>
+                </WrapPanel>
+              </ux:PageHeadPanel>
+            </Border>
+            <ScrollViewer x:Name="LadderPanel" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <StackPanel>
+                <TextBlock Text="{Binding Engineering.SourceStatus}" Style="{StaticResource Project.SourceNotice}"/>
+                <ItemsControl ItemsSource="{Binding Engineering.Networks}">
+                  <ItemsControl.ItemTemplate><DataTemplate>
+                    <Border Style="{StaticResource Primer.ProjectResultCard}" Padding="0" Margin="0,0,0,12">
+                      <StackPanel>
+                        <Border Style="{StaticResource Primer.ProjectNetworkHeader}" Padding="14,8">
+                          <DockPanel>
+                            <Grid DockPanel.Dock="Right" Margin="8,0,0,0">
+                              <TextBlock Text="{Binding CallIdentity}" Style="{StaticResource Project.Caption}"/>
+                              <StackPanel Orientation="Horizontal" Style="{StaticResource Project.NetworkLanguage}">
+                                <TextBlock Text="{Binding Language}" Style="{StaticResource Project.Caption}"/>
+                                <TextBlock Text=" · " Style="{StaticResource Project.Caption}"/><TextBlock Text="{l:Tr Calls.Execution.ReadOnly}" Style="{StaticResource Project.Caption}"/>
+                              </StackPanel>
+                            </Grid>
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding NumberLabel}" Style="{StaticResource Project.LadderOperand}" FontWeight="SemiBold" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding Title}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                          </DockPanel>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding Rungs}" Margin="28,16">
+                          <ItemsControl.ItemTemplate><DataTemplate>
+                            <Grid Margin="0,5">
+                              <TextBlock Text="{Binding Description}" Style="{StaticResource Primer.Mono}" Margin="8,12"
+                                Visibility="{Binding IsText,Converter={StaticResource BoolToVisibility}}"/>
+                              <Border Style="{StaticResource Primer.ProjectRail}" Padding="0,6" ToolTip="{Binding Description}"
+                                Visibility="{Binding IsBox,Converter={StaticResource BoolToVisibility}}">
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                                  <Grid>
+                                    <Grid.ColumnDefinitions>
+                                      <ColumnDefinition Width="196"/><ColumnDefinition Width="130"/><ColumnDefinition Width="130"/><ColumnDefinition Width="236"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="30"/>
+                                      <RowDefinition Height="26"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                    <TextBlock Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Instance}" Style="{StaticResource Project.LadderInstance}"/>
+                                    <Border Grid.Row="1" Grid.RowSpan="3" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Primer.ProjectFunctionBox}"/>
+                                    <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Primer.ProjectFunctionTitle}">
+                                      <TextBlock Text="{Binding Box}" Style="{StaticResource Project.LadderOperand}" TextTrimming="CharacterEllipsis"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" ToolTip="{Binding Box}"/>
+                                    </Border>
+                                    <Grid Grid.Row="2">
+                                      <Border Height="1" Style="{StaticResource Primer.ProjectWire}"/>
+                                      <TextBlock Text="{Binding Enable}" Style="{StaticResource Project.LadderArgument}" Background="{DynamicResource Primer.card}"
+                                        HorizontalAlignment="Center" ToolTip="{Binding Enable}" TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="EN" Style="{StaticResource Project.LadderPin}" Margin="8,0"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="2" Text="ENO" Style="{StaticResource Project.LadderPin}" HorizontalAlignment="Right" Margin="8,0"/>
+                                    <ItemsControl Grid.Row="3" Grid.ColumnSpan="2" ItemsSource="{Binding Inputs}" Margin="0,0,0,8">
+                                      <ItemsControl.ItemTemplate><DataTemplate>
+                                        <Grid Height="26">
+                                          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="60"/><ColumnDefinition Width="130"/></Grid.ColumnDefinitions>
+                                          <TextBlock Text="{Binding Parameter}" Style="{StaticResource Project.LadderArgument}" HorizontalAlignment="Right"/>
+                                          <Border Grid.Column="1" Height="1" Style="{StaticResource Primer.ProjectWire}"/>
+                                          <TextBlock Grid.Column="2" Text="{Binding Label}" Style="{StaticResource Project.LadderPin}" Margin="8,0"/>
+                                        </Grid>
+                                      </DataTemplate></ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <ItemsControl Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding Outputs}" Margin="0,0,0,8">
+                                      <ItemsControl.ItemTemplate><DataTemplate>
+                                        <Grid Height="26">
+                                          <Grid.ColumnDefinitions><ColumnDefinition Width="130"/><ColumnDefinition Width="65"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                          <TextBlock Text="{Binding Label}" Style="{StaticResource Project.LadderPin}" HorizontalAlignment="Right" Margin="8,0"/>
+                                          <Border Grid.Column="1" Height="1" Style="{StaticResource Primer.ProjectWire}"/>
+                                          <TextBlock Grid.Column="2" Text="{Binding Parameter}" Style="{StaticResource Project.LadderArgument}"/>
+                                        </Grid>
+                                      </DataTemplate></ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <StackPanel Grid.Row="4" Grid.ColumnSpan="4" Margin="14,6"
+                                      Visibility="{Binding HasUnclassified,Converter={StaticResource BoolToVisibility}}">
+                                      <TextBlock Text="{l:Tr Project.PinDirectionUnknown}" Style="{StaticResource Project.Caption}"/>
+                                      <ItemsControl ItemsSource="{Binding Unclassified}"><ItemsControl.ItemTemplate><DataTemplate>
+                                        <TextBlock Style="{StaticResource Primer.Mono}"><Run Text="{Binding Name,Mode=OneWay}"/> = <Run Text="{Binding Parameter,Mode=OneWay}"/></TextBlock>
+                                      </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                                    </StackPanel>
+                                  </Grid>
+                                </Viewbox>
+                              </Border>
+                              <Border Style="{StaticResource Primer.ProjectRail}" Padding="0,8" MinHeight="84"
+                                Visibility="{Binding HasElements,Converter={StaticResource BoolToVisibility}}" ToolTip="{Binding Description}">
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left"><ItemsControl ItemsSource="{Binding Elements}">
+                                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate><DataTemplate>
+                                    <StackPanel MinWidth="166">
+                                      <TextBlock Text="{Binding Operand}" Style="{StaticResource Project.LadderOperand}" HorizontalAlignment="Center" Margin="8,0"/>
+                                      <Grid Height="38">
+                                        <Border Height="1.6" VerticalAlignment="Center" Style="{StaticResource Primer.ProjectWire}"/>
+                                        <Grid Background="{DynamicResource Primer.card}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                          <Path Style="{StaticResource Project.LadderContact}" AutomationProperties.Name="{Binding Symbol}"/>
+                                          <TextBlock Text="{Binding CoilMark}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            FontSize="{DynamicResource Ui.FontSize.9}" Style="{StaticResource Primer.Mono}"/>
+                                        </Grid>
+                                      </Grid>
+                                      <TextBlock Text="{Binding Address}" Style="{StaticResource Project.Caption}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                  </DataTemplate></ItemsControl.ItemTemplate>
+                                </ItemsControl></Viewbox>
+                              </Border>
+                            </Grid>
+                          </DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </ScrollViewer>
+          <Border Grid.Row="1" Style="{StaticResource Primer.ProjectCodePanel}" x:Name="CodePanel" Padding="0"
             HorizontalAlignment="Stretch" VerticalAlignment="Top">
             <DockPanel>
               <Border Style="{StaticResource Primer.ProjectHeaderLine}" DockPanel.Dock="Top" Padding="16,9">
                 <DockPanel>
+                  <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Visibility="{Binding Visibility,ElementName=LadderToolbar}">
+                  <Button Click="OnExportXml" Content="{l:Tr Project.ExportXml}" AutomationProperties.Name="{l:Tr Project.ExportXml}"
+                    Visibility="{Binding Engineering.CanExportXml,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.IdeToolButton}"/>
+                  <Button Click="OnOpenXml" Content="{l:Tr Project.OpenXml}" AutomationProperties.Name="{l:Tr Project.OpenXml}"
+                    Style="{StaticResource Primer.IdeToolButton}"/>
+                  </StackPanel>
                   <TextBlock DockPanel.Dock="Right" Text="{Binding Engineering.LineCountLabel}" Style="{StaticResource Project.Caption}"/>
                   <TextBlock Text="{Binding Engineering.SourcePath}" Style="{StaticResource Project.Caption}" ToolTip="{Binding Engineering.SourcePath}"/>
                 </DockPanel>
               </Border>
               <Grid>
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                  <ItemsControl x:Name="SourceRows" Margin="14,12" ItemsSource="{Binding Engineering.SourceLines}" AlternationCount="2147483647">
+                  <ItemsControl x:Name="SourceRows" Margin="14,12" ItemsSource="{Binding Engineering.TextLines}" AlternationCount="2147483647">
                     <ItemsControl.ItemTemplate><DataTemplate>
                       <DockPanel MinHeight="24" VerticalAlignment="Center">
                         <TextBlock Style="{StaticResource Primer.CodeLineNumber}"
@@ -81,38 +230,113 @@
               </Grid>
             </DockPanel>
           </Border>
+          </Grid>
           <Border x:Name="InterfacePanel" Style="{StaticResource Primer.Container}" VerticalAlignment="Top" Padding="20" Visibility="Collapsed">
-            <TextBlock Text="{l:Tr Project.NoInterface}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+            <StackPanel>
+              <DataGrid ItemsSource="{Binding Engineering.Members}" IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False"
+                AutomationProperties.Name="{l:Tr Project.Interface}" HeadersVisibility="Column" ColumnHeaderStyle="{StaticResource Project.TagHeader}"
+                Visibility="{Binding Engineering.HasMembers,Converter={StaticResource BoolToVisibility}}">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="{l:Tr Project.Section}" Binding="{Binding Section}" Width="*"/>
+                  <DataGridTextColumn Header="{l:Tr Primer.Name}" Binding="{Binding Name}" Width="1.4*"/>
+                  <DataGridTextColumn Header="{l:Tr Primer.Type}" Binding="{Binding Datatype}" Width="*"/>
+                  <DataGridTextColumn Header="{l:Tr Project.Comment}" Binding="{Binding Comment}" Width="1.5*"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <TextBlock Text="{l:Tr Project.NoInterface}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"
+                Visibility="{Binding Engineering.HasMembers,Converter={StaticResource NotBoolToVisibility}}"/>
+              <Button Content="{l:Tr Project.OpenXml}" Click="OnOpenXml" AutomationProperties.Name="{l:Tr Project.OpenXml}"
+                Style="{StaticResource Primer.IdeToolButton}" HorizontalAlignment="Left" Margin="0,8,0,0"/>
+            </StackPanel>
           </Border>
         </Grid>
-        <Border x:Name="AtlasFooter" Style="{StaticResource Primer.FooterStrip}" Grid.Row="3" Visibility="{Binding Atlas.HasOutputOrProgress,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
-          <Border x:Name="AtlasBar" Padding="12,8" Visibility="{Binding Atlas.HasOutputOrProgress,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.AtlasState}">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="8"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-              </Grid.ColumnDefinitions>
-              <Ellipse Width="8" Height="8" Fill="{Binding Path=(TextElement.Foreground),RelativeSource={RelativeSource AncestorType=Border}}"/>
-              <TextBlock Grid.Column="1" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"
-                AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Atlas.Label,ElementName=PageRoot}" Text="{Binding Atlas.Label,ElementName=PageRoot}" FontSize="{DynamicResource Ui.FontSize.Caption}" FontWeight="SemiBold" Margin="12,0" VerticalAlignment="Center"/>
-              <TextBlock Grid.Column="2" Text="{Binding Atlas.Detail,ElementName=PageRoot}" ToolTip="{Binding Atlas.Detail,ElementName=PageRoot}" Style="{StaticResource Primer.Mono}"/>
-              <Button Grid.Column="3" Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}" Click="OnCancelAtlas" Style="{StaticResource Primer.Secondary}" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
-              <ProgressBar Grid.Column="2" IsIndeterminate="{Binding Atlas.Indeterminate,ElementName=PageRoot}" Width="120" Height="4" Maximum="100" Value="{Binding Atlas.Percent,ElementName=PageRoot,Mode=OneWay}" Margin="12,0,0,0" Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
-              <Button AutomationProperties.Name="{l:Tr Common.Open}" Grid.Column="3" Content="{l:Tr Common.Open}" Click="OnOpenAtlas" Style="{StaticResource Primer.Secondary}" Margin="12,0,0,0" Visibility="{Binding Atlas.Done,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}"/>
-            </Grid>
-          </Border>
-        </Border>
       </Grid>
     </Border>
+    </Grid>
+    <DockPanel x:Name="NodeDocument" Visibility="Collapsed">
+      <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}"><DockPanel>
+        <Border DockPanel.Dock="Left" x:Name="NodeBadge" Style="{StaticResource Primer.ProjectNodeBadge}" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+          <TextBlock x:Name="NodeKind" FontWeight="SemiBold" Style="{StaticResource Primer.Mono}"/>
+        </Border>
+        <Border x:Name="HmiReadOnlyBadge" DockPanel.Dock="Right" Style="{StaticResource Primer.Tag}" VerticalAlignment="Center">
+          <TextBlock Text="{l:Tr Project.ReadOnlyHmi}"/>
+        </Border>
+        <TextBlock x:Name="NodeSubtitle" DockPanel.Dock="Right" Style="{StaticResource Project.Caption}" Margin="8,0" VerticalAlignment="Center"/>
+        <TextBlock x:Name="NodeTitle" Style="{StaticResource Primer.Mono}" FontWeight="SemiBold"/>
+      </DockPanel></Border>
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition MaxWidth="948"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions><StackPanel>
+      <Border x:Name="HmiMetrics" Style="{StaticResource Primer.ProjectResultCard}" Margin="24,24,24,0" MaxWidth="900" Padding="0">
+        <UniformGrid Columns="3">
+          <StackPanel Margin="16"><TextBlock Text="{l:Tr Project.HmiScreens}" Style="{StaticResource Project.Caption}"/>
+            <TextBlock Text="{Binding Engineering.HmiScreens,TargetNullValue=—}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.18}" FontWeight="SemiBold"/>
+          </StackPanel>
+          <StackPanel Margin="16"><TextBlock Text="{l:Tr Project.HmiTags}" Style="{StaticResource Project.Caption}"/>
+            <TextBlock Text="{Binding Engineering.HmiTags,TargetNullValue=—}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.18}" FontWeight="SemiBold"/>
+          </StackPanel>
+          <StackPanel Margin="16"><TextBlock Text="{l:Tr Project.HmiAlarms}" Style="{StaticResource Project.Caption}"/>
+            <TextBlock Text="{Binding Engineering.HmiAlarms,TargetNullValue=—}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.18}" FontWeight="SemiBold"/>
+          </StackPanel>
+        </UniformGrid>
+      </Border>
+      <Border Style="{StaticResource Primer.ProjectResultCard}" Margin="24" Padding="20" MaxWidth="900">
+        <StackPanel>
+          <TextBlock x:Name="NodeHeading" Style="{StaticResource Primer.ContainerTitle}"/>
+          <TextBlock x:Name="NodeDescription" Style="{StaticResource Project.Caption}"/>
+          <ItemsControl x:Name="UnitMembers" ItemsSource="{Binding Engineering.SelectedUnit.Children}">
+            <ItemsControl.ItemTemplate><DataTemplate>
+              <Button Click="OnOpenUnitMember" HorizontalAlignment="Left" Style="{StaticResource Primer.Button.Primary.Small}" Margin="0,8,0,0"
+                AutomationProperties.Name="{Binding Name}" ToolTip="{l:Tr Project.OpenUnitBlock}">
+                <TextBlock><Run Text="{l:Tr Project.OpenUnitBlock}"/> <Run Text="{Binding Name,Mode=OneWay}"/> →</TextBlock>
+              </Button>
+            </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <ItemsControl x:Name="NodeItems"><ItemsControl.ItemTemplate><DataTemplate>
+            <Border Style="{StaticResource Primer.ProjectHeaderLine}" Padding="16,10"><TextBlock Text="{Binding}" Style="{StaticResource Primer.Mono}"/></Border>
+          </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+          <TextBlock Text="{Binding Engineering.UnitSourceFile}" Style="{StaticResource Project.Caption}" TextWrapping="Wrap"/>
+          <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <TextBlock Text="{Binding Engineering.UnitSource}" Style="{StaticResource Primer.Mono}"/>
+          </ScrollViewer>
+        </StackPanel>
+      </Border>
+      </StackPanel></Grid></ScrollViewer>
+    </DockPanel>
     <ux:WorkbenchState x:Name="EmptyBlocks" Style="{StaticResource Primer.Workbench.EmptyState}" Visibility="Collapsed"
-      Title="{l:Tr Shell.EmptyBlocks}" Description="{l:Tr Shell.ImportBlocksHint}" ActionLabel="{l:Tr Shell.ImportBlocks}" ActionCommand="{Binding Engineering.Import}"/>
+      Title="{l:Tr Shell.EmptyBlocks}" Description="{l:Tr Shell.ImportBlocksHint}" ActionLabel="{l:Tr Shell.ImportBlocks}"/>
     <ux:WorkbenchState x:Name="SourceError" Style="{StaticResource Primer.Workbench.ErrorState}" Visibility="Collapsed"
       Title="{Binding Engineering.SourceErrorTitle}" Description="{Binding Engineering.SourceStatus}" Details="{Binding Engineering.SourcePath}"
       Hint="{l:Tr Shell.SourceHint}" ActionLabel="{l:Tr Shell.RetryRead}" ActionCommand="{Binding Engineering.RetrySource}"
       ExportCommand="{x:Static ux:WorkbenchCommands.ExportDiagnostics}"/>
     </Grid>
+    <Border x:Name="AtlasFooter" Style="{StaticResource Primer.FooterStrip}" VerticalAlignment="Bottom"
+      Visibility="{Binding Atlas.Visible,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
+      <Border x:Name="AtlasBar" Padding="16,10" Style="{StaticResource Primer.ProjectAtlasState}">
+        <DockPanel>
+          <Button DockPanel.Dock="Right" Content="×" AutomationProperties.Name="{l:Tr Access.CloseOptions}" Click="OnDismissAtlas"
+            Style="{StaticResource Primer.IdeToolButton}"/>
+          <Button DockPanel.Dock="Right" Content="{l:Tr Project.RetryAtlas}" AutomationProperties.Name="{l:Tr Project.RetryAtlas}" Click="OnRetryAtlas"
+            Visibility="{Binding Atlas.Failed,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Button.Primary.Small}"/>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+            Visibility="{Binding Atlas.Done,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
+            <Button Content="{l:Tr Project.OpenAtlas}" AutomationProperties.Name="{l:Tr Project.OpenAtlas}" Click="OnOpenAtlas"
+              Style="{StaticResource Primer.Button.Primary.Small}"/>
+            <Button Content="{l:Tr Project.OpenFolder}" AutomationProperties.Name="{l:Tr Project.OpenFolder}" Click="OnAtlasFolder"
+              Style="{StaticResource Primer.Button.Secondary.Small}" Margin="6,0"/>
+          </StackPanel>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+            Visibility="{Binding Atlas.Running,ElementName=PageRoot,Converter={StaticResource BoolToVisibility}}">
+            <ProgressBar IsIndeterminate="{Binding Atlas.Indeterminate,ElementName=PageRoot}" Width="120" Height="4"
+              Value="{Binding Atlas.Percent,ElementName=PageRoot,Mode=OneWay}" Margin="8,0"/>
+            <Button Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}" Click="OnCancelAtlas"
+              Style="{StaticResource Primer.Button.Secondary.Small}"/>
+          </StackPanel>
+          <TextBlock DockPanel.Dock="Left" Text="{Binding Atlas.Label,ElementName=PageRoot}" FontWeight="SemiBold" Margin="0,0,8,0"
+            VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Atlas.Label,ElementName=PageRoot}"/>
+          <TextBlock Text="{Binding Atlas.Detail,ElementName=PageRoot}" ToolTip="{Binding Atlas.Detail,ElementName=PageRoot}" Style="{StaticResource Project.Caption}"/>
+        </DockPanel>
+      </Border>
+    </Border>
     <views:EngineeringOptionsView x:Name="Options"/>
   </Grid>
 </UserControl>

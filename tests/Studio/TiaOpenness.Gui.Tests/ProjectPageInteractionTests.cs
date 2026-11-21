@@ -318,7 +318,7 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
                 var host = window;
                 var bar = (Border)ProjectPageTestSupport.Find(window, "ProjectToolbar");
                 var buttons = WorkbenchRenderFeaturePagesTests.Descendants<Button>(bar).ToList();
-                Assert.Equal(3, buttons.Count);
+                Assert.Equal(5, buttons.Count);
                 Assert.Equal(44, bar.ActualHeight);
                 Assert.All(buttons, button => Assert.Equal(28, button.ActualHeight));
                 UnifiedDesktopTests.ClickControl(window.OperationsContent.ExportMenuButton);

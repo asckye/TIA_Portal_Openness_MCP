@@ -14,15 +14,31 @@ public partial class EngineeringOptionsView : UserControl
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void Show(string section)
     {
-        _focus?.Dispose();
-        foreach (var item in new[] { ProjectOptions, ExportOptions, InspectOptions, WorkspaceOptions })
-            item.Visibility = item.Name == section + "Options" ? Visibility.Visible : Visibility.Collapsed;
-        string key = section switch { "Project" => "Project.Label", "Export" => "Primer.Transfer", "Inspect" => "Toolbar.Inspect", _ => "Primer.NewWorkspace" };
-        OptionsTitle.SetBinding(TextBlock.TextProperty, Localization.TrExtension.CreateBinding(key));
+        SelectSection(section);
+        if (IsOpen) return;
         OptionsOverlay.Visibility = Visibility.Visible;
         _focus = new Controls.ModalPane(OptionsOverlay, OptionsTitle, Hide);
     }
-    internal void Hide() { OptionsOverlay.Visibility = Visibility.Collapsed; _focus?.Dispose(); _focus = null; }
+    internal string? CurrentSection { get; private set; }
+    private void OnSection(object sender, RoutedEventArgs e) => SelectSection((string)((RadioButton)sender).Tag);
+    private void SelectSection(string section)
+    {
+        if (CurrentSection == "Download" && section != CurrentSection) Model.Engineering.ClearDownloadPlan();
+        CurrentSection = section;
+        foreach (var item in new[] { ProjectOptions, ExportOptions, ImportOptions, DownloadOptions, InspectOptions, WorkspaceOptions })
+            item.Visibility = item.Name == section + "Options" ? Visibility.Visible : Visibility.Collapsed;
+        foreach (RadioButton tab in OptionTabs.Children) tab.IsChecked = Equals(tab.Tag, section);
+        TabBar.Visibility = section == "Workspace" ? Visibility.Collapsed : Visibility.Visible;
+        OptionsTitle.SetBinding(TextBlock.TextProperty, section == "Workspace"
+            ? Localization.TrExtension.CreateBinding("Primer.NewWorkspace") : Localization.TrExtension.CreateBinding("Project.OptionsTitle"));
+    }
+    internal void Hide()
+    {
+        if (CurrentSection == "Download") Model.Engineering.ClearDownloadPlan();
+        OptionsOverlay.Visibility = Visibility.Collapsed;
+        _focus?.Dispose();
+        _focus = null;
+    }
     internal void SetControlPrefillMarker(bool pending)
         => PatternMarker.SetPending(pending);
     internal void SetMcpPrefillMarkers(bool project, bool export, bool import)
@@ -39,7 +55,21 @@ public partial class EngineeringOptionsView : UserControl
         if (e.NewValue is ViewModels.DeviceNode { Device: not null } node) Model.Engineering.SelectedDevice = node.Device;
     }
 
+    private async void OnPickProcess(object sender, RoutedEventArgs e) => await Model.Session.ChooseProcessAsync(false);
+
+    private void OnOpenConnection(object sender, RoutedEventArgs e)
+    {
+        var command = string.IsNullOrWhiteSpace(Model.Session.ProjectPath) ? Model.Session.Connect : Model.Session.OpenProject;
+        if (command.CanExecute(null)) command.Execute(null);
+    }
+    private async void OnReloadTree(object sender, RoutedEventArgs e) => await Model.RefreshDeviceTreeAsync();
     private void OnBrowseProject(object sender, RoutedEventArgs e) => Model.Session.BrowseProject();
+
+    private void OnScope(object sender, RoutedEventArgs e) => Model.Engineering.AllSoftware = Equals(((RadioButton)sender).Tag, "software");
+    private async void OnReadAdapters(object sender, RoutedEventArgs e) => await Model.Engineering.ReadDownloadAdaptersAsync();
+    private async void OnPreflight(object sender, RoutedEventArgs e) => await Model.Engineering.PreviewDownloadAsync();
+    private async void OnSubmitDownload(object sender, RoutedEventArgs e) => await Model.Engineering.SubmitDownloadAsync(Hide);
+    private void OnResetRules(object sender, RoutedEventArgs e) => Model.Engineering.NamePattern = EngineeringViewModel.DefaultNamePattern;
 
     private void OnBrowseOutput(object sender, RoutedEventArgs e) => Model.Engineering.BrowseOutput();
 

@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Gui.Common;
+using TiaOpenness.Gui.Services;
 
 namespace TiaOpenness.Gui.ViewModels;
 
@@ -64,6 +65,13 @@ public sealed class DeviceNode : ObservableObject
         // Keep the PLC and its two navigation links in place as block groups change.
         while (_plcChildren.Count > 0 && _plcChildren[0] is BlockNode) _plcChildren.RemoveAt(0);
         for (int index = 0; index < blocks.Count; index++) _plcChildren.Insert(index, blocks[index]);
+    }
+
+    internal void ShowUnits(IReadOnlyList<SoftwareUnitInfo> units)
+    {
+        foreach (var previous in _plcChildren.OfType<SoftwareUnitInfo>().ToArray()) _plcChildren.Remove(previous);
+        int index = _plcChildren.TakeWhile(item => item is BlockNode).Count();
+        foreach (var unit in units) _plcChildren.Insert(index++, unit);
     }
 
     internal IEnumerable<DeviceNode> DeviceNodes() => Device != null ? [this] : Children.SelectMany(child => child.DeviceNodes());

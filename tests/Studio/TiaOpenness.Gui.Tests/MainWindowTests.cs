@@ -337,7 +337,7 @@ public class MainWindowTests(WpfContext wpf)
 
             var labels = Descendants<TextBlock>(rendered.Host).Select(t => t.Text).ToList();
             Assert.Contains("项目", labels);
-            Assert.Contains("尚未打开项目", labels);
+            Assert.Contains("未连接", labels);
         });
     }
 
@@ -451,7 +451,7 @@ public class MainWindowTests(WpfContext wpf)
                 .Select(t => t.Text)
                 .ToList();
 
-            Assert.Contains(Loc.Current["Blocks.Empty.Title"], visible);
+            Assert.Contains(Loc.Current["Project.Disconnected"], visible);
             Assert.Contains(Loc.Current["Shell.Engineering"], visible);
 
             // And the grids behind them are hidden rather than merely empty.

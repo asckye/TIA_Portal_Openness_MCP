@@ -16,8 +16,10 @@ public partial class ProjectOperationsView : UserControl
     internal RadioButton TagsTab { get; set; } = null!;
     internal bool OptionsOpen => Options.IsOpen;
     private Action? _environmentRequested;
+    internal event Action<Services.Stubs.IApprovalService?>? ReviewsChanged;
     internal void SetFeatures(FeaturePagesViewModel? features, Action? environmentRequested)
     {
+        ReviewsChanged?.Invoke(features?.Approvals);
         RunEnvironmentItem.DataContext = features;
         _environmentRequested = environmentRequested;
     }
@@ -25,7 +27,8 @@ public partial class ProjectOperationsView : UserControl
     internal event EventHandler<string>? ClearPrefillRequested;
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void ShowProjectOptions() => Options.Show("Project");
-    internal void ShowTransferOptions() => Options.Show("Export");
+    internal Func<string>? PendingTransfer { get; set; }
+    internal void ShowTransferOptions() => Options.Show(PendingTransfer?.Invoke() ?? "Export");
     internal void SetMcpPrefillMarkers(bool project, bool export, bool import)
     {
         Options.SetMcpPrefillMarkers(project, export, import);
@@ -37,7 +40,21 @@ public partial class ProjectOperationsView : UserControl
     internal void HideOptions() => Options.Hide();
     private void OnProjectOptions(object sender, RoutedEventArgs e) => ShowProjectOptions();
     internal event EventHandler? OpenTransferRequested;
-    private void OnTransfer(object sender, RoutedEventArgs e) => OpenTransferRequested?.Invoke(this, EventArgs.Empty);
+    private void OnTransfer(object sender, RoutedEventArgs e)
+    {
+        OpenTransferRequested?.Invoke(this, EventArgs.Empty);
+        Options.Show("Export");
+    }
+    internal void ShowDownloadOptions() => Options.Show("Download");
+    private void OnImportDrawer(object sender, RoutedEventArgs e) => Options.Show("Import");
+    private void OnAtlas(object sender, RoutedEventArgs e) => GenerateAtlasItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    private void OnCrashLogs(object sender, RoutedEventArgs e) => Controls.WorkbenchCommands.Navigate.Execute("Log", this);
+    private async void OnScan(object sender, RoutedEventArgs e) => await Model.Session.RefreshProcessesAsync();
+    private async void OnPick(object sender, RoutedEventArgs e) => await Model.Session.ChooseProcessAsync(true);
+    private async void OnAttach(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is ProjectProcessRow row) await Model.Session.SelectProcessAsync(row.ProcessId, true);
+    }
     private void OnExportMenu(object sender, RoutedEventArgs e)
     {
         var menu = ExportMenuButton.ContextMenu;
@@ -57,7 +74,11 @@ public partial class ProjectOperationsView : UserControl
         Model.Engineering.Document = ProjectDocument.Render;
         await Model.Engineering.ReadFocusedBlockAsync();
     }
-    private void OnInterface(object sender, RoutedEventArgs e) => Model.Engineering.Document = ProjectDocument.Interface;
+    private async void OnInterface(object sender, RoutedEventArgs e)
+    {
+        Model.Engineering.Document = ProjectDocument.Interface;
+        await Model.Engineering.ReadInterfaceAsync();
+    }
     private void OnCompileResults(object sender, RoutedEventArgs e) => Model.Engineering.Document = ProjectDocument.Compile;
     private async void OnRefresh(object sender, RoutedEventArgs e)
     {

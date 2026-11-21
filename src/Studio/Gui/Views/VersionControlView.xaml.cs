@@ -15,6 +15,8 @@ public partial class VersionControlView : UserControl
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void HideOptions() => Options.Hide();
     internal bool OptionsOpen => Options.IsOpen;
+    private void OnBackToWorkspace(object sender, RoutedEventArgs e) => Model.VersionControl.CloseSyncResult();
+    private void OnBrowseWorkspace(object sender, RoutedEventArgs e) => Model.VersionControl.BrowseWorkspaceFolder();
     private void OnWorkspaceAction(object sender, RoutedEventArgs e)
     {
         if (Model.VersionControl.SelectedWorkspace == null) { Options.Show("Workspace"); return; }
@@ -44,6 +46,16 @@ public partial class VersionControlView : UserControl
         MappedList.Items.Filter = null;
         Model.VersionControl.VcShowAll = true;
         if (Model.VersionControl.VcStatus.CanExecute(null)) Model.VersionControl.VcStatus.Execute(null);
+    }
+    private void OnDirection(object sender, RoutedEventArgs e) => Model.VersionControl.CloseSyncResult();
+    private void OnApplyPreview(object sender, RoutedEventArgs e)
+    {
+        var vc = Model.VersionControl;
+        if (vc.SyncResult is not { DryRun: true } preview) return;
+        var command = preview.Direction == TiaOpenness.Contracts.Models.SyncDirection.ProjectToWorkspace ? vc.VcPush : vc.VcPull;
+        if (!command.CanExecute(null)) return;
+        vc.VcDryRun = false;
+        command.Execute(null);
     }
     private void OnPreview(object sender, RoutedEventArgs e) => Model.VersionControl.VcDryRun = true;
     private void OnRun(object sender, RoutedEventArgs e) => Model.VersionControl.VcDryRun = false;

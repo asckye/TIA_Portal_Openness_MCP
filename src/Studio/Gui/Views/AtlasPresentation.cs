@@ -42,7 +42,7 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
     public bool Running => _state == "Running";
     public bool Done => _state == "Done";
     public bool Failed => _state == "Failed";
-    public bool CanGenerate => _model.Session.IsConnected && _model.Engineering.SelectedDevice != null && !_model.Busy && !Running;
+    public bool CanGenerate => _model.Session.IsConnected && _model.Engineering.SelectedDevice?.Category == "Plc" && !_model.Busy && !Running;
     private BlockRow? RenderBlock => _model.Engineering.FocusedBlock ?? _model.Engineering.Blocks.FirstOrDefault(b => b.Selected);
     public bool CanViewBlock => CanGenerate && RenderBlock != null;
     public string Label => Running ? Loc.Current.T("Pages.AtlasRunning", _completed, _total)
@@ -52,15 +52,23 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
     public bool Indeterminate => Running && _total <= 0;
     internal void Cancel() => _generation?.Cancel();
 
-    internal async Task GenerateAsync(bool singleBlock)
+    internal void Dismiss()
+    {
+        if (Running) Cancel();
+        else { _state = "Idle"; _detail = ""; Raise(null); }
+    }
+
+    internal async Task GenerateAsync(bool singleBlock, bool skipProtected = false)
     {
         if (!CanGenerate || (singleBlock && !CanViewBlock)) return;
+        var blocks = singleBlock ? new[] { RenderBlock! }.AsEnumerable() : _model.Engineering.Blocks;
+        if (skipProtected) blocks = blocks.Where(block => !block.Info.IsKnowHowProtected);
+        var request = new AtlasRequest(_model.Session.ProjectPath, _model.Engineering.SelectedDevice!.Id,
+            blocks.Select(b => b.Path).ToArray(), singleBlock);
+        if (request.BlockPaths.Count == 0) { Fail(Loc.Current["Project.NoAtlasBlocks"]); return; }
         using var generation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
         _generation = generation;
         var token = generation.Token;
-        var blocks = singleBlock ? new[] { RenderBlock! }.AsEnumerable() : _model.Engineering.Blocks;
-        var request = new AtlasRequest(_model.Session.ProjectPath, _model.Engineering.SelectedDevice!.Id,
-            blocks.Select(b => b.Path).ToArray(), singleBlock);
         _state = "Running";
         _detail = "";
         _completed = 0;
@@ -70,7 +78,7 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
         {
             var progress = new Progress<AtlasProgress>(value =>
             {
-                if (!Running || token.IsCancellationRequested) return;
+                if (_generation != generation || !Running || token.IsCancellationRequested) return;
                 _completed = value.Completed;
                 _total = value.Total;
                 _detail = value.CurrentBlock;
@@ -104,7 +112,7 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
         }
     }
 
-    internal void Open()
+    internal void Open(bool folder = false)
     {
         if (!Done) return;
         try
@@ -113,7 +121,7 @@ public sealed class AtlasPresentation : ObservableObject, IDisposable
             string path = Path.GetFullPath(_detail);
             if (!File.Exists(path) || !string.Equals(Path.GetExtension(path), ".html", StringComparison.OrdinalIgnoreCase))
                 throw new IOException(Loc.Current["Pages.AtlasMissingPath"]);
-            _open(path);
+            _open(folder ? Path.GetDirectoryName(path)! : path);
         }
         catch (Exception ex) { Fail(ex.Message); }
     }

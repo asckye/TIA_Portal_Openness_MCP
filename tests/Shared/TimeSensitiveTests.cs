@@ -61,6 +61,7 @@ namespace TiaMcp.Engine.Tests.Shared
             ["TiaOpenness.Gui.Tests.NetworkHelperTests"] = "Synthetic helper process exit within sixty seconds.",
             ["TiaOpenness.Gui.Tests.UnifiedDesktopTests"] =
                 "Asynchronous approval persistence protected by a hang guard and WPF keyboard input requiring exclusive focus.",
+            ["TiaOpenness.Gui.Tests.ProjectStateRenderTests"] = "Project drawer and document navigation use the WPF input dispatcher.",
             ["TiaOpenness.Gui.Tests.VciPanelTests"] = "Preview command admission protected by a hang guard.",
             ["TiaMcp.ShippedTools.Tests.WriteGuardPortTests"] = "Cold hook startup/decision within fifteen/twenty seconds.",
             ["TiaMcp.Updater.Tests.UpdaterTests"] = "Synthetic launcher/installed-process startup and exit bounds.",
@@ -413,7 +414,9 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Modal_Cancel_returns_no_PID_and_restores_the_owners_keyboard_focus"
             },
             ["TiaOpenness.Gui.Tests.ProjectPageInteractionTests"] = new[] {
+                "The_visual_network_atlas_button_opens_the_page_for_the_focused_block",
                 "A_slow_block_load_keeps_the_device_focused_and_only_disables_block_checkboxes",
+                "Hmi_and_software_unit_tree_entries_open_only_their_own_read_only_documents",
                 "Activating_a_plc_from_the_narrow_vci_flyout_keeps_focus_through_the_load",
                 "Arrows_browse_plcs_tags_and_version_control_and_only_activation_opens_them",
                 "Expanding_a_plc_loads_only_its_blocks_and_tree_nodes_open_the_existing_documents",
@@ -450,6 +453,10 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Narrow_left_pane_overlays_the_page_and_returns_keyboard_focus",
                 "Rail_arrow_keys_cover_the_order_and_agent_restores_its_subpage_unless_approval_is_pending",
                 "Visible_overlay_handles_the_window_control_shortcuts_on_preview_key_down"
+            },
+            ["TiaOpenness.Gui.Tests.ProjectStateRenderTests"] = new[] {
+                "Project_states_follow_session_documents_and_command_results",
+                "Download_drawer_reviews_compile_save_readiness_plan_and_operator_confirmation"
             },
             ["TiaOpenness.Gui.Tests.VciPanelTests"] = new[] {
                 "Registered_older_release_tools_use_MCP_reads_and_approval_gated_writes",

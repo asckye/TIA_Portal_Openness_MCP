@@ -152,7 +152,8 @@
     </Style.Triggers>
   </Style>
   <Style x:Key="Primer.ProjectSessions" TargetType="Expander" BasedOn="{StaticResource Primer.Expander}">
-    <Setter Property="IsExpanded" Value="True"/>
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Setter Property="IsExpanded" Value="False"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding HasMcpPanel}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
       <DataTrigger Binding="{Binding Session.IsConnected}" Value="True"><Setter Property="IsExpanded" Value="False"/><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
@@ -224,7 +225,7 @@
       <DataTrigger Binding="{Binding Severity}" Value="Warning"><Setter Property="Fill" Value="{DynamicResource Primer.warn}"/></DataTrigger>
     </Style.Triggers>
   </Style>
-  <views:ProjectNodeStyleSelector x:Key="Primer.ProjectNodeSelector" Device="{StaticResource Project.DeviceItem}"
+  <views:ProjectNodeStyleSelector x:Key="Primer.ProjectNodeSelector" Device="{StaticResource Project.DeviceItem}" Unit="{StaticResource Project.TreeItem}"
     Block="{StaticResource Primer.ProjectNode}" Link="{StaticResource Primer.ProjectLinkNode}"/>
   <Style x:Key="Primer.ProjectDivider" TargetType="Border" BasedOn="{StaticResource Primer.Plain}">
     <Setter Property="Background" Value="{DynamicResource Primer.cardBorder}"/>
@@ -233,7 +234,10 @@
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.cardBorder}"/>
     <Setter Property="BorderThickness" Value="0,0,0,1"/>
   </Style>
-  <Style x:Key="Primer.ProjectDeviceSurface" TargetType="Border" BasedOn="{StaticResource Primer.Plain}">
+  <Style x:Key="Primer.ProjectLayoutSurface" TargetType="Border">
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style x:Key="Primer.ProjectDeviceSurface" TargetType="Border" BasedOn="{StaticResource Primer.ProjectLayoutSurface}">
     <Setter Property="CornerRadius" Value="7"/>
   </Style>
   <Style x:Key="Primer.ProjectDeviceTile" TargetType="Border" BasedOn="{StaticResource Primer.Plain}">
@@ -288,7 +292,11 @@
   <Style x:Key="Project.ButtonGlyph" TargetType="Path" BasedOn="{StaticResource Primer.ButtonIcon}">
     <Setter Property="Height" Value="13"/><Setter Property="Width" Value="13"/><Setter Property="Margin" Value="0,0,6,0"/>
   </Style>
+  <ControlTemplate x:Key="Project.FileRowContent" TargetType="ListBoxItem">
+    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
+  </ControlTemplate>
   <Style x:Key="Project.ChangedFile" TargetType="ListBoxItem" BasedOn="{StaticResource Primer.FileItem}">
+    <Setter Property="Template" Value="{StaticResource Project.FileRowContent}"/>
     <Setter Property="MinHeight" Value="28"/>
     <Setter Property="Padding" Value="0,2"/>
     <Setter Property="AutomationProperties.Name" Value="{Binding FilePath}"/>
@@ -297,6 +305,127 @@
     <Style.Triggers>
       <DataTrigger Binding="{Binding CompareState}" Value="Unequal"><Setter Property="Text" Value="M"/></DataTrigger>
       <DataTrigger Binding="{Binding CompareState}" Value="WorkspaceFileMissing"><Setter Property="Text" Value="−"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectCrashBand" TargetType="Border" BasedOn="{StaticResource Primer.ProjectHeaderLine}">
+    <Setter Property="Background" Value="{DynamicResource Primer.diffDelBg}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectAtlasState" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.cardBorder}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Atlas.Done,ElementName=PageRoot}" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Primer.okBg}"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Atlas.Failed,ElementName=PageRoot}" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Primer.diffDelBg}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectInput" TargetType="TextBox" BasedOn="{StaticResource Primer.Input}">
+    <Setter Property="MinHeight" Value="32"/><Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.12_5}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectSelect" TargetType="ComboBox" BasedOn="{StaticResource Primer.Select}">
+    <Setter Property="MinHeight" Value="32"/><Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.12_5}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectDrawerTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.Segment}">
+    <Setter Property="MinHeight" Value="26"/><Setter Property="Height" Value="26"/>
+    <Setter Property="Padding" Value="9,0"/><Setter Property="ux:Ux.CornerRadius" Value="6"/>
+    <Style.Triggers><Trigger Property="IsChecked" Value="True">
+      <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+    </Trigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectDrawer" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="CornerRadius" Value="0"/>
+    <Setter Property="BorderThickness" Value="1,0,0,0"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectRail" TargetType="Border">
+    <Setter Property="BorderThickness" Value="3,0,0,0"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectWire" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Primer.textMuted}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectNodeBadge" TargetType="Border" BasedOn="{StaticResource Primer.Plain}">
+    <Setter Property="CornerRadius" Value="4"/>
+  </Style>
+  <Style x:Key="Primer.SoftwareUnitBadge" TargetType="Border" BasedOn="{StaticResource Primer.ProjectNodeBadge}">
+    <Setter Property="Background" Value="{DynamicResource Primer.blkSuBg}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectHmiBadge" TargetType="Border" BasedOn="{StaticResource Primer.ProjectNodeBadge}">
+    <Setter Property="Background" Value="{DynamicResource Primer.blkHmBg}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectLadderHead" TargetType="Border" BasedOn="{StaticResource Primer.ProjectResultCard}">
+    <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectNetworkHeader" TargetType="Border" BasedOn="{StaticResource Primer.ProjectHeaderLine}">
+    <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
+    <Setter Property="CornerRadius" Value="8,8,0,0"/>
+  </Style>
+  <Style x:Key="Project.NetworkLanguage" TargetType="StackPanel">
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Style.Triggers><DataTrigger Binding="{Binding CallIdentity}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+      <DataTrigger Binding="{Binding Language}" Value=""><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectFunctionTitle" TargetType="Border">
+    <Setter Property="BorderThickness" Value="0,0,0,1"/><Setter Property="BorderBrush" Value="{DynamicResource Primer.cardBorder}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectFunctionBox" TargetType="Border" BasedOn="{StaticResource Primer.ProjectResultCard}">
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+    <Setter Property="Padding" Value="0"/>
+  </Style>
+  <Style x:Key="Project.LadderOperand" TargetType="TextBlock" BasedOn="{StaticResource Primer.Mono}">
+    <Setter Property="Foreground" Value="{DynamicResource Primer.accent}"/>
+  </Style>
+  <Style x:Key="Project.SourceNotice" TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+    <Style.Triggers><Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Project.LadderInstance" TargetType="TextBlock" BasedOn="{StaticResource Project.Caption}">
+    <Setter Property="HorizontalAlignment" Value="Center"/><Setter Property="Margin" Value="0,0,0,4"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/><Setter Property="ToolTip" Value="{Binding Instance}"/>
+    <Style.Triggers><Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Project.LadderPin" TargetType="TextBlock" BasedOn="{StaticResource Primer.Mono}">
+    <Setter Property="ToolTip" Value="{Binding Text,RelativeSource={RelativeSource Self}}"/><Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style x:Key="Project.LadderArgument" TargetType="TextBlock" BasedOn="{StaticResource Project.LadderOperand}">
+    <Setter Property="ToolTip" Value="{Binding Text,RelativeSource={RelativeSource Self}}"/><Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    <Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Margin" Value="5,0"/>
+  </Style>
+  <Style x:Key="Project.LadderContact" TargetType="Path">
+    <Setter Property="Width" Value="50"/>
+    <Setter Property="Height" Value="30"/>
+    <Setter Property="Stroke" Value="{DynamicResource Primer.accent}"/>
+    <Setter Property="StrokeThickness" Value="2.2"/>
+    <Setter Property="Data" Value="M0,15 H15 M15,1 V29 M35,1 V29 M35,15 H50"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Symbol}" Value="┤/├">
+        <Setter Property="Data" Value="M0,15 H15 M15,1 V29 M35,1 V29 M35,15 H50 M18,27 L32,3"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding IsCoil}" Value="True">
+        <Setter Property="Data" Value="M0,15 H5 M13,1 C3,9 3,21 13,29 M37,1 C47,9 47,21 37,29 M45,15 H50"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Project.DiffRow" TargetType="ListBoxItem" BasedOn="{StaticResource Primer.FileItem}">
+    <Setter Property="Padding" Value="8,2"/>
+    <Setter Property="Template" Value="{StaticResource Project.FileRowContent}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Kind}" Value="Added"><Setter Property="Background" Value="{DynamicResource Primer.diffAddBg}"/></DataTrigger>
+      <DataTrigger Binding="{Binding Kind}" Value="Removed"><Setter Property="Background" Value="{DynamicResource Primer.diffDelBg}"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Project.EmptySidebar" TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Engineering.HasDevices}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+      <DataTrigger Binding="{Binding Engineering.EmptyDeviceList}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+      <DataTrigger Binding="{Binding Session.LostConnection}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
     </Style.Triggers>
   </Style>
 </ResourceDictionary>

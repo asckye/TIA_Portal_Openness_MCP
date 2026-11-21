@@ -108,6 +108,23 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     public string VcDiffCaption { get => _vcDiffCaption; private set => Set(ref _vcDiffCaption, value); }
 
+    private bool _synchronizing;
+    private SyncResult? _syncResult;
+    public bool Synchronizing { get => _synchronizing; private set { if (Set(ref _synchronizing, value)) RefreshSyncState(); } }
+    public SyncResult? SyncResult { get => _syncResult; private set { if (Set(ref _syncResult, value)) RefreshSyncState(); } }
+    public bool ShowWorkspace => HasWorkspace && !Synchronizing && SyncResult == null;
+    public bool ShowSyncResult => SyncResult != null && !Synchronizing;
+    public string SyncTitle => Synchronizing ? Loc.Current["Project.Syncing"]
+        : SyncResult?.DryRun == true ? Loc.Current["Project.SyncPreview"] + " · "
+            + (SyncResult.Direction == SyncDirection.ProjectToWorkspace ? Loc.Current["Primer.ToWorkspace"] : Loc.Current["Primer.ToProject"])
+            : Loc.Current["Project.Synced"];
+    public string SyncCounts => SyncResult is { } r ? Loc.Current.T("Project.SyncCounts", r.Synchronized, r.SkippedEqual, r.Failed) : "";
+    internal void CloseSyncResult() => SyncResult = null;
+    private void RefreshSyncState()
+    {
+        Raise(nameof(ShowWorkspace)); Raise(nameof(ShowSyncResult)); Raise(nameof(SyncTitle)); Raise(nameof(SyncCounts));
+    }
+
     public bool HasWorkspace => SelectedWorkspace != null;
 
     public WorkspaceInfo? SelectedWorkspace
@@ -116,6 +133,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         set
         {
             if (!Set(ref _selectedWorkspace, value)) return;
+            SyncResult = null;
+            RefreshSyncState();
             HasStatus = false;
             SelectedVcItem = null;
             VcStatusItems.Clear();
@@ -310,7 +329,15 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     private async Task VcSyncAsync(SyncDirection direction)
         => await _activity.Guarded("Status.Synchronizing", async () =>
     {
-        var result = await _client.VcSyncAsync(SelectedWorkspace?.Name, direction, VcDryRun);
+        var workspace = SelectedWorkspace;
+        bool preview = VcDryRun;
+        SyncResult = null;
+        Synchronizing = !preview;
+        SyncResult result;
+        try { result = await _client.VcSyncAsync(workspace?.Name, direction, preview); }
+        finally { Synchronizing = false; }
+        if (SelectedWorkspace != workspace) return;
+        SyncResult = result;
 
         foreach (var item in result.Items.Where(i => i.Error is not null))
         {
@@ -356,7 +383,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
-        Raise(nameof(WorkspaceRootDisplay)); Raise(nameof(ModifiedLabel));
+        Raise(nameof(WorkspaceRootDisplay)); Raise(nameof(ModifiedLabel)); RefreshSyncState();
     }
 
     public void Dispose() { Loc.Current.LanguageChanged -= OnLanguageChanged; _client.Dispose(); }

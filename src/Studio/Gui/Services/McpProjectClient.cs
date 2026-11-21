@@ -16,7 +16,7 @@ using TiaOpenness.Gui.Localization;
 
 namespace TiaOpenness.Gui.Services;
 
-public sealed class McpProjectClient : IProjectClient
+public sealed partial class McpProjectClient : IProjectClient
 {
     public sealed record Receipt(string Tool, string Phase, string Json)
     { public string Label => Tool + " · " + Phase; }
@@ -32,7 +32,12 @@ public sealed class McpProjectClient : IProjectClient
     public event EventHandler<ProgressEventArgs>? Progress { add { } remove { } }
     public event EventHandler? Exited;
     public McpProjectClient(IMcpSessionClient session) { Session = session; session.Detached += OnDetached; }
-    private void OnDetached(object? sender, EventArgs args) => Exited?.Invoke(this, args);
+    internal bool LostTransport { get; private set; }
+    private void OnDetached(object? sender, EventArgs args)
+    {
+        LostTransport = args is SessionTransportLostEventArgs;
+        Exited?.Invoke(this, args);
+    }
     public void Start(bool forceMock, string opennessVersion)
     {
         if (forceMock) throw new InvalidOperationException("Use an offline operator fixture for demonstrations.");
@@ -57,7 +62,9 @@ public sealed class McpProjectClient : IProjectClient
             if (tool == "CompilePlcSoftware" && phase == "apply" && code == "COMPILE_ERRORS"
                 && (string?)envelope["meta"]?["execution"] == "completed")
                 throw new CompilerErrors(envelope);
-            throw new InvalidOperationException(code + ": " + EngineResultText.Error(code) + " " + (string?)envelope["error"]?["message"]);
+            var failure = new InvalidOperationException(code + ": " + EngineResultText.Error(code) + " " + (string?)envelope["error"]?["message"]);
+            failure.Data["McpErrorCode"] = code;
+            throw failure;
         }
         return envelope;
     }
@@ -80,25 +87,63 @@ public sealed class McpProjectClient : IProjectClient
         // Approval is performed by the host's ordinary FoundationV4Tool; the panel cannot grant it.
         return await Read(tool, arguments, token);
     }
+    public async Task<IReadOnlyList<ProjectProcessObservation>> ListProcessesAsync()
+    {
+        var data = await Read("ListPortalProcessProjects");
+        var records = ProcessRecords(data);
+        var rows = await ProcessRowsAsync(data, records);
+        return rows.Select((row, i) => new ProjectProcessObservation(row, ObserveLease(TiaOpenness.Shared.DataLocations.Current.LeasesDirectory,
+            row.ProcessId, (string?)records[i]["osStartTimeUtc"]))).ToArray();
+    }
+
+    internal static ProjectLeaseState ObserveLease(string directory, int pid, string? startTime)
+    {
+        if (pid <= 0 || !DateTimeOffset.TryParseExact(startTime, "O", System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out var start)) return ProjectLeaseState.Unknown;
+        // FoundationProcessLease owns PID/start-time files with FileShare.None. Discovery only reads an existing file.
+        string name = FormattableString.Invariant($"{pid}-{start.UtcTicks}.lease");
+        try
+        {
+            using var reader = File.Open(Path.Combine(directory, name), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            return ProjectLeaseState.Available;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            if (error is FileNotFoundException or DirectoryNotFoundException) return ProjectLeaseState.Available;
+            if (error is IOException && (error.HResult & 0xffff) == 32) return ProjectLeaseState.Held;
+            System.Diagnostics.Trace.TraceInformation("Cannot observe the lease for PID {0}: {1}", pid, error.Message);
+            return ProjectLeaseState.Unknown;
+        }
+    }
+
+    private static JsonObject[] ProcessRecords(JsonObject data) =>
+        (data["processes"] as JsonArray ?? data["items"] as JsonArray ?? new()).Select(Decode).OfType<JsonObject>().ToArray();
+
+    private async Task<PortalProcessInfo[]> ProcessRowsAsync(JsonObject data, JsonObject[] processes)
+    {
+        if (processes.Length == 0) return [];
+        var info = await Read("GetPortalInfo", new() { ["includeProcesses"] = true, ["includeSessions"] = false, ["includeProducts"] = false });
+        var modes = (info["evidence"]?["processes"] as JsonArray ?? new()).Select(Decode).OfType<JsonObject>()
+            .ToDictionary(p => (int)p["id"]!, p => (string?)p["mode"]);
+        return processes.Select(p => new PortalProcessInfo
+        {
+            ProcessId = (int)p["processId"]!, ProjectPath = (string?)p["projectPath"],
+            Release = (string?)data["releaseKey"] ?? (string?)Session.State?["releaseKey"] ?? "",
+            UiMode = modes.TryGetValue((int)p["processId"]!, out var mode) ? mode : null,
+        }).ToArray();
+    }
+
     public async Task<SessionState> ConnectAsync(bool withUserInterface, int? processId = null)
     {
         var data = await Read("ListPortalProcessProjects");
-        var processes = (data["processes"] as JsonArray ?? data["items"] as JsonArray ?? new()).Select(Decode).OfType<JsonObject>().ToArray();
+        var processes = ProcessRecords(data);
         int requested = processId ?? ProcessId;
         var selected = processes.Where(p => requested != 0 ? (int?)p["processId"] == requested :
             !string.IsNullOrEmpty(ExpectedProjectFile) && string.Equals((string?)p["projectPath"], ExpectedProjectFile, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
         if (requested == 0 && selected.Length != 1 && processes.Length > 1)
         {
-            var info = await Read("GetPortalInfo", new() { ["includeProcesses"] = true, ["includeSessions"] = false, ["includeProducts"] = false });
-            var modes = (info["evidence"]?["processes"] as JsonArray ?? new()).Select(Decode).OfType<JsonObject>()
-                .ToDictionary(p => (int)p["id"]!, p => (string?)p["mode"]);
-            throw new PortalProcessSelectionRequiredException(processes.Select(p => new PortalProcessInfo
-            {
-                ProcessId = (int)p["processId"]!, ProjectPath = (string?)p["projectPath"],
-                Release = (string?)data["releaseKey"] ?? (string?)Session.State?["releaseKey"] ?? "",
-                UiMode = modes.TryGetValue((int)p["processId"]!, out var mode) ? mode : null,
-            }).ToArray());
+            throw new PortalProcessSelectionRequiredException(await ProcessRowsAsync(data, processes));
         }
         if (selected.Length != 1) throw new InvalidOperationException("Choose a TIA process ID and exact project file. Start TIA manually if none is listed.");
         int pid = (int)selected[0]["processId"]!;
@@ -147,10 +192,81 @@ public sealed class McpProjectClient : IProjectClient
         var data = await Read("GetProjectTree");
         string tree = (string?)data["value"] ?? (string?)data["projectTree"] ?? "";
         var devices = new List<DeviceInfo>();
-        foreach (Match match in Regex.Matches(tree, @"PlcSoftware: (.*?) \[softwarePath=(.*?)\]"))
-            devices.Add(new() { Id = match.Groups[2].Value, Name = match.Groups[1].Value, DisplayName = match.Groups[1].Value, Category = "Plc" });
+        foreach (Match match in Regex.Matches(tree, @"(PlcSoftware|HmiTarget|HmiSoftware): (.*?) \[softwarePath=(.*?)\]"))
+            devices.Add(new() { Id = match.Groups[3].Value, Name = match.Groups[2].Value, DisplayName = match.Groups[2].Value,
+                TypeName = match.Groups[1].Value switch { "HmiSoftware" => "WinCC Unified", "HmiTarget" => "WinCC Classic", _ => "" },
+                Category = match.Groups[1].Value == "PlcSoftware" ? "Plc" : "Hmi" });
         return devices;
     }
+    public async Task<IReadOnlyList<string>?> ListScreensAsync(string hmi)
+    {
+        if (!Supports("ListHmiScreens", "softwarePath")) return null;
+        var data = await Read("ListHmiScreens", new() { ["softwarePath"] = hmi });
+        return (data["items"] as JsonArray)?.Select(n => n!.GetValue<string>()).ToArray();
+    }
+
+    public async Task<(int? Tags, int? Alarms)> HmiCountsAsync(DeviceInfo hmi)
+    {
+        int? tags = null, alarms = null;
+        if (Supports("ListHmiTags", "softwarePath"))
+        {
+            var inventory = await Read("ListHmiTags", new() { ["softwarePath"] = hmi.Id });
+            tags = (inventory["items"] as JsonArray)?.Count;
+        }
+        if (hmi.TypeName == "WinCC Unified" && Supports("GetUnifiedAlarmCommon", "category"))
+        {
+            var inventory = await Read("GetUnifiedAlarmCommon", new() { ["softwarePath"] = hmi.Id, ["category"] = "discreteAlarms", ["limit"] = 1 });
+            alarms = (int?)inventory["evidence"]?["expectedCount"];
+        }
+        return (tags, alarms);
+    }
+
+    public async Task<IReadOnlyList<SoftwareUnitInfo>> ListUnitsAsync(string plc)
+    {
+        if (!Supports("ListPlcSoftwareUnits", "includeContents")
+            || !TiaMcp.Adapters.Contracts.OpennessApi.PlcUnits.Includes((string?)Session.State?["releaseKey"] ?? "")) return [];
+        var units = new List<SoftwareUnitInfo>();
+        int offset = 0;
+        while (true)
+        {
+            JsonObject data;
+            try { data = await Read("ListPlcSoftwareUnits", new() { ["softwarePath"] = plc, ["offset"] = offset, ["includeContents"] = true }); }
+            catch (InvalidOperationException error) when (offset == 0 && Equals(error.Data["McpErrorCode"], "UNSUPPORTED_CAPABILITY"))
+            {
+                // The release advertises units even when this PLC has no PlcUnitProvider. The host receipt retains the capability result.
+                return [];
+            }
+            var page = data["evidence"] ?? data;
+            foreach (var row in (page["records"] as JsonArray ?? []).Select(Decode).OfType<JsonObject>())
+            {
+                var blocks = (row["blockGroup"]?["blocks"] as JsonArray ?? []).Select(n => n!.GetValue<string>()).ToArray();
+                units.Add(new(row["name"]!.GetValue<string>(), (string?)row["namespacePreset"] ?? "", blocks));
+            }
+            if (page["nextOffset"]?.GetValue<int>() is not int next) return units;
+            if (next <= offset) throw new InvalidOperationException("The software-unit inventory returned a repeated page.");
+            offset = next;
+        }
+    }
+
+    public async Task<IReadOnlyList<BlockMember>> ReadInterfaceAsync(string plc, string block)
+    {
+        if (!Supports("RenderPlcBlockDocument", "blockPath") || !TiaMcp.Adapters.Contracts.OpennessApi.PlcDocuments.Includes(
+            (string?)Session.State?["releaseKey"] ?? "")) return [];
+        var page = await Read("RenderPlcBlockDocument", new() { ["softwarePath"] = plc, ["blockPath"] = block });
+        string markdown = (string?)page["evidence"]?["markdown"] ?? "";
+        var members = new List<BlockMember>();
+        bool table = false;
+        foreach (string line in markdown.Split('\n'))
+        {
+            if (!table) { table = line.TrimEnd() == "| Section | Name | Datatype |"; continue; }
+            if (line.StartsWith("|---", StringComparison.Ordinal)) continue;
+            var match = Regex.Match(line, @"^\| ([^|]*) \| \x60(.*)\x60 \| (.*) \|\r?$");
+            if (!match.Success) break;
+            members.Add(new(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value.Replace(@"\|", "|"), ""));
+        }
+        return members;
+    }
+
     internal static JsonNode? Decode(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out string? json) && json
         .StartsWith("{", StringComparison.Ordinal)
         ? JsonNode.Parse(json) : node;
@@ -224,7 +340,7 @@ public sealed class McpProjectClient : IProjectClient
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format)
         => ExportAsync(deviceId, blocks, outputDirectory, format, CancellationToken.None);
     internal async Task<ExportResult> ExportAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format,
-            CancellationToken token)
+            CancellationToken token, bool stripVolatile = false)
     {
         Directory.CreateDirectory(outputDirectory);
         if (format == ExportFormat.Source)
@@ -242,15 +358,48 @@ public sealed class McpProjectClient : IProjectClient
         var result = new ExportResult { OutputDirectory = outputDirectory, Requested = paths.Length };
         foreach (string path in paths)
         {
-            var data =
-                await Write("ExportPlcBlock", new() {
-                    ["softwarePath"] = deviceId, ["blockPath"] = path, ["exportPath"] = outputDirectory, ["preservePath"] = true }, token);
-            string file = (string?)data["outputFile"] ?? (string?)data["filePath"]
-                ?? (string?)data["items"]?[0]?["result"]?["data"]?["files"]?[0]?["path"] ?? "";
+            string file = await ExportBlockXmlAsync(deviceId, path, outputDirectory, null, stripVolatile, token);
             result.Items.Add(new() { BlockPath = path, FilePath = file, Succeeded = true }); result.Succeeded++;
         }
         return result;
     }
+    internal bool SupportsVolatileFilter => Supports("ExportPlcBlock", "stripVolatile");
+    internal bool SupportsUnitExport => Supports("ExportPlcBlock", "unitName");
+    internal async Task<string> ExportBlockXmlAsync(string plc, string path, string directory, string? unit, bool stripVolatile,
+        CancellationToken token = default)
+    {
+        var arguments = new Dictionary<string, object?> { ["softwarePath"] = plc, ["blockPath"] = path, ["exportPath"] = directory, ["preservePath"] = true };
+        if (unit != null)
+        {
+            if (!SupportsUnitExport) throw new InvalidOperationException(Loc.Current["Project.MissingExport"]);
+            arguments["unitName"] = unit;
+        }
+        if (stripVolatile && SupportsVolatileFilter) arguments["stripVolatile"] = true;
+        var data = await Write("ExportPlcBlock", arguments, token);
+        return (string?)data["outputFile"] ?? (string?)data["filePath"] ?? (string?)data["items"]?[0]?["result"]?["data"]?["files"]?[0]?["path"] ?? "";
+    }
+
+    internal bool SupportsVerifiedImport => Supports("ImportPlcBlockVerified", "previewToken");
+    internal async Task<bool> ImportVerifiedAsync(string plc, string block, string file, string directory, Func<string, bool> review)
+    {
+        var arguments = new Dictionary<string, object?> { ["softwarePath"] = plc, ["blockPath"] = block, ["importPath"] = file,
+            ["evidenceDirectory"] = directory, ["dryRun"] = true };
+        var preview = await Read("ImportPlcBlockVerified", arguments);
+        var evidence = preview["evidence"];
+        string? token = (string?)evidence?["token"];
+        string? backup = (string?)evidence?["backup"]?["path"];
+        string? planned = (string?)evidence?["plannedPath"];
+        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(backup) || string.IsNullOrEmpty(planned))
+            throw new InvalidDataException(Loc.Current["Project.ImportEvidenceMissing"]);
+        if (!review(string.Join("\n", plc + " / " + block, file, backup, planned))) return false;
+        arguments["dryRun"] = false;
+        arguments["previewToken"] = token;
+        var applied = await Read("ImportPlcBlockVerified", arguments);
+        if ((bool?)applied["evidence"]?["verificationSuccess"] != true)
+            throw new InvalidDataException(Loc.Current["Project.ReadbackFailed"]);
+        return true;
+    }
+
     public async Task<ExportResult> ImportBlocksAsync(string deviceId, IEnumerable<string> files, bool overwrite)
     {
         var result = new ExportResult();

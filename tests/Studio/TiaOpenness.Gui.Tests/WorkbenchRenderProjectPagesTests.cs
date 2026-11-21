@@ -233,7 +233,7 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
             });
     }
 
-    private sealed class AtlasFixture(string state) : IAtlasService
+    internal sealed class AtlasFixture(string state) : IAtlasService
     {
         public Task<AtlasResult> GenerateAsync(AtlasRequest request, IProgress<AtlasProgress> progress, CancellationToken cancellationToken)
         {
@@ -299,7 +299,7 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         var bar = state.Item7 == "failed" ? window.Toast : (Border)blocks.FindName("AtlasBar");
                         if (state.Item7 == "failed")
                         {
-                            Assert.Equal(Visibility.Collapsed, blocks.AtlasBar.Visibility);
+                            Assert.Equal(Visibility.Visible, blocks.AtlasBar.Visibility);
                             Assert.Contains(blocks.Atlas.Detail, window.ToastMessage.Text);
                             Assert.Same(window.FindResource("Ant.colorError"), window.ToastDot.Fill);
                         }
@@ -320,7 +320,7 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         var header = rows.Children.OfType<Border>().Single(border => Grid.GetRow(border) == 0);
                         var selection = rows.Children.OfType<StackPanel>().Single(panel => Grid.GetRow(panel) == 1);
                         Assert.Equal(header.TranslatePoint(new Point(0, header.ActualHeight), card).Y, selection.TranslatePoint(new Point(), card).Y);
-                        Assert.Equal(new Thickness(28, 28, 28, 0), card.Margin);
+                        Assert.Equal(new Thickness(24, 24, 24, 0), card.Margin);
                         Assert.Equal(920, card.MaxWidth);
                     }
                     WorkbenchRenderTests.SaveRender(host, Path.Combine(output, state.Item1 + ".png"));
@@ -338,7 +338,7 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         }
                         host.UpdateLayout();
                         Assert.True(tab.IsChecked);
-                        Assert.Equal(Math.Min(920, window.ProjectOverview.ActualWidth - 56), side.ActualWidth);
+                        Assert.Equal(Math.Min(920, window.ProjectOverview.ActualWidth - 48), side.ActualWidth);
                         Assert.Null(side.FindName("EnvironmentCard"));
                         Assert.Null(side.FindName("BlocksLogCard"));
                         Assert.True(((Button)side.FindName("CompileButton")).IsDefault);

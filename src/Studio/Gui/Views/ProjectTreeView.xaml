@@ -1,5 +1,6 @@
 <UserControl x:Class="TiaOpenness.Gui.Views.ProjectTreeView"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:s="clr-namespace:TiaOpenness.Gui.Services"
   xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:vm="clr-namespace:TiaOpenness.Gui.ViewModels"
   xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls">
   <DockPanel>
@@ -8,7 +9,9 @@
         <DockPanel Margin="0,0,0,8">
           <TextBlock DockPanel.Dock="Left" Text="{l:Tr Project.Tree}" Style="{StaticResource Primer.Muted}"
             FontSize="{DynamicResource Ui.FontSize.11}" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level2"/>
-          <TextBlock x:Name="ProjectFile" TextAlignment="Right" Style="{StaticResource Project.Caption}" AutomationProperties.Name="{l:Tr Primer.Bound}"/>
+          <Button DockPanel.Dock="Right" Content="{l:Tr Pages.Options}" AutomationProperties.Name="{l:Tr Project.Options}"
+            Click="OnProjectOptions" Style="{StaticResource Primer.IdeToolButton}"/>
+          <TextBlock Visibility="Collapsed" x:Name="ProjectFile" TextAlignment="Right" Style="{StaticResource Project.Caption}" AutomationProperties.Name="{l:Tr Primer.Bound}"/>
         </DockPanel>
         <Grid>
           <Label x:Name="FilterLabel" Content="{l:Tr Project.Filter}" Target="{Binding ElementName=ControlFilter}" Visibility="Collapsed"/>
@@ -20,8 +23,22 @@
       </StackPanel>
     </Border>
     <ux:PrefillMarker x:Name="SelectionMarker" DockPanel.Dock="Top" Target="{Binding ElementName=Nodes}" Margin="8,0"/>
-    <TextBlock DockPanel.Dock="Top" Text="{l:Tr Sidebar.Empty}" Style="{StaticResource Primer.Muted}" Margin="12" TextWrapping="Wrap"
-      Visibility="{Binding Engineering.HasDevices,Converter={StaticResource NotBoolToVisibility}}"/>
+    <TextBlock DockPanel.Dock="Top" Text="{l:Tr Sidebar.Empty}" Margin="12" TextWrapping="Wrap" Style="{StaticResource Project.EmptySidebar}"/>
+    <StackPanel DockPanel.Dock="Top" Margin="16,28,16,8" Visibility="{Binding Engineering.EmptyDeviceList,Converter={StaticResource BoolToVisibility}}">
+      <TextBlock Text="{l:Tr Project.NoDevices}" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center"/>
+      <TextBlock Text="{l:Tr Project.AddDeviceHint}" Style="{StaticResource Project.Caption}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,8"/>
+      <Button x:Name="ReloadEmptyTree" Content="{l:Tr Project.ReloadTree}" AutomationProperties.Name="{l:Tr Project.ReloadTree}"
+        IsEnabled="{Binding Session.CanOpenConnection}" Click="OnReloadTree" Style="{StaticResource Primer.Button.Secondary.Small}" HorizontalAlignment="Center"/>
+    </StackPanel>
+    <StackPanel DockPanel.Dock="Top" Visibility="{Binding Session.LostConnection,Converter={StaticResource BoolToVisibility}}">
+      <TextBlock Text="{l:Tr Project.Snapshot}" Style="{StaticResource Project.Caption}" Margin="12,8"/>
+      <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=UserControl}}">
+        <ItemsControl ItemsSource="{Binding Engineering.Snapshot.Tree}" Margin="12,0">
+          <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" Style="{StaticResource Primer.Mono}" TextTrimming="CharacterEllipsis"
+            Margin="0,3" ToolTip="{Binding}"/></DataTemplate></ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </StackPanel>
     <TreeView x:Name="Nodes" ItemsSource="{Binding Engineering.ProjectDevices}" AutomationProperties.Name="{l:Tr Access.Software}"
       PreviewMouseLeftButtonDown="OnNodeClick" PreviewKeyDown="OnNodeKey" ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}"
       Background="Transparent" BorderThickness="0" Padding="8" AlternationCount="2147483647" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -44,6 +61,10 @@
                 <Path x:Name="PlcIcon" Data="M2,2 H14 V14 H2 Z M6,6 H10 V10 H6 Z M5,0 V2 M10,0 V2 M5,14 V16 M10,14 V16"
                   Stroke="{DynamicResource Primer.textMuted}" Stretch="Uniform" Width="12" Height="12"/>
               </Border>
+              <Border x:Name="HmiBadge" Visibility="Collapsed" VerticalAlignment="Center" Margin="0,0,6,0"
+                Style="{StaticResource Primer.ProjectHmiBadge}" Padding="6,2">
+                <TextBlock Text="HMI" Foreground="{DynamicResource Primer.blkHmFg}" Style="{StaticResource Primer.Mono}"/>
+              </Border>
               <StackPanel>
                 <DockPanel LastChildFill="False">
                   <TextBlock x:Name="DeviceName" Text="{Binding Label}" Style="{StaticResource Primer.Mono}" FontWeight="SemiBold"
@@ -63,6 +84,10 @@
               <Setter TargetName="DeviceName" Property="Foreground" Value="{DynamicResource Primer.accent}"/>
               <Setter TargetName="Tile" Property="Background" Value="{DynamicResource Primer.primaryBg}"/>
               <Setter TargetName="PlcIcon" Property="Stroke" Value="{DynamicResource Primer.onPrimary}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Category}" Value="Hmi">
+              <Setter TargetName="Tile" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="HmiBadge" Property="Visibility" Value="Visible"/>
             </DataTrigger>
             <DataTrigger Binding="{Binding IsFolder}" Value="True">
               <Setter TargetName="PlcIcon" Property="Data" Value="{StaticResource Icon.WorkbenchProject}"/>
@@ -118,6 +143,19 @@
             </DataTrigger>
           </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
+        <HierarchicalDataTemplate DataType="{x:Type s:SoftwareUnitInfo}" ItemsSource="{Binding Children}"
+          ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}">
+          <DockPanel Margin="12,2,8,2">
+            <Border DockPanel.Dock="Left" Style="{StaticResource Primer.SoftwareUnitBadge}" Padding="4,0" Margin="0,0,6,0">
+              <TextBlock Text="SU" Foreground="{DynamicResource Primer.blkSuFg}" Style="{StaticResource Primer.Mono}"/>
+            </Border>
+            <TextBlock DockPanel.Dock="Right" Text="{Binding Blocks.Count}" Style="{StaticResource Project.Caption}"/>
+            <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.Mono}"/>
+          </DockPanel>
+        </HierarchicalDataTemplate>
+        <DataTemplate DataType="{x:Type s:UnitBlockInfo}">
+          <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.Mono}" Margin="12,3"/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ProjectLink}">
           <DockPanel MinHeight="28">
             <Path x:Name="LinkIcon" Style="{StaticResource Project.Glyph}" Data="{StaticResource Icon.FileText}"/>

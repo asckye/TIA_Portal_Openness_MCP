@@ -15,6 +15,8 @@ public sealed record OperatorSession(OperatorHost Host, string SessionKey, JsonO
     public string DisplayName => SessionKey[..8] + " · " + ((string?)State["participants"]?["mcpClient"] ?? "MCP") + " (unverified)";
 }
 
+internal sealed class SessionTransportLostEventArgs : EventArgs { }
+
 public interface IMcpSessionClient : IAsyncDisposable
 {
     public string? SessionKey { get; }

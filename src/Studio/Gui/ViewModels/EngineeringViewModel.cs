@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using TiaOpenness.Contracts.Models;
@@ -14,7 +15,7 @@ using TiaOpenness.Gui.Services;
 
 namespace TiaOpenness.Gui.ViewModels;
 
-public enum ProjectDocument { Render, Compile, Tags, Interface }
+public enum ProjectDocument { Render, Compile, Tags, Interface, Hmi, SoftwareUnit }
 
 /// <summary>Owns devices, block selection and engineering operations.</summary>
 public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
@@ -24,7 +25,8 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     private readonly WorkbenchActivity _activity;
     private string _outputDirectory = string.Empty;
     private string _blockFilter = string.Empty;
-    private string _namePattern = "^(OB|FB|FC|DB|UDT)_";
+    internal const string DefaultNamePattern = "^(OB|FB|FC|DB|UDT)_";
+    private string _namePattern = DefaultNamePattern;
     private DeviceInfo? _selectedDevice;
     private bool _sourceFormat;
     private bool _suppressDeviceLoad;
@@ -49,6 +51,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             if (_focusedBlock != null) _focusedBlock.IsFocused = false;
             if (value != null) value.IsFocused = true;
             Set(ref _focusedBlock, value);
+            VerifyImport = false; Raise(nameof(CanVerifyImport));
             ResetSource();
         }
     }
@@ -101,16 +104,30 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
 
         RetrySource = new AsyncCommand(ReadFocusedBlockAsync, () => SourceFailed && !_activity.Busy);
         Refresh = new AsyncCommand(RefreshBlocksAsync, () => !_activity.Busy && SelectedDevice is not null);
-        Export = Command(ExportAsync, () => !_activity.Busy && SelectedDevice is not null && OutputDirectory.Length > 0);
-        Import = Command(ImportAsync, () => !_activity.Busy && SelectedDevice is not null);
-        Compile = new AsyncCommand(CompileAsync, () => !_activity.Busy && SelectedDevice is not null);
-        Inspect = new AsyncCommand(InspectAsync, () => !_activity.Busy && SelectedDevice is not null);
+        Export = Command(ExportAsync, () => !_activity.Busy && SelectedDevice?.Category == "Plc" && OutputDirectory.Length > 0);
+        Import = Command(ImportAsync, () => !_activity.Busy && SelectedDevice?.Category == "Plc");
+        Compile = new AsyncCommand(CompileAsync, () => !_activity.Busy && SelectedDevice?.Category == "Plc");
+        Inspect = new AsyncCommand(InspectAsync, () => !_activity.Busy && SelectedDevice?.Category == "Plc");
         Save = new AsyncCommand(SaveAsync, () => !_activity.Busy && SelectedDevice is not null);
     }
 
     public ObservableCollection<DeviceInfo> Devices { get; } = [];
 
     public ObservableCollection<BlockRow> Blocks { get; }
+
+    public IReadOnlyList<string> Screens { get; private set; } = [];
+    public int? HmiScreens { get; private set; }
+    public int? HmiTags { get; private set; }
+    public int? HmiAlarms { get; private set; }
+    private void ClearHmi()
+    {
+        Screens = []; HmiScreens = HmiTags = HmiAlarms = null;
+        Raise(nameof(Screens)); Raise(nameof(HmiScreens)); Raise(nameof(HmiTags)); Raise(nameof(HmiAlarms));
+    }
+
+    private IReadOnlyList<SoftwareUnitInfo> _units = [];
+    private SoftwareUnitInfo? _selectedUnit;
+    public SoftwareUnitInfo? SelectedUnit { get => _selectedUnit; internal set { if (Set(ref _selectedUnit, value)) ClearUnitSource(); } }
 
     public ICollectionView BlocksView { get; }
 
@@ -132,7 +149,14 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     private string _importPathsText = "";
     private bool _importOverwrite;
     public string ImportPathsText { get => _importPathsText; set => Set(ref _importPathsText, value); }
-    public bool ImportOverwrite { get => _importOverwrite; set => Set(ref _importOverwrite, value); }
+    public bool ImportOverwrite
+    {
+        get => _importOverwrite;
+        set { if (Set(ref _importOverwrite, value)) { VerifyImport = false; Raise(nameof(CanVerifyImport)); } }
+    }
+    private bool _verifyImport;
+    public bool VerifyImport { get => _verifyImport; set => Set(ref _verifyImport, value); }
+    public bool CanVerifyImport => ImportOverwrite && FocusedBlock != null && _client is McpProjectClient { SupportsVerifiedImport: true };
     private CompileResult? _lastCompile;
     public CompileResult? LastCompile
     {
@@ -156,9 +180,25 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         set { if (Set(ref _outputDirectory, value)) Export.RaiseCanExecuteChanged(); }
     }
 
-    public string NamePattern { get => _namePattern; set => Set(ref _namePattern, value); }
+    public string NamePattern { get => _namePattern; set { if (Set(ref _namePattern, value)) Raise(nameof(RulePatternStatus)); } }
+    public string RulePatternStatus
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(NamePattern)) return Loc.Current["Project.RuleEmpty"];
+            try
+            {
+                _ = new Regex(NamePattern, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                return Loc.Current["Project.RuleValid"];
+            }
+            catch (ArgumentException error) { return error.Message; }
+        }
+    }
 
-    public bool SourceFormat { get => _sourceFormat; set => Set(ref _sourceFormat, value); }
+    public bool SourceFormat { get => _sourceFormat; set { if (Set(ref _sourceFormat, value)) Raise(nameof(CanStripVolatile)); } }
+    private bool _stripVolatile;
+    public bool StripVolatile { get => _stripVolatile; set => Set(ref _stripVolatile, value); }
+    public bool CanStripVolatile => !SourceFormat && _client is McpProjectClient { SupportsVolatileFilter: true };
 
     public bool HasDevices => Devices.Count > 0;
 
@@ -169,6 +209,8 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         get => _loadedDeviceId;
         private set { if (Set(ref _loadedDeviceId, value)) Raise(nameof(EmptyBlockList)); }
     }
+    private bool _emptyDeviceList;
+    public bool EmptyDeviceList { get => _emptyDeviceList; private set => Set(ref _emptyDeviceList, value); }
     public bool EmptyBlockList => LoadedDeviceId != null && Blocks.Count == 0;
 
     public string BlockFilter
@@ -189,10 +231,16 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         {
             if (!Set(ref _selectedDevice, value)) return;
             Raise(nameof(CanReadTags));
+            Raise(nameof(CanStripVolatile));
+            Raise(nameof(CanExportXml));
+            ResetDownloadTarget();
             _readGeneration++;
             _tagGeneration++;
             Document = ProjectDocument.Render;
             FocusedBlock = null;
+            SelectedUnit = null;
+            _units = [];
+            ClearHmi();
             PlcTags = [];
             Set(ref _tagStatus, LocalizedText.Empty, nameof(TagStatus));
             TagCount = null;
@@ -208,9 +256,11 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
                 _activeNode.HasSafetyBlocks = false;
                 _activeNode.IsExpanded = false;
                 _activeNode.ShowBlocks([]);
+                _activeNode.ShowUnits([]);
             }
             _activeNode = DeviceTree.SelectMany(root => root.DeviceNodes()).FirstOrDefault(node => node.Device == value);
             if (_activeNode != null) { _activeNode.IsActive = true; _activeNode.IsExpanded = true; }
+            Raise(nameof(CanPreviewDownload));
             foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save, RetrySource })
             {
                 command.RaiseCanExecuteChanged();
@@ -243,6 +293,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     public async Task LoadDevicesAsync(string projectName)
     {
         var devices = await _client.ListDevicesAsync();
+        EmptyDeviceList = devices.Count == 0;
         Devices.Clear();
         foreach (var device in devices) Devices.Add(device);
 
@@ -279,7 +330,23 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     {
         if (SelectedDevice is null) return;
 
-        var deviceId = SelectedDevice.Id;
+        var device = SelectedDevice;
+        var deviceId = device.Id;
+        if (SelectedDevice.Category == "Hmi")
+        {
+            int generation = ++_readGeneration;
+            Document = ProjectDocument.Hmi;
+            await _activity.Guarded("Project.HmiScreens", async () =>
+            {
+                var screens = await _client.ListScreensAsync(deviceId);
+                if (generation != _readGeneration) return;
+                Screens = screens ?? []; HmiScreens = screens?.Count; Raise(nameof(Screens)); Raise(nameof(HmiScreens));
+                var counts = await _client.HmiCountsAsync(device);
+                if (generation != _readGeneration) return;
+                (HmiTags, HmiAlarms) = counts; Raise(nameof(HmiTags)); Raise(nameof(HmiAlarms));
+            });
+            return;
+        }
         int request = ++_readGeneration;
         LoadedDeviceId = null;
         await _activity.Guarded("Status.ReadingBlocks", async () =>
@@ -299,6 +366,8 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             LoadedDeviceId = deviceId;
             RebuildTree();
             _activity.SetStatus("Status.BlocksIn", kind: null, blocks.Count, deviceId);
+            var units = await _client.ListUnitsAsync(deviceId);
+            if (request == _readGeneration) { _units = units; FilterUnits(); }
         }, deviceId);
     }
 
@@ -318,7 +387,9 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         var selected = Blocks.Where(b => b.Selected).Select(b => b.Path).ToList();
         var format = SourceFormat ? ExportFormat.Source : ExportFormat.SimaticMl;
 
-        var result = await _client.ExportBlocksAsync(SelectedDevice!.Id, selected, OutputDirectory, format);
+        var result = StripVolatile && CanStripVolatile && _client is McpProjectClient host
+            ? await host.ExportAsync(SelectedDevice!.Id, selected, OutputDirectory, format, System.Threading.CancellationToken.None, stripVolatile: true)
+            : await _client.ExportBlocksAsync(SelectedDevice!.Id, selected, OutputDirectory, format);
 
         foreach (var item in result.Items.Where(i => !i.Succeeded))
         {
@@ -350,6 +421,24 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             DialogButtons.YesNoCancel, DialogIcon.Question, new(ConfirmationAction.ImportBlocks));
         if (overwrite == DialogResult.Cancel) return;
 
+        if (VerifyImport)
+        {
+            if (!CanVerifyImport || overwrite != DialogResult.Yes || FocusedBlock is not { } block || _client is not McpProjectClient host
+                || files.Length != 1 || !string.Equals(System.IO.Path.GetExtension(files[0]), ".xml", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(Loc.Current["Project.ImportOneXml"]);
+            var device = SelectedDevice!;
+            var folder = _dialogs.OpenFolder(Loc.Current["Project.ImportEvidence"]);
+            if (folder == null) return;
+            bool approved = await host.ImportVerifiedAsync(device.Id, block.Path, files[0], folder, detail => FocusedBlock == block && SelectedDevice == device
+                && _dialogs.ShowMessage(detail, Loc.Current["Project.VerifyImport"], DialogButtons.OKCancel, DialogIcon.Warning) == DialogResult.OK);
+            if (approved)
+            {
+                _activity.SetStatus("Status.Imported", ToastKind.Success, 1, 1);
+                _activity.AppendStatus(); await RefreshBlocksAsync();
+            }
+            return;
+        }
+
         var result = await _client.ImportBlocksAsync(
             SelectedDevice!.Id, files, overwrite == DialogResult.Yes);
 
@@ -366,6 +455,12 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     private async Task CompileAsync() => await _activity.Guarded("Status.Compiling", async () =>
     {
         var result = await _client.CompileAsync(SelectedDevice!.Id);
+        PresentCompileResult(result);
+        await RefreshBlocksAsync();
+    });
+
+    private void PresentCompileResult(CompileResult result)
+    {
         LastCompile = result;
 
         foreach (var message in Flatten(result.Messages).Where(m => m.Severity != CompileSeverity.Information))
@@ -381,8 +476,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             result.Duration.TotalSeconds.ToString("F1", CultureInfo.CurrentCulture));
 
         _activity.AppendStatus();
-        await RefreshBlocksAsync();
-    });
+    }
 
     private async Task InspectAsync() => await _activity.Guarded("Status.Inspecting", async () =>
     {
@@ -428,6 +522,15 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     /// </summary>
     private bool Matches(string? value) => value?.Contains(BlockFilter, StringComparison.OrdinalIgnoreCase) == true;
 
+    private void FilterUnits()
+    {
+        if (_activeNode == null) return;
+        bool all = BlockFilter.Length == 0 || Matches(_activeNode.Name) || Matches(_activeNode.Label);
+        var visible = all ? _units : _units.Where(unit => Matches(unit.Name) || Matches(unit.NamespacePreset) || unit.Blocks.Any(Matches)).ToArray();
+        _activeNode.ShowUnits(visible);
+        if (visible.Count > 0) _activeNode.MatchesFilter = true;
+    }
+
     private void RebuildTree()
     {
         BlockTree.Clear();
@@ -439,6 +542,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         }
         foreach (var device in ProjectDevices.SelectMany(node => node.DeviceNodes()))
             device.MatchesFilter = BlockFilter.Length == 0 || Matches(device.Name) || Matches(device.Label) || device.IsActive && BlockTree.Count > 0;
+        FilterUnits();
         Raise(nameof(HasBlocks));
         Raise(nameof(EmptyBlockList));
     }
@@ -467,6 +571,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     internal void ClearPresentation()
     {
         LastCompile = null;
+        EmptyDeviceList = false;
         LoadedDeviceId = null;
         SelectedDevice = null;
         Devices.Clear();
@@ -479,6 +584,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
+        Raise(nameof(RulePatternStatus)); Raise(nameof(LogicModeLabel));
         Raise(nameof(TagStatus));
         Raise(nameof(SourceStatus)); Raise(nameof(SourceErrorTitle));
         Raise(nameof(LineCountLabel));
@@ -498,6 +604,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
             _ = RefreshBlocksAsync();
         }
         Raise(nameof(CanReadTags));
+        Raise(nameof(CanPreviewDownload));
         foreach (var command in new[] { Refresh, Export, Import, Compile, Inspect, Save, RetrySource }) command.RaiseCanExecuteChanged();
     }
     private void OnResultEntry(object? sender, NotifyCollectionChangedEventArgs e)

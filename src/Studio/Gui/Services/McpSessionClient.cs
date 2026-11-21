@@ -211,9 +211,10 @@ public sealed class McpSessionClient : IMcpSessionClient
         // No automatic following of an AI client's new session key.
         if (!token.IsCancellationRequested)
         {
+            var ended = (string?)State?["endReason"] is "disconnect" or "session-ended" ? EventArgs.Empty : new SessionTransportLostEventArgs();
             try { await CloseConnection().ConfigureAwait(false); }
             finally { await ReleaseOwnedHost().ConfigureAwait(false); }
-            Detached?.Invoke(this, EventArgs.Empty);
+            Detached?.Invoke(this, ended);
         }
     }
     public async Task CreateAsync(string releaseKey, CancellationToken token = default)

@@ -139,10 +139,16 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
 
                 window.Navigate("Engineering");
                 var options = (TiaOpenness.Gui.Views.EngineeringOptionsView)((UserControl)window.FindName("OperationsContent")).FindName("Options");
-                foreach (string section in new[] { "Project", "Export", "Inspect", "Workspace" })
+                foreach (string section in new[] { "Project", "Export", "Import", "Download", "Inspect", "Workspace" })
                 {
                     options.Show(section);
                     Layout(host);
+                    if (section == "Project")
+                    {
+                        Assert.False(options.AdvancedProjectTools.IsExpanded);
+                        options.AdvancedProjectTools.IsExpanded = true;
+                        Layout(host);
+                    }
                     var panel = (StackPanel)options.FindName(section + "Options");
                     Assert.True(panel.ActualHeight > 0);
                     RealizePickers(panel);

@@ -6,17 +6,32 @@
       <views:EngineeringOptionsView x:Name="Options" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=Grid}}" Height="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=Grid}}"/>
     </Canvas>
     <DockPanel x:Name="ProjectBackdrop">
+    <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}"
+      Visibility="{Binding Session.ShowConnectionForm,Converter={StaticResource BoolToVisibility}}">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Content="{l:Tr Session.Title}" AutomationProperties.Name="{l:Tr Session.Title}" Click="OnSessions"
+          Visibility="{Binding HasMcpPanel,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
+        <Button DockPanel.Dock="Right" Content="{l:Tr Project.Advanced}" AutomationProperties.Name="{l:Tr Project.Advanced}"
+          Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnProjectOptions"/>
+        <Button DockPanel.Dock="Right" Content="{l:Tr Project.Scan}" AutomationProperties.Name="{l:Tr Project.Scan}" Click="OnScan"
+          Style="{StaticResource Primer.IdeToolButton}" IsEnabled="{Binding Session.ProcessScanAvailable}" Margin="0,0,8,0"/>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="{l:Tr Project.ConnectTitle}" ToolTip="{l:Tr Pages.ConnectDescription}" Style="{StaticResource Primer.ContainerTitle}" Margin="0"/>
+          <Border Style="{StaticResource Primer.Tag}" Margin="12,0"><TextBlock Text="{Binding Session.ConnectionLabel}"/></Border>
+        </StackPanel>
+      </DockPanel>
+    </Border>
     <Border DockPanel.Dock="Top" x:Name="ProjectToolbar" Style="{StaticResource Primer.IdeBar}">
       <DockPanel VerticalAlignment="Center">
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
           <Button x:Name="ExportMenuButton" Style="{StaticResource Primer.IdeToolButton}" AutomationProperties.Name="{l:Tr Blocks.Export}"
             Click="OnExportMenu" ToolTip="{l:Tr Pages.TransferDescription}">
             <StackPanel Orientation="Horizontal">
-              <Path Data="{StaticResource Icon.Download}" Style="{StaticResource Project.ButtonGlyph}"/><TextBlock Text="{l:Tr Blocks.Export}"/>
+              <Path Data="{StaticResource Icon.Download}" Style="{StaticResource Project.ButtonGlyph}"/><TextBlock Text="{l:Tr Project.TransferMenu}"/>
             </StackPanel>
             <Button.ContextMenu><ContextMenu Placement="Bottom">
               <MenuItem Header="{l:Tr Primer.Transfer}" Click="OnTransfer" ToolTip="{l:Tr Pages.NoSelection}"/>
-              <MenuItem Header="{l:Tr Pages.Import}" Command="{Binding Engineering.Import}"/>
+              <MenuItem Header="{l:Tr Pages.Import}" Click="OnImportDrawer"/>
               <MenuItem x:Name="GenerateAtlasItem" Header="{l:Tr Pages.GenerateAtlas}"/>
               <Separator/>
               <MenuItem Header="{l:Tr Project.OpenConnect}" Command="{x:Static ux:WorkbenchCommands.Open}"
@@ -31,8 +46,11 @@
               <MenuItem Header="{l:Tr Pages.Disconnect}" Command="{Binding Session.Disconnect}"/>
             </ContextMenu></Button.ContextMenu>
           </Button>
+          <Button Content="{l:Tr Project.Atlas}" AutomationProperties.Name="{l:Tr Project.Atlas}" Click="OnAtlas"
+            IsEnabled="{Binding IsEnabled,ElementName=GenerateAtlasItem}" Style="{StaticResource Primer.IdeToolButton}"/>
+          <Button Content="{l:Tr Project.Rules}" AutomationProperties.Name="{l:Tr Project.Rules}" Click="OnInspect" Style="{StaticResource Primer.IdeToolButton}"/>
           <Border Style="{StaticResource Primer.ProjectDivider}" Width="1" Margin="6,4"/>
-          <Button ContentTemplate="{x:Null}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" Command="{Binding Engineering.Compile}"
+          <Button x:Name="ToolbarCompile" ContentTemplate="{x:Null}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" Command="{Binding Engineering.Compile}"
             AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Style="{StaticResource Primer.Button.Secondary.Small}">
             <StackPanel Orientation="Horizontal">
               <Path Data="M3,1 L14,8 3,15 Z" Style="{StaticResource Project.ButtonGlyph}"/><TextBlock Text="{l:Tr Toolbar.Compile}"/>
@@ -59,7 +77,7 @@
           <RadioButton x:Name="RenderTab" AutomationProperties.Name="{l:Tr Project.Render}" GroupName="ProjectDocument"
             Style="{StaticResource Primer.ProjectRenderTab}" Click="OnRender">
             <StackPanel Orientation="Horizontal"><Path Data="M6,3 L1,8 6,13 M10,3 L15,8 10,13" Style="{StaticResource Project.ButtonGlyph}"/>
-              <TextBlock Text="{l:Tr Project.Render}"/></StackPanel>
+              <TextBlock Text="{l:Tr Project.NetworkTab}"/></StackPanel>
           </RadioButton>
           <RadioButton x:Name="InterfaceTab" AutomationProperties.Name="{l:Tr Project.Interface}" GroupName="ProjectDocument"
             Margin="4,0" Style="{StaticResource Primer.ProjectInterfaceTab}" Click="OnInterface">
@@ -70,13 +88,19 @@
             Style="{StaticResource Primer.ProjectCompileTab}" Click="OnCompileResults">
             <StackPanel Orientation="Horizontal">
               <Path Data="{StaticResource Icon.Warning}" Style="{StaticResource Project.ButtonGlyph}"/>
-              <TextBlock Text="{l:Tr Toolbar.Compile}"/>
+              <TextBlock Text="{l:Tr Project.DiagnosticTab}"/>
               <Border Style="{StaticResource Primer.ProjectCompileCount}" Margin="4,0,0,0" VerticalAlignment="Center">
                 <TextBlock Text="{Binding Engineering.DiagnosticCount}"/>
               </Border>
             </StackPanel>
           </RadioButton>
         </DockPanel>
+      </DockPanel>
+    </Border>
+    <Border x:Name="EmptyToolbar" DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}" Visibility="Collapsed">
+      <DockPanel><Button DockPanel.Dock="Right" Click="OnProjectOptions" Content="{l:Tr Project.OptionsTitle}"
+          AutomationProperties.Name="{l:Tr Project.OptionsTitle}" Style="{StaticResource Primer.Button.Secondary.Small}"/>
+        <TextBlock Text="{l:Tr Project.BlockWorkspace}" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
       </DockPanel>
     </Border>
     <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
@@ -87,7 +111,7 @@
         <StackPanel>
           <WrapPanel Margin="0,8,0,0">
             <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=SessionPicker}" x:Name="AccessibleLabel1" Content="{l:Tr Access.FieldSessionTitle}" Target="{Binding ElementName=SessionPicker}" Style="{StaticResource Primer.FormLabel}"/>
-<ComboBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Session.Title}" x:Name="SessionPicker" ItemsSource="{Binding Panel.Sessions}" SelectedItem="{Binding Panel.Selected}" DisplayMemberPath="DisplayName" MinWidth="320" Style="{StaticResource Primer.Select}"/></StackPanel>
+<ComboBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Session.Title}" x:Name="SessionPicker" ItemsSource="{Binding Panel.Sessions}" SelectedItem="{Binding Panel.Selected}" DisplayMemberPath="DisplayName" MinWidth="320" Style="{StaticResource Primer.ProjectSelect}"/></StackPanel>
             <Button AutomationProperties.Name="{l:Tr Session.Refresh}" Content="{l:Tr Session.Refresh}" Command="{Binding Panel.Refresh}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
             <Button AutomationProperties.Name="{l:Tr Session.Attach}" Content="{l:Tr Session.Attach}" Command="{Binding Panel.Attach}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
             <Button AutomationProperties.Name="{l:Tr Session.Create}" Content="{l:Tr Session.Create}" Command="{Binding Panel.Create}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
@@ -104,38 +128,130 @@
       <Expander AutomationProperties.Name="{l:Tr Session.Result}" Header="{l:Tr Session.Result}">
         <StackPanel>
         <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=AccessibleField2}" x:Name="AccessibleLabel2" Content="{l:Tr Access.FieldSessionResult}" Target="{Binding ElementName=AccessibleField2}" Style="{StaticResource Primer.FormLabel}"/>
-<ComboBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}" x:Name="AccessibleField2" AutomationProperties.Name="{l:Tr Session.Result}" ItemsSource="{Binding Receipts}" SelectedItem="{Binding SelectedReceipt}" DisplayMemberPath="Label" Style="{StaticResource Primer.Select}"/></StackPanel>
+<ComboBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}" x:Name="AccessibleField2" AutomationProperties.Name="{l:Tr Session.Result}" ItemsSource="{Binding Receipts}" SelectedItem="{Binding SelectedReceipt}" DisplayMemberPath="Label" Style="{StaticResource Primer.ProjectSelect}"/></StackPanel>
         <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=McpEnvelopeResult}" x:Name="AccessibleLabel3" Content="{l:Tr Access.FieldSessionResult}" Target="{Binding ElementName=McpEnvelopeResult}" Style="{StaticResource Primer.FormLabel}"/>
-<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}" AutomationProperties.Name="{l:Tr Session.Result}" Style="{StaticResource Primer.Input}" x:Name="McpEnvelopeResult" Text="{Binding LastEnvelope,Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="200" VerticalScrollBarVisibility="Auto" FontFamily="{DynamicResource Ui.FontMono}"/></StackPanel>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}" AutomationProperties.Name="{l:Tr Session.Result}" Style="{StaticResource Primer.ProjectInput}" x:Name="McpEnvelopeResult" Text="{Binding LastEnvelope,Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="200" VerticalScrollBarVisibility="Auto" FontFamily="{DynamicResource Ui.FontMono}"/></StackPanel>
         </StackPanel>
       </Expander>
       </StackPanel>
     </Expander>
-  <StackPanel>
-    <Border Style="{StaticResource Primer.Container}" Margin="0,0,0,16" Visibility="{Binding Tag.HasProject,ElementName=PageRoot,Converter={StaticResource NotBoolToVisibility}}">
+  <StackPanel x:Name="CrashDocument" DockPanel.Dock="Top" Visibility="{Binding Session.LostConnection,Converter={StaticResource BoolToVisibility}}">
+    <Border Style="{StaticResource Primer.ProjectCrashBand}" Padding="16,8">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" x:Name="CrashLogs" Click="OnCrashLogs" Content="{l:Tr Project.ViewLogs}" AutomationProperties.Name="{l:Tr Project.ViewLogs}"
+          Style="{StaticResource Primer.Button.Secondary.Small}" Margin="0,0,8,0"/>
+        <Button DockPanel.Dock="Right" Click="OnProjectOptions" Content="{l:Tr Pages.Options}" AutomationProperties.Name="{l:Tr Project.Options}"
+          Style="{StaticResource Primer.Button.Secondary.Small}"/>
+        <Button DockPanel.Dock="Right" Content="{l:Tr Session.Title}" AutomationProperties.Name="{l:Tr Session.Title}" Click="OnSessions"
+          Visibility="{Binding HasMcpPanel,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Button.Secondary.Small}" Margin="0,0,8,0"/>
+        <Button DockPanel.Dock="Right" Click="OnPick" Content="{l:Tr Project.RescanProcesses}" AutomationProperties.Name="{l:Tr Project.RescanProcesses}"
+          IsEnabled="{Binding Session.ProcessScanAvailable}" Style="{StaticResource Primer.Button.Primary.Small}" Margin="0,0,8,0"/>
+        <StackPanel><TextBlock Text="{l:Tr Project.CrashTitle}" FontWeight="SemiBold"/>
+          <TextBlock Text="{l:Tr Project.ReconnectHint}" Style="{StaticResource Project.Caption}"/></StackPanel>
+      </DockPanel>
+    </Border>
+    <Grid Margin="24,18,24,0"><Grid.ColumnDefinitions><ColumnDefinition MaxWidth="920"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions>
       <StackPanel>
-        <TextBlock Text="{l:Tr Blocks.Empty.Title}" Style="{StaticResource Primer.PageTitle}"/>
-        <TextBlock Text="{l:Tr Pages.ConnectDescription}" Style="{StaticResource Primer.PageSubtitle}" TextWrapping="Wrap" Margin="0,4,0,16"/>
+        <StackPanel Orientation="Horizontal">
+          <Border DataContext="{Binding Engineering.Snapshot}" Style="{StaticResource Primer.BlkBadge}" Margin="0,0,8,0"><TextBlock Text="{Binding Kind}"
+            Style="{StaticResource Primer.BlkBadgeText}"/></Border>
+          <TextBlock Text="{Binding Engineering.Snapshot.BlockName}" Style="{StaticResource Primer.Mono}" FontWeight="SemiBold"/>
+          <TextBlock Text="{l:Tr Project.Snapshot}" Style="{StaticResource Project.Caption}" Margin="12,0,0,0"/>
+        </StackPanel>
+        <TextBlock Text="{Binding Engineering.Snapshot.File}" Style="{StaticResource Project.Caption}" Margin="0,4,0,16"/>
+        <Border Style="{StaticResource Primer.ProjectCodePanel}" Padding="0"><DockPanel>
+          <Border DockPanel.Dock="Top" Style="{StaticResource Primer.ProjectHeaderLine}" Padding="16,9">
+            <TextBlock Text="{Binding Engineering.Snapshot.DocumentPath}" Style="{StaticResource Project.Caption}"/>
+          </Border>
+          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" MaxHeight="420">
+            <ItemsControl ItemsSource="{Binding Engineering.Snapshot.Lines}" AlternationCount="2147483647" Margin="14,12">
+              <ItemsControl.ItemTemplate><DataTemplate><DockPanel MinHeight="24">
+                <TextBlock Style="{StaticResource Primer.CodeLineNumber}" Text="{Binding (ItemsControl.AlternationIndex),
+                  RelativeSource={RelativeSource AncestorType=ContentPresenter},Converter={StaticResource Project.LineNumber}}"/>
+                <views:ProjectSourceLine SourceText="{Binding}" Style="{StaticResource Primer.CodeText}"
+                  LanguageName="{Binding DataContext.Engineering.Snapshot.Language,RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
+              </DockPanel></DataTemplate></ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel></Border>
+      </StackPanel>
+    </Grid>
+  </StackPanel>
+  <Grid Visibility="{Binding Session.ShowConnectionForm,Converter={StaticResource BoolToVisibility}}">
+    <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="868"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions>
+  <StackPanel x:Name="ConnectionForms" AutomationProperties.Name="{l:Tr Blocks.Empty.Title}" MaxWidth="820" Margin="24" Visibility="{Binding Session.ShowConnectionForm,Converter={StaticResource BoolToVisibility}}">
+    <Border Style="{StaticResource Primer.Container}" Padding="20" Margin="0,0,0,20">
+      <StackPanel>
+        <DockPanel>
+          <Button DockPanel.Dock="Right" Content="{l:Tr Project.OpenPicker}" AutomationProperties.Name="{l:Tr Project.OpenPicker}" Click="OnPick"
+            IsEnabled="{Binding Session.ProcessScanAvailable}" Style="{StaticResource Primer.Button.Secondary.Small}"/>
+          <StackPanel><TextBlock Text="{l:Tr Project.Instances}" Style="{StaticResource Primer.ContainerTitle}"/>
+            <TextBlock Text="{l:Tr Project.AttachHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+          </StackPanel>
+        </DockPanel>
+        <TextBlock Text="{Binding Session.ProcessListHint}" Style="{StaticResource Primer.Muted}" Margin="0,16,0,0" TextWrapping="Wrap"
+          Visibility="{Binding Session.HasProcesses,Converter={StaticResource NotBoolToVisibility}}"/>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="248">
+          <ItemsControl ItemsSource="{Binding Session.Processes}">
+            <ItemsControl.ItemTemplate><DataTemplate>
+              <Border Style="{StaticResource Primer.CodeBlock}" Padding="14" Margin="0,8,0,0">
+                <DockPanel>
+                  <Button DockPanel.Dock="Right" Content="{l:Tr Project.AttachProcess}" AutomationProperties.Name="{Binding AccessibleName}"
+                    Click="OnAttach" Style="{StaticResource Primer.Button.Secondary.Small}"/>
+                  <Border DockPanel.Dock="Left" Style="{StaticResource Primer.Tag.Accent}" VerticalAlignment="Center" Margin="0,0,12,0"><TextBlock Text="{Binding Release}"/></Border>
+                  <StackPanel><TextBlock Text="{Binding ProjectPath}" Style="{StaticResource Primer.Mono}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Details}" Style="{StaticResource Project.Caption}" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </DockPanel>
+              </Border>
+            </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+    </Border>
+    <Border Style="{StaticResource Primer.Container}" Padding="20">
+      <StackPanel>
+        <TextBlock Text="{l:Tr Project.OpenFile}" Style="{StaticResource Primer.ContainerTitle}"/>
+        <TextBlock Text="{l:Tr Project.PathHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,4,0,12"/>
         <Grid>
           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
           <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="120"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ProjectPathInput}" x:Name="AccessibleLabel4" Content="{l:Tr Project.Label}" Target="{Binding ElementName=ProjectPathInput}" Style="{StaticResource Primer.FormLabel}"/>
-<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}" AutomationProperties.Name="{l:Tr Project.Label}" x:Name="ProjectPathInput" Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.Input}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/></StackPanel>
-          <ux:PrefillMarker x:Name="ProjectPathMarker" Grid.Row="1" Target="{Binding ElementName=ProjectPathInput}" ClearRequested="OnClearProjectPrefill"/>
-          <Button AutomationProperties.Name="{l:Tr Common.Browse}" Grid.Column="1" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0" VerticalAlignment="Bottom"/>
-          <Button AutomationProperties.Name="{l:Tr Toolbar.Connect}" x:Name="ConnectButton" Grid.Column="2" Content="{l:Tr Toolbar.Connect}" Click="OnConnect" Style="{StaticResource Primer.Run}" Margin="8,0,0,0" VerticalAlignment="Bottom" IsEnabled="{Binding Tag.CanConnect,ElementName=PageRoot}"/>
+          <StackPanel Margin="0,0,6,0">
+            <Label x:Name="FileReleaseLabel" Visibility="Collapsed" Content="{l:Tr Config.Version}" Target="{Binding ElementName=FileRelease}" Style="{StaticResource Primer.FormLabel}"/>
+            <ComboBox x:Name="FileRelease" ItemsSource="{Binding Releases}" TextSearch.TextPath="DisplayName" SelectedValuePath="Key"
+              SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Primer.ProjectSelect}"
+              AutomationProperties.LabeledBy="{Binding ElementName=FileReleaseLabel}" AutomationProperties.Name="{l:Tr Config.Version}">
+              <ComboBox.ItemTemplate><DataTemplate><TextBlock Style="{StaticResource Primer.Mono}">
+                <TextBlock.Text><MultiBinding StringFormat="{}{0} ({1})"><Binding Path="DisplayName"/><Binding Path="OwnerApartment"/></MultiBinding></TextBlock.Text>
+              </TextBlock></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Grid.Column="1">
+            <Label x:Name="AccessibleLabel4" Visibility="Collapsed" Content="{l:Tr Project.Label}" Target="{Binding ElementName=ProjectPathInput}"
+              AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ProjectPathInput}" Style="{StaticResource Primer.FormLabel}"/>
+            <TextBox x:Name="ProjectPathInput" AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel4}" AutomationProperties.Name="{l:Tr Project.Label}"
+              Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{Binding Session.ProjectFilePlaceholder}"
+              Style="{StaticResource Primer.ProjectInput}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+          </StackPanel>
+          <ux:PrefillMarker x:Name="ProjectPathMarker" Grid.Row="1" Grid.Column="1" Target="{Binding ElementName=ProjectPathInput}" ClearRequested="OnClearProjectPrefill"/>
+          <Button AutomationProperties.Name="{l:Tr Common.Browse}" Grid.Column="2" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0" VerticalAlignment="Bottom"/>
+          <Button AutomationProperties.Name="{l:Tr Toolbar.Connect}" x:Name="ConnectButton" Grid.Column="3" Content="{l:Tr Project.OpenConnectFile}" Click="OnConnect" Style="{StaticResource Primer.Run}" Margin="8,0,0,0" VerticalAlignment="Bottom" IsEnabled="{Binding Tag.CanConnect,ElementName=PageRoot}"/>
         </Grid>
-        <DockPanel Margin="0,16,0,0">
-          <Button AutomationProperties.Name="{l:Tr Pages.Options}" DockPanel.Dock="Right" Content="{l:Tr Pages.Options}" Click="OnProjectOptions" Style="{StaticResource Primer.Link}" MinHeight="24"/>
+        <Border Style="{StaticResource Primer.Divider}" Margin="0,12,0,8"/>
+        <DockPanel>
+          <Button x:Name="GoToMcp" AutomationProperties.Name="{l:Tr Project.GoToMcp}" DockPanel.Dock="Right" Content="{l:Tr Project.GoToMcp}"
+            Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Mcp" Style="{StaticResource Primer.Link}" MinHeight="24"/>
           <TextBlock Text="{l:Tr Pages.ConnectHint}" Style="{StaticResource Primer.Muted.textFaint}" TextWrapping="Wrap"/>
         </DockPanel>
       </StackPanel>
     </Border>
   </StackPanel>
+  </Grid>
     </DockPanel>
   </DockPanel>
 </UserControl>

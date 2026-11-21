@@ -13,6 +13,30 @@ using TiaOpenness.Contracts.Models.Errors;
 
 namespace TiaOpenness.Gui.ViewModels;
 
+public sealed class ProjectProcessRow(ProjectProcessObservation observation) : ObservableObject
+{
+    private PortalProcessInfo Process => observation.Process;
+    private TiaMcp.Versioning.TiaVersionDescriptor Version => TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(Process.Release);
+    public int ProcessId => Process.ProcessId;
+    public string Release => Version.DisplayName;
+    public string ProjectPath => string.IsNullOrWhiteSpace(Process.ProjectPath) ? Loc.Current["ProcessPicker.NoProject"] : Process.ProjectPath;
+    public string Details => $"PID {ProcessId} · {Version.OwnerApartment} · {UiMode} · {LeaseLabel}";
+    private string UiMode => Process.UiMode switch
+    {
+        "WithUserInterface" => Loc.Current["Project.WithUi"],
+        "WithoutUserInterface" => Loc.Current["Project.HeadlessProcess"],
+        _ => Loc.Current["ProcessPicker.UnknownMode"],
+    };
+    private string LeaseLabel => observation.Lease switch
+    {
+        ProjectLeaseState.Available => Loc.Current["Project.LeaseAvailable"],
+        ProjectLeaseState.Held => Loc.Current["Project.LeaseHeld"],
+        _ => Loc.Current["Project.LeaseUnknown"],
+    };
+    public string AccessibleName => Release + " · " + ProjectPath + " · " + Details;
+    internal void RefreshLanguage() { Raise(nameof(ProjectPath)); Raise(nameof(Details)); Raise(nameof(AccessibleName)); }
+}
+
 /// <summary>Owns the selected release and the shared session's project presentation.</summary>
 public sealed class SessionViewModel : ObservableObject, IDisposable
 {
@@ -63,10 +87,12 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     public bool CanSelectRelease => (_client is McpProjectClient ? !_client.IsRunning : !_started) && !_activity.Busy && !ServiceOwnsRelease;
 
+    public string ProjectFilePlaceholder => Loc.Current.T("Project.FilePlaceholder",
+        SelectedReleaseKey switch { "14sp1" => "14", "15.1" => "15_1", _ => SelectedReleaseKey });
     public string SelectedReleaseKey
     {
         get => _selectedReleaseKey;
-        set { if (CanSelectRelease) Set(ref _selectedReleaseKey, value); }
+        set { if (CanSelectRelease && Set(ref _selectedReleaseKey, value)) { ProcessId = 0; ClearProcessList(); Raise(nameof(ProjectFilePlaceholder)); } }
     }
 
     public AsyncCommand RunDoctor { get; }
@@ -74,20 +100,74 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     public AsyncCommand Disconnect { get; }
     [PrefillTarget(Executes = "mcp")]
     public AsyncCommand OpenProject { get; }
+    private int _processId;
     public int ProcessId
     {
-        get => (_client as McpProjectClient)?.ProcessId ?? 0;
-        set { if (_client is McpProjectClient project) { project.ProcessId = value; Raise(); } }
+        get => (_client as McpProjectClient)?.ProcessId ?? _processId;
+        set { if (_client is McpProjectClient project) project.ProcessId = value; _processId = value; Raise(); }
+    }
+    private bool _scannedProcesses;
+    private IReadOnlyList<PortalProcessInfo> _processes = [];
+    public IReadOnlyList<ProjectProcessRow> Processes { get; private set; } = [];
+    public string ProcessListHint => _scannedProcesses ? Loc.Current["Project.NoInstances"]
+        : _client is McpProjectClient && !_client.IsRunning ? Loc.Current["Project.ScanSession"] : Loc.Current["Project.ScanFirst"];
+    public bool HasProcesses => Processes.Count > 0;
+    public bool CanOpenConnection => !_activity.Busy;
+    public bool ProcessScanAvailable => !_activity.Busy && (_client is not McpProjectClient || _client.IsRunning);
+    public bool ShowConnectionForm => !LostConnection && (!IsConnected || ProjectName.Length == 0);
+    public bool LostConnection => !IsConnected && OpenProjectFile.Length > 0;
+    public string ConnectionLabel => IsConnected ? Loc.Current["Project.NoOpenFile"] : Loc.Current["Project.Disconnected"];
+
+    internal async Task RefreshProcessesAsync()
+    {
+        if (!ProcessScanAvailable) return;
+        ClearProcessList();
+        string release = SelectedReleaseKey;
+        await _activity.Guarded("Project.Scan", async () =>
+        {
+            var processes = await _client.ListProcessesAsync();
+            if (release != SelectedReleaseKey || _client is McpProjectClient && !_client.IsRunning) return;
+            _scannedProcesses = true; Raise(nameof(ProcessListHint));
+            _processes = processes.Select(row => row.Process).ToArray();
+            Processes = processes.Select(row => new ProjectProcessRow(row)).ToArray();
+            Raise(nameof(Processes)); Raise(nameof(HasProcesses));
+        });
+    }
+
+    internal async Task ChooseProcessAsync(bool attach)
+    {
+        await RefreshProcessesAsync();
+        if (!ProcessScanAvailable || !HasProcesses) return;
+        if (_dialogs.PickPortalProcess(_processes) is int pid) await SelectProcessAsync(pid, attach);
+    }
+
+    internal async Task SelectProcessAsync(int pid, bool attach)
+    {
+        if (!ProcessScanAvailable || !_processes.Any(process => process.ProcessId == pid)) return;
+        ProcessId = pid;
+        if (attach) await _activity.Guarded("Status.Connecting", () => ConnectCoreAsync(true, pid));
+    }
+
+    private void ClearProcessList()
+    {
+        _scannedProcesses = false; Raise(nameof(ProcessListHint));
+        _processes = [];
+        Processes = [];
+        Raise(nameof(Processes)); Raise(nameof(HasProcesses)); Raise(nameof(ProcessScanAvailable));
     }
     private string? _loadedSharedBinding;
     public async Task ApplySharedStateAsync(JsonObject? state)
     {
         if (_client is not McpProjectClient project) return;
-        if ((string?)state?["releaseKey"] is { } release) Set(ref _selectedReleaseKey, release, nameof(SelectedReleaseKey));
+        Raise(nameof(ProcessScanAvailable)); Raise(nameof(ProcessListHint));
+        if ((string?)state?["releaseKey"] is { } release && Set(ref _selectedReleaseKey, release, nameof(SelectedReleaseKey)))
+            Raise(nameof(ProjectFilePlaceholder));
         Raise(nameof(CanSelectRelease));
         if (state == null || (string?)state["worker"]?["state"] == "disconnected")
         {
-            IsConnected = false; OpenProjectFile = ""; ProjectName = ""; _loadedSharedBinding = null; SetOpennessVersion(null);
+            IsConnected = false;
+            if (!(state == null && project.LostTransport) && (string?)state?["endReason"] != "worker-restart") OpenProjectFile = "";
+            ProjectName = ""; _loadedSharedBinding = null; SetOpennessVersion(null);
             return;
         }
         ProcessId = (int?)state["binding"]?["processId"] ?? 0;
@@ -123,14 +203,21 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         set { if (Set(ref _projectPath, value)) OpenProject.RaiseCanExecuteChanged(); }
     }
 
-    public string ProjectName { get => _projectName; private set => Set(ref _projectName, value); }
-    internal string OpenProjectFile { get => _openProjectFile; private set => Set(ref _openProjectFile, value); }
+    public string ProjectName { get => _projectName; private set { if (Set(ref _projectName, value)) Raise(nameof(ShowConnectionForm)); } }
+    public string OpenProjectFile
+    {
+        get => _openProjectFile;
+        private set { if (Set(ref _openProjectFile, value)) { Raise(nameof(LostConnection)); Raise(nameof(ShowConnectionForm)); } }
+    }
     public string BoundProjectFile => (_client as McpProjectClient)?.ExpectedProjectFile ?? ProjectPath;
 
     public bool IsConnected
     {
         get => _isConnected;
-        private set { if (Set(ref _isConnected, value)) Disconnect.RaiseCanExecuteChanged(); }
+        private set { if (Set(ref _isConnected, value))
+            {
+                Raise(nameof(ConnectionLabel)); Raise(nameof(LostConnection)); Raise(nameof(ShowConnectionForm)); Disconnect.RaiseCanExecuteChanged();
+            } }
     }
 
     public bool UseMock
@@ -212,22 +299,27 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     /// Take over whatever project a running TIA already had open. Right when the operator asked
     /// only to connect; wrong when they named a project to open, which would be overwritten.
     /// </param>
-    private async Task<bool> ConnectCoreAsync(bool adoptOpenProject)
+    private async Task<bool> ConnectCoreAsync(bool adoptOpenProject, int? processId = null)
     {
         EnsureBridge();
         if (_client is McpProjectClient project) project.ExpectedProjectFile = ProjectPath;
         SessionState state;
-        try { state = await _client.ConnectAsync(!Headless); }
+        try { state = await _client.ConnectAsync(!Headless, processId ?? (ProcessId > 0 ? ProcessId : null)); }
         catch (PortalProcessSelectionRequiredException selection)
         {
-            var processId = _dialogs.PickPortalProcess(selection.Processes);
+            processId = _dialogs.PickPortalProcess(selection.Processes);
             if (!processId.HasValue) { _activity.SetStatus("Status.NotConnected", ToastKind.Warning); return false; }
             state = await _client.ConnectAsync(!Headless, processId);
         }
+        if (processId.HasValue) ProcessId = processId.Value;
         IsConnected = true;
         SetOpennessVersion(state.OpennessVersion);
         _activity.SetStatus("Status.Connected", ToastKind.Success, state.Mode, state.OpennessVersion);
 
+        if (adoptOpenProject && state.OpenProject == null)
+        {
+            OpenProjectFile = ""; ProjectName = "";
+        }
         // Attaching to a running TIA inherits whatever project it already had open.
         if (adoptOpenProject && state.OpenProject is not null)
         {
@@ -312,6 +404,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         if (_disposed) return;
         if (_client is McpProjectClient && _client.IsRunning) return;
         IsConnected = false;
+        ClearProcessList();
         if (_client is McpProjectClient) _activity.AppendLocalized("Session.Detached");
         else _activity.AppendLocalized("Log.BridgeExited");
     }
@@ -321,6 +414,8 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         if (e.PropertyName == nameof(WorkbenchActivity.Busy))
         {
             Raise(nameof(CanSelectRelease));
+            Raise(nameof(CanOpenConnection));
+            Raise(nameof(ProcessScanAvailable)); Raise(nameof(ConnectionLabel)); Raise(nameof(LostConnection));
             Disconnect.RaiseCanExecuteChanged();
             Connect.RaiseCanExecuteChanged();
             OpenProject.RaiseCanExecuteChanged();
@@ -330,7 +425,8 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
         Raise(nameof(OpennessBadge));
-        Raise(nameof(ModeLabel));
+        Raise(nameof(ProjectFilePlaceholder)); Raise(nameof(ModeLabel)); Raise(nameof(ConnectionLabel)); Raise(nameof(ProcessListHint));
+        foreach (var process in Processes) process.RefreshLanguage();
     }
 
     public void Dispose()

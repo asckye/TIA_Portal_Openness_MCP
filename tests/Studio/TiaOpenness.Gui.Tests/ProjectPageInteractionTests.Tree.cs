@@ -40,7 +40,7 @@ public sealed partial class ProjectPageInteractionTests
                     var side = window.CompileDocument;
                     var blocks = window.BlockDocument;
                     Assert.True(side.TranslatePoint(new Point(), blocks).Y >= blocks.ActualHeight);
-                    Assert.Equal(System.Math.Min(920, window.ProjectOverview.ActualWidth - 56), side.ActualWidth);
+                    Assert.Equal(System.Math.Min(920, window.ProjectOverview.ActualWidth - 48), side.ActualWidth);
                     if (width < 1200) Assert.Equal(Visibility.Collapsed, window.FoldProjectContext.Visibility);
                     else
                     {
@@ -75,6 +75,44 @@ public sealed partial class ProjectPageInteractionTests
         target.RaiseEvent(preview);
         if (!preview.Handled)
             target.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, source, 0, key) { RoutedEvent = Keyboard.KeyDownEvent });
+    }
+
+    [Fact]
+    public void Hmi_and_software_unit_tree_entries_open_only_their_own_read_only_documents()
+    {
+        wpf.Run(() =>
+        {
+            var client = new FakeProjectClient { AttachedProject = new() { Name = "Cell", Path = @"D:\Fixture\Cell.ap21" },
+                Screens = ["Overview"], Units = [new("Motion", "Cell.Motion", ["Main"])] };
+            client.Devices.Add(new() { Id = "HMI", Name = "Panel", Category = "Hmi" });
+            var dialogs = new FakeDialogService();
+            var model = new MainViewModel(client, dialogs);
+            var window = new MainWindow(model, false);
+            try
+            {
+                model.Session.Connect.Execute(null);
+                WpfContext.ShowWindow(window); WpfContext.Drain();
+                var tree = window.ProjectExplorer.Nodes;
+                var plc = (TreeViewItem)tree.ItemContainerGenerator.ContainerFromIndex(0);
+                var hmi = (TreeViewItem)tree.ItemContainerGenerator.ContainerFromIndex(1);
+                PressTreeKey(hmi, Key.Enter); WpfContext.Drain();
+                Assert.Equal(ProjectDocument.Hmi, model.Engineering.Document);
+                Assert.Equal("Overview", Assert.Single(model.Engineering.Screens));
+                Assert.False(model.Engineering.Compile.CanExecute(null));
+                PressTreeKey(plc, Key.Enter); WpfContext.Drain(); tree.UpdateLayout();
+                var unit = (TreeViewItem)plc.ItemContainerGenerator.ContainerFromItem(Assert.Single(client.Units));
+                PressTreeKey(unit, Key.Enter); WpfContext.Drain(); tree.UpdateLayout();
+                Assert.Equal(ProjectDocument.SoftwareUnit, model.Engineering.Document);
+                Assert.Equal("Motion", model.Engineering.SelectedUnit!.Name);
+                var member = (TreeViewItem)unit.ItemContainerGenerator.ContainerFromIndex(0);
+                client.Calls.Clear();
+                PressTreeKey(member, Key.Enter); WpfContext.Drain();
+                Assert.Single(dialogs.FileRequests);
+                Assert.Null(model.Engineering.FocusedBlock);
+                Assert.Empty(client.Calls);
+            }
+            finally { window.Close(); }
+        });
     }
 
     private static (MainWindow Window, MainViewModel Model, FakeProjectClient Client) TwoPlcProject()

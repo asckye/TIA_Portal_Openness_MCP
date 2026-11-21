@@ -1,4 +1,10 @@
 using System;
+using System.ComponentModel;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using TiaOpenness.Gui.Services;
+using TiaOpenness.Gui.Services.Stubs;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -9,6 +15,39 @@ namespace TiaOpenness.Gui;
 
 public partial class MainWindow
 {
+    private IApprovalService? _projectApprovals;
+    private void BindProjectReviews(IApprovalService? service)
+    {
+        if (_projectApprovals != null) _projectApprovals.PropertyChanged -= OnProjectReviewsChanged;
+        _projectApprovals = service;
+        if (service != null) service.PropertyChanged += OnProjectReviewsChanged;
+        UpdateProjectReview();
+    }
+    private void OnProjectReviewsChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(UpdateProjectReview); return; }
+        UpdateProjectReview();
+    }
+    internal static bool MatchesBlockReview(ApprovalRequest request, string release, string file, string plc, string path)
+    {
+        if (request.State != ApprovalState.Pending || request.Actor != "mcp" || request.Release != release || file.Length == 0
+            || !string.Equals(request.Project, file, StringComparison.OrdinalIgnoreCase) || request.Plc != plc) return false;
+        try
+        {
+            return JsonNode.Parse(request.ParametersJson) is JsonObject values && values["blockPath"] is JsonValue value
+                && value.TryGetValue<string>(out var target) && target == path;
+        }
+        catch (JsonException error)
+        {
+            System.Diagnostics.Trace.TraceWarning("Invalid target JSON for request {0} at byte {1}.", request.Id, error.BytePositionInLine);
+            return false;
+        }
+    }
+    private ApprovalRequest? BlockReview() => _model.Session.IsConnected && _model.Engineering.FocusedBlock is { } block
+        && _model.Engineering.SelectedDevice is { } plc ? _projectApprovals?.Requests.FirstOrDefault(request => MatchesBlockReview(request,
+            _model.SelectedReleaseKey, _model.Session.OpenProjectFile, plc.Id, block.Path)) : null;
+    private void UpdateProjectReview() => BlocksContent.BlockReviewButton.Visibility = BlockReview() == null ? Visibility.Collapsed : Visibility.Visible;
+
     private Panel? _shellBannerSlot;
     private void PlaceSafetyBanner()
     {
@@ -26,8 +65,23 @@ public partial class MainWindow
         _shellBannerSlot = (Panel)SafetyBanner.Parent;
         EngineeringPage.IsVisibleChanged += (_, _) => PlaceSafetyBanner();
         VersionControlContent.IsVisibleChanged += (_, _) => PlaceSafetyBanner();
+        OperationsContent.ReviewsChanged += BindProjectReviews;
+        BlocksContent.BlockReviewButton.Click += (_, _) =>
+        {
+            if (BlockReview() is not { } request) return;
+            OpenDrawer("Approvals"); ApprovalsContent.FocusRequest(request.Id);
+        };
+        OperationsContent.PendingTransfer = () => _prefills.Latest?.Form == TiaOpenness.Shared.WorkbenchPrefillForm.ImportBlocks ? "Import" : "Export";
         OperationsContent.TagsTab = ((Views.PlcTagsView)PlcTagsContent.Content).TagsTab;
+        ProjectExplorer.OptionsRequested += (_, _) => OperationsContent.ShowProjectOptions();
         ProjectExplorer.OpenPage = OpenTreePage;
+        var openImport = new Common.AsyncCommand(() =>
+        {
+            OperationsContent.Options.Show("Import"); return System.Threading.Tasks.Task.CompletedTask;
+        }, () => _model.Engineering.Import.CanExecute(null));
+        BlocksContent.EmptyBlocks.ActionCommand = openImport;
+        _model.Engineering.Import.CanExecuteChanged += (_, _) => openImport.RaiseCanExecuteChanged();
+        BlocksContent.DownloadRequested += (_, _) => OperationsContent.ShowDownloadOptions();
         BlocksContent.SelectionMarker.Target = ProjectExplorer.Nodes;
         ProjectExplorer.SelectionMarker.SetBinding(VisibilityProperty, new Binding(nameof(Visibility)) { Source = BlocksContent.SelectionMarker });
         ProjectExplorer.SelectionMarker.ClearRequested += (source, _) => OnClearFieldPrefill(source, "BlockSelection");
@@ -43,8 +97,16 @@ public partial class MainWindow
 
         _model.Engineering.PropertyChanged += (_, change) =>
         {
-            if (change.PropertyName is nameof(EngineeringViewModel.Document) or nameof(EngineeringViewModel.FocusedBlock)) ShowDocument();
+            if (change.PropertyName is nameof(EngineeringViewModel.Document) or nameof(EngineeringViewModel.FocusedBlock)
+                or nameof(EngineeringViewModel.EmptyBlockList) or nameof(EngineeringViewModel.EmptyDeviceList)) ShowDocument();
         };
+        _model.Session.PropertyChanged += (_, change) =>
+        {
+            if (change.PropertyName == nameof(SessionViewModel.IsConnected)) OperationsContent.Sessions.ClearValue(VisibilityProperty);
+            if (change.PropertyName is nameof(SessionViewModel.IsConnected) or nameof(SessionViewModel.ProjectName)
+                or nameof(SessionViewModel.LostConnection)) ShowDocument();
+        };
+        ProjectOverview.SizeChanged += (_, _) => ShowDocument();
         Root.SizeChanged += (_, _) => ShowDocument();
         ShowDocument();
     }
@@ -53,6 +115,7 @@ public partial class MainWindow
 
     private void ShowDocument()
     {
+        UpdateProjectReview();
         PlaceSafetyBanner();
         var document = _model.Engineering.Document;
         bool tags = document == ProjectDocument.Tags;
@@ -65,7 +128,13 @@ public partial class MainWindow
         BlockDocument.Visibility = tags ? Visibility.Collapsed : Visibility.Visible;
         CompileDocument.Visibility = compile && FoldProjectContext.IsChecked != true ? Visibility.Visible : Visibility.Collapsed;
         PlcTagsContent.Visibility = tags ? Visibility.Visible : Visibility.Collapsed;
-        OperationsContent.ProjectToolbar.Visibility = tags ? Visibility.Collapsed : Visibility.Visible;
+        bool empty = HasProject && document == ProjectDocument.Render && (_model.Engineering.EmptyBlockList || _model.Engineering.EmptyDeviceList);
+        OperationsContent.EmptyToolbar.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        OperationsContent.ProjectToolbar.Visibility = HasProject && !empty && !tags && document is not (ProjectDocument.Hmi or ProjectDocument.SoftwareUnit)
+            ? Visibility.Visible : Visibility.Collapsed;
+        bool lost = _model.Session.LostConnection;
+        if (HasProject || lost) ProjectTree.ClearValue(VisibilityProperty);
+        else ProjectTree.Visibility = Visibility.Collapsed;
         OperationsContent.BlockIdentity.Visibility = Root.ActualWidth >= 1280 && _model.Engineering.FocusedBlock != null
             ? Visibility.Visible : Visibility.Collapsed;
         DocumentHost.RowDefinitions[0].Height = compile ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
@@ -73,8 +142,9 @@ public partial class MainWindow
         Grid.SetRow(CompileDocument, 1);
         Grid.SetColumn(CompileDocument, 0);
         Grid.SetColumnSpan(CompileDocument, 2);
-        CompileDocument.Width = double.NaN;
-        CompileDocument.Margin = new Thickness(28, 16, 28, 20);
+        CompileDocument.HorizontalAlignment = HorizontalAlignment.Left;
+        CompileDocument.Width = Math.Max(0, ProjectOverview.ActualWidth - 48);
+        CompileDocument.Margin = new Thickness(24, 16, 24, 20);
         CompileDocument.MaxWidth = 920;
     }
 

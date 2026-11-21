@@ -131,6 +131,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
         set { if (value) View = MainView.Log; }
     }
 
+    internal Task RefreshDeviceTreeAsync() => Busy || !Session.IsConnected || Session.ProjectName.Length == 0
+        ? Task.CompletedTask : Activity.Guarded("Project.ReloadTree", () => Engineering.LoadDevicesAsync(Session.ProjectName));
+
     private async Task LoadProjectAsync(string projectName)
     {
         await Engineering.LoadDevicesAsync(projectName);
@@ -143,9 +146,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
         if (e.PropertyName == nameof(SessionViewModel.IsConnected) && !Session.IsConnected
             || e.PropertyName == nameof(SessionViewModel.ProjectName) && Session.ProjectName.Length == 0)
         {
+            if (Session.LostConnection) Engineering.CaptureSnapshot(Session.OpenProjectFile);
             Engineering.ClearPresentation();
             VersionControl.ClearPresentation();
         }
+        if (e.PropertyName == nameof(SessionViewModel.OpenProjectFile) && Session.OpenProjectFile != Engineering.Snapshot?.File
+            || e.PropertyName == nameof(SessionViewModel.IsConnected) && Session.IsConnected) Engineering.ClearSnapshot();
         if (e.PropertyName is nameof(SelectedReleaseKey) or nameof(ServiceOwnsRelease) or nameof(CanSelectRelease))
         {
             Raise(e.PropertyName);

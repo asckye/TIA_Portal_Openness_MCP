@@ -18,16 +18,20 @@ namespace TiaOpenness.Gui.Views;
 public sealed class ProjectNodeStyleSelector : StyleSelector
 {
     public Style Device { get; set; } = null!;
+    public Style Unit { get; set; } = null!;
     public Style Block { get; set; } = null!;
     public Style Link { get; set; } = null!;
     public override Style SelectStyle(object item, DependencyObject container) => item switch
     {
-        ProjectLink => Link, DeviceNode => Device, _ => Block,
+        Services.SoftwareUnitInfo or Services.UnitBlockInfo => Unit, ProjectLink => Link, DeviceNode => Device, _ => Block,
     };
 }
 
 public partial class ProjectTreeView : UserControl
 {
+    private async void OnReloadTree(object sender, RoutedEventArgs e) => await ((MainViewModel)DataContext).RefreshDeviceTreeAsync();
+    internal event EventHandler? OptionsRequested;
+    private void OnProjectOptions(object sender, RoutedEventArgs e) => OptionsRequested?.Invoke(this, EventArgs.Empty);
     private bool _updateQueued;
     private BlockNode? _contextGroup;
     private BlockRow? _anchor;
@@ -109,7 +113,7 @@ public partial class ProjectTreeView : UserControl
                     ? model.VersionControl.HasStatus ? model.VersionControl.ModifiedCount + " M" : ""
                     : model.Engineering.TagCount?.ToString() ?? "";
             }
-            bool editorOpen = !model.IsVcTab && model.Engineering.Document != ProjectDocument.Tags;
+            bool editorOpen = !model.IsVcTab && model.Engineering.Document is ProjectDocument.Render or ProjectDocument.Compile or ProjectDocument.Interface;
             foreach (var root in model.Engineering.BlockTree) Mark(root, changed, editorOpen);
         }));
     }
@@ -228,6 +232,20 @@ public partial class ProjectTreeView : UserControl
                 engineering.Document = ProjectDocument.Render;
                 engineering.FocusedBlock = row;
                 await engineering.ReadFocusedBlockAsync();
+                break;
+            case Services.UnitBlockInfo member when !model.Busy:
+                if (OpenPage("Blocks", false)) await engineering.OpenUnitBlockAsync(member.Unit, member.Name);
+                break;
+            case Services.SoftwareUnitInfo unit when !model.Busy:
+                if (!OpenPage("Blocks", false)) return;
+                item.IsExpanded = true;
+                engineering.SelectedUnit = unit;
+                engineering.Document = ProjectDocument.SoftwareUnit;
+                break;
+            case DeviceNode { Device.Category: "Hmi" } hmi when !model.Busy:
+                if (!OpenPage("Blocks", false)) return;
+                engineering.SelectedDevice = hmi.Device;
+                engineering.Document = ProjectDocument.Hmi;
                 break;
             case DeviceNode { Device.Category: "Plc" } device when !model.Busy:
                 if (!OpenPage("Blocks", true)) return;
