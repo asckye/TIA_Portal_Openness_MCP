@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-beta.6_20261118",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-21T05:43:09.8945382+00:00",
+  "generatedAt": "2026-11-21T06:55:13.1952823+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "2ca11708956b8a31a3100a0aad0aea773112ca9522c96e0be2e99949019458ed",
-  "workerSha256": "6c3d0d11bc013e98fef80ba5ce4a9cb1b5f549c305eb5a696dd2a04489300d65",
+  "workerSha256": "8c389b0750cb441ca83858137eb1c015913e1379ba9dc0ed7bca44838f33a5ac",
   "toolCount": 524,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2926,
-    "parametersUndocumented": 846,
-    "parametersFromVocabulary": 690,
+    "parameters": 2928,
+    "parametersUndocumented": 843,
+    "parametersFromVocabulary": 687,
     "toolsWithUndocumentedParameters": 215,
     "toolsWithEnumHints": 173,
     "enumHints": 271,
-    "defaultHints": 1686,
+    "defaultHints": 1688,
     "examplesCurated": 524,
     "recipes": 54
   },
@@ -1654,7 +1654,7 @@
         "offset",
         "limit"
       ],
-      "description": "[L2][HMI][READ]List full screen group paths, including nested folders. Paths start with / and URI-escape each name segment. offset/limit paginate the list; exact paths disambiguate same-named screens. Examples: GetToolUsage(toolName: \"ListHmiScreenPaths\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][READ]List full screen group paths, including nested folders. Paths start with /. Within each name, percent-encode %, /, backslash and ASCII controls (e.g. /Area%2F1/Main). offset/limit paginate the list. Exact paths disambiguate same-named screens. Examples: GetToolUsage(toolName: \"ListHmiScreenPaths\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\"}"
     },
     {
@@ -2022,7 +2022,8 @@
         "importPath",
         "dryRun",
         "expectedPlanHash",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "overwrite"
       ],
       "description": "[L2][PLC-Software][WRITE]Import one PLC Technology Object XML file into PLC software (best-effort) Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportTechnologyObject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"folderPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"dryRun\":true}"
@@ -3121,7 +3122,7 @@
         "expectedPlanHash",
         "expectedProjectFile"
       ],
-      "description": "[L2][Hardware][WRITE] Preview or change the I/O START ADDRESS of one device item (e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong value does NOT fail compilation — the program silently reads a different module. Read back with GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are rejected by TIA and reported back with the reason. Documented Address.StartAddress restrictions: changing one IO type can also move the other IO type of the same module, PLC tags are not rewired, and the PLC must be offline; the result lists every address row of the item before and after the write. Examples: GetToolUsage(toolName: \"SetDeviceItemIoAddress\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Hardware][WRITE] Preview or change the I/O START ADDRESS of one device item (e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong value does NOT fail compilation — the program silently reads a different module. Read back with GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are rejected by TIA and reported back with the reason. Documented Address.StartAddress restrictions: changing one IO type can also move the other IO type of the same module, PLC tags are not rewired, and the PLC must be offline; the result lists every address row of the item before and after the write. To execute, pass dryRun=false, expectedPlanHash from the preview planHash, and expectedProjectFile from the same preview. Examples: GetToolUsage(toolName: \"SetDeviceItemIoAddress\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"deviceItemPath\":\"PLC_1/CPU_1\",\"ioType\":\"Input\",\"startAddress\":1,\"dryRun\":true}"
     },
     {
@@ -3224,7 +3225,7 @@
         "keyword",
         "limit"
       ],
-      "description": "[L2][Hardware][READ]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD devices such as AFM60A, ATV320, or DL100. Use a precise vendor/order/DAP keyword. limit bounds returned candidates, not the synchronous native Find call or file traversal. A failed read reports its own outcome. Inspect the returned diagnostics before another call. The catalog API has no cancellation or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows. Examples: GetToolUsage(toolName: \"SearchInstalledGsdDevices\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Hardware][READ]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD device access points. Use a precise vendor, order or DAP keyword, such as AFM60A, ATV320 or DL100. File-only GSDML rows are metadata. The limit bounds returned candidates. Truncated results include the total match count. File traversal and the synchronous native Find run to completion. The catalog API has no cancellation or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows. Examples: GetToolUsage(toolName: \"SearchInstalledGsdDevices\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"keyword\":\"1513\"}"
     },
     {
@@ -4741,7 +4742,7 @@
         "dryRun",
         "allowRemoveScreenItems"
       ],
-      "description": "[L2][HMI][WRITE] Preview or apply a SiVArc layout export or import on a classic WinCC or Unified screen. Both actions preview by default. Export writes a new YML file on apply and verifies size and SHA-256. Import replaces the screen content with the file's layouts. Preview lists current items at risk. Apply requires allowRemoveScreenItems when items exist or cannot be read, and reports removed and added items when readable. screenName accepts an exact name or /Group/Screen path. Requires V21 and the SiVArc option. No project save. Native acceptance pending. Examples: GetToolUsage(toolName: \"ManageSivarcScreenLayout\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][WRITE] Preview or apply a SiVArc layout export or import on a classic WinCC or Unified screen. Both actions preview by default. Export writes a new YML file on apply and verifies size and SHA-256. Import replaces the screen content with the file's layouts. Preview lists current items at risk. Classic import always requires allowRemoveScreenItems and provides no item diff. Unified import requires consent when items exist or cannot be read. screenName accepts an exact name or /Group/Screen path. Requires V21 and the SiVArc option. No project save. Native acceptance pending. Examples: GetToolUsage(toolName: \"ManageSivarcScreenLayout\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"action\":\"export\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Overview.yml\",\"dryRun\":true}"
     },
     {
@@ -4764,7 +4765,7 @@
         "confirmDelete",
         "dryRun"
       ],
-      "description": "[L2][HMI][WRITE] SiVArc rule folders and rule tables of one family: kind folder (*RuleFolderComposition.Create / Delete, empty folders only) or table (*RuleTableComposition.Create(name), createFromType with typePath + typeVersion of a *RuleTableType in the project or an open global library (libraryName), Delete of non-default tables). path is Folder/Sub/Name relative to the family's system folder; read returns the typed row. delete needs confirmDelete=true when dryRun=false. Default preview; real edits need the SiVArc licence; never generates or saves. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcRuleContainer\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][WRITE] SiVArc rule folders and rule tables of one family: kind folder (*RuleFolderComposition.Create / Delete, empty folders only) or table (*RuleTableComposition.Create(name), createFromType with typePath + typeVersion of a *RuleTableType in the project or an open global library (libraryName), Delete of empty non-default tables). path is Folder/Sub/Name relative to the family root. read returns the typed row. delete needs confirmDelete=true when dryRun=false. Default preview; real edits need the SiVArc licence; never generates or saves. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSivarcRuleContainer\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"category\":\"screens\",\"kind\":\"folder\",\"path\":\"MCP_Example\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"create\"}"
     },
     {
@@ -5987,7 +5988,8 @@
         "preferredDap",
         "dryRun",
         "expectedPlanHash",
-        "expectedProjectFile"
+        "expectedProjectFile",
+        "limit"
       ],
       "description": "[L2][Hardware][WRITE]Add one third-party GSD/GSDML device from the installed TIA hardware catalog (V18+). keyword must be the exact catalog TypeIdentifier of one candidate (from SearchInstalledGsdDevices or SearchHardwareCatalog); that entry is created once with deviceName. Any other keyword is refused with the ranked candidates (preferredDap only ranks them); GSDML file rows without a catalog TypeIdentifier are never created. One DeviceComposition.CreateWithItem call: no next-candidate retry, no renaming. A TIA refusal is verified by the unchanged device inventory and lists the candidates. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"CreateGsdDevice\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"keyword\":\"\\u003Cexact catalog TypeIdentifier from SearchInstalledGsdDevices\\u003E\",\"deviceName\":\"PLC_2\",\"dryRun\":true}"
@@ -6455,7 +6457,7 @@
         "syntaxCheck",
         "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Generate and apply a deterministic Unified HMI button action. Only set-bit/reset-bit/toggle-bit are applied; high-risk or TODO recipes are rejected. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiButtonAction\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Generate and apply a deterministic Unified HMI button action. Only set-bit/reset-bit/toggle-bit are applied; high-risk or TODO recipes are rejected. The target tag is checked on apply. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"EnsureUnifiedHmiButtonAction\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"buttonName\":\"StartButton\",\"eventType\":\"Down\",\"actionKind\":\"set-bit\",\"targetTag\":\"Ready\",\"dryRun\":true}"
     },
     {
@@ -6966,7 +6968,7 @@
         "address",
         "dryRun"
       ],
-      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Ensure a Unified HMI TagDynamization exists for an item property and bind it to an HMI tag. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"BindUnifiedHmiTagDynamization\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Unified][WRITE] Default dryRun=true returns planned changes without native calls; dryRun=false uses the existing approval gate. [L2][HMI-Unified]Ensure a Unified HMI TagDynamization exists for an item property and bind it to an HMI tag. The tag is checked on apply. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"BindUnifiedHmiTagDynamization\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"/Overview\",\"itemName\":\"StatusText\",\"propertyName\":\"Visible\",\"tagName\":\"Ready\",\"dryRun\":true}"
     },
     {
@@ -8519,7 +8521,7 @@
         "expectedPlanHash",
         "expectedProjectFile"
       ],
-      "description": "[L2][HMI-Library][WRITE] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen item is modified. Current native policy; V4 native acceptance is pending. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportMasterCopyFromGlobalLibrary\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Library][WRITE] Refused: no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a target-release document. The exact-signature allow-list is empty; no library is opened and no screen item is modified. Preview and apply both report this refusal. Examples: GetToolUsage(toolName: \"ImportMasterCopyFromGlobalLibrary\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"libraryPath\":\"C:\\\\Examples\\\\Library.al21\",\"masterCopyName\":\"FB_Motor\",\"hmiSoftwarePath\":\"HMI_RT_1\",\"screenName\":\"Overview\",\"dryRun\":true}"
     },
     {

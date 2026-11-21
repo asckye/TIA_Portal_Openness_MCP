@@ -11807,7 +11807,7 @@
         "properties": {
           "limit": {
             "default": 50,
-            "description": "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded.",
+            "description": "Registered-tool rows per page, 1 through 50. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded.",
             "maximum": 50,
             "minimum": 1,
             "type": "integer"
@@ -12961,7 +12961,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "a6fd93fa6612ba1a410b545c33dbce9726f6d5c85d84a7dce31abb2deee1ceeb",
+      "descriptionSha256": "4131fdadb805164d1f8a4687ed9591e75e0ac27909a927ff6d6c3ea4372e072b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13736,7 +13736,7 @@
           },
           "newName": {
             "default": "",
-            "description": "newName: the new name (rename actions).",
+            "description": "Name of the child folder to create under folderPath. Used only for create.",
             "type": "string"
           },
           "softwarePath": {
@@ -15035,7 +15035,7 @@
           },
           "dependenciesMode": {
             "default": "",
-            "description": "dependenciesMode: how dependent types are handled by the action ('' = default).",
+            "description": "dependenciesMode: native dependency mode required for release. Leave empty for other actions.",
             "type": "string"
           },
           "dryRun": {
@@ -15072,7 +15072,7 @@
             "type": "string"
           },
           "typePath": {
-            "description": "typePath: 'Group/Name' of the PLC data type as GetSoftwareTree shows it.",
+            "description": "Exact library type path, including its type folders.",
             "type": "string"
           },
           "updatePathsMode": {
@@ -15087,7 +15087,7 @@
             "type": "string"
           },
           "version": {
-            "description": "version: catalog / firmware version string, e.g. 'V2.9'.",
+            "description": "Exact existing library type version in Major.Minor.Build form.",
             "type": "string"
           }
         },
@@ -15133,13 +15133,13 @@
             "type": "string"
           },
           "exportDirectory": {
-            "description": "Absolute output directory on the TIA host. Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Absolute output directory on the TIA host. Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive.",
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           },
           "exportFile": {
-            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive.",
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
@@ -15164,7 +15164,7 @@
           },
           "outputPath": {
             "default": "",
-            "description": "Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Deprecated alias; use exportFile or exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Optional new absolute .json file for import, required new .json file or CSV directory for export/template. Deprecated alias; use exportFile or exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile or exportDirectory; these parameters are mutually exclusive.",
             "type": "string"
           },
           "packageId": {
@@ -16408,7 +16408,7 @@
             "type": "string"
           },
           "exportFile": {
-            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute local .zip path under an existing parent; export only. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute local .zip path under an existing parent; export only. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive.",
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
@@ -16425,7 +16425,7 @@
           },
           "outputPath": {
             "default": "",
-            "description": "New absolute local .zip path under an existing parent; export only. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "New absolute local .zip path under an existing parent; export only. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive.",
             "type": "string"
           },
           "packageId": {
@@ -17037,7 +17037,7 @@
             "type": "string"
           },
           "exportFile": {
-            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute output file; existing parent directory required when dryRun=false. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. New absolute output file; existing parent directory required when dryRun=false. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive.",
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
@@ -17048,7 +17048,7 @@
           },
           "outputPath": {
             "default": "",
-            "description": "New absolute output file; existing parent directory required when dryRun=false. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "New absolute output file; existing parent directory required when dryRun=false. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive.",
             "type": "string"
           }
         },
@@ -18031,7 +18031,7 @@
             "type": "string"
           },
           "exportFile": {
-            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: See the operation description and its bounds. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: See the operation description and its bounds. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive.",
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
@@ -18053,7 +18053,7 @@
           },
           "outputPath": {
             "default": "",
-            "description": "outputPath: See the operation description and its bounds. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "outputPath: See the operation description and its bounds. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive.",
             "type": "string"
           },
           "softwarePath": {
@@ -18263,7 +18263,7 @@
           },
           "limit": {
             "default": 50,
-            "description": "Maximum registered-tool rows per page. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded.",
+            "description": "Registered-tool rows per page, 1 through 50. Follow meta.paging.nextOffset; a page may contain fewer rows to keep the report bounded.",
             "maximum": 50,
             "minimum": 1,
             "type": "integer"
@@ -18892,7 +18892,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "1e03212f3e4cf15f5f22e23dc21d066d29b3e3ac53cc9202a3e5208227dd540f",
+      "descriptionSha256": "d51009ae34ed03ed521544204e9313c48a96549f427cb0dd943962d85bffdf02",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -18902,7 +18902,7 @@
           },
           "limit": {
             "default": 50,
-            "description": "limit: maximum candidates to return",
+            "description": "limit: positive maximum number of candidates to return",
             "minimum": 1,
             "type": "integer"
           }
@@ -19220,7 +19220,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "c6872f77a94e671910c88f19ffe6894ff903897a30236eb375fbbbe8f6f59503",
+      "descriptionSha256": "2661022dab29baca867b5d63bfdfb4c62fb2ba02491ca76eff9d1517305aa5df",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -20011,7 +20011,7 @@
         "additionalProperties": false,
         "properties": {
           "exportFile": {
-            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Absolute output file path on the TIA host. Supply a file, not a directory. outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive.",
             "examples": [
               "C:\\<directory under GetSessionState data.outputRoot>\\FC_Add.scl"
             ],
@@ -20021,7 +20021,7 @@
           },
           "outputPath": {
             "default": "",
-            "description": "outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "outputPath: .scl only target file path. If a directory is given (or the path has no extension), the file is named after the first block found in the source. Empty means a temp file under %TEMP%\\tia_mcp_scl. Deprecated alias; use exportFile. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputPath or exportFile; these parameters are mutually exclusive.",
             "examples": [
               "C:\\<directory under GetSessionState data.outputRoot>\\FC_Add.scl"
             ],
