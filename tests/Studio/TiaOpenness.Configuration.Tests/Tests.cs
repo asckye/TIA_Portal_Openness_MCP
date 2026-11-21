@@ -256,7 +256,8 @@ namespace TiaMcpConfigurator
                     };
                     Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Pages.SaveBoth"],
                         (chinese ? "Chinese" : "English") + " save both label");
-                    Assert(((System.Windows.Controls.TextBlock)window.FindName("McpStatusText")).Text.StartsWith("MCP ·")
+                    Assert(System.Windows.Automation.AutomationProperties.GetHelpText(
+                            (System.Windows.Controls.RadioButton)window.FindName("RailMcp")).StartsWith("MCP ·")
                         && ((System.Windows.Controls.RadioButton)window.FindName("RailMcp")).IsChecked == true
                         && ((System.Windows.Controls.RadioButton)window.FindName("RailEngineering")).IsChecked == false,
                         (chinese ? "Chinese" : "English") + " caption and rail track the configuration page");
