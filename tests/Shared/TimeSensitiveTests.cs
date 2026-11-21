@@ -336,6 +336,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Existing_modals_suppress_the_palette_shortcut",
                 "Every_palette_item_only_navigates_locates_or_sets_appearance",
                 "Palette_keeps_surface_clicks_inside_and_dismisses_on_a_scrim_click",
+                "Popover_discovers_attaches_detaches_and_creates_through_the_operator_panel",
+                "Overlay_cards_show_the_bound_project_and_safe_choices",
                 "Palette_finds_a_block_by_metadata_or_path_and_keeps_the_short_page_names_searchable",
                 "Session_escape_returns_focus_and_AI_navigation_closes_the_non_modal_flyout"
             },

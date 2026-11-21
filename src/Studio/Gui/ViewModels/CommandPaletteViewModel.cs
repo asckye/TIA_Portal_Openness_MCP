@@ -1,17 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Data;
+using TiaOpenness.Gui.Common;
 
 namespace TiaOpenness.Gui.ViewModels;
 
 internal sealed record CommandPaletteItem(string Title, string Detail, Action Execute, string SearchAlias = "");
 
-internal sealed class CommandPaletteViewModel(List<CommandPaletteItem> items)
+internal sealed class CommandPaletteViewModel(List<CommandPaletteItem> items) : ObservableObject
 {
+    private bool _showKeyboardSelection;
+    public bool ShowKeyboardSelection { get => _showKeyboardSelection; set => Set(ref _showKeyboardSelection, value); }
     public ListCollectionView Results { get; } = new(items);
 
     internal void Search(string query)
     {
+        ShowKeyboardSelection = false;
         string term = query.Trim();
         Results.Filter = term.Length == 0 ? null : value => value is CommandPaletteItem item
             && (item.Title.Contains(term, StringComparison.CurrentCultureIgnoreCase)

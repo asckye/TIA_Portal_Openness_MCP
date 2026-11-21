@@ -36,6 +36,7 @@ public partial class CommandPalette : UserControl
         else if (SearchBox.IsKeyboardFocusWithin && e.Key is Key.Down or Key.Up && ResultList.HasItems)
         {
             e.Handled = true;
+            ((CommandPaletteViewModel)DataContext).ShowKeyboardSelection = true;
             ResultList.SelectedIndex = Math.Clamp(ResultList.SelectedIndex + (e.Key == Key.Down ? 1 : -1), 0, ResultList.Items.Count - 1);
             ResultList.ScrollIntoView(ResultList.SelectedItem);
         }

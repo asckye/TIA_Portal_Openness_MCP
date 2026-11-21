@@ -24,7 +24,7 @@ using static TiaOpenness.Gui.Tests.WorkbenchControlTests;
 namespace TiaOpenness.Gui.Tests;
 
 [Collection(WpfCollection.Name)]
-public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
+public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
 {
     private static CommandPalette OpenPalette(MainWindow window)
     {
@@ -84,6 +84,16 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                 var palette = OpenPalette(window);
                 Assert.True(AutomationProperties.GetIsDialog(palette));
                 Assert.Same(palette.SearchBox, Keyboard.FocusedElement);
+                Assert.Equal(0, palette.ResultList.SelectedIndex);
+                Assert.True(KeyDown(palette.SearchBox, Key.Down));
+                Assert.Equal(1, palette.ResultList.SelectedIndex);
+                WpfContext.Drain();
+                var current = (ListBoxItem)palette.ResultList.ItemContainerGenerator.ContainerFromIndex(1);
+                Assert.True(current.IsSelected);
+                Assert.True(((CommandPaletteViewModel)palette.DataContext).ShowKeyboardSelection);
+                Assert.Same(current.FindResource("Primer.accent"), current.BorderBrush);
+                Assert.True(KeyDown(palette.SearchBox, Key.Up));
+                Assert.Equal(0, palette.ResultList.SelectedIndex);
                 Assert.Equal(KeyboardNavigationMode.Cycle, KeyboardNavigation.GetTabNavigation(palette));
                 Assert.False(window.RailEngineering.IsEnabled);
                 foreach (var direction in new[] { FocusNavigationDirection.Next, FocusNavigationDirection.Previous })
@@ -153,7 +163,8 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                     "Audit Chain", "Runtime Logs", "Settings & Safety", "Approvals", "AI calls", "Version control"];
                 string[] appearance = ["Settings.Light", "Settings.Dark", "Settings.AccentCobalt", "Settings.AccentPetrol",
                     "Settings.English", "Settings.Chinese"];
-                var titles = pages.Concat(new[] { "Main" }).Concat(appearance.Select(key => Loc.Current[key])).ToArray();
+                var commands = new[] { "Main", Loc.Current["Overlay.Rules"], Loc.Current["Overlay.Transfer"] };
+                var titles = pages.Concat(commands).Concat(appearance.Select(key => Loc.Current[key])).ToArray();
                 var approvals = (ApprovalServiceStub)window.Approvals;
                 approvals.Receive(FeaturePageFixtures.Request(CallId) with { Deadline = DateTimeOffset.UtcNow.AddMinutes(2) });
                 bool approvalEnabled = approvals.Enabled, controlEnabled = App.Settings.WorkbenchControlEnabled;
@@ -170,6 +181,15 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                     palette.ResultList.SelectedItem = palette.ResultList.Items.Cast<CommandPaletteItem>().Single(item => item.Title == titles[i]);
                     Assert.True(KeyDown(palette.SearchBox, Key.Enter));
                     if (i < pages.Length) Assert.Equal(destinations[i], window.CurrentPage);
+                    if (titles[i] == Loc.Current["Overlay.Rules"] || titles[i] == Loc.Current["Overlay.Transfer"])
+                    {
+                        Assert.Equal("Engineering", window.CurrentPage);
+                        Assert.True(window.OperationsContent.OptionsOpen);
+                        WpfContext.Drain(); window.UpdateLayout();
+                        var options = window.OperationsContent.Options;
+                        Assert.True((titles[i] == Loc.Current["Overlay.Rules"] ? options.InspectOptions : options.ExportOptions).IsVisible);
+                        options.Hide();
+                    }
                     if (titles[i] == "Main")
                     {
                         Assert.Equal("Engineering", window.CurrentPage);
@@ -273,22 +293,24 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
             {
                 var popover = OpenSession(window);
                 Assert.False(AutomationProperties.GetIsDialog(popover));
-                Assert.Equal("Line.ap21", popover.Project.Text);
+                Assert.Contains("Line.ap21", window.SessionStatus.Text);
+                Assert.Null(popover.FindName("Project"));
                 Assert.Equal(Loc.Current["Overlay.Session"], popover.SessionHeading.Text);
-                Assert.Equal("PLC_1", popover.Plc.Text);
-                Assert.Equal("—", popover.Client.Text);
+                Assert.Null(popover.FindName("Plc"));
+                Assert.Null(popover.FindName("Client"));
+                Assert.Null(popover.FindName("AiSettings"));
                 Assert.True(KeyDown(popover, Key.Escape));
                 Assert.Empty(window.Root.Children.OfType<SessionPopover>());
                 Assert.Same(window.SessionStatusButton, Keyboard.FocusedElement);
                 client.Devices[0].TypeName = "CPU 1512SP-1 PN";
-                Assert.Equal("PLC_1 · CPU 1512SP-1 PN", OpenSession(window).Plc.Text);
+                Assert.DoesNotContain(DesktopCapture.Descendants<TextBlock>(OpenSession(window)), text => text.Text.Contains("CPU 1512SP-1 PN"));
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request()).Status);
                 Assert.Equal("Log", window.CurrentPage);
                 Assert.Empty(window.Root.Children.OfType<SessionPopover>());
                 Assert.Empty(client.Calls);
                 UnifiedDesktopTests.ClickControl(OpenSession(window).SwitchVersion);
                 Assert.Equal("Mcp", window.CurrentPage);
-                UnifiedDesktopTests.ClickControl(OpenSession(window).AiSettings);
+                UnifiedDesktopTests.ClickControl(window.ApprovalStatusButton);
                 Assert.Equal("Settings", window.CurrentPage);
                 Assert.Equal(Visibility.Visible, window.SettingsContent.AiPanel.Visibility);
             }
@@ -434,10 +456,18 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                 WpfContext.ShowWindow(window);
                 var popover = OpenSession(window);
                 Assert.Equal(TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName + " · " + apartment, popover.Release.Text);
-                Assert.Contains("fixture AI", popover.Client.Text);
-                Assert.Contains("(stdio)", popover.Client.Text);
+                InvokeSessionButton(popover.Discover, model.Panel!.Refresh);
+                popover.UpdateLayout();
+                var row = Assert.Single(DesktopCapture.Descendants<ListBoxItem>(popover.SessionList));
+                var clientLabel = Assert.Single(DesktopCapture.Descendants<TextBlock>(row), text => text.Text.Contains("fixture AI"));
+                Assert.Contains(DesktopCapture.Descendants<TextBlock>(row), text => text.IsVisible && text.Text == "IDLE");
+                Assert.True(clientLabel.IsVisible);
+                Assert.Contains("fixture AI", clientLabel.Text);
+                Assert.Contains("(stdio)", clientLabel.Text);
                 Assert.Equal(Loc.Current["Overlay.SharedSession"], popover.SessionHeading.Text);
-                Assert.Contains(language == AppLanguage.Chinese ? "（未验证）" : "(unverified)", popover.Client.Text);
+                var marker = language == AppLanguage.Chinese ? "（未验证）" : "(unverified)";
+                Assert.Contains(DesktopCapture.Descendants<TextBlock>(row), text => text.IsVisible && text.Text == marker);
+                Assert.Contains(marker, AutomationProperties.GetName(row));
                 popover.UpdateLayout();
                 // XREF-1 removed the cross-reference strings, so match the visible words in both languages.
                 static bool Mentions(string? text) => text is not null
@@ -454,6 +484,9 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                         _ => false,
                     });
                 Assert.Empty(DesktopCapture.Descendants<ToggleButton>(popover));
+                Assert.Equal(new[] { "Attach", "Create", "Detach", "Disconnect", "Discover", "SwitchVersion" },
+                    DesktopCapture.Descendants<Button>(popover).Where(button => button.IsVisible)
+                        .Select(button => button.Name).OrderBy(name => name, StringComparer.Ordinal).ToArray());
                 Assert.True(popover.Disconnect.IsEnabled);
                 UnifiedDesktopTests.ClickControl(popover.Disconnect);
                 Assert.Equal(ConfirmationAction.EndSharedSession, dialogs.Action);
@@ -522,7 +555,7 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                     Capture((FrameworkElement)palette.ResultList.Parent, "palette");
                     Assert.Equal(!themes.UseLowEffects && !themes.EffectivelyHighContrast, palette.Backdrop.IsVisible);
                     Assert.Equal(490, palette.Surface.ActualWidth);
-                    Assert.Equal(64, palette.Surface.TranslatePoint(new Point(), window.Root).Y);
+                    Assert.Equal(56, palette.Surface.TranslatePoint(new Point(), window.Root).Y);
                     Assert.Equal(300, palette.ResultList.ActualHeight);
                     UnifiedDesktopTests.ClickControl(palette.Dismiss);
                     var popover = OpenSession(window);
@@ -530,10 +563,13 @@ public sealed class WorkbenchControlOverlayTests(WpfContext wpf)
                     var corner = popover.TranslatePoint(new Point(0, popover.ActualHeight), window.Root);
                     Assert.Equal(12, corner.X);
                     Assert.Equal(32, window.Root.ActualHeight - corner.Y);
-                    Assert.Equal(312, popover.ActualWidth);
+                    Assert.Equal(372, popover.ActualWidth);
+                    Assert.Equal(140, popover.SwitchVersion.ActualWidth);
                     Assert.Equal(28, popover.SwitchVersion.ActualHeight);
                     Assert.Equal(28, popover.Disconnect.ActualHeight);
-                    Assert.InRange(Math.Abs(popover.SwitchVersion.ActualWidth - popover.Disconnect.ActualWidth), 0, 1);
+                    var actionsBottom = popover.Disconnect.TranslatePoint(new Point(0, popover.Disconnect.ActualHeight), popover).Y;
+                    Assert.Equal(17, popover.ActualHeight - actionsBottom);
+                    Assert.InRange(Math.Abs(popover.Detach.ActualWidth - popover.Disconnect.ActualWidth), 0, 1);
                     var peer = new ButtonAutomationPeer(popover.Disconnect);
                     Assert.Equal(Loc.Current["Overlay.Disconnect"], peer.GetName());
                     var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(popover);

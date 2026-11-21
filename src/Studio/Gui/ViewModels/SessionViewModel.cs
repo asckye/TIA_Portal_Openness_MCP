@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Text.Json.Nodes;
 using System.Windows.Threading;
@@ -68,6 +69,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         _loadProject = loadProject;
         RunDoctor = new AsyncCommand(DoctorAsync);
         Connect = new AsyncCommand(ConnectAsync, () => !_activity.Busy);
+        PickProcess = new AsyncCommand(PickProcessAsync, () => !_activity.Busy && _client is McpProjectClient { IsRunning: true });
         Disconnect = new AsyncCommand(DisconnectAsync, () => IsConnected && !_activity.Busy);
         OpenProject = client is McpProjectClient
             ? new McpPanelCommand(OpenProjectAsync, () => !_activity.Busy && ProjectPath.Length > 0)
@@ -97,6 +99,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
 
     public AsyncCommand RunDoctor { get; }
     public AsyncCommand Connect { get; }
+    public AsyncCommand PickProcess { get; }
     public AsyncCommand Disconnect { get; }
     [PrefillTarget(Executes = "mcp")]
     public AsyncCommand OpenProject { get; }
@@ -160,6 +163,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     {
         if (_client is not McpProjectClient project) return;
         Raise(nameof(ProcessScanAvailable)); Raise(nameof(ProcessListHint));
+        PickProcess.RaiseCanExecuteChanged();
         if ((string?)state?["releaseKey"] is { } release && Set(ref _selectedReleaseKey, release, nameof(SelectedReleaseKey)))
             Raise(nameof(ProjectFilePlaceholder));
         Raise(nameof(CanSelectRelease));
@@ -271,6 +275,33 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         await ConnectCoreAsync(adoptOpenProject: true);
     });
 
+    private async Task PickProcessAsync() => await _activity.Guarded("Status.Connecting", async () =>
+    {
+        var client = (McpProjectClient)_client;
+        var key = client.Session.SessionKey;
+        var processes = await ScanProcessesAsync();
+        int? pid = _dialogs.PickPortalProcess(processes, ScanProcessesAsync);
+        if (pid.HasValue && key != null && key == client.Session.SessionKey)
+            await ConnectCoreAsync(adoptOpenProject: true, pid);
+    });
+
+    private async Task<IReadOnlyList<PortalProcessInfo>> ScanProcessesAsync(CancellationToken token = default)
+    {
+        var client = (McpProjectClient)_client;
+        var data = await client.Read("ListPortalProcessProjects", token: token);
+        var rows = (data["processes"] as JsonArray ?? data["items"] as JsonArray ?? []).Select(McpProjectClient.Decode).OfType<JsonObject>().ToArray();
+        if (rows.Length == 0) return [];
+        var info = await client.Read("GetPortalInfo", new() { ["includeProcesses"] = true, ["includeSessions"] = false, ["includeProducts"] = false }, token);
+        var modes = (info["evidence"]?["processes"] as JsonArray ?? []).Select(McpProjectClient.Decode).OfType<JsonObject>()
+            .ToDictionary(p => (int)p["id"]!, p => (string?)p["mode"]);
+        return rows.Select(p => new PortalProcessInfo
+        {
+            ProcessId = (int)p["processId"]!, ProjectPath = (string?)p["projectPath"],
+            Release = (string?)data["releaseKey"] ?? SelectedReleaseKey,
+            UiMode = modes.GetValueOrDefault((int)p["processId"]!),
+        }).ToArray();
+    }
+
     private async Task DisconnectAsync() => await _activity.Guarded("Pages.Disconnecting", async () =>
     {
         if (_client is McpProjectClient project)
@@ -304,10 +335,12 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         EnsureBridge();
         if (_client is McpProjectClient project) project.ExpectedProjectFile = ProjectPath;
         SessionState state;
+        int? selectedPid = processId;
         try { state = await _client.ConnectAsync(!Headless, processId ?? (ProcessId > 0 ? ProcessId : null)); }
-        catch (PortalProcessSelectionRequiredException selection)
+        catch (PortalProcessSelectionRequiredException selection) when (!selectedPid.HasValue)
         {
-            processId = _dialogs.PickPortalProcess(selection.Processes);
+            processId = _client is McpProjectClient ? _dialogs.PickPortalProcess(selection.Processes, ScanProcessesAsync)
+                : _dialogs.PickPortalProcess(selection.Processes);
             if (!processId.HasValue) { _activity.SetStatus("Status.NotConnected", ToastKind.Warning); return false; }
             state = await _client.ConnectAsync(!Headless, processId);
         }
@@ -327,6 +360,11 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
             ProjectName = state.OpenProject.Name ?? string.Empty;
             _activity.AppendLocalized("Log.Attached", state.OpenProject.Name);
             await _loadProject(ProjectName);
+        }
+        else if (adoptOpenProject && selectedPid.HasValue)
+        {
+            OpenProjectFile = ProjectName = string.Empty;
+            if (_client is McpProjectClient selected) selected.ExpectedProjectFile = string.Empty;
         }
         return true;
     }
@@ -418,6 +456,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
             Raise(nameof(ProcessScanAvailable)); Raise(nameof(ConnectionLabel)); Raise(nameof(LostConnection));
             Disconnect.RaiseCanExecuteChanged();
             Connect.RaiseCanExecuteChanged();
+            PickProcess.RaiseCanExecuteChanged();
             OpenProject.RaiseCanExecuteChanged();
         }
     }

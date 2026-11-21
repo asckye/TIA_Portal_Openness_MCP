@@ -26,6 +26,77 @@ internal sealed class WorkbenchMessageBox : Window
         SetResourceReference(StyleProperty, "Ui.Window");
         Result = buttons == MessageBoxButton.OK ? MessageBoxResult.OK : MessageBoxResult.Cancel;
 
+        bool projectDialog = labels?.Action is Services.ConfirmationAction.SaveProject or Services.ConfirmationAction.EndSharedSession;
+        WrapPanel actions;
+        if (projectDialog)
+        {
+            Width = 472; // 440 px card with space to paint its shadow.
+            AllowsTransparency = true;
+            Background = System.Windows.Media.Brushes.Transparent;
+            var sheet = new ProjectConfirmation();
+            Loaded += (_, _) =>
+            {
+                sheet.ShowDetails(labels!.Action, caption, text, Owner?.DataContext as ViewModels.MainViewModel);
+                Title = sheet.Heading.Text;
+                System.Windows.Automation.AutomationProperties.SetName(this, Title);
+            };
+            Content = sheet;
+            actions = sheet.Actions;
+        }
+        else actions = CreateMessageLayout(text, caption, icon);
+
+        var choices = labels?.Detach == true ? new[] { MessageBoxResult.OK, MessageBoxResult.No, MessageBoxResult.Cancel } : buttons switch
+        {
+            MessageBoxButton.OK => new[] { MessageBoxResult.OK },
+            MessageBoxButton.OKCancel => new[] { MessageBoxResult.OK, MessageBoxResult.Cancel },
+            MessageBoxButton.YesNo => new[] { MessageBoxResult.Yes, MessageBoxResult.No },
+            _ => new[] { MessageBoxResult.Yes, MessageBoxResult.No, MessageBoxResult.Cancel },
+        };
+        foreach (var choice in Enumerable.Reverse(choices))
+        {
+            var label = choice == choices[0] && labels != null ? labels.Action switch
+            {
+                Services.ConfirmationAction.SaveProject => TrExtension.CreateBinding("Dialog.Save.Action"),
+                Services.ConfirmationAction.EndSharedSession => TrExtension.CreateBinding("Dialog.Disconnect.Action"),
+                Services.ConfirmationAction.OverwriteProject => TrExtension.CreateBinding("Dialog.Pull.Action"),
+                _ => TrExtension.CreateBinding("Dialog.Import.Action"),
+            } : choice == MessageBoxResult.No && labels?.Action == Services.ConfirmationAction.EndSharedSession
+                ? TrExtension.CreateBinding("Dialog.Detach.Action")
+                : choice == MessageBoxResult.No && labels?.Action == Services.ConfirmationAction.ImportBlocks
+                ? TrExtension.CreateBinding("Dialog.Import.Safe") : choice switch
+            {
+                MessageBoxResult.OK => TrExtension.CreateBinding("Dialog.OK"), MessageBoxResult.Yes => TrExtension.CreateBinding("Dialog.Yes"),
+                MessageBoxResult.No => TrExtension.CreateBinding("Dialog.No"), _ => TrExtension.CreateBinding("Dialog.Cancel"),
+            };
+            var safe = buttons == MessageBoxButton.OK ? MessageBoxResult.OK : buttons == MessageBoxButton.YesNo ? MessageBoxResult.No : MessageBoxResult.Cancel;
+            var button = new Button
+            {
+                MinWidth = projectDialog ? 0 : 84, Margin = new Thickness(actions.Children.Count == 0 ? 0 : 8, 0, 0, 0),
+                IsDefault = choice == safe, IsCancel = choice == safe,
+            };
+            button.SetBinding(ContentControl.ContentProperty, label);
+            button.SetBinding(System.Windows.Automation.AutomationProperties.NameProperty, TrExtension.NameBinding(label));
+            // Ant: the affirmative action is the primary button, or the danger button when the dialog warns;
+            // a lone acknowledgement is primary, and every other choice (including the safe default) is default.
+            string style = choice == choices[0] && (choice != safe || buttons == MessageBoxButton.OK)
+                ? icon == MessageBoxImage.Warning && choice != safe ? "Primer.WarningAction" : "Primer.Run"
+                : "Primer.Secondary";
+            if (projectDialog) style = choice == choices[0] ? "Primer.Button.Primary.Medium" : "Primer.Button.Secondary.Medium";
+            button.SetResourceReference(StyleProperty, style);
+            button.Click += (_, _) => { Result = choice; Close(); };
+            actions.Children.Add(button);
+            if (choice == safe) Loaded += (_, _) => button.Focus();
+        }
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key != Key.Escape) return;
+            Result = buttons == MessageBoxButton.YesNo ? MessageBoxResult.No : buttons == MessageBoxButton.OK ? MessageBoxResult.OK : MessageBoxResult.Cancel;
+            e.Handled = true; Close();
+        };
+    }
+
+    private WrapPanel CreateMessageLayout(string text, string caption, MessageBoxImage icon)
+    {
         // Ant Modal.confirm: 20/24 content padding, a 22px status icon beside a fontSizeLG title, the body
         // aligned under the title 8px below it, and the footer 12px below the body.
         var panel = new DockPanel { Margin = new Thickness(24, 20, 24, 20) };
@@ -63,53 +134,10 @@ internal sealed class WorkbenchMessageBox : Window
                 Content = message, MaxHeight = MaxHeight - 160, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Margin =
                     new Thickness(mark != null ? 34 : 0, 0, 0, 0)
             });
-        var choices = labels?.Detach == true ? new[] { MessageBoxResult.OK, MessageBoxResult.No, MessageBoxResult.Cancel } : buttons switch
-        {
-            MessageBoxButton.OK => new[] { MessageBoxResult.OK },
-            MessageBoxButton.OKCancel => new[] { MessageBoxResult.OK, MessageBoxResult.Cancel },
-            MessageBoxButton.YesNo => new[] { MessageBoxResult.Yes, MessageBoxResult.No },
-            _ => new[] { MessageBoxResult.Yes, MessageBoxResult.No, MessageBoxResult.Cancel },
-        };
-        foreach (var choice in Enumerable.Reverse(choices))
-        {
-            var label = choice == choices[0] && labels != null ? labels.Action switch
-            {
-                Services.ConfirmationAction.SaveProject => TrExtension.CreateBinding("Dialog.Save.Action"),
-                Services.ConfirmationAction.EndSharedSession => TrExtension.CreateBinding("Dialog.Disconnect.Action"),
-                Services.ConfirmationAction.OverwriteProject => TrExtension.CreateBinding("Dialog.Pull.Action"),
-                _ => TrExtension.CreateBinding("Dialog.Import.Action"),
-            } : choice == MessageBoxResult.No && labels?.Action == Services.ConfirmationAction.EndSharedSession
-                ? TrExtension.CreateBinding("Dialog.Detach.Action")
-                : choice == MessageBoxResult.No && labels?.Action == Services.ConfirmationAction.ImportBlocks
-                ? TrExtension.CreateBinding("Dialog.Import.Safe") : choice switch
-            {
-                MessageBoxResult.OK => TrExtension.CreateBinding("Dialog.OK"), MessageBoxResult.Yes => TrExtension.CreateBinding("Dialog.Yes"),
-                MessageBoxResult.No => TrExtension.CreateBinding("Dialog.No"), _ => TrExtension.CreateBinding("Dialog.Cancel"),
-            };
-            var safe = buttons == MessageBoxButton.OK ? MessageBoxResult.OK : buttons == MessageBoxButton.YesNo ? MessageBoxResult.No : MessageBoxResult.Cancel;
-            var button = new Button {
-                MinWidth = 84, Margin = new Thickness(actions.Children.Count == 0 ? 0 : 8, 0, 0, 0), IsDefault = choice == safe, IsCancel = choice == safe };
-            button.SetBinding(ContentControl.ContentProperty, label);
-            button.SetBinding(System.Windows.Automation.AutomationProperties.NameProperty, TrExtension.NameBinding(label));
-            // Ant: the affirmative action is the primary button, or the danger button when the dialog warns;
-            // a lone acknowledgement is primary, and every other choice (including the safe default) is default.
-            string style = choice == choices[0] && (choice != safe || buttons == MessageBoxButton.OK)
-                ? icon == MessageBoxImage.Warning && choice != safe ? "Primer.WarningAction" : "Primer.Run"
-                : "Primer.Secondary";
-            button.SetResourceReference(StyleProperty, style);
-            button.Click += (_, _) => { Result = choice; Close(); };
-            actions.Children.Add(button);
-            if (choice == safe) Loaded += (_, _) => button.Focus();
-        }
-        PreviewKeyDown += (_, e) =>
-        {
-            if (e.Key != Key.Escape) return;
-            Result = buttons == MessageBoxButton.YesNo ? MessageBoxResult.No : buttons == MessageBoxButton.OK ? MessageBoxResult.OK : MessageBoxResult.Cancel;
-            e.Handled = true; Close();
-        };
         var card = new Border { Child = panel, Padding = new Thickness(0) };
         card.SetResourceReference(StyleProperty, "Primer.Dialog");
         Content = card;
+        return actions;
     }
 
     internal static void ShowModal(Window dialog)
@@ -121,8 +149,44 @@ internal sealed class WorkbenchMessageBox : Window
         }
         var previous = workbench.OwnedDialogScrim.Visibility;
         workbench.OwnedDialogScrim.Visibility = Visibility.Visible;
-        try { dialog.ShowDialog(); }
+        try
+        {
+            if (dialog is PortalProcessPicker || dialog.Content is ProjectConfirmation)
+                ShowProjectModal(workbench, dialog);
+            else dialog.ShowDialog();
+        }
         finally { workbench.OwnedDialogScrim.Visibility = previous; }
+    }
+
+    private static void ShowProjectModal(MainWindow owner, Window dialog)
+    {
+        var card = (FrameworkElement)dialog.Content;
+        card.Width = Math.Min(dialog.Width, owner.ActualWidth);
+        card.HorizontalAlignment = HorizontalAlignment.Center;
+        card.VerticalAlignment = VerticalAlignment.Center;
+        dialog.Content = null;
+        // A layered HWND passes fully transparent pixels through to the disabled owner.
+        // Keep the shell scrim visible and give the dismissal area one alpha step for hit testing.
+        var hitBrush = ((System.Windows.Media.Brush)dialog.FindResource("Primer.window")).CloneCurrentValue();
+        hitBrush.Opacity = 1d / 255;
+        var backdrop = new Grid { Background = hitBrush };
+        backdrop.Children.Add(card);
+        backdrop.MouseLeftButtonDown += (_, e) =>
+        {
+            if (e.OriginalSource != backdrop) return;
+            e.Handled = true;
+            dialog.Close();
+        };
+        dialog.Content = backdrop;
+        dialog.SizeToContent = SizeToContent.Manual;
+        dialog.MaxWidth = dialog.Width = owner.ActualWidth;
+        dialog.MaxHeight = dialog.Height = owner.ActualHeight;
+        try { dialog.ShowDialog(); }
+        finally
+        {
+            backdrop.Children.Remove(card);
+            dialog.Content = card;
+        }
     }
 
     internal static MessageBoxResult Show(string text, string caption, MessageBoxButton buttons, MessageBoxImage icon)

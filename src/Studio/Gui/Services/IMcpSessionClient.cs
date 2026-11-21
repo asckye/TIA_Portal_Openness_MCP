@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using TiaOpenness.Gui.Localization;
 
 namespace TiaOpenness.Gui.Services;
 
@@ -12,6 +13,13 @@ public sealed record OperatorHost(int Pid, long StartTicks, string ReleaseKey, s
 }
 public sealed record OperatorSession(OperatorHost Host, string SessionKey, JsonObject State)
 {
+    public string ClientIdentity => SessionKey[..8] + " · " + TiaMcp.Versioning.TiaVersionCatalog.Get(Host.ReleaseKey).DisplayName
+        + " · " + ((string?)State["participants"]?["mcpClient"] ?? "MCP")
+        + (Host.Transport is { Length: > 0 } transport ? " (" + transport + ")" : "");
+    public string Summary => ClientIdentity + " " + Loc.Current["Session.Unverified"];
+    public string WorkerState => ((string?)State["worker"]?["state"])?.ToUpperInvariant() ?? "—";
+    public string ProjectAndParticipants => ((string?)State["binding"]?["projectFile"] is { Length: > 0 } file ? file : Loc.Current["ProcessPicker.NoProject"])
+        + ((int?)State["participants"]?["workbench"] is int count ? " · " + Loc.Current.T("Overlay.Panels", count) : "");
     public string DisplayName => SessionKey[..8] + " · " + ((string?)State["participants"]?["mcpClient"] ?? "MCP") + " (unverified)";
 }
 

@@ -77,6 +77,20 @@ public partial class MainWindow
             }
         }
 
+        if (_model.HasMcpPanel && _model.Session.PickProcess.CanExecute(null))
+            items.Add(new(Loc.Current["Overlay.Picker"], Loc.Current["Overlay.Modal"], () => _model.Session.PickProcess.Execute(null)));
+        if (HasProject && PageUnavailable("Engineering") == null)
+        {
+            void Drawer(string title, Action open) => items.Add(new(title, Loc.Current["Overlay.Drawer"], () =>
+            {
+                if (!HasProject) return;
+                Navigate("Engineering");
+                if (_page == "Engineering") open();
+            }));
+            Drawer(Loc.Current["Overlay.Rules"], OperationsContent.ShowControlInspectionRules);
+            Drawer(Loc.Current["Overlay.Transfer"], OperationsContent.ShowTransferOptions);
+        }
+
         var themes = ThemeManager.Current;
         items.Add(new(Loc.Current["Settings.Light"], Loc.Current["Settings.Theme"], () => themes.Theme = AppTheme.Light));
         items.Add(new(Loc.Current["Settings.Dark"], Loc.Current["Settings.Theme"], () => themes.Theme = AppTheme.Dark));
@@ -111,9 +125,9 @@ public partial class MainWindow
     {
         if (_sessionPopover != null) { CloseSessionPopover(); return; }
         if (ShellModalOpen) return;
-        var popover = new SessionPopover(_model, NavigateFromSession, () => CloseSessionPopover());
+        var popover = new SessionPopover(_model, OpenMcpFromSession, () => CloseSessionPopover(),
+            release => _preview == null ? TiaMcpConfigurator.ConfigCore.DetectTia(release).Key != null : _preview.Detected && _preview.ReleaseKey == release);
         _sessionPopover = popover;
-        popover.AiSettings.IsEnabled = PageUnavailable("Settings") == null;
         SetServiceHelp(popover.SwitchVersion, AutomationProperties.GetHelpText(RailMcp));
         popover.SwitchVersion.IsEnabled = PageUnavailable("Mcp") == null;
         Root.Children.Add(popover);
@@ -131,11 +145,10 @@ public partial class MainWindow
         AutomationProperties.SetHelpText(button, service);
     }
 
-    private void NavigateFromSession(string page)
+    private void OpenMcpFromSession()
     {
         CloseSessionPopover(false);
-        Navigate(page);
-        if (page == "Settings" && _page == page) SettingsContent.ShowSection("AI");
+        Navigate("Mcp");
     }
 
     private void OnSessionOutsideClick(object sender, MouseButtonEventArgs e)
@@ -147,6 +160,7 @@ public partial class MainWindow
     private void OnSessionDeactivated(object? sender, EventArgs e) => CloseSessionPopover(false);
     private void OnSessionFocusLeft(object sender, KeyboardFocusChangedEventArgs e)
     {
+        if (_sessionPopover?.VersionMenuButton.ContextMenu.IsOpen == true) return;
         if (e.NewFocus is DependencyObject next && next != SessionStatusButton && next != _sessionPopover
             && _sessionPopover?.IsAncestorOf(next) == false) CloseSessionPopover(false);
     }
@@ -166,6 +180,7 @@ public partial class MainWindow
         Deactivated -= OnSessionDeactivated;
         RemoveHandler(Keyboard.PreviewKeyDownEvent, new KeyEventHandler(OnSessionKey));
         popover.LostKeyboardFocus -= OnSessionFocusLeft;
+        popover.VersionMenuButton.ContextMenu.IsOpen = false;
         Root.Children.Remove(popover);
         if (restoreFocus) SessionStatusButton.Focus();
     }

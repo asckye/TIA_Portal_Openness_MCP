@@ -5,9 +5,9 @@
     Focusable="False" IsTabStop="False" AutomationProperties.Name="{l:Tr Shell.CommandPalette}" PreviewKeyDown="OnPaletteKey">
   <Grid MouseLeftButtonDown="OnBackdrop">
     <ux:WorkbenchScrim x:Name="Scrim"/>
-    <ContentControl Style="{StaticResource Primer.Shadow}" Width="{Binding ActualWidth,ElementName=Surface}"
-        Height="{Binding ActualHeight,ElementName=Surface}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,64,0,0"/>
-    <Border x:Name="Surface" MaxWidth="490" VerticalAlignment="Top" Margin="16,64,16,0"
+    <ContentControl Style="{StaticResource Primer.Workbench.FloatShadow}" Width="{Binding ActualWidth,ElementName=Surface}"
+        Height="{Binding ActualHeight,ElementName=Surface}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,56,0,0"/>
+    <Border x:Name="Surface" MaxWidth="490" VerticalAlignment="Top" Margin="16,56,16,0"
         CornerRadius="{StaticResource Ui.Radius.Large}" Background="{DynamicResource Primer.window}"
         BorderBrush="{DynamicResource Primer.inputBorder}" BorderThickness="1">
       <StackPanel>
@@ -30,7 +30,7 @@
                   ToolTip="{l:Tr Overlay.SearchHint}" TextChanged="OnSearch">
                 <TextBox.Template>
                   <ControlTemplate TargetType="TextBox">
-                    <Border x:Name="Outline" BorderThickness="2" BorderBrush="{DynamicResource Primer.hcOutline}"
+                    <Border x:Name="Outline" BorderThickness="2" BorderBrush="Transparent"
                         Background="{TemplateBinding Background}">
                       <ScrollViewer x:Name="PART_ContentHost"/>
                     </Border>
@@ -56,11 +56,14 @@
             </Grid>
           </DockPanel>
         </Border>
-        <ListBox x:Name="ResultList" ItemsSource="{Binding Results}" MaxHeight="300" SelectedIndex="0" Padding="6,6,6,0"
+        <ListBox x:Name="ResultList" ItemsSource="{Binding Results}" MaxHeight="300" SelectedIndex="0" Padding="6"
             Style="{StaticResource Primer.VirtualList}" AutomationProperties.Name="{l:Tr Overlay.Results}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
           <ListBox.ItemContainerStyle>
-            <Style TargetType="ListBoxItem" BasedOn="{StaticResource Primer.TableItem}">
+            <Style TargetType="ListBoxItem">
+              <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
+              <Setter Property="Background" Value="Transparent"/>
+              <Setter Property="BorderBrush" Value="Transparent"/>
               <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
               <Setter Property="AutomationProperties.HelpText" Value="{Binding Detail}"/>
               <Setter Property="Margin" Value="0,0,0,2"/>
@@ -71,13 +74,30 @@
                 <Setter.Value>
                   <ControlTemplate TargetType="ListBoxItem">
                     <Border CornerRadius="7" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
-                        BorderBrush="{DynamicResource Primer.hcOutline}" BorderThickness="1">
+                        BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
                       <ContentPresenter VerticalAlignment="Center"/>
                     </Border>
                   </ControlTemplate>
                 </Setter.Value>
               </Setter>
               <EventSetter Event="MouseLeftButtonUp" Handler="OnChoose"/>
+              <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                  <Setter Property="Background" Value="{DynamicResource Primer.pillHover}"/>
+                </Trigger>
+                <MultiDataTrigger>
+                  <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsSelected,RelativeSource={RelativeSource Self}}" Value="True"/>
+                    <Condition Binding="{Binding DataContext.ShowKeyboardSelection,RelativeSource={RelativeSource AncestorType=ListBox}}" Value="True"/>
+                  </MultiDataTrigger.Conditions>
+                  <Setter Property="Background" Value="{DynamicResource Primer.cardSel}"/>
+                  <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+                </MultiDataTrigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                  <Setter Property="Background" Value="{DynamicResource Primer.cardSel}"/>
+                  <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+                </Trigger>
+              </Style.Triggers>
             </Style>
           </ListBox.ItemContainerStyle>
           <ListBox.ItemTemplate>

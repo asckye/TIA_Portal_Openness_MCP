@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Markup;
@@ -32,9 +34,9 @@ internal sealed partial class PortalProcessPicker : Window
         ((PortalProcessPickerViewModel)DataContext).Cancel.Execute(null);
     }
 
-    internal static int? Show(IReadOnlyList<PortalProcessInfo> processes)
+    internal static int? Show(IReadOnlyList<PortalProcessInfo> processes, Func<CancellationToken, Task<IReadOnlyList<PortalProcessInfo>>>? rescan = null)
     {
-        using var model = new PortalProcessPickerViewModel(processes);
+        using var model = new PortalProcessPickerViewModel(processes, rescan);
         var dialog = new PortalProcessPicker(model);
         var owner = Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
         if (owner?.IsVisible == true) dialog.Owner = owner;

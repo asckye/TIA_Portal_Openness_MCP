@@ -101,7 +101,6 @@ internal static partial class Strings
         ("Access.Error", "Error", "错误"),
         ("Access.Debug", "Debug", "调试"),
         ("Common.SoftwareSuffix", " · Software", " · 软件"),
-        ("Common.Plc", "PLC", "PLC"),
         ("Common.Id", "ID", "ID"),
         ("Common.Seconds", "{0}s", "{0} 秒"),
         ("Settings.Timeout60", "60s", "60 秒"),

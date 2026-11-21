@@ -35,6 +35,8 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
         + " · Workbench: " + ((int?)state?["participants"]?["workbench"] ?? 0);
     public string Status => state == null || !Attached ? Loc.Current["Session.SelectHint"] :
         $"{state["worker"]?["state"]} · PID {state["worker"]?["pid"]} · generation {state["worker"]?["generation"]} · {state["binding"]?["projectFile"]}";
+    public bool WorkerBusy => Attached && ((state?["running"] ?? state?["sessionState"]?["running"] ?? state?["lane"]) is JsonObject
+        || string.Equals((string?)state?["worker"]?["state"], "busy", StringComparison.OrdinalIgnoreCase));
     public string Lane
     {
         get
@@ -63,14 +65,17 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
         this.client = client; this.release = release; this.activity = activity; this.apply = apply;
         state = client.State;
         Cancel = new AsyncCommand(() => { client.CancelPending(); return Task.CompletedTask; });
-        Refresh =
-            new(() =>
-                Guard(async () => {
-                    Selected = null; Sessions.Clear(); foreach (var session in await client.DiscoverAsync(release(), lifetime.Token)) Sessions.Add(session); }),
-                () => !activity.Busy);
-        Attach =
-            new(() => Guard(async () => { await client.AttachAsync(Selected!, lifetime.Token); await apply(client.State); Raise(null); }), () => !activity.Busy
-                && Selected != null);
+        Refresh = new(() => Guard(async () =>
+        {
+            string target = release();
+            Selected = null;
+            Sessions.Clear();
+            var discovered = await client.DiscoverAsync(target, lifetime.Token);
+            if (release() != target) return;
+            foreach (var session in discovered) Sessions.Add(session);
+        }), () => !activity.Busy);
+        Attach = new(() => Guard(async () => { await client.AttachAsync(Selected!, lifetime.Token); await apply(client.State); Raise(null); }),
+            () => !activity.Busy && Selected != null && Selected.Host.ReleaseKey == release());
         Create =
             new(() => Guard(async () => { await client.CreateAsync(release(), lifetime.Token); await apply(client.State); Raise(null); }), () => !activity
                 .Busy);

@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using TiaOpenness.Contracts.Models;
 
 namespace TiaOpenness.Gui.Services;
@@ -16,6 +19,8 @@ public sealed record ConfirmationLabels(ConfirmationAction Action)
 public interface IDialogService
 {
     public int? PickPortalProcess(IReadOnlyList<PortalProcessInfo> processes);
+    public int? PickPortalProcess(IReadOnlyList<PortalProcessInfo> processes, Func<CancellationToken, Task<IReadOnlyList<PortalProcessInfo>>> rescan)
+        => PickPortalProcess(processes);
     public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon);
     public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon, ConfirmationLabels labels)
         => ShowMessage(text, caption, buttons, icon);

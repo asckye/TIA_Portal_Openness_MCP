@@ -133,7 +133,6 @@ public class StringsTests(WpfContext wpf)
             // Product names, protocol identifiers and units stay the same in both languages.
             "Desktop.Configuration", // Standard abbreviation MCP (product name)
             "Shell.McpStatus", "Audit.Size5", "Audit.Size10", "Audit.Size50", "Actor.AI",
-            "Common.Plc", // Standard abbreviation: programmable logic controller.
             "Common.Id", // Standard abbreviation: identifier.
             "Common.PortalName", // Product name: Siemens TIA Portal.
             "Common.McpPortal", // Standard abbreviation MCP and product name TIA Portal, with a version placeholder.
@@ -157,7 +156,7 @@ public class StringsTests(WpfContext wpf)
     [InlineData("Settings.Timeout300", "300s", "300 秒")]
     [InlineData("Common.WorkbenchVersion", "AE Workbench {0}", "自动化工程工作台 {0}")]
     [InlineData("Common.WorkbenchName", "AE Workbench", "自动化工程工作台")]
-    [InlineData("Common.Plc", "PLC", "PLC")]
+    [InlineData("Session.Unverified", "(unverified)", "（未验证）")]
     [InlineData("Common.Id", "ID", "ID")]
     [InlineData("Common.PortalName", "TIA Portal", "TIA Portal")]
     [InlineData("Common.McpPortal", "MCP · TIA Portal {0}", "MCP · TIA Portal {0}")]
@@ -166,6 +165,16 @@ public class StringsTests(WpfContext wpf)
     {
         Assert.Equal(english, Strings.English[key]);
         Assert.Equal(chinese, Strings.Chinese[key]);
+    }
+
+    [Theory]
+    [InlineData("Common.Plc")]
+    [InlineData("Overlay.Client")]
+    [InlineData("Overlay.AiSettings")]
+    public void Retired_session_popover_labels_are_absent_from_both_catalogues(string key)
+    {
+        Assert.False(Strings.English.ContainsKey(key));
+        Assert.False(Strings.Chinese.ContainsKey(key));
     }
 
     /// <summary>

@@ -131,6 +131,71 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
         });
     }
 
+    [Fact]
+    public void Rescan_invalidates_the_old_choice_and_a_failed_scan_cannot_attach_it()
+    {
+        wpf.Run(() =>
+        {
+            var scan = new TaskCompletionSource<IReadOnlyList<PortalProcessInfo>>();
+            using var model = new PortalProcessPickerViewModel(Processes(), _ => scan.Task);
+            model.SelectedProcess = model.Processes[1];
+            model.Rescan.Execute(null);
+            Assert.Empty(model.Processes);
+            Assert.Null(model.SelectedProcess);
+            Assert.False(model.Connect.CanExecute(null));
+            scan.SetResult([Processes()[0]]);
+            WpfContext.Drain();
+            Assert.Equal(123, Assert.Single(model.Processes).ProcessId);
+            Assert.Null(model.SelectedProcess);
+            scan = new();
+            model.SelectedProcess = model.Processes[0];
+            model.Rescan.Execute(null);
+            scan.SetException(new InvalidOperationException("fixture scan failed"));
+            WpfContext.Drain();
+            Assert.Equal("fixture scan failed", model.ScanError);
+            Assert.Empty(model.Processes);
+            Assert.False(model.Connect.CanExecute(null));
+        });
+    }
+
+    [Fact]
+    public void Closing_the_picker_cancels_a_pending_rescan()
+    {
+        wpf.Run(() =>
+        {
+            var scan = new TaskCompletionSource<IReadOnlyList<PortalProcessInfo>>();
+            CancellationToken pending = default;
+            var model = new PortalProcessPickerViewModel(Processes(), token => { pending = token; return scan.Task; });
+            model.Rescan.Execute(null);
+            model.Dispose();
+            Assert.True(pending.IsCancellationRequested);
+            scan.SetResult(Processes());
+            WpfContext.Drain();
+            Assert.Empty(model.Processes);
+            Assert.Null(model.ResultProcessId);
+        });
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(456)]
+    public void Explicit_picker_reads_candidates_and_connects_only_the_confirmed_PID(int? choice)
+    {
+        wpf.Run(() =>
+        {
+            var session = new ProcessSession();
+            var dialogs = new FakeDialogService { SelectedProcessId = choice };
+            using var model = new MainViewModel(new McpProjectClient(session), dialogs);
+            model.Session.PickProcess.Execute(null);
+            Assert.Equal(new[] { 123, 456 }, Assert.Single(dialogs.ProcessRequests).Select(p => p.ProcessId));
+            Assert.Equal(choice, session.ConnectedPid);
+            string[] expected = choice.HasValue
+                ? ["ListPortalProcessProjects", "GetPortalInfo", "ListPortalProcessProjects", "ConnectPortal"]
+                : ["ListPortalProcessProjects", "GetPortalInfo"];
+            Assert.Equal(expected, session.Calls);
+        });
+    }
+
     public static IEnumerable<object[]> Layouts()
     {
         foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
@@ -180,7 +245,7 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
                 Assert.InRange(cancel.ActualHeight, 32, 44);
                 Assert.InRange(connect.TranslatePoint(new Point(0, connect.ActualHeight), host).Y, 0, height);
                 var first = (ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(0);
-                Assert.Equal(36, first.ActualHeight);
+                Assert.Equal(94, first.ActualHeight);
                 Assert.NotNull(first.FocusVisualStyle);
                 Assert.Equal(model.Processes[0].AccessibleName, UIElementAutomationPeer.CreatePeerForElement(first)!.GetName());
                 var pid = Descendants<TextBlock>(first).Single(text => text.Text == "123");
@@ -188,12 +253,12 @@ public sealed class PortalProcessPickerTests(WpfContext wpf)
                 var projectPath = Descendants<TextBlock>(first).Single(text => text.Text == rows[0].ProjectPath);
                 Assert.Equal(rows[0].ProjectPath, projectPath.ToolTip);
                 Assert.Equal(TextTrimming.CharacterEllipsis, projectPath.TextTrimming);
-                var releaseHeader = Descendants<TextBlock>(list).Single(text => text.Text == Loc.Current["ProcessPicker.Release"]);
-                var modeHeader = Descendants<TextBlock>(list).Single(text => text.Text == Loc.Current["ProcessPicker.Mode"]);
+                var thread = Descendants<TextBlock>(first).Single(text => text.Text == "MTA");
                 var releaseCell = Descendants<TextBlock>(first).Single(text => text.Text == "V21");
                 var modeCell = Descendants<TextBlock>(first).Single(text => text.Text == model.Processes[0].UiMode);
-                Assert.InRange(Math.Abs(releaseHeader.TranslatePoint(new Point(), list).X - releaseCell.TranslatePoint(new Point(), list).X), 0, 1);
-                Assert.InRange(Math.Abs(modeHeader.TranslatePoint(new Point(), list).X - modeCell.TranslatePoint(new Point(), list).X), 0, 1);
+                Assert.InRange(Math.Abs(pid.TranslatePoint(new Point(), list).Y - releaseCell.TranslatePoint(new Point(), list).Y), 0, 1);
+                Assert.InRange(Math.Abs(thread.TranslatePoint(new Point(), list).Y - modeCell.TranslatePoint(new Point(), list).Y), 0, 1);
+                Assert.True(modeCell.TranslatePoint(new Point(), list).X > pid.TranslatePoint(new Point(), list).X);
                 var modeText = new FormattedText(modeCell.Text, System.Globalization.CultureInfo.CurrentUICulture,
                     FlowDirection.LeftToRight, new Typeface(modeCell.FontFamily, modeCell.FontStyle, modeCell.FontWeight, modeCell.FontStretch),
                     modeCell.FontSize, modeCell.Foreground, VisualTreeHelper.GetDpi(modeCell).PixelsPerDip);
