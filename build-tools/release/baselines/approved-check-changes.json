@@ -7507,6 +7507,23 @@
           "identifier": "WritePreviewCoverageTests/Maintained_write_examples_preview_without_native_dispatch( string name ):fbee0155e51d61b1cb0cabd3d10c7e83c219f6a391a20b5283a7112fdd321274:1"
         }
       ]
+    },
+    {
+      "task": "LOW-BCDF",
+      "maintainerDate": "2026-11-21",
+      "reason": "Maintainer approved 2026-11-21 (explicit yes): CWC pointer /sourceDirectory, private-field refusal hides the field name, warning enum 16 to 18 with SESSION_TAKEN_OVER and PAGE_LIMIT_CAPPED, HMI design pointer /design/palette",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/ArgumentPointerTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ArgumentPointerTests/Production_private_field_evidence_hides_unquoted_data( string release , string key ):c96635b81b7b3ea7e10147be7b6ead20bcef5fc36d6d492bbe9dbbaadbc7aae9:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/V4EnvelopeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.V4EnvelopeTests/NewTypesHaveNoSiemensOrMcpSdkReferences( ):b051be3b62b6378f9e123fb1c91dc8136affe6e2ba6e4f2df4b38a4d525c9608:1"
+        }
+      ]
     }
   ]
 }
