@@ -33,13 +33,13 @@ public sealed class ArgumentPointerTests
             Params = new() { Name = tool.ProtocolTool.Name,
                 Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } });
         var body = result.StructuredContent!;
-        string expectedEvidence = key == "token=sk-live" ? "Field token=•••• was refused." : "Input does not satisfy the declared contract.";
         Assert.Equal(1, worker.Calls);
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]!["code"]);
         Assert.Equal("The request could not be admitted; inspect the retained evidence.", (string?)body["error"]!["message"]);
         Assert.DoesNotContain(key, body.ToJsonString(), StringComparison.Ordinal);
         Assert.DoesNotContain(key, ((TextContentBlock)result.Content.Single()).Text, StringComparison.Ordinal);
-        Assert.Equal(expectedEvidence, (string?)body["data"]!["evidence"]!["message"]);
+        Assert.Equal("Input does not satisfy the declared contract.", (string?)body["data"]!["evidence"]!["message"]);
+        Assert.DoesNotContain("token=", body.ToJsonString(), StringComparison.Ordinal);
         Assert.True(JsonNode.DeepEquals(body, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
     }
 

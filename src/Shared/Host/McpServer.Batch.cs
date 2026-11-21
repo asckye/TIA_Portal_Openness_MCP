@@ -237,7 +237,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var call = operations[index];
                 string row = "/operations/" + index.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 if (call == null) return InvalidInput(row, "object");
-                var targetMethod = CatalogView.Find(call.Name, includeUnavailable: true);
+                var targetMethod = CatalogView.Find(call.Name);
                 if (targetMethod == null || call.Name != targetMethod.Name)
                     return InvalidArgumentDetails.Prefix(ToolInvoker.Bind(call.Name, call.Arguments, out _)!, row + "/arguments");
                 string name = targetMethod.Name;

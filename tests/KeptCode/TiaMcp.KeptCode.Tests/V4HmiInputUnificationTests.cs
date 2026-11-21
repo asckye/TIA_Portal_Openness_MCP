@@ -160,10 +160,14 @@ namespace TiaMcp.Engine.Tests
             Assert.True(contract.Read(json, "design").IsValid);
             Assert.Null(contract.Budget.Characters);
             Assert.Null(contract.Budget.StringLength);
-            foreach (string invalid in new[] { "{\"secret-canary\":true}", "{\"palette\":{\"Text\":\"secret-canary\"}}", "{secret-canary" })
+            foreach (var (invalid, pointer) in new[] {
+                ("{\"secret-canary\":true}", "/design/palette"),
+                ("{\"palette\":{\"Text\":\"secret-canary\"}}", "/design/palette/Text"),
+                ("{secret-canary", "/design")
+            })
             {
                 var error = contract.Read(invalid, "design").Error;
-                Invalid(error, invalid.Contains("\"Text\"", StringComparison.Ordinal) ? "/design/palette/Text" : "/design");
+                Invalid(error, pointer);
                 Assert.DoesNotContain("secret-canary", V4Json.Serialize(error));
             }
         }

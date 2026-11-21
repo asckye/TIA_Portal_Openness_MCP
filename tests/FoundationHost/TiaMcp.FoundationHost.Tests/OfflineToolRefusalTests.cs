@@ -138,7 +138,7 @@ public sealed class OfflineToolRefusalTests : IDisposable
     public void Cwc_inspect_of_a_missing_directory_names_directory(string release)
     {
         using var scope = Host.HardwareContract.UseRelease(release);
-        Refused(new Host.V21EcosystemTools().ManageUnifiedCwcPackageV4(Path.Combine(root, "missing")).StructuredContent!, "/directory", "existing");
+        Refused(new Host.V21EcosystemTools().ManageUnifiedCwcPackageV4(Path.Combine(root, "missing")).StructuredContent!, "/sourceDirectory", "existing");
     }
 
     [Theory, MemberData(nameof(CwcReleases))]
@@ -160,7 +160,7 @@ public sealed class OfflineToolRefusalTests : IDisposable
         {
             File.WriteAllText(manifest, invalid);
             var body = tools.ManageUnifiedCwcPackageV4(source, "build", Path.Combine(root, PackageName), false).StructuredContent!;
-            Refused(body, "/directory", "manifest");
+            Refused(body, "/sourceDirectory", "manifest");
             Assert.DoesNotContain("caller_private_key_11a", body.ToJsonString());
             Assert.DoesNotContain(root, (string)body["error"]!["message"]!);
         }

@@ -224,20 +224,28 @@ internal sealed class HostSession : IHostSession
                 + "ConnectPortal(takeOver=true) takes an eligible recently active idle session.";
         }
     }
-    internal string HolderDiagnostic(JsonObject? workerRunning = null)
+    internal string HolderDiagnostic(JsonObject? workerRunning, bool workerBusy)
     {
         lock (sync)
         {
             var running = workerRunning ?? LateResults.Running ?? lane ?? activeRequests.Values.FirstOrDefault();
-            var since = DateTimeOffset.TryParse((string?)running?["sinceUtc"], System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.RoundtripKind, out var started) ? started : lastRequestUtc;
+            string activity = "";
+            if (givingWay) activity = "The session is handing over its TIA connection. ";
+            else if (workerBusy || activeCalls > 0 || running != null)
+            {
+                if (running != null)
+                {
+                    var since = DateTimeOffset.TryParse((string?)running["sinceUtc"], System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.RoundtripKind, out var started) ? started : lastRequestUtc;
+                    activity = $"Call {running["tool"]} (request {running["requestId"]}, "
+                        + $"started {since:O}, elapsed {(clock.GetUtcNow() - since).TotalSeconds:F0} seconds) is active, including any approval wait. ";
+                }
+                activity += "This clears when the active call returns.";
+                if (running != null) activity += LateCalls.RunningDiagnostic(running);
+                activity += " ";
+            }
             return $"Session {SessionKey}, client {TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(clientName) ?? "unknown"}, "
-                + $"idle for {(clock.GetUtcNow() - lastRequestUtc).TotalSeconds:F0} seconds. "
-                + (givingWay ? "The session is handing over its TIA connection. " : activeCalls > 0 || lane != null || running != null
-                        ? $"Call {running?["tool"]} (request {running?["requestId"]}, "
-                    + $"started {since:O}, elapsed {(clock.GetUtcNow() - since).TotalSeconds:F0} seconds) is active, including any approval wait. "
-                    + "This clears when that call returns. "
-                    + (running == null ? "" : LateCalls.RunningDiagnostic(running)) : "")
+                + $"idle for {(clock.GetUtcNow() - lastRequestUtc).TotalSeconds:F0} seconds. " + activity
                 + (operators > 0 || OperatorOwned ? "End the connection in the Workbench. " : "");
         }
     }

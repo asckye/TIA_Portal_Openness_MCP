@@ -149,6 +149,7 @@ public sealed class OfflineReadinessTests
         {
             BundleLayout.Initialize(AppContext.BaseDirectory, TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory));
             Directory.CreateDirectory(root);
+            File.WriteAllText(Path.Combine(root, "Fixture.al21"), "synthetic global library marker");
             Directory.CreateDirectory(Path.Combine(root, "System")); Directory.CreateDirectory(Path.Combine(root, "XRef"));
             foreach (string file in new[] { "System/PEData.plf", "System/PEData.idx", "XRef/XRef.db" })
                 File.WriteAllText(Path.Combine(root, file), "synthetic file-system fixture");
@@ -156,7 +157,9 @@ public sealed class OfflineReadinessTests
                 {"Screen":{"Name":"Overview","Width":800,"Height":480},"Items":[
                   {"Type":"Text","Name":"StatusText","Left":20,"Top":20,"Width":160,"Height":40,"Text":"Ready"}]}
                 """);
-            File.WriteAllText(Path.Combine(root, "report.json"), "{}");
+            File.WriteAllText(Path.Combine(root, "report.json"), """
+                {"mode":"tia-mcp-offline-release-validation-suite","offlineOnly":true,"ok":true,"items":[]}
+                """);
             var block = TiaMcpServer.ModelContextProtocol.PlcBuilderToolJson.ComposeFcBlock("{\"blockName\":\"FC_Ready\",\"blockNumber\":10,\"inputs\":[],\"outputs\":[{\"name\":\"Ready\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"assign\",\"target\":\"#Ready\",\"literalValue\":\"TRUE\"}]}}");
             Directory.CreateDirectory(Path.Combine(root, "exports"));
             File.WriteAllText(Path.Combine(root, "exports/FC_Ready.xml"), (string)block["xml"]!);

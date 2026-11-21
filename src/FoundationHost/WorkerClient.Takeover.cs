@@ -52,8 +52,8 @@ internal sealed partial class WorkerClient
                     + "to connect again. An active idle holder requires takeOver=true.");
     }
 
-    private AdapterPreconditionException HeldBySession(WorkerClient holder, string reason)
-        => RecoveryRefusal("tia-held-by-session", (holder.OwnerSession?.HolderDiagnostic(holder.Running)
+    private AdapterPreconditionException HeldBySession(WorkerClient holder, string reason = "", bool workerBusy = false)
+        => RecoveryRefusal("tia-held-by-session", (holder.OwnerSession?.HolderDiagnostic(holder.Running, workerBusy)
             ?? "Another MCP session holds this TIA process. ") + reason);
 
     private async Task YieldHolder(int pid, bool takeOver, CancellationToken token)
@@ -65,7 +65,7 @@ internal sealed partial class WorkerClient
                 if ((holder.attachedProcessId ?? holder.attachingProcessId) != pid || holder.process is not { HasExited: false }) continue;
             if (holder.OwnerSession == null) continue;
             if (!holder.serial.Wait(0))
-                throw HeldBySession(holder, "");
+                throw HeldBySession(holder, workerBusy: true);
             bool reserved = false;
             try
             {
@@ -76,7 +76,7 @@ internal sealed partial class WorkerClient
                     running = holder.CallRunning || holder.UnansweredRequest;
                     owned = holder.ownsPortal;
                 }
-                if (running) throw HeldBySession(holder, "");
+                if (running) throw HeldBySession(holder, workerBusy: true);
                 if (owned)
                     throw HeldBySession(holder,
                         "This worker started its TIA instance. From the holding session, save and close the project. To discard changes to an owned "

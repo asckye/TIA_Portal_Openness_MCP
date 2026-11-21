@@ -44,7 +44,11 @@ namespace TiaMcpServer.ModelContextProtocol
             var report = await BridgeWait.On(PreflightToolCallAsync(name, args.Json.GetRawText())).ConfigureAwait(false);
             if (error != null)
             {
-                report.Meta!["validationError"] = JsonNode.Parse(V4Json.Serialize(error));
+                // Ordinary field problems are the result of a completed preview. Preserve explicit validator refusals.
+                var meta = report.Meta!;
+                bool reportedInvalid = meta["validationError"] == null && (meta["missing"] is JsonArray { Count: > 0 }
+                    || meta["unknown"] is JsonArray { Count: > 0 } || meta["typeProblems"] is JsonArray { Count: > 0 });
+                meta["validationError"] = JsonNode.Parse(V4Json.Serialize(error));
                 var fields = new InputSchema(CatalogView.Find(name)!.Tool.InputSchema).ValidateFields(args.Json).ToList();
 #if TIA_ENGINE_HOST
                 var target = CatalogView.Find(name)!;
@@ -54,10 +58,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     && !fields.Any(field => field.Details is InvalidArgumentDetails details && details.Parameter == aliasDetails.Parameter))
                     fields.Insert(0, aliasError);
 #endif
-                report.Meta["validationErrors"] = JsonNode.Parse(V4Json.Serialize(fields.Count == 0 ? new[] { error } : fields.ToArray()));
-                report.Meta["ok"] = false;
+                meta["validationErrors"] = JsonNode.Parse(V4Json.Serialize(fields.Count == 0 ? new[] { error } : fields.ToArray()));
+                meta["ok"] = false;
+                meta["success"] = reportedInvalid;
                 report.Message = "NOT READY: " + error.Message;
-                return InfrastructureResult("PreviewToolCall", report, rejection: error);
+                return InfrastructureResult("PreviewToolCall", report, rejection: reportedInvalid ? null : error);
             }
             if ((bool?)report.Meta?["ok"] == false)
             {

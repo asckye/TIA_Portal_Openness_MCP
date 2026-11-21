@@ -167,7 +167,7 @@ namespace TiaMcp.Logic.V4
                 Flag("writeOutcomeUnknown"), Flag("unrestoredWrite"), Flag("rollbackRefused"), Flag("rollbackReachable"));
             var details = Evidence(evidence, tool);
             if (tool is "ManageCommunicationConnection" or "ManageDeviceUsers" or "ManageTransferArea" or "ManageSyslogServers" or "ManageLibraryType"
-                or "ExchangeUnifiedTags")
+                or "ExchangeUnifiedTags" or "ManageSivarcRuleContainer")
                 foreach (var pair in HostBehavior.WorkerReplyEvidence(evidence)) details[pair.Key] = pair.Value;
             if (result == "restored")
             {
