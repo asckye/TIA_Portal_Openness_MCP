@@ -7524,6 +7524,93 @@
           "identifier": "TiaMcp.Engine.Tests.V4EnvelopeTests/NewTypesHaveNoSiemensOrMcpSdkReferences( ):b051be3b62b6378f9e123fb1c91dc8136affe6e2ba6e4f2df4b38a4d525c9608:1"
         }
       ]
+    },
+    {
+      "task": "LOW-E",
+      "maintainerDate": "2026-11-21",
+      "reason": "Maintainer approved 2026-11-21 (explicit yes): MergeCheckTests and PrereleaseTests signature changes and the renamed upload-retry test with growing delays; all assertions kept",
+      "items": [
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):0ee49a1b74bbfaadaa7db77a75040cdd2b709237583429e8581da9274e0f6452:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):2f46f7c18ab4dad6b822f04baa5c4a524078e65e2f73e872781c070d7f5852d5:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):397d2fdffcdef107e36331795cb1bad89b0a3428f90b11407813ec2f5d2344f7:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):5da5338951948d4d73b3edca35cfed7c03e3a632f12a8b3074bdb0c02a2b013b:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):a4cad6863bdf879ee048e49e124066f3fb6ef7d09e842f305a520037985d6e1d:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):a621a5d7019c899b1ba4239b3e19a1fa64384123d57b3581b726afc3d692780d:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):a974efb9e1f9eda74a42c9482687c94ca62cb9d723871dc20fdf69133b704f17:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):ccc813f74515117280533df4cb30c308e7bb03e5cae2fd9c587b8fa0c9bd0241:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):d08db72a65bfd9268b09239f0aaf06dab8df9f289fdfc48480efc91b8ac8b9e8:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):d897582138e3ba7fb5a6ca9a7326019315d871cd1c28d9a8fb06c2a1a09c7da7:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):dcb1ca5d70dd08048a6c05686013110b9fd108bf1f6397896e9ba822fe320754:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):f7d9f3d1b0edaaf50a044f66613c2ac6d5c587cab83ca8b9b7b7465daee46388:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/MergeCheckTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.MergeCheckTests/RunOverlappingPreSuiteChecks( bool updater ):fb2b6d31c670bac93201dd955bf967e0ccf8d67efddf88d898beca8d21ebc417:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/NotVerifiedSectionComesFromTheLedgerAndTheChecklist( ):3925e60415803469944b099dc06146f71bf40a426cd2571e7f868d4f37f0943b:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PrereleaseTests/NotVerifiedSectionComesFromTheLedgerAndTheChecklist( ):6b8688c20e38dc864b45eb28dae404f74b53c58832289455d85c15a3b14d0292:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/PublishPreparedTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.PublishPreparedTests/DownloadRetriesUsePublishedUrlAndThreeSecondDelays( ):e708a1ca25a4b763297fc9e3eb29eb5bdfb1a69b05b15c237428e5afec86147d"
+        }
+      ]
     }
   ]
 }
