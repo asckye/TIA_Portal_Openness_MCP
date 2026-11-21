@@ -7483,6 +7483,18 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchToastTests/Only_visible_unpaused_time_counts( ToastKind kind , int seconds ):af19f6477a18e8ed40be2310fe6a32c13c25a3736bd66ce8ab312362b420d857"
         }
       ]
+    },
+    {
+      "task": "UI-0036GA",
+      "maintainerDate": "2026-11-21",
+      "reason": "Maintainer approved 2026-11-20 design colour values: the pending badge background follows the palette warnBg in both themes",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/PrimerInteractionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.PrimerInteractionTests/Count_badges_hide_zero_and_pending_counts_use_the_warning_palette( ):9f949867b049c5a9e9ef3c3f73517d9e4e8bbecc06afd92f0f3072545807b29f:1"
+        }
+      ]
     }
   ]
 }
