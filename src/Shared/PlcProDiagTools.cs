@@ -22,8 +22,10 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ManagePlcSupervision"),
                 Description("[L2][PLC-Software][WRITE] ProDiag native object access on an exact PLC or block: read provider metadata (attributes, advertised " +
                 "compositions), readComposition/createEntry/deleteEntry through the official IEngineeringObject composition API (typeName must be advertised " +
-                "by GetCreationInfos), setAttributes on the provider, exportSettings/importSettings (.dat) via SupervisionSettingsProvider. readComposition pages entries of the selected provider. " +
-                "FB.Supervisions exists from V15.1 and is outside this tool. Use ExchangePlcSupervisions for XLSX bulk exchange. Offline PLC for real writes; deletes need confirmDelete=true. " +
+                "by GetCreationInfos), setAttributes on the provider, exportSettings/importSettings (.dat) via SupervisionSettingsProvider. " +
+                "readComposition pages entries of the selected provider. " +
+                "FB.Supervisions exists from V15.1 and is outside this tool. Use ExchangePlcSupervisions for XLSX bulk exchange. " +
+                "Offline PLC for real writes; deletes need confirmDelete=true. " +
                 "Default preview; no save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManagePlcSupervision(
             string softwarePath,
