@@ -8914,8 +8914,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
+        "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
       }
     },
     {
@@ -8938,8 +8938,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "pgPcInterface": "PLCSIM",
-        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+        "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -8967,7 +8967,7 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
         "action": "read",
         "confirmValueChange": false,
         "dryRun": true
@@ -11605,8 +11605,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
+        "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
       }
     },
     {
@@ -11629,8 +11629,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "pgPcInterface": "PLCSIM",
-        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+        "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -11668,7 +11668,7 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
         "action": "read",
         "confirmValueChange": false,
         "dryRun": true
@@ -14612,8 +14612,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
+        "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
       }
     },
     {
@@ -14636,8 +14636,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "pgPcInterface": "PLCSIM",
-        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+        "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -14675,7 +14675,7 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
         "action": "read",
         "confirmValueChange": false,
         "dryRun": true
@@ -17854,8 +17854,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
+        "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
       }
     },
     {
@@ -17878,8 +17878,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "pgPcInterface": "PLCSIM",
-        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+        "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -17932,7 +17932,7 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
         "action": "read",
         "confirmValueChange": false,
         "dryRun": true
@@ -18374,17 +18374,6 @@
         "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
         "dryRun": true,
         "modelVersion": "V2.0"
-      }
-    },
-    {
-      "releaseKey": "18",
-      "entry": "ManageCfcChartProtection",
-      "family": "F32",
-      "example": {
-        "softwarePath": "PLC_1",
-        "chartName": "Chart_1",
-        "dryRun": true,
-        "action": "read"
       }
     },
     {
@@ -21436,8 +21425,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
+        "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
       }
     },
     {
@@ -21460,8 +21449,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "pgPcInterface": "PLCSIM",
-        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+        "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -21525,7 +21514,7 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
         "action": "read",
         "confirmValueChange": false,
         "dryRun": true
@@ -22006,17 +21995,6 @@
         "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
         "dryRun": true,
         "modelVersion": "V2.0"
-      }
-    },
-    {
-      "releaseKey": "19",
-      "entry": "ManageCfcChartProtection",
-      "family": "F32",
-      "example": {
-        "softwarePath": "PLC_1",
-        "chartName": "Chart_1",
-        "dryRun": true,
-        "action": "read"
       }
     },
     {
@@ -23918,7 +23896,9 @@
       "releaseKey": "19",
       "entry": "GetUnifiedPlantObject",
       "family": "F27",
-      "example": {}
+      "example": {
+        "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+      }
     },
     {
       "releaseKey": "19",
@@ -26148,8 +26128,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
+        "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
       }
     },
     {
@@ -26172,8 +26152,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "pgPcInterface": "PLCSIM",
-        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+        "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -26237,7 +26217,7 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
         "action": "read",
         "confirmValueChange": false,
         "dryRun": true
@@ -26718,17 +26698,6 @@
         "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
         "dryRun": true,
         "modelVersion": "V2.0"
-      }
-    },
-    {
-      "releaseKey": "20",
-      "entry": "ManageCfcChartProtection",
-      "family": "F32",
-      "example": {
-        "softwarePath": "PLC_1",
-        "chartName": "Chart_1",
-        "dryRun": true,
-        "action": "read"
       }
     },
     {
@@ -28756,7 +28725,9 @@
       "releaseKey": "20",
       "entry": "GetUnifiedPlantObject",
       "family": "F27",
-      "example": {}
+      "example": {
+        "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+      }
     },
     {
       "releaseKey": "20",
@@ -31086,8 +31057,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
+        "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
       }
     },
     {
@@ -31110,8 +31081,8 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "pgPcInterface": "PLCSIM",
-        "targetIpAddress": "192.168.0.3",
+        "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+        "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
         "dryRun": false,
         "expectedProjectFile": "C:/Examples/Project.ap{extension}",
         "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -31175,7 +31146,7 @@
       "family": "F22",
       "example": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
         "action": "read",
         "confirmValueChange": false,
         "dryRun": true
@@ -31798,17 +31769,6 @@
         "filePath": "C:\\Examples\\exports\\Charts.xml.zip",
         "dryRun": true,
         "modelVersion": "V2.0"
-      }
-    },
-    {
-      "releaseKey": "21",
-      "entry": "ManageCfcChartProtection",
-      "family": "F32",
-      "example": {
-        "softwarePath": "PLC_1",
-        "chartName": "Chart_1",
-        "dryRun": true,
-        "action": "read"
       }
     },
     {
@@ -33863,7 +33823,9 @@
       "releaseKey": "21",
       "entry": "GetUnifiedPlantObject",
       "family": "F27",
-      "example": {}
+      "example": {
+        "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+      }
     },
     {
       "releaseKey": "21",
@@ -41464,8 +41426,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42173,8 +42135,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -44372,7 +44334,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -45795,23 +45759,6 @@
         "exampleSource": "full-engine"
       },
       {
-        "name": "ManageCfcChartProtection",
-        "currentName": "ManageCfcChartProtection",
-        "sourceName": "ManageCfcChartProtection",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "chartName": "Chart_1",
-          "dryRun": true,
-          "action": "read"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "ManageClassicHmiCycle",
         "currentName": "ManageClassicHmiCycle",
         "sourceName": "ManageClassicHmiCycle",
@@ -46597,7 +46544,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true
@@ -51141,8 +51088,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -51850,8 +51797,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -54048,7 +53995,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -55480,23 +55429,6 @@
         "exampleSource": "full-engine"
       },
       {
-        "name": "ManageCfcChartProtection",
-        "currentName": "ManageCfcChartProtection",
-        "sourceName": "ManageCfcChartProtection",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "chartName": "Chart_1",
-          "dryRun": true,
-          "action": "read"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "ManageClassicHmiCycle",
         "currentName": "ManageClassicHmiCycle",
         "sourceName": "ManageClassicHmiCycle",
@@ -56377,7 +56309,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true
@@ -65731,8 +65663,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -66243,8 +66175,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -69115,7 +69047,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true
@@ -71856,8 +71788,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -72400,8 +72332,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -75564,7 +75496,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true
@@ -78447,8 +78379,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -78991,8 +78923,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -82388,7 +82320,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true
@@ -85472,8 +85404,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -86070,8 +86002,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -88966,23 +88898,6 @@
         "exampleSource": "full-engine"
       },
       {
-        "name": "ManageCfcChartProtection",
-        "currentName": "ManageCfcChartProtection",
-        "sourceName": "ManageCfcChartProtection",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "chartName": "Chart_1",
-          "dryRun": true,
-          "action": "read"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "ManageClassicHmiCycle",
         "currentName": "ManageClassicHmiCycle",
         "sourceName": "ManageClassicHmiCycle",
@@ -89710,7 +89625,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true
@@ -93306,8 +93221,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -94001,8 +93916,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
           "dryRun": false,
           "expectedProjectFile": "C:/Examples/Project.ap{extension}",
           "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
@@ -96129,7 +96044,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -97459,23 +97376,6 @@
         "exampleSource": "full-engine"
       },
       {
-        "name": "ManageCfcChartProtection",
-        "currentName": "ManageCfcChartProtection",
-        "sourceName": "ManageCfcChartProtection",
-        "profiles": [
-          "full",
-          "plc-foundation"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "chartName": "Chart_1",
-          "dryRun": true,
-          "action": "read"
-        },
-        "envelopeVersion": 4,
-        "exampleSource": "full-engine"
-      },
-      {
         "name": "ManageClassicHmiCycle",
         "currentName": "ManageClassicHmiCycle",
         "sourceName": "ManageClassicHmiCycle",
@@ -98245,7 +98145,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true
@@ -102243,8 +102143,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4
       },
@@ -102764,8 +102664,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3"
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;"
         },
         "envelopeVersion": 4
       },
@@ -104555,7 +104455,9 @@
         "profiles": [
           "full"
         ],
-        "arguments": {},
+        "arguments": {
+          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+        },
         "envelopeVersion": 4
       },
       {
@@ -105639,21 +105541,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ManageCfcChartProtection",
-        "currentName": "ManageCfcChartProtection",
-        "sourceName": "ManageCfcChartProtection",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "chartName": "Chart_1",
-          "dryRun": true,
-          "action": "read"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ManageClassicHmiCycle",
         "currentName": "ManageClassicHmiCycle",
         "sourceName": "ManageClassicHmiCycle",
@@ -106298,7 +106185,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true
@@ -109587,8 +109474,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "ipAddress": "192.168.0.3",
-          "pgPcInterface": "PLCSIM"
+          "ipAddress": "&lt;PLC IPv4 address from the allow-list&gt;",
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;"
         },
         "envelopeVersion": 4
       },
@@ -110108,8 +109995,8 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "pgPcInterface": "PLCSIM",
-          "targetIpAddress": "192.168.0.3"
+          "pgPcInterface": "&lt;exact PG/PC interface name from ListTransferRoutes&gt;",
+          "targetIpAddress": "&lt;PLC IPv4 address from the allow-list&gt;"
         },
         "envelopeVersion": 4
       },
@@ -111898,7 +111785,9 @@
         "profiles": [
           "full"
         ],
-        "arguments": {},
+        "arguments": {
+          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+        },
         "envelopeVersion": 4
       },
       {
@@ -112989,21 +112878,6 @@
         "envelopeVersion": 4
       },
       {
-        "name": "ManageCfcChartProtection",
-        "currentName": "ManageCfcChartProtection",
-        "sourceName": "ManageCfcChartProtection",
-        "profiles": [
-          "full"
-        ],
-        "arguments": {
-          "softwarePath": "PLC_1",
-          "chartName": "Chart_1",
-          "dryRun": true,
-          "action": "read"
-        },
-        "envelopeVersion": 4
-      },
-      {
         "name": "ManageClassicHmiCycle",
         "currentName": "ManageClassicHmiCycle",
         "sourceName": "ManageClassicHmiCycle",
@@ -113721,7 +113595,7 @@
         ],
         "arguments": {
           "softwarePath": "PLC_1",
-          "blockPath": "Main",
+          "blockPath": "&lt;exact data block path from GetSoftwareTree&gt;",
           "action": "read",
           "confirmValueChange": false,
           "dryRun": true

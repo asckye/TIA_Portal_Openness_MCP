@@ -54,6 +54,8 @@ namespace TiaMcpServer.Siemens
             if (!Contains(SafetyPasswordReleases, versionKey) && name is "CompilePlcSoftware" or "CompilePlcDiagnostics"
                 && !string.IsNullOrEmpty(argument("password")))
                 return "Safety compilation with a password requires V17 or later.";
+            if (name == "ManageSafetyGlobalSettings" && versionKey == "16" && argument("action") is null or "" or "read")
+                return "GlobalSettings getters require V17 or later. V16 exposes setters for SafetyModificationsPossible and UsernameForFChangeHistory.";
             if (name.Equals("ImportLibraryTypeDocuments", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.IsNullOrEmpty(argument("libraryName"))) return name + " supports only the project library (leave libraryName empty).";

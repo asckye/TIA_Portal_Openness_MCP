@@ -39,14 +39,17 @@ def parse(source):
     overrides = re.search(r'\bToolReleases\s*=\s*new Dictionary<string, string\[\]>\([^)]*\)\s*\{(.*?)\n\s*\};', source, re.S)
     assert overrides or not re.search(r'\bToolReleases\s*=', source), "Unparsed per-tool availability overrides"
     if overrides:
-        entries = re.findall(r'\["([^"\n]+)"\]\s*=\s*(' + RELEASE_LIST_PATTERN + ')', overrides.group(1))
+        entries = re.findall(r'\["([^"\n]+)"\]\s*=\s*(' + RELEASE_LIST_PATTERN + r'|Array\.Empty<string>\(\))', overrides.group(1))
         assert len(entries) == overrides.group(1).count('=')
         for tool, releases in entries:
             owners = [f for f in result.values() if tool in f["tools"]]
             assert len(owners) == 1, ("Unknown per-tool availability override", tool)
             owner = owners[0]
-            releases = expand_releases(releases)
-            assert releases and len(releases) == len(set(releases)) and set(releases) <= set(owner["releases"])
+            if releases == 'Array.Empty<string>()':
+                releases = []
+            else:
+                releases = expand_releases(releases)
+                assert releases and len(releases) == len(set(releases)) and set(releases) <= set(owner["releases"])
             assert tool not in owner.setdefault("tool_releases", {})
             owner["tool_releases"][tool] = releases
     return result

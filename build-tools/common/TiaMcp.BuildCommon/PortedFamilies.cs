@@ -55,15 +55,22 @@ public static class PortedFamilies
         Require(overrides.Success || !Regex.IsMatch(source, @"\bToolReleases\s*="), "Unparsed per-tool availability overrides");
         if (overrides.Success)
         {
-            var entries = Regex.Matches(overrides.Groups[1].Value, "\\[\"([^\"\\n]+)\"\\]\\s*=\\s*(" + ReleaseListPattern + ")");
+            var entries = Regex.Matches(overrides.Groups[1].Value, "\\[\"([^\"\\n]+)\"\\]\\s*=\\s*(" + ReleaseListPattern + @"|Array\.Empty<string>\(\))");
             Require(entries.Count == overrides.Groups[1].Value.Count(c => c == '='), "Unparsed per-tool availability override");
             foreach (Match row in entries)
             {
-                var tool = row.Groups[1].Value; var releases = ExpandReleases(row.Groups[2].Value, releaseKeys);
+                var tool = row.Groups[1].Value;
+                var expression = row.Groups[2].Value;
                 var owners = result.Values.Where(f => f.Tools.Contains(tool)).ToArray();
                 Require(owners.Length == 1, "Unknown per-tool availability override: " + tool);
                 var owner = owners[0];
-                Require(releases.Length > 0 && releases.Distinct().Count() == releases.Length && releases.All(owner.Releases.Contains), "Invalid per-tool releases: " + tool);
+                var releases = Array.Empty<string>();
+                if (expression != "Array.Empty<string>()")
+                {
+                    releases = ExpandReleases(expression, releaseKeys);
+                    Require(releases.Length > 0 && releases.Distinct().Count() == releases.Length && releases.All(owner.Releases.Contains),
+                        "Invalid per-tool releases: " + tool);
+                }
                 Require(owner.ToolReleases.TryAdd(tool, releases), "Duplicate per-tool availability override");
             }
         }

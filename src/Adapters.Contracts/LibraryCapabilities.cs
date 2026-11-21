@@ -20,7 +20,9 @@ namespace TiaMcp.Adapters.Contracts
         {
             if ((operation == "ManageLibraryMasterCopy" && copyMode != ""
                 || operation == "ManageLibraryTypeVersion" && updatePathsMode != "") && !OpennessApi.LibraryCopyModes.Includes(release))
-                return "Library instantiation copyMode/updatePathsMode overloads require V20 or later.";
+                return operation == "ManageLibraryMasterCopy"
+                    ? "CreateFrom(MasterCopy, MasterCopyMode) requires V20 or later. Omit copyMode to use CreateFrom(MasterCopy)."
+                    : "CreateFrom with UpdatePathsMode requires V20 or later.";
             if (operation == "ManageLibraryTypeVersion" && (action == "edit" || action == "release" || action == "discard")
                 && !OpennessApi.LibraryVersionEditing.Includes(release))
                 return "Library version editing/release/discard requires V20 or later.";

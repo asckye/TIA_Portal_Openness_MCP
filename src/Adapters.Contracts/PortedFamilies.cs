@@ -202,7 +202,8 @@ namespace TiaMcp.Adapters.Contracts
             ["ManagePlcSafety"] = ReleaseRange.Since("17"),
             ["ManageSafetyGlobalSettings"] = ReleaseRange.Since("16"),
             ["ExchangeCfcCharts"] = ReleaseRange.Since("18"),
-            ["ManageCfcChartProtection"] = ReleaseRange.Since("18"),
+            // CfcSafetyPolicy refuses every protection action until native chart inventory is safe.
+            ["ManageCfcChartProtection"] = Array.Empty<string>(),
             ["ListTestSuiteCases"] = ReleaseRange.Since("17"),
             ["ManageTestSuiteCase"] = ReleaseRange.Since("17"),
             ["ExchangeTestSuiteCase"] = ReleaseRange.Since("17"),

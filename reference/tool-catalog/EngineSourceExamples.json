@@ -1516,8 +1516,8 @@
   "DownloadPlc": {
     "arguments": {
       "softwarePath": "PLC_1",
-      "pgPcInterface": "PLCSIM",
-      "targetIpAddress": "192.168.0.3"
+      "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
+      "targetIpAddress": "<PLC IPv4 address from the allow-list>"
     },
     "parameters": {
       "consistentBlocksOnly": {
@@ -1561,6 +1561,19 @@
       },
       "trustDeviceCertificate": {
         "exampleValue": true
+      },
+      "targetIpAddress": {
+        "exampleValue": "<PLC IPv4 address from the allow-list>",
+        "meaning": "Bind the explicit IPv4 address of the intended PLC from the allow-list.",
+        "requiresBinding": true
+      },
+      "pgPcInterface": {
+        "exampleValue": "<exact PG/PC interface name from ListTransferRoutes>",
+        "meaning": "Copy the PG/PC interface name shown by ListTransferRoutes for the selected route.",
+        "requiresBinding": true,
+        "tools": [
+          "ListTransferRoutes"
+        ]
       }
     },
     "operations": {},
@@ -3111,8 +3124,8 @@
   "ConnectOnlinePlc": {
     "arguments": {
       "softwarePath": "PLC_1",
-      "ipAddress": "192.168.0.3",
-      "pgPcInterface": "PLCSIM"
+      "ipAddress": "<PLC IPv4 address from the allow-list>",
+      "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>"
     },
     "parameters": {
       "password": {
@@ -3132,6 +3145,19 @@
       },
       "trustDeviceCertificate": {
         "exampleValue": true
+      },
+      "ipAddress": {
+        "exampleValue": "<PLC IPv4 address from the allow-list>",
+        "meaning": "Bind the explicit IPv4 address of the intended PLC from the allow-list.",
+        "requiresBinding": true
+      },
+      "pgPcInterface": {
+        "exampleValue": "<exact PG/PC interface name from ListTransferRoutes>",
+        "meaning": "Copy the PG/PC interface name shown by ListTransferRoutes for the selected route.",
+        "requiresBinding": true,
+        "tools": [
+          "ListTransferRoutes"
+        ]
       }
     },
     "operations": {},
@@ -6884,7 +6910,7 @@
   "ManagePlcDataBlockSnapshot": {
     "arguments": {
       "softwarePath": "PLC_1",
-      "blockPath": "Main",
+      "blockPath": "<exact data block path from GetSoftwareTree>",
       "action": "read",
       "confirmValueChange": false,
       "dryRun": true
@@ -6892,6 +6918,14 @@
     "parameters": {
       "filePath": {
         "exampleValue": "C:\\Examples\\exports\\Main.xml"
+      },
+      "blockPath": {
+        "exampleValue": "<exact data block path from GetSoftwareTree>",
+        "meaning": "Copy the path of a data block from GetSoftwareTree.",
+        "requiresBinding": true,
+        "tools": [
+          "GetSoftwareTree"
+        ]
       }
     },
     "operations": {
@@ -11861,10 +11895,14 @@
     "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
   },
   "GetUnifiedPlantObject": {
-    "arguments": {},
+    "arguments": {
+      "plantPath": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>"
+    },
     "parameters": {
       "plantPath": {
-        "exampleValue": "Plant_1"
+        "exampleValue": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>",
+        "requiresBinding": true,
+        "meaning": "Use the absolute path from the plant view root. An empty plantPath lists the views."
       },
       "objectPath": {
         "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",

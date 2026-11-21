@@ -11,8 +11,17 @@ public sealed class ServedToolUsageBudgetTests
         var root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
         var matrix = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "manifest", "version-tools.json")))!["tools"]!.AsArray();
         using var fixture = new DiscoveryFixture(release);
+        Assert.Equal(523, matrix.Count);
         foreach (var (name, operation) in ToolUsageTests.ReviewedExamples)
         {
+            if (name == "ManageCfcChartProtection")
+            {
+                Assert.DoesNotContain(matrix, row => (string?)row!["name"] == name);
+                Assert.DoesNotContain(fixture.Tools, tool => tool.ProtocolTool.Name == name);
+                var usage = await fixture.Call("GetToolUsage", new { toolName = name, operation });
+                Assert.False((bool?)usage["ok"]);
+                continue;
+            }
             var declared = matrix.Single(row => (string?)row!["name"] == name)!["releases"]!.AsArray();
             if (!declared.Any(version => (string?)version == release)) continue;
             var result = await fixture.Call("GetToolUsage", new { toolName = name, operation });

@@ -311,7 +311,7 @@ public sealed class FoundationV4ContractsTests
     // VMFIX-15 moves the two standalone alarm XLSX exports from V16 to V17.
     // VMFIX-17B withholds the two SiVArc block definition entries on V17 through V19.
     [InlineData("14sp1", 287)] [InlineData("15.1", 328)] [InlineData("16", 354)]
-    [InlineData("17", 377)] [InlineData("18", 403)] [InlineData("19", 479)]
+    [InlineData("17", 377)] [InlineData("18", 402)] [InlineData("19", 478)]
     public async Task EveryRegisteredEntryHasOneNameTypedSchemaAndV4Rejection(string release, int count)
     {
         var worker = new FakeWorker();

@@ -36,7 +36,7 @@ public sealed class OptionalProductTests
             Assert.Contains("unknown-chart GetChartProtection", error.Message);
             Assert.Contains("skipChartPreflight", error.Message);
         }
-        Assert.True(PortedFamilies.Available(major.ToString(System.Globalization.CultureInfo.InvariantCulture), "ManageCfcChartProtection"));
+        Assert.False(PortedFamilies.Available(major.ToString(System.Globalization.CultureInfo.InvariantCulture), "ManageCfcChartProtection"));
     }
 
     [Theory]

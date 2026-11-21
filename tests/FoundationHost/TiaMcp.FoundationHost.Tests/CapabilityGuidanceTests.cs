@@ -7,6 +7,13 @@ using Xunit;
 
 public sealed class CapabilityGuidanceTests
 {
+    [Theory, InlineData(null), InlineData(""), InlineData("read")]
+    public void V16_global_safety_read_defaults_require_getters(string? action)
+    {
+        var problem = TiaMcpServer.Siemens.ToolVersionPolicy.CallProblem("16", "ManageSafetyGlobalSettings", key => key == "action" ? action : null);
+        Assert.Contains("getters", problem);
+    }
+
     [Theory, InlineData(true, ""), InlineData(false, "Global")]
     public async Task V16_block_master_copy_refusal_precedes_worker_dispatch(bool preview, string library)
     {
@@ -51,6 +58,19 @@ public sealed class CapabilityGuidanceTests
         Assert.Equal(ReleaseCapabilityQuery.Problem("GetDriveParameters", "19", new JsonObject { ["source"] = "read" }),
             (string?)body["error"]?["message"]);
         Assert.Contains("V20", (string?)body["error"]?["message"]);
+    }
+
+    [Theory]
+    [InlineData("ManageLibraryMasterCopy", "{\"action\":\"instantiate\",\"copyMode\":\"Rename\"}", "MasterCopyMode")]
+    [InlineData("ManageLibraryType", "{\"action\":\"update\",\"properties\":{\"DoNotUse\":true}}", "LibraryType.DoNotUse")]
+    [InlineData("ManageSyslogServers", "{\"action\":\"read\"}", "SyslogServerProvider.Servers")]
+    [InlineData("ManageSyslogServers", "{\"action\":\"create\"}", "SyslogServerProvider.Servers")]
+    [InlineData("ManageUmcUsers", "{\"action\":\"createOffline\"}", "CreateOfflineUmcUser")]
+    public void V19_refusals_identify_the_missing_member(string name, string json, string member)
+    {
+        var args = JsonNode.Parse(json)!.AsObject();
+        Assert.Contains(member, ReleaseCapabilityQuery.Problem(name, "19", args));
+        Assert.Null(ReleaseCapabilityQuery.Problem(name, "20", args));
     }
 
     [Fact]

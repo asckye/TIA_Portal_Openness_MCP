@@ -378,7 +378,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 18 | F31 | current | NOT RUN | GetDccObject, GetDriveParameters, GetOnlineDriveParameters, ListDccCharts, ListDriveObjects, ManageDcbLibraries, ManageDccBlock, ManageDccChart, ManageDccChartInterface, ManageDccChartPartition, ManageDccPin, ManageDriveFunctions, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter, ManageTechnologyExtensions |
 | 18 | F30 | current | NOT RUN | ExportSafetyPrintout, GetSafetyBlockSignatures, ManagePlcSafety, ManageSafetyGlobalSettings |
 | 18 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
-| 18 | F32 | current | NOT RUN | ExchangeCfcCharts, ManageCfcChartProtection |
+| 18 | F32 | current | NOT RUN | ExchangeCfcCharts |
 | 18 | F34 | current | NOT RUN | ExchangeTestSuiteCase, ExportScadaData, ImportSinumerikAlarmTexts, InitializeSimotionScripting, ListTestSuiteCases, ManageSinumerikArchive, ManageSinumerikSafetyMode, ManageTestSuiteCase, RunTestSuiteCase |
 | 18 | F05 | current | NOT RUN | ArchiveSavedProject, BuildProjectScaffold, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 18 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
@@ -420,7 +420,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 19 | F31 | current | NOT RUN | GetDccObject, GetDriveParameters, GetOnlineDriveParameters, ListDccCharts, ListDriveObjects, ManageDcbLibraries, ManageDccBlock, ManageDccChart, ManageDccChartInterface, ManageDccChartPartition, ManageDccPin, ManageDriveFunctions, ManageDriveHardwareModule, ManageDriveSecurity, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter, ManageTechnologyExtensions |
 | 19 | F30 | current | NOT RUN | ExportSafetyPrintout, GetSafetyBlockSignatures, ManagePlcSafety, ManageSafetyGlobalSettings |
 | 19 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
-| 19 | F32 | current | NOT RUN | ExchangeCfcCharts, ManageCfcChartProtection |
+| 19 | F32 | current | NOT RUN | ExchangeCfcCharts |
 | 19 | F34 | current | NOT RUN | ExchangeTestSuiteCase, ExportScadaData, ImportSinumerikAlarmTexts, InitializeSimotionScripting, ListTestSuiteCases, ManageSinumerikArchive, ManageSinumerikSafetyMode, ManageTestSuiteCase, RunTestSuiteCase |
 | 19 | F05 | current | NOT RUN | ArchiveSavedProject, BuildProjectScaffold, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 19 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageSyslogServers, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
@@ -465,7 +465,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 20 | F31 | current | NOT RUN | GetDccObject, GetDriveParameters, GetOnlineDriveParameters, ListDccCharts, ListDriveObjects, ManageDcbLibraries, ManageDccBlock, ManageDccChart, ManageDccChartInterface, ManageDccChartPartition, ManageDccPin, ManageDriveFunctions, ManageDriveHardwareModule, ManageDriveSecurity, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter, ManageTechnologyExtensions |
 | 20 | F30 | current | NOT RUN | ExportSafetyPrintout, GetSafetyBlockSignatures, ManagePlcSafety, ManageSafetyGlobalSettings |
 | 20 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
-| 20 | F32 | current | NOT RUN | ExchangeCfcCharts, ManageCfcChartProtection |
+| 20 | F32 | current | NOT RUN | ExchangeCfcCharts |
 | 20 | F34 | current | NOT RUN | ExchangeTestSuiteCase, ExportScadaData, ImportSinumerikAlarmTexts, InitializeSimotionScripting, ListTestSuiteCases, ManageSinumerikArchive, ManageSinumerikSafetyMode, ManageTestSuiteCase, RunTestSuiteCase |
 | 20 | F05 | current | NOT RUN | ArchiveSavedProject, BuildProjectScaffold, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 20 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageSyslogServers, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |
@@ -510,7 +510,7 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 | 21 | F31 | current | NOT RUN | GetDccObject, GetDriveParameters, GetOnlineDriveParameters, ListDccCharts, ListDriveObjects, ManageDcbLibraries, ManageDccBlock, ManageDccChart, ManageDccChartInterface, ManageDccChartPartition, ManageDccPin, ManageDriveFunctions, ManageDriveHardwareModule, ManageDriveSafetyAcceptanceTest, ManageDriveSecurity, ManageDriveTelegrams, ManageOnlineDriveFunctions, ManageStartdriveParameter, ManageTechnologyExtensions |
 | 21 | F30 | current | NOT RUN | ExportSafetyPrintout, GetSafetyBlockSignatures, ListSafetyActivationTests, ManagePlcSafety, ManageSafetyActivationTest, ManageSafetyActivationTestGroup, ManageSafetyFunction, ManageSafetyFunctionCondition, ManageSafetyGlobalSettings |
 | 21 | F00 | current | NOT RUN | CreateHardwareDevice, ExportPlcWatchTable, SearchHardwareCatalog |
-| 21 | F32 | current | NOT RUN | ExchangeCfcCharts, ManageCfcChartProtection |
+| 21 | F32 | current | NOT RUN | ExchangeCfcCharts |
 | 21 | F34 | current | NOT RUN | ExchangeTestSuiteCase, ListTestSuiteCases, ManageTestSuiteCase, RunTestSuiteCase |
 | 21 | F05 | current | NOT RUN | ArchiveSavedProject, BuildProjectScaffold, ConnectIsolatedPortal, EnsureOpennessUserGroup, GetPortalInfo, ManageMultiuserSession, RetrieveProjectArchive, SaveProjectCopy, ValidateAutomationContext |
 | 21 | F07 | current | NOT RUN | GetPlcPutGetAccess, GetProjectProtection, GetProjectUserManagement, ManageDeviceUsers, ManagePasswordPolicy, ManagePlcCertificate, ManagePlcProtection, ManageProjectUserManagement, ManageSyslogServers, ManageUmcUsers, ManageWatchForceTableWebAccess, SetPlcPutGetAccess |

@@ -8,12 +8,12 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.FoundationHost
 {
-    // Withdrawn duplicate/composite workflows are absent from discovery and execution catalogs.
+    // Withdrawn tools are absent from discovery and execution catalogs.
     internal static class SharedToolPolicy
     {
         internal static readonly ISet<string> Removed = new HashSet<string>(StringComparer.Ordinal) {
 
-            "ConnectProject"
+            "ConnectProject", "ManageCfcChartProtection"
         };
         internal static readonly string[] Bridge = { "FindTools", "CallTool", "PreviewToolCall", "ListToolCategories",
             "GetOpennessWorkerStatus", "RestartOpennessWorker" };

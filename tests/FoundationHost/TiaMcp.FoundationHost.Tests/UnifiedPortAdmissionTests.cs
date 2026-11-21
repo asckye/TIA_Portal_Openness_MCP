@@ -849,6 +849,11 @@ public sealed class UnifiedPortAdmissionTests
         using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
         var tool = LegacyHostToolRegistry.Create(worker, release, false).Single(t => t.ProtocolTool.Name == name);
         var arguments = Arguments(name);
+        if (name == "GetUnifiedPlantObject")
+        {
+            Assert.Equal("<absolute plant path from GetUnifiedPlantObject with empty plantPath>", (string?)arguments["plantPath"]);
+            arguments["plantPath"] = "/FixturePlant";
+        }
         arguments[parameter] = encoded ? JsonValue.Create(path) : JsonNode.Parse(path);
         var schema = tool.ProtocolTool.InputSchema.GetProperty("properties");
         if (schema.TryGetProperty("action", out _)) arguments["action"] = "delete";

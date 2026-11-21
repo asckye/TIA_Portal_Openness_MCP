@@ -58,6 +58,15 @@ public sealed class GeneratorTests
     }
 
     [Fact]
+    public void Unknown_topic_tool_fails_generation_with_the_spelling_from_the_rules()
+    {
+        var rules = Read(Root, "reference/tool-catalog/usage-topic-rules.json");
+        rules["tools"]!["ComparePorjects"] = new JsonArray("change-detection");
+        var names = new CatalogData(Root).Rosters.Values.SelectMany(tools => tools).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("ComparePorjects", Assert.Throws<ReleaseException>(() => ToolUsageGenerator.ValidateTopicTools(rules, names)).Message);
+    }
+
+    [Fact]
     public void Explicit_guide_topics_cover_comparisons_and_read_batches_on_every_release()
     {
         var usage = ToolUsageGenerator.Generate(Root);
@@ -212,6 +221,18 @@ public sealed class GeneratorTests
         }
         foreach (var key in new[] { "20", "21" })
             Assert.InRange(proposal.Count(name => data.Rosters[key].Contains(name) || data.Removed.Contains(name)), 50, 65);
+    }
+
+    [Fact]
+    public void Explicitly_withheld_chart_protection_keeps_the_sibling_chart_tool_on_its_supported_releases()
+    {
+        var families = PortedFamilies.Load(Root, Keys);
+        Assert.Empty(families["F32"].ToolReleases["ManageCfcChartProtection"]);
+        foreach (var key in Keys)
+        {
+            Assert.Contains("ManageCfcChartProtection", PortedFamilies.Withheld(families, key));
+            Assert.Equal(key is "18" or "19" or "20" or "21", PortedFamilies.Additions(families, key).Contains("ExchangeCfcCharts"));
+        }
     }
 
     [Fact]

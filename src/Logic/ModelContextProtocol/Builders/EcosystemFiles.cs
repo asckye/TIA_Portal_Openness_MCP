@@ -31,24 +31,25 @@ namespace TiaMcpServer.ModelContextProtocol
             var result = new JsonObject {
                 ["source"] = "siemens/tia-portal-ai-extensions", ["commit"] = provenance["commit"]!.DeepClone(),
                 ["scope"] = provenance["scope"]?.DeepClone(), ["referenceDataOnly"] = true };
+            int total;
             if (!string.IsNullOrEmpty(document))
             {
                 var file = files.SingleOrDefault(p => p.Id == document) ?? throw new ArgumentException("Unknown document id. List first.");
                 var lines = File.ReadAllLines(file.Path);
                 result["document"] = document; result["content"] = string.Join("\n", lines.Skip(offset).Take(limit));
-                result["total"] = lines.Length; result["offset"] = offset; result["dataComplete"] = true;
-                result["nextOffset"] = offset + limit < lines.Length ? (JsonNode)(offset + limit) : null;
-                return result;
+                total = lines.Length;
             }
-            var matches = files
-                .Where(f => string.IsNullOrEmpty(query) || f.Id.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || File.ReadAllText(f.Path)
-                    .IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
-                .ToList();
-            result["documents"] =
-                new JsonArray(matches.Skip(offset).Take(limit)
+            else
+            {
+                var matches = files.Where(f => string.IsNullOrEmpty(query) || f.Id.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0
+                    || File.ReadAllText(f.Path).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+                result["documents"] = new JsonArray(matches.Skip(offset).Take(limit)
                     .Select(f => (JsonNode)new JsonObject { ["id"] = f.Id, ["lines"] = File.ReadLines(f.Path).Count() }).ToArray());
-            result["total"] = matches.Count; result["dataComplete"] = true;
-            result["nextOffset"] = offset + limit < matches.Count ? (JsonNode)(offset + limit) : null;
+                total = matches.Count;
+            }
+            result["total"] = total; result["offset"] = offset;
+            result["nextOffset"] = offset < total - limit ? (JsonNode)(offset + limit) : null;
+            result["dataComplete"] = result["nextOffset"] == null;
             return result;
         }
 

@@ -6087,8 +6087,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
-          "ExchangeCfcCharts",
-          "ManageCfcChartProtection"
+          "ExchangeCfcCharts"
         ]
       },
       {
@@ -6804,8 +6803,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
-          "ExchangeCfcCharts",
-          "ManageCfcChartProtection"
+          "ExchangeCfcCharts"
         ]
       },
       {
@@ -7620,8 +7618,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
-          "ExchangeCfcCharts",
-          "ManageCfcChartProtection"
+          "ExchangeCfcCharts"
         ]
       },
       {
@@ -8470,8 +8467,7 @@
         "state": "current",
         "l5": "NOT RUN",
         "entries": [
-          "ExchangeCfcCharts",
-          "ManageCfcChartProtection"
+          "ExchangeCfcCharts"
         ]
       },
       {

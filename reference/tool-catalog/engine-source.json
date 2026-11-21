@@ -358,7 +358,7 @@
       "path": "src/FoundationHost/FoundationTools.cs",
       "owner": "FoundationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult CompilePlcDiagnostics(\n    [Description(\"Exact PLC software path from discovery, or a unique short name.\")] string softwarePath,\n    [Description(\"Optional Safety password; requires V17+ SafetyAdministration and is never ignored.\")] string password = \"\",\n    [Description(\"Preview the exact compiler owner and service availability without compilation.\")] bool dryRun = true,\n    [Description(\"Exact compiler owner: software, block, group or unit; no software fallback.\")] string scope = \"software\",\n    [Description(\"Exact block/group path relative to the program-block root, or one unit name. Split before MIN-ESCAPE decoding.\")] string scopePath = \"\",\n    [Description(\"Optional exact V16\\u2013V21 standard software unit for block/group scope; empty selects the PLC root.\")] string unitName = \"\",\n    [Description(\"Execution requires explicit confirm=true. Compile is EXECUTE and requires no WRITE approval.\")] bool confirm = false,\n    [Description(\"Execution requires the exact bound project file; no expectedPlanHash is used.\")] string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult CompilePlcDiagnostics(\n    [Description(\"Exact PLC software path from discovery, or a unique short name.\")] string softwarePath,\n    [Description(\"Optional Safety password; requires V17+ SafetyAdministration and is never ignored.\")] string password = \"\",\n    [Description(\"Preview the exact compiler owner and service availability without compilation.\")] bool dryRun = true,\n    [Description(\"Exact compiler owner: software (default), block, group or unit; no software fallback.\")] string scope = \"software\",\n    [Description(\"Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding.\")] string scopePath = \"\",\n    [Description(\"Optional exact V16\\u2013V21 standard software unit for block/group scope; empty selects the PLC root.\")] string unitName = \"\",\n    [Description(\"Execution requires explicit confirm=true. Compile is EXECUTE and requires no WRITE approval.\")] bool confirm = false,\n    [Description(\"Execution requires the exact bound project file; no expectedPlanHash is used.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -380,13 +380,13 @@
         "scope": {
           "type": "string",
           "default": "\"software\"",
-          "description": "Exact compiler owner: software, block, group or unit; no software fallback.",
+          "description": "Exact compiler owner: software (default), block, group or unit; no software fallback.",
           "value": "software"
         },
         "scopePath": {
           "type": "string",
           "default": "\"\"",
-          "description": "Exact block/group path relative to the program-block root, or one unit name. Split before MIN-ESCAPE decoding.",
+          "description": "Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding.",
           "value": ""
         },
         "unitName": {
@@ -555,7 +555,7 @@
       "path": "src/FoundationHost/FoundationTools.cs",
       "owner": "FoundationTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult CompilePlcSoftware(\n    [Description(\"Exact PLC software path from discovery, or a unique short name.\")] string softwarePath,\n    [Description(\"Optional Safety password; requires V17+ SafetyAdministration and is never ignored.\")] string password = \"\",\n    [Description(\"Preview the exact compiler owner and service availability without compilation.\")] bool dryRun = true,\n    [Description(\"Exact compiler owner: software, block, group or unit; no software fallback.\")] string scope = \"software\",\n    [Description(\"Exact block/group path relative to the program-block root, or one unit name. Split before MIN-ESCAPE decoding.\")] string scopePath = \"\",\n    [Description(\"Optional exact V16\\u2013V21 standard software unit for block/group scope; empty selects the PLC root.\")] string unitName = \"\",\n    [Description(\"Execution requires explicit confirm=true. Compile is EXECUTE and requires no WRITE approval.\")] bool confirm = false,\n    [Description(\"Execution requires the exact bound project file; no expectedPlanHash is used.\")] string expectedProjectFile = \"\")",
+      "signature": "public CallToolResult CompilePlcSoftware(\n    [Description(\"Exact PLC software path from discovery, or a unique short name.\")] string softwarePath,\n    [Description(\"Optional Safety password; requires V17+ SafetyAdministration and is never ignored.\")] string password = \"\",\n    [Description(\"Preview the exact compiler owner and service availability without compilation.\")] bool dryRun = true,\n    [Description(\"Exact compiler owner: software (default), block, group or unit; no software fallback.\")] string scope = \"software\",\n    [Description(\"Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding.\")] string scopePath = \"\",\n    [Description(\"Optional exact V16\\u2013V21 standard software unit for block/group scope; empty selects the PLC root.\")] string unitName = \"\",\n    [Description(\"Execution requires explicit confirm=true. Compile is EXECUTE and requires no WRITE approval.\")] bool confirm = false,\n    [Description(\"Execution requires the exact bound project file; no expectedPlanHash is used.\")] string expectedProjectFile = \"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -577,13 +577,13 @@
         "scope": {
           "type": "string",
           "default": "\"software\"",
-          "description": "Exact compiler owner: software, block, group or unit; no software fallback.",
+          "description": "Exact compiler owner: software (default), block, group or unit; no software fallback.",
           "value": "software"
         },
         "scopePath": {
           "type": "string",
           "default": "\"\"",
-          "description": "Exact block/group path relative to the program-block root, or one unit name. Split before MIN-ESCAPE decoding.",
+          "description": "Block/group path relative to the selected program-block root, or one exact unit name; split before MIN-ESCAPE decoding.",
           "value": ""
         },
         "unitName": {
@@ -16701,7 +16701,7 @@
       }
     },
     "GetOpennessGuidance": {
-      "description": "[L2][Guide][READ] Search or read the bundled 32 official Siemens Openness guides. Empty document lists matching document IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Guides target V21; see scope. Does not connect to TIA.",
+      "description": "[L2][Guide][READ] Search bundled Siemens Openness guides and supporting documents. Empty document lists matching IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Guides target V21; see scope. Does not connect to TIA.",
       "method": "ReadOpennessGuidanceV4",
       "path": "src/Shared/Host/EcosystemTools.cs",
       "owner": "EcosystemTools",

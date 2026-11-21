@@ -294,7 +294,7 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `WritePlcWebVars` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 | `WriteUnifiedRuntimeTags` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 |
 
-## Shared by some releases (214)
+## Shared by some releases (213)
 
 | Tool | Release keys |
 |---|---|
@@ -424,7 +424,6 @@ Groups compare current V4 tool names. Read the selected host schema; V20/V21 sha
 | `ListUnifiedLibraryFolderEntries` | 19, 20, 21 |
 | `ListUnifiedTagDefinitions` | 19, 20, 21 |
 | `ListVersionControlWorkspaces` | 16, 17, 18, 19, 20, 21 |
-| `ManageCfcChartProtection` | 18, 19, 20, 21 |
 | `ManageDcbLibraries` | 16, 17, 18, 19, 20, 21 |
 | `ManageDccBlock` | 18, 19, 20, 21 |
 | `ManageDccChart` | 16, 17, 18, 19, 20, 21 |

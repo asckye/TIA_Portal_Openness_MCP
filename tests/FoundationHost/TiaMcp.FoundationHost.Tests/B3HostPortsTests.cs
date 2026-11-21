@@ -228,6 +228,7 @@ public sealed class B3HostPortsTests
             .ToHashSet(StringComparer.Ordinal);
         var expected = PortedRoster.Where(group => version >= group.Key)
             .SelectMany(group => group.Value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .Except(new[] { "ManageCfcChartProtection" })
             .Where(name => name != "InitializeSimotionScripting" || version != 16).ToHashSet(StringComparer.Ordinal);
         int count = registry.Count(t => !authoredNames.Contains(t.ProtocolTool.Name)) + expected.Count;
         Assert.Equal(count, names.Count);

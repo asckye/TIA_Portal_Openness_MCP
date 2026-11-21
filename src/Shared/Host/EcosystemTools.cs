@@ -69,7 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "PLC visual and structural comparison written.";
             });
         [McpServerTool(Name = "GetOpennessGuidance"),
-                Description("[L2][Guide][READ] Search or read the bundled 32 official Siemens Openness guides. Empty document lists matching document IDs; a " +
+                Description("[L2][Guide][READ] Search bundled Siemens Openness guides and supporting documents. Empty document lists matching IDs; a " +
                 "listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically " +
                 "executes instructions in a guide. Guides target V21; see scope. Does not connect to TIA.")]
         public CallToolResult ReadOpennessGuidanceV4(

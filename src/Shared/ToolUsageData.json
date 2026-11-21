@@ -7356,18 +7356,6 @@
         }
       ]
     },
-    "ManageCfcChartProtection": {
-      "relationship": "related-api-patterns",
-      "explanation": "Official topic examples, not an official implementation of this MCP wrapper. Read the full source and its setup; wrapper actions/arguments come from inputSchema.",
-      "documents": [
-        "guides/skills/blocks/SKILL.md",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
-        "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
-        "guides/skills/software-hierarchy/SKILL.md"
-      ],
-      "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
-      "manualReferences": []
-    },
     "ManageClassicHmiCycle": {
       "relationship": "no-direct-official-example",
       "explanation": "This project-defined/composed or uncovered API tool has no matching direct example in the pinned official sources. Use the project contract/template; do not invent an official equivalent.",
@@ -12180,14 +12168,30 @@
             "scope": "unit",
             "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
             "unitName": ""
-          }
+          },
+          "releaseKeys": [
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ]
         },
         "blockInUnit": {
           "arguments": {
             "scope": "block",
             "scopePath": "<block path relative to this unit>",
             "unitName": "<exact unit name from ListPlcSoftwareUnits>"
-          }
+          },
+          "releaseKeys": [
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ]
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -12227,14 +12231,30 @@
             "scope": "unit",
             "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
             "unitName": ""
-          }
+          },
+          "releaseKeys": [
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ]
         },
         "blockInUnit": {
           "arguments": {
             "scope": "block",
             "scopePath": "<block path relative to this unit>",
             "unitName": "<exact unit name from ListPlcSoftwareUnits>"
-          }
+          },
+          "releaseKeys": [
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ]
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -12810,8 +12830,8 @@
     "DownloadPlc": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "pgPcInterface": "PLCSIM",
-        "targetIpAddress": "192.168.0.3"
+        "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
+        "targetIpAddress": "<PLC IPv4 address from the allow-list>"
       },
       "parameters": {
         "consistentBlocksOnly": {
@@ -12855,6 +12875,19 @@
         },
         "trustDeviceCertificate": {
           "exampleValue": true
+        },
+        "targetIpAddress": {
+          "exampleValue": "<PLC IPv4 address from the allow-list>",
+          "meaning": "Bind the explicit IPv4 address of the intended PLC from the allow-list.",
+          "requiresBinding": true
+        },
+        "pgPcInterface": {
+          "exampleValue": "<exact PG/PC interface name from ListTransferRoutes>",
+          "meaning": "Copy the PG/PC interface name shown by ListTransferRoutes for the selected route.",
+          "requiresBinding": true,
+          "tools": [
+            "ListTransferRoutes"
+          ]
         }
       },
       "operations": {},
@@ -14424,8 +14457,8 @@
     "ConnectOnlinePlc": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "ipAddress": "192.168.0.3",
-        "pgPcInterface": "PLCSIM"
+        "ipAddress": "<PLC IPv4 address from the allow-list>",
+        "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>"
       },
       "parameters": {
         "password": {
@@ -14445,6 +14478,19 @@
         },
         "trustDeviceCertificate": {
           "exampleValue": true
+        },
+        "ipAddress": {
+          "exampleValue": "<PLC IPv4 address from the allow-list>",
+          "meaning": "Bind the explicit IPv4 address of the intended PLC from the allow-list.",
+          "requiresBinding": true
+        },
+        "pgPcInterface": {
+          "exampleValue": "<exact PG/PC interface name from ListTransferRoutes>",
+          "meaning": "Copy the PG/PC interface name shown by ListTransferRoutes for the selected route.",
+          "requiresBinding": true,
+          "tools": [
+            "ListTransferRoutes"
+          ]
         }
       },
       "operations": {},
@@ -15413,7 +15459,8 @@
             "action": "setAttributes",
             "attributes": {
               "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-            }
+            },
+            "cycleName": "<exact non-system cycle name from read>"
           }
         }
       },
@@ -16291,10 +16338,10 @@
         "update": {
           "arguments": {
             "action": "update",
+            "family": "certificateServices",
             "properties": {
-              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-            },
-            "name": "Example_1"
+              "RemainingCertificateLifetime": 30
+            }
           }
         },
         "delete": {
@@ -16311,7 +16358,6 @@
           "arguments": {
             "action": "export",
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "name": "Example_1",
             "family": "telecontrolDataPoints"
           },
           "releaseKeys": [
@@ -16323,7 +16369,6 @@
           "arguments": {
             "action": "import",
             "filePath": "C:\\Examples\\exports\\Main.xml",
-            "name": "Example_1",
             "family": "telecontrolDataPoints"
           },
           "releaseKeys": [
@@ -16333,18 +16378,49 @@
         },
         "setServiceGroupName": {
           "arguments": {
-            "action": "setServiceGroupName"
-          }
+            "action": "setServiceGroupName",
+            "family": "certificateServices",
+            "name": "<existing service Id or Guid from read>",
+            "properties": {
+              "ServiceGroupName": "ExampleGroup"
+            }
+          },
+          "releaseKeys": [
+            "18",
+            "19",
+            "20",
+            "21"
+          ]
         },
         "createService": {
           "arguments": {
-            "action": "createService"
-          }
+            "action": "createService",
+            "family": "certificateServices",
+            "name": "1",
+            "properties": {
+              "ServiceGroupName": "ExampleGroup",
+              "ServiceType": "OpcUaClient"
+            }
+          },
+          "releaseKeys": [
+            "18",
+            "19",
+            "20",
+            "21"
+          ]
         },
         "deleteService": {
           "arguments": {
-            "action": "deleteService"
-          }
+            "action": "deleteService",
+            "family": "certificateServices",
+            "name": "<existing service Id or Guid from read>"
+          },
+          "releaseKeys": [
+            "18",
+            "19",
+            "20",
+            "21"
+          ]
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
@@ -17515,11 +17591,7 @@
       },
       "operations": {
         "update": {
-          "arguments": {
-            "properties": {
-              "DoNotUse": true
-            }
-          }
+          "arguments": {}
         },
         "delete": {
           "arguments": {
@@ -17957,27 +18029,45 @@
         },
         "performFactoryReset": {
           "arguments": {
-            "action": "performFactoryReset",
-            "dryRun": false,
-            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+            "action": "performFactoryReset"
+          },
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+              "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+              "confirmOnline": true
+            },
+            "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
           }
         },
         "performRamToRomCopy": {
           "arguments": {
-            "action": "performRamToRomCopy",
-            "dryRun": false,
-            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+            "action": "performRamToRomCopy"
+          },
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+              "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+              "confirmOnline": true
+            },
+            "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
           }
         },
         "changeActivationState": {
           "arguments": {
             "action": "changeActivationState",
-            "activationState": "Deactivate",
-            "dryRun": false,
-            "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-            "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+            "activationState": "Deactivate"
+          },
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+              "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+              "confirmOnline": true
+            },
+            "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
           }
         }
       },
@@ -18432,7 +18522,7 @@
     "ManagePlcDataBlockSnapshot": {
       "arguments": {
         "softwarePath": "PLC_1",
-        "blockPath": "Main",
+        "blockPath": "<exact data block path from GetSoftwareTree>",
         "action": "read",
         "confirmValueChange": false,
         "dryRun": true
@@ -18440,6 +18530,14 @@
       "parameters": {
         "filePath": {
           "exampleValue": "C:\\Examples\\exports\\Main.xml"
+        },
+        "blockPath": {
+          "exampleValue": "<exact data block path from GetSoftwareTree>",
+          "meaning": "Copy the path of a data block from GetSoftwareTree.",
+          "requiresBinding": true,
+          "tools": [
+            "GetSoftwareTree"
+          ]
         }
       },
       "operations": {
@@ -19959,7 +20057,7 @@
           "arguments": {
             "action": "update",
             "properties": {
-              "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+              "UsernameForFChangeHistory": "ExampleUser"
             }
           }
         }
@@ -20256,8 +20354,14 @@
         "import": {
           "arguments": {
             "action": "import",
-            "filePath": "C:\\Examples\\imports\\Overview.yml",
-            "allowRemoveScreenItems": true
+            "filePath": "C:\\Examples\\imports\\Overview.yml"
+          },
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "allowRemoveScreenItems": true
+            },
+            "meaning": "After reviewing the removal inventory, apply to the same screen and file. Workbench approval binds that import plan."
           }
         }
       },
@@ -23655,7 +23759,10 @@
           "arguments": {
             "category": "graphicLists",
             "name": "StatusGraphics"
-          }
+          },
+          "releaseKeys": [
+            "21"
+          ]
         }
       },
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
@@ -23864,10 +23971,14 @@
       "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
     },
     "GetUnifiedPlantObject": {
-      "arguments": {},
+      "arguments": {
+        "plantPath": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>"
+      },
       "parameters": {
         "plantPath": {
-          "exampleValue": "Plant_1"
+          "exampleValue": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>",
+          "requiresBinding": true,
+          "meaning": "Use the absolute path from the plant view root. An empty plantPath lists the views."
         },
         "objectPath": {
           "exampleValue": "[{\"property\":\"ScreenFolder\"},{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]",
@@ -25076,21 +25187,19 @@
       "operations": {
         "preview": {
           "arguments": {
-            "changes": {
-              "MaxLoginRuntimeSettings.MaxLoginErrors": 5
-            },
             "dryRun": true
           }
         },
         "execute": {
-          "arguments": {
-            "changes": {
-              "MaxLoginRuntimeSettings.MaxLoginErrors": 5
+          "arguments": {},
+          "execution": {
+            "arguments": {
+              "dryRun": false,
+              "previewToken": "<token from SetUnifiedRuntimeSettings preview>",
+              "expectedPlanHash": "<planHash from SetUnifiedRuntimeSettings preview>",
+              "expectedProjectFile": "C:/Examples/Example.ap{extension}"
             },
-            "dryRun": false,
-            "previewToken": "<token from SetUnifiedRuntimeSettings preview>",
-            "expectedPlanHash": "<planHash from SetUnifiedRuntimeSettings preview>",
-            "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+            "meaning": "After reviewing this preview, bind its token, plan hash and exact project file for the same changes."
           }
         }
       },
@@ -25831,6 +25940,7 @@
       "parameters": {},
       "operations": {
         "rung": {
+          "argumentsMode": "complete",
           "arguments": {
             "ladFcBlock": {
               "blockName": "FC_LadDemo",
@@ -25981,6 +26091,7 @@
           "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. For timers, counters and user FC/FB calls, see operation rung-boxes. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
         },
         "rung-boxes": {
+          "argumentsMode": "complete",
           "arguments": {
             "ladFcBlock": {
               "blockName": "FC_LadBoxes",
@@ -29033,6 +29144,65 @@
     },
     "scope": "Examples for every registered tool in both profiles. Target-dependent bindings and operation parameters accompany the call. A sample value is not evidence that an object exists or an API operation is supported by that device. Ported examples are offered only for tools registered on the selected release, using PortedFamilies.ToolReleases; partial tools keep their action and format refusals.",
     "releaseArguments": {
+      "BuildProjectScaffold": [
+        {
+          "releases": [
+            "14sp1"
+          ],
+          "arguments": {
+            "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 511-1AK01-0AB0\",\"plcVersion\":\"V2.1\"}"
+          }
+        },
+        {
+          "releases": [
+            "15.1"
+          ],
+          "arguments": {
+            "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AL01-0AB0\",\"plcVersion\":\"V2.5\"}"
+          }
+        },
+        {
+          "releases": [
+            "16"
+          ],
+          "arguments": {
+            "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 513-1AL02-0AB0\",\"plcVersion\":\"V2.8\"}"
+          }
+        },
+        {
+          "releases": [
+            "17"
+          ],
+          "arguments": {
+            "spec": "{\"projectName\":\"Demo\",\"directoryPath\":\"C:\\\\Projects\",\"plcName\":\"PLC_1\",\"plcFamily\":\"S7-1500\",\"plcMlfb\":\"6ES7 515-2AM02-0AB0\",\"plcVersion\":\"V2.9\"}"
+          }
+        }
+      ],
+      "SetUnifiedRuntimeSettings": [
+        {
+          "releases": [
+            "19"
+          ],
+          "arguments": {
+            "changes": {
+              "GMPEnabled": true
+            }
+          }
+        }
+      ],
+      "ManageSafetyGlobalSettings": [
+        {
+          "releases": [
+            "16"
+          ],
+          "arguments": {
+            "action": "update",
+            "properties": {
+              "UsernameForFChangeHistory": "ExampleUser"
+            }
+          }
+        }
+      ],
       "CreateLibraryMasterCopy": [
         {
           "releases": [
@@ -29737,14 +29907,30 @@
                 "scope": "unit",
                 "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
                 "unitName": ""
-              }
+              },
+              "releaseKeys": [
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             },
             "blockInUnit": {
               "arguments": {
                 "scope": "block",
                 "scopePath": "<block path relative to this unit>",
                 "unitName": "<exact unit name from ListPlcSoftwareUnits>"
-              }
+              },
+              "releaseKeys": [
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             }
           },
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview and real compile exercised successfully; read native diagnostic counts/state, not just transport success. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. Scoped compile native acceptance is NOT RUN on all releases. The lead confirmed only V21 PlcBlock ICompilable exposure (CompileProvider.Compile) in Step 0; V18 and group/unit services require Step 0b probes.",
@@ -29849,14 +30035,30 @@
                 "scope": "unit",
                 "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
                 "unitName": ""
-              }
+              },
+              "releaseKeys": [
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             },
             "blockInUnit": {
               "arguments": {
                 "scope": "block",
                 "scopePath": "<block path relative to this unit>",
                 "unitName": "<exact unit name from ListPlcSoftwareUnits>"
-              }
+              },
+              "releaseKeys": [
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             }
           },
           "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): real software compilation. V16 COMPILE_ERRORS reports completed execution, six errors, counts and first diagnostic; V18/V19 approval-disabled compilation also verified. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4. Scoped compile native acceptance is NOT RUN on all releases. The lead confirmed only V21 PlcBlock ICompilable exposure (CompileProvider.Compile) in Step 0; V18 and group/unit services require Step 0b probes.",
@@ -29900,8 +30102,8 @@
               "exampleValue": 12345
             },
             "takeOver": {
-              "meaning": "Optional boolean, default false. Set true to hand over an eligible idle non-owning attachment in the same host. Calls, approval waits, Workbench participation and worker-started TIA instances stay protected.",
-              "exampleValue": true
+              "meaning": "Default false. Set true only to take over an eligible idle non-owning attachment in the same host. Running calls, approval waits, Workbench sessions and worker-started portals stay protected.",
+              "exampleValue": false
             }
           },
           "operations": {},
@@ -33261,7 +33463,7 @@
             },
             "properties": {
               "exampleValue": {
-                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                "RemainingCertificateLifetime": 30
               },
               "requiresBinding": true
             },
@@ -33286,10 +33488,10 @@
             "update": {
               "arguments": {
                 "action": "update",
+                "family": "certificateServices",
                 "properties": {
-                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-                },
-                "name": "Example_1"
+                  "RemainingCertificateLifetime": 30
+                }
               }
             },
             "delete": {
@@ -33306,7 +33508,6 @@
               "arguments": {
                 "action": "export",
                 "filePath": "C:\\Examples\\exports\\Main.xml",
-                "name": "Example_1",
                 "family": "telecontrolDataPoints"
               },
               "releaseKeys": [
@@ -33318,7 +33519,6 @@
               "arguments": {
                 "action": "import",
                 "filePath": "C:\\Examples\\exports\\Main.xml",
-                "name": "Example_1",
                 "family": "telecontrolDataPoints"
               },
               "releaseKeys": [
@@ -33328,22 +33528,53 @@
             },
             "setServiceGroupName": {
               "arguments": {
-                "action": "setServiceGroupName"
-              }
+                "action": "setServiceGroupName",
+                "family": "certificateServices",
+                "name": "<existing service Id or Guid from read>",
+                "properties": {
+                  "ServiceGroupName": "ExampleGroup"
+                }
+              },
+              "releaseKeys": [
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             },
             "createService": {
               "arguments": {
-                "action": "createService"
-              }
+                "action": "createService",
+                "family": "certificateServices",
+                "name": "1",
+                "properties": {
+                  "ServiceGroupName": "ExampleGroup",
+                  "ServiceType": "OpcUaClient"
+                }
+              },
+              "releaseKeys": [
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             },
             "deleteService": {
               "arguments": {
-                "action": "deleteService"
-              }
+                "action": "deleteService",
+                "family": "certificateServices",
+                "name": "<existing service Id or Guid from read>"
+              },
+              "releaseKeys": [
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             }
           },
           "validation": "Parameterized Foundation adapter call; input schema checked on all six old releases. Bind exact target values before calling. Native execution NOT RUN; behaviorPolicy=current.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. P8-03c: V14 SP1-V19 remain current / NOT RUN. Unavailable actions return UNSUPPORTED_CAPABILITY before native lookup: hardware catalog 18+, diagnostics 17+, transfer areas 15.1+ (extended positions 16+), MRP/Sync 16+, MRP instances 20+, certificates 18+, telecontrol export/import 20+ and typed actions 21+, web applications and communication connections 21+, normalization 17+, PSC 15.1+ and encryption 20+."
+          "note": "Bind the service owner from GetProjectTree. For createService choose an unused numeric service Id. For changes to an existing service copy its Id or Guid from read."
         },
         "ManageHardwareUtilities": {
           "arguments": {
@@ -34225,8 +34456,11 @@
           "parameters": {},
           "operations": {},
           "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
-          "note": "session.source=workbench-bridge describes the Workbench own bridge, until P8-21. It does not prove a shared MCP/native session. workbench.controlEnabled is read-only; only a person changes the switch in Settings. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
-          "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+          "note": "Read data.workbench.blockedBy to identify what blocks interaction. Follow data.nextStep before issuing another Workbench command.",
+          "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state.",
+          "resultReading": [
+            "For example, data.workbench.blockedBy=\"dialog\" identifies an open dialog. Read data.nextStep for the action required to continue in the calling session."
+          ]
         },
         "GetWorkbenchSelection": {
           "arguments": {
@@ -39984,11 +40218,7 @@
           },
           "operations": {
             "update": {
-              "arguments": {
-                "properties": {
-                  "DoNotUse": true
-                }
-              }
+              "arguments": {}
             },
             "delete": {
               "arguments": {
@@ -41539,12 +41769,16 @@
                 "action": "setAttributes",
                 "attributes": {
                   "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-                }
+                },
+                "cycleName": "<exact non-system cycle name from read>"
               }
             }
           },
           "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "releaseNotes": {
+            "17": "setAttributes requires a non-system cycle with a writable attribute in the read result. If its schema lists only read-only Name and IsSystemObject, use native XML export/import for that cycle."
+          }
         },
         "ManageClassicHmiTextGraphicList": {
           "arguments": {
@@ -41773,6 +42007,7 @@
           },
           "operations": {
             "rung": {
+              "argumentsMode": "complete",
               "arguments": {
                 "outputReleaseKey": "21",
                 "ladFcBlock": {
@@ -41924,6 +42159,7 @@
               "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. For timers, counters and user FC/FB calls, see operation rung-boxes. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
             },
             "rung-boxes": {
+              "argumentsMode": "complete",
               "arguments": {
                 "outputReleaseKey": "21",
                 "ladFcBlock": {
@@ -44964,8 +45200,8 @@
         "ConnectOnlinePlc": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "ipAddress": "192.168.0.3",
-            "pgPcInterface": "PLCSIM"
+            "ipAddress": "<PLC IPv4 address from the allow-list>",
+            "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>"
           },
           "parameters": {
             "password": {
@@ -44985,6 +45221,19 @@
             },
             "trustDeviceCertificate": {
               "exampleValue": false
+            },
+            "ipAddress": {
+              "exampleValue": "<PLC IPv4 address from the allow-list>",
+              "meaning": "Bind the explicit IPv4 address of the intended PLC from the allow-list.",
+              "requiresBinding": true
+            },
+            "pgPcInterface": {
+              "exampleValue": "<exact PG/PC interface name from ListTransferRoutes>",
+              "meaning": "Copy the PG/PC interface name shown by ListTransferRoutes for the selected route.",
+              "requiresBinding": true,
+              "tools": [
+                "ListTransferRoutes"
+              ]
             }
           },
           "operations": {},
@@ -45033,8 +45282,8 @@
         "DownloadPlc": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "pgPcInterface": "PLCSIM",
-            "targetIpAddress": "192.168.0.3",
+            "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
+            "targetIpAddress": "<PLC IPv4 address from the allow-list>",
             "dryRun": false,
             "expectedProjectFile": "C:/Examples/Project.ap{extension}",
             "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -45081,6 +45330,19 @@
             },
             "trustDeviceCertificate": {
               "exampleValue": false
+            },
+            "targetIpAddress": {
+              "exampleValue": "<PLC IPv4 address from the allow-list>",
+              "meaning": "Bind the explicit IPv4 address of the intended PLC from the allow-list.",
+              "requiresBinding": true
+            },
+            "pgPcInterface": {
+              "exampleValue": "<exact PG/PC interface name from ListTransferRoutes>",
+              "meaning": "Copy the PG/PC interface name shown by ListTransferRoutes for the selected route.",
+              "requiresBinding": true,
+              "tools": [
+                "ListTransferRoutes"
+              ]
             }
           },
           "operations": {},
@@ -45228,7 +45490,7 @@
         "ManagePlcDataBlockSnapshot": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "Main",
+            "blockPath": "<exact data block path from GetSoftwareTree>",
             "action": "read",
             "confirmValueChange": false,
             "dryRun": true
@@ -45236,6 +45498,14 @@
           "parameters": {
             "filePath": {
               "exampleValue": "C:\\Examples\\exports\\Main.xml"
+            },
+            "blockPath": {
+              "exampleValue": "<exact data block path from GetSoftwareTree>",
+              "meaning": "Copy the path of a data block from GetSoftwareTree.",
+              "requiresBinding": true,
+              "tools": [
+                "GetSoftwareTree"
+              ]
             }
           },
           "operations": {
@@ -46212,27 +46482,45 @@
             },
             "performFactoryReset": {
               "arguments": {
-                "action": "performFactoryReset",
-                "dryRun": false,
-                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+                "action": "performFactoryReset"
+              },
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+                  "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                  "confirmOnline": true
+                },
+                "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
               }
             },
             "performRamToRomCopy": {
               "arguments": {
-                "action": "performRamToRomCopy",
-                "dryRun": false,
-                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+                "action": "performRamToRomCopy"
+              },
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+                  "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                  "confirmOnline": true
+                },
+                "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
               }
             },
             "changeActivationState": {
               "arguments": {
                 "action": "changeActivationState",
-                "activationState": "Deactivate",
-                "dryRun": false,
-                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+                "activationState": "Deactivate"
+              },
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+                  "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                  "confirmOnline": true
+                },
+                "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
               }
             }
           },
@@ -46937,7 +47225,7 @@
               "arguments": {
                 "action": "update",
                 "properties": {
-                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                  "UsernameForFChangeHistory": "ExampleUser"
                 }
               }
             }
@@ -46946,7 +47234,10 @@
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
           "notes": [
             "available only on releases registered in PortedFamilies.ToolReleases. Missing API actions refuse before native dispatch. Optional products are detected in the session; native acceptance remains NOT RUN."
-          ]
+          ],
+          "releaseNotes": {
+            "16": "V16 has GlobalSettings setters only. Preview update for UsernameForFChangeHistory or SafetyModificationsPossible. Reading the setting requires V17."
+          }
         },
         "GetSafetyBlockSignatures": {
           "arguments": {
@@ -47107,52 +47398,6 @@
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
           "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: V18-V21 imports remain available. Every export/preflight action is guarded before native calls; skipChartPreflight cannot bypass the guard. ExportInstructionData also lacks an API on V18."
-        },
-        "ManageCfcChartProtection": {
-          "arguments": {
-            "softwarePath": "PLC_1",
-            "chartName": "Chart_1",
-            "dryRun": true,
-            "action": "read"
-          },
-          "parameters": {
-            "currentPassword": {
-              "exampleValue": "<current password supplied for this target>",
-              "requiresBinding": true
-            },
-            "newHashedPassword": {
-              "exampleValue": "<hash in the format described by this tool>",
-              "requiresBinding": true
-            },
-            "modelVersion": {
-              "exampleValue": "V2.0"
-            },
-            "skipChartPreflight": {
-              "exampleValue": false
-            }
-          },
-          "operations": {
-            "read": {
-              "arguments": {}
-            },
-            "add": {
-              "arguments": {
-                "action": "add"
-              }
-            },
-            "change": {
-              "arguments": {
-                "action": "change"
-              }
-            },
-            "remove": {
-              "arguments": {
-                "action": "remove"
-              }
-            }
-          },
-          "validation": "All protection actions, including read, return UNSUPPORTED_CAPABILITY on V18–V21 before dispatch. The example demonstrates the documented refusal on these releases.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Every protection action is guarded on V18-V21 before native calls, including an unknown chart with skipChartPreflight=true. No CompleteExport preflight is permitted."
         },
         "ListTestSuiteCases": {
           "arguments": {
@@ -47800,10 +48045,14 @@
           ]
         },
         "GetUnifiedPlantObject": {
-          "arguments": {},
+          "arguments": {
+            "plantPath": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>"
+          },
           "parameters": {
             "plantPath": {
-              "exampleValue": "/Plant_1"
+              "exampleValue": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>",
+              "requiresBinding": true,
+              "meaning": "Use the absolute path from the plant view root. An empty plantPath lists the views."
             },
             "objectPath": {
               "exampleValue": [],
@@ -48255,7 +48504,10 @@
               "arguments": {
                 "category": "graphicLists",
                 "name": "StatusGraphics"
-              }
+              },
+              "releaseKeys": [
+                "21"
+              ]
             }
           },
           "validation": "Official V19 PublicAPI member review; current / NOT RUN. No native TIA execution is claimed.",
@@ -48899,21 +49151,19 @@
           "operations": {
             "preview": {
               "arguments": {
-                "changes": {
-                  "MaxLoginRuntimeSettings.MaxLoginErrors": 5
-                },
                 "dryRun": true
               }
             },
             "execute": {
-              "arguments": {
-                "changes": {
-                  "MaxLoginRuntimeSettings.MaxLoginErrors": 5
+              "arguments": {},
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "previewToken": "<token from SetUnifiedRuntimeSettings preview>",
+                  "expectedPlanHash": "<planHash from SetUnifiedRuntimeSettings preview>",
+                  "expectedProjectFile": "C:/Examples/Example.ap{extension}"
                 },
-                "dryRun": false,
-                "previewToken": "<token from SetUnifiedRuntimeSettings preview>",
-                "expectedPlanHash": "<planHash from SetUnifiedRuntimeSettings preview>",
-                "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+                "meaning": "After reviewing this preview, bind its token, plan hash and exact project file for the same changes."
               }
             }
           },
@@ -50886,14 +51136,30 @@
                 "scope": "unit",
                 "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
                 "unitName": ""
-              }
+              },
+              "releaseKeys": [
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             },
             "blockInUnit": {
               "arguments": {
                 "scope": "block",
                 "scopePath": "<block path relative to this unit>",
                 "unitName": "<exact unit name from ListPlcSoftwareUnits>"
-              }
+              },
+              "releaseKeys": [
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             }
           },
           "validation": "Reviewer VM evidence: V14 SP1, V15.1, V16; 2026-10-06/07. Preview and real compile exercised successfully; read native diagnostic counts/state, not just transport success. V17, V18 and V19 native execution NOT RUN. These examples do not change the current behavior policy or certify safe-v4. Scoped compile native acceptance is NOT RUN on all releases. The lead confirmed only V21 PlcBlock ICompilable exposure (CompileProvider.Compile) in Step 0; V18 and group/unit services require Step 0b probes.",
@@ -50998,14 +51264,30 @@
                 "scope": "unit",
                 "scopePath": "<encoded exact unit name from ListPlcSoftwareUnits>",
                 "unitName": ""
-              }
+              },
+              "releaseKeys": [
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             },
             "blockInUnit": {
               "arguments": {
                 "scope": "block",
                 "scopePath": "<block path relative to this unit>",
                 "unitName": "<exact unit name from ListPlcSoftwareUnits>"
-              }
+              },
+              "releaseKeys": [
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             }
           },
           "validation": "Real-machine verified V14 SP1–V19 (2026-10-07): real software compilation. V16 COMPILE_ERRORS reports completed execution, six errors, counts and first diagnostic; V18/V19 approval-disabled compilation also verified. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4. Scoped compile native acceptance is NOT RUN on all releases. The lead confirmed only V21 PlcBlock ICompilable exposure (CompileProvider.Compile) in Step 0; V18 and group/unit services require Step 0b probes.",
@@ -51089,8 +51371,8 @@
               "exampleValue": 12345
             },
             "takeOver": {
-              "meaning": "Optional boolean, default false. Set true to hand over an eligible idle non-owning attachment in the same host. Calls, approval waits, Workbench participation and worker-started TIA instances stay protected.",
-              "exampleValue": true
+              "meaning": "Default false. Set true only to take over an eligible idle non-owning attachment in the same host. Running calls, approval waits, Workbench sessions and worker-started portals stay protected.",
+              "exampleValue": false
             }
           },
           "operations": {},
@@ -51756,8 +52038,8 @@
         "DownloadPlc": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "pgPcInterface": "PLCSIM",
-            "targetIpAddress": "192.168.0.3",
+            "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>",
+            "targetIpAddress": "<PLC IPv4 address from the allow-list>",
             "dryRun": false,
             "expectedProjectFile": "C:/Examples/Project.ap{extension}",
             "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
@@ -51804,6 +52086,19 @@
             },
             "trustDeviceCertificate": {
               "exampleValue": false
+            },
+            "targetIpAddress": {
+              "exampleValue": "<PLC IPv4 address from the allow-list>",
+              "meaning": "Bind the explicit IPv4 address of the intended PLC from the allow-list.",
+              "requiresBinding": true
+            },
+            "pgPcInterface": {
+              "exampleValue": "<exact PG/PC interface name from ListTransferRoutes>",
+              "meaning": "Copy the PG/PC interface name shown by ListTransferRoutes for the selected route.",
+              "requiresBinding": true,
+              "tools": [
+                "ListTransferRoutes"
+              ]
             }
           },
           "operations": {},
@@ -54313,8 +54608,8 @@
         "ConnectOnlinePlc": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "ipAddress": "192.168.0.3",
-            "pgPcInterface": "PLCSIM"
+            "ipAddress": "<PLC IPv4 address from the allow-list>",
+            "pgPcInterface": "<exact PG/PC interface name from ListTransferRoutes>"
           },
           "parameters": {
             "password": {
@@ -54334,6 +54629,19 @@
             },
             "trustDeviceCertificate": {
               "exampleValue": false
+            },
+            "ipAddress": {
+              "exampleValue": "<PLC IPv4 address from the allow-list>",
+              "meaning": "Bind the explicit IPv4 address of the intended PLC from the allow-list.",
+              "requiresBinding": true
+            },
+            "pgPcInterface": {
+              "exampleValue": "<exact PG/PC interface name from ListTransferRoutes>",
+              "meaning": "Copy the PG/PC interface name shown by ListTransferRoutes for the selected route.",
+              "requiresBinding": true,
+              "tools": [
+                "ListTransferRoutes"
+              ]
             }
           },
           "operations": {},
@@ -55726,52 +56034,6 @@
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
-        "ManageCfcChartProtection": {
-          "arguments": {
-            "softwarePath": "PLC_1",
-            "chartName": "Chart_1",
-            "dryRun": true,
-            "action": "read"
-          },
-          "parameters": {
-            "currentPassword": {
-              "exampleValue": "<current password supplied for this target>",
-              "requiresBinding": true
-            },
-            "newHashedPassword": {
-              "exampleValue": "<hash in the format described by this tool>",
-              "requiresBinding": true
-            },
-            "modelVersion": {
-              "exampleValue": "V2.0"
-            },
-            "skipChartPreflight": {
-              "exampleValue": false
-            }
-          },
-          "operations": {
-            "read": {
-              "arguments": {}
-            },
-            "add": {
-              "arguments": {
-                "action": "add"
-              }
-            },
-            "change": {
-              "arguments": {
-                "action": "change"
-              }
-            },
-            "remove": {
-              "arguments": {
-                "action": "remove"
-              }
-            }
-          },
-          "validation": "All protection actions, including read, return UNSUPPORTED_CAPABILITY on V18–V21 before dispatch. The example demonstrates the documented refusal on these releases.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Release limits: Every protection action is guarded on V18-V21 before native calls, including an unknown chart with skipChartPreflight=true. No CompleteExport preflight is permitted."
-        },
         "ManageClassicHmiCycle": {
           "arguments": {
             "softwarePath": "<exact Classic HMI softwarePath from GetProjectTree>",
@@ -55836,12 +56098,16 @@
                 "action": "setAttributes",
                 "attributes": {
                   "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-                }
+                },
+                "cycleName": "<exact non-system cycle name from read>"
               }
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "releaseNotes": {
+            "17": "setAttributes requires a non-system cycle with a writable attribute in the read result. If its schema lists only read-only Name and IsSystemObject, use native XML export/import for that cycle."
+          }
         },
         "ManageClassicHmiFolder": {
           "arguments": {
@@ -56724,7 +56990,7 @@
             },
             "properties": {
               "exampleValue": {
-                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                "RemainingCertificateLifetime": 30
               },
               "requiresBinding": true
             },
@@ -56749,10 +57015,10 @@
             "update": {
               "arguments": {
                 "action": "update",
+                "family": "certificateServices",
                 "properties": {
-                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
-                },
-                "name": "Example_1"
+                  "RemainingCertificateLifetime": 30
+                }
               }
             },
             "delete": {
@@ -56769,7 +57035,6 @@
               "arguments": {
                 "action": "export",
                 "filePath": "C:\\Examples\\exports\\Main.xml",
-                "name": "Example_1",
                 "family": "telecontrolDataPoints"
               },
               "releaseKeys": [
@@ -56781,7 +57046,6 @@
               "arguments": {
                 "action": "import",
                 "filePath": "C:\\Examples\\exports\\Main.xml",
-                "name": "Example_1",
                 "family": "telecontrolDataPoints"
               },
               "releaseKeys": [
@@ -56791,22 +57055,53 @@
             },
             "setServiceGroupName": {
               "arguments": {
-                "action": "setServiceGroupName"
-              }
+                "action": "setServiceGroupName",
+                "family": "certificateServices",
+                "name": "<existing service Id or Guid from read>",
+                "properties": {
+                  "ServiceGroupName": "ExampleGroup"
+                }
+              },
+              "releaseKeys": [
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             },
             "createService": {
               "arguments": {
-                "action": "createService"
-              }
+                "action": "createService",
+                "family": "certificateServices",
+                "name": "1",
+                "properties": {
+                  "ServiceGroupName": "ExampleGroup",
+                  "ServiceType": "OpcUaClient"
+                }
+              },
+              "releaseKeys": [
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             },
             "deleteService": {
               "arguments": {
-                "action": "deleteService"
-              }
+                "action": "deleteService",
+                "family": "certificateServices",
+                "name": "<existing service Id or Guid from read>"
+              },
+              "releaseKeys": [
+                "18",
+                "19",
+                "20",
+                "21"
+              ]
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "Bind the service owner from GetProjectTree. For createService choose an unused numeric service Id. For changes to an existing service copy its Id or Guid from read."
         },
         "ManageDeviceUserGroup": {
           "arguments": {
@@ -58083,11 +58378,7 @@
           },
           "operations": {
             "update": {
-              "arguments": {
-                "properties": {
-                  "DoNotUse": true
-                }
-              }
+              "arguments": {}
             },
             "delete": {
               "arguments": {
@@ -58575,27 +58866,45 @@
             },
             "performFactoryReset": {
               "arguments": {
-                "action": "performFactoryReset",
-                "dryRun": false,
-                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+                "action": "performFactoryReset"
+              },
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+                  "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                  "confirmOnline": true
+                },
+                "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
               }
             },
             "performRamToRomCopy": {
               "arguments": {
-                "action": "performRamToRomCopy",
-                "dryRun": false,
-                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+                "action": "performRamToRomCopy"
+              },
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+                  "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                  "confirmOnline": true
+                },
+                "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
               }
             },
             "changeActivationState": {
               "arguments": {
                 "action": "changeActivationState",
-                "activationState": "Deactivate",
-                "dryRun": false,
-                "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-                "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>"
+                "activationState": "Deactivate"
+              },
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "expectedPlanHash": "<planHash from this tool's preview for these arguments and bound project>",
+                  "expectedProjectFile": "C:/Examples/Project.ap{extension}",
+                  "confirmOnline": true
+                },
+                "meaning": "Apply only after reviewing the preview for this drive and binding the exact project and plan."
               }
             }
           },
@@ -59072,7 +59381,7 @@
         "ManagePlcDataBlockSnapshot": {
           "arguments": {
             "softwarePath": "PLC_1",
-            "blockPath": "Main",
+            "blockPath": "<exact data block path from GetSoftwareTree>",
             "action": "read",
             "confirmValueChange": false,
             "dryRun": true
@@ -59080,6 +59389,14 @@
           "parameters": {
             "filePath": {
               "exampleValue": "C:\\Examples\\exports\\Main.xml"
+            },
+            "blockPath": {
+              "exampleValue": "<exact data block path from GetSoftwareTree>",
+              "meaning": "Copy the path of a data block from GetSoftwareTree.",
+              "requiresBinding": true,
+              "tools": [
+                "GetSoftwareTree"
+              ]
             }
           },
           "operations": {
@@ -60651,13 +60968,16 @@
               "arguments": {
                 "action": "update",
                 "properties": {
-                  "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                  "UsernameForFChangeHistory": "ExampleUser"
                 }
               }
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained."
+          "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
+          "releaseNotes": {
+            "16": "V16 has GlobalSettings setters only. Preview update for UsernameForFChangeHistory or SafetyModificationsPossible. Reading the setting requires V17."
+          }
         },
         "ManageSivarcRule": {
           "arguments": {
@@ -60848,7 +61168,7 @@
               "requiresBinding": true
             },
             "blockPath": {
-              "meaning": "Select an existing FB or FC. V20 blocks definition enumeration for every block type.",
+              "meaning": "Select an existing FB or FC.",
               "requiresBinding": true
             }
           },
@@ -60957,8 +61277,14 @@
             "import": {
               "arguments": {
                 "action": "import",
-                "filePath": "C:\\Examples\\imports\\Overview.yml",
-                "allowRemoveScreenItems": true
+                "filePath": "C:\\Examples\\imports\\Overview.yml"
+              },
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "allowRemoveScreenItems": true
+                },
+                "meaning": "After reviewing the removal inventory, apply to the same screen and file. Workbench approval binds that import plan."
               }
             }
           },
@@ -64350,7 +64676,7 @@
               "exampleValue": true
             },
             "blockPath": {
-              "meaning": "Select an existing FB or FC. V20 blocks definition enumeration for every block type.",
+              "meaning": "Select an existing FB or FC.",
               "requiresBinding": true
             }
           },
@@ -64541,7 +64867,10 @@
               "arguments": {
                 "category": "graphicLists",
                 "name": "StatusGraphics"
-              }
+              },
+              "releaseKeys": [
+                "21"
+              ]
             }
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
@@ -64775,10 +65104,14 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "GetUnifiedPlantObject": {
-          "arguments": {},
+          "arguments": {
+            "plantPath": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>"
+          },
           "parameters": {
             "plantPath": {
-              "exampleValue": "/Plant_1"
+              "exampleValue": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>",
+              "requiresBinding": true,
+              "meaning": "Use the absolute path from the plant view root. An empty plantPath lists the views."
             },
             "objectPath": {
               "exampleValue": [],
@@ -66256,21 +66589,19 @@
           "operations": {
             "preview": {
               "arguments": {
-                "changes": {
-                  "MaxLoginRuntimeSettings.MaxLoginErrors": 5
-                },
                 "dryRun": true
               }
             },
             "execute": {
-              "arguments": {
-                "changes": {
-                  "MaxLoginRuntimeSettings.MaxLoginErrors": 5
+              "arguments": {},
+              "execution": {
+                "arguments": {
+                  "dryRun": false,
+                  "previewToken": "<token from SetUnifiedRuntimeSettings preview>",
+                  "expectedPlanHash": "<planHash from SetUnifiedRuntimeSettings preview>",
+                  "expectedProjectFile": "C:/Examples/Example.ap{extension}"
                 },
-                "dryRun": false,
-                "previewToken": "<token from SetUnifiedRuntimeSettings preview>",
-                "expectedPlanHash": "<planHash from SetUnifiedRuntimeSettings preview>",
-                "expectedProjectFile": "C:/Examples/Example.ap{extension}"
+                "meaning": "After reviewing this preview, bind its token, plan hash and exact project file for the same changes."
               }
             }
           },
@@ -67255,6 +67586,7 @@
           },
           "operations": {
             "rung": {
+              "argumentsMode": "complete",
               "arguments": {
                 "ladFcBlock": {
                   "blockName": "FC_LadDemo",
@@ -67405,6 +67737,7 @@
               "note": "Declare DB_LadDemo and the global constant LAD_LIMIT first. No symbol/type resolution; compile is the authority. Rung fields are exact camelCase; local symbols must start with this FC inputs/outputs. For timers, counters and user FC/FB calls, see operation rung-boxes. Duration constants use typed, such as {\"typed\":\"T#1s\"} or {\"typed\":\"LT#1s\"}; Time/LTime remain compare types only. Literal values must be non-blank and typed constants need content after #."
             },
             "rung-boxes": {
+              "argumentsMode": "complete",
               "arguments": {
                 "ladFcBlock": {
                   "blockName": "FC_LadBoxes",
@@ -68548,8 +68881,11 @@
           "parameters": {},
           "operations": {},
           "validation": "Host and fake Workbench offline contract tests; real host/Workbench end-to-end P8-20e NOT RUN.",
-          "note": "session.source=workbench-bridge describes the Workbench own bridge, until P8-21. It does not prove a shared MCP/native session. workbench.controlEnabled is read-only; only a person changes the switch in Settings. Workbench must already be running in the same user/data root/bundle. No Workbench returns RESOURCE_UNAVAILABLE within a 250 ms connect attempt. UI success is UI state only; no worker, TIA lane, approval or audit. Human activity/modal/busy/control-disabled refusals must not trigger automatic retries.",
-          "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state."
+          "note": "Read data.workbench.blockedBy to identify what blocks interaction. Follow data.nextStep before issuing another Workbench command.",
+          "resultInterpretation": "Read V4 ok/error.code/error.details and meta.outcome/execution first. Refused requests are rejected-before-operation/not-started. Protocol/transport failures return INTERNAL_ERROR with host diagnostic correlation; timeout has workbench-ui or workbench-read stage and never locks the session. Success data is a UI snapshot or applied UI state.",
+          "resultReading": [
+            "For example, data.workbench.blockedBy=\"dialog\" identifies an open dialog. Read data.nextStep for the action required to continue in the calling session."
+          ]
         },
         "GetWorkbenchSelection": {
           "arguments": {

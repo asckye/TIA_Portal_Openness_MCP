@@ -21,11 +21,12 @@ public static class SecurityCapabilities
         if (operation == "ManageDeviceUsers" && scope == "simpleWebserver" && version < 18)
             return "Simple web users require V18 or later.";
         if (operation == "ManageSyslogServers" && scope == "project" && version < 20)
-            return "Project-global syslog requires V20 or later.";
+            return "Project-global SyslogServerProvider.Servers requires V20 or later.";
         if (operation == "ManageUmcUsers")
         {
-            if (action is "createOffline" or "rename" && version < 20)
-                return "Offline UMC creation and renaming require V20 or later.";
+            if (action == "createOffline" && version < 20)
+                return "UmcUserComposition.CreateOfflineUmcUser and UmcUserGroupComposition.CreateOfflineUmcUserGroup require V20 or later.";
+            if (action == "rename" && version < 20) return "Offline UMC renaming requires V20 or later.";
             if (scope == "server" && action is "checkConsistency" or "synchronize" && version < 18)
                 return "UMC consistency/synchronization requires V18 or later.";
         }

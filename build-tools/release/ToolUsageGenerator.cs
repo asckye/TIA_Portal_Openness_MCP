@@ -74,6 +74,7 @@ internal static class ToolUsageGenerator
         Require(Set(data.Rosters["21"].Except(data.Registrations.Keys)).IsSubsetOf(data.Rosters["19"]), "New registrations must come from Foundation");
         var names = Set(data.Rosters.Values.SelectMany(v => v));
         var topicRules = Read(root, "reference/tool-catalog/usage-topic-rules.json");
+        ValidateTopicTools(topicRules, names);
         var manuals = Read(root, "reference/siemens-openness/manual-examples.json")["references"]!.AsArray();
         var mappings = new JsonObject();
         foreach (var name in Sorted(names))
@@ -169,6 +170,12 @@ internal static class ToolUsageGenerator
             text = Regex.Replace(text, @"\b" + old + @"\b", name);
         return JsonNode.Parse(text.Replace("Returns the existing PascalCase array", "Returns declarations in V4 data.items", StringComparison.Ordinal))!;
     }
+    internal static void ValidateTopicTools(JsonNode rules, ISet<string> roster)
+    {
+        foreach (var entry in rules["tools"]!.AsObject())
+            Require(roster.Contains(entry.Key), "Unknown tool in usage-topic-rules.json: " + entry.Key);
+    }
+
     private static int ComparePath(string a, string b)
     {
         var x = a.Replace('\\', '/').Split('/'); var y = b.Replace('\\', '/').Split('/');

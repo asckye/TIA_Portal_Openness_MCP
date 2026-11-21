@@ -131,6 +131,10 @@ namespace TiaOpenness.Shared
                     ?? (profile == "engine-source" ? Data.Value["engineSourceCalls"]?[source] : Data.Value["calls"]?["profiles"]?[exampleSource]?[source]))
                 ?.DeepClone();
             if (row == null) return null;
+            if (row["operations"] is JsonObject operations)
+                foreach (var example in operations.ToArray())
+                    if (example.Value?["releaseKeys"] is JsonArray keys && !keys.Any(key => (string?)key == release))
+                        operations.Remove(example.Key);
             row["arguments"] = ServedArguments(Data.Value["calls"]!, name, release, entry?["arguments"] ?? row["arguments"]!);
             var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
             // Only our explicit format tokens are replaced; braces in JSON/code are preserved.
@@ -326,7 +330,14 @@ namespace TiaOpenness.Shared
                 choices = new JsonArray(examples.Select(example => (JsonNode?)JsonValue.Create(example.Key)).ToArray());
             choices = new JsonArray(choices.Where(c => !string.IsNullOrEmpty((string?)c)).Select(c => c!.DeepClone()).ToArray());
             if (operation.Length > 0 && !choices.Any(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase)))
-                throw new ArgumentException("Unknown operation for this tool/release. Read its operations list.");
+            {
+                string message = choices.Count == 0 ? name + " has no selectable operations or named examples."
+                    : "Unknown operation for " + name + ". Valid choices: " + string.Join(", ", choices.Select(choice => (string?)choice)) + ".";
+                // Only publish choices from a registered schema. Standalone catalog callers supply their own schema and receive an argument error.
+                if (schemaFor != null && JsonNode.DeepEquals(schemaFor(name), schema))
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(message, "operation");
+                throw new ArgumentException(message, nameof(operation));
+            }
             if (operation.Length > 0) operation = (string)choices.First(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase))!;
             var curated = curatedArguments == null ? null : (JsonObject)JsonNode.Parse(curatedArguments)!;
             bool matches = curated != null && (operation.Length == 0 || (string?)(curated[selector] ?? properties[selector]?["default"]) == operation);
@@ -386,10 +397,12 @@ namespace TiaOpenness.Shared
             var operations = new JsonArray();
             foreach (var choice in choices)
             {
-                var candidate = (JsonObject)args.DeepClone();
-                if (call?["operations"]?[(string)choice!]?["arguments"] is JsonObject operationArgs)
+                var recipe = call?["operations"]?[(string)choice!];
+                bool complete = (string?)recipe?["argumentsMode"] == "complete";
+                if (selector.Length == 0 && !complete) continue;
+                var candidate = complete ? new JsonObject() : (JsonObject)args.DeepClone();
+                if (recipe?["arguments"] is JsonObject operationArgs)
                 {
-                    if ((string?)call["operations"]![(string)choice!]!["argumentsMode"] == "complete") candidate.Clear();
                     foreach (var field in operationArgs) candidate[field.Key] = field.Value?.DeepClone();
                 }
                 if (selector.Length > 0) candidate[selector] = choice!.DeepClone();
@@ -397,7 +410,7 @@ namespace TiaOpenness.Shared
                 string discriminator = name is "ManageDeviceServiceObjects" or "ManagePlcUserGroup" ? "family" : name == "ManagePlcDocuments" ? "objectKind"
                     : name == "ManageSivarcBlockDefinition" ? "kind" : "";
                 var contexts = discriminator.Length > 0 ? properties[discriminator]?["enum"] as JsonArray : null;
-                bool chosenContext = false;
+                bool chosenContext = discriminator.Length > 0 && candidate[discriminator] != null && Problem(candidate).Length == 0;
                 foreach (var context in contexts ?? new JsonArray(new JsonNode?[] { null }))
                 {
                     var variant = (JsonObject)candidate.DeepClone();
@@ -408,8 +421,11 @@ namespace TiaOpenness.Shared
                     if (operation == (string?)choice && reason.Length == 0 && context != null && !chosenContext)
                     { args[discriminator] = context.DeepClone(); chosenContext = true; }
                 }
-                operations.Add(new JsonObject { ["operation"] = choice!.DeepClone(), ["selector"] = selector,
-                    ["variants"] = variants, ["exampleQuery"] = new JsonObject { ["toolName"] = name, ["operation"] = choice.DeepClone() } });
+                var option = new JsonObject { ["operation"] = choice!.DeepClone() };
+                if (selector.Length > 0) option["selector"] = selector;
+                option["variants"] = variants;
+                option["exampleQuery"] = new JsonObject { ["toolName"] = name, ["operation"] = choice.DeepClone() };
+                operations.Add(option);
             }
             string selectedProblem = releaseProblem.Length > 0 ? releaseProblem : Problem(args);
             var response = new JsonObject {
@@ -435,7 +451,9 @@ namespace TiaOpenness.Shared
                 ["resultReading"] = Reading(resultContract, call),
                 ["examples"] = Examples(release, profile, available, toolName: name, schemaFor: schemaFor)["examples"]!.DeepClone()
             };
-            if (call?["execution"] != null) response["example"]!["execution"] = call["execution"]!.DeepClone();
+            if (selector.Length == 0 && choices.Count > 0) response["namedExamples"] = choices;
+            var execution = call?["operations"]?[operation]?["execution"] ?? call?["execution"];
+            if (execution != null) response["example"]!["execution"] = execution.DeepClone();
             if (call?["executionTest"] != null) response["example"]!["executionTest"] = call["executionTest"]!.DeepClone();
             response["example"]!["bindings"] =
                 new JsonArray(args.Where(p => p.Value?.ToJsonString().Contains("<") == true || p.Value?.ToJsonString().Contains("\\u003C") == true)
@@ -448,6 +466,12 @@ namespace TiaOpenness.Shared
             {
                 response["interpretation"] = notes.DeepClone();
                 if (response["interpretation"]?["profile"] != null) response["interpretation"]!["profile"] = "plc-foundation";
+            }
+            if (selectedProblem.Length > 0)
+            {
+                var example = response["example"]!.AsObject();
+                example["kind"] = "unavailable";
+                example["validation"] = "This operation is unavailable on the selected release. " + selectedProblem;
             }
             return response;
         }

@@ -226,10 +226,10 @@ runtime/v<发布键>/        （八个发布键相同）
 | V15.1 | 328 | 96 |
 | V16 | 354 | 96 |
 | V17 | 377 | 96 |
-| V18 | 403 | 98 |
-| V19 | 479 | 98 |
-| V20 | 500 | 101 |
-| V21 | 519 | 104 |
+| V18 | 402 | 98 |
+| V19 | 478 | 98 |
+| V20 | 499 | 101 |
+| V21 | 518 | 104 |
 <!-- generated:tool-counts:end -->
 
 交付包由 `prepare` 按 [`delivery-files.json`](../../scripts/operations/delivery-files.json) 过滤 Git 文件集，再加入清单中的运行文件，排除 `runtime/verification/`；开发源码、检查脚本和开发文档不分发，不能只复制 EXE。文件清单 `manifest/multi-version-build.json` 只在暂存目录生成，不入 Git；工具范围见[版本工具矩阵](../reference/version-tools.md)。已发布的归档保留各自记录的范围。

@@ -1375,7 +1375,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 403,
+      "toolCount": 402,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -1634,7 +1634,6 @@
         "ListTransferAreas",
         "ListTransferRoutes",
         "ListVersionControlWorkspaces",
-        "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiGraphic",
@@ -1784,7 +1783,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 479,
+      "toolCount": 478,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2093,7 +2092,6 @@
         "ListUnifiedLibraryFolderEntries",
         "ListUnifiedTagDefinitions",
         "ListVersionControlWorkspaces",
-        "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiGraphic",
@@ -2269,7 +2267,7 @@
     },
     "20": {
       "profile": "plc-foundation",
-      "toolCount": 500,
+      "toolCount": 499,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -2591,7 +2589,6 @@
         "ListUnifiedLibraryFolderEntries",
         "ListUnifiedTagDefinitions",
         "ListVersionControlWorkspaces",
-        "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiGraphic",
@@ -2775,7 +2772,7 @@
     },
     "21": {
       "profile": "plc-foundation",
-      "toolCount": 519,
+      "toolCount": 518,
       "tools": [
         "AnalyzeGlobalLibraryPackage",
         "AnalyzeHmiTemplateReference",
@@ -3105,7 +3102,6 @@
         "ListUnifiedLibraryFolderEntries",
         "ListUnifiedTagDefinitions",
         "ListVersionControlWorkspaces",
-        "ManageCfcChartProtection",
         "ManageClassicHmiCycle",
         "ManageClassicHmiFolder",
         "ManageClassicHmiGraphic",
@@ -3301,7 +3297,7 @@
   },
   "groupCounts": {
     "all-releases": 286,
-    "shared-subset": 214,
+    "shared-subset": 213,
     "release-only": 24
   },
   "tools": [
@@ -7721,17 +7717,6 @@
       "releases": [
         "16",
         "17",
-        "18",
-        "19",
-        "20",
-        "21"
-      ],
-      "group": "shared-subset",
-      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
-    },
-    {
-      "name": "ManageCfcChartProtection",
-      "releases": [
         "18",
         "19",
         "20",

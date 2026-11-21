@@ -475,7 +475,8 @@ public sealed class DownloadSafetyHostTests
         {
             var usage = (await fixture.Call("GetToolUsage", new { toolName = "DownloadPlc" })).StructuredContent!;
             Assert.True((bool?)usage["ok"], usage.ToJsonString());
-            Assert.Equal("PLCSIM", (string?)usage["data"]?["example"]?["request"]?["params"]?["arguments"]?["pgPcInterface"]);
+            Assert.Equal("<exact PG/PC interface name from ListTransferRoutes>",
+                (string?)usage["data"]?["example"]?["request"]?["params"]?["arguments"]?["pgPcInterface"]);
         }
         Assert.Equal(0, fixture.Worker.Calls);
     }
