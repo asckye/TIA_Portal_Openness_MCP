@@ -217,133 +217,101 @@ namespace TiaMcp.Adapters
             return parts.Count == 0 ? "<no summary>" : string.Join("; ", parts);
         }
 
-        // ConnectDeviceNodesToProfinetSubnet. The operation name is kept for the worker wire; this is a guarded write, not a probe:
-        // the subnet comes from Project.Subnets (an existing subnet of that name is joined explicitly, never through a silent
-        // CreateAndConnectToSubnet name collision), a node attached to another subnet is refused, and success is the typed
-        // Node.ConnectedSubnet read-back of both nodes. Connections are read from the HMI software under the second root.
-        public string HardwareProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName)
+        private string ConnectHardwareNodes(string plcRootPath, string hmiRootPath, string subnetName)
         {
-            var evidence = new Dictionary<string, object?> { ["firstRootPath"] = plcRootPath, ["secondRootPath"] = hmiRootPath, ["subnetName"] = subnetName };
-            bool nestedWrite = EngineeringWriteJournal.Active;
-            IDisposable? editAccess = null;
-            bool operationStarted = false;
+            var sb = new StringBuilder();
+            if (HardwareProjectMissing()) return "Project is null";
+
+            var plcRoot = HardwareResolveItem(plcRootPath);
+            var hmiRoot = HardwareResolveItem(hmiRootPath);
+            sb.AppendLine("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
+            sb.AppendLine("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
+            if (plcRoot == null || hmiRoot == null) return sb.AppendLine("Result: NOT CONNECTED: a root path was not found; nothing was changed.")
+                .ToString();
+
+            var plcNodes = FindNetworkNodes(plcRoot).ToList();
+            var hmiNodes = FindNetworkNodes(hmiRoot).ToList();
+            sb.AppendLine("PLC nodes:");
+            foreach (var n in plcNodes) sb.AppendLine("  " + HardwareFormatNodeInfo(n));
+            sb.AppendLine("HMI nodes:");
+            foreach (var n in hmiNodes) sb.AppendLine("  " + HardwareFormatNodeInfo(n));
+
+            var plcNode = plcNodes.FirstOrDefault(n => IsIndustrialEthernetNode(n.Node)) ?? new NetworkNodeInfo();
+            var hmiNode = hmiNodes.FirstOrDefault(n => IsIndustrialEthernetNode(n.Node)) ?? new NetworkNodeInfo();
+            sb.AppendLine("Selected PLC node: " + (plcNode.Node == null ? "<none>" : HardwareFormatNodeInfo(plcNode)));
+            sb.AppendLine("Selected HMI node: " + (hmiNode.Node == null ? "<none>" : HardwareFormatNodeInfo(hmiNode)));
+            if (plcNode.Node is not Node plc || hmiNode.Node is not Node hmi)
+                return sb.AppendLine("Result: NOT CONNECTED: no Industrial Ethernet/PROFINET node under both roots; nothing was changed.").ToString();
+
+            Subnet? target;
+            try { target = HardwareFindSubnet(subnetName); }
+            catch (Exception ex) { return sb.AppendLine("Result: NOT CONNECTED: invalid subnetName: " + HardwareExceptionDetail(ex)).ToString(); }
+            sb.AppendLine("Project.Subnets '" + subnetName + "': " + (target == null ? "<absent>" : "exists"));
+
+            // Both nodes must be free or already on the target before anything is written.
+            string? Conflict(string label, Node node)
+                => node.ConnectedSubnet != null && (target == null || !object.Equals(node.ConnectedSubnet, target))
+                    ? label + " node is attached to subnet '" + node.ConnectedSubnet.Name + "', not to '" + subnetName + "'" : null;
+            var conflict = Conflict("PLC", plc) ?? Conflict("HMI", hmi);
+            if (conflict != null) return sb.AppendLine("Result: NOT CONNECTED: " + conflict + "; disconnect it explicitly first. Nothing was changed.")
+                .ToString();
+
             try
             {
-                var report = EngineeringWriteJournal.RunReported(evidence, () => {
-                    editAccess = nestedWrite || HardwareProjectMissing() ? null : EngineeringPlcSession.AcquireHmiEditAccess();
-                    operationStarted = true;
-                    string result = Connect();
-                    evidence["operationSuccess"] = result.IndexOf("Result: ConnectToSubnet: OK", StringComparison.Ordinal) >= 0;
-                    return result;
-                }, error => {
-                    if (!operationStarted)
-                    {
-                        evidence["failureCode"] = "PRECONDITION_FAILED";
-                        evidence["mayHaveChanged"] = false;
-                        return "Result: NOT CONNECTED: exclusive access refused; nothing changed. " + HardwareExceptionDetail(error);
-                    }
-                    if (HmiReadPolicy.ConnectionUnavailable(error)) evidence["connectionUnavailable"] = true;
-                    return "Result: NOT CONNECTED: " + HardwareExceptionDetail(error);
-                });
-                return evidence["operationSuccess"] is true ? report : report + "\nRollback evidence: " + EngineeringPlcSession.SerializeEvidence(evidence);
-            }
-            finally { editAccess?.Dispose(); }
+                if (target == null)
+                {
+                    EngineeringWriteJournal.Creating(() => HardwareFindSubnet(subnetName), "Project.Subnets/" + subnetName);
+                    EngineeringWriteJournal
+                        .ConnectedNode(plcRootPath + "/Nodes/" + plc.Name, () => plc.ConnectedSubnet != null, () => { plc.DisconnectFromSubnet(); });
+                    target = plc.CreateAndConnectToSubnet(subnetName);
+                    sb.AppendLine("PLC CreateAndConnectToSubnet: " + (target == null ? "NULL" : "created '" + target.Name + "'"));
+                    if (target == null) return sb.AppendLine("Result: NOT CONNECTED: CreateAndConnectToSubnet returned null; inspect the project.")
+                        .ToString();
+                }
+                else if (plc.ConnectedSubnet == null)
+                {
+                    EngineeringWriteJournal
+                        .ConnectedNode(plcRootPath + "/Nodes/" + plc.Name, () => plc.ConnectedSubnet != null, () => { plc.DisconnectFromSubnet(); });
+                    plc.ConnectToSubnet(target);
+                    sb.AppendLine("PLC ConnectToSubnet(existing '" + target.Name + "') called");
+                }
+                else sb.AppendLine("PLC node is on '" + target.Name + "' (no call)");
 
-            string Connect()
+                if (hmi.ConnectedSubnet == null)
+                {
+                    EngineeringWriteJournal
+                        .ConnectedNode(hmiRootPath + "/Nodes/" + hmi.Name, () => hmi.ConnectedSubnet != null, () => { hmi.DisconnectFromSubnet(); });
+                    hmi.ConnectToSubnet(target);
+                    sb.AppendLine("HMI ConnectToSubnet('" + target.Name + "') called");
+                }
+                else sb.AppendLine("HMI node is on '" + target.Name + "' (no call)");
+            }
+            catch (Exception ex)
             {
-                var sb = new StringBuilder();
-                if (HardwareProjectMissing()) return "Project is null";
-
-                var plcRoot = HardwareResolveItem(plcRootPath);
-                var hmiRoot = HardwareResolveItem(hmiRootPath);
-                sb.AppendLine("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
-                sb.AppendLine("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
-                if (plcRoot == null || hmiRoot == null) return sb.AppendLine("Result: NOT CONNECTED: a root path was not found; nothing was changed.")
-                    .ToString();
-
-                var plcNodes = FindNetworkNodes(plcRoot).ToList();
-                var hmiNodes = FindNetworkNodes(hmiRoot).ToList();
-                sb.AppendLine("PLC nodes:");
-                foreach (var n in plcNodes) sb.AppendLine("  " + HardwareFormatNodeInfo(n));
-                sb.AppendLine("HMI nodes:");
-                foreach (var n in hmiNodes) sb.AppendLine("  " + HardwareFormatNodeInfo(n));
-
-                var plcNode = plcNodes.FirstOrDefault(n => IsIndustrialEthernetNode(n.Node)) ?? new NetworkNodeInfo();
-                var hmiNode = hmiNodes.FirstOrDefault(n => IsIndustrialEthernetNode(n.Node)) ?? new NetworkNodeInfo();
-                sb.AppendLine("Selected PLC node: " + (plcNode.Node == null ? "<none>" : HardwareFormatNodeInfo(plcNode)));
-                sb.AppendLine("Selected HMI node: " + (hmiNode.Node == null ? "<none>" : HardwareFormatNodeInfo(hmiNode)));
-                if (plcNode.Node is not Node plc || hmiNode.Node is not Node hmi)
-                    return sb.AppendLine("Result: NOT CONNECTED: no Industrial Ethernet/PROFINET node under both roots; nothing was changed.").ToString();
-
-                Subnet? target;
-                try { target = HardwareFindSubnet(subnetName); }
-                catch (Exception ex) { return sb.AppendLine("Result: NOT CONNECTED: invalid subnetName: " + HardwareExceptionDetail(ex)).ToString(); }
-                sb.AppendLine("Project.Subnets '" + subnetName + "': " + (target == null ? "<absent>" : "exists"));
-
-                // Both nodes must be free or already on the target before anything is written.
-                string? Conflict(string label, Node node)
-                    => node.ConnectedSubnet != null && (target == null || !object.Equals(node.ConnectedSubnet, target))
-                        ? label + " node is attached to subnet '" + node.ConnectedSubnet.Name + "', not to '" + subnetName + "'" : null;
-                var conflict = Conflict("PLC", plc) ?? Conflict("HMI", hmi);
-                if (conflict != null) return sb.AppendLine("Result: NOT CONNECTED: " + conflict + "; disconnect it explicitly first. Nothing was changed.")
-                    .ToString();
-
-                try
-                {
-                    if (target == null)
-                    {
-                        EngineeringWriteJournal.Creating(() => HardwareFindSubnet(subnetName), "Project.Subnets/" + subnetName);
-                        EngineeringWriteJournal
-                            .ConnectedNode(plcRootPath + "/Nodes/" + plc.Name, () => plc.ConnectedSubnet != null, () => { plc.DisconnectFromSubnet(); });
-                        target = plc.CreateAndConnectToSubnet(subnetName);
-                        sb.AppendLine("PLC CreateAndConnectToSubnet: " + (target == null ? "NULL" : "created '" + target.Name + "'"));
-                        if (target == null) return sb.AppendLine("Result: NOT CONNECTED: CreateAndConnectToSubnet returned null; inspect the project.")
-                            .ToString();
-                    }
-                    else if (plc.ConnectedSubnet == null)
-                    {
-                        EngineeringWriteJournal
-                            .ConnectedNode(plcRootPath + "/Nodes/" + plc.Name, () => plc.ConnectedSubnet != null, () => { plc.DisconnectFromSubnet(); });
-                        plc.ConnectToSubnet(target);
-                        sb.AppendLine("PLC ConnectToSubnet(existing '" + target.Name + "') called");
-                    }
-                    else sb.AppendLine("PLC node is on '" + target.Name + "' (no call)");
-
-                    if (hmi.ConnectedSubnet == null)
-                    {
-                        EngineeringWriteJournal
-                            .ConnectedNode(hmiRootPath + "/Nodes/" + hmi.Name, () => hmi.ConnectedSubnet != null, () => { hmi.DisconnectFromSubnet(); });
-                        hmi.ConnectToSubnet(target);
-                        sb.AppendLine("HMI ConnectToSubnet('" + target.Name + "') called");
-                    }
-                    else sb.AppendLine("HMI node is on '" + target.Name + "' (no call)");
-                }
-                catch (Exception ex)
-                {
-                    sb.AppendLine("Subnet create/connect error: " + HardwareExceptionDetail(ex));
-                }
-
-                sb.AppendLine("Readback PLC node: " + HardwareFormatNodeInfo(plcNode));
-                sb.AppendLine("Readback HMI node: " + HardwareFormatNodeInfo(hmiNode));
-                bool verified = target != null && object.Equals(plc.ConnectedSubnet, target) && object.Equals(hmi.ConnectedSubnet, target)
-                    && object.Equals(HardwareFindSubnet(subnetName), target);
-
-                try
-                {
-                    var container = HardwareSoftwareContainerUnder(hmiRoot);
-                    var sw = container?.Software;
-                    var connections = sw == null ? null : TryGetPropertyValue(sw, "Connections");
-                    sb
-                        .AppendLine("HMI Connections after subnet ("
-                            + (sw == null ? "no HMI software under " + hmiRootPath : "software '" + (TryGetName(sw) ?? "<unnamed>") + "'") + "):");
-                    if (connections is IEnumerable en)
-                    {
-                        var any = false;
-                        foreach (var c in en)
-                        {
-                            any = true;
-                            sb.AppendLine("  " + (TryGetName(c) ?? c?.ToString() ?? "<null>"));
+                sb.AppendLine("Subnet create/connect error: " + HardwareExceptionDetail(ex));
             }
+
+            sb.AppendLine("Readback PLC node: " + HardwareFormatNodeInfo(plcNode));
+            sb.AppendLine("Readback HMI node: " + HardwareFormatNodeInfo(hmiNode));
+            bool verified = target != null && object.Equals(plc.ConnectedSubnet, target) && object.Equals(hmi.ConnectedSubnet, target)
+                && object.Equals(HardwareFindSubnet(subnetName), target);
+
+            try
+            {
+                var container = HardwareSoftwareContainerUnder(hmiRoot);
+                var sw = container?.Software;
+                var connections = sw == null ? null : TryGetPropertyValue(sw, "Connections");
+                sb
+                    .AppendLine("HMI Connections after subnet ("
+                        + (sw == null ? "no HMI software under " + hmiRootPath : "software '" + (TryGetName(sw) ?? "<unnamed>") + "'") + "):");
+                if (connections is IEnumerable en)
+                {
+                    var any = false;
+                    foreach (var c in en)
+                    {
+                        any = true;
+                        sb.AppendLine("  " + (TryGetName(c) ?? c?.ToString() ?? "<null>"));
+                    }
                     if (!any) sb.AppendLine("  <empty>");
                 }
                 else
@@ -360,8 +328,8 @@ namespace TiaMcp.Adapters
                 ? "Result: ConnectToSubnet: OK (both nodes read back on subnet '" + subnetName + "')"
                 : "Result: NOT CONNECTED: Node.ConnectedSubnet read-back does not show both nodes on '" + subnetName + "'; inspect the project.");
             return sb.ToString();
-                    }
         }
+
         public HardwareProbeReply ReadHardwareOwnerCandidates(string plcRootPath, string hmiRootPath, bool deepScan = true)
         {
             var lines = HardwareProbeHardwareHmiConnectionOwnerCandidates(plcRootPath, hmiRootPath, deepScan);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TiaMcp.Adapters.Native.Hmi;
@@ -89,6 +90,7 @@ namespace TiaMcp.Adapters.Native.Security
                     meta["deviceItem"] = string.Join("/", itemPathJson.Length == 0 ? devicePathJson : itemPathJson);
                     meta["phase"] = "get-certificate-template";
                     meta["template"] = TemplateRow(ReadTemplate(kind));
+                    ClearTemplateContext(meta);
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
                     meta["catalogs"] = new HmiObject {
                         ["usages"] = new HmiArray(SecurityCatalog.CertificateUsages.Select(x => (object?)x).ToArray()), ["signatures"] =
@@ -117,8 +119,13 @@ namespace TiaMcp.Adapters.Native.Security
                     {
                         meta["mayHaveChanged"] = true;
                         SecurityProperties.Apply(template, prepared, meta);
-                        foreach (var san in subjectAlternativeNames) template.SubjectAlternativeNames
-                            .Create((SubjectAlternativeNameType)Enum.Parse(typeof(SubjectAlternativeNameType), san.Type), san.Value);
+                        if (subjectAlternativeNames.Length > 0)
+                        {
+                            var names = template.SubjectAlternativeNames;
+                            var existing = HardwareGroupOperations.Items(names).Cast<SubjectAlternativeName>().Select(s => (s.Type.ToString(), s.Value));
+                            foreach (var san in CertificateNames.Missing(existing, subjectAlternativeNames))
+                                names.Create((SubjectAlternativeNameType)Enum.Parse(typeof(SubjectAlternativeNameType), san.Type), san.Value);
+                        }
                         meta["templateApplied"] = TemplateRow(template);
                         int before = store.Certificates.Count();
                         certificate = store.Certificates.Create(template); meta["after"] = HmiScalar.Read(certificate); meta["certificateId"] = certificate.Id
@@ -127,6 +134,7 @@ namespace TiaMcp.Adapters.Native.Security
                         if (!store.Certificates.Any(c => c.Id == certificate.Id))
                             throw new InvalidOperationException("Create returned but the certificate is not listed in the local store.");
                     }
+                    ClearTemplateContext(meta);
                 }
                 else if (action == "import" || action == "export")
                 {
@@ -188,10 +196,30 @@ namespace TiaMcp.Adapters.Native.Security
                 return writing ? "Certificate operation completed; no download or explicit save. Private keys are never exported."
                     : "Certificate read/preview completed; no persistent change.";
             });
+        private static void ClearTemplateContext(HmiObject meta)
+        {
+            meta.Remove("phase");
+            meta.Remove("usage");
+            meta.Remove("deviceItem");
+        }
+
         private CertificateSubjectName[] SubjectAlternativeNames()
         { _session.Validate("san"); return request.SubjectAlternativeNames; }
         private HmiObject Properties()
         { _session.Validate("properties"); return new HmiObject(HardwareScalarEvidence.Requested(request.Properties)) { ScalarInputs = request.Properties }; }
     }
 #endif
+    internal static class CertificateNames
+    {
+        internal static IEnumerable<CertificateSubjectName> Missing(IEnumerable<(string Type, string Value)> existing,
+                IEnumerable<CertificateSubjectName> requested)
+        {
+            var seen = new HashSet<(string, string)>(existing.Select(s => Key(s.Type, s.Value)));
+            foreach (var name in requested)
+                if (seen.Add(Key(name.Type, name.Value))) yield return name;
+        }
+
+        private static (string, string) Key(string type, string value)
+            => (type, type == "IP" && System.Net.IPAddress.TryParse(value, out var ip) ? ip.ToString() : value);
+    }
 }

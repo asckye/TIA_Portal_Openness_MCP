@@ -34,7 +34,8 @@ internal sealed class VciSyncSelection
     {
         if (skippedUnknown > 0)
             return message + " " + skippedUnknown + " object(s) have Unknown status. Pass changedOnly=false to attempt them.";
-        return noTargets ? message + " Every mapped object is already in sync." : message;
+        if (!noTargets) return message;
+        return message + (SkippedEqual > 0 ? " All " + SkippedEqual + " mapped object(s) reported Equal and are in sync." : " No objects are mapped.");
     }
 
     internal HmiObject Evidence(bool dryRun, int synchronized = 0, int failed = 0)

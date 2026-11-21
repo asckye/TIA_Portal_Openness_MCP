@@ -35,6 +35,7 @@ namespace TiaMcp.Generation.Tests
             }
             var relocated = new StandardPackageStore(Path.GetDirectoryName(repository)!, Path.Combine(root, "relocated-data", "standards"));
             var first = Manage("fork", newId: "example.portable", newVersion: "2.0.0");
+            Assert.Contains("Omit expectedProjectFile", (string)first["nextStep"]!);
             var second = relocated.Manage("fork", "tiamcp.basic", "1.0.0", "", "", "example.portable", "2.0.0", true, "");
             Assert.Equal((string)first["planHash"]!, (string)second["planHash"]!);
             Assert.NotEqual((string)first["targetPath"]!, (string)second["targetPath"]!);

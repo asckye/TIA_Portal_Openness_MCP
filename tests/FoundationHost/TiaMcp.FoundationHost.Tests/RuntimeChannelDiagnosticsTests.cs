@@ -147,6 +147,13 @@ public sealed class RuntimeChannelDiagnosticsTests
             Assert.Null(report.Data?["safety"]?["certificateValidated"]);
             Assert.NotNull(report.Data?["error"]);
         }
+        var names = new[] { "GetPlcWebVars", "WritePlcWebVars", "GetPlcWebDiagnostics", "SetPlcWebOperatingMode" };
+        for (int i = 0; i < reports.Length; i++)
+        {
+            var mapped = Host.RuntimeToolContract.Map(names[i], reports[i], true, false).StructuredContent!;
+            Assert.Equal("PRECONDITION_FAILED", (string?)mapped["error"]?["code"]);
+            Assert.Equal(host, (string?)mapped["error"]?["details"]?["target"]);
+        }
         Assert.False((bool?)reports[1].Data?["contactedDevice"]);
         Assert.False((bool?)reports[3].Data?["contactedDevice"]);
     }

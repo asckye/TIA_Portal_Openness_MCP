@@ -16,6 +16,15 @@ namespace TiaMcp.FoundationHost.Tests.Operator;
 
 public sealed class HardwareArgumentRefusalTests
 {
+    [Fact]
+    public void Io_address_description_identifies_both_execution_inputs()
+    {
+        var method = typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.AddressesTools).GetMethod("SetDeviceItemIoAddressV4")!;
+        var description = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()!.Description;
+        Assert.Contains("expectedPlanHash", description);
+        Assert.Contains("expectedProjectFile", description);
+    }
+
     [Theory]
     [InlineData("exportOpcUa", true)]
     [InlineData("exportOpcUa", false)]

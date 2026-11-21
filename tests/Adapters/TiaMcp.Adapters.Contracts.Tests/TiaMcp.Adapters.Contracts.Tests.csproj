@@ -15,6 +15,7 @@
     <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />
     <ProjectReference Include="../../Fixtures/TiaMcp.UnifiedWorker.Fixture/TiaMcp.UnifiedWorker.Fixture.csproj" Aliases="unifiedworkerfixture" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareLegacyWrites.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkLegacy.Connect.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkLegacy.Read.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcOrganisationGroups.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcObjectPath.cs" />
@@ -42,6 +43,7 @@
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestValues.cs" Link="Native/Hmi/UnifiedRequestValues.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/EngineeringFileExport.cs" Link="Hmi/EngineeringFileExport.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/HmiEngineeringSteps.cs" Link="Hmi/HmiEngineeringSteps.cs" />
+    <Compile Include="../../../src/Adapters/Native/Security/CertificateAdapter.cs" />
     <Compile Include="../../../src/Adapters/Native/Security/PutGetAccess.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSourceFileOutput.cs" />
     <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringFileOutput.cs" />

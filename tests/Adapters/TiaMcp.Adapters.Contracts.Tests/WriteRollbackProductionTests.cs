@@ -46,6 +46,31 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Equal("NATIVE_OPERATION_FAILED", step.Meta["v4FailureCode"]);
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Refused_network_lease_records_the_failure_before_subnet_lookup(bool lost)
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            engine.NetworkLeaseError = lost ? new System.Runtime.InteropServices.COMException("The portal connection was lost.")
+                : new InvalidOperationException("Fixture lease refused.");
+            var report = engine.HardwareProbeConnectDeviceNodesToSubnet("PLC", "HMI", "LAN");
+            Assert.Contains("Rollback evidence:", report);
+            using var document = JsonDocument.Parse(report.Split("Rollback evidence: ")[1]);
+            var evidence = document.RootElement;
+            Assert.Equal(lost ? "CONNECTION_UNAVAILABLE" : "PRECONDITION_FAILED", evidence.GetProperty("failureCode").GetString());
+            Assert.False(evidence.GetProperty("mayHaveChanged").GetBoolean());
+            Assert.Contains(lost ? "connection unavailable" : "exclusive access refused", report);
+            foreach (var reply in new[] { engine.HardwareEnsureSubnet("CPU", "PN", "LAN"), engine.HardwareAttachDeviceNodeToSubnet("CPU", 0, "LAN") })
+            {
+                Assert.Equal(lost ? "CONNECTION_UNAVAILABLE" : "PRECONDITION_FAILED", reply.Meta["failureCode"]);
+                Assert.Equal(lost, reply.Meta.ContainsKey("connectionUnavailable"));
+                Assert.False(reply.MayHaveChanged);
+                Assert.False(reply.OutcomeUnknown);
+                Assert.False(reply.Meta.ContainsKey("readback"));
+            }
+        }
+
         public static HardwareAddressingReply RefusedWatchImport()
             => HardwareWriteFailureTests.NativeFixture().Engine.RunHmiStep("ImportPlcWatchTableOffline", meta => {
                 meta["mayHaveChanged"] = true;

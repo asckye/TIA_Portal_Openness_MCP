@@ -38,6 +38,37 @@ public sealed class HardwareNetworkReadTests
         Assert.Equal("PROJECT_NOT_BOUND", reply["failureCode"]);
     }
 
+    [Fact]
+    public void Topology_prefers_the_item_path_and_preserves_each_distinct_interface_and_node()
+    {
+        var first = new object();
+        var second = new object();
+        var node = new object();
+        var paths = Hardware.HardwareNetworkPolicy.TopologyNodes(new[] {
+            (first, node, "Rack/CPU/Port/PN", true), (first, node, "Rack/CPU/PN", false),
+            (first, new object(), "Rack/CPU/PN", false), (second, node, "Rack/CPU/PN_2", false)
+        }).ToArray();
+        Assert.Equal(3, paths.Length);
+        Assert.False(paths[0].Component);
+        Assert.Equal("Rack/CPU/PN", paths[0].Path);
+        Assert.Same(second, paths[2].Interface);
+    }
+
+    [Theory]
+    [InlineData(false, "CPU/PN")]
+    [InlineData(true, "devices/Station/CPU/PN")]
+    public void Unlocated_device_keeps_a_relative_item_path(bool located, string expected)
+    {
+        var fixture = HardwareWriteFailureTests.NativeFixture();
+        var device = (Device)fixture.Engine.FamilyObject;
+        device.Name = "Station";
+        device.DeviceItems.Add(fixture.Cpu);
+        if (located) fixture.Project.Devices.Add(device);
+        fixture.Engine.NetworkNodes.Add((new object(), "CPU/PN"));
+        var result = fixture.Engine.ReadHardwareIpAddress("Station");
+        Assert.Equal(expected, Assert.Single(result.Nodes).InterfacePath);
+    }
+
     public static object? ReadReply(string release, string failure)
     {
         var fixture = HardwareWriteFailureTests.NativeFixture(release, bindProject: failure != "no-project");

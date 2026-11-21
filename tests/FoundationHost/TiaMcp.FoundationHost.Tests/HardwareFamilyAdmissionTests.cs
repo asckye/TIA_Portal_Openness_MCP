@@ -10,6 +10,155 @@ using Xunit;
 
 public sealed class HardwareFamilyAdmissionTests
 {
+    [Theory]
+    [InlineData(0, 50)]
+    [InlineData(22, 50)]
+    [InlineData(50, 50)]
+    [InlineData(72, 50)]
+    [InlineData(72, 65)]
+    public void Gsd_search_reports_the_matching_total_and_requested_page(int total, int limit)
+    {
+        using var release = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease("21");
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, args) => {
+            Assert.Equal("hardware-devices.HardwareLegacySearchInstalledGsdDevices", operation);
+            Assert.Equal(limit, (int?)args["limit"]);
+            var matches = Enumerable.Range(0, total).Select(i => new DeviceCreationRules.GsdMatch {
+                TypeIdentifier = "GSD:FIXTURE.XML/DAP/" + i, DapId = i.ToString() }).ToList();
+            var rows = JsonNode.Parse(TiaMcp.PlcWorker.WorkerJson.Serialize(DeviceCreationRules.GsdPage(matches, "FIXTURE", limit)))!.AsArray();
+            WorkerProtocol.ValidateExchangeResult(operation, args, rows);
+            return rows;
+        }, () => true, () => "fixture.ap21");
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
+        var result = limit == 50 ? tools.SearchInstalledGsdDevicesV4("FIXTURE") : tools.SearchInstalledGsdDevicesV4("FIXTURE", limit);
+        var data = result.StructuredContent!["data"]!;
+        Assert.Equal(Math.Min(total, limit), data["items"]!.AsArray().Count);
+        Assert.Equal(total, (int?)data["evidence"]?["total"]);
+        Assert.Equal(total > limit, (bool?)data["evidence"]?["truncated"]);
+    }
+
+    [Fact]
+    public void Gsd_search_worker_row_is_a_discoverable_hardware_contract()
+    {
+        const string operation = "hardware-devices.HardwareLegacySearchInstalledGsdDevices";
+        string returnType = "System.Collections.Generic.List<" + typeof(DeviceCreationRules.GsdMatch).FullName + ">";
+        var (args, reply) = Assert.Single(TiaMcp.FoundationHost.Tests.FamilyReplyShapes.For(operation, returnType));
+        WorkerProtocol.ValidateExchangeResult(operation, args, reply);
+        Assert.NotNull(reply![0]!["TotalMatches"]);
+    }
+
+    [Theory]
+    [InlineData(50, 72)]
+    [InlineData(65, 72)]
+    [InlineData(3, 2)]
+    public void Gsd_create_relays_its_page_limit_and_reports_truncation(int limit, int total)
+    {
+        using var selected = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease("21");
+        using var worker = new CreationPreviewWorker();
+        using var foundationWorker = new FakeWorker();
+        var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
+        using var session = pipeline.EnterSession();
+        const string exact = "GSD:FIXTURE.XML/DAP/DAP1";
+        int calls = 0;
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, args) => {
+            calls++;
+            Assert.Equal("hardware-devices.HardwareCreateGsdDevice", operation);
+            Assert.Equal(limit, (int?)args["limit"]);
+            Assert.Equal(exact, (string?)args["keyword"]);
+            var rows = new JsonArray();
+            for (int i = 1; i <= Math.Min(total, limit); i++)
+                rows.Add(new JsonObject { ["TypeIdentifier"] = "GSD:FIXTURE.XML/DAP/DAP" + i, ["TotalMatches"] = total });
+            var reply = new JsonObject { ["Device"] = new JsonObject { ["Name"] = "ENC_1" }, ["Candidate"] = rows[0]!.DeepClone(),
+                ["Candidates"] = rows, ["Attempts"] = new JsonArray("created"), ["Error"] = null };
+            WorkerProtocol.ValidateExchangeResult(operation, args, reply);
+            return reply;
+        }, () => true, () => "C:/Fixture/Fixture.ap21");
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
+        var preview = limit == 50 ? tools.CreateGsdDeviceV4(exact, "ENC_1") : tools.CreateGsdDeviceV4(exact, "ENC_1", limit: limit);
+        string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
+        string project = (string)preview.StructuredContent["data"]!["targetIdentity"]!["identity"]!["projectPath"]!;
+        var result = limit == 50 ? tools.CreateGsdDeviceV4(exact, "ENC_1", dryRun: false, expectedPlanHash: hash, expectedProjectFile: project)
+            : tools.CreateGsdDeviceV4(exact, "ENC_1", dryRun: false, expectedPlanHash: hash, expectedProjectFile: project, limit: limit);
+        var body = result.StructuredContent!;
+        Assert.True((bool)body["ok"]!, body.ToJsonString());
+        Assert.Equal(1, calls);
+        Assert.Equal(Math.Min(total, limit), body["data"]!["candidates"]!.AsArray().Count);
+        Assert.Equal(total, (int?)body["data"]!["evidence"]?["total"]);
+        Assert.Equal(total > limit, (bool?)body["data"]!["evidence"]?["truncated"]);
+    }
+
+    [Fact]
+    public void Published_gsd_description_explains_return_and_traversal_limits()
+    {
+        var method = typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools).GetMethod("SearchInstalledGsdDevicesV4")!;
+        string text = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()!.Description;
+        Assert.Contains("The limit bounds returned candidates. Truncated results include the total match count.", text, StringComparison.Ordinal);
+        Assert.Contains("synchronous native Find run to completion.", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Published_gsd_create_accepts_the_page_size()
+    {
+        using var worker = new OnlinePortAdmissionTests.OnlineWorker();
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21", worker: worker);
+        using var session = fixture.EnterSession();
+        var result = await fixture.Call("CreateGsdDevice", new { keyword = "GSD:FIXTURE.XML/DAP/1", deviceName = "ENC_1", limit = 65 });
+        var body = result.StructuredContent!;
+        Assert.True((bool)body["ok"]!, body.ToJsonString());
+        Assert.NotNull(body["data"]?["planHash"]);
+        Assert.Equal(65, (int?)body["data"]?["plannedChanges"]?["limit"]);
+        Assert.Empty(worker.Requests);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Invalid_gsd_limits_are_refused_before_search_or_creation(int limit)
+    {
+        using var worker = new CreationPreviewWorker();
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareDevicesService((_, _) =>
+            throw new InvalidOperationException("Unexpected worker call"), () => true, () => "fixture.ap21");
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
+        foreach (var result in new[] { tools.SearchInstalledGsdDevicesV4("FIXTURE", limit), tools.CreateGsdDeviceV4("FIXTURE", "ENC_1", limit: limit) })
+        {
+            Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent!["error"]?["code"]);
+            Assert.Equal("/limit", (string?)result.StructuredContent["error"]?["details"]?["parameter"]);
+        }
+    }
+
+    [Fact]
+    public void File_only_gsd_rows_keep_their_dap_without_a_creatable_identifier()
+    {
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareDevicesService((operation, args) => {
+            var rows = new JsonArray(new JsonObject { ["TypeIdentifier"] = "", ["Source"] = "GSDML", ["DapId"] = "DAP1", ["TotalMatches"] = 5 });
+            WorkerProtocol.ValidateExchangeResult(operation, args, rows);
+            return rows;
+        }, () => true, () => "fixture.ap21");
+        var (items, total) = service.SearchInstalledGsdDevices("FIXTURE", 1);
+        Assert.Equal(5, total);
+        Assert.Equal("DAP1", Assert.Single(items).DapId);
+        Assert.Null(items[0].TypeIdentifier);
+    }
+
+    [Fact]
+    public void Transfer_routes_keep_interfaces_with_different_target_addresses()
+    {
+        using var selected = toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareContract.UseRelease("18");
+        var route = new JsonObject { ["name"] = "TeleService", ["number"] = 1, ["addresses"] = new JsonArray(), ["subnets"] = new JsonArray(),
+            ["targetInterfaces"] = new JsonArray(new JsonObject { ["name"] = "1 X1", ["addresses"] = new JsonArray() },
+                new JsonObject { ["name"] = "1 X2", ["addresses"] = new JsonArray() }) };
+        var other = route.DeepClone();
+        other["targetInterfaces"]![1]!["addresses"] = new JsonArray(new JsonObject { ["name"] = "LAN", ["address"] = "192.0.2.1" });
+        var modes = new JsonArray(new JsonObject { ["name"] = "TeleService", ["pcInterfaces"] = new JsonArray(route, route.DeepClone(), other) });
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.OnlineDownloadService((_, _) =>
+            new JsonObject { ["Value"] = new JsonObject { ["Meta"] = new JsonObject { ["modes"] = modes } } }, () => "");
+        var routes = service.ReadTransferRoutes("PLC").Meta!["modes"]![0]!["pcInterfaces"]!.AsArray();
+        Assert.Equal(2, routes.Count);
+        Assert.True(JsonNode.DeepEquals(other, routes[1]));
+    }
+
     [Theory, InlineData(null, ""), InlineData("Firmware", "Firmware")]
     public void Device_attribute_worker_receives_a_string_for_an_optional_filter(string? filter, string expected)
     {

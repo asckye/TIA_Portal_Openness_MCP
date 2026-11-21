@@ -12,6 +12,7 @@ using Siemens.Engineering.HW;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.HW.Features;
 using TiaMcp.Adapters.Contracts;
+using GsdMatch = TiaMcp.Adapters.Contracts.DeviceCreationRules.GsdMatch;
 using TiaMcp.Adapters.Hardware;
 using TiaMcp.Adapters.Native.Hardware;
 namespace TiaMcp.Adapters
@@ -82,10 +83,14 @@ namespace TiaMcp.Adapters
 #endif
         }
 
-        public List<HardwareGsdCandidate> HardwareLegacySearchInstalledGsdDevices(string keyword, int limit = 50)
+        public List<GsdMatch> HardwareLegacySearchInstalledGsdDevices(string keyword, int limit = 50)
+            => FindGsdMatches(keyword, limit, null);
+
+        private List<GsdMatch> FindGsdMatches(string keyword, int limit, string? preferredDap)
         {
+            if (limit < 1) throw new AdapterPreconditionException("limit must be positive.", nameof(limit));
             var normalizedKeyword = (keyword ?? string.Empty).Trim();
-            var results = new List<HardwareGsdCandidate>();
+            var results = new List<GsdMatch>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             if (string.IsNullOrWhiteSpace(normalizedKeyword))
@@ -131,17 +136,8 @@ namespace TiaMcp.Adapters
 
             }
 
-            return results
-                .Select(c =>
-                {
-                    c.Score = ScoreGsdCandidate(c, normalizedKeyword, null);
-                    return c;
-                })
-                .OrderByDescending(c => c.Score ?? 0)
-                .ThenBy(c => c.Source)
-                .ThenBy(c => c.Description)
-                .Take(Math.Max(1, limit))
-                .ToList();
+            foreach (var candidate in results) candidate.Score = ScoreGsdCandidate(candidate, normalizedKeyword, preferredDap);
+            return DeviceCreationRules.GsdPage(results, normalizedKeyword, limit);
         }
 
         public List<HardwareCatalogEntry> HardwareLegacySearchHardwareCatalog(string keyword, int limit = 50)
@@ -216,29 +212,35 @@ namespace TiaMcp.Adapters
             return (device, candidate, candidates, new List<string> { exact + " -> created (one CreateWithItem call)" }, null);
         }
 
-        private (Device? Device, HardwareGsdCandidate? Candidate, List<HardwareGsdCandidate> Candidates, List<string> Attempts, string? Error)
-            HardwareLegacyAddGsdDeviceWithProbe(string keyword, string deviceName, string preferredDap = "")
+        public Dictionary<string, object?> HardwareCreateGsdDevice(string keyword, string deviceName, string preferredDap = "", int limit = 50)
         {
-            var candidates = HardwareLegacySearchInstalledGsdDevices(keyword, 100)
-                .Select(c =>
-                {
-                    c.Score = ScoreGsdCandidate(c, keyword, preferredDap);
-                    return c;
-                })
-                .OrderByDescending(c => c.Score ?? 0)
-                .ToList();
-            var metadataOnly = candidates.Count(c => string.IsNullOrWhiteSpace(c.TypeIdentifier));
-            var exact = DeviceCreationRules.ExactCandidate(candidates.Select(c => c.TypeIdentifier), keyword, "installed GSD/catalog",
-                metadataOnly == 0 ? "" : " " + metadataOnly
-                    + " GSDML file row(s) carry no TypeIdentifier (GSDML DAP metadata only) and cannot be created by this tool.");
-            var candidate = candidates.First(c => string.Equals(c.TypeIdentifier, exact, StringComparison.Ordinal));
-            var device = HardwareCreateExactDevice(exact, deviceName, "keyword");
-            return (device, candidate, candidates, new List<string> { exact + " -> created (one CreateWithItem call)" }, null);
+            var result = HardwareLegacyAddGsdDeviceWithProbe(keyword, deviceName, preferredDap);
+            return new Dictionary<string, object?>
+            {
+                ["Device"] = new Dictionary<string, object?> { ["Name"] = result.Device.Name },
+                ["Candidate"] = result.Candidate,
+                ["Candidates"] = result.Candidates,
+                ["Attempts"] = new List<string> { result.Candidate.TypeIdentifier + " -> created (one CreateWithItem call)" },
+                ["Error"] = null
+            };
+
+            (Device Device, GsdMatch Candidate, List<GsdMatch> Candidates)
+                HardwareLegacyAddGsdDeviceWithProbe(string keyword, string deviceName, string preferredDap = "")
+            {
+                var candidates = FindGsdMatches(keyword, limit, preferredDap);
+                int metadataOnly = candidates.Count(c => string.IsNullOrWhiteSpace(c.TypeIdentifier));
+                int total = candidates.FirstOrDefault()?.TotalMatches ?? 0;
+                var exact = DeviceCreationRules.ExactCandidate(candidates.Select(c => c.TypeIdentifier), keyword, "installed GSD/catalog",
+                    metadataOnly == 0 ? "" : " " + metadataOnly + " returned GSDML file row(s) carry no TypeIdentifier and cannot be created.", limit, total);
+                var candidate = candidates.First(c => string.Equals(c.TypeIdentifier, exact, StringComparison.Ordinal));
+                var device = HardwareCreateExactDevice(exact, deviceName, "keyword");
+                return (device, candidate, candidates);
+            }
         }
 
-        private static HardwareGsdCandidate? CatalogEntryToCandidate(object entry, string keyword)
+        private static GsdMatch? CatalogEntryToCandidate(object entry, string keyword)
         {
-            var c = new HardwareGsdCandidate
+            var c = new GsdMatch
             {
                 Source = "HardwareCatalog",
                 Keyword = keyword,
@@ -250,6 +252,9 @@ namespace TiaMcp.Adapters
                 TypeName = HardwareTryProperty(entry, "TypeName")?.ToString(),
                 Version = HardwareTryProperty(entry, "Version")?.ToString()
             };
+
+            c.DapId = DeviceCreationRules.GsdDapId(c.TypeIdentifier);
+            if (c.DapId == null) return null;
 
             var haystack = string.Join(" ", new[]
             {
@@ -302,7 +307,7 @@ namespace TiaMcp.Adapters
             return c;
         }
 
-        private IEnumerable<HardwareGsdCandidate> SearchGsdmlFiles(string keyword)
+        private IEnumerable<GsdMatch> SearchGsdmlFiles(string keyword)
         {
             var root = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
@@ -345,15 +350,17 @@ namespace TiaMcp.Adapters
                 foreach (var dap in doc.Descendants().Where(e => e.Name.LocalName == "DeviceAccessPointItem"))
                 {
                     var dapId = dap.Attribute("ID")?.Value;
+                    if (string.IsNullOrWhiteSpace(dapId)) continue;
                     var dapName = dap.Attribute("DNS_CompatibleName")?.Value ?? dap.Attribute("Name")?.Value;
                     var textId = dap.Attribute("TextId")?.Value;
                     var infoText = FindGsdText(doc, textId) ?? dapName ?? fileName;
                     var haystack = string.Join(" ", new[] { vendor, mainFamily, productFamily, orderNumber, dapId, dapName, infoText, fileName });
                     if (!ContainsAnyKeywordToken(haystack, keyword)) continue;
 
-                    yield return new HardwareGsdCandidate
+                    yield return new GsdMatch
                     {
                         Source = "GSDML",
+                        TypeIdentifier = string.Empty,
                         Keyword = keyword,
                         Vendor = vendor,
                         MainFamily = mainFamily,

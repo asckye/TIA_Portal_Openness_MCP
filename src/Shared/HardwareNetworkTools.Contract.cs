@@ -143,7 +143,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 || evidence["file"] is JsonObject && Flag(evidence, "mayHaveWrittenFiles") == true && Flag(evidence, "mayHaveChanged") == false;
             string status = evidence["failureCode"]?.ToString() ?? evidence["status"]?.ToString() ?? "";
             Outcome outcome; Execution execution; Error? error = null;
-            if ((HostBehavior.DocumentedRefusal(evidence)
+            if (!issued && status == "CONNECTION_UNAVAILABLE" && Flag(evidence, "connectionUnavailable") == true)
+            {
+                outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted;
+                error =
+                    new Error("The portal connection was unavailable before the operation started.", new PreconditionFailedDetails("portal-connected", null));
+            }
+            else if ((HostBehavior.DocumentedRefusal(evidence)
                 ?? HostBehavior
                     .KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
@@ -227,7 +233,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Sanitize(data);
             if (NativeResultState.TryUnsuccessful(evidence, !readOnly, out var nativeOutcome, out var nativeError, tool))
                 return Result(tool, data, nativeError, nativeOutcome, nativeOutcome == Outcome.Unknown ? Execution.Unknown : readOnly ? Execution.ReadOnly
-                        : Execution.Completed,
+                        : nativeOutcome == Outcome.Partial ? Execution.Partial : Execution.Completed,
                     nativeOutcome == Outcome.Unknown ? Completeness.Unknown : nativeOutcome == Outcome.Partial ? Completeness.Partial : Completeness.Complete,
                         current);
             var completeness = outcome == Outcome.RejectedBeforeOperation ? Completeness.None

@@ -25,9 +25,9 @@ namespace TiaMcp.Adapters
         private DeviceItem? HardwareLegacyItem(string deviceItemPath)
             => project?.Devices == null ? null : ProjectDeviceWalk.FindItem(project.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, deviceItemPath);
 
-        private static IEnumerable<NetworkNodeInfo> FindNetworkNodes(DeviceItem root)
+        private static IEnumerable<NetworkNodeInfo> FindNetworkNodes(DeviceItem root, string componentSeparator = "#")
         {
-            foreach (var item in TraverseDeviceItemsAndHardware(root, root.Name, new HashSet<DeviceItem>()))
+            foreach (var item in TraverseDeviceItemsAndHardware(root, root.Name, new HashSet<DeviceItem>(), componentSeparator))
             {
                 object? networkInterface = null;
                 try { networkInterface = TryGetNetworkInterfaceService(item.Object) ?? TryGetNetworkInterfaceFromNetworkPort(item.Object); } catch /* swallow(probe-optional): device items without a network service are skipped */ { }
@@ -37,12 +37,12 @@ namespace TiaMcp.Adapters
                 if (nodes is not IEnumerable enumerable || nodes is string) continue;
                 foreach (var node in enumerable)
                 {
-                    if (node != null) yield return new NetworkNodeInfo(item.Path, item.DeviceItem, networkInterface, node);
+                    if (node != null) yield return new NetworkNodeInfo(item.Path, item.DeviceItem, networkInterface, node, item.Kind == "HardwareComponent");
                 }
             }
         }
         private static IEnumerable<(object Object, DeviceItem DeviceItem, string Path, string Kind)> TraverseDeviceItemsAndHardware(DeviceItem root,
-                string path, HashSet<DeviceItem> visited)
+                string path, HashSet<DeviceItem> visited, string componentSeparator = "#")
         {
             if (!visited.Add(root)) yield break;
             yield return (root, root, path, "DeviceItem");
@@ -51,13 +51,13 @@ namespace TiaMcp.Adapters
             foreach (var hardware in root.Items)
             {
                 if (hardware == null) continue;
-                yield return (hardware, root, path + "#" + (TryGetName(hardware) ?? hardware.GetType().Name), "HardwareComponent");
+                yield return (hardware, root, path + componentSeparator + (TryGetName(hardware) ?? hardware.GetType().Name), "HardwareComponent");
                 if (hardware is DeviceItem hardwareItem) hardwareItems.Add(hardwareItem);
             }
 
             foreach (var child in root.DeviceItems)
             {
-                foreach (var nested in TraverseDeviceItemsAndHardware(child, path + "/" + child.Name, visited))
+                foreach (var nested in TraverseDeviceItemsAndHardware(child, path + "/" + child.Name, visited, componentSeparator))
                 {
                     yield return nested;
                 }
@@ -65,7 +65,7 @@ namespace TiaMcp.Adapters
 
             foreach (var hardwareItem in hardwareItems)
             {
-                foreach (var nested in TraverseDeviceItemsAndHardware(hardwareItem, path + "/" + hardwareItem.Name, visited))
+                foreach (var nested in TraverseDeviceItemsAndHardware(hardwareItem, path + "/" + hardwareItem.Name, visited, componentSeparator))
                 {
                     yield return nested;
                 }
@@ -119,8 +119,9 @@ namespace TiaMcp.Adapters
             internal DeviceItem Item { get; }
             internal object NetworkInterface { get; }
             internal object Node { get; }
-            internal NetworkNodeInfo(string path, DeviceItem item, object networkInterface, object node)
-            { Path = path; Item = item; NetworkInterface = networkInterface; Node = node; }
+            internal bool Component { get; }
+            internal NetworkNodeInfo(string path, DeviceItem item, object networkInterface, object node, bool component = false)
+            { Component = component; Path = path; Item = item; NetworkInterface = networkInterface; Node = node; }
         }
         private static object? TryGetPropertyValue(object obj, params string[] propertyNames)
         {

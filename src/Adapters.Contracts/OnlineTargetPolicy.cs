@@ -100,7 +100,7 @@ public static class OnlineTargetPolicy
         if (parts.Length != 4) return false;
         foreach (string part in parts)
         {
-            if (part.Length > 3 || part.Length > 1 && part[0] == '0' || !Decimal(part, 255, out int octet)) return false;
+            if (part.Length > 3 || !Decimal(part, 255, out int octet)) return false;
             address = (address << 8) | (uint)octet;
         }
         return true;
@@ -109,7 +109,7 @@ public static class OnlineTargetPolicy
     private static bool Decimal(string text, int maximum, out int value)
     {
         value = 0;
-        return text.Length > 0 && text.All(c => c >= '0' && c <= '9')
+        return text.Length > 0 && (text.Length == 1 || text[0] != '0') && text.All(c => c >= '0' && c <= '9')
             && int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value) && value <= maximum;
     }
 }

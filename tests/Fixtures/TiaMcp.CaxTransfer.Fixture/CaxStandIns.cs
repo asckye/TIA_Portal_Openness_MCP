@@ -66,14 +66,16 @@ namespace TiaMcp.Adapters
         private void Check() { }
         private bool HardwareProjectMissing() => false;
         public int WriteAdmissions { get; private set; }
+        public bool LastStepWriting { get; private set; }
         private IDisposable HardwareEditAccess() => provider.ExclusiveAccess();
         private void HardwareWriteAdmission() => WriteAdmissions++;
         private IEnumerable<Device> EnumerateAllDevices() => Array.Empty<Device>();
         private Device? HardwareLegacyDevice(string path) => throw new NotSupportedException();
 
         // Expose the adapter's returned metadata and let any thrown exception fail the test.
-        private HardwareAddressingReply RunHardwareAddressStep(string tool, Func<Dictionary<string, object?>, string> run)
+        private HardwareAddressingReply RunHardwareAddressStep(string tool, Func<Dictionary<string, object?>, string> run, bool writing = true)
         {
+            LastStepWriting = writing;
             var reply = new HardwareAddressingReply();
             reply.Message = run(reply.Meta);
             return reply;

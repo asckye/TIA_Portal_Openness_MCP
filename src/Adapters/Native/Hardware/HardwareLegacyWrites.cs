@@ -10,6 +10,17 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
+        private string NetworkAdmissionFailure(Exception error, Dictionary<string, object?> meta)
+        {
+            bool lost = HmiReadPolicy.ConnectionUnavailable(error);
+            if (lost) meta["connectionUnavailable"] = true;
+            meta["mayHaveChanged"] = false;
+            meta["failureCode"] = lost ? "CONNECTION_UNAVAILABLE" : "PRECONDITION_FAILED";
+            meta["nativeMessage"] = HardwareExceptionDetail(error);
+            return lost ? "Portal connection unavailable before the network operation started."
+                : "Exclusive access refused before the network operation started.";
+        }
+
         public HardwareAddressingReply HardwareEnsureSubnet(string anchorDeviceItemPath, string subnetType, string subnetName)
         {
             // envelope: legacy-multiple-dynamic-fields
@@ -25,6 +36,7 @@ namespace TiaMcp.Adapters
             bool nestedWrite = EngineeringWriteJournal.Active;
             using var journal = new EngineeringWriteJournal();
             IDisposable? editAccess = null;
+            bool acquiringLease = false;
 
             try
             {
@@ -44,7 +56,12 @@ namespace TiaMcp.Adapters
                     meta["error"] = meta["nativeMessage"];
                     return new HardwareAddressingReply { Message = "Invalid subnetType", Meta = meta };
                 }
-                if (!nestedWrite) editAccess = EngineeringPlcSession.AcquireHmiEditAccess();
+                if (!nestedWrite)
+                {
+                    acquiringLease = true;
+                    editAccess = EngineeringPlcSession.AcquireHmiEditAccess();
+                    acquiringLease = false;
+                }
 
                 var anchorRoot = HardwareResolveItem(anchorDeviceItemPath);
                 if (anchorRoot == null)
@@ -105,6 +122,8 @@ namespace TiaMcp.Adapters
             {
                 EngineeringWriteJournal.ObserveFailure(ex);
                 meta["error"] = HardwareExceptionDetail(ex);
+                if (acquiringLease)
+                    return new HardwareAddressingReply { Message = NetworkAdmissionFailure(ex, meta), Meta = meta };
                 meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
                 return new HardwareAddressingReply { Message = "Failed ensuring subnet", Meta = meta };
             }
@@ -132,6 +151,7 @@ namespace TiaMcp.Adapters
             bool nestedWrite = EngineeringWriteJournal.Active;
             using var journal = new EngineeringWriteJournal();
             IDisposable? editAccess = null;
+            bool acquiringLease = false;
 
             try
             {
@@ -140,7 +160,12 @@ namespace TiaMcp.Adapters
                     meta["failureCode"] = "PROJECT_NOT_BOUND";
                     return new HardwareAddressingReply { Message = "Project is null", Meta = meta };
                 }
-                if (!nestedWrite) editAccess = EngineeringPlcSession.AcquireHmiEditAccess();
+                if (!nestedWrite)
+                {
+                    acquiringLease = true;
+                    editAccess = EngineeringPlcSession.AcquireHmiEditAccess();
+                    acquiringLease = false;
+                }
 
                 var targetRoot = HardwareResolveItem(deviceItemPath);
                 if (targetRoot == null)
@@ -215,6 +240,8 @@ namespace TiaMcp.Adapters
             {
                 EngineeringWriteJournal.ObserveFailure(ex);
                 meta["error"] = HardwareExceptionDetail(ex);
+                if (acquiringLease)
+                    return new HardwareAddressingReply { Message = NetworkAdmissionFailure(ex, meta), Meta = meta };
                 meta["readback"] = HardwareBuildSubnetReadbackJson(subnetName);
                 return new HardwareAddressingReply { Message = "Failed attaching device node to subnet", Meta = meta };
             }

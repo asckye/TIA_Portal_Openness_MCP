@@ -206,7 +206,7 @@ namespace TiaMcp.Adapters
                 }
                 catch (TargetInvocationException ex) { System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException ?? ex).Throw(); throw; }
                 return FinishCommunicationConnection(created, () => HardwareRequireConnectionComposition(owner), connectionName, before, meta);
-            });
+            }, writing: !dryRun);
 #else
         public HardwareAddressingReply HardwareManageCommunicationConnection(string[] devicePathJson, string[] itemPathJson, string action,
                 string connectionType = "", string connectionName = "",
@@ -230,7 +230,7 @@ namespace TiaMcp.Adapters
                 IEngineeringServiceProvider owner = devicePathJson.Length == 0 ? (IEngineeringServiceProvider)project!
                     : HardwareServiceProvider(ExactHardware(devicePathJson, itemPathJson));
                 var provider = owner.GetService<SystemdiagnosticsSettingsDataProvider>()
-                    ?? throw new NotSupportedException("SystemdiagnosticsSettingsDataProvider unavailable on the selected owner.");
+                    ?? throw StepFailureStatus.UnsupportedByTarget("SystemdiagnosticsSettingsDataProvider unavailable on the selected owner.");
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false; meta["ownerType"] = owner.GetType().FullName;
                 if (action == "export")
                 {
@@ -250,7 +250,7 @@ namespace TiaMcp.Adapters
                 HardwareOfficialService.AttachResult(meta, imported);
                 if (imported?.State.ToString() == "Error") throw new HardwareAddressingException("ImportFailed", "Native import reported Error state.");
                 return "System diagnostics settings imported (native state attached); project not saved, compiled or downloaded.";
-            });
+            }, writing: !dryRun);
 #else
         public HardwareAddressingReply HardwareExchangeSystemDiagnosticsSettings(string action, string filePath, string[] devicePathJson = null!,
                 string[] itemPathJson = null!, bool confirmImport = false, bool dryRun = true) =>
@@ -493,8 +493,14 @@ namespace TiaMcp.Adapters
                             }
                             case "deleteService":
                                 var deletedId = service!.Id; service.Delete();
-                                if (services.Find(deletedId) != null)
-                                    throw new InvalidOperationException("Delete returned but the service is still found by Id."); meta["verifiedAbsent"] = true;
+                                meta["writeReturned"] = true;
+                                bool StillPresent()
+                                {
+                                    configuration = HardwareRequireHardwareService<CertificateManagementConfiguration>(
+                                        ExactHardware(devicePathJson, itemPathJson), "itemPathJson");
+                                    return configuration.CertificateSupportedServices.Find(deletedId) != null;
+                                }
+                                if (!VerifyHardwareDelete(StillPresent, "the certificate service", meta)) return ReadbackStep.Message;
                                 break;
                         }
                         meta["after"] = HardwareCertificateConfigurationRow(configuration); meta["apiCallSuccess"] = true;
@@ -504,7 +510,7 @@ namespace TiaMcp.Adapters
                         throw new NotSupportedException("CertificateManagementConfiguration is absent in this API.");
 #endif
                 }
-            });
+            }, writing: !dryRun && action != "read");
 
         public HardwareAddressingReply HardwareManageHardwareUtilities(string action = "list", string typeIdentifier = "", string[] devicePathJson = null!,
                 string[] itemPathJson = null!, string filePath = "", string password = "", bool dryRun = true)
@@ -575,7 +581,7 @@ namespace TiaMcp.Adapters
                 file.Refresh(); if (!file.Exists || file.Length == 0) throw new InvalidOperationException("Export returned but no file was written.");
                 meta["fileBytes"] = file.Length; meta["apiCallSuccess"] = true;
                 return action + " completed; file written. No save.";
-            });
+            }, writing: !dryRun && (action == "exportOpcUa" || action == "exportCardReaderPsc"));
 
 #if PLC_HARDWARE_LINKED_TAGS
         private static Dictionary<string, object?> TelecontrolRow(TelecontrolDataPoint point)
@@ -736,7 +742,7 @@ namespace TiaMcp.Adapters
                     }
                 }
                 return dryRun ? "Hardware preview; no modification." : "Hardware operation completed; project not saved or downloaded.";
-            });
+            }, writing: !dryRun);
             // A completed ChangeType with a readable mismatch/absent path is a known failed verification, not an attempted rollback.
             if (reply.Meta.TryGetValue("verified", out var verified) && verified is false
                 && reply.Meta.TryGetValue("postStateKnown", out var known) && known is true)

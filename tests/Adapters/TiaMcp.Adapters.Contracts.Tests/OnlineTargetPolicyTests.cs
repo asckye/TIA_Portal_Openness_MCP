@@ -24,6 +24,9 @@ public sealed class OnlineTargetPolicyTests
     [InlineData("target=192.168.1.-1")]
     [InlineData("target=localhost")]
     [InlineData("target=::1")]
+    [InlineData("target=192.168.1.10/024")]
+    [InlineData("target=192.168.1.10/01")]
+    [InlineData("target=192.168.1.10/00")]
     [InlineData("target=192.168.1.10/33")]
     [InlineData("target=192.168.1.10/-1")]
     [InlineData("target=192.168.1.10/+24")]
@@ -41,7 +44,7 @@ public sealed class OnlineTargetPolicyTests
     public static IEnumerable<object[]> InvalidAddresses =>
         from operation in new[] { "ConnectOnlinePlc", "DownloadPlc", "UploadDeviceParameters", "GetPlcBlockFingerprints", "UploadStationFromPlc" }
         from address in new[] { "192.168.001.010", "010.001.001.001", "00.1.1.1", "0.0.0.00", " 192.168.1.10", "192.168.1.10 ",
-            "192.168.1.\t10", "::1", "plc.example", "256.1.1.1", "192.168.1.999" }
+            "192.168.1.10.", "192..1.10", ".192.168.1.10", "192.168.1.\t10", "::1", "plc.example", "256.1.1.1", "192.168.1.999" }
         select new object[] { operation, address };
 
     [Theory, MemberData(nameof(InvalidAddresses))]

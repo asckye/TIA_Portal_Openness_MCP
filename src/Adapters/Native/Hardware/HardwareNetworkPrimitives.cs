@@ -24,7 +24,7 @@ namespace TiaMcp.Adapters
                 throw new AdapterPreconditionException("CAx import cannot run inside an engineering transaction.", "exclusive-access", null);
         }
         private static IEngineeringServiceProvider HardwareServiceProvider(object target)
-            => target as IEngineeringServiceProvider ?? throw new NotSupportedException("Selected object is not a service provider.");
+            => target as IEngineeringServiceProvider ?? throw StepFailureStatus.UnsupportedByTarget("Selected object is not a service provider.");
         private static bool HardwareDisposedOnly(Exception error) => HmiReadPolicy.DisposedObjectOnly(error);
         private static void HardwarePage(object[] rows, int offset, int limit, Dictionary<string, object?> meta)
         {
@@ -45,12 +45,25 @@ namespace TiaMcp.Adapters
 
         private static T HardwareRequireHardwareService<T>(HardwareObject owner, string parameter) where T : class, IEngineeringService
             => HardwareServiceProvider(owner).GetService<T>()
-                ?? throw new NotSupportedException(HardwareServicesPolicy.DeclaredParameter(parameter) + " does not expose " + typeof(T).Name
+                ?? throw StepFailureStatus.UnsupportedByTarget(HardwareServicesPolicy.DeclaredParameter(parameter) + " does not expose " + typeof(T).Name
                     + " (service is null for this hardware object).");
 
         internal static void JournalTransferAreaCreate(Func<object> freshAreas, string name)
             => Native.Engineering.EngineeringWriteJournal.Creating(() => HardwareGroupOperations.Items(freshAreas()).SingleOrDefault(area =>
                 string.Equals((string)HardwareGroupOperations.Get(area, "Name"), name, StringComparison.Ordinal)), name);
+
+        internal static bool VerifyHardwareDelete(Func<bool> stillPresent, string description, Dictionary<string, object?> meta)
+        {
+            bool FreshLookup()
+            {
+                try { return stillPresent(); }
+                catch (Exception ex) when (HardwareDisposedOnly(ex)) { return stillPresent(); }
+            }
+            if (!ReadbackStep.TryRead(meta, "postDelete", FreshLookup, out var remaining)) return false;
+            if (remaining) throw new InvalidOperationException("Delete returned but " + description + " is still present on the refreshed composition.");
+            meta["verifiedAbsent"] = true;
+            return true;
+        }
 
         private static object? HardwareFindOnFresh(Func<object> composition, string name, Dictionary<string, object?> meta, string phase)
             => HardwareReadOnFresh(() => HardwareGroupOperations.Find(composition(), name), meta, phase, null);

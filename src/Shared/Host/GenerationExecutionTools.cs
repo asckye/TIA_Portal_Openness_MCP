@@ -62,7 +62,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private CallToolResult Execute(string name, Func<CallToolResult> operation)
         {
-            try { return operation(); }
+            try
+            {
+                var result = operation();
+                return name is "PlanProjectGeneration" or "ApplyGenerationPlan" ? ResponseGuardTool.Guard(result, name, null) : result;
+            }
             catch (GenerationCallRejectionException ex) { return McpServer.V4Reject(name, ex.Error, ex.Evidence); }
             catch (GenerationValidationException ex)
             {
@@ -139,16 +143,20 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private GenerationRunStore Records => new(Path.Combine(root(), "runs"));
         private JsonObject Read(string name, JsonObject? arguments = null, bool requireComplete = true)
+            => ReadData(name, arguments, requireComplete, out var body)
+                ?? throw new GenerationCallRejectionException(new Error("Complete project readback is required from " + name + ".",
+                    new PreconditionFailedDetails("generation-readback", name)),
+                    new JsonObject { ["readTool"] = name, ["result"] = body?.DeepClone() });
+
+        private JsonObject? ReadData(string name, JsonObject? arguments, bool requireComplete, out JsonObject? body)
         {
-            var result = call(name, arguments ?? new JsonObject(), null);
-            var body = Body(result);
+            body = Body(call(name, arguments ?? new JsonObject(), null));
             if ((bool?)body?["ok"] != true || requireComplete && (string?)body?["meta"]?["completeness"] != "complete"
                 || body?["meta"]?["paging"] is JsonObject paging && (bool?)paging["complete"] == false)
-                throw new GenerationCallRejectionException(new Error("Complete project readback is required from " + name + ".",
-                            new PreconditionFailedDetails("generation-readback", name)),
-                    new JsonObject { ["readTool"] = name, ["result"] = body?.DeepClone() });
+                return null;
             return body!["data"]!.AsObject();
         }
+
         private (string Binding, string Project) Target(bool allowUnbound = false)
         {
             var state = Read("GetSessionState", requireComplete: false)["sessionState"];
@@ -307,10 +315,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     string objectPath = (string)row["objectPath"]!;
                     string path = Uri.UnescapeDataString(objectPath);
                     string group = path.Contains('/') ? path.Substring(0, path.LastIndexOf('/')) : "";
-                    if ((string?)row["unitName"] is string unit && unit.Length > 0)
+                    string? unit = (string?)row["unitName"];
+                    bool inUnit = !string.IsNullOrEmpty(unit);
+                    if (inUnit)
                     {
                         // ProjectModel indexes blocks and types by station and name, independently of their group.
-                        string scope = "units/" + ObjectPathEncoding.EncodeSegment(unit);
+                        string scope = "units/" + ObjectPathEncoding.EncodeSegment(unit!);
                         path = objectPath.Length == 0 ? scope : scope + "/" + objectPath;
                         name = path;
                         group = "";
@@ -319,9 +329,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         case "block": observed.Blocks.Add(new ProjectBlock { Station = station.Id, Name = name, Group = group }); break;
                         case "type": observed.Types.Add(new ProjectType { Station = station.Id, Name = name, Group = group }); break;
-                        case "block-group": if (path.Length != 0) observed.Groups.Add(new ProjectGroup { Station = station.Id, Name = path, Kind = "blocks" });
+                        case "block-group": if (path.Length != 0) observed.Groups
+                            .Add(new ProjectGroup { Station = station.Id, Name = path, Kind = inUnit ? "unit-blocks" : "blocks" });
                         break;
-                        case "type-group": if (path.Length != 0) observed.Groups.Add(new ProjectGroup { Station = station.Id, Name = path, Kind = "types" });
+                        case "type-group": if (path.Length != 0) observed.Groups
+                            .Add(new ProjectGroup { Station = station.Id, Name = path, Kind = inUnit ? "unit-types" : "types" });
                         break;
                         case "unit": case "tag-table": case "tag-group": case "external-source": case "source-group": break;
                         default: throw new GenerationCallRejectionException(new Error(
@@ -368,8 +380,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         paths.Add(child.Substring(start + marker.Length, child.Length - start - marker.Length - 1));
                 }
                 if (paths.Count != 1) continue;
-                var item = Read("GetDeviceItemInfo", new JsonObject { ["deviceItemPath"] = paths[0] });
-                if (item["attributes"] is not JsonArray attributes) continue;
+                // An existing station with unreadable catalog identity will conflict with the requested device.
+                var item = ReadData("GetDeviceItemInfo", new JsonObject { ["deviceItemPath"] = paths[0] }, true, out _);
+                if (item?["attributes"] is not JsonArray attributes) continue;
                 string Value(string name) => (string?)attributes.OfType<JsonObject>().SingleOrDefault(a => (string?)a["name"] == name)?["value"] ?? "";
                 device.Article = Value("OrderNumber");
                 device.Firmware = Value("FirmwareVersion");
@@ -409,7 +422,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Check(stored, fresh: true);
             VerifyArtifacts(stored);
             if (preview || steps.Length == 0) return McpServer
-                .V4Result("ApplyGenerationPlan", new JsonObject { ["dryRun"] = true, ["plan"] = JsonNode.Parse(stored.Result.CanonicalPlan),
+                .V4Result("ApplyGenerationPlan", new JsonObject { ["dryRun"] = preview, ["plan"] = JsonNode.Parse(stored.Result.CanonicalPlan),
                 ["selectedSteps"] = JsonSerializer.SerializeToNode(steps.Select(s => s.Id)), ["wouldChange"] = steps.Length > 0 });
             string applyDigest = TiaMcp.FoundationHost.WriteDigest.Latest("ApplyGenerationPlan")
                 ?? McpServer.PrepareWriteDigest("ApplyGenerationPlan", new JsonObject { ["planId"] = planId, ["expectedPlanHash"] = hash,
@@ -530,8 +543,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     using var diagnostics = NativeFailureDiagnostics.Begin(requestId, JsonSerializer.SerializeToElement(finalArguments));
                     using var association = AuditInvocation.GenerationStep(planId, step.Id, runId, parentId, previewHash, requestId);
                     using var granted = GenerationStepApproval.Enter(approval, step, finalArguments, previewId, previewHash, sessionKey, runId);
-                    records.Append(runId, new JsonObject { ["event"] = "step-start", ["stepId"] = step.Id, ["requestId"] = requestId });
                     string stepDigest = McpServer.PrepareWriteDigest(step.Tool, finalArguments);
+                    records.Append(runId, new JsonObject { ["event"] = "step-start", ["stepId"] = step.Id, ["requestId"] = requestId });
                     try
                     {
                         dispatched = true;

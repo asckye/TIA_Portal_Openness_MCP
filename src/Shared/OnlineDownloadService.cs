@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
@@ -128,7 +130,21 @@ internal sealed class OnlineDownloadService
             });
 
     public ResponseMessage ReadTransferRoutes(string softwarePath, int maxItems = 500)
-        => Invoke<ResponseMessage>(new OnlineRequest { Operation = "ListTransferRoutes", SoftwarePath = softwarePath, MaxItems = maxItems });
+    {
+        var reply = Invoke<ResponseMessage>(new OnlineRequest { Operation = "ListTransferRoutes", SoftwarePath = softwarePath, MaxItems = maxItems });
+        if (reply.Meta?["modes"] is JsonArray modes)
+            foreach (var mode in modes.OfType<JsonObject>())
+            {
+                if (mode["pcInterfaces"] is not JsonArray routes) continue;
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                for (int i = 0; i < routes.Count;)
+                {
+                    if (routes[i] is JsonObject route && !seen.Add(route.ToJsonString())) routes.RemoveAt(i);
+                    else i++;
+                }
+            }
+        return reply;
+    }
 
     public ResponseMessage ManagePlcDataBlockSnapshot(string softwarePath, string blockPath, string action, string filePath = "", bool confirmValueChange =
             false, bool dryRun = true)

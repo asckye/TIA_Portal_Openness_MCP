@@ -147,7 +147,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 {
                     Message = n == 0
                         ? "No version control workspace exists in this project yet. Create one with " +
-                          "CreateVersionControlWorkspace, then map objects into it in the TIA UI."
+                          "CreateVersionControlWorkspace, then use ConnectProjectToWorkspace to map project objects."
                         : n + " version control workspace(s).",
                     Items = lines,
                     Meta = HmiMeta.Basic(true, ("workspaces", entries)),
@@ -192,7 +192,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 if (dryRun)
                     return new VersionControlResult {
                         Message = "Version-control workspace '" + workspaceName.Trim() + "' would be created. Folder: " + dir.FullName,
-                        Meta = HmiMeta.Basic(true, ("dryRun", true), ("mayHaveChanged", false)),
+                        Meta = HmiMeta.Basic(true, ("dryRun", true), ("mayHaveChanged", false), ("rootPath", dir.FullName)),
                     };
 
                 var group = Keep(PortVci.Group(vci));
@@ -226,7 +226,7 @@ namespace TiaMcp.Adapters.Native.Vci
 
                 var lines = new List<string>();
                 var entries = new HmiArray();
-                int total = 0, differing = 0;
+                int total = 0, differing = 0, unknown = 0;
                 foreach (var mo in PortVci.Enumerate(Keep(PortVci.MappedObjects(ws))))
                 {
                     total++;
@@ -236,7 +236,8 @@ namespace TiaMcp.Adapters.Native.Vci
                     try { status = PortVci.State(PortVci.ReadStatus(mo)).ToString(); }
                     catch (Exception ex) { status = "Unknown(" + ex.Message + ")"; }
                     bool inSync = string.Equals(status, "Equal", StringComparison.OrdinalIgnoreCase);
-                    if (!inSync) differing++;
+                    if (status.StartsWith("Unknown", StringComparison.Ordinal)) unknown++;
+                    else if (!inSync) differing++;
                     if (changedOnly && inSync) continue;
                     lines.Add(string.Format("{0} | {1} | file={2}{3}",
                         SafeName(mo), status, SafeFile(mo), SafeFormat(mo)));
@@ -250,14 +251,17 @@ namespace TiaMcp.Adapters.Native.Vci
                     Message = string.Format(
                         "Workspace '{0}': {1} mapped object(s), {2} differ from the workspace files.{3}",
                         PortVci.Name(ws), total, differing,
-                        differing == 0
+                        unknown > 0 ? " " + unknown + " comparison(s) are unknown. Inspect the individual status before export."
+                        : total == 0 ? " Use ConnectProjectToWorkspace to map objects."
+                        : differing == 0
                             ? " Project and workspace are in sync — nothing to commit."
                             : " Call SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit."),
                     Items = lines,
                     // envelope: legacy-multiple-dynamic-fields
                     Meta = new HmiObject {
                         ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
-                            ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["objects"] = entries
+                            ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["unknown"] = unknown,
+                            ["dataComplete"] = unknown == 0, ["objects"] = entries
                     },
                 };
             }

@@ -267,8 +267,9 @@ namespace TiaMcp.Adapters
             };
             var prefix = Native.Hardware.ProjectDeviceWalk.DevicePathPrefix(
                 project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, device);
-            foreach (var row in itemsArr.OfType<Dictionary<string, object?>>())
-                row["deviceItemPath"] = prefix + "/" + row["path"];
+            if (prefix != null)
+                foreach (var row in itemsArr.OfType<Dictionary<string, object?>>())
+                    row["deviceItemPath"] = prefix + "/" + row["path"];
             return reply;
         }
         private static string? TryGetAttributeInfoAccess(object info)
@@ -294,14 +295,6 @@ namespace TiaMcp.Adapters
         public Dictionary<string, object?> HardwareCreateCatalogDevice(string keyword, string deviceName, string preferredText = "")
         {
             var result = HardwareLegacyAddHardwareCatalogDeviceWithProbe(keyword, deviceName, preferredText);
-            return new Dictionary<string, object?> {
-                ["Device"] = result.Device == null ? null : new Dictionary<string, object?> { ["Name"] = result.Device.Name }, ["Candidate"] = result.Candidate,
-                    ["Candidates"] = result.Candidates, ["Attempts"] = result.Attempts, ["Error"] = result.Error
-            };
-        }
-        public Dictionary<string, object?> HardwareCreateGsdDevice(string keyword, string deviceName, string preferredDap = "")
-        {
-            var result = HardwareLegacyAddGsdDeviceWithProbe(keyword, deviceName, preferredDap);
             return new Dictionary<string, object?> {
                 ["Device"] = result.Device == null ? null : new Dictionary<string, object?> { ["Name"] = result.Device.Name }, ["Candidate"] = result.Candidate,
                     ["Candidates"] = result.Candidates, ["Attempts"] = result.Attempts, ["Error"] = result.Error

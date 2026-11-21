@@ -82,6 +82,34 @@ namespace TiaMcpServer.ModelContextProtocol
                 || obj.Any(p => (p.Key == "error" || p.Key.EndsWith("Error", StringComparison.Ordinal)) && p.Value != null || Incomplete(p.Value));
         }
 
+        private static string? UnreachableRuntimeTarget(string tool, JsonObject data)
+        {
+            string? parameter = TiaMcp.Adapters.Contracts.OnlineTargetPolicy.AddressParameter(tool);
+            if (parameter is not ("ip" or "host" or "endpointUrl")) return null;
+            string? target = (string?)data[parameter == "endpointUrl" ? "endpoint" : parameter];
+            if (string.IsNullOrWhiteSpace(target) || data["error"] is not JsonValue value || !value.TryGetValue<string>(out var reason)) return null;
+            var safety = data["safety"] as JsonObject;
+            if (Flag(data, "connected") == true || Flag(data, "identityConfirmed") == true || Flag(data, "reusedSession") == true
+                || safety != null && Flag(safety, "connected") == true) return null;
+
+            string message = reason.TrimEnd('.');
+            if (message.Equals("No online connection", StringComparison.OrdinalIgnoreCase)
+                || message.Equals("Target not reachable", StringComparison.OrdinalIgnoreCase)) return target;
+            bool unreachable = parameter switch {
+                "ip" => reason.StartsWith("Connect failed: TCP: ", StringComparison.Ordinal)
+                    || reason.StartsWith("Connect to " + target + " (rack ", StringComparison.Ordinal)
+                        && reason.Contains(") failed: TCP: ", StringComparison.Ordinal),
+                "host" => safety != null && Flag(safety, "connected") == false
+                    && (reason.StartsWith("S7 Web API error: Timeout: no answer from the CPU web server", StringComparison.Ordinal)
+                        || reason.StartsWith("S7 Web API error: Connection unavailable: ", StringComparison.Ordinal)),
+                "endpointUrl" => reason.StartsWith("OPC UA connection unavailable: ", StringComparison.Ordinal)
+                    || reason.StartsWith("OPC UA read timed out after ", StringComparison.Ordinal)
+                        && reason.EndsWith("unreachable or no UA server enabled).", StringComparison.Ordinal),
+                _ => false
+            };
+            return unreachable ? target : null;
+        }
+
         internal static CallToolResult Map(string tool, object response, bool readOnly, bool current)
         {
             var raw = System.Text.Json.JsonSerializer.SerializeToNode(response, response.GetType(),
@@ -173,6 +201,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = Outcome.RejectedBeforeOperation;
                 error = new Error(HostBehavior.SafeDiagnostic((string?)raw["message"]) ?? "The PLC is offline.",
                     new PreconditionFailedDetails("plc-online", null));
+            }
+            else if (success == false && !issued && succeeded + failed == 0
+                && (readOnly || Flag(data, "mayHaveChanged") == false || Flag(data, "writeAttempted") == false)
+                && UnreachableRuntimeTarget(tool, data) is string target)
+            {
+                outcome = Outcome.RejectedBeforeOperation;
+                error = new Error("The runtime target could not be reached.", new PreconditionFailedDetails("plc-online", target));
             }
             else if (success == true) outcome = Outcome.Succeeded;
             else if (readOnly) { outcome = Outcome.ReadFailed; error = Failure(false, data); }

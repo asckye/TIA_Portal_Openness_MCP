@@ -306,13 +306,17 @@ namespace TiaMcpServer.Runtime
             return item;
         }
 
-        private static string Describe(Exception ex)
+        private static string Describe(Exception ex, bool transport = false)
         {
             while (ex is AggregateException ae && ae.InnerException != null) ex = ae.InnerException;
             // HttpClient reports its own timeout as a cancelled task; say what it means.
             if (ex is OperationCanceledException)
                 return "Timeout: no answer from the CPU web server within the request timeout (web server disabled, wrong host/port, https blocked, or CPU " +
                     "unreachable).";
+            if (transport && ex.GetBaseException() is System.Net.Sockets.SocketException socket
+                && socket.SocketErrorCode is System.Net.Sockets.SocketError.ConnectionRefused or System.Net.Sockets.SocketError.HostUnreachable
+                    or System.Net.Sockets.SocketError.NetworkUnreachable or System.Net.Sockets.SocketError.TimedOut)
+                return "Connection unavailable: " + socket.Message;
             string text = ex.Message;
             for (var inner = ex.InnerException; inner != null; inner = inner.InnerException)
                 text += " <- " + inner.Message;
@@ -342,8 +346,8 @@ namespace TiaMcpServer.Runtime
                 if (!task.Wait(budget * 2 + 12000))
                     setError(result, $"S7 Web API call timed out ({budget} ms per request) against '{host}'.");
             }
-            catch (AggregateException ae) { setError(result, "S7 Web API error: " + Describe(ae)); }
-            catch (Exception ex) { setError(result, "S7 Web API error: " + Describe(ex)); }
+            catch (AggregateException ae) { setError(result, "S7 Web API error: " + Describe(ae, transport: true)); }
+            catch (Exception ex) { setError(result, "S7 Web API error: " + Describe(ex, transport: true)); }
             finally { sw.Stop(); setElapsed(result, sw.ElapsedMilliseconds); }
         }
 

@@ -9,6 +9,10 @@ namespace TiaMcp.Adapters.Hardware
     // channels, addressing, device user groups, device users, port interconnections). No Siemens.Engineering dependency.
     internal static class HardwareNetworkPolicy
     {
+        internal static IEnumerable<(object Interface, object Node, string Path, bool Component)> TopologyNodes(
+            IEnumerable<(object Interface, object Node, string Path, bool Component)> nodes)
+            => nodes.GroupBy(n => (n.Interface, n.Node)).Select(group => group.OrderBy(n => n.Component).ThenBy(n => n.Path.Length).First());
+
         internal static void RequireStandardTransferAreaMode(bool isIoDevice)
         {
             if (!isIoDevice)

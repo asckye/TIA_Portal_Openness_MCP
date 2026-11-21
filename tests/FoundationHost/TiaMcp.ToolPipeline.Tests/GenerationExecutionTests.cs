@@ -81,6 +81,7 @@ public sealed class GenerationExecutionTests : IDisposable
             if (name == "GetDeviceItemInfo")
             {
                 Assert.Equal("devices/PLC1/CPU", (string?)args["deviceItemPath"]);
+                if (textTreeFirmware == "unreadable") return Result(name, new JsonObject(), "partial");
                 return Result(name, new JsonObject { ["attributes"] = new JsonArray(
                     new JsonObject { ["name"] = "OrderNumber", ["value"] = "6ES7 513-1AL02-0AB0" },
                     new JsonObject { ["name"] = "FirmwareVersion", ["value"] = textTreeFirmware }) });
@@ -191,6 +192,8 @@ public sealed class GenerationExecutionTests : IDisposable
         Row("tag-table", "Signals", "/tag-tables/IO/Signals", "IO/Signals", "table");
         Row("source-group", "Sources", "/external-sources/Sources", "Sources", "groupPath");
         Row("external-source", "Program", "/external-sources/Sources/Program", "Sources/Program", "externalSourceName");
+        softwarePaths.Add(new JsonObject { ["kind"] = "block-group", ["name"] = "Library", ["objectPath"] = "units/Cell/Library",
+            ["path"] = "PLC1/blocks/units/Cell/Library", ["selectorParameter"] = "groupPath" });
         var scoped = Plan(session, "17");
         Assert.Equal(new[] { "block:units/Cell/Library/FB_MotorDol", "type:units/Cell/Library/UDT_MotorDolStatus" },
             scoped["observed"]!["PLC1"]!["objectKeys"]!.AsArray().Select(n => (string?)n));
@@ -210,6 +213,52 @@ public sealed class GenerationExecutionTests : IDisposable
         var error = Assert.Throws<GenerationCallRejectionException>(() => Plan(Session("17"), "17"));
         Assert.Contains("unknown-kind", error.Message);
         Assert.Contains("Group/Thing", error.Message);
+        Assert.Equal(0, writes);
+    }
+
+    [Fact]
+    public void Empty_selected_phase_reports_execution_mode_without_dispatch()
+    {
+        var session = Session("17");
+        var plan = Plan(session, "17");
+        var populated = plan["steps"]!.AsArray().Select(step => (string)step!["phase"]!);
+        var unavailable = plan["unavailable"]!.AsArray().Select(entry => (string)entry!["phase"]!);
+        string empty = plan["phases"]!.AsArray().Select(phase => (string)phase!).Except(populated).Except(unavailable).First();
+        var result = session.Apply((string)plan["planId"]!, (string)plan["planHash"]!, (string)plan["target"]!["projectIdentity"]!,
+            new[] { empty }, false);
+        Assert.Equal(false, (bool?)result.StructuredContent!["data"]!["dryRun"]);
+        Assert.Equal(false, (bool?)result.StructuredContent!["data"]!["wouldChange"]);
+        Assert.Equal(0, writes);
+        Assert.Equal(0, approvals);
+    }
+
+    [Fact]
+    public void Large_plan_and_apply_preview_return_export_handles()
+    {
+        var session = Session("17");
+        var tool = new GenerationTools("17", () => new StandardPackageStore(Path.Combine(repository, "templates", "standards"),
+            Path.Combine(root, "standards")), session);
+        var previous = Environment.GetEnvironmentVariable("TIA_MCP_MAX_RESPONSE_CHARS");
+        try
+        {
+            Environment.SetEnvironmentVariable("TIA_MCP_MAX_RESPONSE_CHARS", "6000");
+            var machine = new TiaMcp.Logic.V4.Inputs.ToolArguments(JsonSerializer.SerializeToElement(Machine("17")));
+            var planResult = tool.PlanProjectGeneration("tiamcp.basic", "1.0.0", machine);
+            Assert.NotNull(planResult.StructuredContent!["data"]!["export"]!["id"]);
+            var plan = Plan(session, "17");
+            var preview = tool.ApplyGenerationPlan((string)plan["planId"]!, (string)plan["planHash"]!, (string)plan["target"]!["projectIdentity"]!);
+            Assert.NotNull(preview.StructuredContent!["data"]!["export"]!["id"]);
+            Assert.Equal(0, writes);
+        }
+        finally { Environment.SetEnvironmentVariable("TIA_MCP_MAX_RESPONSE_CHARS", previous); }
+    }
+
+    [Fact]
+    public void Unreadable_catalog_identity_leaves_existing_station_in_conflict()
+    {
+        textTreeFirmware = "unreadable";
+        var plan = Plan(Session("17"), "17");
+        Assert.Contains("PLC1", plan["conflicts"]!.ToJsonString());
         Assert.Equal(0, writes);
     }
 

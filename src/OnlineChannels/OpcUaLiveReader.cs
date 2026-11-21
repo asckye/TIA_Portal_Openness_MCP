@@ -35,6 +35,7 @@ namespace TiaMcpServer.Runtime
         public bool Ok;
         public string? Error;
         public string Endpoint = "";
+        internal volatile bool OpeningFirstSession;
         public bool ReusedSession;   // true if an already-open cached session was used
         public List<OpcUaReadItem> Items = new List<OpcUaReadItem>();
         public long ElapsedMs;
@@ -72,18 +73,26 @@ namespace TiaMcpServer.Runtime
             var sw = System.Diagnostics.Stopwatch.StartNew();
             var ids = nodeIds.ToList();
             int budget = timeoutMs <= 0 ? 5000 : timeoutMs;
+            string TimeoutMessage() => result.OpeningFirstSession
+                ? $"OPC UA read timed out after {budget} ms (server '{endpointUrl}' unreachable or no UA server enabled)."
+                : $"OPC UA read timed out after {budget} ms waiting for a read at '{endpointUrl}'.";
             try
             {
                 var task = ReadReuseAsync(endpointUrl, ids, result, budget);
                 if (!task.Wait(budget))
                 {
-                    result.Error = $"OPC UA read timed out after {budget} ms (server '{endpointUrl}' unreachable or no UA server enabled).";
-                    return result;
+                    // The pending read owns its result until it finishes.
+                    return new OpcUaReadResult { Endpoint = endpointUrl, Error = TimeoutMessage(), ElapsedMs = sw.ElapsedMilliseconds };
                 }
             }
             catch (AggregateException ae)
             {
-                result.Error = "OPC UA error: " + (ae.InnerException?.Message ?? ae.Message);
+                var cause = ae.GetBaseException();
+                result.Error = cause is ObjectDisposedException && sw.ElapsedMilliseconds >= budget ? TimeoutMessage()
+                    : result.OpeningFirstSession && cause is System.Net.Sockets.SocketException socket
+                        && socket.SocketErrorCode is System.Net.Sockets.SocketError.ConnectionRefused or System.Net.Sockets.SocketError.HostUnreachable
+                            or System.Net.Sockets.SocketError.NetworkUnreachable or System.Net.Sockets.SocketError.TimedOut
+                        ? "OPC UA connection unavailable: " + cause.Message : "OPC UA error: " + cause.Message;
             }
             catch (Exception ex)
             {
@@ -123,7 +132,9 @@ namespace TiaMcpServer.Runtime
                 // cached session went stale, drop it and rebuild exactly once.
                 for (int attempt = 0; attempt < 2; attempt++)
                 {
+                    result.OpeningFirstSession = attempt == 0;
                     var (channel, reused) = await AcquireAsync(endpointUrl, forceNew: attempt > 0);
+                    result.OpeningFirstSession = false;
                     try
                     {
                         await DoReadAsync(channel, nodeIds, result);

@@ -8,6 +8,18 @@ public sealed class HardwareFeatureReadTests
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(release => new object[] { release });
 
+    [Theory]
+    [InlineData("read", false, false)]
+    [InlineData("deleteService", true, false)]
+    [InlineData("deleteService", false, true)]
+    public void Device_service_read_and_preview_clear_unknown_write_outcomes(string action, bool preview, bool writing)
+    {
+        var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+        engine.EngineeringStep = (_, _) => new HardwareAddressingReply { OutcomeUnknown = true };
+        var result = engine.HardwareManageDeviceServiceObjects(new[] { "PLC" }, new[] { "CPU" }, "certificate", action, dryRun: preview);
+        Assert.Equal(writing, result.OutcomeUnknown);
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void Unprobed_feature_is_not_reported_absent(string release)
     {
@@ -69,6 +81,19 @@ public sealed class HardwareFeatureReadTests
         var failure = Assert.IsType<Dictionary<string, object?>>(Assert.Single(Assert.IsType<List<object?>>(values["failures"])));
         Assert.Equal("InterfaceType", failure["property"]);
         Assert.Equal(false, reply.Meta["dataComplete"]);
+    }
+
+    [Fact]
+    public void Missing_service_on_selected_item_carries_target_refusal()
+    {
+        var fixture = HardwareWriteFailureTests.NativeFixture("21");
+        var method = typeof(PlcFoundationEngine).GetMethod("HardwareRequireHardwareService",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!;
+        var invocation = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+            method.MakeGenericMethod(typeof(Siemens.Engineering.HW.Features.NetworkInterface)).Invoke(null, new object[] { fixture.Cpu, "itemPathJson" }));
+        var error = Assert.IsType<NotSupportedException>(invocation.InnerException);
+        Assert.Equal("target", error.Data["unsupportedBy"]);
+        Assert.Contains("itemPath", error.Message, StringComparison.Ordinal);
     }
 
     private static Dictionary<string, object?>[] Rows(HardwareAddressingReply reply)

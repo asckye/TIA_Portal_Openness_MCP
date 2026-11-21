@@ -52,7 +52,8 @@ namespace TiaMcp.Adapters
                 IpAddress = primary, Nodes = nodes.ToArray() };
             var prefix = Native.Hardware.ProjectDeviceWalk.DevicePathPrefix(
                 project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup, device);
-            foreach (var node in nodes) node.InterfacePath = prefix + "/" + node.InterfacePath;
+            if (prefix != null)
+                foreach (var node in nodes) node.InterfacePath = prefix + "/" + node.InterfacePath;
             return reply;
         }
 
@@ -169,7 +170,7 @@ namespace TiaMcp.Adapters
                 if (dryRun) return "Address update preview; nothing changed.";
                 meta["after"] = AddressRow(address);
                 return "Address properties/attributes written and read back. No save/compile/download.";
-            });
+            }, writing: !dryRun);
         }
 
         private object? HardwareBlock(string softwarePath, string blockPath)

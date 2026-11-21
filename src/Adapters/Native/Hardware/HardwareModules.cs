@@ -330,6 +330,8 @@ namespace TiaMcp.Adapters
             // Motor Module, 1000 for the motor), so the readback matches by the created item's name first and by slot second.
             string? createdName = null; try { createdName = created.Name; } catch /* swallow(probe-optional): 无法读取名称或位置时保留既有模块验证回退路径。 */ { }
             var occupiedAfter = ReadOccupiedSlots(verifyHost);
+            result.OccupiedSlots = occupiedAfter;
+            result.FreeSlots = ReadFreeSlots(verifyHost);
             var after = (createdName != null ? occupiedAfter.FirstOrDefault(x => string.Equals(x.Name, createdName, StringComparison.Ordinal)) : null)
                         ?? occupiedAfter.FirstOrDefault(x => x.PositionNumber == acceptedSlot);
             // TIA V21 (2026-09-20; docs/reference/real-machine-ledger.md): a Device-level PlugNew of a Startdrive Motor Module creates the rack item (驱动轴_n) AND the module below it - the

@@ -144,7 +144,7 @@ namespace TiaMcp.Adapters
                     catch { /* swallow(probe-optional): import remains unknown when even the device count is unavailable. */ }
                     throw;
                 }
-            });
+            }, writing: !dryRun);
         }
 
 #if !PLC_CAX_TRANSFER_RESULT

@@ -24,11 +24,13 @@ public sealed class CaxTransferResultTests
         {
             File.WriteAllText(source, """<CAEXFile SchemaVersion="2.15" FileName="input.aml"><InstanceHierarchy Name="Project"/></CAEXFile>""");
             engine.ImportHardwareAml(source, log);
+            Assert.False(engine.LastStepWriting);
             Assert.Equal(0, engine.WriteAdmissions);
             Assert.Equal(0, provider.ImportCalls);
             using (provider.ExclusiveAccess())
                 Assert.Throws<InvalidOperationException>(() => engine.ImportHardwareAml(source, log, confirmImport: true, dryRun: false));
             var reply = engine.ImportHardwareAml(source, log, confirmImport: true, dryRun: false);
+            Assert.True(engine.LastStepWriting);
             Assert.Equal(2, engine.WriteAdmissions);
             Assert.Equal(1, provider.ImportCalls);
             Assert.Equal(false, reply.Meta["nativeResult"]);

@@ -14,6 +14,20 @@ public static class DeviceCreationRules
 {
     public const int CandidateListLimit = 12;
 
+    // Worker catalog replies are arrays. The count on a returned row describes the full deduplicated search.
+    public sealed class GsdMatch : HardwareGsdCandidate
+    {
+        public int TotalMatches { get; set; }
+    }
+
+    public static List<GsdMatch> GsdPage(List<GsdMatch> matches, string keyword, int limit)
+    {
+        var page = matches.OrderByDescending(c => string.Equals(c.TypeIdentifier, keyword, StringComparison.Ordinal))
+            .ThenByDescending(c => c.Score ?? 0).ThenBy(c => c.Source).ThenBy(c => c.Description).Take(limit).ToList();
+        foreach (var match in page) match.TotalMatches = matches.Count;
+        return page;
+    }
+
     public static void RequireUnifiedPanelVersion(string identifier, string version, int portalMajor)
     {
         var text = (identifier ?? "") + "/" + (version ?? "");
@@ -67,16 +81,22 @@ public static class DeviceCreationRules
     // Keyword tools create only when keyword equals one ranked candidate's TypeIdentifier (ordinal). Otherwise the ranked
     // identifiers are returned in a typed refusal; no candidate is tried.
     public static string ExactCandidate(IEnumerable<string?> rankedTypeIdentifiers, string keyword, string source, string note = "")
+        => ExactCandidate(rankedTypeIdentifiers, keyword, source, note, CandidateListLimit, null);
+
+    public static string ExactCandidate(IEnumerable<string?> rankedTypeIdentifiers, string keyword, string source, string note,
+        int candidateLimit, int? totalMatches)
     {
         var requested = (keyword ?? string.Empty).Trim();
-        var identifiers = (rankedTypeIdentifiers ?? Enumerable.Empty<string?>()).Where(id => !string.IsNullOrWhiteSpace(id))
+        var rows = (rankedTypeIdentifiers ?? Enumerable.Empty<string?>()).ToList();
+        var identifiers = rows.Where(id => !string.IsNullOrWhiteSpace(id))
             .Select(id => id!).Distinct(StringComparer.Ordinal).ToList();
         var matches = identifiers.Where(id => string.Equals(id, requested, StringComparison.Ordinal)).ToList();
         if (matches.Count == 1) return matches[0];
+        if (totalMatches > rows.Count) source += $" (truncated=true, total={totalMatches}, returned={rows.Count})";
         throw new AdapterPreconditionException(
             "Creation needs keyword to be one exact TypeIdentifier; '" + requested + "' is not. No device was created and no candidate was tried. "
             + (identifiers.Count == 0 ? "The " + source + " search found no candidate with a TypeIdentifier."
-                : "Ranked " + source + " candidates: " + List(identifiers) + ". Pass one of them as keyword.") + note,
+                : "Ranked " + source + " candidates: " + List(identifiers, candidateLimit) + ". Pass one of them as keyword.") + note,
             "keyword", false);
     }
 
@@ -89,9 +109,27 @@ public static class DeviceCreationRules
         return (slash >= 0 ? text.Substring(0, slash) : text).Trim();
     }
 
+    public static string? GsdDapId(string? identifier)
+    {
+        if (identifier == null || !identifier.StartsWith("GSD:", StringComparison.OrdinalIgnoreCase)) return null;
+        var parts = identifier.Split('/');
+        return parts.Length == 3 && parts[0].Length > 4 && string.Equals(parts[1], "DAP", StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(parts[2]) ? parts[2] : null;
+    }
+
     public static string? StationName(string typeIdentifier, string itemName)
         => typeIdentifier.StartsWith("OrderNumber:", StringComparison.Ordinal)
-            && CatalogFilter(typeIdentifier).StartsWith("6AV", StringComparison.OrdinalIgnoreCase) ? null : itemName;
+            && IsClassicPanel(CatalogFilter(typeIdentifier)) ? null : itemName;
+
+    private static bool IsClassicPanel(string article)
+    {
+        string compact = article.Replace(" ", "");
+        return compact.StartsWith("6AV2123-", StringComparison.OrdinalIgnoreCase)
+            || compact.StartsWith("6AV2124-", StringComparison.OrdinalIgnoreCase)
+            || compact.StartsWith("6AV2125-", StringComparison.OrdinalIgnoreCase)
+            || compact.StartsWith("6AV65", StringComparison.OrdinalIgnoreCase)
+            || compact.StartsWith("6AV664", StringComparison.OrdinalIgnoreCase);
+    }
 
     public static string CandidateText(string filter, IEnumerable<string?> catalogTypeIdentifiers)
     {
@@ -127,6 +165,6 @@ public static class DeviceCreationRules
                     + "' already exists (root, grouped or ungrouped devices); no create attempted. Choose a new deviceName.", "deviceName", false);
     }
 
-    private static string List(IReadOnlyList<string> identifiers)
-        => string.Join("; ", identifiers.Take(CandidateListLimit)) + (identifiers.Count > CandidateListLimit ? "; ..." : "");
+    private static string List(IReadOnlyList<string> identifiers, int limit = CandidateListLimit)
+        => string.Join("; ", identifiers.Take(limit)) + (identifiers.Count > limit ? "; ..." : "");
 }

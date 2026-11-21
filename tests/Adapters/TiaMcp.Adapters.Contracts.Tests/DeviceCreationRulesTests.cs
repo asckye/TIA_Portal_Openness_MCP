@@ -7,6 +7,27 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 // the hardware-catalog candidates so the caller chooses again.
 public sealed class DeviceCreationRulesTests
 {
+    [Theory]
+    [InlineData("GSD:GSDML-V2.34-FIXTURE.XML/DAP/DAP 1", "DAP 1")]
+    [InlineData("GSD:GSDML-V2.1-PILZ-PSSUNIVERSAL-20100616.XML/M/ID_Mod_E_S_RS232", null)]
+    [InlineData("OrderNumber:6ES7 513-1RL00-0AB0/V2.6", null)]
+    [InlineData("GSD:GSDML-V2.34-FIXTURE.XML/DAP/DAP 1/M/Module", null)]
+    public void Catalog_gsd_devices_require_a_device_access_point(string identifier, string? expected)
+        => Assert.Equal(expected, DeviceCreationRules.GsdDapId(identifier));
+
+    [Theory]
+    [InlineData("6AV2 128-3GB06-0AX1")]
+    [InlineData("6AV7 884-2AH00-0AA0")]
+    public void Unified_and_panel_pc_articles_keep_the_requested_station_name(string article)
+        => Assert.Equal("Panel", DeviceCreationRules.StationName("OrderNumber:" + article, "Panel"));
+
+    [Theory]
+    [InlineData("6AV2 125-2GB03-0AX0")]
+    [InlineData("6AV6545-0AG10-0AX0")]
+    [InlineData("6AV6 542-0BB15-2AX0")]
+    public void Mobile_and_older_classic_panels_only_name_the_head_item(string article)
+        => Assert.Null(DeviceCreationRules.StationName("OrderNumber:" + article + "/17.0.0.0", "Panel"));
+
     [Fact]
     public void Classic_panel_names_only_the_head_item_and_attributes_a_native_name_refusal()
     {
@@ -55,6 +76,31 @@ public sealed class DeviceCreationRulesTests
             Assert.Contains("No device was created and no candidate was tried.", refusal.Message, StringComparison.Ordinal);
             Assert.Contains("Ranked hardware catalog candidates: OrderNumber:6AV2 123-2GB03-0AX0/17.0.0.0; OrderNumber:6AV2 123-2GB03-0AX0/16.0.0.0.", refusal.Message, StringComparison.Ordinal);
         }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(13)]
+    [InlineData(50)]
+    [InlineData(65)]
+    [InlineData(90)]
+    public void Gsd_page_keeps_the_exact_dap_and_honours_the_requested_limit(int limit)
+    {
+        var matches = Enumerable.Range(1, 73).Select(i => new DeviceCreationRules.GsdMatch {
+            TypeIdentifier = $"GSD:FIXTURE.XML/DAP/DAP{i:D2}", Score = 100 - i }).ToList();
+        string exact = matches.Last().TypeIdentifier!;
+        var page = DeviceCreationRules.GsdPage(matches, exact, limit);
+        Assert.Equal(matches.Count, page[0].TotalMatches);
+        Assert.Equal(exact, page[0].TypeIdentifier);
+        Assert.Equal(Math.Min(limit, matches.Count), page.Count);
+        Assert.All(page, row => Assert.Equal(73, row.TotalMatches));
+        Assert.Equal(matches.Take(page.Count - 1), page.Skip(1));
+        var refusal = Assert.Throws<AdapterPreconditionException>(() =>
+            DeviceCreationRules.ExactCandidate(page.Select(row => row.TypeIdentifier), "FIXTURE", "installed GSD/catalog", "",
+                candidateLimit: limit, totalMatches: matches.Count));
+        if (limit < matches.Count) Assert.Contains($"truncated=true, total=73, returned={limit}", refusal.Message, StringComparison.Ordinal);
+        else Assert.DoesNotContain("truncated=true", refusal.Message, StringComparison.Ordinal);
+        Assert.Contains(page.Last().TypeIdentifier!, refusal.Message, StringComparison.Ordinal);
     }
 
     [Fact]

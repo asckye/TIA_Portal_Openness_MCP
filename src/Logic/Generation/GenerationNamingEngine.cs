@@ -49,7 +49,7 @@ namespace TiaMcp.Logic.Generation
                 if (expression.Arguments == null)
                 {
                     if (!TryResolve(context, expression.Name, out var field))
-                        throw CanonicalJson.Failure("/" + expression.Name, "reference", "Placeholder field does not exist.");
+                        throw CanonicalJson.Failure("/" + expression.Name, "reference", "Placeholder field '" + expression.Name + "' does not exist.");
                     return field;
                 }
                 var args = expression.Arguments.Select(Evaluate).ToArray();

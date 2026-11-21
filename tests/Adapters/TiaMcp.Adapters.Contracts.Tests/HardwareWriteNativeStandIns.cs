@@ -294,7 +294,8 @@ namespace TiaMcp.Adapters
             ? throw DeviceInventoryFailure : project!.Devices;
         private sealed class EngineeringAmbientAccess : IDisposable { public void Dispose() { } }
         private Siemens.Engineering.TiaPortal Portal() => portal!;
-        private IEnumerable<(object Node, string Path)> FindNetworkNodes(Siemens.Engineering.HW.DeviceItem item) => Array.Empty<(object, string)>();
+        internal readonly List<(object Node, string Path)> NetworkNodes = new();
+        private IEnumerable<(object Node, string Path)> FindNetworkNodes(Siemens.Engineering.HW.DeviceItem item) => NetworkNodes;
         private object? TryGetPropertyValue(object value, string name) => null;
         private string? TryGetName(object? value) => null;
         private static object? TryGetEngineeringAttribute(object owner, string attributeName)

@@ -277,6 +277,19 @@ public sealed class WriteReadbackTests
 
     private sealed class EngineeringObjectDisposedException : Exception { }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public void Disposed_multicast_lookup_requires_a_readable_fresh_composition(bool recovered)
+    {
+        int reads = 0;
+        var meta = new Dictionary<string, object?> { ["writeReturned"] = true };
+        bool absent = PlcFoundationEngine.VerifyHardwareDelete(() =>
+            ++reads == 2 && recovered ? false : throw new EngineeringObjectDisposedException(), "Area", meta);
+        Assert.Equal(2, reads);
+        Assert.Equal(recovered, absent);
+        Assert.Equal(recovered, meta.ContainsKey("verifiedAbsent"));
+        Assert.Equal(!recovered, meta.ContainsKey("readbackFailed"));
+    }
+
     [Fact]
     public void Disposed_domain_proxy_after_Delete_does_not_verify_absence()
     {

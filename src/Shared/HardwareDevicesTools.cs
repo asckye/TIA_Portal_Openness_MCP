@@ -415,32 +415,39 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "SearchInstalledGsdDevices"),
-                Description("[L2][Hardware]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD devices such as AFM60A, " +
-                "ATV320, or DL100. Use a precise vendor/order/DAP keyword. limit bounds returned candidates, not the synchronous native Find call or file " +
-                "traversal. A failed read reports its own outcome. Inspect the returned diagnostics before another call. The catalog API has no cancellation " +
-                    "or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows.")]
+            Description("[L2][Hardware]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD device access points. " +
+                "Use a precise vendor, order or DAP keyword, such as AFM60A, ATV320 or DL100. File-only GSDML rows are metadata. " +
+                "The limit bounds returned candidates. Truncated results include the total match count. File traversal and the synchronous native Find " +
+                "run to completion. The catalog API has no cancellation or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows.")]
         public CallToolResult SearchInstalledGsdDevicesV4(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100', 'SICK AFM60A'")] string keyword,
-            [Description("limit: maximum candidates to return")] int limit = 50)
-            => HardwareContract.Run("SearchInstalledGsdDevices", () =>
-            {
-                return SearchInstalledGsdDevices(keyword, limit);
-            }, write: false, current: false);
+            [Description("limit: positive maximum number of candidates to return")] int limit = 50)
+            => limit < 1 ? McpServer.V4Reject("SearchInstalledGsdDevices", McpServer.InvalidInput("limit"))
+                : HardwareContract.Run("SearchInstalledGsdDevices", () => SearchInstalledGsdDevices(keyword, limit), write: false, current: false);
 
         public ResponseGsdDeviceSearch SearchInstalledGsdDevices(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100', 'SICK AFM60A'")] string keyword,
-            [Description("limit: maximum candidates to return")] int limit = 50)
+            [Description("limit: positive maximum number of candidates to return")] int limit = 50)
         {
             try
             {
-                var items = _service.SearchInstalledGsdDevices(keyword, limit);
+                var (items, total) = _service.SearchInstalledGsdDevices(keyword, limit);
+                var meta = ResponseMeta.Basic(DateTime.Now, true);
+                if (total.HasValue)
+                {
+                    meta["total"] = total.Value;
+                    bool truncated = items.Count < total.Value;
+                    meta["truncated"] = truncated;
+                    if (truncated) meta["dataComplete"] = false;
+                }
                 return new ResponseGsdDeviceSearch
                 {
-                    Message = $"Found {items.Count} installed GSD/catalog candidate(s) for '{keyword}'",
+                    Message = total > items.Count ? $"Returned {items.Count} of {total} installed GSD/catalog candidates for '{keyword}'"
+                            : $"Returned {items.Count} installed GSD/catalog candidate(s) for '{keyword}'",
                     Keyword = keyword,
                     Count = items.Count,
                     Items = items,
-                    Meta = ResponseMeta.Basic(DateTime.Now, true)
+                    Meta = meta
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -519,23 +526,30 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
             [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
-                "dryRun=false.")] string expectedProjectFile =
-                "")
-            => McpServer
-                .RunWritePreview("CreateGsdDevice", dryRun, new { keyword, deviceName, preferredDap }, () => HardwareContract.Run("CreateGsdDevice", () =>
-            {
-                HardwareContract.RequireProject(_service.HasProject);
-                return AddGsdDeviceWithProbe(keyword, deviceName, preferredDap);
-            }, write: true, current: true), expectedPlanHash, expectedProjectFile);
+                "dryRun=false.")] string expectedProjectFile = "",
+            [Description("Positive maximum number of ranked candidates to return. Defaults to 50.")] int limit = 50)
+            => limit < 1 ? McpServer.V4Reject("CreateGsdDevice", McpServer.InvalidInput("limit"))
+                : McpServer.RunWritePreview("CreateGsdDevice", dryRun, new { keyword, deviceName, preferredDap, limit },
+                    () => HardwareContract.Run("CreateGsdDevice", () =>
+                    {
+                        HardwareContract.RequireProject(_service.HasProject);
+                        return AddGsdDeviceWithProbe(keyword, deviceName, preferredDap, limit);
+                    }, write: true, current: true), expectedPlanHash, expectedProjectFile);
 
         public ResponseGsdDeviceProbe AddGsdDeviceWithProbe(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100'")] string keyword,
             [Description("deviceName: name in project tree, e.g. 'ENC_AFM60A_1'")] string deviceName,
-            [Description("preferredDap: optional DAP/version hint, e.g. 'DAP V2.0', 'DAP 1', or empty")] string preferredDap = "")
+            [Description("preferredDap: optional DAP/version hint, e.g. 'DAP V2.0', 'DAP 1', or empty")] string preferredDap = "", int limit = 50)
         {
             try
             {
-                var res = _service.AddGsdDeviceWithProbe(keyword, deviceName, preferredDap);
+                var res = _service.AddGsdDeviceWithProbe(keyword, deviceName, preferredDap, limit);
+                var meta = ResponseMeta.Basic(DateTime.Now, res.Device != null);
+                if (res.Total.HasValue)
+                {
+                    meta["total"] = res.Total.Value;
+                    meta["truncated"] = res.Candidates.Count < res.Total.Value;
+                }
                 if (res.Device == null)
                 {
                     return new ResponseGsdDeviceProbe
@@ -548,10 +562,11 @@ namespace TiaMcpServer.ModelContextProtocol
                         Candidates = res.Candidates,
                         Attempts = res.Attempts,
                         Error = res.Error,
-                        Meta = ResponseMeta.Basic(DateTime.Now, false)
+                        Meta = meta
                     };
                 }
 
+                meta["name"] = res.Device.Name;
                 return new ResponseGsdDeviceProbe
                 {
                     Message = $"GSD device '{deviceName}' added",
@@ -562,7 +577,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     CandidateUsed = res.Candidate,
                     Candidates = res.Candidates,
                     Attempts = res.Attempts,
-                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("name", res.Device.Name))
+                    Meta = meta
                 };
             }
             catch (Exception ex) when (ex is not McpException)

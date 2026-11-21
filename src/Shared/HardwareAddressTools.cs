@@ -122,7 +122,8 @@ namespace TiaMcpServer.ModelContextProtocol
             + "GetDeviceItemIoAddresses, then CompilePlcSoftware and SaveProject. Overlapping address ranges are "
             + "rejected by TIA and reported back with the reason. Documented Address.StartAddress restrictions: changing one "
             + "IO type can also move the other IO type of the same module, PLC tags are not rewired, and the PLC must be offline; "
-            + "the result lists every address row of the item before and after the write.")]
+            + "the result lists every address row of the item before and after the write. To execute, pass dryRun=false, "
+            + "expectedPlanHash from the preview planHash, and expectedProjectFile from the same preview.")]
         public CallToolResult SetDeviceItemIoAddressV4(
             [Description("deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'")] string deviceItemPath,
             [Description("ioType: Input, Output, Diagnosis or Substitute")] string ioType,

@@ -11,6 +11,43 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class RuntimeOnlineTargetAdmissionTests
 {
+    [Fact]
+    public void Disposed_channel_after_deadline_reports_timeout_and_endpoint()
+    {
+        var previous = OpcUaLiveReader.ChannelFactory.Value;
+        const string endpoint = "opc.tcp://fixture.invalid:4840";
+        try
+        {
+            OpcUaLiveReader.ChannelFactory.Value = _ => {
+                Thread.Sleep(20);
+                throw new ObjectDisposedException("fixture");
+            };
+            var reply = OpcUaLiveReader.ReadNodes(endpoint, new[] { "ns=2;s=Speed" }, 5);
+            Assert.False(reply.Ok);
+            Assert.Contains("timed out after 5 ms", reply.Error);
+            Assert.Contains(endpoint, reply.Error);
+        }
+        finally { OpcUaLiveReader.ChannelFactory.Value = previous; }
+    }
+
+    [Fact]
+    public void Opc_ua_open_socket_refusal_identifies_the_unreachable_endpoint()
+    {
+        var previous = OpcUaLiveReader.ChannelFactory.Value;
+        const string endpoint = "opc.tcp://192.0.2.10:4840";
+        try
+        {
+            OpcUaLiveReader.ChannelFactory.Value = _ => throw new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.ConnectionRefused);
+            var reply = OpcUaLiveReader.ReadNodes(endpoint, new[] { "ns=2;s=Speed" }, 5000);
+            Assert.False(reply.Ok);
+            var data = new JsonObject { ["endpoint"] = reply.Endpoint, ["error"] = reply.Error };
+            var result = Host.RuntimeToolContract.Map("GetPlcLiveValuesOpcUa", new Host.ResponseJsonReport { Ok = reply.Ok, Data = data }, true, false);
+            Assert.Equal("PRECONDITION_FAILED", (string?)result.StructuredContent!["error"]?["code"]);
+            Assert.Equal(endpoint, (string?)result.StructuredContent["error"]?["details"]?["target"]);
+        }
+        finally { OpcUaLiveReader.ChannelFactory.Value = previous; }
+    }
+
     private static readonly string[] Tools = {
         "GetPlcLiveValuesS7", "SamplePlcLiveValuesS7", "MonitorPlcWatchTableS7", "TraceTagCauseLive", "ProbeS7CpuIdentity",
         "GetPlcRunStateS7", "GetPlcWebVars", "GetPlcWebDiagnostics", "WritePlcWebVars", "SetPlcWebOperatingMode", "GetPlcLiveValuesOpcUa" };

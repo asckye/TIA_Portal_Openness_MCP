@@ -204,7 +204,12 @@ namespace TiaMcp.Logic.Generation
             string hash = CanonicalJson.Hash(CanonicalJson.Parse(plan.ToJsonString()));
             result["planHash"] = hash;
             RequirePlan(dryRun, expectedPlanHash, hash);
-            if (dryRun) return result;
+            if (dryRun)
+            {
+                result["nextStep"] =
+                    "Repeat the package action with dryRun=false and expectedPlanHash set to planHash. Omit expectedProjectFile for this file operation.";
+                return result;
+            }
             Safe(target);
             if (action == "export")
             {

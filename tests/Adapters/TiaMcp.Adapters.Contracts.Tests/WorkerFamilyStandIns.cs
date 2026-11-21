@@ -126,6 +126,9 @@ namespace TiaMcp.Adapters
         private IDisposable? unifiedPages;
         private string _hmiTokenGeneration = "fixture-start";
         private OrganisationSession? EngineeringPlcOrganisationSession;
+        internal Exception? NetworkLeaseError;
+        private string ConnectHardwareNodes(string plcRootPath, string hmiRootPath, string subnetName)
+            => throw new InvalidOperationException("Unexpected native connection after lease refusal.");
         private OrganisationSession EngineeringPlcSession => EngineeringPlcOrganisationSession ?? new OrganisationSession(this);
         public readonly List<string> FamilyCalls = new();
         public int HardwareEditAccessCalls { get; set; }
@@ -175,6 +178,7 @@ namespace TiaMcp.Adapters
             public IDisposable AcquireHmiEditAccess()
             {
                 _engine.HardwareEditAccessCalls++;
+                if (_engine.NetworkLeaseError != null) throw _engine.NetworkLeaseError;
                 return new System.IO.MemoryStream();
             }
             public void RecordExportFailure(Exception error) => _engine.ExportFailures++;

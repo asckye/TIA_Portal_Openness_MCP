@@ -271,7 +271,7 @@ namespace TiaMcp.Adapters
                 if (dryRun) return "IO system update preview; Number values outside the UI range fail only at compile time.";
                 meta["after"] = HardwareIoSystemRow(system);
                 return "IO system properties/attributes written and read back. No save/compile/download.";
-            });
+            }, writing: !dryRun);
 
 #if PLC_HARDWARE_DOMAINS
         public HardwareAddressingReply HardwareReadNetworkDomains(string subnetName, int offset = 0, int limit = 100)
@@ -383,7 +383,7 @@ namespace TiaMcp.Adapters
                 if (dryRun) return "Domain update preview; nothing changed.";
                 meta["after"] = Row(target!);
                 return "Domain properties/attributes written and read back. No save/compile/download.";
-            });
+            }, writing: !dryRun);
 #else
         public HardwareAddressingReply HardwareManageNetworkDomain(string subnetName, string kind, string action, string name, Dictionary<string,
                 HardwareScalar> propertiesJson = null!, Dictionary<string, HardwareScalar> attributesJson = null!,
@@ -444,7 +444,7 @@ namespace TiaMcp.Adapters
                 SetDynamicAttributes(channel, attributes, meta);
                 meta["after"] = HardwareChannelRow(channel, names);
                 return "Channel attributes written and read back. No save/compile/download.";
-            });
+            }, writing: !dryRun);
 
         public HardwareAddressingReply HardwareManageDeviceUserGroup(string groupPath = "", string action = "read", string newName = "", bool dryRun = true)
             => RunHardwareAddressStep("ManageDeviceUserGroup", meta => {
@@ -476,7 +476,7 @@ namespace TiaMcp.Adapters
                 if (!dryRun) meta["mayHaveChanged"] = true;
                 return dryRun ? "Device user group preview; nothing changed."
                     : "Device user group operation completed (CreateFrom(MasterCopy) is not exposed here). No save/compile/download.";
-            });
+            }, writing: !dryRun && action != "read");
 
         private string[] ConnectedPortPaths(string[] device, string[] item)
         {
@@ -526,6 +526,6 @@ namespace TiaMcp.Adapters
                     throw new InvalidOperationException("Native call returned but ConnectedPorts count did not change as expected.");
                 }
                 return "Port " + action + " completed and ConnectedPorts count verified. No save/compile/download.";
-            });
+            }, writing: !dryRun && action != "read");
     }
 }

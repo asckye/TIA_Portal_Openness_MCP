@@ -75,21 +75,20 @@ namespace TiaMcp.Adapters
         private List<object?> HardwareBuildDeviceNodesJson(Device device)
         {
             var arr = new List<object?>();
-            foreach (var root in device.DeviceItems)
+            var nodes = device.DeviceItems.SelectMany(root => FindNetworkNodes(root, "/"))
+                .Select(n => (n.NetworkInterface, n.Node, n.Path, n.Component));
+            foreach (var n in HardwareNetworkPolicy.TopologyNodes(nodes))
             {
-                foreach (var n in FindNetworkNodes(root))
+                var subnet = TryGetPropertyValue(n.Node, "ConnectedSubnet");
+                arr.Add(new Dictionary<string, object?>
                 {
-                    var subnet = TryGetPropertyValue(n.Node, "ConnectedSubnet");
-                    arr.Add(new Dictionary<string, object?>
-                    {
-                        ["nodeName"] = TryGetName(n.Node) ?? "<unnamed>",
-                        ["address"] = ReadNodeAddress(n.Node) ?? string.Empty,
-                        ["nodeType"] = TryGetPropertyValue(n.Node, "NodeType")?.ToString() ?? string.Empty,
-                        ["connectedSubnet"] = TryGetName(subnet) ?? subnet?.ToString() ?? string.Empty,
-                        ["interfacePath"] = n.Path,
-                        ["isIndustrialEthernet"] = IsIndustrialEthernetNode(n.Node)
-                    });
-                }
+                    ["nodeName"] = TryGetName(n.Node) ?? "<unnamed>",
+                    ["address"] = ReadNodeAddress(n.Node) ?? string.Empty,
+                    ["nodeType"] = TryGetPropertyValue(n.Node, "NodeType")?.ToString() ?? string.Empty,
+                    ["connectedSubnet"] = TryGetName(subnet) ?? subnet?.ToString() ?? string.Empty,
+                    ["interfacePath"] = n.Path,
+                    ["isIndustrialEthernet"] = IsIndustrialEthernetNode(n.Node)
+                });
             }
             return arr;
         }

@@ -150,10 +150,12 @@ namespace TiaMcp.Adapters
                         meta["deleteSemantics"] = "Deleting a sender deletes every receiver; deleting the last receiver also deletes the sender.";
                         if (dryRun) return "Multicast transfer area delete preview; nothing changed.";
                         meta["mayHaveChanged"] = true; target.Delete();
-                        if (HardwareFindOnFresh(fresh, name, meta, "postDelete") != null)
-                            throw new InvalidOperationException("Delete returned but the transfer area is still present on the refreshed composition; do not " +
-                            "blindly retry.");
-                        meta["verifiedAbsent"] = true; HardwareCountOnFresh(fresh, meta, "countAfter");
+                        meta["writeReturned"] = true;
+                        object ResolveAreas() => HardwareRequireNetworkInterface(ExactHardware(devicePathJson, itemPathJson),
+                            "itemPathJson").MulticastableTransferAreas;
+                        if (!VerifyHardwareDelete(() => HardwareGroupOperations.Find(ResolveAreas(), name) != null, "the transfer area", meta))
+                            return ReadbackStep.Message;
+                        HardwareCountOnFresh(ResolveAreas, meta, "countAfter");
                         return "Multicast transfer area deleted and verified absent. No save/compile/download.";
                     }
                     ApplyScalarsAndAttributes(target, propertiesJson, attributesJson, meta, !dryRun);
@@ -252,7 +254,7 @@ namespace TiaMcp.Adapters
                 if (ruleTarget != null) { meta["mayHaveChanged"] = true; existingRule.Target = ruleTarget; }
                 meta["ruleAfter"] = HardwareMappingRuleRow(existingRule, ruleIndex);
                 return "Mapping rule written and read back. No save/compile/download.";
-            });
+            }, writing: !dryRun);
 #else
         public HardwareAddressingReply HardwareManageTransferArea(string[] devicePathJson, string[] itemPathJson, string action, string kind = "standard",
                 string name = "", string type = "",

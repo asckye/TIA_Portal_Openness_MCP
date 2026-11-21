@@ -88,7 +88,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("direction: 'ProjectToWorkspace' exports; this build refuses 'WorkspaceToProject'.")] string direction = "ProjectToWorkspace",
             [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",
             [Description("dryRun: DEFAULT true — only reports what would change. Pass false to actually synchronize.")] bool dryRun = true,
-            [Description("changedOnly: default true — synchronize only objects whose status is not Equal. false forces every mapped object.")] bool changedOnly =
+            [Description("changedOnly: true selects known differences. False also attempts Unknown objects. Equal objects are skipped in both " +
+                "modes.")] bool changedOnly =
                 true)
             => LibraryToolContract.Run("SynchronizeVersionControlWorkspace", !dryRun, true, () =>
             {

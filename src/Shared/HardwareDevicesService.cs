@@ -34,6 +34,7 @@ namespace TiaMcpServer.Siemens.Services
         }
         internal sealed class GsdProbe
         {
+            internal int? Total { get; set; }
             public DeviceInfo? Device { get; set; } public GsdDeviceCandidate? Candidate { get; set; } public List<GsdDeviceCandidate> Candidates { get; set;
             } = new(); public List<string> Attempts { get; set; } = new(); public string? Error { get; set; }
         }
@@ -60,12 +61,30 @@ namespace TiaMcpServer.Siemens.Services
         public string[] GetPlcSoftwareNamesForDesktop() => Read<string[]>("HardwareReadPlcNames", new())!;
         public DeviceInfo AddDevice(string orderNumber, string version, string deviceName) => new() {
             Name = Read<string>("HardwareCreateDevice", new() { ["orderNumber"] = orderNumber, ["version"] = version, ["deviceName"] = deviceName }, true)! };
-        public List<GsdDeviceCandidate> SearchInstalledGsdDevices(string keyword, int limit = 50) =>
-            Read<List<GsdDeviceCandidate>>("HardwareLegacySearchInstalledGsdDevices", new() { ["keyword"] = keyword, ["limit"] = limit })!;
+        private static int? NormalizeGsdPage(JsonArray rows, List<GsdDeviceCandidate> candidates)
+        {
+            foreach (var candidate in candidates)
+                if (candidate.Source == "GSDML" && candidate.TypeIdentifier == "") candidate.TypeIdentifier = null;
+            // Older worker rows do not carry the unpaged count.
+            return rows.Count == 0 ? 0 : (int?)rows[0]?["TotalMatches"];
+        }
+
+        public (List<GsdDeviceCandidate> Items, int? Total) SearchInstalledGsdDevices(string keyword, int limit = 50)
+        {
+            var rows = Invoke("hardware-devices.HardwareLegacySearchInstalledGsdDevices", new() { ["keyword"] = keyword, ["limit"] = limit }, false)!.AsArray();
+            var items = rows.Deserialize<List<GsdDeviceCandidate>>()!;
+            return (items, NormalizeGsdPage(rows, items));
+        }
         public List<HardwareCatalogCandidate> SearchHardwareCatalog(string keyword, int limit = 50) =>
             Read<List<HardwareCatalogCandidate>>("HardwareLegacySearchHardwareCatalog", new() { ["keyword"] = keyword, ["limit"] = limit })!;
-        public GsdProbe AddGsdDeviceWithProbe(string keyword, string deviceName, string preferredDap = "") =>
-            Read<GsdProbe>("HardwareCreateGsdDevice", new() { ["keyword"] = keyword, ["deviceName"] = deviceName, ["preferredDap"] = preferredDap }, true)!;
+        public GsdProbe AddGsdDeviceWithProbe(string keyword, string deviceName, string preferredDap = "", int limit = 50)
+        {
+            var reply = Invoke("hardware-devices.HardwareCreateGsdDevice", new() {
+                ["keyword"] = keyword, ["deviceName"] = deviceName, ["preferredDap"] = preferredDap, ["limit"] = limit }, true)!;
+            var probe = reply.Deserialize<GsdProbe>()!;
+            probe.Total = NormalizeGsdPage(reply["Candidates"]!.AsArray(), probe.Candidates);
+            return probe;
+        }
         public CatalogProbe AddHardwareCatalogDeviceWithProbe(string keyword, string deviceName, string preferredText = "") =>
             Read<CatalogProbe>("HardwareCreateCatalogDevice", new() { ["keyword"] = keyword, ["deviceName"] = deviceName, ["preferredText"] = preferredText },
                 true)!;

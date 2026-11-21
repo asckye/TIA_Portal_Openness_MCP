@@ -6,6 +6,15 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class NativeFailureTextTests
 {
     [Fact]
+    public void Certificate_template_keeps_each_requested_ip_only_once()
+    {
+        var names = new[] { "192.0.2.1", "2001:db8::1", "192.0.2.2", "192.0.2.2" }
+            .Select(ip => new CertificateSubjectName { Type = "IP", Value = ip });
+        var missing = TiaMcp.Adapters.Native.Security.CertificateNames.Missing(new[] { ("IP", "192.0.2.1"), ("IP", "2001:0db8::1") }, names);
+        Assert.Equal("192.0.2.2", Assert.Single(missing).Value);
+    }
+
+    [Fact]
     public void The_log_excerpt_byte_limit_preserves_complete_UTF8_characters()
     {
         string deviceName = new string('\u8f74', 2000);

@@ -6,6 +6,15 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class VciSyncTests
 {
+    [Fact]
+    public void Empty_workspace_does_not_claim_a_successful_comparison()
+    {
+        var selection = new VciSyncSelection();
+        Assert.Contains("No objects are mapped", selection.Summary("Preview.", noTargets: true));
+        Assert.False(selection.Include(() => "Equal", true, out _));
+        Assert.Contains("1 mapped object(s) reported Equal", selection.Summary("Preview.", noTargets: true));
+    }
+
     [Theory]
     [InlineData("unchanged", false)][InlineData("unrelated", false)][InlineData("empty", false)]
     [InlineData("relative", true)][InlineData("directory-read", true)][InlineData("post-read", true)]
