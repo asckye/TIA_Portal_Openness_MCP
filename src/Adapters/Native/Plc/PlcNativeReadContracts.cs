@@ -169,8 +169,12 @@ namespace TiaMcp.Adapters
         public PlcTypeDetails[] ReadTypes(string softwarePath, string regexName = "")
         {
             var filter=NameFilter(regexName);
-            return TypeGroups(ReadPlc(softwarePath).TypeGroup).SelectMany(g=>g.Value.Types).Where(t=>filter==null || filter.IsMatch(t.Name)).Select(TypeDetails)
-                .ToArray();
+            return TypeGroups(ReadPlc(softwarePath).TypeGroup).SelectMany(group => group.Value.Types
+                .Where(type => filter == null || filter.IsMatch(type.Name)).Select(type => {
+                    var details = TypeDetails(type);
+                    details.Path = Child(group.Path, details.Name!);
+                    return details;
+                })).ToArray();
         }
         // V17 ResolvePlcTagTablesCollection selects root TagTableGroup.TagTables only.
         public string[] ReadTagTableNames(string softwarePath) => ReadPlc(softwarePath).TagTableGroup.TagTables.Select(t=>t.Name).ToArray();

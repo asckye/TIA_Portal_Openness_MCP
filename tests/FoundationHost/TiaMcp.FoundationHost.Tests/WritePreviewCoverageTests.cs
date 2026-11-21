@@ -1460,9 +1460,11 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         var method = typeof(Host).Assembly.GetTypes().SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             .Single(candidate => candidate.GetCustomAttributesData().Any(attribute => attribute.AttributeType.Name == "McpServerToolAttribute"
                 && attribute.NamedArguments.Any(argument => argument.MemberName == "Name" && (string?)argument.TypedValue.Value == name)));
+        // Workspace creation and single TO import check their targets through a read-only worker call.
         var constructor = method.DeclaringType!.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Single();
         var services = new object?[constructor.GetParameters().Length];
         int workspaceReads = 0;
+        int technologyReads = 0;
         bool screenImport = name is "ImportHmiScreen" or "ImportHmiScreensFromDirectory";
         var screenChecks = new List<JsonObject>();
         if (name == "CreateVersionControlWorkspace")
@@ -1481,6 +1483,17 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
                 screenChecks.Add(args);
                 return new JsonObject();
             }, () => "C:/Projects/original.ap21");
+        else if (name == "ImportTechnologyObject")
+            services[0] = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((operation, args) => {
+                Assert.Equal("plc-technology.ExecutePlcOrganisation", operation);
+                Assert.Equal(name, (string?)args["request"]?["Operation"]);
+                Assert.True((bool?)args["dryRun"]);
+                Assert.True((bool?)args["request"]?["DryRun"]);
+                Assert.False((bool?)args["request"]?["Overwrite"]);
+                Assert.Null(args["confirm"]);
+                technologyReads++;
+                return new JsonObject { ["Found"] = true, ["MayHaveChanged"] = false };
+            }, () => true, () => "C:/Projects/original.ap21");
         var target = constructor.Invoke(services);
         var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), release);
         var path = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
@@ -1519,6 +1532,11 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             Assert.True((bool?)result.StructuredContent?["data"]?["targetVerified"]);
             Assert.Contains("The bound Classic HMI software and destination screen folder were checked.",
                 (string?)result.StructuredContent?["data"]?["scope"]);
+        }
+        else if (name == "ImportTechnologyObject")
+        {
+            Assert.Equal(1, technologyReads);
+            Assert.False((bool?)result.StructuredContent?["data"]?["mayHaveChanged"]);
         }
         else
         {
@@ -1610,7 +1628,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             // Use the maintained tag table unless the preview validates a specific document kind.
             string xml = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
                 "templates", "mcp-full-e2e-verify", "import", "MCP_E2E_Tags.xml");
-            if (tool == "ImportTechnologyObject")
+            if (tool is "ImportTechnologyObject" or "ImportTechnologyObjectsFromDirectory")
             {
                 xml = Path.Combine(root, "MCP_B5_Axis.xml");
                 File.WriteAllText(xml, "<Document><SW.TechnologicalObjects.TechnologicalInstanceDB ID='0'><AttributeList><Name>MCP_B5_Axis</Name>" +
@@ -1637,7 +1655,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
                         string blocks = Directory.CreateDirectory(Path.Combine(root, "plc", "blocks")).FullName;
                         File.Copy(source, Path.Combine(blocks, Path.GetFileName(source)), overwrite: true);
                     }
-                    else File.Copy(xml, Path.Combine(root, "MCP_E2E_Tags.xml"), overwrite: true);
+                    else if (tool != "ImportTechnologyObjectsFromDirectory") File.Copy(xml, Path.Combine(root, "MCP_E2E_Tags.xml"), overwrite: true);
                     arguments[parameter] = root;
                 }
         }

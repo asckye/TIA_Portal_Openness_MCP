@@ -41,6 +41,7 @@ namespace TiaMcp.Adapters
         internal static void Classify(PlcCompileResult result,IEnumerable<PlcDiagnostic> diagnostics, bool blockScope = false)
         {
             var raw=new List<string>(); var errors=new List<string>(); var warnings=new List<string>(); var info=new List<string>();
+            var otherErrors = new List<string>();
             foreach(var item in diagnostics)
             {
                 raw.Add(item.Formatted);
@@ -55,10 +56,10 @@ namespace TiaMcp.Adapters
                 bool error=string.Equals(item.State,"Error",StringComparison.Ordinal);
                 bool warning=string.Equals(item.State,"Warning",StringComparison.Ordinal);
                 if((error || warning) && item.HasChildren && string.IsNullOrWhiteSpace(item.Description)) continue;
-                if (error && blockScope && !item.InRequestedBlock) continue;
-                var target=error ? errors : warning ? warnings : info;
+                var target = error && blockScope && !item.InRequestedBlock ? otherErrors : error ? errors : warning ? warnings : info;
                 if((error || warning || description.Length!=0) && !target.Contains(item.Formatted)) target.Add(item.Formatted);
             }
+            if (result is PlcScopedCompileResult scoped) scoped.OtherErrors = otherErrors.ToArray();
             result.Messages=raw.ToArray(); result.Errors=errors.ToArray(); result.Warnings=warnings.ToArray(); result.Info=info.ToArray();
         }
     }

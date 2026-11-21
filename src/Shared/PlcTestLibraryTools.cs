@@ -143,7 +143,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     case "list": return Page(library.List(tags)["items"]!.AsArray(), offset, limit);
                     case "read": data = library.Read(id); break;
-                    case "save": data = library.Save(testCase ?? throw new ArgumentException("save requires testCase."), overwrite); break;
+                    case "save": data = library.Save(testCase ?? throw new ArgumentException("save requires testCase.", nameof(testCase)), overwrite); break;
                     case "delete": data = library.Delete(id); break;
                     case "listRuns": return Page(PlcTestRunRecord.List(runsDirectory(), offset, limit), offset, limit);
                     case "readRun": data = new JsonObject { ["run"] = PlcTestRunRecord.Read(runsDirectory(), runId).Document }; break;
@@ -159,9 +159,9 @@ namespace TiaMcpServer.ModelContextProtocol
             { return McpServer.V4Reject(tool, new Error("Case or run was not found.", new NotFoundDetails(null))); }
             catch (Exception ex) when (ex is ArgumentException || ex is JsonException || ex is InputRejectionException)
             { return McpServer.V4Reject(tool, new Error("Invalid library input or stored document: " + ex.Message,
-                new InvalidArgumentDetails("", Array.Empty<string>()))); }
+                new InvalidArgumentDetails((ex as ArgumentException)?.ParamName ?? "", Array.Empty<string>()))); }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
-            { return McpServer.V4Reject(tool, new Error("PLC test library file operation failed: " + ex.Message,
+            { return McpServer.V4Reject(tool, new Error("PLC test library file operation failed: " + ex.GetType().Name,
                 new IoFailedDetails("plc-test-library", null))); }
         }
 

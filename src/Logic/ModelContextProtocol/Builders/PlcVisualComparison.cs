@@ -39,6 +39,8 @@ namespace TiaMcpServer.ModelContextProtocol
             diff.State = diff.Interface.State == CompareState.Equal && diff.Content!.State == CompareState.Equal ? CompareState.Equal : CompareState.Changed;
             var pairs = graphical ? PlcLadderDrawing.LayoutComparison(diff) : new System.Collections.Generic.List<LadNetworkPairLayout>();
             var structural = OfflineAnalysisLogic.CompareFiles(leftPath, rightPath, 0, OfflineAnalysisLogic.MaxLimit);
+            if ((bool?)structural["identicalAfterNormalization"] == false || (bool?)structural["structurallyIdentical"] == false)
+                diff.State = CompareState.Changed;
             var data = new JsonObject
             {
                 ["left"] = left.Blocks[0].Name, ["right"] = right.Blocks[0].Name,

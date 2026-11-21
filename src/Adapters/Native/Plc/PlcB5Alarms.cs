@@ -148,7 +148,11 @@ namespace TiaMcp.Adapters.Native.Plc
                             .Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false))
                     };
 
-                if (!importPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase) || !File.Exists(importPath))
+                if (!File.Exists(importPath)) return new PlcB5Reply {
+                    Message = "Alarm class import file not found.", Meta = ResponseMeta
+                        .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
+                };
+                if (!importPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
                     return new PlcB5Reply {
                         Message = "importPath must be an existing .DAT file written by ExportAlarmClasses (official AlarmClassDataProvider format); got '"
                             + importPath + "'.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "INVALID_ARGUMENT"), ("mayHaveChanged", false))
@@ -221,7 +225,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 {
                     meta["status"] = "PreconditionFailed";
                     meta["precondition"] = "plc-text-lists";
-                    meta["refusal"] = "This PLC has no alarm text list; create one in TIA or with ManagePlcAlarmTextList createFromMasterCopy.";
+                    meta["refusal"] = PlcAlarmExportPolicy.MissingTextListGuidance(_session.ReleaseKey);
                 }
                 return new PlcB5Reply {
                     Message = $"Export failed: {reason}", Meta = meta
@@ -311,9 +315,15 @@ namespace TiaMcp.Adapters.Native.Plc
             catch (Exception ex)
             {
                 _session.RecordExportFailure(ex);
-                return new PlcB5Reply { Message = $"Export failed: {NativeReason(ex)}", Meta = ResponseMeta.Unstamped(false,
-                    ("operationSuccess", false), ("apiCallSuccess", false), ("mayHaveChanged", false),
-                    ("mayHaveWrittenFiles", File.Exists(exportPath)), ("nativeMessage", NativeReason(ex))) };
+                var meta = ResponseMeta.Unstamped(false, ("operationSuccess", false), ("apiCallSuccess", false), ("mayHaveChanged", false),
+                    ("mayHaveWrittenFiles", File.Exists(exportPath)), ("nativeMessage", NativeReason(ex)));
+                if (meta["nativeMessage"] is string reason && PlcAlarmExportPolicy.NoAlarms(reason))
+                {
+                    meta["status"] = "PreconditionFailed";
+                    meta["precondition"] = "plc-alarm-instances";
+                    meta["refusal"] = reason;
+                }
+                return new PlcB5Reply { Message = $"Export failed: {NativeReason(ex)}", Meta = meta };
             }
         }
 
@@ -364,6 +374,15 @@ namespace TiaMcp.Adapters.Native.Plc
                         meta["languages"] = new PlcB5Array(languages.Select(l => (object)l.Culture?.Name).ToArray()); meta["textLists"] =
                             new PlcB5Array(request.TextLists.Select(t => (object)t).ToArray());
                     }
+#if PLC_ALARM_LISTS
+                    var lists = unit == null ? plc.PlcAlarmTextlistGroup
+#if PLC_SAFETY_UNITS
+                        : ((Siemens.Engineering.SW.Units.PlcUnitBase)unit).PlcAlarmTextlistGroup;
+#else
+                        : ((Siemens.Engineering.SW.Units.PlcUnit)unit).PlcAlarmTextlistGroup;
+#endif
+                    PlcAlarmExportPolicy.RequireUserLists(lists.PlcAlarmUserTextlists.Select(list => list.Name), request.TextLists);
+#endif
                     if (dryRun) return "Text list XLSX export preview; no file written.";
                     meta["mayHaveWrittenFiles"] = true;
                     TextListXlsxResult result;

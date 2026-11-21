@@ -100,6 +100,8 @@ public sealed class PlcWatchTechnologyPortTests
     }
 
     [Theory]
+    [InlineData("watch", "<Name> Table</Name>")]
+    [InlineData("force", "<Name>Table </Name>")]
     [InlineData("watch", "")]
     [InlineData("watch", "<Name/>")]
     [InlineData("watch", "<Name>One</Name><Name>Two</Name>")]

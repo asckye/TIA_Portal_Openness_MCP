@@ -139,6 +139,7 @@
     <Compile Include="../../../src/Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="ModelContextProtocol" />
+    <None Update="Fixtures/AlarmExport/rc-full-v20-raw-B-331.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="GoldenWire.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="StudioGoldenWire.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

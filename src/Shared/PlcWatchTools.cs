@@ -636,7 +636,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "table).")] string tablePath,
             [Description("action: read | createTable | createComment | deleteEntry | deleteTable (force tables: read only).")] string action="read",
             [Description("entryIndex: 0-based row index from a read, for deleteEntry.")] int entryIndex=-1,
-            [Description("confirmDelete: must be true together with dryRun=false for deleteEntry / deleteTable.")] bool confirmDelete=false,
+            [Description("confirmDelete: set true on both preview and apply for deleteEntry / deleteTable. Changing it requires a new plan " +
+                "hash.")] bool confirmDelete=
+                false,
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true,
             [Description("offset: first row to return (paging).")] int offset=0,
             [Description("limit: maximum rows to return.")] int limit=200,

@@ -192,7 +192,7 @@ namespace TiaMcp.Engine.Tests
                     "Read-only/informative", "Member comment refuses " + flag + " on " + name);
             Refuses(MemberXml.Replace("<Comment>", "<Comment Informative='true'>"), Change("Enabled"), "Read-only/informative", "Informative comment is refused");
             Refuses(MemberXml, Change(section: "Missing"), "Section is absent or ambiguous", "Member comment refuses unknown section");
-            Refuses(MemberXml, Change("Missing"), "Sequence contains no matching element", "Member comment refuses unknown member");
+            Refuses(MemberXml, Change("Missing"), "Member path is absent or ambiguous: Missing", "Member comment refuses unknown member");
             foreach (var culture in new[] { "zho-CN", "zh-419", "zh-CN\n" })
                 Refuses(MemberXml, Change(culture: culture), "culture must be a culture name such as zh-CN.", "Member comment refuses malformed culture " + culture);
             Refuses(MemberXml, Change(culture: "de-DE"), "culture de-DE does not occur in this document; use a project language that the export contains.",

@@ -460,7 +460,8 @@ namespace TiaMcpServer.ModelContextProtocol
             plan = null!;
             if (dryRun && WritePreviewArgumentRefusal(tool, arguments) is Error argumentRefusal) return V4Reject(tool, argumentRefusal);
             try { plan = WritePreviewPlan(tool, arguments, writing, plannedFiles); }
-            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) when (error.Condition == SeedReferenceLayout.Condition)
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error) when (error.Condition == SeedReferenceLayout.Condition
+                || tool == "ImportTechnologyObjectsFromDirectory" && error.ParamName == "regexName")
             { return TargetFailure(tool, error, false); }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
             {

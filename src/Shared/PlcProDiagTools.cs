@@ -41,11 +41,15 @@ namespace TiaMcpServer.ModelContextProtocol
             int limit=100,
             bool confirmDelete=false,
             bool dryRun=true)
-            => ClassicMotionToolContract
+        {
+            if (action is "readComposition" or "createEntry" or "deleteEntry" && string.IsNullOrWhiteSpace(compositionName))
+                return McpServer.V4Reject("ManagePlcSupervision", McpServer.InvalidInput(nameof(compositionName)));
+            return ClassicMotionToolContract
                 .Invoke("ManagePlcSupervision", dryRun || action == "read" || action == "readComposition", action != "read" && action != "readComposition",
                 () => _service
                     .ManagePlcSupervision(softwarePath,action,blockPath,providerKind,compositionName,entryName,typeName,filePath,ClassicMotionToolContract
                         .Json(attributes),offset,limit,confirmDelete,dryRun));
+        }
         [McpServerTool(Name="ExportPlcProDiagInfo"),
                 Description("[L2][PLC-Software][READ] Native CodeBlock.ExportProDIAGInfo: writes the alarm messages of one exact ProDiag FB (blockPath under " +
                 "BlockGroup or a unit's BlockGroup) as CSV files into an existing directoryPath on the TIA Portal machine and hashes the new files. Refused " +

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using System.Threading;
+using System.Text.RegularExpressions;
+using TiaMcp.Adapters.Contracts;
 using TiaOpenness.Shared;
 
 namespace TiaMcp.Logic.V4
@@ -55,6 +57,7 @@ namespace TiaMcp.Logic.V4
         internal static void Validate(string tool, JsonObject arguments)
         {
             RefuseHumanSettingsTargets(arguments);
+            TechnologyImportFilter(tool, arguments);
             ValidateNativeFile(tool, arguments);
             foreach (var input in Inputs(tool, arguments))
             {
@@ -79,6 +82,7 @@ namespace TiaMcp.Logic.V4
         internal static JsonArray Snapshot(string tool, JsonObject arguments)
         {
             RefuseHumanSettingsTargets(arguments);
+            var technologyFilter = TechnologyImportFilter(tool, arguments);
             var inputs = new JsonArray();
             foreach (var input in Inputs(tool, arguments).OrderBy(item => item.Parameter, StringComparer.Ordinal)
                 .ThenBy(item => item.Path, StringComparer.Ordinal))
@@ -87,22 +91,30 @@ namespace TiaMcp.Logic.V4
                 {
                     string full = NativeInputPolicy.FullPath(input.Path);
                     var entries = new JsonArray();
+                    bool technologyDirectory = tool == "ImportTechnologyObjectsFromDirectory" && input.Parameter == "dir";
+                    bool matched = false;
                     var paths = input.Directory ? System.IO.Directory.EnumerateFiles(full, "*", SearchOption.AllDirectories)
                         .OrderBy(path => path, StringComparer.Ordinal) : new[] { full }.AsEnumerable();
                     foreach (string path in paths)
                     {
+                        string name = input.Directory ? path.Substring(full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Length + 1)
+                            .Replace('\\', '/') : Path.GetFileName(full);
                         using var stream = NativeInputPolicy.OpenRead(path, input.Parameter);
-                        if (tool == "ImportTechnologyObject" && input.Parameter == "importPath")
+                        if (tool == "ImportTechnologyObject" && input.Parameter == "importPath"
+                            || technologyDirectory && !name.Contains("/")
+                            && string.Equals(Path.GetExtension(path), ".xml", StringComparison.OrdinalIgnoreCase)
+                            && (technologyFilter == null || technologyFilter.IsMatch(Path.GetFileNameWithoutExtension(path))))
                         {
                             RequireTechnologyDocument(stream, input.Parameter);
+                            matched = true;
                             stream.Position = 0;
                         }
                         using var sha = SHA256.Create();
                         string hash = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
-                        string name = input.Directory ? path.Substring(full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Length + 1)
-                            .Replace('\\', '/') : Path.GetFileName(full);
                         entries.Add(new JsonObject { ["name"] = name, ["sha256"] = hash });
                     }
+                    if (technologyDirectory && !matched)
+                        throw new AdapterPreconditionException("No technology object XML files match the selection.", input.Parameter);
                     return entries;
                 });
                 inputs.Add(new JsonObject { ["parameter"] = input.Parameter, ["files"] = files });
@@ -110,12 +122,20 @@ namespace TiaMcp.Logic.V4
             return inputs;
         }
 
+        private static Regex? TechnologyImportFilter(string tool, JsonObject arguments)
+        {
+            if (tool != "ImportTechnologyObjectsFromDirectory") return null;
+            string pattern = TextArgument(arguments, "regexName");
+            if (string.IsNullOrWhiteSpace(pattern)) return null;
+            try { return new Regex(pattern, RegexOptions.IgnoreCase); }
+            catch (ArgumentException error) { throw new AdapterPreconditionException("Invalid regular expression.", "regexName", true, error); }
+        }
+
         private static void RequireTechnologyDocument(Stream input, string parameter)
         {
             try
             {
-                using var reader = System.Xml.XmlReader.Create(input, new System.Xml.XmlReaderSettings {
-                    DtdProcessing = System.Xml.DtdProcessing.Prohibit, XmlResolver = null });
+                using var reader = PlcTechnologyDocument.OpenReader(input);
                 reader.MoveToContent();
                 bool document = reader.Name == "Document" && reader.NamespaceURI.Length == 0;
                 bool technologyObject = false;
@@ -123,8 +143,9 @@ namespace TiaMcp.Logic.V4
                 {
                     if (reader.NodeType != System.Xml.XmlNodeType.Element || reader.Depth != 1) continue;
                     if (reader.NamespaceURI.Length == 0 && reader.Name is "Engineering" or "DocumentInfo") continue;
-                    if (technologyObject || reader.NamespaceURI.Length != 0 || reader.Name != "SW.TechnologicalObjects.TechnologicalInstanceDB")
+                    if (technologyObject || reader.NamespaceURI.Length != 0 || reader.Name != PlcTechnologyDocument.ObjectType)
                         break;
+                    PlcTechnologyDocument.ReadName(reader, parameter);
                     technologyObject = true;
                 }
                 if (document && technologyObject && reader.EOF) return;

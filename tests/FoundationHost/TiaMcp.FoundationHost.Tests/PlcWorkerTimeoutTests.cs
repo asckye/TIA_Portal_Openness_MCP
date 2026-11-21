@@ -148,6 +148,7 @@ public sealed class PlcWorkerRobustnessTests
         ["diagnostics.ExecuteProbeMasterCopy"] = "default",
         ["diagnostics.ExportProbeAlarmTextLists"] = "importExport",
         ["diagnostics.ReadProbePortalInfo"] = "default",
+        ["diagnostics.ReadProbeProjectTexts"] = "importExport",
         ["diagnostics.ReadProbeSivarc"] = "default",
         ["plc-analysis.ExportBlockDocument"] = "default",
         ["plc-compile.ExecutePlcOrganisation"] = "compile",
@@ -544,7 +545,9 @@ public sealed class PlcWorkerRobustnessTests
             .Where(field => field.IsLiteral && field.FieldType == typeof(string)).Select(field => (string)field.GetRawConstantValue()!);
         string dispatcher = File.ReadAllText(Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
             "src", "PlcWorker", "FoundationWorkerDispatcher.cs"));
-        var direct = Regex.Matches(dispatcher, "new WorkerOperationModule\\(\"([^\"]*)\", typeof\\(PlcFoundationEngine\\), new\\[\\] \\{([^}]+)\\}")
+        var direct = Regex
+            .Matches(dispatcher,
+                "new WorkerOperationModule\\(\"([^\"]*)\", typeof\\((?:PlcFoundationEngine|ProjectTextProbeWorker)\\), new\\[\\] \\{([^}]+)\\}")
             .SelectMany(module => Regex.Matches(module.Groups[2].Value, "\"([^\"]+)\"")
                 .Select(name => module.Groups[1].Value + "." + name.Groups[1].Value)).ToArray();
         Assert.NotEmpty(direct);

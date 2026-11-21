@@ -73,7 +73,8 @@ namespace TiaMcpServer.ModelContextProtocol
             private readonly List<XElement> _accesses = new List<XElement>();
             private readonly List<Element> _elements = new List<Element>();
             private readonly Net _rail = new Net(new Pin());
-            internal Compiler(FlgNetFormat format) { _ns = format.Namespace; }
+            private readonly bool arrayIndex;
+            internal Compiler(FlgNetFormat format) { _ns = format.Namespace; arrayIndex = format.ArrayIndex; }
 
             private XElement Access(LadOperand operand)
             {
@@ -97,6 +98,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var xml = new XElement(_ns + "Component", new XAttribute("Name", component.Name));
                     if (component.Index != null)
                     {
+                        if (!arrayIndex) throw new ArgumentException("Array indices require V15.1 or later.");
                         xml.Add(new XAttribute("AccessModifier", "Array"));
                         foreach (int index in component.Index)
                             xml.Add(new XElement(_ns + "Access", new XAttribute("Scope", "LiteralConstant"),

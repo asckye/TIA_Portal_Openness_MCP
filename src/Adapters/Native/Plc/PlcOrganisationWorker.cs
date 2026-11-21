@@ -81,7 +81,8 @@ namespace TiaMcp.Adapters
                     break;
 #endif
                     case "ImportTechnologyObject": adapter
-                        .ImportTechnologyObject(request.SoftwarePath, request.GroupPath, request.FilePath, true, new List<string>()); reply.Found = true; break;
+                        .ImportTechnologyObject(request.SoftwarePath, request.GroupPath, request.FilePath, request.Overwrite, new List<string>(), dryRun); reply
+                            .Found = true; break;
                     case "ImportTechnologyObjectsFromDirectory": reply.Batch = adapter
                         .ImportTechnologyObjectsFromDirectory(request.SoftwarePath, request.GroupPath, request.FilePath, request.RegexName, request.Overwrite);
                     break;

@@ -82,6 +82,7 @@ public sealed class OnlinePortAdmissionTests
     }
 
     [Theory]
+    [InlineData("18", "ManagePlcDataBlockSnapshot", "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"DB1\",\"action\":\"createSnapshot\"}")]
     [InlineData("20", "ManagePlcDataBlockSnapshot", "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"DB1\",\"action\":\"createSnapshot\"}")]
     [InlineData("16", "ConnectOnlinePlc", "{\"softwarePath\":\"PLC_1\",\"userName\":\"fixture\"}")]
     [InlineData("14sp1", "ConnectOnlinePlc", "{\"softwarePath\":\"PLC_1\",\"ipAddress\":\"127.0.0.1\"}")]
@@ -110,6 +111,8 @@ public sealed class OnlinePortAdmissionTests
             return;
         }
         Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)result.StructuredContent!["error"]?["code"]);
+        if (release == "18" && name == "ManagePlcDataBlockSnapshot")
+            Assert.Contains("ValueService", (string?)result.StructuredContent["error"]?["message"], StringComparison.Ordinal);
         Assert.NotEqual("unknown", (string?)result.StructuredContent["meta"]!["outcome"]);
         Assert.Equal(0, worker.Calls);
     }

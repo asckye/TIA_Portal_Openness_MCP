@@ -81,9 +81,10 @@ namespace TiaMcp.Adapters.Native.Plc
                             .Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false))
                     };
 
-                data["serverInterfaces"] = CollectOpcUaItems(PlcB5Scalar.TryProperty(sig, "ServerInterfaces"));
-                data["simaticInterfaces"] = CollectOpcUaItems(PlcB5Scalar.TryProperty(sig, "SimaticInterfaces"));
-                data["referenceNamespaces"] = CollectOpcUaItems(PlcB5Scalar.TryProperty(sig, "ReferenceNamespaces"));
+                string? editingCulture = _session.CurrentProject?.LanguageSettings?.EditingLanguage?.Culture?.Name;
+                data["serverInterfaces"] = CollectOpcUaItems(PlcB5Scalar.TryProperty(sig, "ServerInterfaces"), editingCulture);
+                data["simaticInterfaces"] = CollectOpcUaItems(PlcB5Scalar.TryProperty(sig, "SimaticInterfaces"), editingCulture);
+                data["referenceNamespaces"] = CollectOpcUaItems(PlcB5Scalar.TryProperty(sig, "ReferenceNamespaces"), editingCulture);
 
                 return new PlcB5Reply { Ok = true, Message = $"OPC UA config read for '{softwarePath}'.", Data = data };
             }
@@ -93,7 +94,7 @@ namespace TiaMcp.Adapters.Native.Plc
             }
         }
 
-        private static PlcB5Array CollectOpcUaItems(object? collection)
+        private static PlcB5Array CollectOpcUaItems(object? collection, string? editingCulture)
         {
             var arr = new PlcB5Array();
             if (collection is not IEnumerable items || collection is string) return arr;
@@ -104,7 +105,10 @@ namespace TiaMcp.Adapters.Native.Plc
                 foreach (var prop in new[] { "Name", "Comment", "Author", "Enabled", "UseStringNodeIds", "GenerateNodes", "GeneratedInterfaceName" })
                 {
                     var val = PlcB5Scalar.TryProperty(item, prop);
-                    if (val != null) obj[prop] = PlcB5Scalar.Value(val.ToString());
+                    if (val is MultilingualText comment)
+                        obj[prop] = PlcB5Scalar.CommentText(comment.Items.Cast<MultilingualTextItem>(), editingCulture,
+                            itemText => itemText.Language?.Culture?.Name, itemText => itemText.Text);
+                    else if (val != null) obj[prop] = PlcB5Scalar.Value(val.ToString());
                 }
                 arr.Add(obj);
             }
@@ -285,7 +289,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     Message = $"Import file not found: {importPath}", Meta = ResponseMeta
                         .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
                 };
-                var interfaceName = Path.GetFileNameWithoutExtension(importPath);
+                var interfaceName = interfaceType == "ServerInterface" ? PlcOpcUaImportDocument.InterfaceName(fi) : Path
+                    .GetFileNameWithoutExtension(importPath);
                 var existing = FindByName(collection, interfaceName);
 
                 object? target = existing; bool createdNow = false;

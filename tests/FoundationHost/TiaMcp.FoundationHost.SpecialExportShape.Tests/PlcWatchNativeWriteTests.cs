@@ -203,6 +203,7 @@ public sealed class PlcWatchNativeWriteTests
         Assert.NotNull(imported); Assert.Equal(1, imported.DeleteCalls); Assert.Empty(group.StoredWatchTables);
         Assert.Equal(true, outer["rollbackCompleted"]); Assert.Equal(false, outer["unrestoredWrite"]);
         Assert.Empty((List<object?>)outer["cleanupRequired"]!);
+        Assert.Single((List<object?>)outer["restoredChanges"]!);
     }
 
     [Fact]

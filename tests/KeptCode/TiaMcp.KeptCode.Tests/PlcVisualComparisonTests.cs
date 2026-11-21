@@ -43,6 +43,15 @@ public sealed class PlcVisualComparisonTests : IDisposable
         </Member>
         """;
 
+    [Fact]
+    public void Summary_reports_a_document_only_change()
+    {
+        var before = Block("17", ObMembers());
+        var result = Compare(before, before.Replace("<Name>Example</Name>", "<Name>Renamed</Name>"));
+        Assert.False((bool?)result["documentDiff"]!["identicalAfterNormalization"]);
+        Assert.Equal("Changed", (string?)result["state"]);
+    }
+
     private string Write(string name, string text)
     {
         Directory.CreateDirectory(root);

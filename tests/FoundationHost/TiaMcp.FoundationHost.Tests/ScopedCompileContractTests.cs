@@ -37,6 +37,26 @@ public sealed class ScopedCompileContractTests
         Assert.Equal(0, worker.Calls);
     }
 
+    [Fact]
+    public void Block_scope_keeps_errors_from_other_blocks()
+    {
+        var result = new PlcScopedCompileResult { Scope = "block", ErrorCount = 2 };
+        PlcCompilePolicy.Classify(result, new[] {
+            new PlcDiagnostic { State = "Error", Formatted = "Main: tag missing", InRequestedBlock = true },
+            new PlcDiagnostic { State = "Error", Formatted = "Helper: bad operand" }
+        }, blockScope: true);
+        Assert.Equal(new[] { "Main: tag missing" }, result.Errors);
+        Assert.Equal(new[] { "Helper: bad operand" }, result.OtherErrors);
+        Assert.Equal(2, result.ErrorCount);
+    }
+
+    [Fact]
+    public void Unit_scope_begins_at_V16()
+    {
+        Assert.Throws<AdapterPreconditionException>(() => PlcCompilePolicy.RequireScope("15.1", "unit", "Unit", ""));
+        Assert.Equal(new[] { "Unit" }, PlcCompilePolicy.RequireScope("16", "unit", "Unit", ""));
+    }
+
     private const string Project = "C:/Projects/Scoped.ap21";
     private sealed class Worker : IFoundationWorker
     {

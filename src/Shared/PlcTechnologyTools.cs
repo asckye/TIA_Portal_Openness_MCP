@@ -56,7 +56,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var result = _technology.ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName, dryRun,
                     expectedPlanHash, confirm, expectedProjectFile);
                 // Report the exported and failed counts even when the batch contains no objects.
-                var exportedCount = result.Imported?.Count() ?? 0; var failedCount = result.Failed?.Count() ?? 0;
+                var exportedCount = dryRun ? (result.Meta?["items"] as JsonArray)?.Count ?? 0 : result.Imported?.Count() ?? 0;
+                var failedCount = result.Failed?.Count() ?? 0;
                 result.Message = $"{(dryRun ? "Previewed" : "Exported")} {exportedCount} technology object(s) to '{exportDir}'. Failed={failedCount}"
                     + (failedCount > 0 ? ": " + string.Join(" | ", result.Failed!.Take(5).Select(f => f.Path + " -> " + (f.Error ?? "").Split('\n')[0])) : "");
                 // envelope: legacy-existing-meta
@@ -84,23 +85,26 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedPlanHash: planHash returned by this tool's dry-run preview; required when dryRun=false.")] string expectedPlanHash = "",
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
-                "")
+                "",
+            [Description("Allow replacement of an existing technology object with the same name.")] bool overwrite = false)
             => McpServer
-                .RunWritePreview("ImportTechnologyObject", dryRun, new { softwarePath, folderPath, importPath }, () => EngineeringToolContract
-                    .Run("ImportTechnologyObject", true, () => ImportTechnologyObject(softwarePath, folderPath, importPath)), expectedPlanHash,
-                    expectedProjectFile);
+                .RunNativeWritePreview("ImportTechnologyObject", dryRun, new { softwarePath, folderPath, importPath, overwrite },
+                    () => EngineeringToolContract.Run("ImportTechnologyObject", false,
+                        () => ImportTechnologyObject(softwarePath, folderPath, importPath, overwrite, true)),
+                    () => EngineeringToolContract.Run("ImportTechnologyObject", true,
+                        () => ImportTechnologyObject(softwarePath, folderPath, importPath, overwrite, false)), expectedPlanHash, expectedProjectFile);
 
         public ResponseMessage ImportTechnologyObject(
             string softwarePath,
             string folderPath,
-            string importPath)
+            string importPath, bool overwrite = false, bool dryRun = false)
         {
             try
             {
-                _technology.ImportTechnologyObject(softwarePath, folderPath, importPath);
+                _technology.ImportTechnologyObject(softwarePath, folderPath, importPath, overwrite, dryRun);
                 return new ResponseMessage
                 {
-                    Message = $"Technology object imported from '{importPath}'",
+                    Message = dryRun ? "Technology object import preview." : $"Technology object imported from '{importPath}'",
                     Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
@@ -108,7 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 throw new McpException($"Failed importing technology object from '{importPath}' [{pex.Code}]: {pex.Message}", pex, McpErrorCode.InternalError);
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex) when (ex is not McpException && ex is not TiaMcp.Adapters.Contracts.AdapterPreconditionException)
             {
                 throw new McpException($"Unexpected error importing technology object: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
@@ -130,8 +134,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            => McpServer
-                .RunWritePreview("ImportTechnologyObjectsFromDirectory", dryRun, new { softwarePath, folderPath, dir, regexName, overwrite }, () =>
+            => McpServer.RunWritePreview("ImportTechnologyObjectsFromDirectory", dryRun, new { softwarePath, folderPath, dir, regexName, overwrite }, () =>
                     EngineeringToolContract
                 .Run("ImportTechnologyObjectsFromDirectory", true, () =>
                     ImportTechnologyObjectsFromDirectory(softwarePath, folderPath, dir, regexName, overwrite)), expectedPlanHash, expectedProjectFile);

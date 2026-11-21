@@ -12,6 +12,37 @@ using Xunit;
 
 public sealed class B3HostPortsTests
 {
+    [Theory]
+    [InlineData("tags", "Program blocks")]
+    [InlineData("technology", "程序块")]
+    [InlineData("watchTables", "Program blocks")]
+    [InlineData("externalSources", "程序块")]
+    public void Non_block_group_names_are_forwarded_literally(string family, string group)
+    {
+        using var fixture = new TiaMcp.FoundationHost.Tests.PreviewHostFixture("21");
+        using var session = fixture.Pipeline.EnterSession();
+        var service = new Service((_, args) => {
+            Assert.Equal(group, (string?)args["request"]?["GroupPath"]);
+            return new JsonObject { ["Message"] = group, ["Meta"] = new JsonObject() };
+        }, () => true, () => "fixture.ap21");
+        Assert.Equal(group, service.ManagePlcUserGroup("PLC", family, group, "create").Message);
+    }
+
+    [Theory]
+    [InlineData("readComposition")]
+    [InlineData("createEntry")]
+    [InlineData("deleteEntry")]
+    public void Supervision_composition_actions_identify_the_missing_argument(string action)
+    {
+        using var host = new TiaMcp.FoundationHost.Tests.PreviewHostFixture("17");
+        using var session = host.Pipeline.EnterSession();
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcB5PortService(
+            (_, _) => throw new InvalidOperationException("Unexpected dispatch"), () => "fixture.ap17");
+        var result = new Host.PlcProDiagTools(service).ManagePlcSupervision("PLC", action).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
+        Assert.Equal("/compositionName", (string?)result["error"]?["details"]?["parameter"]);
+    }
+
     private static readonly IReadOnlyDictionary<string, int> FirstRelease = new Dictionary<string, int> {
         ["ManagePlcBlockProtection"] = 15, ["ListPlcSystemGroups"] = 14, ["CreatePlcInstanceDb"] = 15,
         ["SetPlcProgram"] = 18, ["GetPlcCrossReferences"] = 18, ["CreateHardwareCatalogDevice"] = 18,

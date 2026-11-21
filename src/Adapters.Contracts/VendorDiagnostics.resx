@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="NoExportableAlarms" xml:space="preserve"><value>没有可导出的报警</value></data>
+  <data name="NoExportableAlarms.ReleaseKeys" xml:space="preserve"><value>V19,V20</value></data>
+  <data name="NoExportableAlarms.Evidence" xml:space="preserve"><value>rc-full-v19/raw-B/391,rc-full-v20/raw-B/331</value></data>
+</root>

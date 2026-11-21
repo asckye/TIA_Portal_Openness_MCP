@@ -432,7 +432,14 @@ public sealed class PortedPortalAdmissionTests
             Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
             Assert.Equal("connect-portal", (string?)body["error"]?["details"]?["condition"]);
         }
-        if (inputs != null)
+        if (name == "ImportTechnologyObject")
+        {
+            Assert.False((bool?)body["ok"]);
+            Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Equal("connect-portal", (string?)body["error"]?["details"]?["condition"]);
+            Assert.Null(body["data"]?["planHash"]);
+        }
+        else if (inputs != null)
         {
             Assert.True((bool?)body["ok"]);
             Assert.True((bool?)body["data"]?["dryRun"]);

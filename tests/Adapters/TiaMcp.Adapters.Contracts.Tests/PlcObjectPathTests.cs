@@ -350,6 +350,13 @@ public sealed class PlcObjectPathTests
         var parent = Assert.Single(root.Groups);
         Assert.Equal("G/A", parent.Name);
         Assert.Equal("Sub%", Assert.Single(parent.Groups).Name);
+        var refusal = Assert.Throws<AdapterPreconditionException>(() =>
+            TiaMcp.Adapters.Native.Plc.PlcGroupOperations.Manage(root, "G%2FA", "deleteEmpty", "", true, "Blocks", pathParts: parse));
+        var evidence = new Dictionary<string, object?> { ["mayHaveChanged"] = false };
+        MutationEvidence.RecordStepFailure(refusal, evidence);
+        Assert.Equal("PRECONDITION_FAILED", evidence["v4FailureCode"]);
+        Assert.Equal("PreconditionFailed", evidence["status"]);
+        Assert.Equal("group-not-empty", evidence["precondition"]);
         TiaMcp.Adapters.Native.Plc.PlcGroupOperations.Manage(root, "G%2FA/Sub%25", "rename", "Renamed", false, "Blocks", pathParts: parse);
         Assert.Equal("Renamed", Assert.Single(parent.Groups).Name);
         TiaMcp.Adapters.Native.Plc.PlcGroupOperations.Manage(root, "G%2FA/Renamed", "deleteEmpty", "", false, "Blocks", pathParts: parse);

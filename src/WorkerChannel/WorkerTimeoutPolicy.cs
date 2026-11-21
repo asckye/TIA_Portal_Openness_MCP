@@ -145,6 +145,7 @@ namespace TiaMcp.WorkerChannel
             ["plc-alarms.ExecutePlcB5"] = "default",
             ["diagnostics.ExecuteProbeMasterCopy"] = "default",
             ["diagnostics.ExportProbeAlarmTextLists"] = "importExport",
+            ["diagnostics.ReadProbeProjectTexts"] = "importExport",
             ["diagnostics.ReadProbePortalInfo"] = "default",
             ["diagnostics.ReadProbeSivarc"] = "default",
             ["plc-analysis.ExportBlockDocument"] = "default",

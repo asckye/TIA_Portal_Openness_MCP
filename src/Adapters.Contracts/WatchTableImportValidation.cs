@@ -33,6 +33,8 @@ namespace TiaMcp.Adapters.Contracts
                 .SelectMany(list => list.Elements().Where(e => e.Name.LocalName == "Name")).ToArray()).ToArray();
             if (names.Any(items => items.Length != 1 || string.IsNullOrWhiteSpace(items[0].Value)))
                 throw new ArgumentException("Each native PLC table must have one nonempty AttributeList/Name.");
+            if (names.Any(items => items[0].Value != items[0].Value.Trim()))
+                throw new ArgumentException("Table names cannot have leading or trailing whitespace.");
             return names.Select(items => items[0].Value).ToArray();
         }
     }

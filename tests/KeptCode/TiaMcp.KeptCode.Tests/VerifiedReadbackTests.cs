@@ -51,6 +51,25 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(false, meta["success"]);
         }
 
+        [Fact]
+        public void Patch_round_trips_an_encoded_member_and_matches_the_exported_culture()
+        {
+            string xml = Xml(false).Replace("Name=\"Speed\"", "Name=\"Line/A%1\"");
+            var inspected = PlcDocumentEditing.Inspect(xml);
+            string changes = """
+                [{"action":"setMemberStartValue","section":"Input","memberPath":"Line%2FA%251","expectedValue":"1","value":"2"},
+                 {"action":"setMemberComment","section":"Input","memberPath":"Line%2FA%251","culture":"en-us","expectedValue":"","value":"Motor"},
+                 {"action":"setNetworkText","networkIndex":0,"field":"Title","culture":"en-us","expectedValue":"Original","value":"Edited"}]
+                """;
+            var patched = PlcDocumentEditing.Patch(xml, changes, (string)inspected["documentFingerprint"]!);
+            Assert.Contains("<StartValue>2</StartValue>", patched);
+            Assert.Contains("<Text>Edited</Text>", patched);
+            Assert.Contains("<MultiLanguageText Lang=\"en-US\">Motor</MultiLanguageText>", patched);
+            Assert.Contains("Line%2FA%251", inspected.ToJsonString());
+            string udt = xml.Replace("SW.Blocks.FC", "SW.Types.PlcStruct");
+            Assert.Contains("ImportPlcType", Assert.Throws<AdapterPreconditionException>(() => PlcVerifiedImport.CandidateName(udt)).Message);
+        }
+
         private static string Xml(bool readOnly) => """
             <Document><Engineering version="V21"/><SW.Blocks.FC ID="0"><AttributeList>
             <Name>FC_Fixture</Name><Number>7</Number><ProgrammingLanguage>LAD</ProgrammingLanguage>

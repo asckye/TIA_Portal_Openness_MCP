@@ -53,7 +53,8 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 // Keep the typed precondition and its recovery evidence across the worker boundary.
                 Exception mapped = code == nameof(AdapterPreconditionException) && (bool?)reply["MayHaveChanged"] != true
-                    ? new AdapterPreconditionException(message, null, false)
+                    ? new AdapterPreconditionException(message, request.Operation == "ImportTechnologyObject" ? (string?)failure["Evidence"]?["parameter"]
+                            : null, false)
                     : code == nameof(ArgumentException) ? new ArgumentException(message)
                     : code == nameof(NotSupportedException) ? new NotSupportedException(message)
                     : code == nameof(System.IO.IOException) ? new System.IO.IOException(message)
@@ -97,9 +98,13 @@ namespace TiaMcpServer.Siemens.Services
         public JsonObject DeletePlcTagTable(string softwarePath, string tagTableName, bool dryRun, bool crossReferences = false)
             => Delete("DeletePlcTagTable", softwarePath, tagTableName, dryRun, crossReferences);
 
-        internal static void ValidateGroup(string path, bool types)
+        internal static void ValidateGroup(string path, bool types, bool blocks = true)
         {
-            try { PlcOrganisationPaths.Parse(path, types); }
+            try {
+                if (types || blocks) PlcOrganisationPaths.Parse(path, types);
+                else if ((path ?? "").Replace('\\', '/').Split('/').Any(segment => string.IsNullOrWhiteSpace(segment) || segment == "." || segment == ".."))
+                    throw new PlcSoftwareException("InvalidParams", "Specify a non-root group path without empty or relative segments.");
+            }
             catch (PlcSoftwareException error) { throw new AdapterPreconditionException(error.Message, "groupPath", isArgument: true, innerException: error); }
         }
         public JsonObject CreatePlcTypeGroup(string softwarePath, string groupPath, bool dryRun = true)
@@ -166,7 +171,7 @@ namespace TiaMcpServer.Siemens.Services
 
             var unavailable = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, "ManagePlcUserGroup", action, family);
             if (unavailable != null) throw new NotSupportedException(unavailable);
-            ValidateGroup(groupPath, family == "types");
+            ValidateGroup(groupPath, family == "types", family == "blocks");
             if (!hasProject()) return NoProject("ManagePlcUserGroup");
             return Step(Invoke(new PlcSoftwareRequest { Operation = "ManagePlcUserGroup", SoftwarePath = softwarePath,
                 Family = family, GroupPath = groupPath, Action = action, NewName = newName, DryRun = dryRun }));

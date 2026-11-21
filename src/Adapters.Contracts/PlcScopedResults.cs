@@ -10,6 +10,7 @@ namespace TiaMcp.Adapters.Contracts
         public string UnitName { get; internal set; } = "";
         public string ResolvedObject { get; internal set; } = "";
         public string[] CompiledRoots { get; internal set; } = Array.Empty<string>();
+        public string[] OtherErrors { get; internal set; } = Array.Empty<string>();
         public bool ScopeMismatch { get; internal set; }
         public bool Compilable { get; internal set; }
         public bool ApplyBlocked => !Compilable;

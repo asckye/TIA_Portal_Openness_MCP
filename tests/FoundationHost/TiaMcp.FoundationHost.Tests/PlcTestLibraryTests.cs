@@ -20,6 +20,21 @@ public sealed class PlcTestLibraryTests : IDisposable
     private PlcTestLibrary Store => new(Library);
     private Tools Tool => new(() => Library, () => Runs);
 
+    [Fact]
+    public void Locked_case_errors_identify_the_exception_without_exposing_the_library_path()
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "21");
+        Store.Save(PlcTestCaseDocument.Parse(Scenario));
+        using var locked = File.Open(Path.Combine(Library, "cases", "conveyor-start.json"), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        Assert.Equal(nameof(IOException), (string?)Store.List()["items"]![0]!["error"]);
+        var result = Tool.ManagePlcTestLibrary("read", id: "conveyor-start").StructuredContent!;
+        Assert.Contains(nameof(IOException), (string)result["error"]!["message"]!);
+        Assert.DoesNotContain(Library, result.ToJsonString(), StringComparison.OrdinalIgnoreCase);
+        var missing = Tool.ManagePlcTestLibrary("save").StructuredContent!;
+        Assert.Equal("/testCase", (string?)missing["error"]!["details"]!["parameter"]);
+    }
+
     private const string Scenario = """
         {"schemaVersion":1,"id":"conveyor-start","title":"Conveyor starts when Start is pressed","requirement":"REQ-012",
         "tags":["fat","conveyor"],"kind":"plcsimScenario","scenario":{"instance":"PLC_1","mode":"singleStep","stopOnFailure":true,

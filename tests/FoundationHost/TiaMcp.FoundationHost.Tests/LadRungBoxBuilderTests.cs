@@ -67,6 +67,26 @@ public sealed class LadRungBoxBuilderTests
             .Descendants(Ns + "FlgNet").Single();
     }
 
+    [Fact]
+    public void Direct_builder_refuses_an_indexed_symbol_in_the_v14_sp1_wire_format()
+    {
+        var coil = Coil();
+        coil["operand"] = new JsonObject { ["global"] = new JsonArray("DB", new JsonObject { ["name"] = "Flags", ["index"] = new JsonArray(1) }) };
+        var input = new ConstructionInput<LadFcBlockSpec>().Read(Block(coil).ToJsonString(), "ladFcBlock");
+        Assert.True(input.IsValid, V4Json.Serialize(input.Error));
+        var rung = input.Value!.Networks.Single().Rung!;
+        Assert.Throws<ArgumentException>(() => FlgNetRungXmlBuilder.Build(rung, FlgNetFormat.ForRelease("14sp1"), Array.Empty<string>()));
+        Assert.Contains("AccessModifier=\"Array\"", FlgNetRungXmlBuilder.Build(rung, FlgNetFormat.ForRelease("17"), Array.Empty<string>()).ToString());
+    }
+
+    [Fact]
+    public void User_motion_block_can_be_called_by_its_declared_name()
+    {
+        var call = Call("FB");
+        call["block"] = "MC_Conveyor";
+        Assert.Equal("MC_Conveyor", (string?)Build(call).Descendants(Ns + "CallInfo").Single().Attribute("Name"));
+    }
+
     public static IEnumerable<object[]> Elements()
     {
         foreach (string type in new[] { "TON", "TOF", "TP" })
@@ -149,6 +169,10 @@ public sealed class LadRungBoxBuilderTests
         item = Call(); item["pins"]![0]!["value"] = new JsonObject { ["local"] = new JsonArray("SECRET_CANARY") };
         yield return Invalid(item, "/pins/0/value");
         foreach (string name in new[] { "MC_Power", "TON", "ctud", "Library.Block", "SECRET_CANARY/path" })
+        {
+            item = Call(); item["block"] = name; yield return Invalid(item, "/block");
+        }
+        foreach (string name in new[] { "TSEND_C", "SEL", "LIMIT", "NORM_X", "SCALE_X", "MOVE_BLK", "GET", "PUT", "TRCV_C", "RD_SYS_T" })
         {
             item = Call(); item["block"] = name; yield return Invalid(item, "/block");
         }

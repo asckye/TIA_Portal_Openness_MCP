@@ -11,6 +11,10 @@ public sealed class SimaticCallTests
     {
         string directory = Path.Combine(AppContext.BaseDirectory, "Fixtures", "SimaticMl", "17");
         string file = Path.Combine(directory, "MCP_RC_FB.xml");
+        var xml = XDocument.Load(file);
+        string code = string.Join("\n", xml.Descendants().Where(e => e.Name.LocalName == "NetworkSource").Select(LadTextRenderer.Code));
+        Assert.Contains("\"MCP_RC_FC\"(", code);
+        Assert.DoesNotContain("\"\"MCP_RC_FC\"\"", code);
         var doc = OfflineAnalysisLogic.ParseFile(file);
         Assert.Equal("FC:MCP_RC_FC", Assert.Single(doc.BlockCalls));
         Assert.Contains("\"MCP_RC_FC\"(", string.Join("\n", doc.Networks.SelectMany(n => n.SourceLines)));

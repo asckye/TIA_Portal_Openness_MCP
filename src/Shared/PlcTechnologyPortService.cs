@@ -17,10 +17,11 @@ namespace TiaMcpServer.Siemens.Services
                 Message = (string?)batch["Message"], Imported = JsonSerializer.Deserialize<List<string>>(batch["Imported"]!.ToJsonString()),
                 Failed = JsonSerializer.Deserialize<List<ImportFailure>>(batch["Failed"]!.ToJsonString()), Meta = batch["Meta"]?.DeepClone() as JsonObject };
         }
-        public void ImportTechnologyObject(string softwarePath, string folderPath, string importPath)
+        public void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = false)
             =>
                 Invoke(new PlcSoftwareRequest {
-                    Operation = "ImportTechnologyObject", SoftwarePath = softwarePath, GroupPath = folderPath, FilePath = importPath, DryRun = false });
+                    Operation = "ImportTechnologyObject", SoftwarePath = softwarePath, GroupPath = folderPath, FilePath = importPath,
+                    Overwrite = overwrite, DryRun = dryRun });
         public ResponseImportBatch ImportTechnologyObjectsFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "",
                 bool overwrite = false)
             =>

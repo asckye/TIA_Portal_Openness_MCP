@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -34,6 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static XElement Block(XDocument d) => d.Root!.Elements().Single(x => x.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal)
             || x.Name.LocalName == "SW.Types.PlcStruct");
         public static XDocument Parse(string xml) => ParseDocument(xml, false);
+        public static XDocument ParseBlockImport(string xml) => ParseDocument(xml, false, blockImport: true);
         private static XDocument ParseDocument(string xml, bool editable, bool blockImport = false)
         {
             if (Encoding.UTF8.GetByteCount(xml) > MaxBytes) throw new ArgumentException("XML exceeds 16 MiB.");
@@ -134,7 +136,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var section = member.Ancestors().FirstOrDefault(e => e.Name.LocalName == "Section");
                     var path = string
                         .Join("/", member.AncestorsAndSelf().Reverse().Where(e => e.Name.LocalName == "Member")
-                            .Select(e => (string?)e.Attribute("Name") ?? ""));
+                            .Select(e => ObjectPathEncoding.EncodeSegment((string?)e.Attribute("Name") ?? "")));
                     var comments = new JsonObject();
                     foreach (var text in member.Elements().Where(e => e.Name.LocalName == "Comment")
                             .Elements().Where(e => e.Name.LocalName == "MultiLanguageText"))
@@ -187,29 +189,31 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (c.Any(p => !allowed.Contains(p.Key))) throw new ArgumentException("Unknown patch property.");
                 if (action == "setMemberComment")
                 {
-                    var member = FindMember(d, Get("section"), Get("memberPath"));
+                    var member = FindMember(d, Get("section"), MemberPath(Get("memberPath")));
                     var culture = Get("culture");
                     if (!Regex.IsMatch(culture, @"\A[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}\z"))
                         throw new ArgumentException("culture must be a culture name such as zh-CN.");
                     cultures ??= new HashSet<string>(d.Descendants().Where(e => e.Name.LocalName == "MultilingualTextItem")
                         .Select(e => Value(Child(e, "AttributeList"), "Culture"))
                         .Concat(d.Descendants().Where(e => e.Name.LocalName == "MultiLanguageText")
-                            .Select(e => (string?)e.Attribute("Lang") ?? "")).Where(c => c.Length > 0), StringComparer.Ordinal);
-                    if (cultures.Count > 0 && !cultures.Contains(culture))
+                            .Select(e => (string?)e.Attribute("Lang") ?? "")).Where(c => c.Length > 0), StringComparer.OrdinalIgnoreCase);
+                    if (cultures.Count == 0) cultures.Add(culture);
+                    if (!cultures.TryGetValue(culture, out var documentCulture))
                         throw new ArgumentException("culture " + culture
                                 + " does not occur in this document; use a project language that the export contains.");
-                    if (!used.Add((member, culture)))
+                    if (!used.Add((member, culture.ToUpperInvariant())))
                         throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
-                    SetMemberComment(member, culture, Get("expectedValue"), Get("value"));
+                    SetMemberComment(member, documentCulture, Get("expectedValue"), Get("value"));
                     continue;
                 }
                 if (action == "setMemberStartValue")
                 {
-                    var section = Get("section"); var path = Get("memberPath").Split('/');
+                    var section = Get("section"); var path = MemberPath(Get("memberPath"));
                     var current = FindMember(d, section, path);
                     if (current.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections"))
                         throw new ArgumentException("Select a scalar member.");
-                    target = Child(current, "StartValue"); // Do not invent missing/default/array value shapes.
+                    target = current.Elements().SingleOrDefault(e => e.Name.LocalName == "StartValue")
+                        ?? throw new ArgumentException("Selected member has no explicit StartValue.");
                     if (!used.Add((target, ""))) throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
                     SetMemberStartValue(d, section, path, Get("expectedValue"), Get("value"));
                     continue;
@@ -230,7 +234,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     var text = Child(owner, "ObjectList").Elements()
                         .Single(e => e.Name.LocalName == "MultilingualText" && (string?)e.Attribute("CompositionName") == field);
                     var item = text.Descendants()
-                        .Single(e => e.Name.LocalName == "MultilingualTextItem" && Value(Child(e, "AttributeList"), "Culture") == Get("culture"));
+                        .Single(e => e.Name.LocalName == "MultilingualTextItem" && string
+                                .Equals(Value(Child(e, "AttributeList"), "Culture"), Get("culture"), StringComparison.OrdinalIgnoreCase));
                     target = Child(Child(item, "AttributeList"), "Text");
                 }
                 if (target.HasElements || !used.Add((target, "")) || target.Value != Get("expectedValue"))
@@ -239,8 +244,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return d.ToString();
         }
-        private static XElement FindMember(XDocument d, string section, string memberPath)
-            => FindMember(d, section, memberPath.Split('/'));
+        private static string[] MemberPath(string path) => Array.ConvertAll(path.Split('/'), ObjectPathEncoding.DecodeSegment);
         private static XElement FindMember(XDocument d, string section, string[] path)
         {
             var sections = Child(Child(Block(d), "AttributeList"), "Interface").Descendants()
@@ -248,7 +252,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (sections.Length != 1) throw new ArgumentException("Section is absent or ambiguous.");
             var current = sections[0];
             foreach (var segment in path)
-                current = current.Elements().Single(e => e.Name.LocalName == "Member" && (string?)e.Attribute("Name") == segment);
+            {
+                var matches = current.Elements().Where(e => e.Name.LocalName == "Member" && (string?)e.Attribute("Name") == segment).ToArray();
+                if (matches.Length != 1) throw new ArgumentException("Member path is absent or ambiguous: " + segment);
+                current = matches[0];
+            }
             if (current.AncestorsAndSelf().Any(e => e.Attributes()
                     .Any(a => (a.Name.LocalName == "ReadOnly" || a.Name.LocalName == "Informative")
                         && a.Value.Equals("true", StringComparison.OrdinalIgnoreCase))))
@@ -284,7 +292,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var comment = member.Elements().SingleOrDefault(e => e.Name.LocalName == "Comment");
             if (((string?)comment?.Attribute("Informative"))?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
                 throw new ArgumentException("Read-only/informative member cannot be edited.");
-            var entry = comment?.Elements().SingleOrDefault(e => e.Name.LocalName == "MultiLanguageText" && (string?)e.Attribute("Lang") == culture);
+            var entry = comment?.Elements()
+                .SingleOrDefault(e => e.Name.LocalName == "MultiLanguageText" && string
+                    .Equals((string?)e.Attribute("Lang"), culture, StringComparison.OrdinalIgnoreCase));
             if (entry?.HasElements == true || (entry?.Value ?? "") != expectedValue)
                 throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
             if (value.Length == 0)

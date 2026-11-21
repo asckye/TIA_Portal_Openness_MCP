@@ -70,6 +70,17 @@ namespace TiaMcp.Adapters.Native.Plc
     internal static class PlcB5Scalar
     {
         internal static object? Value(object? value) => value;
+        internal static string CommentText<T>(IEnumerable<T> items, string? editingCulture, Func<T, string?> culture, Func<T, string?> text) where T : class
+        {
+            T? first = null;
+            foreach (var item in items)
+            {
+                first ??= item;
+                if (editingCulture == null || string.Equals(culture(item), editingCulture, StringComparison.OrdinalIgnoreCase))
+                    return text(item) ?? "";
+            }
+            return first == null ? "" : text(first) ?? "";
+        }
         internal static bool Scalar(Type type) => HardwareScalarEvidence.Scalar(type);
         internal static object? Json(object? value) => HardwareAddressingPolicy.ScalarValue(value);
         internal static PlcB5Object Read(object target) => new PlcB5Object(HardwareScalarEvidence.Read(target));

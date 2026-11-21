@@ -44,6 +44,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 "", string targetGroupPath = "",
             string newName = "", bool confirmDelete = false, bool dryRun = true)
             => _session.RunHmiStepTool("ManagePlcExternalSources", meta => {
+                meta["action"] = action;
                 if (unitName.Length == 0 && (action is "createGroup" or "renameGroup" or "deleteGroup"
                     || groupPath.Length == 0 && (action is "createFromFile" or "delete"
                         || action == "generateBlocks" && targetKind.Length == 0 && targetGroupPath.Length == 0 && generateOption == "None")))
@@ -58,7 +59,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 PlcExternalSourceSystemGroup root = ExternalSourceRootOf(plc, unit);
                 PlcExternalSourceGroup group = (PlcExternalSourceGroup)PlcGroupOperations.Group(root, groupPath);
                 PlcExternalSourceComposition sources = Documents.Sources(group); PlcExternalSourceUserGroupComposition groups = Documents.SourceGroups(group);
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["container"] = new Dictionary<string, object?> {
+                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["container"] = new Dictionary<string, object?> {
                     ["unit"] = unit == null ? null : PlcGroupOperations.Get(unit, "Name"), ["group"] = Documents.Name(group), ["groupPath"] = groupPath };
                 if (action == "list") {
                     meta["group"] = ExternalSourceGroupRow(group); meta["apiCallSuccess"] = true; return "External source group listed; no changes."; }

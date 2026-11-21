@@ -6,6 +6,62 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class PlcB5PortTests
 {
     [Theory]
+    [InlineData("17", false)]
+    [InlineData("18", true)]
+    public void Missing_list_guidance_names_the_creation_tool_only_where_registered(string release, bool registered)
+    {
+        var hint = PlcAlarmExportPolicy.MissingTextListGuidance(release);
+        Assert.Equal(registered, hint.Contains("ManagePlcAlarmTextList createFromMasterCopy", StringComparison.Ordinal));
+        Assert.Contains("TIA", hint, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Alarm_export_requires_the_selected_user_lists_and_recognises_the_native_empty_alarm_refusal()
+    {
+        Assert.Throws<AdapterPreconditionException>(() => PlcAlarmExportPolicy.RequireUserLists(Array.Empty<string>(), Array.Empty<string>()));
+        Assert.Throws<AdapterPreconditionException>(() => PlcAlarmExportPolicy.RequireUserLists(new[] { "Line A" }, new[] { "Line B" }));
+        PlcAlarmExportPolicy.RequireUserLists(new[] { "Line A" }, new[] { "Line A" });
+        var recorded = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "AlarmExport", "rc-full-v20-raw-B-331.txt")).TrimEnd();
+        Assert.True(PlcAlarmExportPolicy.NoAlarms(recorded));
+        string diagnostic = recorded[(recorded.LastIndexOf(';') + 1)..^1].TrimStart();
+        Assert.True(PlcAlarmExportPolicy.NoAlarms(diagnostic));
+        for (int i = 0; i < diagnostic.Length; i++)
+            Assert.False(PlcAlarmExportPolicy.NoAlarms(recorded.Replace(diagnostic, diagnostic.Remove(i, 1))));
+        Assert.False(PlcAlarmExportPolicy.NoAlarms(string.Empty));
+        Assert.False(PlcAlarmExportPolicy.NoAlarms("Access denied"));
+        Assert.False(PlcAlarmExportPolicy.NoAlarms("No alarms to export"));
+    }
+
+    [Theory]
+    [InlineData("zh-CN", "0012")]
+    [InlineData("ZH-cn", "0012")]
+    [InlineData("de-DE", "First")]
+    [InlineData(null, "First")]
+    public void Opc_ua_comments_are_strings_in_the_editing_language_or_first_culture(string? culture, string expected)
+    {
+        var texts = new[] { new { Culture = "en-US", Text = "First" }, new { Culture = "zh-CN", Text = "0012" } };
+        string Read(bool empty) => TiaMcp.Adapters.Native.Plc.PlcB5Scalar.CommentText(empty ? texts.Take(0) : texts, culture,
+            item => item.Culture, item => item.Text);
+        Assert.Equal(expected, Read(false));
+        Assert.Equal("", Read(true));
+    }
+
+    [Fact]
+    public void Generated_interface_retains_its_model_name_when_the_file_is_renamed()
+    {
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (!File.Exists(Path.Combine(root.FullName, "AGENTS.md"))) root = root.Parent!;
+        string file = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".xml");
+        try
+        {
+            string template = File.ReadAllText(Path.Combine(root.FullName, "third_party/SiemensOpcUaModelled/Phases/Phase1/InterfaceTemplate.xml"));
+            File.WriteAllText(file, template.Replace("{insert_interfaceName}", "Packaging").Replace("{insert_namespaceUri}", "urn:fixture"));
+            Assert.Equal("Packaging", PlcOpcUaImportDocument.InterfaceName(new FileInfo(file)));
+        }
+        finally { File.Delete(file); }
+    }
+
+    [Theory]
     [InlineData("14sp1", 1, 0, 0)]
     [InlineData("15.1", 1, 0, 6)]
     [InlineData("16", 1, 3, 6)]

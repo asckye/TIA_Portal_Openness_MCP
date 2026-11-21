@@ -34,7 +34,7 @@ namespace TiaMcp.Logic.Testing
                     || ex is JsonException || ex is V4.Inputs.InputRejectionException)
                 {
                     row = new JsonObject { ["id"] = id, ["title"] = null, ["kind"] = null, ["tags"] = new JsonArray(),
-                        ["requirement"] = null, ["valid"] = false, ["error"] = ex.Message, ["sha256"] = null };
+                        ["requirement"] = null, ["valid"] = false, ["error"] = ex.GetType().Name, ["sha256"] = null };
                 }
                 rows.Add(row);
             }

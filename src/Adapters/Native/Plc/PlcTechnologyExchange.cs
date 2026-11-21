@@ -22,7 +22,7 @@ namespace TiaMcp.Adapters.Native.Plc
     public sealed partial class PlcOrganisationAdapter
     {
         public PlcSeedHmiReply ImportTechnologyObjectsFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite =
-                true)
+                false)
         {
             if (!IsProjectNull()) TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath,
                 _session.PlcSoftwarePath(_session.GetPlcSoftware(softwarePath)), true);
@@ -59,7 +59,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
                     // Preserve native returned identities, including those read before an enumeration failure.
                     try { ImportTechnologyObject(softwarePath, folderPath, file, overwrite, imported); }
-                    catch (PlcSoftwareException pex)
+                    catch (Exception pex) when (pex is PlcSoftwareException || pex is AdapterPreconditionException)
                     {
                         failed.Add(new PlcSeedImportFailure { Path = file, Error = pex.Message + " Batch stopped; later files were not attempted." });
                         break;
@@ -89,6 +89,9 @@ namespace TiaMcp.Adapters.Native.Plc
             var plan = new List<Dictionary<string, object?>>();
             foreach (var row in selected)
             {
+                if (row.To.IsKnowHowProtected)
+                    throw new AdapterPreconditionException("Know-how protected technology objects are outside this export scope.", "export-plan", false);
+                if (!row.To.IsConsistent) TiaOpenness.Shared.NativeExportPolicy.RequireApply("inconsistent");
                 string name = WatchNative.Name(row.To) ?? "";
                 var parts = row.Folder.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(ObjectPathEncoding.DecodeSegment).Concat(new[] { name }).ToArray();
@@ -115,6 +118,9 @@ namespace TiaMcp.Adapters.Native.Plc
                 try
                 {
                     PlcSpecialExportPolicy.Output(path, true);
+                    if (selected[i].To.IsKnowHowProtected)
+                        throw new AdapterPreconditionException("Technology object protection changed after preview.", "export-plan", false);
+                    if (!selected[i].To.IsConsistent) TiaOpenness.Shared.NativeExportPolicy.RequireApply("inconsistent");
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                     PlcSpecialExportPolicy.Output(path, true);
                     var evidence = TechnologyExport(selected[i].To, path, false, () => meta["mayHaveWrittenFiles"] = true);
@@ -153,14 +159,15 @@ namespace TiaMcp.Adapters.Native.Plc
             return list;
         }
 
-        public void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames)
+        public void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames, bool dryRun =
+                false)
         {
             if (IsProjectNull())
                 throw new PlcSoftwareException("InvalidState",
                     "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
                     "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
-            var plc = _session.ResolvePlc(softwarePath, true);
+            var plc = _session.ResolvePlc(softwarePath, !dryRun);
             if (plc == null) throw new PlcSoftwareException("NotFound", $"PlcSoftware not found at '{softwarePath}'" + _session.AvailablePlcPathsSuffix());
 
             try
@@ -171,9 +178,15 @@ namespace TiaMcp.Adapters.Native.Plc
                 var group = (global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup)PlcGroupOperations
                     .Group(plc.TechnologicalObjectGroup, folderPath ?? "");
                 var col = group.TechnologicalObjects;
+                using var input = TiaOpenness.Shared.NativeInputPolicy.OpenRead(importPath, "importPath");
+                var name = PlcTechnologyDocument.ReadName(input, "importPath");
+                if (!overwrite && WatchNative.Find(col, name) != null)
+                    throw new AdapterPreconditionException("Technology object already exists. Set overwrite=true to replace it.", "overwrite", false);
+                if (dryRun) return;
                 if (TryImportEngineeringObjectIntoCollection(col, importPath, overwrite, importedNames, out var err)) return;
                 throw new PlcSoftwareException("ImportFailed", err ?? "ImportTechnologyObject failed");
             }
+            catch (AdapterPreconditionException) { throw; }
             catch (PlcSoftwareException)
             {
                 throw;

@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return value.GetString();
         }
 
-        public static string CandidateName(string xml) => Candidate(() => PlcDocumentEditing.Name(PlcDocumentEditing.Parse(xml)));
+        public static string CandidateName(string xml) => Candidate(() => PlcDocumentEditing.Name(PlcDocumentEditing.ParseBlockImport(xml)));
 
         private static T Candidate<T>(Func<T> read)
         {

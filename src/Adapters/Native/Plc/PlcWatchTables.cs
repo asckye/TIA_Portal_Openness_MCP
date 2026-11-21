@@ -430,16 +430,25 @@ namespace TiaMcp.Adapters.Native.Plc
                     string[] names;
                     if (tableKind == "watch")
                     {
-                        foreach (string name in expectedNames)
-                            EngineeringWriteJournal.Creating(() => WatchNative.Find(WatchNative.WatchTables(FindGroup()), name),
-                                PlcObjectPath.Format(PlcObjectPath.Parts(groupPath, true).Concat(new[] { name })));
+                        var pending = new HashSet<string>(expectedNames, StringComparer.Ordinal);
                         var importedNames = new List<string>();
-                        foreach (var table in WatchNative.Import(WatchNative.WatchTables(group), source, ImportOptions.None))
+                        try
                         {
-                            string name = WatchNative.Name(table);
-                            EngineeringWriteJournal.Created(table, PlcObjectPath.Format(PlcObjectPath.Parts(groupPath, true).Concat(new[] { name })),
-                                absent: () => WatchNative.Find(WatchNative.WatchTables(FindGroup()), name) == null);
-                            importedNames.Add(name);
+                            foreach (var table in WatchNative.Import(WatchNative.WatchTables(group), source, ImportOptions.None))
+                            {
+                                string name = WatchNative.Name(table);
+                                EngineeringWriteJournal.Created(table, PlcObjectPath.Format(PlcObjectPath.Parts(groupPath, true).Concat(new[] { name })),
+                                    absent: () => WatchNative.Find(WatchNative.WatchTables(FindGroup()), name) == null);
+                                pending.Remove(name);
+                                importedNames.Add(name);
+                            }
+                        }
+                        finally
+                        {
+                            // Import can insert an object before returning its handle or before enumeration completes.
+                            foreach (string name in pending)
+                                EngineeringWriteJournal.Creating(() => WatchNative.Find(WatchNative.WatchTables(FindGroup()), name),
+                                    PlcObjectPath.Format(PlcObjectPath.Parts(groupPath, true).Concat(new[] { name })));
                         }
                         names = importedNames.ToArray();
                     }

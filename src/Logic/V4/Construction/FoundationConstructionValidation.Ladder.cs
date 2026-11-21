@@ -82,7 +82,7 @@ namespace TiaMcp.Logic.V4.Construction
             void Call(LadOutput output, string here)
             {
                 Id(output.Block!, here + "/block");
-                Required(!SystemInstruction(output.Block!), here + "/block", "user FC/FB; known instruction names and MC_ prefix are reserved");
+                Required(!SystemInstruction(output.Block!), here + "/block", "user FC/FB; known instruction names are reserved");
                 Required(output.BlockType != "FB" || output.InstanceDb != null, here + "/instance", "global instance DB for FB");
                 Required(output.BlockType != "FC" || output.InstanceDb == null, here + "/instance", "no instance on FC");
                 if (output.InstanceDb != null) Id(output.InstanceDb, here + "/instance");
@@ -183,9 +183,13 @@ namespace TiaMcp.Logic.V4.Construction
 
         private static bool SystemInstruction(string name)
         {
-            if (name.StartsWith("MC_", StringComparison.OrdinalIgnoreCase)) return true;
             switch (name.ToUpperInvariant())
             {
+                case "TSEND_C": case "TRCV_C": case "SEL": case "LIMIT": case "NORM_X": case "SCALE_X":
+                case "MOVE_BLK": case "GET": case "PUT": case "RD_SYS_T":
+                case "MC_POWER": case "MC_RESET": case "MC_HOME": case "MC_HALT": case "MC_STOP":
+                case "MC_MOVEABSOLUTE": case "MC_MOVERELATIVE": case "MC_MOVEVELOCITY": case "MC_MOVEJOG":
+                case "MC_GEARIN": case "MC_GEAROUT": case "MC_CAMIN": case "MC_CAMOUT":
                 case "TON": case "TOF": case "TP": case "TONR":
                 case "CTU": case "CTD": case "CTUD": case "R_TRIG": case "F_TRIG":
                 case "MOVE": case "ADD": case "SUB": case "MUL": case "DIV": case "MOD":
