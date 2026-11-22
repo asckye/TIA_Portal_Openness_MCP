@@ -67,6 +67,7 @@ internal static class FoundationHostPorts
         public UnsettledCalls Unsettled => worker is IEngineWorker engine ? engine.Unsettled : SharedSessionState.For(worker).Unsettled;
         public LateCalls LateResults => worker is IEngineWorker engine ? engine.LateResults : SharedSessionState.For(worker).LateResults;
         public object SessionKey => worker is IEngineWorker engine ? engine.SessionKey : worker is WorkerClient client ? client.HostSessionKey : sessionKey;
+        public bool RequiresOpennessInstallation { get; } = FoundationPassiveDiagnostics.RequiresOpennessInstallation(worker);
         public JsonNode? Binding => Snapshot()["binding"]?.DeepClone();
         internal JsonObject OperatorSnapshot()
             => SharedSessionState.For(worker).OperatorSnapshot(release);

@@ -33,6 +33,8 @@ namespace TiaMcpServer.Dispatch
 #if TIA_ENGINE_HOST
             // The Foundation target checks readiness after capability admission.
             if (McpServer.CatalogView.Find(name)?.Execution == "foundation") return false;
+            // A standalone protocol simulator handles its own restart admission.
+            if (name == nameof(McpServer.RestartOpennessWorker) && !McpServer.Worker.RequiresOpennessInstallation) return false;
 #endif
             return !IsSafeWithoutTia(name);
         }

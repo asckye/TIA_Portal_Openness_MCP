@@ -24,6 +24,8 @@ internal static class FoundationPassiveDiagnostics
     internal const int RosterPageLimit = 50;
     private const int RosterPageCharacters = 16384;
     internal readonly record struct InstallationLocation(string? Path, string? Source);
+    internal static bool RequiresOpennessInstallation(IFoundationWorker worker)
+        => worker is IFoundationSessionWorker { Bundled: true } || worker is WorkerClient client && client.IsReleasePlcWorker();
     internal static JsonObject Readiness(string releaseKey) => Readiness(releaseKey, (string?)null, (string?)null);
     internal static JsonObject Readiness(string releaseKey, string? hostApiDirectory, string? hostApiDirectorySource)
         => Readiness(releaseKey, hostApiDirectory, hostApiDirectorySource, FindTiaInstallation, CurrentUserInOpennessGroup);
@@ -325,8 +327,7 @@ internal static class LegacyHostToolRegistry
         tools.AddRange(FoundationPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, usageRoster ?? (() => tools), readiness));
         tools.Add(new ToolUsageTool(releaseKey, usageRoster ?? (() => tools), exampleProfile ?? ReleaseCatalogData.Releases[releaseKey].ExampleProfile));
         var wrapped = new McpServerTool[tools.Count];
-        bool checkReadiness = worker is IFoundationSessionWorker { Bundled: true } || worker is WorkerClient client && client.IsReleasePlcWorker();
-        Func<JsonObject>? readinessForTool = checkReadiness ? readiness : null;
+        Func<JsonObject>? readinessForTool = FoundationPassiveDiagnostics.RequiresOpennessInstallation(worker) ? readiness : null;
         Parallel.For(0, tools.Count, new ParallelOptions { MaxDegreeOfParallelism = 4 }, i =>
         {
             wrapped[i] = new UsageHintTool(new FoundationV4Tool(tools[i], releaseKey, readinessForTest: readinessForTool,

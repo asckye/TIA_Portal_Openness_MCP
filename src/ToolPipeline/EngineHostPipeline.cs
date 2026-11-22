@@ -33,6 +33,7 @@ namespace TiaMcp.FoundationHost
         public JsonNode? Binding { get; }
         public object SessionKey { get; }
         public JsonObject Snapshot();
+        public bool RequiresOpennessInstallation => true;
         public JsonObject EnvironmentReadiness() => Snapshot()["readiness"]!.AsObject();
         public Task<JsonObject> Status(CancellationToken token);
         public Task<JsonObject> StartForStatus(CancellationToken token) => Status(token);
