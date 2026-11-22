@@ -11,6 +11,14 @@ namespace TiaMcp.Adapters.Native.Optional;
 
 internal static class OptionalNativeOperations
 {
+    internal static void ValidateRuleProperties(string action, IDictionary<string, object?> properties)
+    {
+        if (action == "delete" && properties.Count != 0)
+            throw new ArgumentException("The delete action requires empty properties.", nameof(properties));
+        if (properties.ContainsKey("Name"))
+            throw new ArgumentException("The " + action + " action cannot set properties.Name. Use name to identify the rule.", nameof(properties));
+    }
+
     internal static void RequireGenerationConnections(string hmi, string[] plcPartners, IEnumerable<string> connections,
         bool hasHmiSoftware, string hmiParameter)
     {

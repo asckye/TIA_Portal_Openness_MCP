@@ -11,9 +11,11 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class HardwareNetworkPlanValidator
     {
-        public static JsonObject Validate(string planJson)
+        public static JsonObject Validate(string planJson) => Validate(planJson, null);
+
+        internal static JsonObject Validate(string planJson, Action<int, string>? invalidField)
         {
-            var errors = new JsonArray();
+            var errors = new PlanErrors(invalidField);
             var warnings = new JsonArray();
             JsonObject? root = null;
 
@@ -23,12 +25,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                errors.Add("Invalid JSON: " + ex.Message);
+                errors.Messages.Add("Invalid JSON: " + ex.Message);
             }
 
             var operations = root?["operations"] as JsonArray;
             if (root != null && operations == null)
-                errors.Add("Missing operations array.");
+                errors.Messages.Add("Missing operations array.");
 
             if (operations != null)
             {
@@ -36,14 +38,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (operations[i] is not JsonObject op)
                     {
-                        errors.Add($"operations[{i}] must be an object.");
+                        errors.Messages.Add($"operations[{i}] must be an object.");
                         continue;
                     }
 
                     var type = op["type"]?.ToString() ?? string.Empty;
                     if (string.IsNullOrWhiteSpace(type))
                     {
-                        errors.Add($"operations[{i}].type is required.");
+                        errors.Add(i, "type", "is required.");
                         continue;
                     }
 
@@ -59,7 +61,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             ValidateCpuSettings(op, i, errors, warnings);
                             break;
                         default:
-                            errors.Add($"operations[{i}].type '{type}' is not supported. Use EnsureSubnet, AttachDeviceNodeToSubnet, or SetPlcCpuSettings.");
+                            errors.Add(i, "type", $"'{type}' is not supported. Use EnsureSubnet, AttachDeviceNodeToSubnet, or SetPlcCpuSettings.");
                             break;
                     }
                 }
@@ -67,30 +69,41 @@ namespace TiaMcpServer.ModelContextProtocol
 
             return new JsonObject
             {
-                ["ok"] = errors.Count == 0,
+                ["ok"] = errors.Messages.Count == 0,
                 ["offlineOnly"] = true,
                 ["connectsToTia"] = false,
                 ["modifiesProject"] = false,
                 ["requiresReadbackAfterApply"] = true,
                 ["operationCount"] = operations?.Count ?? 0,
-                ["errors"] = errors,
+                ["errors"] = errors.Messages,
                 ["warnings"] = warnings
             };
         }
 
-        private static void ValidateEnsureSubnet(JsonObject op, int index, JsonArray errors, JsonArray warnings)
+        private sealed class PlanErrors(Action<int, string>? invalidField)
+        {
+            internal JsonArray Messages { get; } = new JsonArray();
+
+            internal void Add(int index, string field, string reason)
+            {
+                invalidField?.Invoke(index, field);
+                Messages.Add($"operations[{index}].{field} {reason}");
+            }
+        }
+
+        private static void ValidateEnsureSubnet(JsonObject op, int index, PlanErrors errors, JsonArray warnings)
         {
             RequireResolvedPath(op, "anchorDeviceItemPath", index, errors);
             RequireNonEmpty(op, "subnetName", index, errors);
 
             var subnetType = op["subnetType"]?.ToString() ?? string.Empty;
             if (!TiaMcp.Adapters.Hardware.SubnetTypePolicy.IsSupported(subnetType))
-                errors.Add($"operations[{index}]." + TiaMcp.Adapters.Hardware.SubnetTypePolicy.Message);
+                errors.Add(index, "subnetType", "must be one of: " + string.Join(", ", TiaMcp.Adapters.Hardware.SubnetTypePolicy.AllowedValues) + ".");
 
             ValidateOptionalNetworkFields(op, index, errors, warnings);
         }
 
-        private static void ValidateAttach(JsonObject op, int index, JsonArray errors, JsonArray warnings)
+        private static void ValidateAttach(JsonObject op, int index, PlanErrors errors, JsonArray warnings)
         {
             RequireResolvedPath(op, "deviceItemPath", index, errors);
             RequireNonEmpty(op, "subnetName", index, errors);
@@ -100,7 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     .TryParse(node.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture,
                         out var interfaceIndex)
                     || interfaceIndex < 0)
-                errors.Add($"operations[{index}].interfaceIndex must be a zero-based non-negative integer from network-node discovery readback.");
+                errors.Add(index, "interfaceIndex", "must be a zero-based non-negative integer from network-node discovery readback.");
 
             if (op.ContainsKey("anchorDeviceItemPath"))
                 RequireResolvedPath(op, "anchorDeviceItemPath", index, errors);
@@ -108,21 +121,21 @@ namespace TiaMcpServer.ModelContextProtocol
             ValidateOptionalNetworkFields(op, index, errors, warnings);
         }
 
-        private static void ValidateCpuSettings(JsonObject op, int index, JsonArray errors, JsonArray warnings)
+        private static void ValidateCpuSettings(JsonObject op, int index, PlanErrors errors, JsonArray warnings)
         {
             RequireResolvedPath(op, "cpuPath", index, errors);
             var settings = op["settings"] as JsonObject;
             var exact = settings?["exactAttributes"] as JsonObject;
             if (exact == null || exact.Count == 0)
                 errors
-                    .Add($"operations[{index}].settings.exactAttributes is required. Attribute names must come from GetDeviceItemInfo/GetDeviceItemNetworkInfo readback.");
+                    .Add(index, "settings.exactAttributes", "is required. Attribute names must come from GetDeviceItemInfo/GetDeviceItemNetworkInfo readback.");
 
             if (settings != null)
             {
                 foreach (var key in settings.Select(kv => kv.Key))
                 {
                     if (!string.Equals(key, "exactAttributes", StringComparison.Ordinal))
-                        errors.Add($"operations[{index}].settings.{key} is not accepted. Use exactAttributes only.");
+                        errors.Add(index, "settings." + key, "is not accepted. Use exactAttributes only.");
                 }
             }
 
@@ -132,53 +145,53 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (LooksLikeAlias(kv.Key))
                         errors
-                            .Add($"operations[{index}].settings.exactAttributes.{kv.Key} looks like an alias. Use the exact TIA attribute name from readback.");
+                            .Add(index, "settings.exactAttributes." + kv.Key, "looks like an alias. Use the exact TIA attribute name from readback.");
                     if (string.IsNullOrWhiteSpace(kv.Value?.ToString()))
                         warnings.Add($"operations[{index}].settings.exactAttributes.{kv.Key} has an empty value.");
                 }
             }
         }
 
-        private static void ValidateOptionalNetworkFields(JsonObject op, int index, JsonArray errors, JsonArray warnings)
+        private static void ValidateOptionalNetworkFields(JsonObject op, int index, PlanErrors errors, JsonArray warnings)
         {
             ValidateIp(op, "ip", index, errors);
             ValidateIp(op, "gateway", index, errors);
 
             var mask = op["mask"]?.ToString();
             if (!string.IsNullOrWhiteSpace(mask) && !IsValidSubnetMask(mask!))
-                errors.Add($"operations[{index}].mask is not a valid IPv4 subnet mask.");
+                errors.Add(index, "mask", "is not a valid IPv4 subnet mask.");
 
             if (!string.IsNullOrWhiteSpace(op["gateway"]?.ToString()) && string.IsNullOrWhiteSpace(op["ip"]?.ToString()))
                 warnings.Add($"operations[{index}].gateway was supplied without ip; verify the target attribute model before applying.");
         }
 
-        private static void ValidateIp(JsonObject op, string propertyName, int index, JsonArray errors)
+        private static void ValidateIp(JsonObject op, string propertyName, int index, PlanErrors errors)
         {
             var value = op[propertyName]?.ToString();
             if (string.IsNullOrWhiteSpace(value))
                 return;
 
             if (!IPAddress.TryParse(value, out var ip) || ip.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
-                errors.Add($"operations[{index}].{propertyName} is not a valid IPv4 address.");
+                errors.Add(index, propertyName, "is not a valid IPv4 address.");
         }
 
-        private static void RequireNonEmpty(JsonObject op, string propertyName, int index, JsonArray errors)
+        private static void RequireNonEmpty(JsonObject op, string propertyName, int index, PlanErrors errors)
         {
             if (string.IsNullOrWhiteSpace(op[propertyName]?.ToString()))
-                errors.Add($"operations[{index}].{propertyName} is required.");
+                errors.Add(index, propertyName, "is required.");
         }
 
-        private static void RequireResolvedPath(JsonObject op, string propertyName, int index, JsonArray errors)
+        private static void RequireResolvedPath(JsonObject op, string propertyName, int index, PlanErrors errors)
         {
             var value = op[propertyName]?.ToString() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(value))
             {
-                errors.Add($"operations[{index}].{propertyName} is required.");
+                errors.Add(index, propertyName, "is required.");
                 return;
             }
 
             if (LooksGuessed(value))
-                errors.Add($"operations[{index}].{propertyName} looks guessed. Resolve it from GetProjectTree/GetDeviceItemTree first.");
+                errors.Add(index, propertyName, "looks guessed. Resolve it from GetProjectTree/GetDeviceItemTree first.");
         }
 
         private static bool LooksGuessed(string value)

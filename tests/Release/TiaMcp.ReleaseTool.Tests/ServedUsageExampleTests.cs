@@ -33,6 +33,33 @@ public sealed class ServedUsageExampleTests
         Assert.Null(ReleaseCapabilityQuery.Problem(tool, minimum, args));
     }
 
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Hardware_and_SiVArc_examples_match_the_selected_release(string release)
+    {
+        var tools = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.FindRoot(), "manifest", "contracts", "v4", "baseline",
+            release + ".json")))!["tools"]!.AsArray();
+        JsonObject Example(string tool, string operation = "")
+        {
+            var schema = tools.Single(row => (string?)row!["name"] == tool)!["inputSchema"]!.AsObject();
+            var usage = ToolUsageCatalog.Describe(tool, release, "plc-foundation", "", schema, operation: operation);
+            return usage["example"]!["request"]!["params"]!["arguments"]!.AsObject();
+        }
+        var aml = Example("BuildDeviceAmlDocument");
+        Assert.Contains("GetSessionState data.outputRoot", (string?)aml["exportFile"]);
+        Assert.EndsWith(".aml", (string?)aml["exportFile"]);
+        Assert.NotNull(aml["spec"]?["devices"]?[0]);
+        if (release == "14sp1") return;
+        var transfer = Example("ManageTransferArea");
+        Assert.Equal(release == "15.1" ? "CD" : "IN", (string?)transfer["type"]);
+        Assert.Null(ReleaseCapabilityQuery.Problem("ManageTransferArea", release, transfer));
+        var rule = Example("ManageSivarcRule", "update");
+        Assert.Null(rule["properties"]?["Name"]);
+        Assert.True((bool?)rule["properties"]?["Enabled"]);
+        Assert.Empty(Example("ManageSivarcRule", "delete")["properties"]!.AsObject());
+        if (release == "15.1") Assert.True((bool?)Example("ManageSivarcRule")["properties"]?["Enabled"]);
+    }
+
     [Fact]
     public void Simotion_guidance_observes_the_registered_V14_provider()
     {

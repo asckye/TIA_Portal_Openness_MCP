@@ -349,6 +349,20 @@ namespace TiaMcp.Adapters.Native.Hmi
                     if (child != null) foreach (var screen in EnumerateClassicScreens(child, depth + 1)) yield return screen;
         }
 
+        internal void CheckTagImportTarget(string softwarePath, string folderPath)
+        {
+            var software = _session.ResolveHmiSoftwareOrThrow(softwarePath);
+            HmiExchangePolicy.RequireClassic(software);
+            TagTablesForImport(software, folderPath);
+        }
+
+        private object TagTablesForImport(object software, string folderPath)
+        {
+            var group = HmiExchangePolicy.Folder(_session.TryGetHmiTagRoot(software), folderPath);
+            return TryGetPropertyValue(group, "TagTables")
+                ?? throw new PlcSoftwareException("NotFound", "TagTables collection unavailable: " + folderPath);
+        }
+
         public void ImportHmiTagTable(string softwarePath, string folderPath, string importPath, bool overwrite = false)
         {
             if (_session.IsProjectNull())
@@ -362,12 +376,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             HmiExchangePolicy.RequireClassic(softwareContainer.Software);
             try
             {
-                var sw = softwareContainer.Software;
-
-                var tagRoot = _session.TryGetHmiTagRoot(sw);
-                var group = HmiExchangePolicy.Folder(tagRoot, folderPath);
-                var tables = TryGetPropertyValue(group, "TagTables")
-                    ?? throw new PlcSoftwareException("NotFound", "TagTables collection unavailable: " + folderPath);
+                var tables = TagTablesForImport(softwareContainer.Software, folderPath);
                 HmiExchangePolicy.BeforeImport(tables, importPath, "Hmi.Tag.TagTable", overwrite);
 
                 if (_session.TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err, overwrite))

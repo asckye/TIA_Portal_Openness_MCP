@@ -31,7 +31,7 @@ namespace TiaMcp.Adapters.Contracts
         {
             var a = (action ?? "").Trim();
             var hit = Actions.FirstOrDefault(x => x.Equals(a, StringComparison.OrdinalIgnoreCase));
-            if (hit == null) throw new ArgumentException("action must be one of: " + string.Join(", ", Actions) + ".");
+            if (hit == null) throw new ArgumentException("action must be one of: " + string.Join(", ", Actions) + ".", nameof(action));
             return hit;
         }
 
@@ -41,7 +41,8 @@ namespace TiaMcp.Adapters.Contracts
             var hit = AccessLevels.FirstOrDefault(x => x.Equals(value, StringComparison.OrdinalIgnoreCase));
             if (hit == null)
                 throw new ArgumentException("accessLevel must be one of: " + string.Join(", ", AccessLevels)
-                    + " (TIA UI: Full access (no protection) / Read access / HMI access / No access / Full access incl. fail-safe - F-CPUs only).");
+                    + " (TIA UI: Full access (no protection) / Read access / HMI access / No access / Full access incl. fail-safe - F-CPUs only).",
+                    nameof(accessLevel));
             return hit;
         }
 
@@ -51,15 +52,16 @@ namespace TiaMcp.Adapters.Contracts
             var act = NormalizeAction(action);
             var level = LevelActions.Contains(act) ? RequireAccessLevel(accessLevel) : "";
             if (PasswordActions.Contains(act) && string.IsNullOrEmpty(password))
-                throw new ArgumentException(act + " needs password (converted to SecureString, never echoed; TIA rejects an empty password).");
+                throw new ArgumentException(act + " needs password (converted to SecureString, never echoed; TIA rejects an empty password).",
+                    nameof(password));
             if (act == "changeMasterSecret" && string.IsNullOrEmpty(newPassword))
-                throw new ArgumentException("changeMasterSecret needs newPassword besides password (the current master secret).");
+                throw new ArgumentException("changeMasterSecret needs newPassword besides password (the current master secret).", nameof(newPassword));
             if (act == "setAccessPassword" && level == "FullAccessIncludingFailsafe")
                 throw new ArgumentException("No password exists for FullAccessIncludingFailsafe (it is the unprotected level of an F-CPU); passwords belong " +
-                    "to FullAccess / ReadAccess / HMIAccess.");
+                    "to FullAccess / ReadAccess / HMIAccess.", nameof(accessLevel));
             if (act == "setAccessPassword" && level == "NoAccess")
                 throw new ArgumentException("No password exists for NoAccess (complete protection has no login of its own); set the password for FullAccess " +
-                    "/ ReadAccess / HMIAccess.");
+                    "/ ReadAccess / HMIAccess.", nameof(accessLevel));
             return (act, level);
         }
 

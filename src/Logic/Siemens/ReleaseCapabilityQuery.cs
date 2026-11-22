@@ -95,7 +95,7 @@ public static class ReleaseCapabilityQuery
         if (!PortedFamilies.Available(release, name) || args.ContainsKey("action") && !port.SupportsAction(release, action))
             return "The release capability table excludes this operation.";
         string? reason = HardwareCapabilities.Unsupported(release, name, action, family, Number("positionNumber", -1),
-            Number("extendedPositionNumber", -1), Text("password").Length != 0)
+            Number("extendedPositionNumber", -1), Text("password").Length != 0, Text("type"))
             ?? PlcSoftwareCapabilities.Unsupported(release, name, action, family, Text("unitName"), Text("unitKind", "unit"),
                 Text("targetKind"), Text("copyMode"), Text("generateOption", "None"));
         if (reason != null) return reason;

@@ -104,7 +104,7 @@
     "ManageSivarcRule": [
       {
         "releases": ["15.1"],
-        "arguments": { "action": "update", "collectionPath": [{ "property": "Rules" }], "properties": { "Name": "ReviewedRule" } }
+        "arguments": { "action": "update", "collectionPath": [{ "property": "Rules" }], "properties": { "Enabled": true } }
       },
       {
         "releases": ["16", "17"],
@@ -114,7 +114,7 @@
     "ManageTransferArea": [
       {
         "releases": ["15.1"],
-        "arguments": { "positionNumber": -1 }
+        "arguments": { "positionNumber": -1, "type": "CD" }
       }
     ],
     "ManageDcbLibraries": [
@@ -5060,6 +5060,7 @@
       },
       "BuildDeviceAmlDocument": {
         "arguments": {
+          "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -5072,6 +5073,11 @@
           }
         },
         "parameters": {
+          "exportFile": {
+            "requiresBinding": true,
+            "meaning": "Replace the sample path with a new file under GetSessionState data.outputRoot.",
+            "tools": ["GetSessionState"]
+          },
           "referenceAmlPath": {
             "exampleValue": "<referenceAmlPath from this operation's target or user input>",
             "requiresBinding": true
@@ -16707,13 +16713,14 @@
             "arguments": {
               "action": "update",
               "properties": {
-                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                "Enabled": true
               }
             }
           },
           "delete": {
             "arguments": {
-              "action": "delete"
+              "action": "delete",
+              "properties": {}
             }
           }
         },
@@ -21352,6 +21359,7 @@
       },
       "BuildDeviceAmlDocument": {
         "arguments": {
+          "exportFile": "C:\\<directory under GetSessionState data.outputRoot>\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -21364,6 +21372,11 @@
           }
         },
         "parameters": {
+          "exportFile": {
+            "requiresBinding": true,
+            "meaning": "Replace the sample path with a new file under GetSessionState data.outputRoot.",
+            "tools": ["GetSessionState"]
+          },
           "referenceAmlPath": {
             "exampleValue": "<referenceAmlPath from this operation's target or user input>",
             "requiresBinding": true
@@ -31955,13 +31968,14 @@
             "arguments": {
               "action": "update",
               "properties": {
-                "<exact supported field from this operation/read result>": "<value of that field's documented type>"
+                "Enabled": true
               }
             }
           },
           "delete": {
             "arguments": {
-              "action": "delete"
+              "action": "delete",
+              "properties": {}
             }
           }
         },

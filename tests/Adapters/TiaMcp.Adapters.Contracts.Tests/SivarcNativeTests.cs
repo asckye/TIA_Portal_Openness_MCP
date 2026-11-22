@@ -11,6 +11,17 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class SivarcNativeTests
     {
+        [Theory, InlineData("update", "Name"), InlineData("create", "Name"), InlineData("delete", "Enabled")]
+        public void Rule_property_refusal_identifies_the_requested_action(string action, string key)
+        {
+            var changes = new Dictionary<string, object?> { [key] = key == "Name" ? "ReviewedRule" : true };
+            var refusal = Assert.Throws<ArgumentException>(() => OptionalNativeOperations.ValidateRuleProperties(action, changes));
+            Assert.Equal("properties", refusal.ParamName);
+            Assert.Contains(action, refusal.Message);
+            if (action != "delete") Assert.DoesNotContain("delete", refusal.Message);
+            OptionalNativeOperations.ValidateRuleProperties("update", new Dictionary<string, object?> { ["Enabled"] = true });
+        }
+
         private sealed record RuleFolder(string Name);
         private sealed class Folders : List<RuleFolder>
         {

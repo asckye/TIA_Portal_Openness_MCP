@@ -68,7 +68,12 @@ namespace Siemens.Engineering.SW.Types
     {
         public string Name { get; set; } = "";
         public string Declaration { get; set; } = "";
-        public void Export(FileInfo file, Siemens.Engineering.ExportOptions options) => File.WriteAllText(file.FullName, Declaration);
+        public Exception? ExportFailure { get; set; }
+        public void Export(FileInfo file, Siemens.Engineering.ExportOptions options)
+        {
+            if (ExportFailure != null) throw ExportFailure;
+            File.WriteAllText(file.FullName, Declaration);
+        }
     }
 }
 namespace TiaMcp.Adapters.Native.Plc

@@ -208,7 +208,7 @@ namespace TiaMcp.Logic.V4
             bool False(string key) => data[key] is JsonValue value && value.TryGetValue<bool>(out var flag) && !flag;
             return (string?)data["status"] == "not-found-not-deleted" && False("attempted") && False("executed") && False("deleted")
                 && (string?)data["targetIdentity"] == ""
-                || data["plan"]?["operations"] is JsonArray { Count: 0 }
+                || data["plan"] is JsonObject plan && plan["operations"] is JsonArray { Count: 0 }
                 || data["inventoryComplete"] is JsonValue complete && complete.TryGetValue<bool>(out var inventory) && inventory && data["items"] is JsonArray {
                     Count: 0 };
         }

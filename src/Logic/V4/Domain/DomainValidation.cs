@@ -57,14 +57,17 @@ namespace TiaMcp.Logic.V4.Domain
                 Text(json.GetProperty("id").GetString()!);
                 if (json.TryGetProperty("dependencies", out var dependencies)) foreach (var entry in dependencies.EnumerateArray()) Text(entry.GetString()!);
             }
-            else if (type == typeof(NetworkPlan))
+            else if (type == typeof(NetworkPlan) || typeof(NetworkOperation).IsAssignableFrom(type))
             {
-                var result = HardwareNetworkPlanValidator.Validate(raw);
-                Require(result["ok"]!.GetValue<bool>());
-            }
-            else if (typeof(NetworkOperation).IsAssignableFrom(type))
-            {
-                var result = HardwareNetworkPlanValidator.Validate("{\"operations\":[" + raw + "]}");
+                bool plan = type == typeof(NetworkPlan);
+                var result = HardwareNetworkPlanValidator.Validate(plan ? raw : "{\"operations\":[" + raw + "]}", (index, field) =>
+                {
+                    string path = (plan ? "/operations/" + index.ToString(CultureInfo.InvariantCulture) : "") + "/" + field.Replace('.', '/');
+                    if (field == "subnetType")
+                        throw new InputRejectionException(TiaMcp.Adapters.Hardware.SubnetTypePolicy.AllowedValues.ToArray(),
+                            diagnostic: TiaMcp.Adapters.Hardware.SubnetTypePolicy.Message).At(path, null);
+                    throw new InputRejectionException(diagnostic: "Invalid hardware network plan field: " + field + ".").At(path, null);
+                });
                 Require(result["ok"]!.GetValue<bool>());
             }
             else if (type == typeof(TemplateRow))

@@ -44,8 +44,18 @@ namespace TiaMcp.Adapters.Native.Plc
                         if (groups.Length != 1) return false;
                         var type = ((PlcTypeGroup)groups[0]).Types.Find(name);
                         if (type == null) return false;
-                        type.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.None);
-                        return true;
+                        var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
+                        try
+                        {
+                            type.Export(file, ExportOptions.None);
+                            return true;
+                        }
+                        catch (Exception ex) when (ex is not OperationCanceledException && !TiaMcpServer.ModelContextProtocol.PortalFailureClassifier
+                            .IsPortalProcessLost(ex))
+                        {
+                            /* swallow(probe-optional): compare strictly when the UDT declaration cannot be exported. */
+                            return false;
+                        }
                     }
                     void Import(string path) {
                         Resolve();

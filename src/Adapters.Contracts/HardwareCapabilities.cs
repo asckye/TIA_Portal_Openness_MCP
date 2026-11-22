@@ -1,13 +1,25 @@
 using System;
+using System.Linq;
 
 namespace TiaMcp.Adapters.Contracts
 {
     // API availability is separate from runtime feature presence and acceptance.
     public static class HardwareCapabilities
     {
+        public static System.Collections.Generic.IReadOnlyList<string> TransferAreaTypes { get; } = Array.AsReadOnly(new[] {
+            "None", "MS", "CD", "F_PS", "TM", "IN", "OUT", "MSI", "MSO", "MSO_LOCAL", "RECORD_WRITE_STO", "RECORD_WRITE_PUB", "RECORD_READ_STO",
+                "RECORD_READ_PUB",
+            "MSI_MSO", "IN_OUT", "LOCAL_RECORD_STO", "LOCAL_RECORD_PUB", "SUB_MSI", "SUB_MSO", "SUB_LOCAL_RECORD_STO_READ", "SUB_LOCAL_RECORD_PUB_READ",
+                "PROFISAFE_IN12_OUT6", "PROFISAFE_IN6_OUT12",
+            "F_Proxy_CD", "DDX", "ISOC_STATUS_CONTROL", "ISOCHRON_IN", "ISOCHRON_OUT", "F_CD" });
+
         public static string
             ? Unsupported(string release, string operation, string action = "", string family = "", int positionNumber = -1, int extendedPositionNumber = -1,
                 bool hasPassword = false)
+            => Unsupported(release, operation, action, family, positionNumber, extendedPositionNumber, hasPassword, "");
+
+        public static string? Unsupported(string release, string operation, string action, string family, int positionNumber, int extendedPositionNumber,
+            bool hasPassword, string transferAreaType)
         {
             int version = release == "14sp1" ? 14 : release == "15.1" ? 15 : int.Parse(release, System.Globalization.CultureInfo.InvariantCulture);
             string name = operation.Substring(operation.LastIndexOf('.') + 1);
@@ -20,6 +32,10 @@ namespace TiaMcp.Adapters.Contracts
             if ((name == "ListTransferAreas" || name == "ManageTransferArea" || name == "HardwareReadTransferAreas" || name == "HardwareManageTransferArea")
                     && version < 15)
                 return "TransferAreas requires V15.1.";
+            if ((name == "ManageTransferArea" || name == "HardwareManageTransferArea") && release == "15.1"
+                && action == "create" && family != "multicast" && TransferAreaTypes.Contains(transferAreaType)
+                && transferAreaType is not ("None" or "MS" or "CD" or "F_PS" or "TM"))
+                return "V15.1 supports only None, MS, CD, F_PS and TM for standard transfer area type.";
             if ((name == "ListNetworkDomains" || name == "ManageNetworkDomain" || name == "HardwareReadNetworkDomains" || name == "HardwareManageNetworkDomain")
                     && version < 16)
                 return "MRP and Sync domains require V16.";

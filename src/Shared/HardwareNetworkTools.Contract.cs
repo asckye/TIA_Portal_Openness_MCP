@@ -74,11 +74,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        internal static void Confirm(bool dryRun, bool confirmed)
+        internal static void Confirm(bool dryRun, bool confirmed, string? parameter = null)
         {
             if (!dryRun && !confirmed)
-                throw new InputFailureException(new Error("Explicit confirmation is required for this hardware change.",
-                            new ConfirmationRequiredDetails(null)));
+                throw new InputFailureException(new Error(parameter == null ? "Explicit confirmation is required for this hardware change."
+                    : "Set " + parameter + "=true to confirm this hardware change.", new ConfirmationRequiredDetails(null)));
         }
 
         internal static CallToolResult Unsupported(string tool, Error error)
@@ -153,7 +153,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 ?? HostBehavior
                     .KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
-            else if (HostBehavior.UnchangedNativeFailure(evidence, success))
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success, allowWrittenFiles: tool == "ManageHardwareUtilities"
+                && (string?)evidence["action"] is "exportOpcUa" or "exportCardReaderPsc"))
             { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
                 HostBehavior.UnchangedNativeError(evidence); }
             else if (tool == "ConnectDeviceNodesToProfinetSubnet" && status == "PROJECT_NOT_BOUND" && !issued)

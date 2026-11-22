@@ -146,7 +146,8 @@ namespace TiaMcp.PlcWorker
                     WorkerJson.Get(values, "extendedPositionNumber").ValueKind == JsonValueKind.Number ? WorkerJson.Get(values, "extendedPositionNumber")
                         .GetInt32() : -1,
                     WorkerJson.Get(values, "password").ValueKind == JsonValueKind.String && !string
-                        .IsNullOrEmpty(WorkerJson.Get(values, "password").GetString())) is string unavailable)
+                        .IsNullOrEmpty(WorkerJson.Get(values, "password").GetString()),
+                    WorkerJson.Get(values, "type").ValueKind == JsonValueKind.String ? WorkerJson.Get(values, "type").GetString()! : "") is string unavailable)
                     throw new NotSupportedException(unavailable);
                 if(disconnectAttempted && name!="Disconnect")
                     throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");

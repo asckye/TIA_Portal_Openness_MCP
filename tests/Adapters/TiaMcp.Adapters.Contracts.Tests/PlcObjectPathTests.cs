@@ -106,6 +106,16 @@ public sealed class PlcObjectPathTests
                 Assert.Equal(declaration, File.ReadAllText(path));
                 return "";
             });
+            types.Types.Single().ExportFailure = new InvalidOperationException("Export failed on inconsistent UDT.");
+            foreach (bool preview in new[] { false, true })
+            {
+                request.DryRun = preview;
+                engine.VerifiedImport(request, candidate, execution => {
+                    Assert.False(execution.ExportType("MCP_RC_UDT", path));
+                    return "";
+                });
+            }
+            types.Types.Single().ExportFailure = null;
             engine.Plc.TypeGroup.Types.Add(new PlcType { Name = "MCP_RC_UDT" });
             engine.VerifiedImport(request, candidate, execution => {
                 Assert.False(execution.ExportType("MCP_RC_UDT", path));

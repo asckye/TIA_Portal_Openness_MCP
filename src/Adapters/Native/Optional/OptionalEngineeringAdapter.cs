@@ -43,7 +43,7 @@ namespace TiaMcp.Adapters.Native.Optional
             =>_session.RunHmiStepTool("ManageSivarcRule",meta=>{
                 EngineeringObjectAddress.Parse(collectionPathJson);
                 var changes=OptionalInputs.Parse(propertiesJson) as HmiObject ?? throw new ArgumentException("Expected properties object.");
-                if(changes.ContainsKey("Name")||(action=="delete"&&changes.Count>0))throw new ArgumentException("No renaming or changes during delete.");
+                OptionalNativeOperations.ValidateRuleProperties(action, changes);
                 try
                 {
                 if(!new[]{"create","update","delete"}.Contains(action)||string.IsNullOrWhiteSpace(name))

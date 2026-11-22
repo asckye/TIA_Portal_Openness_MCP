@@ -293,7 +293,7 @@ internal sealed class FoundationV4Tool : McpServerTool
                     && HostBehavior.ExpectedProjectArgument(project.GetString()) is { } projectError)
                     return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, projectError, true));
                 capabilityInput = declared.CapabilityInput(argumentsInput);
-                if ((declaredPortInputAndPaging || declared.HasDuplicateUnifiedInput(capabilityInput))
+                if ((declaredPortInputAndPaging || tool.Name == "PlanHardwareNetworkConfiguration" || declared.HasDuplicateUnifiedInput(capabilityInput))
                     && declared.ValidatePortedInput(capabilityInput) is { } declaredError)
                     return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, declaredError, true));
             }

@@ -41,8 +41,8 @@ namespace TiaMcpServer.Siemens.Services {
                 });
             return value == null ? null : (value.Exported, value.Failed, JsonSerializer.SerializeToNode(value.Items)!.AsArray());
         }
-        internal void CheckScreenImportTarget(string softwarePath, string folderPath) => Invoke<object?>(new HmiRequest {
-            Operation = "ImportHmiScreen", SoftwarePath = softwarePath, FolderPath = folderPath, DryRun = true });
+        internal void CheckImportTarget(string operation, string softwarePath, string folderPath) => Invoke<object?>(new HmiRequest {
+            Operation = operation, SoftwarePath = softwarePath, FolderPath = folderPath, DryRun = true });
         public void ImportHmiScreen(string softwarePath, string folderPath, string importPath, bool overwrite = false) => Invoke<object
             ?>(new HmiRequest {
                 Operation = "ImportHmiScreen", SoftwarePath = softwarePath, FolderPath = folderPath, ImportPath = importPath, Overwrite = overwrite, DryRun =

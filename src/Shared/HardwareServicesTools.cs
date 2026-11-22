@@ -101,8 +101,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 string itemPathJson = HardwareToolContract.Path(itemPath, "itemPath", rootAllowed: true, optional: true);
                 HardwareToolContract.Check(() =>
                 {
-                    PlcProtectionLogic.NormalizeAction(action);
-                    if (action != "read") HardwareToolContract.Confirm(dryRun, confirmChange);
+                    PlcProtectionLogic.Validate(action, accessLevel, password, newPassword);
+                    if (action != "read") HardwareToolContract.Confirm(dryRun, confirmChange, nameof(confirmChange));
                 });
                 return _hardware.ManagePlcProtection(devicePathJson,itemPathJson,action,accessLevel,password,newPassword,confirmChange,dryRun);
             });

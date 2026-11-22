@@ -51,12 +51,7 @@ namespace TiaMcp.Adapters.Hardware
         internal static readonly string[] DeviceGroupActions = { "read", "create", "rename", "deleteEmpty" };
 
         // Enum member names of the V20/V21 PublicAPI (Siemens.Engineering.HW). Parsed case-sensitively by the engine at runtime.
-        internal static readonly string[] TransferAreaTypes = {
-            "None", "MS", "CD", "F_PS", "TM", "IN", "OUT", "MSI", "MSO", "MSO_LOCAL", "RECORD_WRITE_STO", "RECORD_WRITE_PUB", "RECORD_READ_STO",
-                "RECORD_READ_PUB",
-            "MSI_MSO", "IN_OUT", "LOCAL_RECORD_STO", "LOCAL_RECORD_PUB", "SUB_MSI", "SUB_MSO", "SUB_LOCAL_RECORD_STO_READ", "SUB_LOCAL_RECORD_PUB_READ",
-                "PROFISAFE_IN12_OUT6", "PROFISAFE_IN6_OUT12",
-            "F_Proxy_CD", "DDX", "ISOC_STATUS_CONTROL", "ISOCHRON_IN", "ISOCHRON_OUT", "F_CD" };
+        internal static readonly string[] TransferAreaTypes = HardwareCapabilities.TransferAreaTypes.ToArray();
         internal static readonly string[] TransferAreaDirections = { "None", "LocalToPartner", "PartnerToLocal", "Bidirectional" };
         internal static readonly string[] ChannelTypes = { "None", "Analog", "Digital", "Technology" };
         internal static readonly string[] ChannelIoTypes = { "None", "Input", "Output", "Complex" };

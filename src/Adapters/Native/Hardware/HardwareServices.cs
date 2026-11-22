@@ -559,19 +559,28 @@ namespace TiaMcp.Adapters
                         : "CardReaderPscProvider.Export(Device, FileInfo[, SecureString]) creates a .psc card image; f-activated devices refuse on V18 and " +
                         "below, encryption needs CPU V40.0+")
                     + ").";
-                meta["mayHaveChanged"] = true;
+                meta["mayHaveChanged"] = false;
                 if (action == "exportOpcUa")
                 {
                     OpcUaExportProvider provider = HardwareRequireUtility<OpcUaExportProvider>("OPCUAExportProvider");
+                    meta["mayHaveWrittenFiles"] = true;
                     provider.Export(item!, file);
                 }
                 else
                 {
 #if PLC_HARDWARE_TRANSFER_AREAS
                     CardReaderPscProvider provider = HardwareRequireUtility<CardReaderPscProvider>("CardReaderPscProvider");
-                    if (string.IsNullOrEmpty(password)) provider.Export(device!, file);
+                    if (string.IsNullOrEmpty(password))
+                    {
+                        meta["mayHaveWrittenFiles"] = true;
+                        provider.Export(device!, file);
+                    }
 #if PLC_HARDWARE_MRP_INSTANCES
-                    else using (var secure = HardwareSecureString(password)) provider.Export(device!, file, secure);
+                    else using (var secure = HardwareSecureString(password))
+                    {
+                        meta["mayHaveWrittenFiles"] = true;
+                        provider.Export(device!, file, secure);
+                    }
 #else
                     else throw new NotSupportedException("Encrypted PSC export requires V20.");
 #endif

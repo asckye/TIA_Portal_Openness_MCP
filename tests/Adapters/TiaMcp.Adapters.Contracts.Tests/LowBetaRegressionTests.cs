@@ -14,6 +14,38 @@ public sealed class LowBetaRegressionTests
         Assert.True(Assert.IsAssignableFrom<ICollection<string>>(values).IsReadOnly);
     }
 
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void OpcUa_compile_refusal_preserves_the_native_failure_and_file_evidence(string release)
+    {
+        var fixture = HardwareWriteFailureTests.NativeFixture(release);
+        var cpu = fixture.Cpu;
+        cpu.Name = fixture.Project.Devices.Single().Name = "MCP_RC_PLC";
+        int exports = 0;
+        const string message = "Error when calling method 'Export' of type 'Siemens.Engineering.HW.Utilities.OpcUaExportProvider'.";
+        const string detail = "MCP_RC_PLC must be successfully compiled.";
+        fixture.Project.HwUtilities.Add(new Siemens.Engineering.HW.Utilities.OpcUaExportProvider {
+            Identifier = "OPCUAExportProvider", OnExport = (item, _) => {
+                exports++;
+                Assert.Same(cpu, item);
+                var failure = new Siemens.Engineering.EngineeringException(message);
+                failure.MessageData.Text = message;
+                failure.MessageData.DetailText = detail;
+                throw failure;
+            }
+        });
+        string file = Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString("N") + ".xml");
+        var result = fixture.Engine.HardwareManageHardwareUtilities("exportOpcUa", devicePathJson: new[] { cpu.Name },
+            itemPathJson: new[] { cpu.Name }, filePath: file, dryRun: false);
+        Assert.Equal(1, exports);
+        Assert.Equal("ReadOrWriteFailed", result.Meta["status"]);
+        Assert.Contains(detail, (string?)result.Meta["nativeMessage"]);
+        Assert.Equal(false, result.Meta["apiCallSuccess"]);
+        Assert.Equal(true, result.Meta["mayHaveWrittenFiles"]);
+        Assert.False(result.OutcomeUnknown);
+        Assert.False(result.MayHaveChanged);
+    }
+
     [Theory]
     [InlineData("device")]
     [InlineData("deviceItem")]

@@ -146,10 +146,11 @@ namespace TiaMcp.Adapters
         };
 
 #if PLC_HARDWARE_TRANSFER_AREAS
-        private static TransferAreaType HardwareParseTransferAreaType(string type)
+        private TransferAreaType HardwareParseTransferAreaType(string type)
         {
             if (!Enum.IsDefined(typeof(TransferAreaType), type))
-                throw new NotSupportedException("TransferAreaType." + type + " is not defined by the connected TIA Portal Openness version.");
+                throw new NotSupportedException("TransferAreaType." + type + " is unavailable on V" + ReleaseKey + ". Supported type values: "
+                    + string.Join(", ", Enum.GetNames(typeof(TransferAreaType))) + ".");
             return (TransferAreaType)Enum.Parse(typeof(TransferAreaType), type);
         }
 #endif

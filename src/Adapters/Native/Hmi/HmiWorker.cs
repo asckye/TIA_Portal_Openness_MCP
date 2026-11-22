@@ -65,8 +65,11 @@ namespace TiaMcp.Adapters
                         if (request.DryRun) exchange.CheckScreenImportTarget(request.SoftwarePath, request.FolderPath);
                         else exchange.ImportHmiScreen(request.SoftwarePath, request.FolderPath, request.ImportPath, request.Overwrite);
                         break;
-                    case "ImportHmiTagTable": new HmiExchangeAdapter(session)
-                        .ImportHmiTagTable(request.SoftwarePath, request.FolderPath, request.ImportPath, request.Overwrite); break;
+                    case "ImportHmiTagTable":
+                        var tags = new HmiExchangeAdapter(session);
+                        if (request.DryRun) tags.CheckTagImportTarget(request.SoftwarePath, request.FolderPath);
+                        else tags.ImportHmiTagTable(request.SoftwarePath, request.FolderPath, request.ImportPath, request.Overwrite);
+                        break;
                     case "ImportHmiConnection": new HmiExchangeAdapter(session)
                         .ImportHmiConnection(request.SoftwarePath, request.ImportPath, request.Overwrite); break;
                     case "ImportHmiScreensFromDirectory": reply.Value = new HmiExchangeAdapter(session)

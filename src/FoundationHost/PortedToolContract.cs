@@ -26,10 +26,11 @@ namespace TiaMcp.FoundationHost;
 // by every port. Only the typed service factory is specific to a family.
 internal static class PortedToolContract
 {
-    // Failure evidence belongs to one dispatch. Only possible mutations accumulate across an invocation.
+    // LastFailure describes the final dispatch. Read-only follow-ups may still need an earlier domain refusal.
     internal sealed class WorkerDispatch(IFoundationWorker worker, CancellationToken token)
     {
         internal Exception? LastFailure { get; private set; }
+        private Exception? lastCaughtFailure;
         internal JsonObject? LastReply { get; private set; }
         internal JsonObject? Diagnostics { get; private set; }
         internal bool Dispatched { get; private set; }
@@ -38,7 +39,7 @@ internal static class PortedToolContract
 
         private void RecordFailure(Exception error, bool mayWrite)
         {
-            LastFailure = error;
+            lastCaughtFailure = LastFailure = error;
             var workerError = error as WorkerOperationException;
             var retained = workerError?.EvidenceJson is string json ? JsonNode.Parse(json) : null;
             if (workerError?.Outcome == "rejected-before-operation" && retained is JsonObject deviceEvidence
@@ -54,6 +55,18 @@ internal static class PortedToolContract
             error.Data["foundationKnownNoMutation"] = !MayHaveChanged && unchanged;
             failedWriteMayHaveChanged = mayWrite && !unchanged;
         }
+        internal CallToolResult? CaughtRefusal(string release, string tool, string id, bool mutation, bool isError)
+        {
+            if (MayHaveChanged) return null;
+            if (tool == "ValidateAutomationContext"
+                && lastCaughtFailure is WorkerOperationException { KnownNoMutation: true, Condition: "not-found" } missing)
+                return FoundationV4Result.Reject(release, tool, id,
+                    new Error(HostBehavior.SafeDiagnostic(missing.Message) ?? "Expected software was not found.", new NotFoundDetails(null)), false);
+            if (isError && lastCaughtFailure is WorkerOperationException { CapabilityRefused: true } capability)
+                return FoundationV4Result.Failure(release, tool, id, true, mutation, null, capability);
+            return null;
+        }
+
         internal JsonNode? Call(string operation, JsonObject input)
         {
             MayHaveChanged |= failedWriteMayHaveChanged;
@@ -61,6 +74,7 @@ internal static class PortedToolContract
             LastFailure = null;
             LastReply = null;
             bool mayWrite = !TiaMcp.PlcWorker.WorkerOperations.IsReadOnly(operation) && (bool?)input["dryRun"] != true;
+            if (mayWrite) lastCaughtFailure = null;
             try
             {
                 Dispatched = true;
@@ -432,7 +446,9 @@ internal sealed partial class FoundationTool
         if (HardwareCapabilities.Unsupported(portedRelease!, tool.Name, actionName, scope,
             arguments.TryGetValue("positionNumber", out var position) ? position.GetInt32() : -1,
             arguments.TryGetValue("extendedPositionNumber", out var extendedPosition) ? extendedPosition.GetInt32() : -1,
-            arguments.TryGetValue("password", out var password) && !string.IsNullOrEmpty(password.GetString())) is string hardwareReason)
+            arguments.TryGetValue("password", out var password) && !string.IsNullOrEmpty(password.GetString()),
+            arguments.TryGetValue("type", out var transferType) && transferType.ValueKind == JsonValueKind.String ? transferType.GetString()! : "")
+            is string hardwareReason)
             return tool.Name == "ManageDeviceServiceObjects" ? CapabilityRefusal(hardwareReason)
                 : Unsupported(hardwareReason);
         if (PlcSoftwareCapabilities.Unsupported(portedRelease!, tool.Name, actionName, scope,
@@ -709,14 +725,8 @@ internal sealed partial class FoundationTool
             if (claimsNotStarted && dispatch.LastFailure?.Data["workerReadTimeout"] is true)
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                     true, false, null, dispatch.LastFailure);
-            if (tool.Name == "ValidateAutomationContext"
-                && dispatch.LastFailure is WorkerOperationException { KnownNoMutation: true, Condition: "not-found" } missing)
-                return FoundationV4Result.Reject(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                    new Error(HostBehavior.SafeDiagnostic(missing.Message) ?? "Expected software was not found.", new NotFoundDetails(null)), false);
-            if (!dispatch.MayHaveChanged && result.IsError == true
-                && dispatch.LastFailure is WorkerOperationException { CapabilityRefused: true })
-                return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                    true, mutation, null, dispatch.LastFailure);
+            if (dispatch.CaughtRefusal(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId), mutation, result.IsError == true)
+                is { } caughtRefusal) return caughtRefusal;
             result = FoundationV4Result.WorkerFailure(result, portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId), mutation,
                 dispatch.LastFailure, dispatch.MayHaveChanged);
             // Preserve the tool's step report while retaining evidence of the earlier mutation.

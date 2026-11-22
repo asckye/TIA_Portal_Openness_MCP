@@ -114,8 +114,7 @@ internal sealed partial class LegacyOptionalAdapter
         var raw = _request.Operation == "ListSivarcRules" ? _request.ObjectPathJson : _request.CollectionPathJson;
         OptionalObjectAddress.Parse(raw);
         var changes = _request.Operation == "ManageSivarcRule" ? Object(_request.PropertiesJson, "propertiesJson") : new HmiObject();
-        if (changes.ContainsKey("Name") || _request.Action == "delete" && changes.Count != 0)
-            throw new ArgumentException("No renaming or changes during delete.");
+        OptionalNativeOperations.ValidateRuleProperties(_request.Action, changes);
         if (_request.Operation == "ListSivarcRules")
         {
             var target = OptionalObjectAddress.Resolve(Rules(), raw);

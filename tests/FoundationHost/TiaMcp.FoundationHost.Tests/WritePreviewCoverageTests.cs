@@ -1466,6 +1466,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         int workspaceReads = 0;
         int technologyReads = 0;
         bool screenImport = name is "ImportHmiScreen" or "ImportHmiScreensFromDirectory";
+        bool tagImport = name == "ImportHmiTagTable";
         var screenChecks = new List<JsonObject>();
         if (name == "CreateVersionControlWorkspace")
             services[0] = new toolpipeline::TiaMcpServer.Siemens.Services.VersionControlPortService((operation, args) => {
@@ -1477,7 +1478,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
                 workspaceReads++;
                 return new JsonObject { ["Message"] = "Workspace name is available.", ["Meta"] = new JsonObject { ["success"] = true } };
             }, () => "C:/Projects/original.ap21");
-        else if (screenImport)
+        else if (screenImport || tagImport)
             services[0] = new toolpipeline::TiaMcpServer.Siemens.Services.HmiExchangeService((operation, args) => {
                 Assert.Equal("hmi-generic.ExecuteHmi", operation);
                 screenChecks.Add(args);
@@ -1520,17 +1521,20 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             Assert.Equal(1, workspaceReads);
             Assert.Equal("Workspace name is available.", (string?)result.StructuredContent?["data"]?["summary"]);
         }
-        else if (screenImport)
+        else if (screenImport || tagImport)
         {
             var check = Assert.Single(screenChecks);
             var request = check["request"]!;
             Assert.True((bool?)check["dryRun"]);
             Assert.True((bool?)request["DryRun"]);
-            Assert.Equal("ImportHmiScreen", (string?)request["Operation"]);
+            if (tagImport) Assert.Equal("ImportHmiTagTable", (string?)request["Operation"]);
+            else Assert.Equal("ImportHmiScreen", (string?)request["Operation"]);
             Assert.Equal((string?)arguments["softwarePath"], (string?)request["SoftwarePath"]);
             Assert.Equal((string?)arguments["folderPath"], (string?)request["FolderPath"]);
             Assert.True((bool?)result.StructuredContent?["data"]?["targetVerified"]);
-            Assert.Contains("The bound Classic HMI software and destination screen folder were checked.",
+            if (tagImport) Assert.Contains("The bound Classic HMI software and destination tag table folder were checked.",
+                (string?)result.StructuredContent?["data"]?["scope"]);
+            else Assert.Contains("The bound Classic HMI software and destination screen folder were checked.",
                 (string?)result.StructuredContent?["data"]?["scope"]);
         }
         else if (name == "ImportTechnologyObject")

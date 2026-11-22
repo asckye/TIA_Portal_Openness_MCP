@@ -206,7 +206,8 @@ namespace Siemens.Engineering.HW.Utilities
     }
     public sealed class OpcUaExportProvider : HardwareUtility
     {
-        public void Export(DeviceItem item, System.IO.FileInfo file) => throw new NotSupportedException();
+        public Action<DeviceItem, System.IO.FileInfo> OnExport { get; set; } = (_, _) => throw new NotSupportedException();
+        public void Export(DeviceItem item, System.IO.FileInfo file) => OnExport(item, file);
     }
 }
 namespace Siemens.Engineering.HW.Features
