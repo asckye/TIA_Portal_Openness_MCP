@@ -403,6 +403,7 @@ public sealed class OutputRootApprovalTests
             Assert.False(preview.IsError, preview.StructuredContent?.ToJsonString());
             Assert.Equal(0, cards);
             Assert.Equal(1, worker.Previews);
+            Assert.Equal(1, worker.SoftwareReads);
             args["dryRun"] = false;
             args["confirm"] = true;
             args["expectedProjectFile"] = worker.ProjectFile;
@@ -410,6 +411,7 @@ public sealed class OutputRootApprovalTests
             Refused(await fixture.Call("ExportPlcBlocks", args), "denied");
             Assert.Equal(1, cards);
             Assert.Equal(2, worker.Previews);
+            Assert.Equal(2, worker.SoftwareReads);
             int batchWrites = 0;
             var batchTool = McpServerTool.Create((string exportPath, bool dryRun = true) =>
             {
@@ -714,6 +716,31 @@ public sealed class OutputRootApprovalTests
         _ => new { workspaceRoot = parent, reportDirectory = Path.Combine(parent, "report") }
     };
 
+    [Theory, MemberData(nameof(VerifiedImportOutcomeTests.Releases), MemberType = typeof(VerifiedImportOutcomeTests))]
+    public async Task Denied_AML_export_outside_the_output_root_never_reaches_the_worker(string release)
+    {
+        using var settings = new SettingsScope();
+        using var worker = new V14Sp1RegressionTests.AmlWorker();
+        int cards = 0;
+        Task<ApprovalOutcome> Deny(PendingApproval card, ApprovalSettings _, CancellationToken token)
+        {
+            cards++;
+            return Task.FromResult(new ApprovalOutcome(card, false, "denied"));
+        }
+        var previous = Host.McpServer.ApprovalWaitOverrideForTests;
+        Host.McpServer.ApprovalWaitOverrideForTests = Deny;
+        try
+        {
+            using var fixture = new VersionControlAdmissionTests.FileToolFixture(release, worker: worker);
+            using var session = fixture.EnterSession();
+            string target = Path.Combine(Path.GetDirectoryName(DataLocations.Current.OutputRoot)!, "RC-14sp1-A-plc.aml");
+            Refused(await fixture.Call("ExportDeviceAml", new { devicePath = new[] { "MCP_RC_PLC" }, exportFile = target }), "denied");
+            Assert.Equal(1, cards);
+            Assert.Equal(0, worker.Exports);
+        }
+        finally { Host.McpServer.ApprovalWaitOverrideForTests = previous; }
+    }
+
     private static void Refused(CallToolResult result, string reason, bool rootHint = true)
     {
         var body = result.StructuredContent!;
@@ -766,7 +793,7 @@ public sealed class OutputRootApprovalTests
 
     private sealed class PreviewWorker(string release = "19") : IFoundationWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
-        internal int Previews, Writes;
+        internal int Previews, Writes, SoftwareReads;
         internal string ProjectFile => "C:/Fixture.ap" + release;
         public object SessionKey { get; } = new();
         public bool Faulted => false;
@@ -787,10 +814,18 @@ public sealed class OutputRootApprovalTests
                 ["ReleaseKey"] = release, [nameof(ProjectFile)] = ProjectFile, ["ProcessId"] = 123,
                 ["IsAttached"] = true, ["OwnsProject"] = false, ["IsLocalSession"] = false,
                 ["IdentityStatus"] = "unverified-cached-pid", ["RuntimeConnectionStatus"] = "not-probed" });
+            if (operation == "ReadSoftwareInfo")
+            {
+                SoftwareReads++;
+                Assert.Equal("PLC", (string?)arguments["softwarePath"]);
+                return Task.FromResult<JsonNode?>(new JsonObject { ["Name"] = "PLC", ["Attributes"] = new JsonArray(),
+                    ["Meta"] = new JsonObject { ["softwarePath"] = "devices/PLC/PLC", ["scope"] = "ordinary PLC software engineering attributes" } });
+            }
             if ((bool?)arguments["dryRun"] == false) Writes++; else Previews++;
             if (operation == "ExportBlocks")
             {
-                var result = TiaMcp.Adapters.PlcBatchExportPolicy.Run("blocks", ProjectFile, "PLC", "", false,
+                Assert.Equal("devices/PLC/PLC", (string?)arguments["softwarePath"]);
+                var result = TiaMcp.Adapters.PlcBatchExportPolicy.Run("blocks", ProjectFile, (string)arguments["softwarePath"]!, "", false,
                     (string)arguments["exportPath"]!, 128, (bool)arguments["dryRun"]!, (string?)arguments["expectedInventoryHash"] ?? "",
                     new[] { new TiaMcp.Adapters.PlcBatchExportSource { Path = "Block", Consistent = true,
                         Export = _ => throw new InvalidOperationException("No native write expected.") } }, () => { });

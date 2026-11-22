@@ -223,8 +223,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 error = new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, evidence)); }
             else if (write && started == false)
             {
-                outcome = Outcome.RejectedBeforeOperation; error =
-                    new Error("Hardware preconditions were not met.", new PreconditionFailedDetails("hardware-admission", null));
+                string? missing = tool == "SetDeviceItemAttribute" && evidence["availableAttributes"] is JsonArray attributes
+                    && evidence["attributeName"] is JsonValue value && value.TryGetValue<string>(out var name)
+                    && !attributes.Any(attribute => (string?)attribute == name) ? name : null;
+                string message = missing == null ? "Hardware preconditions were not met."
+                    : HostBehavior.SafeDiagnostic($"Attribute '{missing}' is absent from the device item's attribute list.") ?? "Device item attribute is missing.";
+                outcome = Outcome.RejectedBeforeOperation;
+                error = new Error(message, new PreconditionFailedDetails("hardware-admission", (string?)evidence["deviceItemPath"]));
             }
             else
             { outcome = write ? Outcome.Failed : Outcome.ReadFailed; error = Failure(false, evidence); }

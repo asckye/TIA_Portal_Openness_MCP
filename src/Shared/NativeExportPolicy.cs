@@ -167,7 +167,7 @@ namespace TiaOpenness.Shared
         {
             if (ObjectPathEncoding.NormalizePath(requested,"softwarePath") == ObjectPathEncoding.NormalizePath(resolved,"softwarePath")) return true;
             var actual = resolved.Split('/').Select(TiaMcp.Adapters.Contracts.ObjectPathEncoding.DecodeSegment).ToArray();
-            var input = requested.Split('/');
+            var input = requested.Split('/').Select(ObjectPathEncoding.DecodeSegment).ToArray();
             if (actual.Length < 2 || input.Length < 1 || input.Any(p => p.Length == 0 || p == "." || p == "..")) return false;
             var groups = new List<string>(); int device = actual.Length - 2;
             if(actual[0] is "devices" or "ungrouped") device=1;

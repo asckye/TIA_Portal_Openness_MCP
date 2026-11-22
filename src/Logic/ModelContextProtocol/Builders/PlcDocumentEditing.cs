@@ -112,6 +112,39 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return block.ToString(SaveOptions.DisableFormatting);
         }
+        // An omitted UDT expansion may be materialized by compilation. The pre-import export is the witness for its shape and values.
+        public static string NormalizeCompiledReadback(string readback, string planned, string before)
+        {
+            var block = XElement.Parse(readback, LoadOptions.PreserveWhitespace);
+            if (block.Name.LocalName != "SW.Blocks.GlobalDB") return readback;
+            XElement? Interface(XElement value) => value.Element("AttributeList")?.Element("Interface");
+            var actual = Interface(block);
+            var plan = Interface(XElement.Parse(planned, LoadOptions.PreserveWhitespace));
+            var baseline = Interface(XElement.Parse(before, LoadOptions.PreserveWhitespace));
+            if (plan == null || baseline == null || actual == null) return readback;
+            foreach (var sections in actual.Elements().Where(e => e.Name.LocalName == "Sections"))
+            {
+                XNamespace ns = sections.Name.Namespace;
+                if (!Regex.IsMatch(ns.NamespaceName, @"/SW/Interface/v[0-9]+\z", RegexOptions.CultureInvariant)) continue;
+                foreach (var section in sections.Elements(ns + "Section"))
+                foreach (var member in section.Elements(ns + "Member"))
+                {
+                    string? type = (string?)member.Attribute("Datatype");
+                    if (type == null || type.Length < 3 || type[0] != '"' || type[type.Length - 1] != '"') continue;
+                    XElement? Peer(XElement root) => root.Elements(sections.Name).Elements(section.Name)
+                        .Where(e => (string?)e.Attribute("Name") == (string?)section.Attribute("Name")).Elements(member.Name)
+                        .SingleOrDefault(e => (string?)e.Attribute("Name") == (string?)member.Attribute("Name") && (string?)e.Attribute("Datatype") == type);
+                    var expansion = member.Element(ns + "Sections");
+                    if (expansion == null || expansion.Elements().Count() != 1 || (string?)expansion.Element(ns + "Section")?.Attribute("Name") != "None")
+                        continue;
+                    var declared = Peer(plan);
+                    var original = Peer(baseline)?.Element(expansion.Name);
+                    if (declared != null && declared.Element(expansion.Name) == null && XNode.DeepEquals(original, expansion)) expansion.Remove();
+                }
+            }
+            return block.ToString(SaveOptions.DisableFormatting);
+        }
+
         public static JsonObject Inspect(string xml)
         {
             var d = ParseDocument(xml, true); var rows = new JsonArray(); var index = 0;

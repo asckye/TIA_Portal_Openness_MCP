@@ -245,6 +245,8 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
     }
 
     [Theory, InlineData("ManagePlcExternalSources", "createGroup"), InlineData("ManagePlcTagDefinition", "update")]
+    [InlineData("ManagePlcExternalSources", "createFromFile")]
+    [InlineData("ManagePlcExternalSources", "createFromMasterCopy")]
     public async Task Reviewed_action_checks_binding_and_arguments_before_dispatch(string tool, string action)
     {
         var source = new ActionSpy(tool);
@@ -260,6 +262,11 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         var forward = new CompatibilityTools.ActionForwarder(source,
             new Dictionary<string, McpServerTool> { [destination.ProtocolTool.Name] = destination }, "21", () => binding);
         var args = new JsonObject { ["action"] = action, ["softwarePath"] = "PLC", ["name"] = "Original", ["dryRun"] = true };
+        if (action == "createFromFile")
+        {
+            args["groupPath"] = "MCP_RC_SrcGrp";
+            args["filePath"] = "C:/Sources/MCP_RC_Keep.scl";
+        }
         var preview = await forward.InvokeAsync(Request(tool, args));
         string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
         Assert.Equal(64, hash.Length);

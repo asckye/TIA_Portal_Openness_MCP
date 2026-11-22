@@ -8,6 +8,16 @@ namespace TiaMcp.Adapters.Hardware
     internal static class HardwareUtilityPolicy
     {
         internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesPolicy.RequireOneOf(value, allowed, parameter);
+        internal static List<string> FindPlugModuleTypes(string query, List<string> attempts, Func<string, IEnumerable<string>?> find)
+        {
+            string operation = $"ModuleInformationProvider.FindModuleTypes('{query}')";
+            attempts.Add(operation);
+            var types = (find(query) ?? Array.Empty<string>()).Where(type => !string.IsNullOrWhiteSpace(type)).Distinct(StringComparer.Ordinal).ToList();
+            attempts[attempts.Count - 1] = operation + " -> " + (types.Count == 0 ? "no installed types"
+                : string.Join(", ", types.Take(12)) + (types.Count > 12 ? ", ..." : ""));
+            return types;
+        }
+
         private static void RequireName(string value, string parameter, int max = 256)
             {
                 if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value)

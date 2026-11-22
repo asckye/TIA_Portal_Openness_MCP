@@ -306,15 +306,19 @@ namespace TiaMcp.Adapters
                 canonical+=string.Concat(inventory.Select(Identity).OrderBy(x=>x,StringComparer.Ordinal).Select(Field));
                 if(request.UnitName!="" || request.SwImportOptions.Length>0 || request.ImportOptions.Length>0) canonical+=Field(request.UnitName)
                     +Field(string.Join(",",request.SwImportOptions))+Field(string.Join(",",request.ImportOptions));
-                canonical+=string
-                    .Concat(items
+                string PlanHash(IEnumerable<PlcBatchImportItem> ordered) => Hash(Encoding.UTF8.GetBytes(canonical + string
+                    .Concat(ordered
                         .Select(x=>Field(x.RelativePath)+Field(x.InputSha256)+Field(Identity(x.Planned))
                             +(request.Overwrite ? Field(x.Action)+Field(x.Replaced==null ? "" : Identity(x.Replaced))+Field(x.Replaced?.BackupBlocker ?? "")
-                                : "")));
-                result.PlanHash=Hash(Encoding.UTF8.GetBytes(canonical));
+                                : "")))));
+                result.PlanHash=PlanHash(items);
                 // Approval is optional. Apply admission must precede recovery access and every native export/import.
                 if(!request.DryRun && !string.Equals(result.PlanHash,request.ExpectedHash,StringComparison.Ordinal))
+                {
+                    if (request.Program && PlanHash(items.OrderBy(x => x.RelativePath, StringComparer.Ordinal)) == request.ExpectedHash)
+                        throw new AdapterPreconditionException("The import order differs from the approved plan.", "importOrder");
                     throw new AdapterPreconditionException("Plan or project changed; review a fresh preview before applying.","expectedPlanHash");
+                }
                 if(items.Any(x=>x.Status=="replace-blocked"))
                 {
                     if(!request.DryRun)

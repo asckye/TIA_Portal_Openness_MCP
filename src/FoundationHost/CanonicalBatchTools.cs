@@ -210,6 +210,9 @@ internal static class CanonicalBatchTools
             {
                 var selectorArgs = Common(); selectorArgs["exportDir"] = exportRoot; selectorArgs["regexName"] = Text("regexName");
                 var listed = Body(await Invoke(roster[tool.Name], selectorArgs, request, token));
+                if ((bool?)listed["ok"] == false && (string?)listed["error"]?["code"] == "PRECONDITION_FAILED")
+                    throw AdapterPreconditionException.Failed(HostBehavior.SafeDiagnostic((string?)listed["error"]?["message"])
+                        ?? "Technology export inventory was refused.", (string?)listed["error"]?["details"]?["condition"] ?? "export-plan", null);
                 if ((bool?)listed["ok"] != true || listed["data"]?["evidence"]?["items"] is not JsonArray inventory)
                     throw new InvalidDataException((string?)listed["error"]?["message"] ?? "Technology export inventory is unavailable.");
                 foreach (var entry in inventory)

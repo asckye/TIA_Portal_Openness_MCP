@@ -13,6 +13,21 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class CaxTransferResultTests
 {
     [Fact]
+    public void Aml_export_marks_only_failures_before_the_CAEX_call_as_unmutated()
+    {
+        var engine = new LegacyEngine("14sp1", new LegacyCax.CaxProvider(new(LegacyCax.TransferResultState.Warning, 0, 0, [])));
+        engine.ResolveEngineeringDevice = name => new legacycax::Siemens.Engineering.HW.Device { Name = name };
+        string output = Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString("N") + ".aml");
+        engine.AdmitHardwareAmlExport = _ => throw new IOException("Target already exists.");
+        var refusal = Assert.Throws<IOException>(() => engine.ExportHardwareAml("MCP_RC_PLC", output));
+        Assert.Equal(true, refusal.Data["foundationKnownNoMutation"]);
+        Assert.Equal("export-admission", refusal.Data["phase"]);
+        engine.AdmitHardwareAmlExport = null;
+        var issued = Assert.Throws<NotSupportedException>(() => engine.ExportHardwareAml("MCP_RC_PLC", output));
+        Assert.False(issued.Data.Contains("foundationKnownNoMutation"));
+    }
+
+    [Fact]
     public void Legacy_importer_can_acquire_its_own_exclusive_scope_after_admission()
     {
         var provider = new LegacyCax.CaxProvider(new(LegacyCax.TransferResultState.Error, 1, 0, []));

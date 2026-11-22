@@ -375,11 +375,12 @@ internal sealed class FoundationV4Tool : McpServerTool
                         {
                             if (inner is FoundationTool applyTool) applyTool.ValidateApplyArguments(args);
                         }
-                        catch (ArgumentException ex)
+                        catch (Exception ex) when (ex is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException { IsArgument: true })
                         {
+                            var parameter = ex is ArgumentException argument ? argument.ParamName : ((TiaMcp.Adapters.Contracts.AdapterPreconditionException)ex).ParamName;
                             refusal = FoundationV4Result
                                 .Reject(release, tool.Name, id,
-                                    new Error(ex.Message, new InvalidArgumentDetails(ex.ParamName ?? "", Array.Empty<string>())),
+                                    new Error(ex.Message, new InvalidArgumentDetails(parameter ?? "", Array.Empty<string>())),
                                     inner is FoundationTool { IsNative: true });
                         }
                         if (refusal == null)

@@ -8,6 +8,15 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
+        internal static (string Name, object Collection, object? Target) SelectLibraryFolder(string path, string action, System.Func<string, object> parentAt)
+        {
+            var parts = PlcGroupOperations.Parts(path, rootAllowed: action == "read");
+            var parent = parentAt(string.Join("/", parts.Take(parts.Length - 1)));
+            var folders = PlcGroupOperations.Get(parent, "Folders");
+            string name = parts.LastOrDefault() ?? "";
+            return (name, folders, parts.Length == 0 ? parent : PlcGroupOperations.Find(folders, name));
+        }
+
         internal static void RequireSelectedTypes(IEnumerable<ILibraryTypeOrFolderSelection> selection)
         {
             bool ContainsType(LibraryTypeFolder folder) => PlcGroupOperations.Items(folder.Types).Any()

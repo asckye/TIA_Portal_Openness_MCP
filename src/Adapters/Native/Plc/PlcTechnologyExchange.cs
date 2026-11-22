@@ -81,7 +81,11 @@ namespace TiaMcp.Adapters.Native.Plc
             if (IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project open.");
             var plc = _session.GetPlcSoftware(softwarePath)
                 ?? throw new PlcSoftwareException("NotFound", "PLC software not found.");
-            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath, _session.PlcSoftwarePath(plc), true);
+            // GetPlcSoftware resolves a unique PLC. Bind both the plan and the apply recheck to its exact identity.
+            string exactPath = _session.PlcSoftwarePath(plc);
+            if (!TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(softwarePath, exactPath))
+                throw new AdapterPreconditionException("Resolved PLC identity does not match the requested software path.", nameof(softwarePath));
+            softwarePath = exactPath;
             string root = Path.GetFullPath(exportDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             var regex = string.IsNullOrWhiteSpace(regexName) ? null : new Regex(regexName, RegexOptions.IgnoreCase);
             var selected = EnumerateTechnologyObjectsRecursive(plc)
@@ -90,8 +94,9 @@ namespace TiaMcp.Adapters.Native.Plc
             foreach (var row in selected)
             {
                 if (row.To.IsKnowHowProtected)
-                    throw new AdapterPreconditionException("Know-how protected technology objects are outside this export scope.", "export-plan", false);
-                if (!row.To.IsConsistent) TiaOpenness.Shared.NativeExportPolicy.RequireApply("inconsistent");
+                    throw new AdapterPreconditionException($"Technology object '{row.To.Name}' is know-how protected.", "export-plan", false);
+                if (!row.To.IsConsistent)
+                    throw new AdapterPreconditionException($"Technology object '{row.To.Name}' is inconsistent. Compile it before export.", "export-plan", false);
                 string name = WatchNative.Name(row.To) ?? "";
                 var parts = row.Folder.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(ObjectPathEncoding.DecodeSegment).Concat(new[] { name }).ToArray();

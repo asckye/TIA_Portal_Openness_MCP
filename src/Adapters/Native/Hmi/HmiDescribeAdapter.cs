@@ -68,7 +68,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             }
 #endif
 
-            return new HmiProgramInfo { Name = sw.ToString(), ProgramType = "Unknown", Screens = new List<string>() };
+            throw new PlcSoftwareException("NotFound", $"No HMI software at '{softwarePath}'.");
         }
 
         public HmiDescribe DescribeHmiSoftware(string softwarePath, int maxMembers = 200)

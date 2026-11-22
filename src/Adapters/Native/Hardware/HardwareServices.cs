@@ -271,7 +271,8 @@ namespace TiaMcp.Adapters
                     var typeName = HardwareServicesPolicy.FeatureTypeName(feature);
                     var type = typeof(HardwareObject).Assembly.GetType(typeName) ?? typeof(PlcSoftware).Assembly.GetType(typeName);
                     var row = new Dictionary<string, object?> {
-                        ["feature"] = feature, ["type"] = typeName, ["typeAvailableInApi"] = type != null, ["present"] = null };
+                        ["feature"] = feature, ["type"] = typeName, ["typeAvailableInApi"] = type != null, ["present"] = null,
+                        ["advertised"] = advertised.Contains(typeName, StringComparer.Ordinal) };
                     if (type == null || !typeof(IEngineeringService).IsAssignableFrom(type) || type.IsAbstract || type.IsInterface) {
                         row["skipped"] = type == null ? "type absent on this version" : "not a concrete service type"; rows.Add(row); continue; }
                     object? service;
@@ -292,7 +293,7 @@ namespace TiaMcp.Adapters
                         && scalar.TryGetValue("dataComplete", out var complete) && Equals(complete, false)));
                 meta["scope"] =
                     "Catalog of Siemens.Engineering.HW.Features.* checked against the connected TIA Portal " + ReleaseKey
-                    + " API; presence via GetService<T>, scalar values only. Nothing written.";
+                    + " API. Advertised means listed by GetServiceInfos. Present means GetService<T> returned an instance on the selected object.";
                 return "Hardware feature services probed on the exact hardware object; read-only.";
             }, writing: false);
 

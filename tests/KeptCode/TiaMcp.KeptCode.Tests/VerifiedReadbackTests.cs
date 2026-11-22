@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcpServer.ModelContextProtocol;
@@ -102,9 +104,9 @@ namespace TiaMcp.Engine.Tests
             internal Fixture(string xml) { candidateXml = xml; Current = xml; After = xml; }
             private void Export(string path) => File.WriteAllText(path, Current);
             private void Import(string path) { Assert.True(File.Exists(path)); Imports++; Current = After; }
-            internal JsonObject Run(bool preview, string token = "")
+            internal JsonObject Run(bool preview, string token = "", JsonObject? meta = null)
             {
-                var meta = new JsonObject();
+                meta ??= new JsonObject();
                 PlcVerifiedImport.Execute(candidateXml, "PLC/" + PlcVerifiedImport.CandidateName(candidateXml), directory,
                     preview, token, Export, Import, () => { }, meta, () => { });
                 return meta;
@@ -154,6 +156,52 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal((string?)result["plannedFingerprint"], (string?)result["actualFingerprint"]);
         }
 
+        [Theory]
+        [InlineData("", true)]
+        [InlineData("member", false)]
+        [InlineData("type", false)]
+        [InlineData("value", false)]
+        [InlineData("retain", false)]
+        [InlineData("declared", false)]
+        [InlineData("noPriorExpansion", false)]
+        public void Compiled_V14_DB_verifies_referenced_members_against_the_preimport_export(string change, bool matches)
+        {
+            string folder = Path.Combine(Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/V14Sp1");
+            var document = XDocument.Load(Path.Combine(folder, "155-global-db.xml"));
+            var diff = JsonNode.Parse(File.ReadAllText(Path.Combine(folder, "171-interface-diff.json")))!.AsArray();
+            PlcDocumentEditing.Child(PlcDocumentEditing.Child(PlcDocumentEditing.Block(document), "AttributeList"), "Name").Value = "MCP_RC_DB";
+            var section = document.Descendants().Single(e => e.Name.LocalName == "Section");
+            XNamespace ns = section.Name.Namespace;
+            section.ReplaceNodes(new XElement(ns + "Member", new XAttribute("Name", "Count"), new XAttribute("Datatype", "Int"),
+                new XElement(ns + "StartValue", "3")), new XElement(ns + "Member", new XAttribute("Name", "Motor"),
+                new XAttribute("Datatype", "\"MCP_RC_UDT\"")));
+            var motor = section.Elements().Last();
+            var xml = document.ToString();
+            var members = diff.Select(line => (string)line!).Where(line => line.StartsWith("+[Interface] None ", StringComparison.Ordinal))
+                .Select(line => line.Substring("+[Interface] None ".Length).Split(" : "))
+                .Select(pair => new XElement(ns + "Member", new XAttribute("Name", pair[0]), new XAttribute("Datatype", pair[1]))).ToArray();
+            Assert.Equal(2, members.Length);
+            motor.Add(new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None"), members)));
+            using var fixture = new Fixture(xml) { Current = change == "noPriorExpansion" ? xml : document.ToString() };
+            foreach (var member in section.Elements()) member.SetAttributeValue("Remanence", "NonRetain");
+            switch (change)
+            {
+                case "member": members[0].SetAttributeValue("Name", "Ready"); break;
+                case "type": members[1].SetAttributeValue("Datatype", "DInt"); break;
+                case "value": members[1].Add(new XElement(ns + "StartValue", "4")); break;
+                case "retain": motor.SetAttributeValue("Remanence", "Retain"); break;
+                case "declared": section.Elements().First().Element(ns + "StartValue")!.Value = "4"; break;
+            }
+            fixture.After = document.ToString();
+            var preview = fixture.Run(true);
+            var applied = fixture.Run(false, (string)preview["token"]!, new JsonObject { ["softwarePath"] = "MCP_RC_PLC",
+                ["blockPath"] = "MCP_RC_Grp/MCP_RC_DB" });
+            Assert.Equal(matches, (bool?)applied["verificationSuccess"]);
+            Assert.Equal(matches ? "DocumentReadbackMatched" : "DocumentReadbackMismatch", (string?)applied["status"]);
+            if (!matches) Assert.Equal("MCP_RC_PLC/MCP_RC_Grp/MCP_RC_DB", (string?)applied["cleanupRequired"]![0]!["target"]);
+        }
+
         [Fact]
         public void Changed_network_text_still_mismatches()
         {
@@ -194,6 +242,7 @@ namespace TiaMcp.Engine.Tests
             PlcDocumentEditing.Child(PlcDocumentEditing.Child(PlcDocumentEditing.Block(current), "AttributeList"), attribute).Value = value;
             fixture.Current = current.ToString();
             var second = fixture.Run(true);
+            Assert.NotEqual((string?)first["backup"]!["sha256"], (string?)second["backup"]!["sha256"]);
             Assert.Equal((string?)first["token"], (string?)second["token"]);
             fixture.After = fixture.Current;
             var applied = fixture.Run(false, (string)first["token"]!);

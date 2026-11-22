@@ -209,7 +209,8 @@ namespace TiaMcp.PlcWorker
                 failureObserved?.Invoke(cause);
                 if (cause is WorkerPrimitiveFailureException primitiveFailure)
                     return ChannelResponse.Error(primitiveFailure.Failure);
-                var classification = WorkerFailurePolicy.Classify(cause, enteredOperation, readOnly);
+                // AML is read-only for the project, but CAx can create a partial output file after export starts.
+                var classification = WorkerFailurePolicy.Classify(cause, enteredOperation, readOnly && request.Method != "adapter.hardware-aml.ExportHardwareAml");
                 return ChannelResponse.Error(new ChannelFailureException(WorkerFailurePolicy.DiagnosticCause(cause).Message, classification.Code,
                     classification.Outcome, WorkerJson.Evidence(cause)));
             }

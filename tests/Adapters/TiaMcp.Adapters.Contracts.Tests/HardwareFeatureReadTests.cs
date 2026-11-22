@@ -84,6 +84,42 @@ public sealed class HardwareFeatureReadTests
     }
 
     [Fact]
+    public void Plug_without_version_records_the_catalog_lookup_and_installed_versions()
+    {
+        const string query = "OrderNumber:6ES7 521-1BH00-0AB0";
+        string[] installed = { query + "/V1.0", query + "/V2.0" };
+        var attempts = new List<string>();
+        var found = Hardware.HardwareUtilityPolicy.FindPlugModuleTypes(query, attempts, value => {
+            Assert.Equal(query, value);
+            return installed;
+        });
+        Assert.Equal(installed, found);
+        string lookup = Assert.Single(attempts);
+        Assert.Contains("FindModuleTypes", lookup);
+        Assert.All(installed, type => Assert.Contains(type, lookup));
+        attempts.Clear();
+        Assert.Throws<IOException>(() => Hardware.HardwareUtilityPolicy.FindPlugModuleTypes(query, attempts, _ => throw new IOException()));
+        Assert.Contains(query, Assert.Single(attempts));
+    }
+
+    [Fact]
+    public void V14_advertisement_and_instance_probe_are_reported_independently()
+    {
+        var fixture = HardwareWriteFailureTests.NativeFixture("14sp1");
+        var type = typeof(Siemens.Engineering.HW.Features.NetworkInterface);
+        fixture.Cpu.AdvertisedServices.Add(new Siemens.Engineering.EngineeringServiceInfo { Type = type });
+        Dictionary<string, object?> Probe() => Rows(fixture.Engine.HardwareReadHardwareFeatures(new[] { "PLC" }, new[] { "CPU" }))
+            .Single(row => Equals(row["type"], type.FullName));
+        var advertised = Probe();
+        Assert.Equal(true, advertised["advertised"]);
+        Assert.Equal(false, advertised["present"]);
+        fixture.Cpu.Services[type] = new Siemens.Engineering.HW.Features.NetworkInterface();
+        var available = Probe();
+        Assert.Equal(true, available["advertised"]);
+        Assert.Equal(true, available["present"]);
+    }
+
+    [Fact]
     public void Missing_service_on_selected_item_carries_target_refusal()
     {
         var fixture = HardwareWriteFailureTests.NativeFixture("21");

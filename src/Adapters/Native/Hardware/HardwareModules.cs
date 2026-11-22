@@ -189,7 +189,7 @@ namespace TiaMcp.Adapters
                 slotCandidates = free.Select(x => x.PositionNumber).ToList();
             }
 
-            var resolved = ResolvePlugTypeIdentifier(orderNumber, version);
+            var resolved = ResolvePlugTypeIdentifier(orderNumber, version, result.Attempts);
             if (resolved.TypeIdentifier == null)
             {
                 result.Reason = resolved.Reason;
@@ -400,7 +400,7 @@ namespace TiaMcp.Adapters
         // used verbatim; otherwise ModuleInformationProvider.FindModuleTypes on the partial identifier "OrderNumber:<orderNumber>"
         // returns the complete identifiers of the installed versions and exactly the requested version is selected.
         // No spelling or version variants are generated and only one identifier reaches CanPlugNew/PlugNew.
-        private (string? TypeIdentifier, string Reason, string Message) ResolvePlugTypeIdentifier(string orderNumber, string version)
+        private (string? TypeIdentifier, string Reason, string Message) ResolvePlugTypeIdentifier(string orderNumber, string version, List<string> attempts)
         {
             var raw = (orderNumber ?? "").Trim();
             var requestedVersion = (version ?? "").Trim();
@@ -409,9 +409,8 @@ namespace TiaMcp.Adapters
             List<string> types;
             try
             {
-                var provider = HardwareRequireUtility<ModuleInformationProvider>("ModuleInformationProvider");
-                types = (provider.FindModuleTypes(partial) ?? Array.Empty<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct(StringComparer.Ordinal)
-                    .ToList();
+                types = Hardware.HardwareUtilityPolicy.FindPlugModuleTypes(partial, attempts,
+                    query => HardwareRequireUtility<ModuleInformationProvider>("ModuleInformationProvider").FindModuleTypes(query));
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {

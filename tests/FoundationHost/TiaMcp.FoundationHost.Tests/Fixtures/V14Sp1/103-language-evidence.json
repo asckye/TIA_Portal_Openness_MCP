@@ -1,0 +1,27 @@
+{
+  "tool": "ManageProjectLanguage",
+  "mayHaveChanged": false,
+  "before": {
+    "activeCultures": [
+      "zh-CN"
+    ],
+    "editingCulture": "zh-CN",
+    "referenceCulture": "zh-CN"
+  },
+  "dryRun": true,
+  "nativeExceptionType": "System.InvalidOperationException",
+  "operationSuccess": false,
+  "apiCallSuccess": false,
+  "dataComplete": false,
+  "status": "ReadOrWriteFailed",
+  "parameter": null,
+  "nativeMessage": "Cannot deactivate current editing/reference language.",
+  "v4FailureCode": "PRECONDITION_FAILED",
+  "summary": "ManageProjectLanguage failed",
+  "executionEvidence": {
+    "issued": 0,
+    "confirmed": 0,
+    "knownSideEffects": false,
+    "stage": "read"
+  }
+}

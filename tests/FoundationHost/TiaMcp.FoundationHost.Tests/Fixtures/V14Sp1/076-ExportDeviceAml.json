@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 4,
+  "ok": false,
+  "data": null,
+  "error": {
+    "code": "OUTCOME_UNKNOWN",
+    "message": "The write outcome cannot be confirmed. Rebuild the session and inspect the target before continuing.",
+    "details": {
+      "stage": "hardware-operation",
+      "evidence": {},
+      "reason": null
+    }
+  },
+  "meta": {
+    "timestamp": "2026-11-22T14:42:22.8792360Z",
+    "releaseKey": "14sp1",
+    "tool": "ExportDeviceAml",
+    "requestId": "6ca6a531dd5b47f88f0dee3e25a91a64",
+    "outcome": "unknown",
+    "execution": "unknown",
+    "behaviorPolicy": "current",
+    "completeness": "unknown",
+    "paging": null,
+    "warnings": [
+      {
+        "code": "UNVERIFIED_BEHAVIOR",
+        "message": "Native behaviorPolicy=current; V4 native acceptance is pending.",
+        "details": {}
+      },
+      {
+        "code": "APPROVAL_DISABLED",
+        "message": "Workbench approval is disabled for this MCP write call.",
+        "details": {
+          "enabled": false
+        }
+      }
+    ],
+    "elapsedMs": 541,
+    "workerElapsedMs": 407
+  }
+}

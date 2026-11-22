@@ -7,6 +7,19 @@ using Xunit;
 public sealed class HmiDescribeToolsTests
 {
     [Fact]
+    public void Plc_software_cannot_produce_a_successful_HMI_program_description()
+    {
+        var service = new Service((_, args) => {
+            Assert.Equal("MCP_RC_PLC", (string?)args["request"]?["SoftwarePath"]);
+            return new JsonObject { ["MayHaveChanged"] = false, ["OutcomeUnknown"] = false,
+                ["Failure"] = new JsonObject { ["Code"] = "NotFound", ["Message"] = "No HMI software at 'MCP_RC_PLC'." } };
+        }, () => "fixture");
+        var result = new Host.HmiDescribeTools(service).GetHmiProgramInfoV4("MCP_RC_PLC").StructuredContent!;
+        Assert.False((bool?)result["ok"]);
+        Assert.Equal("NOT_FOUND", (string?)result["error"]?["code"]);
+    }
+
+    [Fact]
     public void Worker_truncation_reaches_completeness()
     {
         var service = new Service((_, _) => new JsonObject { ["Value"] = JsonNode.Parse(

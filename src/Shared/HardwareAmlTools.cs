@@ -31,6 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("exportPath: target folder or full .aml file path")] string exportPath)
             => HardwareContract.Run("ExportDeviceAml", () =>
             {
+                CallerInputFiles.ValidateNativeFile("ExportDeviceAml", new JsonObject { ["exportPath"] = exportPath });
                 HardwareContract.RequireProject(_service.HasProject);
                 return ExportDeviceAml(devicePath, exportPath);
             }, write: true, current: true);

@@ -1,0 +1,23 @@
+{
+  "success": false,
+  "deviceItemPath": "MCP_RC_PLC/MCP_RC_DI",
+  "attributeName": "McpRcNoSuchAttr",
+  "mayHaveChanged": false,
+  "availableAttributes": [
+    "Author",
+    "Classification",
+    "Comment",
+    "Container",
+    "FirmwareVersion",
+    "IsBuiltIn",
+    "IsPlugged",
+    "Items",
+    "LocationIdentifier",
+    "Name",
+    "OrderNumber",
+    "PlantDesignation",
+    "PositionNumber",
+    "TypeIdentifier",
+    "TypeName"
+  ]
+}

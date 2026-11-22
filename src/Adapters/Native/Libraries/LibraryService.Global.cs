@@ -154,12 +154,8 @@ namespace TiaMcp.Adapters
                 if (folderKind != "types" && folderKind != "masterCopies") throw new ArgumentException("folderKind must be types/masterCopies.");
                 if (!new[] { "read", "create", "rename", "delete" }.Contains(action))
                     throw new ArgumentException("action must be one of: read/create/rename/delete (case-sensitive).");
-                var parts = PlcGroupOperations.Parts(folderPath); // Root cannot be mutated.
-                var library = ExactOpenEngineeringLibrary(libraryName);
-                var parent =
-                    EngineeringLibraryFolder(library,string.Join("/",parts.Take(parts.Length-1)),folderKind=="types" ? "TypeFolder" : "MasterCopyFolder");
-                var collection = PlcGroupOperations.Get(parent,"Folders");
-                var target = PlcGroupOperations.Find(collection,parts.Last());
+                var (name, collection, target) = SelectLibraryFolder(folderPath, action,
+                    path => EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName), path, folderKind == "types" ? "TypeFolder" : "MasterCopyFolder"));
                 if ((action=="create") == (target!=null))
                     throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action=="create" ? "Folder exists."
                         : "Exact folder not found.");
@@ -175,10 +171,10 @@ namespace TiaMcp.Adapters
                 if(target!=null) meta["before"]=HardwareScalarEvidence.Read(target);
                 if(action=="read" || dryRun) return "Library folder read/preview; no mutation.";
                 using var access=HardwareEditAccess(); meta["mayHaveChanged"]=true;
-                if(action=="create") target=PlcGroupOperations.Call(collection,"Create",new[]{typeof(string)},parts.Last());
+                if(action=="create") target=PlcGroupOperations.Call(collection,"Create",new[]{typeof(string)},name);
                 else if(action=="delete") {
                     PlcGroupOperations.Call(target!,"Delete",Type.EmptyTypes);
-                    if(PlcGroupOperations.Find(collection,parts.Last())!=null) throw new InvalidOperationException("Folder remains after delete.");
+                    if(PlcGroupOperations.Find(collection,name)!=null) throw new InvalidOperationException("Folder remains after delete.");
                     meta["verifiedAbsent"]=true; return "Empty library folder deleted; no save.";
                 } else
                     LibraryApply(target!,

@@ -434,10 +434,10 @@ namespace TiaMcpServer.Runtime
         //   DB10.DBX2.3 / DB10.DBB4 / DB10.DBW6 / DB10.DBD8
         //   M0.0 / MB10 / MW12 / MD14   (same for I and Q)
         private static readonly Regex DbRx = new Regex(
-            @"^DB(?<db>\d+)\.DB(?<sz>[XBWD])(?<byte>\d+)(?:\.(?<bit>\d+))?$",
+            @"^DB(?<db>\d+)\.DB(?<sz>[XBWD])(?<byte>\d+)(?:\.(?<bit>[0-7]))?$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex BitRx = new Regex(
-            @"^(?<area>[MIQ])(?<byte>\d+)\.(?<bit>\d+)$",
+            @"^(?<area>[MIQ])(?<byte>\d+)\.(?<bit>[0-7])$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex SzRx = new Regex(
             @"^(?<area>[MIQ])(?<sz>[BWD])(?<byte>\d+)$",

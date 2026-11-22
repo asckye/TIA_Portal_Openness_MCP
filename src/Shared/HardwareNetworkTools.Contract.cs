@@ -258,6 +258,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!(node is JsonObject obj)) return;
             foreach (var pair in obj.ToArray())
             {
+                if (pair.Value == null) continue;
                 if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] =
                     "Native observation failed; details are available in the local diagnostic log.";
                 else if (pair.Key == "nativeMessage") obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());

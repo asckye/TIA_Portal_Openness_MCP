@@ -62,6 +62,8 @@ namespace Siemens.Engineering.HW
         public string Name { get; set; } = "";
         public object? Parent { get; set; }
         public Dictionary<Type, object> Services { get; } = new();
+        internal List<EngineeringServiceInfo> AdvertisedServices { get; } = new();
+        public IEnumerable<EngineeringServiceInfo> GetServiceInfos() => AdvertisedServices;
         internal Dictionary<Type, Exception> ServiceFailures { get; } = new();
         public List<string> Calls { get; } = new();
         public Exception? AttributeFailure { get; set; }

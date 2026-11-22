@@ -1,3 +1,4 @@
+extern alias toolpipeline;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -489,6 +490,31 @@ public sealed class CanonicalBatchToolsTests
         if (!watch) Assert.Equal("^mixedname$", (string?)Assert.Single(source.Arguments)["regexName"]);
     }
 
+    [Theory]
+    [InlineData("know-how protected")]
+    [InlineData("inconsistent")]
+    public async Task Technology_inventory_refusal_reaches_the_batch_with_object_name_and_reason(string reason)
+    {
+        const string name = "ExportTechnologyObjectsToDirectory";
+        using var files = new Files();
+        string message = $"Technology object 'MCP_RC_Axis' is {reason}.";
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((_, args) => {
+            Assert.Equal("MCP_RC_PLC", (string?)args["request"]?["SoftwarePath"]);
+            return new JsonObject { ["MayHaveChanged"] = false, ["OutcomeUnknown"] = false, ["Failure"] = new JsonObject {
+                ["Code"] = "AdapterPreconditionException", ["Message"] = message, ["Evidence"] = new JsonObject { ["parameter"] = "export-plan" } } };
+        }, () => true, () => "C:/Project.ap14");
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.PlcTechnologyTools(service);
+        var source = new Target(name) { PreviewRefusal = tools.ExportTechnologyObjectsToDirectoryV4("MCP_RC_PLC", files.Directory) };
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> { [name] = source },
+            "14sp1", () => Binding.DeepClone().AsObject());
+        var reply = await batch.InvokeAsync(Request(name, new JsonObject { ["softwarePath"] = "MCP_RC_PLC", ["exportDir"] = files.Directory }));
+        Assert.Equal("PRECONDITION_FAILED", (string?)reply.StructuredContent!["error"]?["code"]);
+        Assert.Equal("not-started", (string?)reply.StructuredContent["meta"]?["execution"]);
+        Assert.Contains(message, (string?)reply.StructuredContent["error"]?["message"]);
+        Assert.Single(source.Arguments);
+        Assert.Empty(source.Writes);
+    }
+
     [Fact]
     public async Task Only_a_batch_supplies_the_validated_root_to_the_native_export_request()
     {
@@ -754,6 +780,7 @@ public sealed class CanonicalBatchToolsTests
         internal int Calls;
         internal int FailWrite;
         internal bool BlockPreview;
+        internal CallToolResult? PreviewRefusal;
         internal bool HashInEvidence;
         internal string[] TechnologyPaths = new[] { "Axis" };
         internal bool OmitRequestId;
@@ -776,6 +803,7 @@ public sealed class CanonicalBatchToolsTests
             var args = JsonSerializer.SerializeToNode(request.Params!.Arguments)!.AsObject();
             Arguments.Add(args.DeepClone().AsObject());
             bool write = (bool?)args["dryRun"] == false;
+            if (!write && PreviewRefusal != null) return ValueTask.FromResult(PreviewRefusal);
             if (write) {
                 var grant = GenerationStepApproval.Match(PendingApproval.Create("test", release, name, args.ToJsonString(), null, 120)); Assert.NotNull(grant);
                 Assert.Null(grant.Reason); Assert.True((bool?)args["confirm"]); Assert.Equal("C:/Project.ap21", (string?)args["expectedProjectFile"]); Writes

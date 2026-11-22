@@ -9,6 +9,13 @@ namespace TiaMcp.FoundationHost.Tests;
 
 public sealed class ReadablePathContractTests
 {
+    [Fact]
+    public void A_batch_alias_decodes_each_segment_after_splitting()
+    {
+        Assert.True(TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches("PLC%2F1", "devices/Station/PLC%2F1"));
+        Assert.False(TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches("PLC/1", "devices/Station/PLC%2F1"));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("组\\表")]

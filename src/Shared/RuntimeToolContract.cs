@@ -23,6 +23,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 unique: parameter == "vars" || parameter == "tags" || parameter == "systemNames", trim: true);
             return Json(values, parameter, NameListValidator.Create(policy));
         }
+        internal static string S7Addresses(string[] items)
+        {
+            var names = Names(items, nameof(items), false);
+            if (items.Any(spec => S7LiveReader.ParseSpec(spec).Error != null))
+                throw new InputFailureException(McpServer.InvalidInput(nameof(items), "absolute S7 addresses with bit offsets from 0 to 7"));
+            return names;
+        }
+
         internal static string Path(string[] value, string parameter, bool rootAllowed)
             => Json(value, parameter, PathValidator.Create(rootAllowed));
         internal static string Answers(AttributeMap<string> value)

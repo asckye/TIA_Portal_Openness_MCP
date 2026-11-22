@@ -121,17 +121,20 @@ namespace TiaMcp.Logic.V4.Domain
             var byId = new Dictionary<string, Artifact>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in artifacts!)
             { Require(item != null && !byId.ContainsKey(item.Id)); byId.Add(item!.Id, item); }
-            var active = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var active = new List<string>();
             var done = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var ordered = new List<string>();
             void Visit(Artifact item)
             {
                 if (done.Contains(item.Id)) return;
-                Require(active.Add(item.Id));
+                int cycle = active.IndexOf(item.Id);
+                if (cycle >= 0)
+                    throw new InputRejectionException(diagnostic: "Cyclic import dependency: " + string.Join(" -> ", active.Skip(cycle).Append(item.Id)));
+                active.Add(item.Id);
                 var dependencies = (item.Dependencies ?? System.Array.Empty<string>()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
                 foreach (string id in dependencies) Require(byId.ContainsKey(id));
                 foreach (string id in dependencies.OrderBy(id => byId[id].Priority ?? 0).ThenBy(id => id, StringComparer.OrdinalIgnoreCase)) Visit(byId[id]);
-                active.Remove(item.Id); done.Add(item.Id); ordered.Add(item.Id);
+                active.RemoveAt(active.Count - 1); done.Add(item.Id); ordered.Add(item.Id);
             }
             foreach (var item in artifacts.OrderBy(a => a.Priority ?? 0).ThenBy(a => a.Target, StringComparer.OrdinalIgnoreCase)
                     .ThenBy(a => a.Id, StringComparer.OrdinalIgnoreCase))

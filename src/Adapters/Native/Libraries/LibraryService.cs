@@ -356,6 +356,7 @@ namespace TiaMcp.Adapters
                     if (masterCopyFolder == null) meta["masterCopyFolderNote"] = library.GetType().Name + " exposes no MasterCopyFolder.";
                 }
                 foreach (var pair in LibraryCapabilities.OverviewCounts(items, copies, maxItems)) meta[pair.Key] = pair.Value;
+                if (LibraryCapabilities.IncompleteOverview(meta)) meta["dataComplete"] = false;
                 meta["apiCallSuccess"] = true;
                 meta["scope"] =
                     "Library header (GlobalLibrary scalars, comment per culture, history entries, used products), type folder tree with consistency Status / " +

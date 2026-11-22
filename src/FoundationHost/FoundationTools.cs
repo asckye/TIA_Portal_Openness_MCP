@@ -169,6 +169,9 @@ internal sealed partial class FoundationTool : McpServerTool
     internal CallToolResult ParkWorkerResult(CallToolResult result, string name) => worker is IFoundationWorkerResult store ? store.ParkResult(result, name) : result;
     internal IDisposable? EnterSharedRequest(RequestContext<CallToolRequestParams> request) => (worker as IFoundationSessionWorker)?.EnterRequest(request);
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TiaMcp.Logic.ModelContextProtocol.ImportStagingSession, TiaMcp.Logic.ModelContextProtocol.ImportStagingStore> SharedStagingStores = new();
+    // The native plan hash remains authoritative. Remember recent orders to identify which reviewed input changed.
+    private readonly Queue<(string Plan, string Order)> reviewedProgramOrders = new();
+    private static string OrderDigest(IEnumerable<string> paths) => TiaOpenness.Shared.PendingApproval.Hash(JsonSerializer.Serialize(paths));
     private readonly Definition definition;
     private readonly IFoundationWorker worker;
     private readonly TiaMcp.Logic.ModelContextProtocol.ImportStagingStore? stagingForTest;
@@ -290,15 +293,23 @@ internal sealed partial class FoundationTool : McpServerTool
             if(values["dryRun"]?.GetValue<bool>()==false)
             {
                 var refusal=TiaMcp.Logic.V4.HostBehavior.BatchApplyRefusal(definition.Name,values);
-                if(refusal?.Details is TiaMcp.Logic.V4.InvalidArgumentDetails argument) throw new ArgumentException(refusal.Message,argument.Parameter);
+                if(refusal?.Details is TiaMcp.Logic.V4.InvalidArgumentDetails argument) throw new AdapterPreconditionException(refusal.Message,argument.Parameter);
             }
 
             TiaOpenness.Shared.NativeExportPolicy.RequireBatchOptions(values["compileAfter"]?.GetValue<bool>() ?? false,
                 values["stopOnImportFailure"]?.GetValue<bool>() ?? true,values["technologyFolderPath"]?.GetValue<string>() ?? "");
             if(!values["dryRun"]!.GetValue<bool>())
             {
-                if(values["importOrder"]!.AsArray().Count==0) throw new ArgumentException("Apply requires importOrder from a reviewed preview.","importOrder");
+                if(values["importOrder"]!.AsArray().Count==0) throw new AdapterPreconditionException("Apply requires importOrder from a reviewed preview.","importOrder");
                 if(string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Apply requires expectedPlanHash from a reviewed preview.","expectedPlanHash");
+                if (definition.Name == "ImportPlcProgramFromDirectory")
+                {
+                    string plan = values["expectedPlanHash"]!.GetValue<string>();
+                    string digest = OrderDigest(values["importOrder"]!.AsArray().Select(path => (string)path!));
+                    lock (reviewedProgramOrders)
+                        if (reviewedProgramOrders.Any(entry => entry.Plan == plan && entry.Order != digest))
+                            throw new AdapterPreconditionException("The import order differs from the approved plan.", "importOrder");
+                }
             }
         }
         if(definition.ResponseMember=="DeviceAdd" && !values["dryRun"]!.GetValue<bool>() && string.IsNullOrWhiteSpace(values["expectedPlanHash"]!.GetValue<string>())) throw new ArgumentException("Creation requires a reviewed expectedPlanHash.","expectedPlanHash");
@@ -353,6 +364,21 @@ internal sealed partial class FoundationTool : McpServerTool
                     Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
             }
             cancellationToken.ThrowIfCancellationRequested();
+            if (definition.ResponseMember is "BatchExport" or "BatchImport" or "BatchDocumentExport" or "BatchDocumentImport" or "CrossReferenceAnalysis")
+            {
+                string path = (string)values["softwarePath"]!;
+                static bool Rooted(string value) => value.StartsWith("devices/", StringComparison.Ordinal) || value.StartsWith("device-groups/", StringComparison.Ordinal)
+                    || value.StartsWith("ungrouped/", StringComparison.Ordinal);
+                if (!Rooted(path))
+                {
+                    var info = await worker.Call("ReadSoftwareInfo", new JsonObject { ["softwarePath"] = path }, cancellationToken).ConfigureAwait(false);
+                    SoftwareReadContract.Wrap("GetSoftwareInfo", info, McpJsonUtilities.DefaultOptions);
+                    string exact = (string)info!["Meta"]!["softwarePath"]!;
+                    if (!Rooted(exact) || !TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(path, exact))
+                        throw new InvalidDataException("Resolved PLC identity does not match the requested software path.");
+                    values["softwarePath"] = exact;
+                }
+            }
             dispatched = true;
             if (definition.ResponseMember == "CrossReferenceAnalysis")
             {
@@ -379,7 +405,21 @@ internal sealed partial class FoundationTool : McpServerTool
             else if(definition.ResponseMember=="DocumentImport") result=DocumentImportContract.Validate(result,values);
             else if(definition.ResponseMember=="DocumentExport") result=DocumentExportContract.Validate(result,values["dryRun"]!.GetValue<bool>());
             else if(definition.ResponseMember=="SpecialExport") result=SpecialExportContract.Validate(result,values["dryRun"]!.GetValue<bool>());
-            else if(definition.ResponseMember=="BatchImport") result=BatchImportContract.Validate(result,values["dryRun"]!.GetValue<bool>());
+            else if(definition.ResponseMember=="BatchImport")
+            {
+                bool preview = values["dryRun"]!.GetValue<bool>();
+                result = BatchImportContract.Validate(result, preview);
+                if (preview && definition.Name == "ImportPlcProgramFromDirectory")
+                {
+                    var entry = ((string)result["PlanHash"]!, OrderDigest(result["Items"]!.AsArray().Select(item => (string)item!["RelativePath"]!)));
+                    lock (reviewedProgramOrders)
+                        if (!reviewedProgramOrders.Contains(entry))
+                        {
+                            if (reviewedProgramOrders.Count == 32) reviewedProgramOrders.Dequeue();
+                            reviewedProgramOrders.Enqueue(entry);
+                        }
+                }
+            }
             else if(definition.ResponseMember=="BatchExport") result=BatchExportContract.Validate(result,values["dryRun"]!.GetValue<bool>());
             else if(definition.ResponseMember=="Compile") result=V17CompileEnvelope.Wrap(definition.Name,result,values["dryRun"]!.GetValue<bool>(),values);
             else if(definition.ResponseMember is "Mutation" or "ExportFile") result=V17MutationEnvelope.Wrap(definition.Name,definition.ResponseMember,result,values["dryRun"]!.GetValue<bool>());

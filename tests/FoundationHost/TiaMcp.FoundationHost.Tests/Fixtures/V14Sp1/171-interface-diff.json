@@ -1,0 +1,9 @@
+[
+  " [Attribute] StructureModified=<timestamp>",
+  "-[Interface] Static Count : Int StartValue=3",
+  "+[Interface] Static Count : Int Remanence=NonRetain StartValue=3",
+  "-[Interface] Static Motor : \"MCP_RC_UDT\"",
+  "+[Interface] Static Motor : \"MCP_RC_UDT\" Remanence=NonRetain",
+  "+[Interface] None Run : Bool",
+  "+[Interface] None Speed : Int"
+]

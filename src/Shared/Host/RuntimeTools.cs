@@ -146,7 +146,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "")
             => RuntimeToolContract.Run("GetPlcLiveValuesS7", true, false, () =>
             {
-                return ReadPlcLiveValuesS7(ip, RuntimeToolContract.Names(items, "items", false), rack, slot, expectModuleContains, devicePath);
+                var names = RuntimeToolContract.S7Addresses(items);
+                return ReadPlcLiveValuesS7(ip, names, rack, slot, expectModuleContains, devicePath);
             });
 
         public ResponseJsonReport ReadPlcLiveValuesS7(string ip, string itemsJson, int rack = 0, int slot = 1, string expectModuleContains = "",

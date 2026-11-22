@@ -52,7 +52,9 @@ namespace TiaOpenness.Shared
             {
                 if (directory)
                 {
-                    using (var entries = Directory.EnumerateFileSystemEntries(FullPath(path)).GetEnumerator()) entries.MoveNext();
+                    try { using (var entries = Directory.EnumerateFileSystemEntries(FullPath(path)).GetEnumerator()) entries.MoveNext(); }
+                    catch (DirectoryNotFoundException error)
+                    { throw new AdapterPreconditionException("The input directory does not exist.", parameter, true, error); }
                 }
                 else using (var stream = OpenRead(path, parameter)) { }
                 return true;

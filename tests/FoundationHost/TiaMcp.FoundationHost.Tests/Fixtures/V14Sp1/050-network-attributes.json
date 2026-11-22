@@ -1,0 +1,30 @@
+[
+  {
+    "name": "InterfaceOperatingMode",
+    "value": "IoController",
+    "dataType": null,
+    "isWritable": true,
+    "writeProbeError": "Native observation failed; details are available in the local diagnostic log."
+  },
+  {
+    "name": "InterfaceType",
+    "value": "Ethernet",
+    "dataType": null,
+    "isWritable": false,
+    "writeProbeError": "Native observation failed; details are available in the local diagnostic log."
+  },
+  {
+    "name": "Name",
+    "value": "PROFINET 接口_1",
+    "dataType": null,
+    "isWritable": true,
+    "writeProbeError": "Native observation failed; details are available in the local diagnostic log."
+  },
+  {
+    "name": "PnSendClock",
+    "value": "1000000",
+    "dataType": null,
+    "isWritable": true,
+    "writeProbeError": "Native observation failed; details are available in the local diagnostic log."
+  }
+]

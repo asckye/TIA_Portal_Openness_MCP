@@ -174,7 +174,8 @@ namespace TiaMcpServer.ModelContextProtocol
             else
             {
                 var roots = entries.Where(e => e.Kind == "SW.Blocks.OB").Select(e => e.Id).ToArray();
-                if (roots.Length == 0) throw new ArgumentException("No OB roots in supplied exports; reachability cannot be evaluated.");
+                if (roots.Length == 0) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                    "No OB roots in supplied exports; reachability cannot be evaluated.", nameof(directory));
                 var adjacency = edges.GroupBy(e => e.From).ToDictionary(g => g.Key, g => g.Select(e => e.To).Distinct().ToArray());
                 var reached = new HashSet<string>(roots); var queue = new Queue<string>(roots);
                 while (queue.Count > 0) {

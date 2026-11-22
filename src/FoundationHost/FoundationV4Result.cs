@@ -55,8 +55,11 @@ internal static class FoundationV4Result
     {
         if (failure?.Data["workerPortalLost"] is string)
             return Failure(release, name, id, true, mutation, (result.StructuredContent as JsonObject)?["data"], failure);
-        if (failure == null || result.IsError != true || Classified(result.StructuredContent)
-            || failure is not WorkerOperationException && !failure.Data.Contains("foundationRequestSent")) return result;
+        bool provenUnchanged = failure != null && TiaOpenness.Shared.HostFailurePolicy.KnownNoMutation(failure)
+            && !TiaOpenness.Shared.HostFailurePolicy.PriorMutation(failure) && !TiaOpenness.Shared.HostFailurePolicy.WorkerOutcomeUnknown(failure);
+        bool correctUnknown = provenUnchanged && (string?)result.StructuredContent?["meta"]?["outcome"] == "unknown";
+        if (failure == null || result.IsError != true || Classified(result.StructuredContent) && !correctUnknown
+            || !provenUnchanged && failure is not WorkerOperationException && !failure.Data.Contains("foundationRequestSent")) return result;
         return Failure(release, name, id, failure.Data["foundationRequestSent"] is not false, mutation,
             (result.StructuredContent as JsonObject)?["data"], failure);
     }

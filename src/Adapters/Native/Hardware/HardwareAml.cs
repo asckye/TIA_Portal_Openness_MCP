@@ -20,26 +20,44 @@ namespace TiaMcp.Adapters
 
         public HardwareAmlExportReply ExportHardwareAml(string devicePath, string exportPath)
         {
-            Check();
-            if (HardwareProjectMissing())
-                throw new HardwareAddressingException("InvalidState", "No project is open in TIA Portal");
-            var device = ResolveEngineeringDevice != null ? ResolveEngineeringDevice(devicePath) as global::Siemens.Engineering.HW.Device
-                : HardwareProjectMissing() ? null : HardwareLegacyDevice(devicePath);
-            if (device == null) throw new HardwareAddressingException("NotFound", "Device not found: " + devicePath);
+            global::Siemens.Engineering.HW.Device? device;
+            CaxProvider cax;
             string filePath;
-            if (Directory.Exists(exportPath) || string.IsNullOrEmpty(Path.GetExtension(exportPath)))
+            FileInfo target;
+#if !PLC_CAX_TRANSFER_RESULT
+            FileInfo log;
+#endif
+            try
             {
-                var safeName = string.Concat((device.Name ?? "device").Split(Path.GetInvalidFileNameChars()));
-                filePath = Path.Combine(exportPath, $"{safeName}.aml");
+                Check();
+                if (HardwareProjectMissing())
+                    throw new HardwareAddressingException("InvalidState", "No project is open in TIA Portal");
+                device = ResolveEngineeringDevice != null ? ResolveEngineeringDevice(devicePath) as global::Siemens.Engineering.HW.Device
+                    : HardwareProjectMissing() ? null : HardwareLegacyDevice(devicePath);
+                if (device == null) throw new HardwareAddressingException("NotFound", "Device not found: " + devicePath);
+                if (Directory.Exists(exportPath) || string.IsNullOrEmpty(Path.GetExtension(exportPath)))
+                {
+                    var safeName = string.Concat((device.Name ?? "device").Split(Path.GetInvalidFileNameChars()));
+                    filePath = Path.Combine(exportPath, $"{safeName}.aml");
+                }
+                else filePath = exportPath;
+                if (AdmitHardwareAmlExport != null) AdmitHardwareAmlExport(filePath);
+                else HardwareAmlPolicy.RequireExportTarget(filePath);
+                cax = project!.GetService<CaxProvider>()
+                    ?? throw new HardwareAddressingException("InvalidState", "CAx/AML export service is not available for this project");
+#if !PLC_CAX_TRANSFER_RESULT
+                log = HardwareAmlPolicy.Plan(filePath + "." + Guid.NewGuid().ToString("N") + ".log", "exportPath");
+#endif
+                target = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));
             }
-            else filePath = exportPath;
-            if (AdmitHardwareAmlExport != null) AdmitHardwareAmlExport(filePath);
-            else HardwareAmlPolicy.RequireExportTarget(filePath);
-            var cax = project!.GetService<CaxProvider>();
-            if (cax == null)
-                throw new HardwareAddressingException("InvalidState", "CAx/AML export service is not available for this project");
+            catch (Exception ex)
+            {
+                ex.Data["foundationKnownNoMutation"] = true;
+                ex.Data["phase"] = "export-admission";
+                throw;
+            }
 #if PLC_CAX_TRANSFER_RESULT
-            var result = cax.Export(device, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)));
+            var result = cax.Export(device, target);
             var lines = FlattenHardwareAmlMessages(result?.Messages);
             var state = result?.State.ToString() ?? "Unknown";
             var ok = result != null && NativeResultStates.Succeeded(result.State);
@@ -50,8 +68,7 @@ namespace TiaMcp.Adapters
 #else
             // V14 SP1-V18 expose the bool overload with a native log file.
             // Keep its bool evidence distinct from the later TransferResult enum.
-            var log = HardwareAmlPolicy.Plan(filePath + "." + Guid.NewGuid().ToString("N") + ".log", "exportPath");
-            bool ok = cax.Export(device, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)), log);
+            bool ok = cax.Export(device, target, log);
             return new HardwareAmlExportReply { DeviceName = device.Name ?? devicePath, FilePath = filePath,
                 Success = ok, State = ok.ToString(), NativeBooleanResult = ok,
                 Messages = new List<string> { "CAx Export returned bool; native log: " + log.FullName } };

@@ -45,7 +45,7 @@ namespace TiaMcp.Adapters
                     throw new InvalidOperationException("Activate language explicitly before selecting it.");
                 if(action=="deactivate"
                         && (settings.EditingLanguage?.Culture.Name==selected.Culture.Name || settings.ReferenceLanguage?.Culture.Name==selected.Culture.Name))
-                    throw new InvalidOperationException("Cannot deactivate current editing/reference language.");
+                    throw AdapterPreconditionException.Failed("Cannot deactivate current editing/reference language.", "current-project-language", "culture");
                 if(dryRun) return "Project language preview; no changes.";
                 using var access=HardwareEditAccess(); meta["mayHaveChanged"]=true;
                 switch(action) {

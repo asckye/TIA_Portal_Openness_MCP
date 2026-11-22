@@ -246,7 +246,8 @@ namespace TiaMcp.Logic.V4
                 case "ExportOpcUaInterface": case "ExportHmiConnection": case "ExportHmiScreen": case "ExportHmiTagTable": case "ExportTechnologyObject":
                     return ("exportPath", new[] { ".xml" }, true);
                 case "ImportAlarmClasses": return ("importPath", new[] { ".dat" }, false);
-                case "ExportDeviceAml": return ("exportPath", new[] { ".aml" }, true);
+                case "ExportDeviceAml": return (arguments.ContainsKey("exportFile") ? "exportFile"
+                    : arguments.ContainsKey("exportDirectory") ? "exportDirectory" : "exportPath", new[] { ".aml" }, true);
                 case "ImportDeviceAml": return ("filePath", new[] { ".aml" }, false);
                 case "ExportProjectTexts": return ("filePath", new[] { ".xlsx" }, true);
                 case "ImportProjectTexts": case "ImportPlcAlarmInstanceTexts": return ("filePath", new[] { ".xlsx" }, false);

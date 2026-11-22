@@ -228,7 +228,7 @@ internal static class CompatibilityTools
                 foreach (var field in ConfirmationFields) if (!adapted.ContainsKey(field)) Copy(field, field);
                 var targetTool = roster[target];
                 var supported = targetTool.ProtocolTool.InputSchema.GetProperty("properties");
-                if (action == "createGroup" && target == "ManagePlcUserGroup"
+                if (tool.Name == "ManagePlcExternalSources" && target == "ManagePlcUserGroup"
                     && ConfirmationFields.Any(field => !supported.TryGetProperty(field, out _)))
                 {
                     foreach (string field in ConfirmationFields) adapted.Remove(field);
@@ -245,7 +245,9 @@ internal static class CompatibilityTools
                 }
                 return await Invoke(targetTool, adapted);
             }
-            if (tool.Name == "ManagePlcTagDefinition" && action == "update")
+            if (tool.Name == "ManagePlcTagDefinition" && action == "update"
+                || tool.Name == "ManagePlcExternalSources" && action is "createFromFile" or "createFromMasterCopy" or "delete"
+                    or "generateBlocks" or "createGroup" or "renameGroup" or "deleteGroup")
             {
                 adapted = arguments.Where(pair => !ConfirmationFields.Contains(pair.Key, StringComparer.Ordinal))
                     .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
@@ -268,6 +270,12 @@ internal static class CompatibilityTools
                 string? project = (string?)binding?["projectPath"];
                 var deciding = JsonSerializer.SerializeToNode(adapted)!.AsObject();
                 deciding.Remove("dryRun");
+                if (tool.Name == "ManagePlcExternalSources" && action is "delete" or "deleteGroup")
+                {
+                    deciding.Remove("confirmDelete");
+                    if (!dry && !Flag("confirmDelete"))
+                        return Reject(new Error("Deletion requires confirmDelete=true.", new InvalidArgumentDetails("confirmDelete", Array.Empty<string>())));
+                }
                 var hash = PendingApproval.Hash(PendingApproval.Canonical(new JsonObject {
                     ["release"] = release, ["tool"] = tool.Name, ["action"] = action, ["target"] = destination.ProtocolTool.Name,
                     ["arguments"] = deciding, ["binding"] = binding, ["hostLifetime"] = CallJournalPayload.PlanHostLifetime }));

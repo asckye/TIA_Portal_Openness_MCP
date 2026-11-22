@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace TiaMcp.Adapters.Contracts
 {
@@ -8,6 +9,14 @@ namespace TiaMcp.Adapters.Contracts
             => new System.Collections.Generic.Dictionary<string, object?> {
                 ["typeItems"] = Math.Min(types, maxItems), ["masterCopyItems"] = Math.Min(copies, maxItems),
                 ["truncated"] = types > maxItems || copies > maxItems, ["dataComplete"] = types <= maxItems && copies <= maxItems };
+
+        public static bool IncompleteOverview(object? part)
+        {
+            if (part is System.Collections.Generic.IDictionary<string, object?> row)
+                return row.Any(pair => pair.Key.EndsWith("Error", StringComparison.OrdinalIgnoreCase) && pair.Value != null
+                    || pair.Key.EndsWith("Truncated", StringComparison.OrdinalIgnoreCase) && pair.Value is true || IncompleteOverview(pair.Value));
+            return part is System.Collections.IList children && children.Cast<object?>().Any(IncompleteOverview);
+        }
 
         public const string ScreenItemMasterCopyRefusal =
             "no Openness API for screen-item instantiation from a master copy. Use the documented XML/document import path (ImportHmiScreen) with a document " +

@@ -156,12 +156,13 @@ namespace TiaMcp.Logic.V4.Inputs
         private readonly int? limit;
         private readonly int? actual;
         private readonly string[] allowed;
+        private readonly string? diagnostic;
         private string[]? pointers;
         private string? expected;
         internal bool IsLimit => limit.HasValue;
         internal bool HasLocation => pointers != null;
-        internal InputRejectionException(string[]? allowed = null, int? limit = null, int? actual = null)
-        { this.allowed = allowed ?? Array.Empty<string>(); this.limit = limit; this.actual = actual; }
+        internal InputRejectionException(string[]? allowed = null, int? limit = null, int? actual = null, string? diagnostic = null)
+        { this.diagnostic = diagnostic; this.allowed = allowed ?? Array.Empty<string>(); this.limit = limit; this.actual = actual; }
         internal InputRejectionException(InvalidArgumentDetails details, string prefix)
         {
             allowed = details.AllowedValues.ToArray();
@@ -183,7 +184,7 @@ namespace TiaMcp.Logic.V4.Inputs
         }
         internal Error ToError(string parameter, string? form = null) => limit.HasValue
             ? new Error("Input exceeds its declared budget.", new LimitExceededDetails(parameter, limit, actual))
-            : new Error("Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, allowed,
+            : new Error(diagnostic ?? "Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, allowed,
                 pointers?.Select(p => InvalidArgumentDetails.Pointer(parameter) + p).ToArray(), expected ?? form));
     }
 

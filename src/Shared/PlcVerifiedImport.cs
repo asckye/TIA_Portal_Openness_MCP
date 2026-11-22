@@ -95,7 +95,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             verifyBinding();
             meta["phase"] = "import"; meta["mayHaveChanged"] = true;
-            meta["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = binding, ["restoreFrom"] = beforePath,
+            var target = meta["blockPath"] is JsonValue blockPath ? meta["softwarePath"] + "/" + blockPath : CandidateName(planned);
+            meta["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = target, ["restoreFrom"] = beforePath,
                 ["action"] =
                     "Compare the exact block with the retained original backup and restore it manually if needed; do not replay an unconfirmed import." });
             import(plannedPath); // An exception exits immediately: no second native call or automatic retry.
@@ -110,7 +111,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["nativeMessage"] = NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
                 return "Block imported, content unverifiable until compiled. Original backup retained.";
             }
-            var actual = PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(PlcDocumentEditing.Read(afterPath)));
+            var readback = PlcDocumentEditing.Parse(PlcDocumentEditing.Read(afterPath));
+            var actual = PlcDocumentEditing.Canonical(readback);
+            if (compile != null) actual = PlcDocumentEditing.NormalizeCompiledReadback(actual, expected, (string)tokenData["before"]!);
             var matches = expected == actual;
             meta["afterPath"] = afterPath; meta["actualFingerprint"] = PlcDocumentEditing.HashText(actual);
             meta["verificationSuccess"] = matches; meta["operationSuccess"] = matches;

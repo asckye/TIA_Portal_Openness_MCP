@@ -17,6 +17,19 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class LibraryInstantiationTests
     {
+        [Fact]
+        public void Empty_library_folder_path_reads_the_selected_root_and_rejects_root_mutations()
+        {
+            var root = new LibraryTypeFolder();
+            object Root(string path) { Assert.Equal("", path); return root; }
+            var read = LibraryEngine.SelectLibraryFolder("", "read", Root);
+            Assert.Same(root, read.Target);
+            Assert.Same(root.Folders, read.Collection);
+            foreach (string action in new[] { "create", "rename", "delete" })
+                Assert.Throws<ArgumentException>(() => LibraryEngine.SelectLibraryFolder("", action,
+                    _ => throw new InvalidOperationException("Root mutation reached native selection.")));
+        }
+
         [Theory, InlineData("ManageLibraryMasterCopy"), InlineData("ManageLibraryTypeVersion")]
         public void Instantiate_preview_includes_system_types_without_reading_the_unavailable_Groups_member(string tool)
         {

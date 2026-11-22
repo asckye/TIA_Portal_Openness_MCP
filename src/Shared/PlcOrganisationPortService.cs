@@ -53,7 +53,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 // Keep the typed precondition and its recovery evidence across the worker boundary.
                 Exception mapped = code == nameof(AdapterPreconditionException) && (bool?)reply["MayHaveChanged"] != true
-                    ? new AdapterPreconditionException(message, request.Operation == "ImportTechnologyObject" ? (string?)failure["Evidence"]?["parameter"]
+                    ? new AdapterPreconditionException(message, request.Operation is "ImportTechnologyObject" or "ExportTechnologyObjectsToDirectory" ? (string?)failure["Evidence"]?["parameter"]
                             : null, false)
                     : code == nameof(ArgumentException) ? new ArgumentException(message)
                     : code == nameof(NotSupportedException) ? new NotSupportedException(message)
