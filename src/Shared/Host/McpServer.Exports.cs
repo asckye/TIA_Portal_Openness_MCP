@@ -255,6 +255,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var original = V4Json.Deserialize<Envelope>(full);
                 var export = PlcExchangeContract.DescribeExport(entry);
+                var usage = toolName == "GetToolUsage" && envelope["data"]?["example"] is JsonObject
+                    ? envelope["data"] as JsonObject : null;
                 CallToolResult Render(ExportSlice page)
                 {
                     if (page.Error != null) throw new InvalidOperationException(page.Message);
@@ -267,6 +269,14 @@ namespace TiaMcpServer.ModelContextProtocol
                                 "SaveExportContent(raw=true) saves it in one call. Handles last 24 hours in this session."
                             },
                         ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text };
+                    if (usage != null)
+                    {
+                        foreach (var field in usage)
+                            if (field.Key is not ("inputSchema" or "outputSchema")) data[field.Key] = field.Value?.DeepClone();
+                        data["inputSchemaSource"] = "Read the complete inputSchema from this tool's tools/list entry or the exported usage.";
+                        if (usage["outputSchema"] != null)
+                            data["outputSchemaSource"] = "Read the complete outputSchema from this tool's tools/list entry or the exported usage.";
+                    }
                     var m = original.Meta;
                     var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ResponseExports.MaxSliceChars), page.NextOffset, null, null,
                         page.TotalLength, page.Eof, PagingUnit.Utf16);
