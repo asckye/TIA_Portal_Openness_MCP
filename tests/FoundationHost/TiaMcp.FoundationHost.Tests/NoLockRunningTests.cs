@@ -73,16 +73,20 @@ public sealed class NoLockRunningTests
         Assert.Equal(expected, scope.Worker.Unsettled.Snapshot().Select(call => call.RequestId));
     }
 
-    private static void Dialog(Scope scope, string answer)
+    private static string DialogLine(string answer)
     {
-        string line = TiaMcp.Adapters.Contracts.PortalDialogPolicy.Report(new() {
+        return TiaMcp.Adapters.Contracts.PortalDialogPolicy.Report(new() {
             ["event"] = answer == "handled" ? "Notification" : "Confirmation", ["utc"] = "2026-11-13T00:00:00Z", ["caption"] = "Export dialog",
             ["text"] = "Choose an export option", ["detailText"] = "password=dialog-secret-7f3",
             ["choices"] = answer switch { "handled" => Array.Empty<string>(), "Ok" => new[] { "Ok" },
                 "No" => new[] { "Yes", "No" }, _ => new[] { "Yes" } }, ["answer"] = answer });
+    }
+
+    private static void Dialog(Scope scope, string answer)
+    {
         // Publish only the complete line: the worker can otherwise observe the newly created, still empty file.
         string pending = Path.Combine(scope.DirectoryPath, "dialog.pending");
-        File.WriteAllText(pending, line);
+        File.WriteAllText(pending, DialogLine(answer));
         File.Move(pending, Path.Combine(scope.DirectoryPath, "dialog"));
     }
 
@@ -120,10 +124,14 @@ public sealed class NoLockRunningTests
         using var scope = new Scope(release);
         var tool = scope.Tool("SaveProject");
         using var session = scope.Session(tool);
+        // The fixture reads the line before signalling dispatch. Once busy, only signal emission,
+        // so it never opens a payload that the test is still publishing.
+        File.WriteAllText(Path.Combine(scope.DirectoryPath, "deferred-dialog"), DialogLine("unanswered"));
         var first = await scope.Call(session, "SaveProject", scope.WriteArguments);
         using var deadline = new CancellationTokenSource(TestDeadlines.Hang);
         await scope.WaitDispatched(deadline.Token);
-        Dialog(scope, "unanswered");
+        Assert.Equal("in-progress", Outcome(first));
+        File.WriteAllText(Path.Combine(scope.DirectoryPath, "dialog"), "");
         await scope.WaitDialogRead(deadline.Token);
         var busy = await Assert.ThrowsAsync<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() =>
             scope.Worker.Call("ReadBlocks", new(), CancellationToken.None));
@@ -884,6 +892,19 @@ public sealed class NoLockRunningTests
             Assert.True(field != null, "Expected WorkerClient to declare the dialogReported field.");
             var reported = field.GetValue(Worker) as TaskCompletionSource<JsonObject>;
             Assert.True(reported != null, "Expected WorkerClient.dialogReported to contain the active call's dialog completion source.");
+            using var wait = CancellationTokenSource.CreateLinkedTokenSource(token);
+            try
+            {
+                if (await Task.WhenAny(reported.Task, Child.WaitForExitAsync(wait.Token)) != reported.Task)
+                {
+                    var diagnostics = (Queue<string>)typeof(Foundation.WorkerClient)
+                        .GetField("diagnostics", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(Worker)!;
+                    string lines;
+                    lock (diagnostics) lines = string.Join(Environment.NewLine, diagnostics);
+                    Assert.Fail($"Worker stderr dialog was not acknowledged. Worker exited: {Child.HasExited}. Channel: {Channel.LastFault}. {lines}");
+                }
+            }
+            finally { wait.Cancel(); }
             await reported.Task.WaitAsync(token);
             Assert.True(Worker.CallRunning);
             Assert.NotNull(Worker.Running?["dialog"]);

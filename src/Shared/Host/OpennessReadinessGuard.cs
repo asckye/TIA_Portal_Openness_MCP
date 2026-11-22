@@ -18,52 +18,67 @@ namespace TiaMcpServer.Dispatch
         internal static IList<McpServerTool> Wrap(IList<McpServerTool> tools)
             => tools.Select(tool => (McpServerTool)new GuardedTool(tool)).ToList();
 
-        internal static bool IsSafeWithoutTia(string name)
-        {
-#if TIA_ENGINE_HOST
-            // Restart is hosted in F01 but controls the Openness worker. Use its normal taxonomy rule.
-            if (name != nameof(McpServer.RestartOpennessWorker) && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03") return true;
-#endif
-            return ToolTaxonomy.IsSafeWithoutTia(name);
-        }
-
         internal static bool RequiresOpenness(string name)
         {
 #if TIA_ENGINE_HOST
             // The Foundation target checks readiness after capability admission.
             if (McpServer.CatalogView.Find(name)?.Execution == "foundation") return false;
-            // A standalone protocol simulator handles its own restart admission.
-            if (name == nameof(McpServer.RestartOpennessWorker) && !McpServer.Worker.RequiresOpennessInstallation) return false;
+            // Reviewed host operations with no Openness dependency. Keep their dispatch lanes
+            // independent of installation readiness. New tools default to guarded.
+            if (name is "BuildReleaseHandoffArtifacts" or "CheckProductUpdate" or "ExportPlcTestReport" or "GenerateErrorReport"
+                or "ManagePlcTestLibrary" or "AuditEngineeringExports" or "ExtractPlcBlockMetrics" or "GeneratePlcDocumentation"
+                or "InstantiatePlcTemplates" or "PatchPlcBlockDocument" or "ManageUnifiedCwcPackage" or "RunClassicHmiOfflineValidationSuite"
+                or "RunClassicHmiTemporaryImportPreflight" or "RunHmiActionScriptRecipeSafetySelfTest" or "RunHmiTemplatePlcSyncPrecheckSuite"
+                or "WriteClassicHmiMinimalPackageFiles" or "CallTool") return false;
+            if (!McpServer.Worker.RequiresOpennessInstallation && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03") return false;
 #endif
-            return !IsSafeWithoutTia(name);
+            return !ToolTaxonomy.IsSafeWithoutTia(name);
         }
 
-        private static string? NativeTarget(string name, IReadOnlyDictionary<string, JsonElement>? arguments)
+        private static JsonElement Field(JsonElement arguments, string key)
+            => arguments.ValueKind == JsonValueKind.Object && arguments.TryGetProperty(key, out var value) ? value : default;
+
+        private static string? OperationTarget(Func<string, JsonElement> field)
         {
-            if (arguments == null) return RequiresOpenness(name) ? name : null;
-            if (name.Equals("CallTool", StringComparison.OrdinalIgnoreCase))
+            var name = field("name");
+            if (name.ValueKind != JsonValueKind.String || name.GetString() == "CallTool") return null;
+            var input = field("arguments");
+            return NativeTarget(name.GetString()!, key => Field(input, key));
+        }
+
+        private static string? NativeTarget(string name, Func<string, JsonElement> field)
+        {
+#if TIA_ENGINE_HOST
+            bool HasText(string key) => field(key) is { ValueKind: JsonValueKind.String } value && !string.IsNullOrWhiteSpace(value.GetString());
+#endif
+            if (name.Equals("CallTool", StringComparison.OrdinalIgnoreCase)) return OperationTarget(field);
+            if (name is "RunToolTransaction" or "RunReadOnlyToolBatch")
             {
-                if (!arguments.TryGetValue("name", out var target) || target.ValueKind != JsonValueKind.String) return null;
-                return RequiresOpenness(target.GetString() ?? "") ? target.GetString() : null;
-            }
-            if (name is "RunToolTransaction" or "RunReadOnlyToolBatch" or "ApplyToolBatch")
-            {
-                if (!arguments.TryGetValue("operations", out var operations) || operations.ValueKind != JsonValueKind.Array) return null;
+                var operations = field("operations");
+                if (operations.ValueKind != JsonValueKind.Array) return null;
                 foreach (var item in operations.EnumerateArray())
-                    if (item.ValueKind == JsonValueKind.Object && item.TryGetProperty("name", out var target)
-                        && target.ValueKind == JsonValueKind.String && RequiresOpenness(target.GetString() ?? "")) return target.GetString();
+                    if (OperationTarget(key => Field(item, key)) is string native) return native;
+#if TIA_ENGINE_HOST
+                if (name == "RunReadOnlyToolBatch" && HasText("expectedProject") && RequiresOpenness(name)) return name;
+#endif
                 return null;
             }
+#if TIA_ENGINE_HOST
+            // Only execution of a test library or export of a project block calls the worker.
+            if (name == "RunPlcTestLibrary" && field("dryRun").ValueKind != JsonValueKind.False
+                || name == "ComparePlcBlockDocuments" && !HasText("leftBlockPath") && !HasText("rightBlockPath")
+                || name == "RenderPlcBlockDocument" && !HasText("blockPath")) return null;
+#endif
             return RequiresOpenness(name) ? name : null;
         }
 
         private static CallToolResult? Check(string name, RequestContext<CallToolRequestParams> request)
         {
-            var target = NativeTarget(name, request.Params?.Arguments);
+            var suppliedArguments = request.Params?.Arguments;
+            var target = NativeTarget(name, key => suppliedArguments != null && suppliedArguments.TryGetValue(key, out var value) ? value : default);
             if (target == null || OpennessReadiness.Ready) return null;
-            var arguments = JsonSerializer.SerializeToElement(request.Params?.Arguments
-                ?? new Dictionary<string, JsonElement>());
+            var arguments = JsonSerializer.SerializeToElement(suppliedArguments ?? new Dictionary<string, JsonElement>());
             var admission = McpServer.ValidateInfrastructureExample(name,
                 JsonNode.Parse(arguments.GetRawText())!.AsObject());
             if (admission != null && name == "CallTool" && arguments.TryGetProperty("name", out var targetName)

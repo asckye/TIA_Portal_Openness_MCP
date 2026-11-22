@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using Pipeline = toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline;
@@ -22,14 +23,18 @@ public sealed class PackagedNoTiaReadinessTests
     [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Worker_restart_refuses_before_requesting_Workbench_approval(string release)
     {
+        var realPath = ApprovalSettings.SettingsPath;
+        var previousSettings = File.Exists(realPath) ? File.ReadAllBytes(realPath) : null;
+        var lastWrite = File.GetLastWriteTimeUtc(realPath);
         using var host = new Host(release);
-        var settingsPath = ApprovalSettings.SettingsPath;
-        var previousSettings = File.Exists(settingsPath) ? File.ReadAllBytes(settingsPath) : null;
+        using var data = new IsolatedData(host.Scratch);
         var previousWait = Server.ApprovalWaitOverrideForTests;
         int requests = 0;
         try
         {
-            new ApprovalSettings(true, 1).Save(settingsPath);
+            Assert.Equal(Path.Combine(host.Scratch, "config", "approval.settings"), ApprovalSettings.SettingsPath);
+            Assert.NotEqual(realPath, ApprovalSettings.SettingsPath);
+            new ApprovalSettings(true, 1).Save(ApprovalSettings.SettingsPath);
             Server.ApprovalWaitOverrideForTests = (card, _, _) => {
                 requests++;
                 return Task.FromResult(new ApprovalOutcome(card, false, "workbench-unavailable"));
@@ -62,8 +67,8 @@ public sealed class PackagedNoTiaReadinessTests
         finally
         {
             Server.ApprovalWaitOverrideForTests = previousWait;
-            if (previousSettings == null) File.Delete(settingsPath);
-            else File.WriteAllBytes(settingsPath, previousSettings);
+            Assert.Equal(previousSettings, File.Exists(realPath) ? File.ReadAllBytes(realPath) : null);
+            Assert.Equal(lastWrite, File.GetLastWriteTimeUtc(realPath));
         }
     }
 
@@ -75,6 +80,88 @@ public sealed class PackagedNoTiaReadinessTests
         File.Copy(Path.Combine(AppContext.BaseDirectory, "TiaMcp.FoundationHost.Tests.exe"), simulator);
         using var client = new WorkerClient("20", simulator, files.Api, true) { Bundled = false };
         Assert.False(client.IsReleasePlcWorker());
+        using var host = new Host("20", simulator);
+        using var session = host.EnterSession();
+        foreach (var name in HostedWorkerTools)
+            Assert.False(ReadinessGuard.RequiresOpenness(name), name);
+    }
+
+    // Independent audit of host implementations with a worker path, including conditional branches.
+    private static readonly string[] HostedWorkerTools = {
+        "RestartOpennessWorker", "RunPlcTestLibrary", "RunOnlineMonitoringSafetySelfTest", "GenerateAcceptanceReport",
+        "RunOfflineReleaseValidationSuite", "ComparePlcBlockDocuments", "RenderPlcBlockDocument", "PreviewToolBatch", "ApplyToolBatch", "RunReadOnlyToolBatch"
+    };
+
+    public static IEnumerable<object[]> WorkerCases() => ReleaseRange.All.SelectMany(release =>
+        HostedWorkerTools.Where(name => name != "RestartOpennessWorker").Select(name => new object[] { release, name }));
+
+    [Theory, MemberData(nameof(WorkerCases))]
+    public async Task Hosted_worker_paths_refuse_before_approval(string release, string name)
+    {
+        using var host = new Host(release);
+        using var data = new IsolatedData(host.Scratch);
+        using var session = host.EnterSession();
+        var arguments = name switch {
+            "RunPlcTestLibrary" => new JsonObject { ["dryRun"] = false, ["expectedPlanHash"] = new string('a', 64) },
+            "RunOfflineReleaseValidationSuite" => new JsonObject { ["workspaceRoot"] = host.Scratch, ["reportDirectory"] = host.Scratch },
+            "ComparePlcBlockDocuments" => new JsonObject { ["softwarePath"] = "PLC_1", ["leftBlockPath"] = "Main", ["rightBlockPath"] = "Other" },
+            "RenderPlcBlockDocument" => new JsonObject { ["softwarePath"] = "PLC_1", ["blockPath"] = "Main" },
+            "RunReadOnlyToolBatch" => JsonSerializer.SerializeToNode(new { expectedProject = "Example", operations = new[] {
+                new { name = "GetSessionState", arguments = new { } } } })!.AsObject(),
+            "PreviewToolBatch" => JsonSerializer.SerializeToNode(new { expectedProject = "Example", operations = new[] {
+                new { name = "ManagePlcExternalSources", arguments = new { softwarePath = "PLC_1", action = "createGroup", name = "ExampleSources",
+                    dryRun = true, confirm = true } } } })!.AsObject(),
+            "ApplyToolBatch" => new JsonObject { ["previewToken"] = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Current.BatchPlans.Add(
+                new TiaMcpServer.ModelContextProtocol.BatchPlanStore.Plan { Project = "Example" }, DateTime.UtcNow) },
+            _ => new JsonObject()
+        };
+        var previousWait = Server.ApprovalWaitOverrideForTests;
+        int requests = 0;
+        try
+        {
+            Server.ApprovalWaitOverrideForTests = (card, _, _) => {
+                requests++;
+                return Task.FromResult(new ApprovalOutcome(card, false, "workbench-unavailable"));
+            };
+            foreach (var route in new[] { name, "CallTool" })
+            {
+                var reply = await host.Call(route, route == name ? arguments : new JsonObject { ["name"] = name, ["arguments"] = arguments });
+                Assert.Equal("RESOURCE_UNAVAILABLE", (string?)reply["error"]?["code"]);
+                Assert.Equal("tia-openness-environment", (string?)reply["error"]?["details"]?["resource"]);
+                Assert.Equal("rejected-before-operation", (string?)reply["meta"]?["outcome"]);
+                Assert.Equal("not-started", (string?)reply["meta"]?["execution"]);
+                Assert.Equal(0, requests);
+                Assert.Null(host.Worker.OperatorSnapshot()["pid"]);
+                Assert.False(host.Worker.WorkerFaulted);
+            }
+        }
+        finally { Server.ApprovalWaitOverrideForTests = previousWait; }
+    }
+
+    [Theory, InlineData("14sp1"), InlineData("21")]
+    public async Task Library_previews_and_file_only_block_operations_run_on_a_cold_host(string release)
+    {
+        using var host = new Host(release);
+        using var data = new IsolatedData(host.Scratch);
+        var store = new TiaMcp.Logic.Testing.PlcTestLibrary(DataLocations.Current.TestLibraryDirectory);
+        store.Save(TiaMcp.Logic.Testing.PlcTestCaseDocument.Parse("""
+            {"schemaVersion":1,"id":"ready","title":"Ready","tags":[],"kind":"plcsimScenario",
+             "scenario":{"instance":"PLC_1","mode":"default","steps":[{"assert":{"Ready":true}}]}}
+            """));
+        var file = Path.Combine(AppContext.BaseDirectory, "Fixtures", "SimaticMl", "17", "MCP_RC_FC.xml");
+        foreach (var (name, args) in new (string, JsonObject)[] {
+            ("ManagePlcTestLibrary", new() { ["action"] = "read", ["id"] = "ready" }),
+            ("RunPlcTestLibrary", new() { ["ids"] = new JsonArray("ready") }),
+            ("RenderPlcBlockDocument", new() { ["filePath"] = file }),
+            ("ComparePlcBlockDocuments", new() { ["leftFilePath"] = file, ["rightFilePath"] = file })
+        })
+        foreach (var route in new[] { name, "CallTool" })
+        {
+            var reply = await host.Call(route, route == name ? args : new JsonObject { ["name"] = name, ["arguments"] = args });
+            Assert.True((bool?)reply["ok"] == true, reply.ToJsonString());
+            Assert.Null(host.Worker.OperatorSnapshot()["pid"]);
+            Assert.False(host.Worker.WorkerFaulted);
+        }
     }
 
     [Theory, InlineData("20"), InlineData("21")]
@@ -102,6 +189,13 @@ public sealed class PackagedNoTiaReadinessTests
             .Select(tool => new FoundationV4Tool(tool, release, readinessForTest: () => environment))
             .Where(tool => (string?)tool.ReadinessRefusal("parity")?.StructuredContent?["error"]?["details"]?["resource"] == "tia-openness-environment")
             .Select(tool => tool.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
+        var hosted = PortedFamilies.All.Where(f => f.Name is "F01" or "F02" or "F03").SelectMany(f => f.Tools).ToHashSet();
+        foreach (var tool in Server.CatalogView.All.Values.Where(tool => tool.Execution != "foundation"))
+        {
+            bool expected = hosted.Contains(tool.Name) ? HostedWorkerTools.Contains(tool.Name)
+                : !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(tool.Name);
+            Assert.True(expected == ReadinessGuard.RequiresOpenness(tool.Name), $"{release}/{tool.Name}: expected requires Openness = {expected}");
+        }
         return Server.CatalogView.All.Values.ToDictionary(tool => tool.Name, tool => ReadinessGuard.RequiresOpenness(tool.Name)
             || tool.Execution == "foundation" && native.Contains(tool.Name));
     }
@@ -247,10 +341,18 @@ public sealed class PackagedNoTiaReadinessTests
         Assert.Equal(((string?)null, (string?)null), foundationhost::TiaMcp.FoundationHost.SharedReleaseHost.ReadinessInstallation(options));
     }
 
+    private sealed class IsolatedData : IDisposable
+    {
+        private readonly DataLocations? previous = DataLocations.OverrideForTests.Value;
+        internal IsolatedData(string root) => DataLocations.OverrideForTests.Value = DataLocations.Resolve(root, root, root, root);
+        public void Dispose() => DataLocations.OverrideForTests.Value = previous;
+    }
+
     private sealed class Host : IDisposable
     {
         private readonly string previous = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.ReleaseKey;
         private readonly string scratch = Path.Combine(Path.GetTempPath(), "packaged-no-tia-" + Guid.NewGuid().ToString("N"));
+        internal string Scratch => scratch;
         private readonly Pipeline pipeline;
         internal readonly WorkerClient Worker;
         internal Host(string release, string? workerExe = null, string? installedApi = null)

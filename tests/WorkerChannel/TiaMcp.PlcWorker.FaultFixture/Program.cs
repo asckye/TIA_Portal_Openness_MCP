@@ -50,6 +50,8 @@ internal static class Program
         {
             string? gate = Environment.GetEnvironmentVariable("TIA_MCP_FIXTURE_SLOW_GATE");
             if (string.IsNullOrEmpty(gate)) { Thread.Sleep(150); return; }
+            string deferred = Path.Combine(gate, "deferred-dialog");
+            string? line = File.Exists(deferred) ? File.ReadAllText(deferred) : null;
             File.WriteAllText(Path.Combine(gate, "dispatched"), "");
             var deadline = DateTime.UtcNow.AddSeconds(30);
             bool reported = false;
@@ -58,7 +60,7 @@ internal static class Program
                 string dialog = Path.Combine(gate, "dialog");
                 if (!reported && File.Exists(dialog))
                 {
-                    Console.Error.WriteLine(File.ReadAllText(dialog));
+                    Console.Error.WriteLine(line ?? File.ReadAllText(dialog));
                     Console.Error.Flush();
                     reported = true;
                 }

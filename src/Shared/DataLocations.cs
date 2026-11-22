@@ -39,7 +39,8 @@ namespace TiaOpenness.Shared
         private readonly Lazy<string> outputRoot;
         private readonly Lazy<string> uiFilePath;
 
-        internal static DataLocations Current => ProcessLocations.Value;
+        internal static readonly System.Threading.AsyncLocal<DataLocations> OverrideForTests = new System.Threading.AsyncLocal<DataLocations>();
+        internal static DataLocations Current => OverrideForTests.Value ?? ProcessLocations.Value;
         internal string Root { get; }
         internal string RecoveryAttemptedPath => Path.Combine(Root ?? primaryDataRoot ?? AppContext.BaseDirectory, "recovery");
         internal string WorkbenchDataDirectory => Root ?? Path.Combine(localApplicationData, "TiaOpennessStudio", "data");
