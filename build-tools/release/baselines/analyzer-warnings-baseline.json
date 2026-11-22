@@ -1236,24 +1236,6 @@
     {
       "rule": "CA2208",
       "path": "src/FoundationHost/FoundationTools.cs",
-      "line": 270,
-      "column": 69,
-      "endLine": 270,
-      "endColumn": 159,
-      "message": "Method ReadArguments passes \u0027importOrder\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . FoundationHost/FoundationTool/ReadArguments( IReadOnlyDictionary \u003C string , JsonElement \u003E ? arguments , JsonObject values )",
-      "anchor": "new ArgumentException ( \u0022Apply requires importOrder from a reviewed preview.\u0022 , \u0022importOrder\u0022 ) ",
-      "fingerprint": "794d5612fd8f2e5305bd2130858b0cef28f5d1b3a0d12111f61c6044814bcd1e",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
-        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/FoundationHost/FoundationTools.cs",
       "line": 245,
       "column": 100,
       "endLine": 245,
