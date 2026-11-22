@@ -7966,6 +7966,28 @@
           "identifier": "check_usage:48e65b1d431560869b5587b8afeb4b02c084d63e86e75b3cba18933facdc8b8f:1"
         }
       ]
+    },
+    {
+      "task": "LOW-A",
+      "maintainerDate": "2026-11-22",
+      "reason": "LOW-A: maintainer approved 2026-11-22 - V20/V21 catalog counts 481-\u003E480 and 492-\u003E491 after unregistering ManageCfcChartProtection, and the real-machine replay no longer names GetSessionState as dropped on V21",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.ToolPipeline.Tests/PipelineTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PipelineTests/EveryCatalogEntryHasReviewedOwnershipAndALocalImplementation( string release , int count ):30bd4eb365da02619a411d457788eca88d8e4ab27bf3a15783254b3a5322eab1:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.ToolPipeline.Tests/PipelineTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "PipelineTests/EveryCatalogEntryHasReviewedOwnershipAndALocalImplementation( string release , int count ):84c578182b92a1752d3bb444cbdcd4d6ba0674f8dd4afe89728e6d48a8a55a15:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/RealMachineStatusTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.RealMachineStatusTests/DefaultReplayRendersWithoutVmFilesAndNamesToolsRemovedFromOneRelease( ):d491da56b6ab937adf007ea5d02c6c4039260af61184ed1f8e9a445c664c2545:1"
+        }
+      ]
     }
   ]
 }
