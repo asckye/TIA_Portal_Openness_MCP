@@ -89,6 +89,19 @@ public sealed class GenerationToolTests : IDisposable
         Assert.NotNull(response.StructuredContent!["data"]?["example"]?["request"]?["params"]?["arguments"]?["machine"]);
     }
 
+    [Fact]
+    public async Task Machine_template_targets_the_serving_release()
+    {
+        const string name = "ManageMachineDescription";
+        var args = Identity();
+        args["action"] = "exportTemplate";
+        args["format"] = "csv";
+        args["outputPath"] = Path.Combine(root, "csv");
+        var result = (await Tool(name, "14sp1").InvokeAsync(Request(name, args))).StructuredContent!;
+        Assert.True((bool?)result["ok"], result.ToJsonString());
+        Assert.Equal("14sp1", (string?)result["data"]?["machine"]?["target"]?["release"]);
+    }
+
     private static JsonObject Identity() => new() { ["packageId"] = "tiamcp.basic", ["version"] = "1.0.0" };
     public static IEnumerable<object[]> Releases => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }.Select(r => new object[] { r });
 

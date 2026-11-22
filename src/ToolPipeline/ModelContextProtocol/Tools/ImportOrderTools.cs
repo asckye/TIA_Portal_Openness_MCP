@@ -117,6 +117,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, null,
                         new Error(cause.Message, new IoFailedDetails("decoder-runtime", TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.RelativeDirectory)),
                     Outcome.RejectedBeforeOperation, Completeness.None, current);
+            if (cause is ArgumentException { ParamName: "offlineReleaseSuiteJsonPath" } invalidSuite)
+                return Result(tool, null, new Error(invalidSuite.Message, McpServer.ArgumentDetails(tool, invalidSuite.ParamName)),
+                    Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (cause is DataLocationIOException)
                 return Result(tool, null, new Error("The local tool dependency is unavailable.", new IoFailedDetails("local-tool-dependency", null)),
                     Outcome.RejectedBeforeOperation, Completeness.None, current);
@@ -173,6 +176,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (totalField != null)
                 {
                     paging = McpServer.OffsetPage(offset, limit, Count(evidence, totalField));
+                    if (!paging.Complete)
+                    {
+                        incomplete = true;
+                        if (data.ContainsKey("dataComplete")) data["dataComplete"] = false;
+                    }
                     data.Remove("offset"); data.Remove("limit"); data.Remove("nextOffset");
                 }
             }

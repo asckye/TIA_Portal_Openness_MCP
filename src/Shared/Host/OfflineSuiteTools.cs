@@ -310,13 +310,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(offlineReleaseSuiteJsonPath) || !File.Exists(offlineReleaseSuiteJsonPath))
-                    throw new FileNotFoundException("Offline release suite JSON report not found.", offlineReleaseSuiteJsonPath);
-                var root = JsonNode.Parse(File.ReadAllText(offlineReleaseSuiteJsonPath)) as JsonObject
-                    ?? throw new McpException("Offline release suite JSON root must be an object.", null, McpErrorCode.InvalidParams);
-                if (root["mode"]?.ToString() != "tia-mcp-offline-release-validation-suite" || root["items"] is not JsonArray
-                    || root["ok"] is not JsonValue verdict || !verdict.TryGetValue<bool>(out _))
-                    throw new McpException("Expected an OfflineReleaseValidationSuite report.", null, McpErrorCode.InvalidParams);
+                var root = ReleaseHandoffArtifactBuilder.ReadSuite(offlineReleaseSuiteJsonPath);
                 var data = ReleaseDiagnosticReportBuilder.Build(root);
                 return new ResponseJsonReport
                 {
@@ -345,12 +339,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(offlineReleaseSuiteJsonPath) || !File.Exists(offlineReleaseSuiteJsonPath))
-                    throw new FileNotFoundException("Offline release suite JSON report not found.", offlineReleaseSuiteJsonPath);
-                var root = JsonNode.Parse(File.ReadAllText(offlineReleaseSuiteJsonPath)) as JsonObject
-                    ?? throw new InvalidOperationException("Offline release suite JSON root must be an object.");
+                var root = ReleaseHandoffArtifactBuilder.ReadSuite(offlineReleaseSuiteJsonPath);
                 var diagnostics = root["diagnostics"] as JsonObject ?? ReleaseDiagnosticReportBuilder.Build(root);
-                var data = ReleaseRunbookBuilder.Build(root, diagnostics);
+                var data = ReleaseRunbookBuilder.Build(root, diagnostics, HardwareContract.ReleaseKey);
                 return new ResponseJsonReport
                 {
                     Ok = data["ok"]?.GetValue<bool>() == true,
@@ -377,12 +368,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(offlineReleaseSuiteJsonPath) || !File.Exists(offlineReleaseSuiteJsonPath))
-                    throw new FileNotFoundException("Offline release suite JSON report not found.", offlineReleaseSuiteJsonPath);
-                var root = JsonNode.Parse(File.ReadAllText(offlineReleaseSuiteJsonPath)) as JsonObject
-                    ?? throw new InvalidOperationException("Offline release suite JSON root must be an object.");
+                var root = ReleaseHandoffArtifactBuilder.ReadSuite(offlineReleaseSuiteJsonPath);
                 var diagnostics = root["diagnostics"] as JsonObject ?? ReleaseDiagnosticReportBuilder.Build(root);
-                var runbook = root["runbook"] as JsonObject ?? ReleaseRunbookBuilder.Build(root, diagnostics);
+                var runbook = ReleaseRunbookBuilder.Build(root, diagnostics, HardwareContract.ReleaseKey);
                 var data = ReleaseManifestBuilder.Build(root, diagnostics, runbook);
                 return new ResponseJsonReport
                 {
@@ -414,7 +402,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var data = ReleaseHandoffArtifactBuilder.RebuildFromSuiteJson(offlineReleaseSuiteJsonPath, outputDirectory);
+                var data = ReleaseHandoffArtifactBuilder.RebuildFromSuiteJson(offlineReleaseSuiteJsonPath, outputDirectory, HardwareContract.ReleaseKey);
                 return new ResponseJsonReport
                 {
                     Ok = data["ok"]?.GetValue<bool>() == true,

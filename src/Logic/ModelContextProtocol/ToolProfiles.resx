@@ -6934,7 +6934,8 @@
         "errorCode": "CompileError",
         "summary": "FB_Pump: 2 errors",
         "detail": "&lt;compiler output&gt;",
-        "severity": "error"
+        "severity": "error",
+        "exportDirectory": "C:\\Examples\\exports\\error-report"
       }
     },
     {
@@ -9400,7 +9401,8 @@
         "errorCode": "CompileError",
         "summary": "FB_Pump: 2 errors",
         "detail": "&lt;compiler output&gt;",
-        "severity": "error"
+        "severity": "error",
+        "exportDirectory": "C:\\Examples\\exports\\error-report"
       }
     },
     {
@@ -12282,7 +12284,8 @@
         "errorCode": "CompileError",
         "summary": "FB_Pump: 2 errors",
         "detail": "&lt;compiler output&gt;",
-        "severity": "error"
+        "severity": "error",
+        "exportDirectory": "C:\\Examples\\exports\\error-report"
       }
     },
     {
@@ -15416,7 +15419,8 @@
         "errorCode": "CompileError",
         "summary": "FB_Pump: 2 errors",
         "detail": "&lt;compiler output&gt;",
-        "severity": "error"
+        "severity": "error",
+        "exportDirectory": "C:\\Examples\\exports\\error-report"
       }
     },
     {
@@ -18873,7 +18877,8 @@
         "errorCode": "CompileError",
         "summary": "FB_Pump: 2 errors",
         "detail": "&lt;compiler output&gt;",
-        "severity": "error"
+        "severity": "error",
+        "exportDirectory": "C:\\Examples\\exports\\error-report"
       }
     },
     {
@@ -22504,7 +22509,8 @@
         "errorCode": "CompileError",
         "summary": "FB_Pump: 2 errors",
         "detail": "&lt;compiler output&gt;",
-        "severity": "error"
+        "severity": "error",
+        "exportDirectory": "C:\\Examples\\exports\\error-report"
       }
     },
     {
@@ -27207,7 +27213,8 @@
         "errorCode": "CompileError",
         "summary": "FB_Pump: 2 errors",
         "detail": "&lt;compiler output&gt;",
-        "severity": "error"
+        "severity": "error",
+        "exportDirectory": "C:\\Examples\\exports\\error-report"
       }
     },
     {
@@ -32218,7 +32225,8 @@
         "errorCode": "CompileError",
         "summary": "FB_Pump: 2 errors",
         "detail": "&lt;compiler output&gt;",
-        "severity": "error"
+        "severity": "error",
+        "exportDirectory": "C:\\Examples\\exports\\error-report"
       }
     },
     {
@@ -43024,7 +43032,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -52671,7 +52680,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -61071,7 +61081,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -66639,7 +66650,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -72814,7 +72826,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -79550,7 +79563,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -86647,7 +86661,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -94751,7 +94766,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "&lt;compiler output&gt;",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"

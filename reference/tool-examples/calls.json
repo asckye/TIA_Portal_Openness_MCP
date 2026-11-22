@@ -241,8 +241,11 @@
         "arguments": {
           "methodName": "GetAttribute",
           "args": [
-            "Name"
-          ]
+            "HeaderAuthor"
+          ],
+          "objectKind": "Block",
+          "objectPath": "<exact block path from GetPlcBlockHierarchy>",
+          "softwarePath": "<exact softwarePath from GetProjectTree>"
         }
       }
     ]
@@ -1654,7 +1657,7 @@
           }
         },
         "operations": {},
-        "validation": "Real-machine verified V19 (2026-10-07): compiled SpeedAxis_1 (TO_SpeedAxis) preview and actual export. V16 inconsistent ASIS refused before approval; V17 PID_Compact_1 from the system library reported know-how protected and refused before approval. Successful technology-object export on V16/V17/V18 NOT RUN; V14 SP1/V15.1 capability absent. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+        "validation": "Real-machine verified V19 (2026-10-07): compiled SpeedAxis_1 (TO_SpeedAxis) preview and actual export. V16 inconsistent ASIS refused before approval; V17 PID_Compact_1 from the system library reported know-how protected and refused before approval. Successful export on V14 SP1 through V18 has not been verified. On V14 SP1 a know-how protected PID object was refused before export. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -5562,7 +5565,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "<compiler output>",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "parameters": {
           "detail": {
@@ -5573,7 +5577,8 @@
             "requiresBinding": true
           },
           "exportDirectory": {
-            "exampleValue": "C:\\Examples\\generated"
+            "exampleValue": "C:\\Examples\\generated",
+            "meaning": "Optional absolute directory under the session output root. Omit to use the session default."
           }
         },
         "operations": {},
@@ -24546,7 +24551,7 @@
           }
         },
         "operations": {},
-        "validation": "Real-machine verified V19 (2026-10-07): compiled SpeedAxis_1 (TO_SpeedAxis) preview and actual export. V16 inconsistent ASIS refused before approval; V17 PID_Compact_1 from the system library reported know-how protected and refused before approval. Successful technology-object export on V16/V17/V18 NOT RUN; V14 SP1/V15.1 capability absent. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
+        "validation": "Real-machine verified V19 (2026-10-07): compiled SpeedAxis_1 (TO_SpeedAxis) preview and actual export. V16 inconsistent ASIS refused before approval; V17 PID_Compact_1 from the system library reported know-how protected and refused before approval. Successful export on V14 SP1 through V18 has not been verified. On V14 SP1 a know-how protected PID object was refused before export. Evidence: reviewer VM results.md and per-release JSON; these observations do not switch current behavior to safe-v4.",
         "execution": {
           "arguments": {
             "dryRun": false,
@@ -24739,7 +24744,8 @@
           "errorCode": "CompileError",
           "summary": "FB_Pump: 2 errors",
           "detail": "<compiler output>",
-          "severity": "error"
+          "severity": "error",
+          "exportDirectory": "C:\\Examples\\exports\\error-report"
         },
         "parameters": {
           "detail": {
@@ -24750,7 +24756,8 @@
             "requiresBinding": true
           },
           "exportDirectory": {
-            "exampleValue": "C:\\Examples\\generated"
+            "exampleValue": "C:\\Examples\\generated",
+            "meaning": "Optional absolute directory under the session output root. Omit to use the session default."
           }
         },
         "operations": {},

@@ -12,6 +12,9 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class ReleaseRunbookBuilder
     {
         public static JsonObject Build(JsonObject suiteRoot, JsonObject diagnostics)
+            => Build(suiteRoot, diagnostics, TiaMcp.Versioning.TiaVersionCatalog.Runnable.First().Key);
+
+        public static JsonObject Build(JsonObject suiteRoot, JsonObject diagnostics, string release)
         {
             if (suiteRoot == null) throw new ArgumentNullException(nameof(suiteRoot));
             if (diagnostics == null) throw new ArgumentNullException(nameof(diagnostics));
@@ -30,6 +33,11 @@ namespace TiaMcpServer.ModelContextProtocol
             var nextActions = diagnostics["recommendedNextActions"] as JsonArray ?? new JsonArray();
             var observations = diagnostics["observations"]?["items"] as JsonArray ?? new JsonArray();
 
+            var version = TiaMcp.Versioning.TiaVersionCatalog.Get(release);
+            var project = System.IO.Path.Combine(workspaceRoot, "src", "FoundationHost", "TiaMcp.FoundationHost.csproj").Replace("'", "''");
+            var command = $" | dotnet run --project '{project}' -c Release -- --release-key {version.Key} --host-command ";
+            var suiteInput = new JsonObject { ["workspaceRoot"] = workspaceRoot, ["reportDir"] = reportDirectory }.ToJsonString().Replace("'", "''");
+
             return new JsonObject
             {
                 ["format"] = "tia-mcp-release-runbook-v1",
@@ -41,17 +49,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["reportDirectory"] = reportDirectory,
                 ["quickStartCommands"] = new JsonArray
                 {
-                    "dotnet build \"" + workspaceRoot + "\\TiaPortalOpenness.slnx\" -c Release",
-                    "dotnet run --project \"" + workspaceRoot
-                        + "\\src\\Engine\\TiaMcp.Engine.V21.csproj\" -c Release -- --tia-major-version 21 --run-offline-release-suite " +
-                        "--offline-release-suite-report-directory \""
-                        + workspaceRoot + "\\reports\\offline_release_suite\"",
-                    "dotnet run --project \"" + workspaceRoot
-                        + "\\src\\Engine\\TiaMcp.Engine.V21.csproj\" -c Release -- --tia-major-version 21 --run-online-monitoring-safety-self-test"
+                    "dotnet build '" + System.IO.Path.Combine(workspaceRoot, "TiaPortalOpenness.slnx").Replace("'", "''") + "' -c Release",
+                    "'" + suiteInput + "'" + command + "OfflineReleaseValidationSuite",
+                    "'{}'" + command + "RunOnlineMonitoringSafetySelfTest"
                 },
                 ["handoffChecklist"] = new JsonArray
                 {
-                    "确认 D:\\app\\TIA21\\Portal V21\\PublicAPI\\V21\\net48 可用。",
+                    $"Verify {version.ApiAssembly} under PublicAPI\\{version.ApiFolder} in the {version.DisplayName} installation.",
                     "确认当前 Windows 用户属于 Siemens TIA Openness 组。",
                     "先跑 offline release suite，再看 diagnostics 和 runbook。",
                     "真实工程写入前必须先用临时 TIA 工程验证导入、读回、SyntaxCheck/编译诊断。",

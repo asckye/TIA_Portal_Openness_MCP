@@ -1,0 +1,51 @@
+{
+ "via": "CallTool",
+ "body": {
+  "schemaVersion": 4,
+  "ok": false,
+  "data": {
+   "mayHaveChanged": false,
+   "mayHaveWrittenFiles": false,
+   "exportOptions": "WithDefaults",
+   "error": "Native observation failed; details are available in the local diagnostic log.",
+   "nativeExceptionType": "System.NotSupportedException",
+   "operationSuccess": false,
+   "apiCallSuccess": false,
+   "dataComplete": false,
+   "status": "NotSupportedOnVersion",
+   "parameter": null,
+   "unsupportedBy": "target",
+   "nativeMessage": "Selected software is not a classic WinCC HmiTarget (Siemens.Engineering.SW.PlcSoftware); Unified targets use the Unified tools.",
+   "writeOutcomeUnknown": false
+  },
+  "error": {
+   "code": "UNSUPPORTED_CAPABILITY",
+   "message": "ManageClassicHmiScript cannot run on the selected object: Selected software is not a classic WinCC HmiTarget (Siemens.Engineering.SW.PlcSoftware); Unified targets use the Unified tools.",
+   "details": {
+    "releaseKey": "14sp1",
+    "capability": "ManageClassicHmiScript",
+    "action": null
+   }
+  },
+  "meta": {
+   "timestamp": "2026-11-22T15:51:21.0815999Z",
+   "releaseKey": "14sp1",
+   "tool": "ManageClassicHmiScript",
+   "requestId": "a1560caae40c4e62b8de08257ecc389e",
+   "outcome": "rejected-before-operation",
+   "execution": "not-started",
+   "behaviorPolicy": "current",
+   "completeness": "none",
+   "paging": null,
+   "warnings": [
+    {
+     "code": "UNVERIFIED_BEHAVIOR",
+     "message": "Native behavior retains the current policy; V4 native acceptance is pending.",
+     "details": {}
+    }
+   ],
+   "elapsedMs": 2254,
+   "workerElapsedMs": 2161
+  }
+ }
+}

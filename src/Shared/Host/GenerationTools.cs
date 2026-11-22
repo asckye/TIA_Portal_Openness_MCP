@@ -82,7 +82,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("true previews; false executes file writes after approval.")] bool dryRun = true,
             [Description("Exact planHash from fresh preview; required for file execution.")] string expectedPlanHash = "")
             => Run("ManageMachineDescription", !dryRun && outputPath.Length != 0,
-                s => s.Machine(action, packageId, version, machine?.Json.GetRawText() ?? "", inputPath, outputPath, format, dryRun, expectedPlanHash));
+                s => s.Machine(action, packageId, version, machine?.Json.GetRawText() ?? "", inputPath, outputPath, format, dryRun, expectedPlanHash, release));
 
         private CallToolResult Run(string name, bool writes, Func<StandardPackageStore, JsonObject> operation)
         {

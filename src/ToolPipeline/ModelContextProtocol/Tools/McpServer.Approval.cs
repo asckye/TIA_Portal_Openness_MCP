@@ -118,7 +118,8 @@ namespace TiaMcpServer.ModelContextProtocol
             Func<string, Task<CallToolResult>> previewCall, CancellationToken token)
         {
             var input = JsonSerializer.Deserialize<JsonElement>(arguments);
-            if (HostBehavior.RemovedVaultReference(name, input) is { } credentialError) return V4Reject(name, credentialError);
+            if ((HostBehavior.RemovedVaultReference(name, input)
+                ?? HostBehavior.MissingRuntimeWriteConfirmation(name, input)) is { } admissionError) return V4Reject(name, admissionError);
             if (ApprovalPreviewDepth.Value > 0) return null;
             var args = JsonObject.Create(input)!;
             try

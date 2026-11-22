@@ -265,7 +265,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: " +
                 "exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
                     "softwarePath.")] string objectPath,
-            [Description("Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable")] string serviceTypeSuffix,
+            [Description("Exact Siemens.Engineering service type name or unique suffix, e.g. ICompilable")] string serviceTypeSuffix,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
             => HmiInspectionContract
@@ -276,7 +276,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: " +
                 "exact module name or /Scripts/name (readable name; old encoded input accepted) with softwarePath; HmiScripts: /Scripts with " +
                     "softwarePath.")] string objectPath,
-            [Description("Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable")] string serviceTypeSuffix,
+            [Description("Exact Siemens.Engineering service type name or unique suffix, e.g. ICompilable")] string serviceTypeSuffix,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
         {

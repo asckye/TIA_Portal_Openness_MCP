@@ -16,6 +16,9 @@ public sealed class UpdateFallbackTests
         Assert.False((bool?)result.Meta!["success"]);
         Assert.Null(result.Meta["latestVersion"]);
         Assert.NotNull(result.Meta["apiProblem"]);
+        var body = toolpipeline::TiaMcpServer.ModelContextProtocol.SessionToolContract.Map("CheckProductUpdate", result, false, false).StructuredContent!;
+        Assert.Equal("RESOURCE_UNAVAILABLE", (string?)body["error"]?["code"]);
+        Assert.Contains("rate limited, try later", (string?)body["error"]?["message"]);
         Assert.Contains("latest release is unknown", result.Message);
         Assert.Contains("pre-release install needs the GitHub releases list", result.Message);
         Assert.Single(handler.Requests);

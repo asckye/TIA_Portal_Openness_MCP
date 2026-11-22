@@ -491,10 +491,11 @@ namespace TiaMcpServer.ModelContextProtocol
         => _library.ManageLibraryFolder(folderKind,folderPath,action,libraryName,newName,dryRun);
 
         [McpServerTool(Name = "ProbeGlobalLibrary"),
-                Description("[L2][HMI-Library]Open a TIA global library (.al21) read-only/best-effort and list accessible master copies/types/folders " +
-                "through public/reflection APIs. It does not import library content. Current native policy; V4 native acceptance is pending.")]
+                Description("[L2][HMI-Library]Open a TIA global library for the session release read-only/best-effort and list accessible master " +
+                "copies/types/folders through public/reflection APIs. It does not import library content. " +
+                "Current native policy; V4 native acceptance is pending.")]
         public CallToolResult ProbeGlobalLibraryV4(
-            [Description("libraryPath: full path to .al21 file or its containing folder")] string libraryPath,
+            [Description("Full path to the session release library file or its containing folder.")] string libraryPath,
             [Description("maxItems: maximum items per list")] int maxItems = 500)
             => LibraryToolContract.Run("ProbeGlobalLibrary", false, true, () =>
             {
@@ -507,7 +508,21 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var result = _library.ProbeGlobalLibrary(libraryPath, maxItems);
+                var extension = TiaOpenness.Shared.ToolUsageCatalog.LibraryExtension(HardwareContract.ReleaseKey);
+                var path = libraryPath.Trim().Trim('"');
+                if (Directory.Exists(path))
+                {
+                    var pattern = "*" + extension;
+                    path = Directory.EnumerateFiles(path, pattern).OrderBy(file => file, StringComparer.OrdinalIgnoreCase).FirstOrDefault()
+                        ?? Directory.EnumerateFiles(path, pattern, SearchOption.AllDirectories)
+                            .OrderBy(file => file, StringComparer.OrdinalIgnoreCase).FirstOrDefault() ?? "";
+                }
+                if (!File.Exists(path) || !string.Equals(Path.GetExtension(path), extension, StringComparison.OrdinalIgnoreCase))
+                    return new ResponseGlobalLibraryProbe { LibraryPath = libraryPath, Ok = false,
+                        Meta = ResponseMeta.Basic(DateTime.Now, false, ("v4Rejection", "NOT_FOUND"), ("parameter", "libraryPath"),
+                            ("nativeMessage", $"No {extension} global library file found at the selected path.")) };
+                var result = _library.ProbeGlobalLibrary(path, maxItems);
+                result.LibraryPath = libraryPath;
                 result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
                 return result;
             }

@@ -87,7 +87,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     Add("project.open", "Open project/session", "pass",
                         (string.IsNullOrWhiteSpace(state!.Project) || state.Project == "-"
                             ? $"Session '{state.Session}' is bound." : $"Project '{state.Project}' is bound.")
-                        + " Project-specific checks run only with connectIfNeeded=true.");
+                        + (includeProjectTree ? " Automation context validation requires connectIfNeeded=true."
+                            : " Project-specific checks run only with connectIfNeeded=true."));
                 }
                 else if (hasProject)
                 {
@@ -103,24 +104,24 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Add("project.automation-context", "Automation context validation", "fail", ex.Message);
                     }
-
-                    if (includeProjectTree)
-                    {
-                        try
-                        {
-                            projectTree = tree();
-                            Add("project.tree", "Project tree readback", string.IsNullOrWhiteSpace(projectTree) ? "warn" : "pass", string
-                                    .IsNullOrWhiteSpace(projectTree) ? "Project tree was empty." : "Project tree read successfully.");
-                        }
-                        catch (Exception ex)
-                        {
-                            Add("project.tree", "Project tree readback", "fail", ex.Message);
-                        }
-                    }
                 }
                 else
                 {
                     Add("project.open", "Open project/session", "warn", "No open project or local session is attached. Project-specific checks were skipped.");
+                }
+
+                if (hasProject && includeProjectTree)
+                {
+                    try
+                    {
+                        projectTree = tree();
+                        Add("project.tree", "Project tree readback", string.IsNullOrWhiteSpace(projectTree) ? "warn" : "pass", string
+                                .IsNullOrWhiteSpace(projectTree) ? "Project tree was empty." : "Project tree read successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Add("project.tree", "Project tree readback", "fail", ex.Message);
+                    }
                 }
 
                 var ok = items.All(i => i.Status == "pass" || i.Status == "warn" || i.Status == "skip");

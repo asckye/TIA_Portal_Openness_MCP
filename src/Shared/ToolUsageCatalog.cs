@@ -35,6 +35,8 @@ namespace TiaOpenness.Shared
         public static bool IsRegistered(string name, string release)
             => (Profiles.Value["releases"]?[release] as JsonArray)?.Any(row => (string?)row!["currentName"] == name) == true;
 
+        public static string LibraryExtension(string release) => ".al" + (string)Data.Value["calls"]!["releaseExtensions"]![release]!;
+
         public static string ExampleSource(string name, string release)
             => (string?)(Profiles.Value["releases"]?[release] as JsonArray)?.FirstOrDefault(row => (string?)row!["currentName"] == name)?["exampleSource"]
                 ?? "plc-foundation";
@@ -174,6 +176,11 @@ namespace TiaOpenness.Shared
             }
             usage["examples"] = index;
             usage["exampleRetrieval"] = "Pass exampleId to GetToolUsage for the complete example and its requirements.";
+            if ((string?)usage["toolName"] == "BuildAndImportPlcArtifact" && usage["outputSchema"] != null && usage.ToJsonString().Length >= 38000)
+            {
+                usage.Remove("outputSchema");
+                usage["outputSchemaSource"] = "Read the complete outputSchema from this tool's tools/list entry.";
+            }
         }
 
         private static void PreviewForm(JsonObject arguments)

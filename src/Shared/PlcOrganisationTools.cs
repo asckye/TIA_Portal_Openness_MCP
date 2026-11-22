@@ -75,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took "
             + "TIA Portal V21 down during a dry run, so this optional check is off by default and the response says 'not queried' - never "
             + "read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, "
-            + "back the block up with ExportPlcBlockDocuments and review dependencies (an unavailable query does not prove it is unused); compile with "
+            + "back the block up and review dependencies (an unavailable query does not prove it is unused); compile with "
             + "CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag "
             + "table use DeletePlcTagTable, a UDT use DeletePlcType. "
             + "Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. "
@@ -103,6 +103,13 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var data = _blocks.DeletePlcBlock(softwarePath, blockPath, dryRun, crossReferences);
+                bool canExport = TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("ExportPlcBlockDocuments", HardwareContract.ReleaseKey);
+                if (!canExport && data["warnings"] is JsonArray warnings)
+                {
+                    for (int i = 0; i < warnings.Count; i++)
+                        if (warnings[i] is JsonValue warning && warning.TryGetValue<string>(out var text))
+                            warnings[i] = text.Replace("Back up with ExportPlcBlockDocuments before deletion", "Back up the block before deletion");
+                }
                 bool crossRefOk = data["crossReferenceAvailable"]?.GetValue<bool>() ?? false;
                 int? pinned = data["pinnedBlockNumber"]?.GetValue<int>();
 
@@ -127,8 +134,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     nextActions: dryRun
                         ? new JsonArray
                         {
-                            "ExportPlcBlockDocuments - back up this block before deletion.",
-                            "GetPlcCrossReferences - inspect each remaining caller.",
+                            canExport ? "ExportPlcBlockDocuments - back up this block before deletion." : "Back up this block before deletion.",
+                            TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("GetPlcCrossReferences", HardwareContract.ReleaseKey)
+                                ? "GetPlcCrossReferences - inspect each remaining caller." : "Inspect each remaining caller in TIA Portal.",
                             "After confirmation, call DeletePlcBlock with dryRun=false, confirm=true and the exact bound expectedProjectFile."
                         }
                         : new JsonArray

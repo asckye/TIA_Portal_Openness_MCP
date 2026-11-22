@@ -51,6 +51,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 : status == "NATIVE_OPERATION_FAILED" ? new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())
                 : status == "PRECONDITION_FAILED" ? new PreconditionFailedDetails("HMI/reflection admission", null) : null;
             if (details == null) return null;
+            if (details is NotFoundDetails && tool is ("DescribeService" or "InvokeObject") && evidence?["target"] is JsonValue member
+                && member.TryGetValue<string>(out var name))
+                return new Error(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString()) ?? $"Could not resolve '{name}' on the selected object.",
+                    new NotFoundDetails(name));
             if (tool == "ListObjectChildren")
                 return new Error(HostBehavior.SafeDiagnostic(message ?? evidence?["nativeMessage"]?.ToString())
                     ?? "The collection could not be read. Check the target and collectionProperty.", details);

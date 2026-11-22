@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -14,19 +15,37 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class ReleaseHandoffArtifactBuilder
     {
-        public static JsonObject RebuildFromSuiteJson(string offlineReleaseSuiteJsonPath, string outputDirectory)
+        public static JsonObject ReadSuite(string offlineReleaseSuiteJsonPath)
         {
-            if (string.IsNullOrWhiteSpace(offlineReleaseSuiteJsonPath))
-                throw new ArgumentException("Offline release suite JSON path is required.", nameof(offlineReleaseSuiteJsonPath));
-            if (!File.Exists(offlineReleaseSuiteJsonPath))
+            if (string.IsNullOrWhiteSpace(offlineReleaseSuiteJsonPath) || !File.Exists(offlineReleaseSuiteJsonPath))
                 throw new FileNotFoundException("Offline release suite JSON report not found.", offlineReleaseSuiteJsonPath);
+            static bool Boolean(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out _);
+            try
+            {
+                if (JsonNode.Parse(File.ReadAllText(offlineReleaseSuiteJsonPath, Encoding.UTF8)) is JsonObject root
+                    && root["mode"]?.ToString() == "tia-mcp-offline-release-validation-suite" && root["items"] is JsonArray items
+                    && Boolean(root["ok"]) && (root["offlineOnly"] == null || Boolean(root["offlineOnly"]))
+                    && items.All(item => item is JsonObject && Boolean(item["ok"]))) return root;
+            }
+            catch (JsonException error)
+            {
+                throw new ArgumentException("Invalid OfflineReleaseValidationSuite JSON.", nameof(offlineReleaseSuiteJsonPath), error);
+            }
+            throw new ArgumentException("Expected an OfflineReleaseValidationSuite report with mode, items and a boolean ok.",
+                nameof(offlineReleaseSuiteJsonPath));
+        }
+
+        public static JsonObject RebuildFromSuiteJson(string offlineReleaseSuiteJsonPath, string outputDirectory)
+            => RebuildFromSuiteJson(offlineReleaseSuiteJsonPath, outputDirectory, TiaMcp.Versioning.TiaVersionCatalog.Runnable.First().Key);
+
+        public static JsonObject RebuildFromSuiteJson(string offlineReleaseSuiteJsonPath, string outputDirectory, string release)
+        {
+            var suiteRoot = ReadSuite(offlineReleaseSuiteJsonPath);
             if (string.IsNullOrWhiteSpace(outputDirectory))
                 outputDirectory = Path.GetDirectoryName(Path.GetFullPath(offlineReleaseSuiteJsonPath)) ?? Directory.GetCurrentDirectory();
 
             Directory.CreateDirectory(outputDirectory);
             var stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var suiteRoot = JsonNode.Parse(File.ReadAllText(offlineReleaseSuiteJsonPath, Encoding.UTF8)) as JsonObject
-                ?? throw new InvalidOperationException("Offline release suite JSON root must be an object.");
 
             var diagnostics = ReleaseDiagnosticReportBuilder.Build(suiteRoot);
             var diagJsonPath = Path.Combine(outputDirectory, "rebuilt_release_diagnostics_" + stamp + ".json");
@@ -38,7 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
             suiteRoot["diagnosticJsonPath"] = diagJsonPath;
             suiteRoot["diagnosticMarkdownPath"] = diagMdPath;
 
-            var runbook = ReleaseRunbookBuilder.Build(suiteRoot, diagnostics);
+            var runbook = ReleaseRunbookBuilder.Build(suiteRoot, diagnostics, release);
             var runbookJsonPath = Path.Combine(outputDirectory, "rebuilt_release_runbook_" + stamp + ".json");
             var runbookMdPath = Path.Combine(outputDirectory, "rebuilt_release_runbook_" + stamp + ".md");
             WriteJsonAndMarkdown(runbook, runbookJsonPath, runbookMdPath, ReleaseRunbookBuilder.BuildMarkdown);

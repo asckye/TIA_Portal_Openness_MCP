@@ -181,15 +181,22 @@ namespace TiaMcpServer.ModelContextProtocol
                     outputDirectory = TiaOpenness.Shared.DataLocations.Current.ReportsDirectory;
                 }
 
-                Directory.CreateDirectory(outputDirectory);
                 var operationId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 var markdownPath = Path.Combine(outputDirectory, $"tia_mcp_acceptance_{operationId}.md");
                 var jsonPath = Path.Combine(outputDirectory, $"tia_mcp_acceptance_{operationId}.json");
 
-                var selfTest = await RunCapabilitySelfTest(
+                var selfTest = await RunCapabilityChecks(
                     connectIfNeeded: connectIfNeeded,
                     includeProjectTree: includeProjectTree,
                     inspectPortalProcesses: inspectPortalProcesses);
+                if (includeProjectTree && string.IsNullOrWhiteSpace(selfTest.ProjectTree))
+                {
+                    var reason = selfTest.Items?.FirstOrDefault(item => item.Id == "project.tree")?.Detail
+                        ?? "No project is bound to this session.";
+                    throw TiaMcp.Adapters.Contracts.AdapterPreconditionException.Failed(
+                        "Cannot include the requested project tree. " + reason, "project-tree-unavailable", "includeProjectTree");
+                }
+                Directory.CreateDirectory(outputDirectory);
                 var safetySelfTest = RunOnlineMonitoringSafetySelfTest();
 
                 var markdown = BuildAcceptanceReportMarkdown(title, operationId, selfTest, safetySelfTest);
@@ -233,7 +240,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Detailed error text, stack trace, compile message, or diagnostic context.")] string detail = "",
             [Description("Comma-separated next actions.")] string recommendedNextActions = "",
             [Description("Severity: info, warn, error, critical.")] string severity = "error",
-            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory =
+            [Description("Optional directory under the session output root for the Markdown and JSON reports.")] string outputDirectory =
                 "")
             => SessionToolContract
                 .Run("GenerateErrorReport", true, false, () =>
@@ -246,7 +253,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Detailed error text, stack trace, compile message, or diagnostic context.")] string detail = "",
             [Description("Comma-separated next actions.")] string recommendedNextActions = "",
             [Description("Severity: info, warn, error, critical.")] string severity = "error",
-            [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory =
+            [Description("Optional directory under the session output root for the Markdown and JSON reports.")] string outputDirectory =
                 "")
         {
             try
@@ -316,7 +323,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 false,
             [Description("Expected PLC software path for ValidateAutomationContext.")] string expectedPlcSoftwarePath = "PLC_1",
             [Description("Expected HMI software path for ValidateAutomationContext.")] string expectedHmiSoftwarePath = "HMI_RT_1")
-        => CapabilitySelfTestLogic.Run(
+            => RunCapabilityChecks(connectIfNeeded, connectIfNeeded && includeProjectTree, inspectPortalProcesses,
+                expectedPlcSoftwarePath, expectedHmiSoftwarePath);
+
+        private static Task<ResponseCapabilitySelfTest> RunCapabilityChecks(bool connectIfNeeded, bool includeProjectTree, bool inspectPortalProcesses,
+            string expectedPlcSoftwarePath = "PLC_1", string expectedHmiSoftwarePath = "HMI_RT_1")
+            => CapabilitySelfTestLogic.Run(
                 () => (bool)HostToolServices.Observe("group")!,
                 () => HostToolServices.Observe("session.ListPortalProcessProjects")!.AsArray().Select(n => n!.GetValue<string>()),
                 () => JsonSerializer.Deserialize<State>(HostToolServices.Observe("session.GetState")!.ToJsonString())!,

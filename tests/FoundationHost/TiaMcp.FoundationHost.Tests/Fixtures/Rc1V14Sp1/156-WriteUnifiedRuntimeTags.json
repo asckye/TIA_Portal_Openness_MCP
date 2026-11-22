@@ -1,0 +1,77 @@
+{
+ "via": "CallTool",
+ "body": {
+  "schemaVersion": 4,
+  "ok": false,
+  "data": {
+   "pipeName": "\\\\.\\pipe\\HmiRuntime",
+   "channel": "WinCC Unified Open Pipe (WriteTag)",
+   "connected": false,
+   "status": "Preview",
+   "safety": {
+    "readOnly": true,
+    "writesValues": false,
+    "localOnly": true,
+    "subscriptionsLeftOpen": false
+   },
+   "error": "Open Pipe 'HmiRuntime' is not available (connect timed out after 2000 ms). Is WinCC Unified Runtime running on this machine with a loaded project?",
+   "errors": null,
+   "warnings": null,
+   "outputPath": null,
+   "outputFiles": null,
+   "success": false,
+   "dryRun": true,
+   "mayHaveChanged": false,
+   "request": {
+    "Message": "WriteTag",
+    "Params": {
+     "Tags": [
+      {
+       "Name": "MCP_RC_Tag",
+       "Value": true
+      }
+     ]
+    },
+    "ClientCookie": "<cookie>"
+   }
+  },
+  "error": {
+   "code": "NATIVE_OPERATION_FAILED",
+   "message": "The operation did not establish a successful result.",
+   "details": {
+    "nativeCode": null,
+    "nativeMessage": "Open Pipe 'HmiRuntime' is not available (connect timed out after 2000 ms). Is WinCC Unified Runtime running on this machine with a loaded project?",
+    "evidence": {}
+   },
+   "innererror": {
+    "exceptionType": null,
+    "hResult": null,
+    "diagnosticId": "c810314352784d0db4e21b0ff2a627c1"
+   }
+  },
+  "meta": {
+   "timestamp": "2026-11-22T16:59:55.7655066Z",
+   "releaseKey": "14sp1",
+   "tool": "WriteUnifiedRuntimeTags",
+   "requestId": "c810314352784d0db4e21b0ff2a627c1",
+   "outcome": "read-failed",
+   "execution": "read-only",
+   "behaviorPolicy": "current",
+   "completeness": "partial",
+   "paging": null,
+   "warnings": [
+    {
+     "code": "UNVERIFIED_BEHAVIOR",
+     "message": "Native behavior retains the current policy; V4 native acceptance is pending.",
+     "details": {}
+    },
+    {
+     "code": "INCOMPLETE_DATA",
+     "message": "The observation is incomplete; inspect the retained per-item evidence.",
+     "details": {}
+    }
+   ],
+   "elapsedMs": 2080
+  }
+ }
+}

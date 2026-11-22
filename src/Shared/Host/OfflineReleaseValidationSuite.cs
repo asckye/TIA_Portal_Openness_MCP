@@ -122,7 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
             root["diagnosticJsonPath"] = diagJsonPath;
             root["diagnosticMarkdownPath"] = diagMdPath;
 
-            var runbook = ReleaseRunbookBuilder.Build(root, diagnostics);
+            var runbook = ReleaseRunbookBuilder.Build(root, diagnostics, HardwareContract.ReleaseKey);
             File.WriteAllText(runbookJsonPath, runbook.ToJsonString(new JsonSerializerOptions
             {
                 WriteIndented = true,

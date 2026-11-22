@@ -211,14 +211,14 @@ namespace TiaMcpServer.ModelContextProtocol
 
 
         [McpServerTool(Name = "CompareSoftwareToOnline"), Description(
-            "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc]" +
+            "[L2][Category:PLC-Online][PreCondition:PLC online]" +
             " Compare the offline PLC software in the project against the program currently running on the physical CPU." +
             " Use after editing blocks to confirm what differs from the live CPU before downloading," +
             " or after a download to verify offline/online consistency." +
             " Returns a tree-walked list of differences: only difference states (ObjectsDifferent, LeftMissing, RightMissing, FolderContentsDifferent and " +
                 "the folder own-state differences) are reported; ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant are not."
                 +
-            " Requires ConnectOnlinePlc first; otherwise refuses with PRECONDITION_FAILED, condition plc-online. Native behaviorPolicy=current; V4 native " +
+            " Requires an online PLC connection; otherwise refuses with PRECONDITION_FAILED, condition plc-online. Native behaviorPolicy=current; V4 native " +
                 "acceptance is pending.")]
         public CallToolResult CompareSoftwareToOnlineV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,

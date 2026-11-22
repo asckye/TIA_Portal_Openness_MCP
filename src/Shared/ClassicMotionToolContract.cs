@@ -64,6 +64,12 @@ namespace TiaMcpServer.ModelContextProtocol
             var refusal = HostBehavior.DocumentedRefusal(data)
                 ?? HostBehavior.KnownRefusal(data, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))
                     ?? Refusal(tool, status, data);
+            if (tool == "ManageClassicHmiScript" && (string?)data["unsupportedBy"] == "target" && refusal != null)
+            {
+                data["status"] = "UnsupportedOnTarget";
+                data["nativeMessage"] = "The selected object must be a classic WinCC HmiTarget.";
+                refusal = UnsupportedCapabilityDetails.ErrorFor(HardwareContract.ReleaseKey, tool, null, (string?)data["nativeMessage"], "target");
+            }
             Outcome outcome; Execution execution; Error? error;
             if (status == "HmiReadSessionBlocked")
             {

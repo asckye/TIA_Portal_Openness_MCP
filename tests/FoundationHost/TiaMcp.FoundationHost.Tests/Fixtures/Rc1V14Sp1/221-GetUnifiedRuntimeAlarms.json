@@ -1,0 +1,69 @@
+{
+ "via": "CallTool",
+ "body": {
+  "schemaVersion": 4,
+  "ok": false,
+  "data": {
+   "pipeName": "\\\\.\\pipe\\HmiRuntime",
+   "channel": "WinCC Unified Open Pipe (ReadAlarm, read-only)",
+   "connected": false,
+   "elapsedMs": 4995,
+   "filter": "",
+   "languageId": 1033,
+   "totalCount": 0,
+   "returnedCount": 0,
+   "dataComplete": false,
+   "alarms": [],
+   "safety": {
+    "readOnly": true,
+    "writesValues": false,
+    "localOnly": true,
+    "subscriptionsLeftOpen": false
+   },
+   "error": "Open Pipe 'HmiRuntime' is not available (connect timed out after 5000 ms). Is WinCC Unified Runtime running on this machine with a loaded project?",
+   "errors": null,
+   "warnings": null,
+   "outputPath": null,
+   "outputFiles": null,
+   "success": false
+  },
+  "error": {
+   "code": "NATIVE_OPERATION_FAILED",
+   "message": "The operation did not establish a successful result.",
+   "details": {
+    "nativeCode": null,
+    "nativeMessage": "Open Pipe 'HmiRuntime' is not available (connect timed out after 5000 ms). Is WinCC Unified Runtime running on this machine with a loaded project?",
+    "evidence": {}
+   },
+   "innererror": {
+    "exceptionType": null,
+    "hResult": null,
+    "diagnosticId": "9ac894d3a05f439a8a590f1364eda1ae"
+   }
+  },
+  "meta": {
+   "timestamp": "2026-11-22T16:46:03.5095520Z",
+   "releaseKey": "14sp1",
+   "tool": "GetUnifiedRuntimeAlarms",
+   "requestId": "9ac894d3a05f439a8a590f1364eda1ae",
+   "outcome": "read-failed",
+   "execution": "read-only",
+   "behaviorPolicy": "current",
+   "completeness": "partial",
+   "paging": null,
+   "warnings": [
+    {
+     "code": "INCOMPLETE_DATA",
+     "message": "The observation is incomplete; inspect the retained per-item evidence.",
+     "details": {}
+    },
+    {
+     "code": "UNVERIFIED_BEHAVIOR",
+     "message": "Native behaviorPolicy=current; V4 native acceptance is pending.",
+     "details": {}
+    }
+   ],
+   "elapsedMs": 5035
+  }
+ }
+}

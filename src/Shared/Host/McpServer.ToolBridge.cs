@@ -594,6 +594,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var policy = current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable;
             if (ToolBehaviorPolicy(tool, policy) == BehaviorPolicy.SafeV4)
             { policy = BehaviorPolicy.SafeV4; warnings = Array.Empty<Warning>(); }
+            if (paging?.Complete == false && completeness == Completeness.Partial)
+                warnings = warnings.Append(new Warning(WarningCode.IncompleteData, "More results are available on the next page.",
+                    new Dictionary<string, JsonElement>())).ToArray();
             // An audited call answers with its audit id (the journal starts with the same id at dispatch, and
             // CorrelationId would invent a new one for a refusal before dispatch).
             var meta = new Meta(DateTimeOffset.UtcNow, ReleaseKey, tool,
@@ -612,7 +615,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());
             if (rejection != null)
                 return V4Result(tool, data, rejection, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None);
-            return response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, paging: paging)
+            return response.Meta?["success"]?.GetValue<bool?>() == true ? V4Result(tool, data, null, Outcome.Succeeded,
+                Execution.ReadOnly, paging?.Complete == false ? Completeness.Partial : Completeness.Complete, paging)
                 : V4Result(tool, data, new Error("Input does not satisfy the declared contract.",
                     new InternalErrorDetails(null)), Outcome.ReadFailed, Execution.ReadOnly, Completeness.None);
         }

@@ -130,8 +130,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 else
                 {
                     meta["httpStatus"] = (int)response.StatusCode;
-                    apiProblem = response.StatusCode == HttpStatusCode.Forbidden || (int)response.StatusCode == 429
-                        ? "GitHub API rate limit reached from this address (60 unauthenticated calls per hour)"
+                    bool rateLimited = (int)response.StatusCode == 429 || response.StatusCode == HttpStatusCode.Forbidden
+                        && (json.Contains("rate limit", StringComparison.OrdinalIgnoreCase) || response.Headers.RetryAfter != null
+                            || response.Headers.TryGetValues("X-RateLimit-Remaining", out var remaining) && remaining.Contains("0"));
+                    apiProblem = rateLimited
+                        ? "GitHub API rate limited, try later"
                         : response.StatusCode == HttpStatusCode.NotFound ? "no published release found for " + repository : "GitHub API answered "
                             + (int)response.StatusCode;
                 }

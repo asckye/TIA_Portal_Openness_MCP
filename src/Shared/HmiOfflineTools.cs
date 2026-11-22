@@ -72,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "PlanGlobalLibraryTemplateReuse"),
                 Description("[L2][HMI-Library] Plan the commercial fallback when direct MasterCopy import is not publicly verifiable: learn " +
-                "reference/global-library template evidence and rebuild screens with native Unified HMI MCP theme/layout/action tools. Offline planning " +
+                "reference/global-library template evidence and plan screen reconstruction for the session release. Offline planning " +
                 "only; it does not import library content or modify projects.")]
         public CallToolResult PlanGlobalLibraryTemplateReuseV4(
             [Description("libraryPath: reference global library folder path or .al* file path.")] string libraryPath,
@@ -135,10 +135,12 @@ namespace TiaMcpServer.ModelContextProtocol
                         "EnsureUnifiedHmiButtonAction" }.Where(Registered).Select(name => (JsonNode)name).ToArray()),
                     ["validationGates"] = new JsonArray(
                         "Template plan has offline package evidence.",
-                        "Generated Unified design JSON passes layout QA.",
+                        Registered("BuildUnifiedHmiLayoutDesign") ? "Generated Unified design JSON passes layout QA."
+                            : "Review the screen layout in TIA Portal.",
                         Registered("DescribeHmiScreenItem") ? "Applied HMI screen items are read back by DescribeHmiScreenItem."
                             : "Verify applied screen items in TIA Portal.",
-                        "Button actions pass SyntaxCheck with zero errors.",
+                        Registered("EnsureUnifiedHmiButtonAction") ? "Button actions pass SyntaxCheck with zero errors."
+                            : "Verify button actions in TIA Portal.",
                         "HMI tags bind only to declared PLC symbols/DB members."),
                     ["reconstructionPlan"] = new JsonArray(
                         "Analyze global library/package structure and string hints without importing content.",
@@ -146,9 +148,10 @@ namespace TiaMcpServer.ModelContextProtocol
                             ? "Use ProbeGlobalLibrary only as read-only evidence when TIA is available; " +
                                 "do not claim direct MasterCopy import unless readback succeeds."
                             : "Inspect the global library in TIA Portal and verify any import by readback.",
-                        "Map reusable UI intent to Unified HMI native tools: theme, layout, template apply design, and button action recipes.",
+                        Registered("BuildUnifiedHmiLayoutDesign") ? "Map the layout to the available Unified HMI design tools."
+                            : "Map the layout to screen elements supported by the target runtime.",
                         Registered("ApplyUnifiedHmiScreenDesign")
-                            ? "Apply generated design with ApplyUnifiedHmiScreenDesign and verify with item readback plus action SyntaxCheck."
+                            ? "Apply generated design with ApplyUnifiedHmiScreenDesign and verify by item readback."
                             : "Apply and verify the design in TIA Portal.",
                         "Bind controls only to declared PLC symbols or DB members discovered from project exports/readback."),
                     ["analysis"] = analysis

@@ -27,7 +27,7 @@ internal sealed class FoundationCatalog : IToolCatalogView
         var declared = data.Declarations(release).ToDictionary(ReleaseCatalogData.Name, method =>
         {
             DeclaredToolMetadata.Create(ReleaseCatalogData.Name(method), method,
-                _ => throw new InvalidOperationException("Metadata only."), out var descriptor);
+                _ => throw new InvalidOperationException("Metadata only."), out var descriptor, release);
             return descriptor;
         }, StringComparer.Ordinal);
         All = declared.Where(pair => !data.RetainUnavailable || !TiaMcp.Adapters.Contracts.PortedFamilies.Contains(pair.Key)

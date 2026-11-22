@@ -14,7 +14,8 @@ namespace TiaMcp.Logic.Generation
         private static readonly string[] Sheets = { "Machine", "Stations", "Units", "Devices", "Lists" };
         private const int MaximumBytes = 16 * 1024 * 1024, MaximumRows = 10001, MaximumColumns = 1024;
 
-        public static string EmptyMachine(StandardPackage package)
+        public static string EmptyMachine(StandardPackage package) => EmptyMachine(package, null);
+        internal static string EmptyMachine(StandardPackage package, string? release)
         {
             var languages = package.Manifest.Languages.Required.Concat(new[] { package.Manifest.Languages.Default }).Distinct(StringComparer.Ordinal).ToArray();
             JsonObject Names(string text) { var names = new JsonObject(); foreach (var language in languages) names[language] = text; return names; }
@@ -22,7 +23,7 @@ namespace TiaMcp.Logic.Generation
             ["schema"] = "tiamcp.machine/1", ["machine"] = new JsonObject { ["id"] = "M1", ["name"] = Names("Machine") },
             ["standard"] = new JsonObject { ["package"] = package.Manifest.Id, ["version"] = package.Manifest.Version },
             ["target"] = new JsonObject {
-                ["release"] = package.Manifest.Targets.Releases.Last(), ["project"] = new JsonObject {
+                ["release"] = release ?? package.Manifest.Targets.Releases.Last(), ["project"] = new JsonObject {
                     ["mode"] = "new", ["name"] = "Machine", ["directory"] = "C:/Projects" }
             },
             ["stations"] = new JsonArray(new JsonObject { ["id"] = "PLC1", ["role"] = "plc.main" }),

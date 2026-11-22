@@ -48,8 +48,28 @@ namespace TiaMcpServer.ModelContextProtocol
                 var meta = report.Meta!;
                 bool reportedInvalid = meta["validationError"] == null && (meta["missing"] is JsonArray { Count: > 0 }
                     || meta["unknown"] is JsonArray { Count: > 0 } || meta["typeProblems"] is JsonArray { Count: > 0 });
+                var schema = new InputSchema(CatalogView.Find(name)!.Tool.InputSchema);
+                var fields = new List<Error>();
+                var displayInput = JsonNode.Parse(args.Json.GetRawText())!.AsObject();
+                var declared = schema.Json.GetProperty("properties").EnumerateObject().Select(p => p.Name).ToArray();
+                foreach (var pair in displayInput.ToArray())
+                {
+                    var canonical = declared.FirstOrDefault(key => key.Equals(pair.Key, StringComparison.OrdinalIgnoreCase));
+                    if (canonical == null || canonical == pair.Key || displayInput.ContainsKey(canonical)) continue;
+                    fields.Add(new Error($"Use the exact spelling '{canonical}'.", new InvalidArgumentDetails("/" + canonical, Array.Empty<string>())));
+                    displayInput.Remove(pair.Key);
+                    displayInput[canonical] = pair.Value;
+                }
+                var displayJson = JsonSerializer.SerializeToElement(displayInput);
+                var fieldErrors = schema.ValidateFields(displayJson);
+                if (fields.Count > 0)
+                {
+                    var messages = fields.Select(field => field.Message).ToList();
+                    if (fieldErrors.Count > 0) messages.Add(schema.FieldReport(displayJson));
+                    error = new Error(string.Join(" ", messages), error.Details);
+                }
                 meta["validationError"] = JsonNode.Parse(V4Json.Serialize(error));
-                var fields = new InputSchema(CatalogView.Find(name)!.Tool.InputSchema).ValidateFields(args.Json).ToList();
+                fields.AddRange(fieldErrors.GroupBy(field => V4Json.Serialize(field)).Select(group => group.First()));
 #if TIA_ENGINE_HOST
                 var target = CatalogView.Find(name)!;
                 var aliasError = CanonicalToolParameters.ValidateAliases(name, JsonNode.Parse(args.Json.GetRawText())!.AsObject(),

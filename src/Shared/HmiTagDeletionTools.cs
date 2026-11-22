@@ -14,7 +14,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public HmiTagDeletionTools(HmiTagDeletionService service) => _service = service;
 
         [McpServerTool(Name = "DeleteHmiTag"),
-                Description("[L2][HMI][WRITE] Delete ONE exact ordinary Classic/Unified HMI tag in V20/V21. tagTablePath is /Folder/Table (no recursive name " +
+                Description("[L2][HMI][WRITE] Delete ONE exact ordinary Classic/Unified HMI tag. tagTablePath is /Folder/Table (no recursive name " +
                 "search); empty selects Unified device-root Tags only. Default dryRun=true previews existence. Actual deletion requires dryRun=false AND " +
                 "confirmDelete=true, acquires exclusive access, and verifies absence. No cross-reference call, no save/compile; screen/script/alarm/logging " +
                 "references are NOT checked and may break. No variable table, PLC tag, or system tag deletion.")]

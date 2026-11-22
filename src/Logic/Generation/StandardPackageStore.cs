@@ -224,37 +224,41 @@ namespace TiaMcp.Logic.Generation
 
         public JsonObject Machine(string action, string id, string version, string machineJson, string inputPath,
             string outputPath, string format, bool dryRun, string expectedPlanHash)
+            => Machine(action, id, version, machineJson, inputPath, outputPath, format, dryRun, expectedPlanHash, release: null);
+
+        public JsonObject Machine(string action, string id, string version, string machine, string inputPath,
+            string outputPath, string format, bool dryRun, string expectedPlanHash, string? release)
         {
             if (!new[] { "validate", "import", "export", "exportTemplate" }.Contains(action))
                 throw new ArgumentException("Unknown machine action.", nameof(action));
             if (format != "json" && format != "csv")
                 throw new ArgumentException("Only JSON and package-generated CSV are supported; xlsx is deferred.", nameof(format));
-            if (action == "import" && machineJson.Length != 0 || action != "import" && inputPath.Length != 0
-                || action == "exportTemplate" && machineJson.Length != 0 || action == "validate" && outputPath.Length != 0)
+            if (action == "import" && machine.Length != 0 || action != "import" && inputPath.Length != 0
+                || action == "exportTemplate" && machine.Length != 0 || action == "validate" && outputPath.Length != 0)
                 throw new ArgumentException("Arguments do not belong to this machine action.", nameof(action));
             var package = Effective(Load(id, version));
-            if (action == "import") machineJson = format == "json" ? ReadJson(inputPath) : MachineCsv.Import(package, inputPath);
+            if (action == "import") machine = format == "json" ? ReadJson(inputPath) : MachineCsv.Import(package, inputPath);
             if (action == "exportTemplate")
             {
                 if (format != "csv") throw new ArgumentException("The spreadsheet template uses CSV.", nameof(format));
-                machineJson = MachineCsv.EmptyMachine(package);
+                machine = MachineCsv.EmptyMachine(package, release);
             }
-            if (Encoding.UTF8.GetByteCount(machineJson) > 4 * 1024 * 1024) throw new ArgumentException("Machine JSON exceeds 4 MiB.", "machine");
-            var machine = package.ValidateMachine(machineJson);
-            if (!GenerationPlanner.VersionMatches(machine.Standard.Version, package.Manifest.Version))
+            if (Encoding.UTF8.GetByteCount(machine) > 4 * 1024 * 1024) throw new ArgumentException("Machine JSON exceeds 4 MiB.", nameof(machine));
+            var description = package.ValidateMachine(machine);
+            if (!GenerationPlanner.VersionMatches(description.Standard.Version, package.Manifest.Version))
                 throw CanonicalJson.Failure("/standard/version", "version", "Selected package does not satisfy the machine version range.");
             var cpuWarnings = new JsonArray();
-            foreach (var device in machine.Devices.Where(d => d.Params.TryGetValue("programAlarm", out var alarm) && alarm.ValueKind == JsonValueKind.True))
+            foreach (var device in description.Devices.Where(d => d.Params.TryGetValue("programAlarm", out var alarm) && alarm.ValueKind == JsonValueKind.True))
             {
-                var station = machine.Stations.Single(s => s.Id == device.Station);
+                var station = description.Stations.Single(s => s.Id == device.Station);
                 // The basic package deliberately isolates an S7-1500-only instruction.
                 if (station.Kind == "S7-1200" || (station.Article ?? "").Replace(" ", "").StartsWith("6ES721", StringComparison.OrdinalIgnoreCase))
                     throw CanonicalJson
-                        .Failure("/devices/" + machine.Devices.IndexOf(device) + "/params/programAlarm", "cpu",
+                        .Failure("/devices/" + description.Devices.IndexOf(device) + "/params/programAlarm", "cpu",
                             "Program_Alarm is unavailable on S7-1200; select false.");
                 cpuWarnings.Add("Verify S7-1500 CPU/firmware support for device " + device.Id + "; native acceptance NOT RUN.");
             }
-            string canonical = Encoding.UTF8.GetString(CanonicalJson.Encode(CanonicalJson.Parse(machineJson)));
+            string canonical = Encoding.UTF8.GetString(CanonicalJson.Encode(CanonicalJson.Parse(machine)));
             var result = new JsonObject {
                 ["valid"] = true, ["machine"] = JsonNode.Parse(canonical), ["machineHash"] = GenerationDocuments.MachineHash(canonical),
                 ["packageHash"] = package.ContentHash, ["cpuWarnings"] = cpuWarnings, ["dryRun"] = dryRun, ["executed"] = false };

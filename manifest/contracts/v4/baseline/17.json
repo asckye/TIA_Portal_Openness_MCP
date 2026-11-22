@@ -5961,7 +5961,7 @@
         "openWorldHint": true,
         "readOnlyHint": true
       },
-      "descriptionSha256": "1d3eb7e7dd45a15ef54263e41f760fe6e75b764c0f3f3dd0b502d9e4349f8aa2",
+      "descriptionSha256": "38ca95e40dfcd1a9a37cdd72a3c4246703f1d964ac1f11a0217c12c11237d59a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7162,7 +7162,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "63c36521a758b54047e3c3ca832d79f5e588cdee7f36a50dfc4d6b415970f42f",
+      "descriptionSha256": "22d2d43aa60d5727a682efd2db03484d956e2ceef078d25e7813711882ce88ab",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7207,7 +7207,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "1e231cc6f7f12ebf44143bfb2e8ece8a852b802bab3c708ffea187138d3efd31",
+      "descriptionSha256": "ecd6aba8a520fba19b9cd7955fce034e7eb2ab47c386ae436755469368721c6b",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7715,7 +7715,7 @@
             "type": "string"
           },
           "serviceTypeSuffix": {
-            "description": "Exact Siemens.Engineering service type name or unique suffix, e.g. PlcChecksumProvider or ICompilable",
+            "description": "Exact Siemens.Engineering service type name or unique suffix, e.g. ICompilable PlcChecksumProvider is also available on this release.",
             "type": "string"
           },
           "softwarePath": {
@@ -9943,7 +9943,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "a2250e56541b4e6098889b12d9522a009cffc16453397a15c460910b228155c8",
+      "descriptionSha256": "704e3cad96c9981f3dea314b75f2658a184446890cd72062f4253647cb824b26",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -9963,14 +9963,20 @@
             "type": "string"
           },
           "exportDirectory": {
-            "description": "Absolute output directory on the TIA host. Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Absolute output directory on the TIA host. Optional directory under the session output root for the Markdown and JSON reports. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "examples": [
+              "C:\\Examples\\exports\\error-report"
+            ],
             "minLength": 1,
             "pattern": "^(?:[A-Za-z]:[\\\\/]|/|\\\\\\\\)",
             "type": "string"
           },
           "outputDirectory": {
             "default": "",
-            "description": "Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%. Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "description": "Optional directory under the session output root for the Markdown and JSON reports. Deprecated alias; use exportDirectory. Removed in 5.0; its existing file/directory meaning is unchanged. Supply at most one of outputDirectory or exportDirectory; these parameters are mutually exclusive. Omit the target to use the session output directory when available; otherwise supply it explicitly.",
+            "examples": [
+              "C:\\Examples\\exports\\error-report"
+            ],
             "type": "string"
           },
           "recommendedNextActions": {
@@ -22844,7 +22850,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5433c6363948832a7d60bdc6bc078e91870884b99a432fc2c39dcd824f37b1c3",
+      "descriptionSha256": "e5c45341a00824e72d8504a2b41a7a0f49a923d6121b7a4d416ad96d471d95b4",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -23529,12 +23535,12 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "97a08859c090a647b966c6233b56764b744902d429b26e51a3094463e1d9c703",
+      "descriptionSha256": "e1a6bba7d190811f6d2b6a5ad0980d4e0798627a7b26d14b9926124e0899da99",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
           "libraryPath": {
-            "description": "libraryPath: full path to .al21 file or its containing folder",
+            "description": "Full path to a .al17 library file or its containing folder.",
             "type": "string"
           },
           "maxItems": {
@@ -24772,7 +24778,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "d51009ae34ed03ed521544204e9313c48a96549f427cb0dd943962d85bffdf02",
+      "descriptionSha256": "457f0f16cb771b9ee3ef9e228d9f65c53fd5926bc0531a413a6096393d11a732",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

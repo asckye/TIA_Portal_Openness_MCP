@@ -67,6 +67,11 @@ public sealed class OnlineMonitoringSafetyRuleTests
             Assert.True(File.Exists(response.MarkdownPath));
             Assert.True(File.Exists(response.JsonPath));
             Assert.True((bool?)JsonNode.Parse(File.ReadAllText(response.JsonPath))!["Ok"]);
+            Host.HostToolServices.Override = (operation, arguments) => operation == "session.GetProjectTree"
+                ? JsonValue.Create("Fixture/PLC_1") : Observe(fixture, operation, arguments);
+            var withTree = await new Host.HostMetaTools().GenerateAcceptanceReport(Path.Combine(directory, "with-tree"), includeProjectTree: true);
+            Assert.Equal("Fixture/PLC_1", withTree.SelfTest!.ProjectTree);
+            Assert.Equal("Fixture/PLC_1", (string?)JsonNode.Parse(File.ReadAllText(withTree.JsonPath))!["SelfTest"]?["ProjectTree"]);
         }
         finally
         {

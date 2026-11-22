@@ -141,6 +141,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, data,
                         new Error("The operation did not establish success.", new InvalidArgumentDetails("repository", Array.Empty<string>())),
                     Outcome.RejectedBeforeOperation, Completeness.None, writes, current);
+            if (tool == "CheckProductUpdate" && success == false)
+            {
+                int? status = (int?)evidence["httpStatus"];
+                var problem = Text("apiProblem") ?? "GitHub could not be reached.";
+                if (status == 429 || status == 403 && problem.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
+                    problem = "GitHub API rate limited, try later.";
+                return Result(tool, data, new Error(problem, new ResourceUnavailableDetails("GitHub releases")),
+                    Outcome.ReadFailed, Completeness.None, writes, current);
+            }
             // A returned report contains both completed file writes, even when
             // the diagnostic verdict recorded in those files is a failure.
             if (tool == "GenerateAcceptanceReport" && data["markdownPath"] != null && data["jsonPath"] != null)

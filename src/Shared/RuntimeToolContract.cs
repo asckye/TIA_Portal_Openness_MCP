@@ -84,6 +84,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static string? UnreachableRuntimeTarget(string tool, JsonObject data)
         {
+            if (tool is "GetUnifiedRuntimeAlarms" or "GetUnifiedRuntimeTags" or "WriteUnifiedRuntimeTags"
+                && Flag(data, "connected") == false && data["pipeName"] is JsonValue pipe && pipe.TryGetValue<string>(out var pipeName)
+                && data["error"] is JsonValue failure && failure.TryGetValue<string>(out var problem)
+                && problem.StartsWith("Open Pipe '", StringComparison.Ordinal)
+                && (problem.Contains("' is not available (connect timed out after ") || problem.Contains("' does not exist on this machine.")))
+                return pipeName;
             string? parameter = TiaMcp.Adapters.Contracts.OnlineTargetPolicy.AddressParameter(tool);
             if (parameter is not ("ip" or "host" or "endpointUrl")) return null;
             string? target = (string?)data[parameter == "endpointUrl" ? "endpoint" : parameter];

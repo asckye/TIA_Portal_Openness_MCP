@@ -58,7 +58,15 @@ namespace TiaMcpServer.Siemens.Services
                 if (code == nameof(OverflowException)) throw new OverflowException(message);
                 throw new InvalidOperationException(message);
             }
-            return JsonSerializer.Deserialize<T>(reply["Observation"]!.ToJsonString())!;
+            var observation = reply["Observation"]!;
+            if (request.Operation is "InvokeObject" or "DescribeService" && (string?)observation["Meta"]?["v4Rejection"] == "NOT_FOUND")
+            {
+                var member = request.Operation == "InvokeObject" ? request.MethodName : request.ServiceTypeSuffix;
+                var target = request.ObjectKind + (string.IsNullOrEmpty(request.ObjectPath) ? "" : " '" + request.ObjectPath + "'");
+                observation["Meta"]!["target"] = member;
+                observation["Meta"]!["nativeMessage"] = $"Could not resolve '{member}' on {target} for this call.";
+            }
+            return JsonSerializer.Deserialize<T>(observation.ToJsonString())!;
         }
         private static HardwareScalar[]? Arguments(JsonArray? args) => args?.Select(a => {
             if (a == null) return new HardwareScalar();

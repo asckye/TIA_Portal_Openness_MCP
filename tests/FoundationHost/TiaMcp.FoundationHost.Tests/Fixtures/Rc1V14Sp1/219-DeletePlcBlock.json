@@ -1,0 +1,70 @@
+{
+ "via": "CallTool",
+ "body": {
+  "schemaVersion": 4,
+  "ok": true,
+  "data": {
+   "ok": true,
+   "errors": null,
+   "warnings": [
+    "Only this block is deleted; its instance DB and callers remain. Use CompilePlcSoftware after deletion to detect dangling references.",
+    "Block cross references are unavailable (CrossReferenceService requires V18 or later.); this does not establish that the block has no callers. Back up with ExportPlcBlockDocuments before deletion, then run CompilePlcSoftware and inspect errors."
+   ],
+   "outputPath": null,
+   "outputFiles": null,
+   "softwarePath": "MCP_RC_PLC",
+   "requestedBlockPath": "MCP_RC_Grp/MCP_RC_DB2",
+   "resolvedBlockPath": "MCP_RC_Grp/MCP_RC_DB2",
+   "blockName": "MCP_RC_DB2",
+   "blockType": "GlobalDB",
+   "pinnedBlockNumber": null,
+   "dryRun": true,
+   "deleted": false,
+   "verifiedAbsent": false,
+   "crossReferenceQueried": false,
+   "crossReferenceUnavailableReason": "CrossReferenceService requires V18 or later.",
+   "crossReferenceAvailable": false,
+   "crossReferenceCount": null,
+   "crossReferences": null,
+   "summary": "[dryRun] No changes made. Target: Program block 'MCP_RC_Grp/MCP_RC_DB2', Cross-references were not queried (CrossReferenceService requires V18 or later.). This does not mean the object is unreferenced.After verifying the preview, use dryRun=false, confirm=true and the exact bound expectedProjectFile to delete.",
+   "evidence": {
+    "success": true,
+    "dryRun": true,
+    "deleted": false,
+    "verifiedAbsent": false,
+    "crossReferenceAvailable": false,
+    "nextActions": [
+     "ExportPlcBlockDocuments - back up this block before deletion.",
+     "GetPlcCrossReferences - inspect each remaining caller.",
+     "After confirmation, call DeletePlcBlock with dryRun=false, confirm=true and the exact bound expectedProjectFile."
+    ]
+   }
+  },
+  "error": null,
+  "meta": {
+   "timestamp": "2026-11-22T16:19:09.7722240Z",
+   "releaseKey": "14sp1",
+   "tool": "DeletePlcBlock",
+   "requestId": "362b0594dbec4182bcd22346c94bd85d",
+   "outcome": "succeeded",
+   "execution": "read-only",
+   "behaviorPolicy": "current",
+   "completeness": "partial",
+   "paging": null,
+   "warnings": [
+    {
+     "code": "UNVERIFIED_BEHAVIOR",
+     "message": "Native behavior retains the current policy; V4 native acceptance is pending.",
+     "details": {}
+    },
+    {
+     "code": "INCOMPLETE_DATA",
+     "message": "The returned observation is incomplete; inspect the retained evidence.",
+     "details": {}
+    }
+   ],
+   "elapsedMs": 2481,
+   "workerElapsedMs": 2391
+  }
+ }
+}

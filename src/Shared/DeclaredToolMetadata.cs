@@ -193,7 +193,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return u.Name;
         }
 
-        internal static List<PreflightLogic.ParameterSpec> SpecsOf(MethodInfo method)
+        internal static List<PreflightLogic.ParameterSpec> SpecsOf(MethodInfo method, string? release = null)
         {
             var specs = new List<PreflightLogic.ParameterSpec>();
             foreach (var p in method.GetParameters())
@@ -209,6 +209,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 bool synthesized = false;
                 if (string.IsNullOrEmpty(text)) { text = ParameterVocabulary.Describe(p.Name!); synthesized = text != null; }
                 string tool = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
+                if (release != null && tool == "DescribeService" && p.Name == "serviceTypeSuffix"
+                    && TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("GetPlcChecksums", release))
+                    text += " PlcChecksumProvider is also available on this release.";
+                if (release != null && tool == "ProbeGlobalLibrary" && p.Name == "libraryPath")
+                    text = $"Full path to a {TiaOpenness.Shared.ToolUsageCatalog.LibraryExtension(release)} library file or its containing folder.";
                 specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, text ?? "", synthesized,
                     ToolMetadata.Parameter(tool, p.Name!)?.AllowedValues,
                     pattern: ToolMetadata.Parameter(tool, p.Name!)?.Pattern));
@@ -233,16 +238,24 @@ namespace TiaMcpServer.ModelContextProtocol
             release ??= HardwareContract.ReleaseKey;
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
+            if (name == "SearchInstalledGsdDevices" && !TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("SearchHardwareCatalog", release))
+                description = "[L2][Hardware][READ] Search only installed GSDML files for PROFINET device access points by vendor, order or DAP keyword. "
+                    + "Results are file metadata. The limit bounds the number of candidates returned.";
             var decorated = TiaOpenness.Shared.ToolUsageCatalog.WithHint(name, ToolExamples.Decorate(name, description, release));
             var tool = ReferenceEquals(decorated, description) || decorated == description
                 ? CreateToolCore(method, null, target)
                 : CreateToolCore(method, new McpServerToolCreateOptions { Name = name, Description = decorated }, target);
             // Enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
-            var hinted = McpServer.WithSchemaHints(tool, name, SpecsOf(method), release, (schema, original) => PreserveTypedSchemas(schema, original, method));
+            var specs = SpecsOf(method, release);
+            var hinted = McpServer.WithSchemaHints(tool, name, specs, release, (schema, original) => PreserveTypedSchemas(schema, original, method));
             var schema = JsonNode.Parse(hinted.ProtocolTool.InputSchema.GetRawText())!.AsObject();
+            if (name is "DescribeService" or "ProbeGlobalLibrary")
+            {
+                var field = name == "DescribeService" ? "serviceTypeSuffix" : "libraryPath";
+                schema["properties"]![field]!["description"] = specs.Single(p => p.Name == field).Description;
+            }
             PlcSoftwareUnitSchema.Apply(schema, name, release);
             hinted.ProtocolTool.InputSchema = JsonSerializer.SerializeToElement(schema);
-            var specs = SpecsOf(method);
             var parameters = method.GetParameters().Where(p => !McpServer.IsInfrastructureParameter(p.ParameterType)).Select((p, i) =>
                 new ToolParameterDescriptor(p.Name!, specs[i].Kind, p.ParameterType.FullName!, specs[i].Required, specs[i].DefaultText,
                     p.DefaultValue?.ToString(), specs[i].Description, specs[i].Synthesized, specs[i].AllowedValues))
