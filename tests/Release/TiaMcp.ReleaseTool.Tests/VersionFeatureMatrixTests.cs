@@ -33,12 +33,19 @@ public sealed class VersionFeatureMatrixTests
             [OpennessApi.PlcUnits] = Has("T:SW.Units.PlcUnitProvider"),
             [OpennessApi.IgnoreUnitAttributes] = Has("F:SW.SWImportOptions.IgnoreUnitAttributes"),
             [OpennessApi.VersionControl] = Has("T:VersionControl.VersionControlInterface"),
+            [OpennessApi.WatchForceEntries] = Has("P:SW.WatchAndForceTables.PlcWatchTableEntry.Address")
+                && Has("P:SW.WatchAndForceTables.PlcForceTableEntry.Address"),
+            [OpennessApi.UmcServerSynchronization] = Has("M:Umac.UmcServerConfigurator.CheckConsistency")
+                && Has("M:Umac.UmcServerConfigurator.Synchronize"),
             [OpennessApi.HardwareCatalog] = Has("T:HW.HardwareCatalog.HardwareCatalog"),
             [OpennessApi.UnifiedHmi] = Has("T:HmiUnified.HmiSoftware"),
             [OpennessApi.OnlineAuthentication] = Has("T:Online.Configurations.OnlineAuthenticationConfiguration"),
             [OpennessApi.CultureImportOptions] = Has("F:ImportOptions.SkipInactiveCultures"),
             [OpennessApi.TechnologyGroups] = Has("T:SW.TechnologicalObjects.TechnologicalInstanceDBUserGroup"),
             [OpennessApi.PlcDocuments] = Has("T:SW.ImportDocumentOptions"),
+            [OpennessApi.OfflineUmcUsers] = Has("M:Umac.UmcUserComposition.CreateOfflineUmcUser(System.String)")
+                && Has("M:Umac.UmcUserGroupComposition.CreateOfflineUmcUserGroup")
+                && Has("M:Umac.UmcUser.SetName(System.String)") && Has("M:Umac.UmcUserGroup.SetName(System.String)"),
             [OpennessApi.ObjectIdentifiers] = Has("T:ObjectIdentifierProvider"),
             [OpennessApi.LibraryCopyModes] =
                 Has("M:SW.Blocks.PlcBlockComposition.CreateFrom(Siemens.Engineering.Library.MasterCopies.MasterCopy,"
@@ -60,6 +67,9 @@ public sealed class VersionFeatureMatrixTests
             [OpennessApi.UnifiedRuntimeFontSettings] = Has("P:HmiUnified.RuntimeSettings.HmiRuntimeSetting.EnableLanguageCompatibleFontFamilies"),
             [OpennessApi.TelecontrolPoints] = Has("P:HW.Features.TelecontrolManagement.TelecontrolDataPoints"),
             [OpennessApi.SnapshotValues] = Has("T:SW.Blocks.Interface.ValueService"),
+            [OpennessApi.MotionAxisMappings] = Has("T:SW.TechnologicalObjects.Motion.InterpreterMappings")
+                && Has("T:SW.TechnologicalObjects.Ident.IdentTechnologicalObjectProvider")
+                && Has("T:SW.TechnologicalObjects.Motion.SuperimposingAxes"),
             [OpennessApi.OpcUaAccessControl] = Has("P:SW.OpcUa.ServerInterfaceGroup.AccessControl"),
             [OpennessApi.PlcDocumentCreation] = Has("M:SW.PlcDocumentComposition.CreateFrom(Siemens.Engineering.Library.MasterCopies.MasterCopy)"),
             [OpennessApi.CommunicationConnections] = Has("T:HW.CommunicationConnections.ConnectionComposition"),
