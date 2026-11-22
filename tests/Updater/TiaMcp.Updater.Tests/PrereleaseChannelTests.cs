@@ -137,14 +137,25 @@ namespace TiaMcp.Updater.Tests
         }
 
         [Fact]
+        public void Non_github_api_base_is_rejected_before_the_first_request()
+        {
+            using var handler = new ApiRedirectFixture();
+            var start = new Uri("https://api.github.com.other.invalid/repos/owner/repo/releases/latest");
+            var error = Assert.Throws<InvalidOperationException>(() => handler.Read(start));
+            Assert.Contains("HTTPS GitHub release API URL", error.Message);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
         public void Api_redirects_resolve_relative_locations_and_allow_both_github_hosts()
         {
             var start = new Uri("https://api.github.com/repos/owner/old/releases/latest");
             const string canonical = "/repositories/123/releases/latest";
             const string final = "https://github.com/owner/new/releases/latest";
-            using var handler = new ApiRedirectFixture(canonical, final);
+            using var handler = new ApiRedirectFixture(canonical, final) { CheckCertificateRevocationList = false };
             Assert.Equal("v4.0.0", handler.Read(start).Tag);
             Assert.Equal(new[] { start.AbsoluteUri, "https://api.github.com" + canonical, final }, handler.Requests);
+            Assert.False(handler.CheckCertificateRevocationList);
         }
 
         [Theory]

@@ -516,6 +516,9 @@ public sealed class PrepareTests
         tree.Write("manifest/publication-v4.0.0-beta.2.json", """{"release":"v4.0.0-beta.2"}""");
         SealRepository(tree);
         string[] Errors() => RepositoryChecks.RepositoryNameErrors(tree.Root, ["CHANGELOG.md", notes]).Select(e => e.Split(": ", 2)[0]).ToArray();
+        // Without tags, the dated beta.6 heading freezes both its changelog entry and its release notes.
+        Assert.Equal(new[] { "CHANGELOG.md:2", "CHANGELOG.md:7" }, Errors());
+        Git(tree, ["update-ref", "refs/tags/v4.0.0-beta.2", "HEAD"]);
         Assert.Equal(new[] { "CHANGELOG.md:2", "CHANGELOG.md:4", "CHANGELOG.md:7", notes + ":1" }, Errors());
         Git(tree, ["update-ref", "refs/tags/v4.0.0-beta.6", "HEAD"]);
         Assert.Equal(new[] { "CHANGELOG.md:2", "CHANGELOG.md:7" }, Errors());

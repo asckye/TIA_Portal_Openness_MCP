@@ -21,6 +21,19 @@ public sealed class RuntimeChannelDiagnosticsTests
 
     public static IEnumerable<object[]> WebReleases() => NativeFailureDiagnosticsTests.Releases();
 
+    [Theory]
+    [InlineData("All pipe instances are busy.")]
+    [InlineData("The pipe has been ended.")]
+    public void Open_pipe_io_failure_preserves_native_evidence_and_suggests_what_to_check(string message)
+    {
+        var error = new IOException(message);
+        string diagnostic = TiaMcpServer.Runtime.UnifiedOpenPipeChannel.DescribeFailure(error, "FixturePipe");
+        Assert.Contains("FixturePipe", diagnostic);
+        Assert.Contains("WinCC Unified Runtime is busy", diagnostic);
+        Assert.Contains("pipe is in use", diagnostic);
+        Assert.Contains(nameof(IOException) + ": " + message, diagnostic);
+    }
+
     [Theory, MemberData(nameof(ReadFailures))]
     public void Runtime_read_failure_carries_the_redacted_native_line(string release, string tool, bool topLevel)
     {

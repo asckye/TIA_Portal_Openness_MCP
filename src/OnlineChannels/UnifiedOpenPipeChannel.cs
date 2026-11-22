@@ -33,6 +33,8 @@ namespace TiaMcpServer.Runtime
 
     public static class UnifiedOpenPipeChannel
     {
+        private const string BusyPipeHint = "Check whether WinCC Unified Runtime is busy or the pipe is in use.";
+
         // Sends one line and waits for the first line carrying the expected ClientCookie
         // (and, when command is given, the matching Notify<command>/Error<command> message).
         public static OpenPipeExchange Exchange(string pipeName, string requestLine, string expectedCookie, string? command, int timeoutMs)
@@ -71,8 +73,8 @@ namespace TiaMcpServer.Runtime
             catch (TimeoutException) /* swallow(teardown): a pipe connect timeout is returned as the existing channel error */
             {
                 ex.ConnectionFailure = OpenPipeConnectionFailure.TimedOut;
-                ex.Error =
-                    $"Open Pipe '{name}' is not available (connect timed out after {budget} ms). Is WinCC Unified Runtime running on this machine with a loaded project?";
+                ex.Error = $"Open Pipe '{name}' is not available (connect timed out after {budget} ms). "
+                    + "Check that WinCC Unified Runtime is running locally with a loaded project. " + BusyPipeHint;
                 return;
             }
             catch (IOException error) when (error is FileNotFoundException or DirectoryNotFoundException || (error.HResult & 0xffff) is 2 or 3)
@@ -116,11 +118,13 @@ namespace TiaMcpServer.Runtime
             }
         }
 
-        private static string DescribeFailure(Exception e, string name)
+        internal static string DescribeFailure(Exception e, string name)
         {
             if (e is TimeoutException) return $"Open Pipe '{name}' timed out: {e.Message}";
             if (e is UnauthorizedAccessException)
                 return $"Access to Open Pipe '{name}' was denied. The user running this MCP server must be a member of the 'SIMATIC HMI' group.";
+            if (e is IOException)
+                return $"Open Pipe '{name}' failed. {BusyPipeHint} {e.GetType().Name}: {e.Message}";
             return e.GetType().Name + ": " + e.Message;
         }
     }

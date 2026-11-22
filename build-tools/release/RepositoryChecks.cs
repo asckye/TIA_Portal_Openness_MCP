@@ -59,10 +59,10 @@ internal static class RepositoryChecks
         var headings = Regex.Matches(changelog, @"^## \[(?<version>" + ReleaseVersions.VersionPattern + @")\](?: - (?<date>\d{4}-\d{2}-\d{2})[ \t]*$)?",
             RegexOptions.Multiline);
         bool Published(Match heading) => PrereleaseNotes.Published(root, heading.Groups["version"].Value);
-        // Packages have no tags. Their dated release headings supply the missing publication evidence.
+        // In packages and tag-less checkouts, dated release headings supply the missing publication evidence.
         static bool Dated(Match heading) => DateOnly.TryParseExact(heading.Groups["date"].Value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
             DateTimeStyles.None, out _);
-        var frozen = (Path.Exists(Path.Combine(root, ".git")) ? headings.SkipWhile(m => !Published(m))
+        var frozen = (HasTags(root) ? headings.SkipWhile(m => !Published(m))
             : headings.Where(m => Dated(m) || Published(m))).ToArray();
         var lastPublishedHeading = frozen.FirstOrDefault()?.Value;
         var publishedNotes = frozen.Select(m => PrereleaseNotes.NotesPath(m.Groups["version"].Value)).ToHashSet(StringComparer.Ordinal);
@@ -99,6 +99,14 @@ internal static class RepositoryChecks
             }
         }
         return errors;
+    }
+
+    private static bool HasTags(string root)
+    {
+        if (!Path.Exists(Path.Combine(root, ".git"))) return false;
+        var result = ReviewChangeSet.Git("git", ["for-each-ref", "--count=1", "--format=%(refname)", "refs/tags/"], root);
+        ProcessRunner.RequireSuccess(result, "read local tags");
+        return result.StandardOutput.Length != 0;
     }
 
     internal static List<string> ProductNames(string root, IEnumerable<string> names)
