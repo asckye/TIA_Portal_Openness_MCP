@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-rc.1_20261122",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-22T19:36:49.0449839+00:00",
+  "generatedAt": "2026-11-22T20:13:12.8668642+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "ec72b1af09da0cace3517e1e1475809a39b9ceca74699cfebd1d4548ac479d04",
-  "workerSha256": "0a7a39c5b2edbece4b5f0fbea96f60897d911b8d8eacd2cd6f4a1db6bd1cafaf",
+  "workerSha256": "6b61c8bb5fe34d1f7c10cbef1b46ae131cce7a0616cea66d37b643b3a333c569",
   "toolCount": 523,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -5196,7 +5196,7 @@
         "libraryPath",
         "maxItems"
       ],
-      "description": "[L2][HMI-Library][READ]Open a TIA global library (.al21) read-only/best-effort and list accessible master copies/types/folders through public/reflection APIs. It does not import library content. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ProbeGlobalLibrary\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Library][READ]Open a TIA global library for the session release read-only/best-effort and list accessible master copies/types/folders through public/reflection APIs. It does not import library content. Current native policy; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ProbeGlobalLibrary\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"libraryPath\":\"C:\\\\Examples\\\\Library.al21\"}"
     },
     {
@@ -5372,7 +5372,7 @@
         "libraryPath",
         "templateIntent"
       ],
-      "description": "[L2][HMI-Library][OFFLINE] Plan the commercial fallback when direct MasterCopy import is not publicly verifiable: learn reference/global-library template evidence and rebuild screens with native Unified HMI MCP theme/layout/action tools. Offline planning only; it does not import library content or modify projects. Examples: GetToolUsage(toolName: \"PlanGlobalLibraryTemplateReuse\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI-Library][OFFLINE] Plan the commercial fallback when direct MasterCopy import is not publicly verifiable: learn reference/global-library template evidence and plan screen reconstruction for the session release. Offline planning only; it does not import library content or modify projects. Examples: GetToolUsage(toolName: \"PlanGlobalLibraryTemplateReuse\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"libraryPath\":\"C:\\\\Examples\\\\Library.al21\"}"
     },
     {
@@ -5669,7 +5669,7 @@
         "confirm",
         "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports the resolved target (pinned block number, warnings). Native cross references require crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took TIA Portal V21 down during a dry run, so this optional check is off by default and the response says 'not queried' - never read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, back the block up with ExportPlcBlockDocuments and review dependencies (an unavailable query does not prove it is unused); compile with CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use DeletePlcType. Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"DeletePlcBlock\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports the resolved target (pinned block number, warnings). Native cross references require crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took TIA Portal V21 down during a dry run, so this optional check is off by default and the response says 'not queried' - never read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, back the block up and review dependencies (an unavailable query does not prove it is unused); compile with CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use DeletePlcType. Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. Current native policy; V4 safety behavior is not yet accepted. Use ExportPlcBlockDocuments to back up the block before deletion. Examples: GetToolUsage(toolName: \"DeletePlcBlock\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"dryRun\":true,\"confirm\":false,\"expectedProjectFile\":\"\"}"
     },
     {
@@ -5688,7 +5688,7 @@
         "dryRun",
         "confirmDelete"
       ],
-      "description": "[L2][HMI][WRITE] Delete ONE exact ordinary Classic/Unified HMI tag in V20/V21. tagTablePath is /Folder/Table (no recursive name search); empty selects Unified device-root Tags only. Default dryRun=true previews existence. Actual deletion requires dryRun=false AND confirmDelete=true, acquires exclusive access, and verifies absence. No cross-reference call, no save/compile; screen/script/alarm/logging references are NOT checked and may break. No variable table, PLC tag, or system tag deletion. Examples: GetToolUsage(toolName: \"DeleteHmiTag\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][WRITE] Delete ONE exact ordinary Classic/Unified HMI tag. tagTablePath is /Folder/Table (no recursive name search); empty selects Unified device-root Tags only. Default dryRun=true previews existence. Actual deletion requires dryRun=false AND confirmDelete=true, acquires exclusive access, and verifies absence. No cross-reference call, no save/compile; screen/script/alarm/logging references are NOT checked and may break. No variable table, PLC tag, or system tag deletion. Examples: GetToolUsage(toolName: \"DeleteHmiTag\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"tagTablePath\":\"/Table\",\"tagName\":\"Ready\",\"dryRun\":true,\"confirmDelete\":false}"
     },
     {
@@ -7500,7 +7500,7 @@
         "maxDepth",
         "maxEntries"
       ],
-      "description": "[L2][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+ConnectOnlinePlc][ONLINE] Compare the offline PLC software in the project against the program currently running on the physical CPU. Use after editing blocks to confirm what differs from the live CPU before downloading, or after a download to verify offline/online consistency. Returns a tree-walked list of differences: only difference states (ObjectsDifferent, LeftMissing, RightMissing, FolderContentsDifferent and the folder own-state differences) are reported; ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant are not. Requires ConnectOnlinePlc first; otherwise refuses with PRECONDITION_FAILED, condition plc-online. Example: {\"softwarePath\":\"PLC_1\",\"maxDepth\":4} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CompareSoftwareToOnline\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Category:PLC-Online][PreCondition:PLC online][ONLINE] Compare the offline PLC software in the project against the program currently running on the physical CPU. Use after editing blocks to confirm what differs from the live CPU before downloading, or after a download to verify offline/online consistency. Returns a tree-walked list of differences: only difference states (ObjectsDifferent, LeftMissing, RightMissing, FolderContentsDifferent and the folder own-state differences) are reported; ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant are not. Requires an online PLC connection; otherwise refuses with PRECONDITION_FAILED, condition plc-online. Use ConnectOnlinePlc to establish the online connection. Example: {\"softwarePath\":\"PLC_1\",\"maxDepth\":4} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"CompareSoftwareToOnline\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"PLC_1\",\"maxDepth\":4}"
     },
     {
@@ -9223,8 +9223,8 @@
         "outputDirectory",
         "exportDirectory"
       ],
-      "description": "[L0][Reports][FILE]Generate a standardized Markdown/JSON error report. This is file/report generation only; it does not touch TIA Portal or modify projects. Example: {\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"<compiler output>\",\"severity\":\"error\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateErrorReport\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"\\u003Ccompiler output\\u003E\",\"severity\":\"error\"}"
+      "description": "[L0][Reports][FILE]Generate a standardized Markdown/JSON error report. This is file/report generation only; it does not touch TIA Portal or modify projects. Example: {\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"<compiler output>\",\"severity\":\"error\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\\\\error-report\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateErrorReport\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"\\u003Ccompiler output\\u003E\",\"severity\":\"error\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\\\\error-report\"}"
     },
     {
       "name": "GenerateBlocksFromExternalSource",
