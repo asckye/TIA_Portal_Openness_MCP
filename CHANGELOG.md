@@ -34,6 +34,11 @@
 
 - V4 tool results report host `meta.elapsedMs` on success and failure across all eight releases. Time spent waiting for a Workbench decision appears separately in `meta.approvalWaitMs`. Calls with timed worker replies also report the total worker processing time in `meta.workerElapsedMs`. After a call detaches, `GetCallResult` returns the original call’s timing.
 
+### Removed
+
+- **Breaking:** The HTTP transport no longer uses a shared access key, and the local DPAPI secret vault has been removed (ADR 0035). LAN HTTP connects without a key again, so use it only on a trusted network. A `vault:<name>` credential reference is refused before any TIA call; supply the value directly. The Workbench key and vault settings are gone.
+- Turning Workbench write approval off no longer asks for a typed confirmation word. Destructive confirmations for physical PLC downloads and deletions are unchanged.
+
 ### Fixed
 
 - An untyped HMI write failure now reports `OUTCOME_UNKNOWN`. Typed pre-write refusals retain their invalid argument, precondition or missing-target code.
