@@ -4,12 +4,12 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class PythonCheckChanges
 {
-    private sealed record Test(string Name, string Body, string Skips, int Line);
+    private sealed record Test(string Name, string Body, string Skips, int Line, bool Nested = false);
     private static List<Test> Tests(string source, bool allFunctions = false)
     {
         var lines = source.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
         var tests = new List<Test>();
-        var scopes = new List<(int Indent, string Name)>();
+        var scopes = new List<(int Indent, string Name, bool Function)>();
         for (int index = 0; index < lines.Length; index++)
         {
             var declaration = Regex.Match(lines[index], @"^(?<indent>\s*)(?:async\s+)?(?<kind>def|class)\s+(?<name>\w+)");
@@ -17,8 +17,10 @@ internal static class PythonCheckChanges
             int indent = declaration.Groups["indent"].Length;
             scopes.RemoveAll(scope => scope.Indent >= indent);
             string name = declaration.Groups["name"].Value;
-            if (declaration.Groups["kind"].Value == "class") { scopes.Add((indent, name)); continue; }
-            if (!allFunctions && !name.StartsWith("test_", StringComparison.Ordinal)) continue;
+            bool nested = scopes.Any(scope => scope.Function);
+            bool function = declaration.Groups["kind"].Value == "def";
+            scopes.Add((indent, name, function));
+            if (!function || !allFunctions && !name.StartsWith("test_", StringComparison.Ordinal)) continue;
             int end = index + 1;
             while (end < lines.Length && (string.IsNullOrWhiteSpace(lines[end]) || lines[end].TakeWhile(char.IsWhiteSpace).Count() > indent)) end++;
             int start = index;
@@ -26,10 +28,10 @@ internal static class PythonCheckChanges
             string decorators = string.Join('\n', lines[start..index]);
             var skips = Regex.Matches(decorators, @"@(?:pytest\.mark\.(?:skip|skipif)|unittest\.skip\w*)\b[^\n]*").Select(match => match.Value.Trim());
             tests
-                .Add(new(string.Join('/', scopes.Select(scope => scope.Name).Append(name)), string.Join('\n', lines[index..end]), string
+                .Add(new(string.Join('/', scopes.Select(scope => scope.Name)), string.Join('\n', lines[index..end]), string
                         .Join('\n', skips
                             .Concat(Regex.Matches(string.Join('\n', lines[index..end]), @"\bpytest\.skip\s*\([^\r\n]*").Select(match => match.Value))),
-                        index + 1));
+                        index + 1, nested));
         }
         var covered = new bool[lines.Length];
         for (int index = 0; index < lines.Length; index++)
@@ -55,9 +57,9 @@ internal static class PythonCheckChanges
         foreach (var change in rows)
         foreach (var test in Tests(change.Before ?? "", change.OldPath.StartsWith("scripts/checks/", StringComparison.Ordinal)))
         {
-            int match = after.FindIndex(candidate => candidate.Test.Name == test.Name);
+            int match = after.FindIndex(candidate => candidate.Test.Nested == test.Nested && candidate.Test.Name == test.Name);
             string Body(string text) => Regex.Replace(text, @"^(\s*(?:async\s+)?def)\s+\w+", "$1 _");
-            if (match < 0) match = after.FindIndex(candidate => Body(candidate.Test.Body) == Body(test.Body));
+            if (match < 0) match = after.FindIndex(candidate => candidate.Test.Nested == test.Nested && Body(candidate.Test.Body) == Body(test.Body));
             if (match < 0 && test.Name.Split('/').Last().StartsWith("test_", StringComparison.Ordinal))
             {
                 if (change.After != null)

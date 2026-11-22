@@ -146,7 +146,8 @@ internal static class CheckLimitChanges
             $"Check limit changed: {before.ToString(CultureInfo.InvariantCulture)} -> {after.ToString(CultureInfo.InvariantCulture)}" +
             (context == null ? "" : " (" + context + ")"), line));
 
-    private sealed record Limit(string Key, double[] Values, bool Minimum, int Line);
+    private sealed record LimitPart(string Name, int Position, List<(int Index, double Value)> Numbers);
+    private sealed record Limit(string Member, string Parameters, string Key, LimitPart[] Parts, bool Minimum, int Line);
     private static readonly (string Path, string Member, bool Minimum)[] Locations =
     [
         ("build-tools/release/MergeCheck.cs", "CheckResult", true),
@@ -173,14 +174,32 @@ internal static class CheckLimitChanges
                 argument.Ancestors().OfType<AttributeSyntax>().Any(attribute => attribute.Name.ToString().Split('.').Last() is
                     "Fact" or "Theory" or "FactAttribute" or "TheoryAttribute");
             if (location.Path == null && !timeout) continue;
-            var numbers = node.DescendantTokens().Where(token => Number(token, out _)).ToArray();
-            string owner = timeout ? node.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault()?.Identifier.Text ?? "" : member;
+            var methodOwner = node.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+            string owner = timeout ? methodOwner?.Identifier.Text ?? "" : member;
+            string parameters = methodOwner == null ? "" : CheckLoosening.Tokens(methodOwner.ParameterList);
+            string identity = CheckLoosening.ContainingType(node) + "/" + owner + (timeout ? ":timeout" : "");
+            // Existing approvals identify the original declaration, including its parameters.
             string key = string.Join(".", node.Ancestors().OfType<TypeDeclarationSyntax>().Reverse().Select(type => type.Identifier.Text))
-                + ":" + owner + (node is MethodDeclarationSyntax declaration ? CheckLoosening.Tokens(declaration.ParameterList) : "")
-                + (timeout ? ":timeout" : "");
-            yield return new(key, numbers.Select(token => { Number(token, out double value); return value; }).ToArray(),
+                + ":" + owner + (timeout ? ":timeout" : parameters);
+            yield return new(identity, parameters, key, NumericParts(node),
                 location.Minimum, node.GetLocation().GetLineSpan().StartLinePosition.Line + 1);
         }
+    }
+
+    private static LimitPart[] NumericParts(SyntaxNode node)
+    {
+        var parameters = (node as MethodDeclarationSyntax)?.ParameterList.Parameters ?? default;
+        LimitPart[] parts = [new("", -1, []), .. parameters.Select((parameter, index) => new LimitPart(parameter.Identifier.Text, index, []))];
+        int ordinal = 0;
+        foreach (var token in node.DescendantTokens())
+        {
+            if (!Number(token, out double value)) continue;
+            // An optional parameter can add a literal ahead of every body limit. Keep the original ordinal for approvals.
+            var parameter = token.Parent?.FirstAncestorOrSelf<ParameterSyntax>();
+            int position = parameter == null ? -1 : parameters.IndexOf(parameter);
+            parts[position + 1].Numbers.Add((ordinal++, value));
+        }
+        return parts;
     }
 
     private static bool Number(SyntaxToken token, out double value)
@@ -197,17 +216,31 @@ internal static class CheckLimitChanges
 
     private static void CSharp(CheckChange change, List<ReviewFinding> findings)
     {
-        var after = Limits(change.After!, change).GroupBy(row => row.Key).ToDictionary(group => group.Key, group => group.First());
-        foreach (var previous in Limits(change.Before!, change).DistinctBy(row => row.Key))
+        var before = Limits(change.Before!, change).ToArray();
+        var pairs = new CheckMemberPairs<Limit>(before, Limits(change.After!, change));
+        pairs.MatchBy(row => (row.Member, row.Parameters));
+        pairs.MatchBy(row => row.Member, unique: true);
+        foreach (var previous in before) Compare(change.Path, previous, pairs.Replacement(previous), findings);
+    }
+
+    private static void Compare(string path, Limit previous, Limit? replacement, List<ReviewFinding> findings)
+    {
+        var parts = new CheckMemberPairs<LimitPart>(previous.Parts, replacement?.Parts ?? []);
+        parts.MatchBy(part => part.Name);
+        parts.MatchBy(part => part.Position);
+        foreach (var part in previous.Parts)
         {
-            if (!after.TryGetValue(previous.Key, out var current)) current = previous with { Values = [] };
-            for (int index = current.Values.Length; index < previous.Values.Length; index++)
-                findings.Add(new(change.Path, "gate-removed", CheckLoosening.Hash(previous.Key) + ":" + index,
-                    "Numeric check limit removed", previous.Line));
-            for (int index = 0; index < Math.Min(previous.Values.Length, current.Values.Length); index++)
-                if (previous.Minimum ? current.Values[index] < previous.Values[index] : current.Values[index] > previous.Values[index])
-                    AddNumber(change.Path, previous.Minimum ? "limit-lowered" : "limit-raised", CheckLoosening.Hash(previous.Key) + ":" + index,
-                        previous.Values[index], current.Values[index], findings, previous.Line, previous.Key);
+            var current = parts.Replacement(part)?.Numbers;
+            for (int i = 0; i < part.Numbers.Count; i++)
+            {
+                var (index, value) = part.Numbers[i];
+                string key = CheckLoosening.Hash(previous.Key) + ":" + index;
+                if (current == null || i >= current.Count)
+                    findings.Add(new(path, "gate-removed", key, "Numeric check limit removed", previous.Line));
+                else if (previous.Minimum ? current[i].Value < value : current[i].Value > value)
+                    AddNumber(path, previous.Minimum ? "limit-lowered" : "limit-raised", key, value, current[i].Value,
+                        findings, previous.Line, previous.Key);
+            }
         }
     }
 }

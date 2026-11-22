@@ -9,7 +9,7 @@ Studio/Bridge/Program.cs|return key == "20" || key == "21";
 ToolPipeline/ReleaseCatalogData.cs|DeclaredPortReleases = TiaMcp.Adapters.Contracts.ReleaseRange.Since("20")
 # Exact SDK identities in the API table.
 Adapters.Contracts/OpennessApi.AssemblyIdentity.cs|public const string SplitAssemblyRelease = "21";
-Adapters.Contracts/OpennessApi.cs|public const string DeviceEditorRequiresViewRelease = "20";
+Adapters.Contracts/OpennessApi.cs|public const string DeviceEditorEmptyViewGuardRelease = "20";
 # Exact release identities, file extensions, catalog entries and SDK fixture directories.
 Adapters.Contracts/ReleaseRange.cs|"14sp1", "15.1", "16", "17", "18", "19", "20", "21"
 Adapters.Contracts/SimaticMlImportWindow.cs|"16" or "17" or "18" or "19" or "20" or "21" => new Version

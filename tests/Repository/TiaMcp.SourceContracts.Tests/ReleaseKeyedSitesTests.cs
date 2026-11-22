@@ -19,14 +19,31 @@ public sealed class ReleaseKeyedSitesTests(ITestOutputHelper output)
     public void EveryV21OnlyPolicyKeyHasAToolListRow()
     {
         var root = Repository.FindRoot(AppContext.BaseDirectory);
-        var syntax = CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(root, "src/Logic/Siemens/ToolVersionPolicy.cs"))).GetRoot();
-        var policy = syntax.DescendantNodes().OfType<VariableDeclaratorSyntax>().Single(variable => variable.Identifier.Text == "V21Only");
-        var keys = policy.Initializer!.Value.DescendantNodes().OfType<ImplicitElementAccessSyntax>()
-            .Select(access => ((LiteralExpressionSyntax)access.ArgumentList.Arguments.Single().Expression).Token.ValueText).ToArray();
+        var keys = DictionaryKeys(root, "src/Logic/Siemens/ToolVersionPolicy.cs", "V21Only");
         using var tools = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "manifest/tools-list.json")));
         var names = tools.RootElement.GetProperty("tools").EnumerateArray().Select(row => row.GetProperty("name").GetString()).ToHashSet();
         Assert.NotEmpty(keys);
         Assert.All(keys, key => Assert.Contains(key, names));
+    }
+
+    [Fact]
+    public void EveryV21OnlyPolicyKeyHasAPortedToolRelease()
+    {
+        var root = Repository.FindRoot(AppContext.BaseDirectory);
+        var policy = DictionaryKeys(root, "src/Logic/Siemens/ToolVersionPolicy.cs", "V21Only");
+        var releases = DictionaryKeys(root, "src/Adapters.Contracts/PortedFamilies.cs", "ToolReleases").ToHashSet(StringComparer.Ordinal);
+        Assert.NotEmpty(policy);
+        Assert.All(policy, key => Assert.Contains(key, releases));
+    }
+
+    private static string[] DictionaryKeys(string root, string path, string field)
+    {
+        var syntax = CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(root, path))).GetRoot();
+        var declaration = syntax.DescendantNodes().OfType<VariableDeclaratorSyntax>().Single(variable => variable.Identifier.Text == field);
+        var dictionary = (ObjectCreationExpressionSyntax)declaration.Initializer!.Value;
+        return dictionary.Initializer!.Expressions.Cast<AssignmentExpressionSyntax>()
+            .Select(row => ((ImplicitElementAccessSyntax)row.Left).ArgumentList.Arguments.Single().Expression)
+            .Select(key => ((LiteralExpressionSyntax)key).Token.ValueText).ToArray();
     }
 
     [Fact]

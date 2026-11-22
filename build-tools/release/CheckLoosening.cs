@@ -59,12 +59,15 @@ internal static class CheckLoosening
             .ThenBy(row => row.Identifier, StringComparer.Ordinal).ToList();
     }
 
-    private static string Member(MethodDeclarationSyntax method)
+    internal static string ContainingType(SyntaxNode node)
     {
-        var namespaces = method.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().Reverse().Select(ns => ns.Name.ToString());
-        var types = method.Ancestors().OfType<TypeDeclarationSyntax>().Reverse().Select(type => type.Identifier.Text);
-        return string.Join(".", namespaces.Concat(types)) + "/" + method.Identifier.Text + Tokens(method.ParameterList);
+        var namespaces = node.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().Reverse().Select(ns => ns.Name.ToString());
+        var types = node.Ancestors().OfType<TypeDeclarationSyntax>().Reverse().Select(type => type.Identifier.Text);
+        return string.Join(".", namespaces.Concat(types));
     }
+
+    private static string MemberName(MethodDeclarationSyntax method) => ContainingType(method) + "/" + method.Identifier.Text;
+    private static string Member(MethodDeclarationSyntax method) => MemberName(method) + Tokens(method.ParameterList);
 
     private static bool IsTest(MethodDeclarationSyntax method) => method.AttributeLists.SelectMany(list => list.Attributes)
         .Any(attribute => attribute.Name.ToString().Split('.')
@@ -252,25 +255,20 @@ internal static class CheckLoosening
         }).ToArray();
         var before = Read(true);
         var after = Read(false);
-        var available = after.ToHashSet();
-        var byMember = after.GroupBy(candidate => (Member(candidate.Syntax), IsTest(candidate.Syntax)))
-            .ToDictionary(group => group.Key, group => group.ToArray());
-        var byTokens = after.GroupBy(candidate => Hash(Tokens(candidate.Syntax)))
-            .ToDictionary(group => group.Key, group => group.ToArray());
+        var pairs = new CheckMemberPairs<Method>(before, after);
+        pairs.MatchBy(candidate => (Member(candidate.Syntax), IsTest(candidate.Syntax)));
+        pairs.MatchBy(candidate => Tokens(candidate.Syntax));
+        pairs.MatchBy(candidate => (MemberName(candidate.Syntax), IsTest(candidate.Syntax)), unique: true);
         string Body(MethodDeclarationSyntax method) => Tokens(method.ParameterList) + ":" +
             (method.Body != null ? Tokens(method.Body) : method.ExpressionBody != null ? Tokens(method.ExpressionBody) : "");
-        var byBody = after.Where(candidate => IsTest(candidate.Syntax)).GroupBy(candidate => Hash(Body(candidate.Syntax)))
-            .ToDictionary(group => group.Key, group => group.ToArray());
+        pairs.MatchBy(candidate => Body(candidate.Syntax), include: candidate => IsTest(candidate.Syntax));
+        MatchEditedRenames(pairs);
         var previousMembers = before.GroupBy(candidate => Member(candidate.Syntax))
             .ToDictionary(group => group.Key, group => group.ToArray());
         foreach (var previous in before)
         {
             var method = previous.Syntax;
-            // Fully qualified names are stable across files. An identical definition may also move to another class.
-            var replacement = byMember.GetValueOrDefault((Member(method), IsTest(method)))?.FirstOrDefault(available.Contains)
-                ?? byTokens.GetValueOrDefault(Hash(Tokens(method)))?.FirstOrDefault(available.Contains)
-                ?? (IsTest(method) ? byBody.GetValueOrDefault(Hash(Body(method)))?.FirstOrDefault(available.Contains) : null);
-            if (replacement != null) available.Remove(replacement);
+            var replacement = pairs.Replacement(previous);
             if (previous.Change.After == null)
             {
                 if (replacement != null && IsTest(method)) AddSkips(replacement, method, findings);
@@ -295,11 +293,41 @@ internal static class CheckLoosening
             CompareAssertions(previous.Change.OldPath, Member(method), Assertions(method, ConsoleAssertions(previous.Change.OldPath)),
                 replacement == null ? [] : Assertions(replacement.Syntax, ConsoleAssertions(replacement.Change.Path)), findings);
         }
-        foreach (var added in available.Where(candidate => IsTest(candidate.Syntax)))
+        foreach (var added in pairs.RemainingAfter.Where(candidate => IsTest(candidate.Syntax)))
         {
             AddSkips(added, null, findings);
             if (added.Disabled)
                 findings.Add(new(added.Change.Path, "test-disabled", Member(added.Syntax) + ":" + Hash(Tokens(added.Syntax)), "Test is inside #if false"));
+        }
+    }
+
+    private static void MatchEditedRenames(CheckMemberPairs<Method> pairs)
+    {
+        var previousTests = pairs.RemainingBefore.Where(item => IsTest(item.Syntax)).ToArray();
+        var currentTests = pairs.RemainingAfter.Where(item => IsTest(item.Syntax)).ToLookup(item => ContainingType(item.Syntax));
+        if (previousTests.Length == 0 || currentTests.Count == 0) return;
+        Dictionary<string, int> Counts(Method test, string path) => Assertions(test.Syntax, ConsoleAssertions(path))
+            .OfType<InvocationExpressionSyntax>().Select(Tokens).CountBy(text => text).ToDictionary();
+        var counts = currentTests.SelectMany(group => group).ToDictionary(test => test, test => Counts(test, test.Change.Path));
+        var candidates = new List<(Method Previous, Method Current)>();
+        foreach (var previous in previousTests)
+        {
+            var assertions = Counts(previous, previous.Change.OldPath);
+            int total = assertions.Values.Sum();
+            if (total == 0) continue;
+            foreach (var current in currentTests[ContainingType(previous.Syntax)])
+            {
+                // At least two thirds of assertion occurrences across both bodies must belong to exact pairs.
+                var other = counts[current];
+                int retained = assertions.Sum(row => Math.Min(row.Value, other.GetValueOrDefault(row.Key)));
+                if (3 * retained >= total + other.Values.Sum()) candidates.Add((previous, current));
+            }
+        }
+        var byCurrent = candidates.ToLookup(pair => pair.Current);
+        foreach (var group in candidates.GroupBy(pair => pair.Previous))
+        {
+            var pair = group.First();
+            if (group.Count() == 1 && byCurrent[pair.Current].Count() == 1) pairs.Pair(pair.Previous, pair.Current);
         }
     }
 
@@ -316,9 +344,9 @@ internal static class CheckLoosening
             int match = available.FindIndex(candidate => Tokens(candidate) == text);
             if (match < 0) match = available.FindIndex(candidate => Stronger(assertion, candidate));
             if (match >= 0) { available.RemoveAt(match); continue; }
+            string display = assertion is AttributeSyntax ? "[" + assertion.ToString().ReplaceLineEndings("\\n") + "]" : text;
             findings.Add(new(path, "assertion-removed", member + ":" + Hash(text) + ":" + occurrence,
-                "Removed assertion: " + (assertion is AttributeSyntax ? assertion.ToString() : text), assertion.GetLocation().GetLineSpan().StartLinePosition
-                    .Line + 1));
+                "Removed assertion: " + display, assertion.GetLocation().GetLineSpan().StartLinePosition.Line + 1));
         }
     }
 
