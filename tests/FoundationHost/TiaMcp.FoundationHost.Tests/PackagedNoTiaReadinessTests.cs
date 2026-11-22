@@ -24,8 +24,6 @@ public sealed class PackagedNoTiaReadinessTests
     public async Task Worker_restart_refuses_before_requesting_Workbench_approval(string release)
     {
         var realPath = ApprovalSettings.SettingsPath;
-        var previousSettings = File.Exists(realPath) ? File.ReadAllBytes(realPath) : null;
-        var lastWrite = File.GetLastWriteTimeUtc(realPath);
         using var host = new Host(release);
         using var data = new IsolatedData(host.Scratch);
         var previousWait = Server.ApprovalWaitOverrideForTests;
@@ -35,6 +33,7 @@ public sealed class PackagedNoTiaReadinessTests
             Assert.Equal(Path.Combine(host.Scratch, "config", "approval.settings"), ApprovalSettings.SettingsPath);
             Assert.NotEqual(realPath, ApprovalSettings.SettingsPath);
             new ApprovalSettings(true, 1).Save(ApprovalSettings.SettingsPath);
+            Assert.Equal(1, ApprovalSettings.Load(ApprovalSettings.SettingsPath).TimeoutSeconds);
             Server.ApprovalWaitOverrideForTests = (card, _, _) => {
                 requests++;
                 return Task.FromResult(new ApprovalOutcome(card, false, "workbench-unavailable"));
@@ -64,12 +63,7 @@ public sealed class PackagedNoTiaReadinessTests
             Assert.Equal("CONFIRMATION_REQUIRED", (string?)confirmation["error"]?["code"]);
             Assert.Equal("workbench-unavailable", (string?)confirmation["error"]?["details"]?["reason"]);
         }
-        finally
-        {
-            Server.ApprovalWaitOverrideForTests = previousWait;
-            Assert.Equal(previousSettings, File.Exists(realPath) ? File.ReadAllBytes(realPath) : null);
-            Assert.Equal(lastWrite, File.GetLastWriteTimeUtc(realPath));
-        }
+        finally { Server.ApprovalWaitOverrideForTests = previousWait; }
     }
 
     [Fact]

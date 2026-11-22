@@ -259,9 +259,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "RunOfflineReleaseValidationSuite"),
-                Description("[L2][Validation]Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, " +
-                "Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify " +
-                "projects.")]
+                Description("[L2][Validation]Run release smoke checks for PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, " +
+                "HMI action recipes, and online monitoring safeguards. The safety check requires a ready TIA Openness environment so the worker can " +
+                "inspect the reflection guard. The suite writes its results to reportDirectory without modifying projects.")]
         public CallToolResult RunOfflineReleaseValidationSuiteV4(
             [Description("workspaceRoot: folder you prepared with TMP_EXPORT/_verify, docs/hmi_templates and docs/hmi_template_mappings; these are not " +
                 "shipped.")]

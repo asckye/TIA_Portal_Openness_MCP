@@ -25,8 +25,8 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class HostMetaTools
     {
         [McpServerTool(Name = "RunOnlineMonitoringSafetySelfTest"),
-                Description("[L0][Diagnostics]Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, " +
-                "open projects, modify watch tables, write PLC values, or expose forced-value operations.")]
+                Description("[L0][Diagnostics]Check the online monitoring tool inventory and safeguards against PLC force writes and watch table changes. " +
+                "This read-only self-test requires a ready TIA Openness environment so the worker can inspect the reflection guard.")]
         public CallToolResult RunOnlineMonitoringSafetySelfTestV4()
             => SessionToolContract.Run("RunOnlineMonitoringSafetySelfTest", false, false, () => RunOnlineMonitoringSafetySelfTest());
 
@@ -148,8 +148,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GenerateAcceptanceReport"),
-                Description("[L0][Reports]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to " +
-                "TIA or write to the project; it writes Markdown/JSON report files to outputDirectory.")]
+                Description("[L0][Reports]Write Markdown and JSON acceptance reports to outputDirectory without modifying the project. The safety self-test " +
+                "requires a ready TIA Openness environment so the worker can inspect the reflection guard. Portal attachment is optional (connectIfNeeded " +
+                "defaults to false).")]
         public Task<CallToolResult> GenerateAcceptanceReportV4(
             [Description("Directory where the Markdown and JSON reports will be written. Empty means a temp directory under %TEMP%.")] string outputDirectory =
                 "",
