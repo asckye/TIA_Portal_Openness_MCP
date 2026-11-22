@@ -197,6 +197,8 @@ namespace TiaMcp.Updater
                 return (int)response.StatusCode >= 300 && (int)response.StatusCode < 400 ? response.Headers[HttpResponseHeader.Location] : null;
         }
 
+        internal static HttpClientHandler CreateApiHandler() => new HttpClientHandler { AllowAutoRedirect = false, CheckCertificateRevocationList = true };
+
         internal static T GetJson<T>(string url, string accept, int timeoutSeconds, UpdaterOptions options, HttpClientHandler handler = null) where T : class
         {
 #if UPDATER_TEST_SOURCE
@@ -211,9 +213,9 @@ namespace TiaMcp.Updater
                 using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(options.ReadTextForTest(url, timeoutSeconds)))) return (T)JsonSerializer(typeof(T))
                     .ReadObject(stream);
             }
-            handler = handler ?? new HttpClientHandler();
-            handler.AllowAutoRedirect = false;
-            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(timeoutSeconds) };
+            if (handler?.AllowAutoRedirect == true) throw new InvalidOperationException("The release API handler must disable automatic redirects.");
+            using var client = new HttpClient(handler ?? CreateApiHandler(), disposeHandler: handler == null);
+            client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("TiaMcp-Update-Engine/1");
             client.DefaultRequestHeaders.Accept.ParseAdd(accept);
             var uri = new Uri(url);

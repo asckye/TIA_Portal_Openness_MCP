@@ -120,6 +120,23 @@ namespace TiaMcp.Updater.Tests
         }
 
         [Fact]
+        public void Release_api_handler_checks_revocation_and_leaves_redirects_to_the_updater()
+        {
+            using var handler = UpdaterEngine.CreateApiHandler();
+            Assert.True(handler.CheckCertificateRevocationList);
+            Assert.False(handler.AllowAutoRedirect);
+        }
+
+        [Fact]
+        public void GetJson_rejects_automatic_redirects_without_reconfiguring_the_supplied_handler()
+        {
+            using var handler = new ApiRedirectFixture { AllowAutoRedirect = true };
+            Assert.Throws<InvalidOperationException>(() => handler.Read(new Uri("https://api.github.com/repos/owner/repo/releases/latest")));
+            Assert.True(handler.AllowAutoRedirect);
+            Assert.Empty(handler.Requests);
+        }
+
+        [Fact]
         public void Api_redirects_resolve_relative_locations_and_allow_both_github_hosts()
         {
             var start = new Uri("https://api.github.com/repos/owner/old/releases/latest");
@@ -155,8 +172,15 @@ namespace TiaMcp.Updater.Tests
             Assert.Equal(Enumerable.Repeat(start.AbsoluteUri, 6), handler.Requests);
         }
 
-        private sealed class ApiRedirectFixture(params string[] locations) : HttpClientHandler
+        private sealed class ApiRedirectFixture : HttpClientHandler
         {
+            private readonly string[] locations;
+            internal ApiRedirectFixture(params string[] locations)
+            {
+                AllowAutoRedirect = false;
+                this.locations = locations;
+            }
+
             internal List<string> Requests { get; } = new List<string>();
 
             internal ReleaseInfo Read(Uri start) =>
