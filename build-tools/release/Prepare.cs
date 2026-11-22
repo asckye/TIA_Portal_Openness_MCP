@@ -246,7 +246,11 @@ internal static class Prepare
     internal static PrepareContext CreateContext(string root, Options options, SuiteProcess? companionProbe = null)
     {
         root = Path.GetFullPath(root);
-        var checkTimeoutMinutes = FastSuites.Positive(options, "TimeoutMinutes", DefaultCheckTimeoutMinutes);
+        var parallelism = 6;
+        if (options.Get("MaxParallelism") is { } value
+            && (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out parallelism) || parallelism < 1))
+            throw new ReleaseException("MaxParallelism must be a positive integer");
+        var checkTimeoutMinutes = GateWatchdog.TimeoutMinutes(options, parallelism, DefaultCheckTimeoutMinutes);
         var version = ReleaseVersions.Require(options.Get("Version"), "prepare requires -Version X.Y.Z[-beta.N|-rc.N]").Label;
         RequireRepository(Git(root, "status", "--porcelain=v1", "--untracked-files=all"), Git(root, "branch", "--show-current"), options.Has("BuildOnly"));
         GitWorkingBytes.RequireNormalizedWorkingBytes(root, "git");
@@ -269,9 +273,6 @@ internal static class Prepare
         ReleasePrerequisites.RequireEcosystemPython(companion, Path.Combine(root, "scripts/ecosystem/plc_tools_bridge.py"), python, companionProbe);
         var output = Path.Combine(root, "bin-build/prepared", version);
         PrepareBuild.RequireOwnedTree(root, output);
-        var parallelism = 6;
-        if (options.Get("MaxParallelism") is { } value && (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out parallelism) || parallelism < 1))
-            throw new ReleaseException("MaxParallelism must be a positive integer");
         return new(root, version, api, nuget, python, companion, output, date, parallelism,
             options.Has("MaxParallelism") ? parallelism : Math.Max(1, Environment.ProcessorCount - 4), checkTimeoutMinutes);
     }

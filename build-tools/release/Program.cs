@@ -244,7 +244,7 @@ internal static class ProcessRunner
         }
         Wait(ms => ownedTree?.WaitForExit(ms) ?? process!.WaitForExit(ms));
         int exitCode = ownedTree?.GetExitCode() ?? process!.ExitCode;
-        if (desktop != null) ownedTree!.Finish();
+        ownedTree?.Finish();
         Wait(Task.WhenAll(stdout, stderr).Wait);
         var output = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();

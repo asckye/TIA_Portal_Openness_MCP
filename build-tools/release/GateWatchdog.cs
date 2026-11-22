@@ -1,18 +1,26 @@
+using TiaMcp.BuildCommon;
+
 namespace TiaMcp.ReleaseTool;
 
 // The caller watches the wall clock even when a worker is blocked in managed code
 // or has yet to launch its first process. Parallel workers inherit their job scope.
-internal sealed class GateWatchdog(string stage, TimeSpan limit, TimeProvider clock, Action<string> report)
+internal sealed class GateWatchdog(string stage, TimeSpan limit, TimeProvider clock, Action<string> report,
+    Action<Task, TimeSpan>? waitForCleanup = null)
 {
     private static readonly AsyncLocal<Job?> Current = new();
     private readonly object sync = new();
+    private readonly Action<Task, TimeSpan> waitForStops = waitForCleanup ?? ((task, timeout) => task.Wait(timeout));
     private long Now => clock.GetTimestamp();
     private readonly long started = clock.GetTimestamp();
     private readonly HashSet<Job> jobs = [];
-    private readonly Dictionary<int, Action> trees = [];
+    private readonly HashSet<Tree> trees = [];
+    private Tree[] pendingStops = [];
     private static readonly TimeSpan Silence = TimeSpan.FromMinutes(10);
     private string? timeoutMessage;
     private long? finished;
+
+    internal static int TimeoutMinutes(Options options, int parallelism, int defaultMinutes) =>
+        FastSuites.Positive(options, "TimeoutMinutes", parallelism == 1 ? 3 * defaultMinutes : defaultMinutes);
 
     internal static T Run<T>(string stage, int minutes, Func<T> action)
     {
@@ -40,33 +48,61 @@ internal sealed class GateWatchdog(string stage, TimeSpan limit, TimeProvider cl
 
     internal TimeSpan Poll()
     {
+        Tree[] stops;
+        string message;
         lock (sync)
         {
-            if (timeoutMessage != null) throw new ReleaseException(timeoutMessage);
             var now = finished ?? Now;
-            var elapsed = clock.GetElapsedTime(started, now);
-            var leaves = jobs.Where(job => job.Children == 0).ToArray();
-            string Running() => leaves.Length == 0 ? stage : string.Join(", ", leaves.OrderBy(job => job.Name, StringComparer.Ordinal)
-                .Select(job => $"{job.Name} ({clock.GetElapsedTime(job.Started, now):c})"));
-            if (elapsed >= limit)
+            if (ObserveExpiry(now) is not { } expired)
             {
-                timeoutMessage = $"{stage} wall-clock limit {limit:c} reached after {elapsed:c}. Running jobs: {Running()}.";
-                report(timeoutMessage);
-                foreach (var (pid, stop) in trees)
+                var leaves = jobs.Where(job => job.Children == 0).ToArray();
+                var silent = leaves.Where(job => clock.GetElapsedTime(job.LastOutput, now) >= Silence).ToArray();
+                if (silent.Length > 0)
                 {
-                    try { stop(); }
-                    catch (Exception ex) { report($"Could not stop owned PID {pid}: {ex.Message}"); }
+                    report($"{stage} heartbeat. Running jobs: {Running(leaves, now)}.");
+                    foreach (var job in silent) job.LastOutput = now;
                 }
-                throw new ReleaseException(timeoutMessage);
+                var untilHeartbeat = leaves.Select(job => Silence - clock.GetElapsedTime(job.LastOutput, now)).DefaultIfEmpty(Silence).Min();
+                var left = limit - clock.GetElapsedTime(started, now);
+                return TimeSpan.FromMilliseconds(Math.Ceiling(Math.Min(untilHeartbeat.TotalMilliseconds, left.TotalMilliseconds)));
             }
-            var silent = leaves.Where(job => clock.GetElapsedTime(job.LastOutput, now) >= Silence).ToArray();
-            if (silent.Length > 0)
-            {
-                report($"{stage} heartbeat. Running jobs: {Running()}.");
-                foreach (var job in silent) job.LastOutput = now;
-            }
-            var untilHeartbeat = leaves.Select(job => Silence - clock.GetElapsedTime(job.LastOutput, now)).DefaultIfEmpty(Silence).Min();
-            return TimeSpan.FromMilliseconds(Math.Ceiling(Math.Min(untilHeartbeat.TotalMilliseconds, (limit - elapsed).TotalMilliseconds)));
+            message = expired;
+            stops = pendingStops;
+            pendingStops = [];
+        }
+        StopTrees(stops);
+        throw new ReleaseException(message);
+    }
+
+    private string Running(Job[] leaves, long now) => leaves.Length == 0 ? stage : string.Join(", ", leaves.OrderBy(job => job.Name, StringComparer.Ordinal)
+        .Select(job => $"{job.Name} ({clock.GetElapsedTime(job.Started, now):c})"));
+
+    // Capture jobs and registrations together at the first observation, including expiry noticed by a worker.
+    // The supervisor drains this snapshot outside sync, independently of worker unwinding.
+    private string? ObserveExpiry(long now)
+    {
+        var elapsed = clock.GetElapsedTime(started, now);
+        if (timeoutMessage == null && elapsed >= limit)
+        {
+            var running = Running(jobs.Where(job => job.Children == 0).ToArray(), now);
+            timeoutMessage = $"{stage} wall-clock limit {limit:c} reached after {elapsed:c}. Running jobs: {running}.";
+            pendingStops = trees.ToArray();
+            report(timeoutMessage);
+        }
+        return timeoutMessage;
+    }
+
+    private void StopTrees(Tree[] stops)
+    {
+        if (stops.Length == 0) return;
+        var all = Task.WhenAll(stops.Select(tree => tree.Stop.Value));
+        var grace = ProcessDeadline.CleanupTimeout;
+        waitForStops(all, grace);
+        foreach (var tree in stops)
+        {
+            var stopped = tree.Stop.Value;
+            if (!stopped.IsCompleted) report($"Cleanup of owned PID {tree.Pid} still pending after {grace:c}.");
+            else if (stopped.Result is { } error) report($"Could not stop owned PID {tree.Pid}: {error}");
         }
     }
 
@@ -111,19 +147,19 @@ internal sealed class GateWatchdog(string stage, TimeSpan limit, TimeProvider cl
         // caller until registration (or immediate termination) completes.
         internal IDisposable TrackTree(int pid, Action stop)
         {
+            var tree = new Tree(Owner, pid, stop);
+            string message;
             lock (Owner.sync)
             {
-                if (Owner.timeoutMessage != null)
+                if (Owner.ObserveExpiry(Owner.Now) is not { } expired)
                 {
-                    stop();
-                    throw new ReleaseException(Owner.timeoutMessage);
+                    Owner.trees.Add(tree);
+                    return tree;
                 }
-                Owner.trees.Add(pid, stop);
-                var registration = new Tree(Owner, pid);
-                try { Owner.RequireTime(); }
-                catch { registration.Dispose(); throw; }
-                return registration;
+                message = expired;
             }
+            Owner.StopTrees([tree]);
+            throw new ReleaseException(message);
         }
 
         public void Dispose()
@@ -143,11 +179,27 @@ internal sealed class GateWatchdog(string stage, TimeSpan limit, TimeProvider cl
 
     private void RequireTime()
     {
-        if (timeoutMessage != null || clock.GetElapsedTime(started) >= limit) Poll();
+        if (ObserveExpiry(Now) is { } message) throw new ReleaseException(message);
     }
 
-    private sealed class Tree(GateWatchdog owner, int pid) : IDisposable
+    private sealed class Tree(GateWatchdog owner, int pid, Action stop) : IDisposable
     {
-        public void Dispose() { lock (owner.sync) owner.trees.Remove(pid); }
+        internal int Pid => pid;
+        // Either the supervisor or the returning worker can initiate cleanup. Both share one stop attempt.
+        internal Lazy<Task<string?>> Stop { get; } = new(() => Task.Factory.StartNew<string?>(() =>
+        {
+            try { stop(); return null; }
+            catch (Exception ex) { return ex.Message; }
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default));
+
+        public void Dispose()
+        {
+            lock (owner.sync)
+            {
+                if (!owner.trees.Remove(this) || owner.timeoutMessage == null) return;
+            }
+            // Keep the caller's process handles alive while the snapshot uses them, within the same bounded grace.
+            Stop.Value.Wait(ProcessDeadline.CleanupTimeout);
+        }
     }
 }

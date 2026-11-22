@@ -116,12 +116,15 @@ internal static partial class MergeCheck
     }
 
     internal static int Run(string root, Options options, SuiteProcess? process = null, Func<string[], CommandResult>? git = null,
-        Func<Options, string, int>? prepareDecoder = null) =>
-        GateWatchdog.Run("merge-check", FastSuites.Positive(options, "TimeoutMinutes", 90),
-            () => RunChecks(root, options, process, git, prepareDecoder));
+        Func<Options, string, int>? prepareDecoder = null)
+    {
+        int parallelism = FastSuites.Positive(options, "MaxParallelism", Math.Max(1, Environment.ProcessorCount - 4));
+        return GateWatchdog.Run("merge-check", GateWatchdog.TimeoutMinutes(options, parallelism, 90),
+            () => RunChecks(root, options, process, git, prepareDecoder, parallelism));
+    }
 
     private static int RunChecks(string root, Options options, SuiteProcess? process, Func<string[], CommandResult>? git,
-        Func<Options, string, int>? prepareDecoder)
+        Func<Options, string, int>? prepareDecoder, int parallelism)
     {
         var total = Stopwatch.StartNew();
         var dotnet = ReleaseCommands.Dotnet;
@@ -133,7 +136,6 @@ internal static partial class MergeCheck
         var prerequisites = docsOnly ? new Prerequisites("", "", null) : RequirePrerequisites(root, options, git);
         var (api, python, nuget) = prerequisites;
         if (!docsOnly) options = Options.Parse([.. options.Arguments(), "-Python=" + python], new HashSet<string>());
-        int parallelism = FastSuites.Positive(options, "MaxParallelism", Math.Max(1, Environment.ProcessorCount - 4));
         var output = Path.Combine(root, "bin-build/merge-check");
         var transportFallback = docsOnly ? null : TransportFallbackPath(root, git);
         var catalog = DotnetSuites.LoadCatalog(Path.Combine(root, "tests/test-suites.json"), root);

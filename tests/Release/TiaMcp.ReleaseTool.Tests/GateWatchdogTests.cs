@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using TiaMcp.BuildCommon;
+using TiaMcp.Engine.Tests.Shared;
 using Xunit;
 
 namespace TiaMcp.ReleaseTool.Tests;
@@ -87,7 +89,7 @@ public sealed class GateWatchdogTests
         var clock = new Clock();
         var messages = new List<string>();
         var watch = new GateWatchdog("prepare checks", TimeSpan.FromMinutes(3), clock, messages.Add);
-        var killed = new List<int>();
+        var killed = new ConcurrentBag<int>();
         using var stage = new GateWatchdog.Job(watch, "prepare checks", null);
         using (stage.TrackTree(19, () => killed.Add(19))) { }
         using var selection = new GateWatchdog.Job(watch, "selection", stage);
@@ -107,6 +109,104 @@ public sealed class GateWatchdogTests
         Assert.Contains("selection (00:03:00)", error.Message);
         Assert.Contains("adapter-inputs (00:02:00)", error.Message);
         Assert.Equal(new[] { 21, 22 }, killed.Order().ToArray());
+    }
+
+    [Fact]
+    public async Task Wall_clock_throws_while_a_tree_is_stuck_in_finish()
+    {
+        var clock = new Clock();
+        var messages = new ConcurrentQueue<string>();
+        var inFinish = new TaskCompletionSource();
+        var releaseFinish = new TaskCompletionSource();
+        var otherStopped = new TaskCompletionSource();
+        Task? cleanup = null;
+        var watch = new GateWatchdog("merge-check", TimeSpan.FromMinutes(1), clock, messages.Enqueue, (all, grace) =>
+        {
+            cleanup = all;
+            Assert.Equal(ProcessDeadline.CleanupTimeout, grace);
+            Assert.True(Task.WhenAll(inFinish.Task, otherStopped.Task).Wait(TestDeadlines.Hang));
+            clock.Advance(grace);
+            Assert.False(all.IsCompleted);
+        });
+        using var job = new GateWatchdog.Job(watch, "GUI tests", null);
+        using var stuck = job.TrackTree(41, () =>
+        {
+            inFinish.SetResult();
+            releaseFinish.Task.GetAwaiter().GetResult();
+        });
+        using var other = job.TrackTree(42, () =>
+        {
+            job.Output(); // Needs the watchdog lock while the other tree is still in Finish.
+            otherStopped.SetResult();
+        });
+        var work = new TaskCompletionSource<int>();
+        var supervisor = Task.Run(() => watch.WaitForCompletion(work.Task, interval =>
+        {
+            clock.Advance(interval);
+            return false;
+        }));
+        try
+        {
+            var error = await Assert.ThrowsAsync<ReleaseException>(() => supervisor.WaitAsync(TestDeadlines.Hang));
+            Assert.NotEqual(0, error.ExitCode);
+            Assert.Contains("GUI tests (00:01:00)", error.Message);
+            Assert.Contains(messages, line => line.Contains("owned PID 41 still pending"));
+            Assert.False(releaseFinish.Task.IsCompleted);
+        }
+        finally
+        {
+            releaseFinish.SetResult();
+            if (cleanup != null) await cleanup.WaitAsync(TestDeadlines.Hang);
+        }
+    }
+
+    [Fact]
+    public void Disposing_one_registration_keeps_the_other_tree_with_the_same_pid()
+    {
+        var clock = new Clock();
+        var watch = new GateWatchdog("merge-check", TimeSpan.FromMinutes(1), clock, _ => { });
+        using var job = new GateWatchdog.Job(watch, "selection", null);
+        int stopped = 0, alreadyExited = 0;
+        var first = job.TrackTree(21, () => alreadyExited++);
+        using var second = job.TrackTree(21, () => stopped++);
+        first.Dispose();
+        clock.Advance(TimeSpan.FromMinutes(1));
+        Assert.Throws<ReleaseException>(job.RequireTime);
+        Assert.Throws<ReleaseException>(() => watch.Poll());
+        Assert.Equal(0, alreadyExited);
+        Assert.Equal(1, stopped);
+    }
+
+    [Theory]
+    [InlineData(90, 1, 270)]
+    [InlineData(90, 2, 90)]
+    [InlineData(120, 1, 360)]
+    [InlineData(120, 6, 120)]
+    public void Serial_gates_scale_only_the_default_limit(int normal, int parallelism, int expected)
+    {
+        var defaults = Options.Parse([], Program.BooleanOptions);
+        var explicitLimit = Options.Parse(["-TimeoutMinutes=17"], Program.BooleanOptions);
+        Assert.Equal(expected, GateWatchdog.TimeoutMinutes(defaults, parallelism, normal));
+        Assert.Equal(17, GateWatchdog.TimeoutMinutes(explicitLimit, parallelism, normal));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Missing_active_process_zero_expires_even_if_other_messages_keep_arriving(bool quiet)
+    {
+        var clock = new Clock();
+        var waits = new List<int>();
+        uint? Read(int remaining)
+        {
+            waits.Add(remaining);
+            clock.Advance(TimeSpan.FromMilliseconds(quiet ? remaining : Math.Min(remaining, 2000)));
+            return quiet ? null : 6u; // JOB_OBJECT_MSG_NEW_PROCESS
+        }
+        var error = Assert.Throws<TimeoutException>(() => WindowsProcessTree.WaitForEmptyJob(51, clock, clock.GetTimestamp(), Read));
+        Assert.Equal(quiet ? new[] { 5000 } : new[] { 5000, 3000, 1000 }, waits);
+        Assert.Contains("owned PID 51", error.Message);
+        Assert.Contains("ACTIVE_PROCESS_ZERO", error.Message);
     }
 
     [Fact]

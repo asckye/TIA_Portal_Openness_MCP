@@ -5,6 +5,7 @@ namespace TiaMcp.BuildCommon;
 // One budget covers both process exit and EOF on the redirected pipes.
 public sealed class ProcessDeadline
 {
+    public static readonly TimeSpan CleanupTimeout = TimeSpan.FromSeconds(5);
     public const int QueryMilliseconds = 5 * 60 * 1000;
     private readonly TimeProvider clock;
     private readonly long started;
@@ -61,6 +62,7 @@ public sealed class ProcessDeadline
             else StopTree(child!);
         }
         deadline.Wait(ms => tree?.WaitForExit(ms) ?? child!.WaitForExit(ms), Stop);
+        tree?.Finish();
         deadline.Wait(Task.WhenAll(stdout, stderr).Wait, Stop);
         return (tree?.GetExitCode() ?? child!.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
     }

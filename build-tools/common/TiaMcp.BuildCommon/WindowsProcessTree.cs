@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
@@ -21,7 +22,8 @@ public sealed class WindowsProcessTree : IDisposable
     private AnonymousPipeServerStream? _input;
     private bool _assigned;
     private readonly object _finishLock = new();
-    private bool _finished;
+    private bool _finishAttempted;
+    private ExceptionDispatchInfo? _finishFailure;
 
     public string? DesktopPath { get; }
     public uint ProcessId { get; private set; }
@@ -147,38 +149,74 @@ public sealed class WindowsProcessTree : IDisposable
     public int GetExitCode() => GetExitCodeProcess(_process!, out uint code) ? unchecked((int)code)
         : throw Failure("read the isolated GUI test exit code");
 
-    private void StopTree()
-    {
-        if (!TerminateJobObject(_job!, 1)) throw Failure("terminate the owned process job");
-    }
-
     // Completion messages are event-driven. Wait for the entire owned tree, including an
     // orphaned testhost, before closing its desktop or waiting for redirected pipe EOF.
-    public void Finish()
+    public void Finish() => Finish(disposing: false);
+
+    private void Finish(bool disposing)
     {
-        lock (_finishLock) FinishTree();
+        var clock = TimeProvider.System;
+        long started = clock.GetTimestamp();
+        if (!Monitor.TryEnter(_finishLock, ProcessDeadline.CleanupTimeout))
+            throw CleanupTimedOut(ProcessId, "another cleanup attempt");
+        try
+        {
+            if (_finishAttempted)
+            {
+                // Dispose still closes the handles after a failed Finish without repeating or masking that failure.
+                if (!disposing) _finishFailure?.Throw();
+                return;
+            }
+            _finishAttempted = true;
+            try { FinishTree(clock, started); }
+            catch (Exception ex)
+            {
+                _finishFailure = ExceptionDispatchInfo.Capture(ex);
+                throw;
+            }
+        }
+        finally { Monitor.Exit(_finishLock); }
     }
 
-    private void FinishTree()
+    private void FinishTree(TimeProvider clock, long started)
     {
-        if (_finished) return;
         if (_assigned)
         {
-            StopTree();
-            uint message;
-            do
-            {
-                if (!GetQueuedCompletionStatus(_completion!, out message, out _, out _, uint.MaxValue))
-                    throw Failure("wait for the owned process tree");
-            } while (message != 4 /* ACTIVE_PROCESS_ZERO */);
+            if (!TerminateJobObject(_job!, 1)) throw Failure("terminate the owned process job");
+            WaitForEmptyJob(ProcessId, clock, started, ReadJobMessage);
         }
         else if (_process != null)
         {
             if (!TerminateProcess(_process, 1)) throw Failure("terminate the suspended process");
-            WaitForExit(Timeout.Infinite);
+            if (!WaitForExit(RemainingMilliseconds(clock, started))) throw CleanupTimedOut(ProcessId, "suspended process exit");
         }
-        _finished = true;
     }
+
+    private uint? ReadJobMessage(int milliseconds)
+    {
+        if (GetQueuedCompletionStatus(_completion!, out uint message, out _, out _, (uint)milliseconds)) return message;
+        int code = Marshal.GetLastWin32Error();
+        if (code == 258 /* WAIT_TIMEOUT */) return null;
+        throw Failure("wait for the owned process tree", code);
+    }
+
+    internal static void WaitForEmptyJob(uint pid, TimeProvider clock, long started, Func<int, uint?> read)
+    {
+        int remaining;
+        while ((remaining = RemainingMilliseconds(clock, started)) > 0)
+        {
+            uint? message = read(remaining);
+            if (message == 4 /* ACTIVE_PROCESS_ZERO */) return;
+            if (message == null) break;
+        }
+        throw CleanupTimedOut(pid, "ACTIVE_PROCESS_ZERO");
+    }
+
+    private static int RemainingMilliseconds(TimeProvider clock, long started) =>
+        (int)Math.Max(0, Math.Ceiling((ProcessDeadline.CleanupTimeout - clock.GetElapsedTime(started)).TotalMilliseconds));
+
+    private static TimeoutException CleanupTimedOut(uint pid, string waitingFor) =>
+        new($"Cleanup of owned PID {pid} timed out waiting for {waitingFor} within {ProcessDeadline.CleanupTimeout:c}.");
 
     public void Dispose()
     {
@@ -193,7 +231,7 @@ public sealed class WindowsProcessTree : IDisposable
         using (StandardOutput)
         using (StandardInput)
         {
-            Finish();
+            Finish(disposing: true);
         }
     }
 

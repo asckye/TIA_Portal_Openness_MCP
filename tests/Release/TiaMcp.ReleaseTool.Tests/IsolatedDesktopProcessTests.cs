@@ -88,6 +88,39 @@ public sealed class IsolatedDesktopProcessTests
         AssertDesktopClosed(name);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Non_desktop_owned_tree_finishes_before_draining_inherited_pipes(bool useCapture)
+    {
+        if (!OperatingSystem.IsWindows()) { AssertWindowsRequired(); return; }
+        using var tree = new StaticTree();
+        string report = Path.Combine(tree.Root, "orphan.json");
+        string[] args = [FixtureAssembly, "--desktop-parent", report, "orphan", "23"];
+        string output;
+        int exitCode;
+        if (useCapture)
+        {
+            var start = new ProcessStartInfo(Fixture)
+            {
+                WorkingDirectory = tree.Root, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true
+            };
+            foreach (var arg in args) start.ArgumentList.Add(arg);
+            var result = ProcessDeadline.Capture(start, TestDeadlines.HangMilliseconds);
+            (exitCode, output) = (result.ExitCode, result.StandardError);
+        }
+        else
+        {
+            var result = GateWatchdog.Run("merge-check", 1, () => ProcessRunner.Run(Fixture, args, tree.Root,
+                timeoutMilliseconds: TestDeadlines.HangMilliseconds));
+            (exitCode, output) = (result.ExitCode, result.StandardError);
+        }
+        Assert.Equal(23, exitCode);
+        Assert.Contains("stderr:", output);
+        foreach (string path in new[] { report, report + ".grandchild" })
+            AssertExited(JsonSerializer.Deserialize<Probe>(File.ReadAllText(path))!.Pid);
+    }
+
     [Fact]
     public void Explicit_stream_encodings_round_trip_UTF8_without_an_isolated_desktop()
     {

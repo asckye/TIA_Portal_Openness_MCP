@@ -39,12 +39,12 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1
 
 | 选项 | 用途与边界 |
 |---|---|
-| `-TimeoutMinutes <正整数>` | 从提取 ZIP 到交付检查结束的总时限，默认 120 分钟。每静默 10 分钟显示一次作业心跳。到达总时限时列出运行中的作业及耗时，终止本次检查的子进程树并返回失败。构建阶段的 MSBuild 属性查询另有 5 分钟的单次限时。 |
+| `-TimeoutMinutes <正整数>` | 从提取 ZIP 到交付检查结束的总时限。每静默 10 分钟显示一次作业心跳。到达总时限时列出运行中的作业及耗时，并行终止本次检查的子进程树，最多再等 5 秒，报告仍在清理的 PID 并返回失败。构建阶段的 MSBuild 属性查询另有 5 分钟的单次限时。 |
 | `-BuildOnly` | 跳过漏洞扫描，只构建、暂存校验和打包，不运行交付包检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
 | `-NoDraftUpload` | 仍须通过漏洞扫描；完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |
 | `-Python`、`-CompanionPython` | 分别指定解码器和 PLC Tools 的解释器绝对路径 |
-| `-MaxParallelism` | 构建并行度，必须为正整数，默认 6 |
+| `-MaxParallelism` | 构建并行度，必须为正整数，默认 6。交付检查的默认时限在并行度大于 1 时为 120 分钟，在并行度为 1 时为 360 分钟。显式指定的 `-TimeoutMinutes` 在两种情况下都按原值生效。 |
 
 成功产物位于 `bin-build/prepared/<版本>/`：
 
