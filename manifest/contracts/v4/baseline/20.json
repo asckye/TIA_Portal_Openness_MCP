@@ -8578,7 +8578,7 @@
         "additionalProperties": false,
         "properties": {
           "repository": {
-            "default": "asckye/TIA_Portal_Openness_MCP",
+            "default": "asckye/automation-engineering-workbench",
             "description": "repository: GitHub owner/name to query (default the project's repository).",
             "type": "string"
           },
