@@ -33,6 +33,10 @@ internal sealed class CfcPortService
     public ResponseMessage ManageCfcChartProtection(string softwarePath, string chartName, string action = "read", string currentPassword = "",
             string newHashedPassword = "", bool dryRun = true, string modelVersion = "V2.0", bool skipChartPreflight = false)
     {
+        var release = TiaMcp.Versioning.TiaVersionCatalog.Get(HardwareContract.ReleaseKey);
+        if (CfcSafetyPolicy.ChartInventoryProblem(release.MajorVersion, "CFC chart protection") is string reason)
+            return new ResponseMessage { Message = reason, Meta = new JsonObject {
+                ["rejectionCode"] = "UNSUPPORTED_CAPABILITY", ["operationNotStarted"] = true, ["operationSuccess"] = false, ["unsupportedReason"] = reason } };
         var request = new OptionalProductRequest {
             Operation = "ManageCfcChartProtection", SoftwarePath = softwarePath, ChartName = chartName, Action = action, CurrentPassword = currentPassword,
                 NewHashedPassword = newHashedPassword, DryRun = dryRun, ModelVersion = modelVersion, SkipChartPreflight = skipChartPreflight

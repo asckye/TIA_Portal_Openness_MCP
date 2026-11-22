@@ -15,6 +15,10 @@ public sealed partial class OpennessApi
     public static readonly OpennessApi IgnoreUnitAttributes = new(16);
     // VersionControl.VersionControlInterface
     public static readonly OpennessApi VersionControl = new(16);
+    // Typed watch and force table entry access, including deletion.
+    public static readonly OpennessApi WatchForceEntries = new(17);
+    // UMC server consistency checks and synchronization.
+    public static readonly OpennessApi UmcServerSynchronization = new(18);
     // HW.HardwareCatalog.HardwareCatalog
     public static readonly OpennessApi HardwareCatalog = new(18);
     // Schemas/SW.InterfaceSections_v5.xsd ships alongside v4 on V17. The V17 declaration builder selects v4.
@@ -30,6 +34,8 @@ public sealed partial class OpennessApi
 
     // SW.ImportDocumentOptions and SW.Blocks.PlcBlock.ExportAsDocuments(DirectoryInfo, String)
     public static readonly OpennessApi PlcDocuments = new(20);
+    // UmcUser/UmcUserGroup offline creation and renaming.
+    public static readonly OpennessApi OfflineUmcUsers = new(20);
     // ObjectIdentifierProvider
     public static readonly OpennessApi ObjectIdentifiers = new(20);
     // SW.Blocks.PlcBlockComposition.CreateFrom overloads with MasterCopyMode / UpdatePathsMode
@@ -59,6 +65,8 @@ public sealed partial class OpennessApi
     public static readonly OpennessApi TelecontrolPoints = new(21);
     // SW.Blocks.Interface.ValueService
     public static readonly OpennessApi SnapshotValues = new(21);
+    // InterpreterMappings, IdentTechnologicalObjectProvider and SuperimposingAxes.
+    public static readonly OpennessApi MotionAxisMappings = new(21);
     // SW.OpcUa.ServerInterfaceGroup.AccessControl
     public static readonly OpennessApi OpcUaAccessControl = new(21);
     // SW.PlcDocumentComposition.CreateFrom

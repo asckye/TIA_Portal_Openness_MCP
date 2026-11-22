@@ -481,6 +481,7 @@ namespace TiaMcp.Adapters.Contracts
             "ExportPlcBlockDocuments", "ExportPlcBlocksDocuments", "ImportPlcBlockDocuments", "ImportPlcBlocksDocuments"
         });
         public static bool UsesFoundationCandidate(string tool) => FoundationCandidates.Contains(tool, StringComparer.Ordinal);
+        public static bool Withdrawn(string tool) => ToolReleases.TryGetValue(tool, out var releases) && releases.Length == 0;
         public static bool Available(string release, string tool) => ForTool(tool).Available(release)
             && (!ToolReleases.TryGetValue(tool, out var releases) || releases.Contains(release, StringComparer.Ordinal));
         public static IEnumerable<string> Withheld(string release) => All.SelectMany(family => family.Tools)

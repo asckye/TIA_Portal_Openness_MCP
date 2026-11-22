@@ -81,8 +81,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     || names.Except(expected, StringComparer.Ordinal).Any())
                     throw new InvalidOperationException("Ported declaration roster mismatch: " + family.Name);
                 foreach (var method in methods)
-                    if (includeUnavailable || PortedFamilies.Available(release, method.GetCustomAttribute<McpServerToolAttribute>()!.Name!))
-                    yield return method;
+                {
+                    string name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                    if (!PortedFamilies.Withdrawn(name) && (includeUnavailable || PortedFamilies.Available(release, name))) yield return method;
+                }
             }
         }
     }

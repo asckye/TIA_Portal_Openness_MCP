@@ -13,7 +13,8 @@ public static class SecurityCapabilities
             return "Simple web users require V18 or later.";
         if (operation == "ManageSyslogServers" && scope == "project" && version < 20)
             return "Project-global SyslogServerProvider.Servers requires V20 or later.";
-        if (operation == "ManageUmcUsers" && scope == "server" && action is "checkConsistency" or "synchronize" && version < 18)
+        if (operation == "ManageUmcUsers" && scope == "server" && action is "checkConsistency" or "synchronize"
+            && version < OpennessApi.UmcServerSynchronization.FirstMajor)
             return "UMC consistency/synchronization requires V18 or later.";
         if (operation == "GetProjectUserManagement" && category == "passwordPolicy" && version < 18)
             return "PasswordPolicyConfigurator requires V18 or later.";
@@ -35,11 +36,11 @@ public static class SecurityCapabilities
             if (Array.IndexOf(PlcProtectionRules.MasterSecretActions, action) >= 0 && version < 17)
                 return "PLC master secret requires V17 or later.";
         }
-        if (operation == "ManageUmcUsers")
+        if (operation == "ManageUmcUsers" && version < OpennessApi.OfflineUmcUsers.FirstMajor)
         {
-            if (action == "createOffline" && version < 20)
+            if (action == "createOffline")
                 return "UmcUserComposition.CreateOfflineUmcUser and UmcUserGroupComposition.CreateOfflineUmcUserGroup require V20 or later.";
-            if (action == "rename" && version < 20) return "Offline UMC renaming requires V20 or later.";
+            if (action == "rename") return "Offline UMC renaming requires V20 or later.";
         }
         if (operation == "ManageProjectUserManagement" && action == "deleteDeviceRight" && version < 20)
             return "CustomDeviceFunctionRight.Delete requires V20 or later.";

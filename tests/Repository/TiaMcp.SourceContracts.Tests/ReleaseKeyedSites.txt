@@ -122,8 +122,6 @@ Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.
 Adapters.Contracts/OptionalEngineeringCapabilities.cs|if (major < 20 && request.Operation == "ManageSivarcTableRule")
 Adapters.Contracts/PlcB4Capabilities.cs|if (version == 21 && request.Operation == "ManageTechnologyObject" && request.Action == "create"
 Adapters.Contracts/PlcB4Capabilities.cs|if (request.Operation == "ManagePlcSoftwareUnit" && version < 18 && request.Properties.ContainsKey("NamespacePreset"))
-Adapters.Contracts/PlcB4Capabilities.cs|if (request.Operation == "ManagePlcTableEntries" && version < 17 && request.Action != "createComment" && request.Action != "createTable")
-Adapters.Contracts/PlcB4Capabilities.cs|if (version < 21
 Adapters.Contracts/PlcB4Capabilities.cs|if (version < 16 && (request.Aspect.StartsWith("conveyor", StringComparison.Ordinal) || request.Aspect == "synchronousDelayed"))
 Adapters.Contracts/PlcB4Capabilities.cs|if (version < 15 && request.Aspect == "torque") return "TorqueHardwareConnectionInterface requires V15.1.";
 Adapters.Contracts/PlcB4Capabilities.cs|if (request.Operation == "ConfigureMotionHardwareConnection" && version < 15 && request.Aspect == "torque")
@@ -144,8 +142,6 @@ Adapters.Contracts/PlcSoftwareCapabilities.cs|if (tool == "BuildAndImportPlcArti
 Adapters.Contracts/SecurityCapabilities.cs|if (Array.IndexOf(PlcProtectionRules.MasterSecretActions, action) >= 0 && version < 17)
 Adapters.Contracts/SecurityCapabilities.cs|if (operation == "ManageDeviceUsers" && scope == "simpleWebserver" && version < 18)
 Adapters.Contracts/SecurityCapabilities.cs|if (operation == "ManageSyslogServers" && scope == "project" && version < 20)
-Adapters.Contracts/SecurityCapabilities.cs|if (action is "createOffline" or "rename" && version < 20)
-Adapters.Contracts/SecurityCapabilities.cs|if (scope == "server" && action is "checkConsistency" or "synchronize" && version < 18)
 Adapters.Contracts/SecurityCapabilities.cs|if (operation == "GetProjectUserManagement" && category == "passwordPolicy" && version < 18)
 Adapters.Contracts/SecurityCapabilities.cs|if (operation == "ManageProjectUserManagement" && action == "deleteDeviceRight" && version < 20)
 Adapters.Contracts/SecurityCapabilities.cs|if (operation == "ManagePlcCertificate" && action == "export" && version < 19

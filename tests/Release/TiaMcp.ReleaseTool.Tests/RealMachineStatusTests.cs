@@ -142,7 +142,13 @@ public sealed class RealMachineStatusTests
 
         using var diagnostics = new StringWriter();
         var table = Read(tree.Root, diagnostics);
-        Assert.Equal("Dropped unregistered tool: 21/GetSessionState", diagnostics.ToString().TrimEnd());
+        Assert.Equal(new[] {
+            "Dropped unregistered tool: 18/ManageCfcChartProtection",
+            "Dropped unregistered tool: 19/ManageCfcChartProtection",
+            "Dropped unregistered tool: 20/ManageCfcChartProtection",
+            "Dropped unregistered tool: 21/GetSessionState",
+            "Dropped unregistered tool: 21/ManageCfcChartProtection"
+        }, diagnostics.ToString().TrimEnd().Split(Environment.NewLine));
         Assert.DoesNotContain(tool, table.Cells("21").Keys);
         Assert.Equal(before.Summarize("21").Recorded - 1, table.Summarize("21").Recorded);
         Assert.Equal(before.Cells("20")[tool].Result, table.Cells("20")[tool].Result);

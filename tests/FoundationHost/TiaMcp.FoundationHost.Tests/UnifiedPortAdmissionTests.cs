@@ -851,7 +851,7 @@ public sealed class UnifiedPortAdmissionTests
         var arguments = Arguments(name);
         if (name == "GetUnifiedPlantObject")
         {
-            Assert.Equal("<absolute plant path from GetUnifiedPlantObject with empty plantPath>", (string?)arguments["plantPath"]);
+            Assert.Equal("/<plant path segments from GetUnifiedPlantObject with empty plantPath>", (string?)arguments["plantPath"]);
             arguments["plantPath"] = "/FixturePlant";
         }
         arguments[parameter] = encoded ? JsonValue.Create(path) : JsonNode.Parse(path);

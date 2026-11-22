@@ -37,6 +37,7 @@ namespace TiaMcp.FoundationHost
             foreach (var implementation in shared)
             {
                 var tool = implementation.ProtocolTool;
+                if (SharedToolPolicy.Removed.Contains(tool.Name)) continue;
                 if (TiaMcp.Adapters.Contracts.PortedFamilies.IsMigratedDeclaration(tool.Name)
                     && !TiaMcp.Adapters.Contracts.PortedFamilies.UsesFoundationCandidate(tool.Name)
                     && !TiaMcp.Adapters.Contracts.PortedFamilies.CompatibilityTargets.ContainsKey(tool.Name) && all.TryGetValue(tool.Name, out var declared))

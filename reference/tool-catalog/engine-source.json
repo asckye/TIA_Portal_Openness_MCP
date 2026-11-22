@@ -19668,7 +19668,6 @@
     "ListSivarcBlockDefinitions": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "ListTechnologyObjects": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "ListTransferRoutes": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
-    "ManageCfcChartProtection": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused.",
     "ManageDriveTelegrams": "Preset by the server: softwarePath. Equal normalized values are accepted; different values are refused. PLC software presets on mixed tools follow the target selector.",
     "ManageHardwareObject": "Preset by the server: expectedProjectFile. Equal normalized values are accepted; different values are refused.",
     "ManageLibraryMasterCopy": "Preset by the server: expectedProjectFile, targetSoftwarePath. Equal normalized values are accepted; different values are refused. PLC software presets on mixed tools follow the target selector.",

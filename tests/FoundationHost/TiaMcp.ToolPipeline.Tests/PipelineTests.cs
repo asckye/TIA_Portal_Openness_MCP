@@ -145,12 +145,27 @@ public sealed partial class PipelineTests
     }
 
     [Theory]
-    [InlineData("20", 481)]
-    [InlineData("21", 492)]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Withdrawn_chart_protection_cannot_reenter_the_catalog_from_a_shared_implementation(string release)
+    {
+        const string name = "ManageCfcChartProtection";
+        var shared = McpServerTool.Create(() => "fixture", new() { Name = name });
+        var catalog = new FoundationCatalog(release, new[] { shared });
+        Assert.DoesNotContain(PortedToolDeclarations.Methods(release, includeUnavailable: true), method => ReleaseCatalogData.Name(method) == name);
+        Assert.Null(catalog.Find(name));
+        Assert.Null(catalog.Find(name, includeUnavailable: true));
+        Assert.DoesNotContain(catalog.Lite, tool => tool.Name == name);
+        Assert.Contains(PortedToolDeclarations.Methods(release), method => ReleaseCatalogData.Name(method) == "ExchangeCfcCharts");
+    }
+
+    [Theory]
+    [InlineData("20", 480)]
+    [InlineData("21", 491)]
     public void EveryCatalogEntryHasReviewedOwnershipAndALocalImplementation(string release, int count)
     {
         using var fixture = new Fixture(release, all: true);
         Assert.Equal(count, fixture.Catalog.All.Count);
+        Assert.Null(fixture.Catalog.Find("ManageCfcChartProtection", includeUnavailable: true));
         Assert.Equal(96, fixture.Catalog.All.Values.Count(t => t.Execution == "host"));
         Assert.Equal("host", fixture.Catalog.All["ManagePlcGitRepository"].Execution);
         Assert.All(fixture.Catalog.All.Values, tool => Assert.Contains(tool.Name, ToolExecution.Table.Keys));
@@ -423,7 +438,9 @@ public sealed partial class PipelineTests
             var root = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Catalog", release + ".json")))!;
             var names = new[] { "SaveProject", "GetSessionState", "GetCallResult", "ListExportHandles", "CallTool", "GetOpennessWorkerStatus",
                 "GetNativeInvocationLog", "RestartOpennessWorker" };
-            var declared = root["tools"]!.AsArray().Where(t => all || names.Contains((string)t!["name"]!)).Select(t => {
+            // Frozen engine declarations also include workers that have since been withdrawn from every release.
+            var declared = root["tools"]!.AsArray().Where(t => !TiaMcp.Adapters.Contracts.PortedFamilies.Withdrawn((string)t!["name"]!)
+                && (all || names.Contains((string)t["name"]!))).Select(t => {
                 string name = (string)t!["name"]!;
                 var schema = JsonSerializer.SerializeToElement(t["inputSchema"]);
                 var parameters = schema.GetProperty("properties").EnumerateObject().Select(p => new ToolParameterDescriptor(p.Name,

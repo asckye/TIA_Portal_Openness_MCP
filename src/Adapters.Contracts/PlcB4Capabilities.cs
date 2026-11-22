@@ -8,9 +8,10 @@ namespace TiaMcp.Adapters.Contracts
 
         public static string? UnsupportedOperation(int version, string tool, string action)
         {
-            if (tool == "ManagePlcTableEntries" && version < 17 && action != "createComment" && action != "createTable")
+            if (tool == "ManagePlcTableEntries" && version < OpennessApi.WatchForceEntries.FirstMajor && action != "createComment" && action != "createTable")
                 return "Typed watch/force entry evidence requires V17; only createTable and createComment are available on this release.";
-            if (tool == "ManageMotionAxis" && version < 21 && (action.EndsWith("Mapping", StringComparison.Ordinal) || action == "connectIdent"))
+            if (tool == "ManageMotionAxis" && version < OpennessApi.MotionAxisMappings.FirstMajor && (action.EndsWith("Mapping", StringComparison.Ordinal)
+                || action == "connectIdent"))
                 return InterpreterMappings;
             return null;
         }
@@ -30,7 +31,7 @@ namespace TiaMcp.Adapters.Contracts
             if (UnsupportedOperation(version, request.Operation, request.Action) is string reason) return reason;
             if (request.Operation == "ManageMotionAxis")
             {
-                if (version < 21 && request.Aspect == "superimposingSetPoint") return InterpreterMappings;
+                if (version < OpennessApi.MotionAxisMappings.FirstMajor && request.Aspect == "superimposingSetPoint") return InterpreterMappings;
                 if (version < 16 && (request.Aspect.StartsWith("conveyor", StringComparison.Ordinal) || request.Aspect == "synchronousDelayed"))
                     return "ConveyorTrackingLeadingValues and DelayedCoupling require V16.";
                 if (version < 15 && request.Aspect == "torque") return "TorqueHardwareConnectionInterface requires V15.1.";

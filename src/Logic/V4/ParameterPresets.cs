@@ -180,7 +180,6 @@ namespace TiaMcp.Logic.V4
             ["ListUnifiedGlobalScripts.softwarePath"] = "HMI software; not a PLC target.",
             ["ListUnifiedLibraryFolderEntries.softwarePath"] = "HMI software; not a PLC target.",
             ["ListUnifiedTagDefinitions.softwarePath"] = "HMI software; not a PLC target.",
-            ["ManageCfcChartProtection.softwarePath"] = "PLC",
             ["ManageClassicHmiCycle.softwarePath"] = "HMI software; not a PLC target.",
             ["ManageClassicHmiFolder.softwarePath"] = "HMI software; not a PLC target.",
             ["ManageClassicHmiGraphic.softwarePath"] = "HMI software; not a PLC target.",

@@ -670,7 +670,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["GetUnifiedObjectEvents.objectPath"] = new ParameterHint("\"\\u003CobjectPath\\u003E\""),
             ["GetUnifiedObjectProperties.softwarePath"] = new ParameterHint("\"HMI_RT_1\""),
             ["GetUnifiedObjectProperties.objectPath"] = new ParameterHint("\"\\u003CobjectPath\\u003E\""),
-            ["GetUnifiedPlantObject.plantPath"] = new ParameterHint("\"<absolute plant path from GetUnifiedPlantObject with empty plantPath>\""),
+            ["GetUnifiedPlantObject.plantPath"] = new ParameterHint("\"/<plant path segments from GetUnifiedPlantObject with empty plantPath>\""),
             ["GetUnifiedPlantObject.objectPath"] = new ParameterHint("\"\\u003CobjectPath\\u003E\""),
             ["GetUnifiedRuntimeAlarms.systemNames"] = new ParameterHint("\"\\u003CsystemNames\\u003E\""),
             ["GetUnifiedRuntimeAlarms.filter"] = new ParameterHint("\"Priority \\u003E= 10\""),
