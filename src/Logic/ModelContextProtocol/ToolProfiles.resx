@@ -23897,7 +23897,7 @@
       "entry": "GetUnifiedPlantObject",
       "family": "F27",
       "example": {
-        "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+        "plantPath": "/&lt;plant path segments from GetUnifiedPlantObject with empty plantPath&gt;"
       }
     },
     {
@@ -28726,7 +28726,7 @@
       "entry": "GetUnifiedPlantObject",
       "family": "F27",
       "example": {
-        "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+        "plantPath": "/&lt;plant path segments from GetUnifiedPlantObject with empty plantPath&gt;"
       }
     },
     {
@@ -33824,7 +33824,7 @@
       "entry": "GetUnifiedPlantObject",
       "family": "F27",
       "example": {
-        "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+        "plantPath": "/&lt;plant path segments from GetUnifiedPlantObject with empty plantPath&gt;"
       }
     },
     {
@@ -44335,7 +44335,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+          "plantPath": "/&lt;plant path segments from GetUnifiedPlantObject with empty plantPath&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -53996,7 +53996,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+          "plantPath": "/&lt;plant path segments from GetUnifiedPlantObject with empty plantPath&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -96045,7 +96045,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+          "plantPath": "/&lt;plant path segments from GetUnifiedPlantObject with empty plantPath&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -104456,7 +104456,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+          "plantPath": "/&lt;plant path segments from GetUnifiedPlantObject with empty plantPath&gt;"
         },
         "envelopeVersion": 4
       },
@@ -111786,7 +111786,7 @@
           "full"
         ],
         "arguments": {
-          "plantPath": "&lt;absolute plant path from GetUnifiedPlantObject with empty plantPath&gt;"
+          "plantPath": "/&lt;plant path segments from GetUnifiedPlantObject with empty plantPath&gt;"
         },
         "envelopeVersion": 4
       },

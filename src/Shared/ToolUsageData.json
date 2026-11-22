@@ -24006,7 +24006,7 @@
     },
     "GetUnifiedPlantObject": {
       "arguments": {
-        "plantPath": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>"
+        "plantPath": "/<plant path segments from GetUnifiedPlantObject with empty plantPath>"
       },
       "parameters": {
         "plantPath": {
@@ -48332,11 +48332,11 @@
         },
         "GetUnifiedPlantObject": {
           "arguments": {
-            "plantPath": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>"
+            "plantPath": "/<plant path segments from GetUnifiedPlantObject with empty plantPath>"
           },
           "parameters": {
             "plantPath": {
-              "exampleValue": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>",
+              "exampleValue": "/<plant path segments from GetUnifiedPlantObject with empty plantPath>",
               "requiresBinding": true,
               "meaning": "Use the absolute path from the plant view root. An empty plantPath lists the views."
             },
@@ -65425,11 +65425,11 @@
         },
         "GetUnifiedPlantObject": {
           "arguments": {
-            "plantPath": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>"
+            "plantPath": "/<plant path segments from GetUnifiedPlantObject with empty plantPath>"
           },
           "parameters": {
             "plantPath": {
-              "exampleValue": "<absolute plant path from GetUnifiedPlantObject with empty plantPath>",
+              "exampleValue": "/<plant path segments from GetUnifiedPlantObject with empty plantPath>",
               "requiresBinding": true,
               "meaning": "Use the absolute path from the plant view root. An empty plantPath lists the views."
             },
