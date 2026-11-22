@@ -8,7 +8,7 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class GateWatchdogTests
 {
-    private sealed class Clock : TimeProvider
+    internal sealed class Clock : TimeProvider
     {
         private long ticks;
         public override long TimestampFrequency => TimeSpan.TicksPerSecond;
@@ -207,6 +207,66 @@ public sealed class GateWatchdogTests
         Assert.Equal(quiet ? new[] { 5000 } : new[] { 5000, 3000, 1000 }, waits);
         Assert.Contains("owned PID 51", error.Message);
         Assert.Contains("ACTIVE_PROCESS_ZERO", error.Message);
+    }
+
+    [Fact]
+    public void Exceptional_exit_attaches_cleanup_failure_and_normal_disposal_surfaces_it()
+    {
+        var primary = new IOException("launch failed");
+        var timeout = new TimeoutException("missing ACTIVE_PROCESS_ZERO");
+        void Close() => throw timeout;
+        WindowsProcessTree.ClosePreservingFailure(primary, Close);
+        Assert.Same(timeout, primary.Data["ProcessTreeCleanup"]);
+        Assert.Same(timeout, Assert.Throws<TimeoutException>(() => WindowsProcessTree.ClosePreservingFailure(null, Close)));
+    }
+
+    [Fact]
+    public void Exit_at_the_deadline_can_read_the_queued_empty_job_notification()
+    {
+        var clock = new Clock();
+        var deadline = new ProcessDeadline(Msbuild("-getProperty:TargetFramework"), 1000, clock);
+        clock.Advance(TimeSpan.FromSeconds(1));
+        deadline.FinishAfterExit(budget => WindowsProcessTree.WaitForEmptyJob(52, clock, clock.GetTimestamp(), wait =>
+        {
+            Assert.Equal(ProcessDeadline.CleanupTimeout.TotalMilliseconds, wait);
+            return 4; // ACTIVE_PROCESS_ZERO
+        }, budget));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Completed_work_keeps_its_result_or_exception_and_reports_its_overrun(bool fail)
+    {
+        var clock = new Clock();
+        var messages = new List<string>();
+        var watch = new GateWatchdog("merge-check", TimeSpan.FromSeconds(1), clock, messages.Add);
+        var error = new IOException("worker failure");
+        var work = new TaskCompletionSource<int>();
+        int Run() => watch.WaitForCompletion(work.Task, delay =>
+        {
+            clock.Advance(delay + TimeSpan.FromMilliseconds(1));
+            if (fail) work.SetException(error);
+            else work.SetResult(23);
+            return false;
+        });
+        if (fail) Assert.Same(error, Assert.Throws<IOException>(() => Run()));
+        else Assert.Equal(23, Run());
+        Assert.Contains("finished 00:00:00.0010000 after its wall-clock limit", Assert.Single(messages));
+    }
+
+    [Fact]
+    public void Completed_work_still_drains_the_stop_requested_by_an_expired_job()
+    {
+        var clock = new Clock();
+        var watch = new GateWatchdog("merge-check", TimeSpan.FromMinutes(1), clock, _ => { });
+        using var job = new GateWatchdog.Job(watch, "worker", null);
+        int stops = 0;
+        using var tree = job.TrackTree(41, () => Interlocked.Increment(ref stops));
+        clock.Advance(TimeSpan.FromMinutes(2));
+        Assert.Throws<ReleaseException>(job.RequireTime);
+        Assert.Equal(23, watch.WaitForCompletion(Task.FromResult(23), _ => throw new InvalidOperationException("Work already completed")));
+        Assert.Equal(1, stops);
     }
 
     [Fact]

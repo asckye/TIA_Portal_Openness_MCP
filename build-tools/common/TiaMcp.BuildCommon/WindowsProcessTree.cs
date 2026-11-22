@@ -66,9 +66,9 @@ public sealed class WindowsProcessTree : IDisposable
                 owned.Launch(start);
                 return owned;
             }
-            catch
+            catch (Exception error)
             {
-                owned.Dispose();
+                owned.Dispose(error);
                 throw;
             }
         }
@@ -221,6 +221,15 @@ public sealed class WindowsProcessTree : IDisposable
     private static TimeoutException CleanupTimedOut(uint pid, string waitingFor, TimeSpan timeout) =>
         new($"Cleanup of owned PID {pid} timed out waiting for {waitingFor} within {timeout:c}.");
 
+    // Callers unwinding a failed launch or command pass its exception through their finally block.
+    public void Dispose(Exception? primaryFailure) => ClosePreservingFailure(primaryFailure, Dispose);
+
+    internal static void ClosePreservingFailure(Exception? primaryFailure, Action close)
+    {
+        try { close(); }
+        catch (Exception cleanup) when (primaryFailure != null) { primaryFailure.Data["ProcessTreeCleanup"] = cleanup; }
+    }
+
     public void Dispose()
     {
         using (_desktop)
@@ -234,7 +243,7 @@ public sealed class WindowsProcessTree : IDisposable
         using (StandardOutput)
         using (StandardInput)
         {
-            Finish(ProcessDeadline.NormalExitCleanupTimeout, disposing: true);
+            Finish(ProcessDeadline.CleanupTimeout, disposing: true);
         }
     }
 

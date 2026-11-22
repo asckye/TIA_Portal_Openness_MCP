@@ -41,19 +41,28 @@ internal sealed class GateWatchdog(string stage, TimeSpan limit, TimeProvider cl
 
     internal T WaitForCompletion<T>(Task<T> work, Func<TimeSpan, bool> wait)
     {
-        while (!wait(Poll())) { }
-        Poll();
+        var delay = Poll(work);
+        while (delay != Timeout.InfiniteTimeSpan)
+        {
+            wait(delay);
+            delay = Poll(work);
+        }
         return work.GetAwaiter().GetResult();
     }
 
-    internal TimeSpan Poll()
+    internal TimeSpan Poll(Task? work = null)
     {
         Tree[] stops;
-        string message;
+        string? message = null;
         lock (sync)
         {
             var now = finished ?? Now;
-            if (ObserveExpiry(now) is not { } expired)
+            if (finished.HasValue || work?.IsCompleted == true)
+            {
+                var elapsed = clock.GetElapsedTime(started, now);
+                if (elapsed > limit) report($"{stage} finished {elapsed - limit:c} after its wall-clock limit {limit:c}.");
+            }
+            else if ((message = ObserveExpiry(now)) == null)
             {
                 var leaves = jobs.Where(job => job.Children == 0).ToArray();
                 var silent = leaves.Where(job => clock.GetElapsedTime(job.LastOutput, now) >= Silence).ToArray();
@@ -66,12 +75,12 @@ internal sealed class GateWatchdog(string stage, TimeSpan limit, TimeProvider cl
                 var left = limit - clock.GetElapsedTime(started, now);
                 return TimeSpan.FromMilliseconds(Math.Ceiling(Math.Min(untilHeartbeat.TotalMilliseconds, left.TotalMilliseconds)));
             }
-            message = expired;
             stops = pendingStops;
             pendingStops = [];
         }
         StopTrees(stops);
-        throw new ReleaseException(message);
+        if (message != null) throw new ReleaseException(message);
+        return Timeout.InfiniteTimeSpan;
     }
 
     private string Running(Job[] leaves, long now) => leaves.Length == 0 ? stage : string.Join(", ", leaves.OrderBy(job => job.Name, StringComparer.Ordinal)

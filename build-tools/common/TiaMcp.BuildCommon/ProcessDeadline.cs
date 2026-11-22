@@ -44,10 +44,10 @@ public sealed class ProcessDeadline
 
     public void FinishAfterExit(Action<TimeSpan> finish)
     {
-        // A completed root may still have testhosts or queued job notifications. Respect any shorter command budget.
+        // Even a root that exited on its deadline needs time to drain the job notifications.
         int remaining = RemainingMilliseconds;
         var timeout = remaining == Timeout.Infinite ? NormalExitCleanupTimeout
-            : TimeSpan.FromMilliseconds(Math.Min(remaining, NormalExitCleanupTimeout.TotalMilliseconds));
+            : TimeSpan.FromMilliseconds(Math.Clamp(remaining, CleanupTimeout.TotalMilliseconds, NormalExitCleanupTimeout.TotalMilliseconds));
         try { finish(timeout); }
         catch (Exception ex) { throw new IOException($"Process tree cleanup failed after {Command} exited: {ex.Message}", ex); }
     }
@@ -63,21 +63,27 @@ public sealed class ProcessDeadline
     public static (int ExitCode, string StandardOutput, string StandardError) Capture(ProcessStartInfo start, int? timeoutMilliseconds = null)
     {
         var deadline = new ProcessDeadline(start, timeoutMilliseconds);
-        using var tree = OperatingSystem.IsWindows() && deadline.limit != null ? WindowsProcessTree.Start(start) : null;
-        using var child = tree == null ? new Process { StartInfo = start } : null;
-        if (child != null) WindowsProcessTree.StartRegular(child);
-        tree?.StandardInput.Close();
-        var stdout = (tree?.StandardOutput ?? child!.StandardOutput).ReadToEndAsync();
-        var stderr = (tree?.StandardError ?? child!.StandardError).ReadToEndAsync();
-        void Stop()
+        var tree = OperatingSystem.IsWindows() && deadline.limit != null ? WindowsProcessTree.Start(start) : null;
+        Exception? failure = null;
+        try
         {
-            if (tree != null) tree.Finish(CleanupTimeout);
-            else StopTree(child!);
+            using var child = tree == null ? new Process { StartInfo = start } : null;
+            if (child != null) WindowsProcessTree.StartRegular(child);
+            tree?.StandardInput.Close();
+            var stdout = (tree?.StandardOutput ?? child!.StandardOutput).ReadToEndAsync();
+            var stderr = (tree?.StandardError ?? child!.StandardError).ReadToEndAsync();
+            void Stop()
+            {
+                if (tree != null) tree.Finish(CleanupTimeout);
+                else StopTree(child!);
+            }
+            deadline.Wait(ms => tree?.WaitForExit(ms) ?? child!.WaitForExit(ms), Stop);
+            if (tree != null) deadline.FinishAfterExit(tree.Finish);
+            deadline.Wait(Task.WhenAll(stdout, stderr).Wait, Stop);
+            return (tree?.GetExitCode() ?? child!.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
         }
-        deadline.Wait(ms => tree?.WaitForExit(ms) ?? child!.WaitForExit(ms), Stop);
-        if (tree != null) deadline.FinishAfterExit(tree.Finish);
-        deadline.Wait(Task.WhenAll(stdout, stderr).Wait, Stop);
-        return (tree?.GetExitCode() ?? child!.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
+        catch (Exception ex) { failure = ex; throw; }
+        finally { tree?.Dispose(failure); }
     }
 
     public static (int ExitCode, string Output) RunValidation(string program, IReadOnlyList<string> arguments, string directory)

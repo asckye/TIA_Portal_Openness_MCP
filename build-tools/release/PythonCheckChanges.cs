@@ -4,11 +4,16 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class PythonCheckChanges
 {
-    private sealed record Test(string Name, string Body, string Skips, int Line, bool Nested = false);
+    private sealed record Test(string Name, string Body, string Skips, int Line, bool Nested = false)
+    {
+        internal string AssertionBody { get; set; } = "";
+    }
     private static List<Test> Tests(string source, bool allFunctions = false)
     {
         var lines = source.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
         var tests = new List<Test>();
+        // Zero denotes module scope, -1 an untracked scope, and positive values a function's declaration line.
+        var owners = new int[lines.Length];
         var scopes = new List<(int Indent, string Name, bool Function)>();
         for (int index = 0; index < lines.Length; index++)
         {
@@ -20,30 +25,30 @@ internal static class PythonCheckChanges
             bool nested = scopes.Any(scope => scope.Function);
             bool function = declaration.Groups["kind"].Value == "def";
             scopes.Add((indent, name, function));
-            if (!function || !allFunctions && !name.StartsWith("test_", StringComparison.Ordinal)) continue;
+            // Retain the original full body for rename matching and existing test-removal approval keys.
             int end = index + 1;
             while (end < lines.Length && (string.IsNullOrWhiteSpace(lines[end]) || lines[end].TakeWhile(char.IsWhiteSpace).Count() > indent)) end++;
+            // A comment can be dedented anywhere in a Python suite without ending it.
+            int scopeEnd = end;
+            while (scopeEnd < lines.Length && (string.IsNullOrWhiteSpace(lines[scopeEnd]) || lines[scopeEnd].TrimStart().StartsWith('#')
+                || lines[scopeEnd].TakeWhile(char.IsWhiteSpace).Count() > indent)) scopeEnd++;
+            int parent = owners[index];
+            bool tracked = function && (allFunctions || name.StartsWith("test_", StringComparison.Ordinal) || parent > 0);
+            Array.Fill(owners, tracked ? index + 1 : parent > 0 ? parent : -1, index, scopeEnd - index);
+            if (!tracked) continue;
             int start = index;
             while (start > 0 && lines[start - 1].TrimStart().StartsWith('@')) start--;
             string decorators = string.Join('\n', lines[start..index]);
             var skips = Regex.Matches(decorators, @"@(?:pytest\.mark\.(?:skip|skipif)|unittest\.skip\w*)\b[^\n]*").Select(match => match.Value.Trim());
-            tests
-                .Add(new(string.Join('/', scopes.Select(scope => scope.Name)), string.Join('\n', lines[index..end]), string
-                        .Join('\n', skips
-                            .Concat(Regex.Matches(string.Join('\n', lines[index..end]), @"\bpytest\.skip\s*\([^\r\n]*").Select(match => match.Value))),
-                        index + 1, nested));
+            string body = string.Join('\n', lines[index..end]);
+            var markers = skips.Concat(Regex.Matches(body, @"\bpytest\.skip\s*\([^\r\n]*").Select(match => match.Value));
+            var test = new Test(string.Join('/', scopes.Select(scope => scope.Name)), body, string.Join('\n', markers), index + 1, nested);
+            tests.Add(test);
         }
-        var covered = new bool[lines.Length];
-        for (int index = 0; index < lines.Length; index++)
-        {
-            var declaration = Regex.Match(lines[index], @"^(?<indent>\s*)(?:async\s+)?(?:def|class)\s+\w+");
-            if (!declaration.Success) continue;
-            int indent = declaration.Groups["indent"].Length, end = index + 1;
-            while (end < lines.Length && (string.IsNullOrWhiteSpace(lines[end]) ||
-                lines[end].TakeWhile(char.IsWhiteSpace).Count() > indent)) end++;
-            for (int line = index; line < end; line++) covered[line] = true;
-        }
-        tests.Add(new("<module>", string.Join('\n', lines.Select((line, index) => covered[index] ? "" : line)), "", 1));
+        var scopedLines = Enumerable.Range(0, lines.Length).ToLookup(index => owners[index], index => lines[index]);
+        foreach (var test in tests) test.AssertionBody = string.Join('\n', scopedLines[test.Line]);
+        var module = string.Join('\n', lines.Select((line, index) => owners[index] == 0 ? line : ""));
+        tests.Add(new("<module>", module, "", 1) { AssertionBody = module });
         return tests;
     }
 
@@ -71,8 +76,8 @@ internal static class PythonCheckChanges
             if (match >= 0) after.RemoveAt(match);
             AddSkip(replacement.Change, replacement.Test, test.Skips, findings);
             if (change.After == null) continue;
-            var available = Assertions(replacement.Test.Body).SelectMany(pair => Enumerable.Repeat(pair.Key, pair.Value)).ToList();
-            foreach (var (assertion, count) in Assertions(test.Body))
+            var available = Assertions(replacement.Test.AssertionBody).SelectMany(pair => Enumerable.Repeat(pair.Key, pair.Value)).ToList();
+            foreach (var (assertion, count) in Assertions(test.AssertionBody))
                 for (int index = 0; index < count; index++)
                 {
                     int found = available.FindIndex(current => CheckLoosening.StricterCondition(assertion, current));

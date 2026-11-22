@@ -182,6 +182,8 @@ internal static class DotnetSuiteSelfTests
     private static void PlantedHang()
     {
         var root = Repository.FindRoot();
+        // The Codex sandbox can deny mini-dump collection. Both host runners produced dumps; under load the 2 s fixture
+        // deadline has also fired before VSTest recorded the test name. Both the name and the dump are required below.
         // Retain the real collector artifacts for the reviewer, below this worktree.
         var directory = Path.Combine(root, "bin-build/suite-hang-self-tests", Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(directory);

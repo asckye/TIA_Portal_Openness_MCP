@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
+using TiaMcp.BuildCommon;
 using TiaMcp.WorkerChannel;
 
 namespace TiaMcp.ReleaseTool;
@@ -26,15 +27,44 @@ internal static class PlcWorkerFixtures
     internal static async Task<string> Smoke(string worker, string api, string key, string? fault = null, string? environmentFault = null)
     {
         string nonce = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
-        var start = new ProcessStartInfo(Path.GetFullPath(worker)) { UseShellExecute = false, CreateNoWindow = true,
-            RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true };
+        var start = new ProcessStartInfo(Path.GetFullPath(worker)) { WorkingDirectory = Environment.CurrentDirectory,
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            StandardInputEncoding = new System.Text.UTF8Encoding(false) };
         foreach (string argument in new[] { "--native-session", key, Path.GetFullPath(api), nonce }) start.ArgumentList.Add(argument);
         start.Environment["TIA_MCP_PLC_WORKER_FAULT"] = fault ?? environmentFault;
         start.Environment["TIA_MCP_PLC_WORKER_SDK_READY"] = "1";
-        using var process = Process.Start(start) ?? throw new ReleaseException("PlcWorker did not start.");
-        var stderr = process.StandardError.ReadToEndAsync();
-        using var channel = new ChannelClient(process.StandardOutput.BaseStream, process.StandardInput.BaseStream,
-            new ChannelIdentity(key, FileHash.Sha256(worker), FileHash.Sha256(Path.Combine(Path.GetDirectoryName(worker)!, $"TiaMcp.Adapter.{key}.dll")), process.Id, nonce));
+        var job = GateWatchdog.ActiveJob;
+        job?.RequireTime();
+        var tree = WindowsProcessTree.Start(start);
+        Exception? failure = null;
+        try
+        {
+            void Stop()
+            {
+                if (!tree.WaitForExit(0))
+                {
+                    using var process = Process.GetProcessById(checked((int)tree.ProcessId));
+                    string actual = process.MainModule?.FileName ?? throw new ReleaseException("Cannot verify owned worker image before shutdown.");
+                    if (!string.Equals(Path.GetFullPath(actual), start.FileName, StringComparison.OrdinalIgnoreCase))
+                        throw new ReleaseException("Owned worker image changed before shutdown: " + actual);
+                    Console.Error.WriteLine($"Stopping owned PlcWorker pid={tree.ProcessId} image={actual}");
+                }
+                tree.Finish(ProcessDeadline.CleanupTimeout);
+            }
+            using var registration = job?.TrackTree(checked((int)tree.ProcessId), Stop);
+            return await SmokeStarted(tree, worker, key, nonce, fault, environmentFault, Stop);
+        }
+        catch (Exception error) { failure = error; throw; }
+        finally { tree.Dispose(failure); }
+    }
+
+    private static async Task<string> SmokeStarted(WindowsProcessTree tree, string worker, string key, string nonce,
+        string? fault, string? environmentFault, Action stop)
+    {
+        var stderr = tree.StandardError.ReadToEndAsync();
+        using var channel = new ChannelClient(tree.StandardOutput.BaseStream, tree.StandardInput.BaseStream,
+            new ChannelIdentity(key, FileHash.Sha256(worker), FileHash.Sha256(Path.Combine(Path.GetDirectoryName(worker)!, $"TiaMcp.Adapter.{key}.dll")),
+                checked((int)tree.ProcessId), nonce));
         string result = "";
         Exception? failure = null;
         try
@@ -55,7 +85,7 @@ internal static class PlcWorkerFixtures
             }
             catch (ChannelFailureException error) when (fault is "tia-lost" or "background-tia-exit")
             {
-                if (error.Outcome != ChannelOutcome.Unknown || process.HasExited) throw;
+                if (error.Outcome != ChannelOutcome.Unknown || tree.WaitForExit(0)) throw;
                 result = error.Message;
             }
             catch (ChannelFaultException error) when (fault is not ("tia-lost" or "background-tia-exit"))
@@ -67,20 +97,17 @@ internal static class PlcWorkerFixtures
         catch (Exception error) { failure = error; }
         try
         {
+            tree.StandardInput.Close();
             channel.Dispose();
-            if (!process.WaitForExit(5000))
-            {
-                string actual = process.MainModule?.FileName ?? throw new ReleaseException("Cannot verify owned worker image before shutdown.");
-                if (!string.Equals(Path.GetFullPath(actual), Path.GetFullPath(worker), StringComparison.OrdinalIgnoreCase))
-                    throw new ReleaseException("Owned worker image changed before shutdown: " + actual);
-                Console.Error.WriteLine($"Stopping owned PlcWorker pid={process.Id} image={actual}");
-                process.Kill(); process.WaitForExit();
-            }
+            if (!tree.WaitForExit(5000)) stop();
+            else tree.Finish();
+            int exitCode = tree.GetExitCode();
             string diagnostics = await stderr;
             if (fault == null && environmentFault == null) result += "\n" + diagnostics;
             if (fault == "background-tia-exit" && !diagnostics.Contains("terminating=False", StringComparison.Ordinal))
                 throw new ReleaseException("Missing CLR non-terminating background exception evidence: " + diagnostics);
-            if (process.ExitCode == 86 || fault == null && process.ExitCode != 0) throw new ReleaseException("PlcWorker smoke " + TiaMcp.Engine.Tests.Shared.FixtureExit.Describe(process.ExitCode, diagnostics));
+            if (exitCode == 86 || fault == null && exitCode != 0)
+                throw new ReleaseException("PlcWorker smoke " + TiaMcp.Engine.Tests.Shared.FixtureExit.Describe(exitCode, diagnostics));
         }
         catch (Exception cleanup) { failure = failure == null ? cleanup : new AggregateException(failure, cleanup); }
         if (failure != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();

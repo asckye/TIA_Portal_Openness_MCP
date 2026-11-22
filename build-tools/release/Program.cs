@@ -178,13 +178,22 @@ internal static class ProcessRunner
         var job = GateWatchdog.ActiveJob;
         bool useJobObject = (job != null || deadline.IsQuery) && OperatingSystem.IsWindows();
         job?.RequireTime();
-        using var ownedTree = desktop != null ? IsolatedDesktopProcess.Start(start, desktop)
+        var ownedTree = desktop != null ? IsolatedDesktopProcess.Start(start, desktop)
             : useJobObject ? WindowsProcessTree.Start(start) : null;
+        Exception? failure = null;
+        try { return RunChild(start, ownedTree, deadline, job, logPath, standardInput, forwardOutput); }
+        catch (Exception ex) { failure = ex; throw; }
+        finally { ownedTree?.Dispose(failure); }
+    }
+
+    private static CommandResult RunChild(ProcessStartInfo start, WindowsProcessTree? ownedTree, ProcessDeadline deadline,
+        GateWatchdog.Job? job, string? logPath, string? standardInput, bool forwardOutput)
+    {
         using var process = ownedTree == null ? new Process { StartInfo = start } : null;
         if (process != null)
         {
             try { WindowsProcessTree.StartRegular(process); }
-            catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
+            catch (Exception ex) { throw new ReleaseException($"Could not start {start.FileName}: {ex.Message}"); }
         }
         void StopTree()
         {

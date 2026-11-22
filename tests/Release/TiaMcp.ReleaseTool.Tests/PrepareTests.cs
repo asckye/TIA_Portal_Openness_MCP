@@ -314,6 +314,7 @@ public sealed class PrepareTests
         Assert.All(PrepareBuild.VersionProjects(context with { Root = StaticCheckVectorTests.Root }), project => Assert.True(File.Exists(project.Path), project.Path));
         var workers = projects.Where(row => row.Kind == "Worker").Select(row => row with { Path = fixture }).ToArray();
         var table = tree.Write("table.proj", PrepareBuild.BuildTableDocument(workers).ToString());
+        // The Windows host gate ran all eight items in 5.2 s. The Codex sandbox can deny MSBuild child-node pipe connections.
         var result = ProcessRunner.Run(Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet",
             ["msbuild", table, "-t:Build", "-m:6", "-nodeReuse:false", "-nologo"], tree.Root, timeoutMilliseconds: 60_000);
         Assert.True(result.ExitCode == 0, $"MSBuild exited {result.ExitCode}.\n{result.StandardOutput}{result.StandardError}");

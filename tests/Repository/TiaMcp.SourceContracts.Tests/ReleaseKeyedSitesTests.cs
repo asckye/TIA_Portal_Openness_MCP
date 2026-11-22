@@ -39,11 +39,30 @@ public sealed class ReleaseKeyedSitesTests(ITestOutputHelper output)
     private static string[] DictionaryKeys(string root, string path, string field)
     {
         var syntax = CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(root, path))).GetRoot();
-        var declaration = syntax.DescendantNodes().OfType<VariableDeclaratorSyntax>().Single(variable => variable.Identifier.Text == field);
-        var dictionary = (ObjectCreationExpressionSyntax)declaration.Initializer!.Value;
-        return dictionary.Initializer!.Expressions.Cast<AssignmentExpressionSyntax>()
-            .Select(row => ((ImplicitElementAccessSyntax)row.Left).ArgumentList.Arguments.Single().Expression)
-            .Select(key => ((LiteralExpressionSyntax)key).Token.ValueText).ToArray();
+        var declaration = Assert.Single(syntax.DescendantNodes().OfType<VariableDeclaratorSyntax>(), variable => variable.Identifier.Text == field);
+        var initializer = (declaration.Initializer?.Value as ObjectCreationExpressionSyntax)?.Initializer;
+        Assert.True(initializer != null, $"{path}: {field} must have a dictionary initializer. Found '{declaration.Initializer?.Value}'.");
+        return initializer.Expressions.Select(row =>
+        {
+            if (row is AssignmentExpressionSyntax { Left: ImplicitElementAccessSyntax { ArgumentList.Arguments: [var argument] } }
+                && argument.Expression is LiteralExpressionSyntax key && key.Kind() == SyntaxKind.StringLiteralExpression)
+                return key.Token.ValueText;
+            throw new Xunit.Sdk.XunitException($"{path}:{row.GetLocation().GetLineSpan().StartLinePosition.Line + 1}: " +
+                $"expected a string-literal dictionary key in {field}. Found '{row}'.");
+        }).ToArray();
+    }
+
+    [Theory]
+    [InlineData("GetKeys()", "Keys must have a dictionary initializer", "GetKeys()")]
+    [InlineData("new Dictionary<string, int> { [computed] = 1 }", "string-literal dictionary key in Keys", "[computed] = 1")]
+    public void Unexpected_policy_syntax_identifies_the_field_and_offending_expression(string initializer, string expectation, string offending)
+    {
+        using var fixture = new OfflineFixtures();
+        File.WriteAllText(Path.Combine(fixture.DirectoryPath, "Policy.cs"), $"class Policy {{ object Keys = {initializer}; }}");
+        var error = Assert.ThrowsAny<Xunit.Sdk.XunitException>(() => DictionaryKeys(fixture.DirectoryPath, "Policy.cs", "Keys"));
+        Assert.Contains("Policy.cs", error.Message);
+        Assert.Contains(expectation, error.Message);
+        Assert.Contains(offending, error.Message);
     }
 
     [Fact]

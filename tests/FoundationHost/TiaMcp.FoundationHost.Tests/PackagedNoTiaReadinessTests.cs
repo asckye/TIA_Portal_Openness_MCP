@@ -28,14 +28,17 @@ public sealed class PackagedNoTiaReadinessTests
         using var data = new IsolatedData(host.Scratch);
         var previousWait = Server.ApprovalWaitOverrideForTests;
         int requests = 0;
+        int? requestedTimeout = null;
         try
         {
             Assert.Equal(Path.Combine(host.Scratch, "config", "approval.settings"), ApprovalSettings.SettingsPath);
             Assert.NotEqual(realPath, ApprovalSettings.SettingsPath);
+            const int isolatedTimeout = 137;
             new ApprovalSettings(true, 1).Save(ApprovalSettings.SettingsPath);
             Assert.Equal(1, ApprovalSettings.Load(ApprovalSettings.SettingsPath).TimeoutSeconds);
             Server.ApprovalWaitOverrideForTests = (card, _, _) => {
                 requests++;
+                requestedTimeout = card.TimeoutSeconds;
                 return Task.FromResult(new ApprovalOutcome(card, false, "workbench-unavailable"));
             };
             const string name = "RestartOpennessWorker";
@@ -58,8 +61,10 @@ public sealed class PackagedNoTiaReadinessTests
             }
             using var files = new ApiFiles(release);
             using var ready = new Host(release, installedApi: files.InstalledApi);
+            new ApprovalSettings(true, isolatedTimeout).Save(ApprovalSettings.SettingsPath);
             var confirmation = await ready.Call(name, new JsonObject { ["confirmRestart"] = true });
             Assert.Equal(1, requests);
+            Assert.Equal(isolatedTimeout, requestedTimeout);
             Assert.Equal("CONFIRMATION_REQUIRED", (string?)confirmation["error"]?["code"]);
             Assert.Equal("workbench-unavailable", (string?)confirmation["error"]?["details"]?["reason"]);
         }
