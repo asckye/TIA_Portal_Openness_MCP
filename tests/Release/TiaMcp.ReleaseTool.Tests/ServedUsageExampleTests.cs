@@ -46,8 +46,7 @@ public sealed class ServedUsageExampleTests
             return usage["example"]!["request"]!["params"]!["arguments"]!.AsObject();
         }
         var aml = Example("BuildDeviceAmlDocument");
-        Assert.Contains("GetSessionState data.outputRoot", (string?)aml["exportFile"]);
-        Assert.EndsWith(".aml", (string?)aml["exportFile"]);
+        Assert.Null(aml["exportFile"]);
         Assert.NotNull(aml["spec"]?["devices"]?[0]);
         if (release == "14sp1") return;
         var transfer = Example("ManageTransferArea");
