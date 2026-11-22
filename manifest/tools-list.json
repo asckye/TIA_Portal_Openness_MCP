@@ -1,7 +1,7 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-rc.1_20261122",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-22T16:19:53.0357390+00:00",
+  "generatedAt": "2026-11-22T16:51:12.3582046+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "ec72b1af09da0cace3517e1e1475809a39b9ceca74699cfebd1d4548ac479d04",
