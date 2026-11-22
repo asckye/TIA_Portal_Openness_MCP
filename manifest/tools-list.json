@@ -1,11 +1,11 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-rc.1_20261122",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-22T16:51:12.3582046+00:00",
+  "generatedAt": "2026-11-22T17:21:17.2305393+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "ec72b1af09da0cace3517e1e1475809a39b9ceca74699cfebd1d4548ac479d04",
-  "workerSha256": "5678fd2a2df0d9449b5e57dcb09475cab1a8b40e34611d1f45ba4cb7fdb0e5c4",
+  "workerSha256": "0a7a39c5b2edbece4b5f0fbea96f60897d911b8d8eacd2cd6f4a1db6bd1cafaf",
   "toolCount": 523,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
@@ -4077,7 +4077,7 @@
       "method": "RunOnlineMonitoringSafetySelfTestV4",
       "returnType": "CallToolResult",
       "parameters": [],
-      "description": "[L0][Diagnostics][EXECUTE]Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, open projects, modify watch tables, write PLC values, or expose forced-value operations. Examples: GetToolUsage(toolName: \"RunOnlineMonitoringSafetySelfTest\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L0][Diagnostics][EXECUTE]Check the online monitoring tool inventory and safeguards against PLC force writes and watch table changes. This read-only self-test requires a ready TIA Openness environment so the worker can inspect the reflection guard. Examples: GetToolUsage(toolName: \"RunOnlineMonitoringSafetySelfTest\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{}"
     },
     {
@@ -4093,7 +4093,7 @@
         "workspaceRoot",
         "reportDirectory"
       ],
-      "description": "[L2][Validation][EXECUTE]Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects. Examples: GetToolUsage(toolName: \"RunOfflineReleaseValidationSuite\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Validation][EXECUTE]Run release smoke checks for PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online monitoring safeguards. The safety check requires a ready TIA Openness environment so the worker can inspect the reflection guard. The suite writes its results to reportDirectory without modifying projects. Examples: GetToolUsage(toolName: \"RunOfflineReleaseValidationSuite\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"workspaceRoot\":\"C:\\\\Examples\\\\work\",\"reportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\"}"
     },
     {
@@ -9263,7 +9263,7 @@
         "title",
         "exportDirectory"
       ],
-      "description": "[L0][Reports][FILE]Generate a read-only acceptance report for the current MCP/TIA environment. The default mode does not attach to TIA or write to the project; it writes Markdown/JSON report files to outputDirectory. Example: {\"exportDirectory\":\"C:\\\\<directory under GetSessionState data.outputRoot>\",\"includeProjectTree\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateAcceptanceReport\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L0][Reports][FILE]Write Markdown and JSON acceptance reports to outputDirectory without modifying the project. The safety self-test requires a ready TIA Openness environment so the worker can inspect the reflection guard. Portal attachment is optional (connectIfNeeded defaults to false). Example: {\"exportDirectory\":\"C:\\\\<directory under GetSessionState data.outputRoot>\",\"includeProjectTree\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"GenerateAcceptanceReport\"), optionally operation or language. outputDirectory and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"includeProjectTree\":true}"
     },
     {
