@@ -81,11 +81,7 @@ namespace TiaMcp.Adapters.Native.Plc
             if (IsProjectNull()) throw new PlcSoftwareException("InvalidState", "No project open.");
             var plc = _session.GetPlcSoftware(softwarePath)
                 ?? throw new PlcSoftwareException("NotFound", "PLC software not found.");
-            // GetPlcSoftware resolves a unique PLC. Bind both the plan and the apply recheck to its exact identity.
-            string exactPath = _session.PlcSoftwarePath(plc);
-            if (!TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(softwarePath, exactPath))
-                throw new AdapterPreconditionException("Resolved PLC identity does not match the requested software path.", nameof(softwarePath));
-            softwarePath = exactPath;
+            TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(softwarePath, _session.PlcSoftwarePath(plc), true);
             string root = Path.GetFullPath(exportDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             var regex = string.IsNullOrWhiteSpace(regexName) ? null : new Regex(regexName, RegexOptions.IgnoreCase);
             var selected = EnumerateTechnologyObjectsRecursive(plc)

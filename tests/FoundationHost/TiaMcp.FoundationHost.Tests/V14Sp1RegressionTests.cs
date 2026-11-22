@@ -125,16 +125,6 @@ public sealed class V14Sp1RegressionTests
     }
 
     [Fact]
-    public async Task Missing_batch_software_path_is_refused_before_alias_lookup()
-    {
-        using var fixture = new VersionControlAdmissionTests.FileToolFixture("14sp1");
-        using var session = fixture.EnterSession();
-        var reply = await fixture.Call("AnalyzePlcCrossReferences", new { groupPath = "" });
-        Rejected(reply.StructuredContent!, "INVALID_ARGUMENT");
-        Assert.Equal("/softwarePath", (string?)reply.StructuredContent!["error"]?["details"]?["parameter"]);
-    }
-
-    [Fact]
     public async Task Artifact_error_reports_only_members_of_the_dependency_cycle()
     {
         using var fixture = new VersionControlAdmissionTests.FileToolFixture("14sp1");

@@ -462,16 +462,9 @@ public sealed class VersionControlAdmissionTests
     {
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
-            if (operation == "ReadSoftwareInfo")
-            {
-                Assert.Equal("PLC", (string?)arguments["softwarePath"]);
-                return Task.FromResult<JsonNode?>(new JsonObject { ["Name"] = "PLC", ["Attributes"] = new JsonArray(),
-                    ["Meta"] = new JsonObject { ["softwarePath"] = "devices/PLC/PLC", ["scope"] = "ordinary PLC software engineering attributes" } });
-            }
             Assert.Equal("ExportBlocks", operation);
             Assert.True((bool)arguments["dryRun"]!);
-            Assert.Equal("devices/PLC/PLC", (string?)arguments["softwarePath"]);
-            var result = TiaMcp.Adapters.PlcBatchExportPolicy.Run("blocks", "C:/Fixture.ap19", (string)arguments["softwarePath"]!, "", false,
+            var result = TiaMcp.Adapters.PlcBatchExportPolicy.Run("blocks", "C:/Fixture.ap19", "PLC", "", false,
                 (string)arguments["exportPath"]!, 128, true, "", Array.Empty<TiaMcp.Adapters.PlcBatchExportSource>(),
                 () => throw new InvalidOperationException("Preview must not write."));
             return Task.FromResult(JsonSerializer.SerializeToNode(result));

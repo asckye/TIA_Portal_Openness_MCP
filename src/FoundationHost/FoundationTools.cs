@@ -364,13 +364,6 @@ internal sealed partial class FoundationTool : McpServerTool
                     Content = new[] { new TextContentBlock { Text = mapped.Content[0].Text } } };
             }
             cancellationToken.ThrowIfCancellationRequested();
-            if (definition.ResponseMember is "BatchExport" or "BatchImport" or "BatchDocumentExport" or "BatchDocumentImport" or "CrossReferenceAnalysis")
-            {
-                string path = BatchSoftwarePath.Require(values);
-                // Directory imports and reviewed exports bind their exact wire identity in the native transport.
-                if (!BatchSoftwarePath.BindAtDispatch(definition.Operation, values))
-                    values["softwarePath"] = await BatchSoftwarePath.Resolve(worker, path, cancellationToken).ConfigureAwait(false);
-            }
             dispatched = true;
             if (definition.ResponseMember == "CrossReferenceAnalysis")
             {
