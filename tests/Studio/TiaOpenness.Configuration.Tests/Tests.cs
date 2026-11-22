@@ -267,7 +267,7 @@ namespace TiaMcpConfigurator
                         // Final design texts (maintainer 2026-11-21): release link and homepage show their targets.
                         (() => Content("OpenReleases"), "GitHub Releases ↗", "GitHub Releases ↗"),
                         (() => Content("OpenData"), "Open folder", "打开文件夹"),
-                        (() => Content("OpenProjectPage"), "github.com/asckye/TIA_Portal_Openness_MCP", "github.com/asckye/TIA_Portal_Openness_MCP"),
+                        (() => Content("OpenProjectPage"), "github.com/asckye/automation-engineering-workbench", "github.com/asckye/automation-engineering-workbench"),
                         (() => Content("RailLog"), "Logs", "日志")
                     };
                     Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Pages.SaveBoth"],
@@ -627,8 +627,8 @@ namespace TiaMcpConfigurator
                 Assert((string)parsedJsonc["url"] == "http://example/a/*b*/", "JSONC URLs preserved while removing comments and trailing commas");
                 // 2.8.0 update band: pure logic without network, then the band itself in the rendered window.
                 Assert(UpdateCheck.Compare("2.8.0", "2.7.62") > 0 && UpdateCheck.Compare("v2.7.62", "2.7.62") == 0 && UpdateCheck.Compare("2.7.9", "2.7.62") < 0 && UpdateCheck.Compare(null, "1.0.0") < 0, "update: numeric version comparison ignores a leading v and sorts empty lowest");
-                Assert(UpdateCheck.TagFromLocation("https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v2.7.62") == "v2.7.62" && UpdateCheck.TagFromLocation("https://github.com/x/y/releases") == null, "update: release page redirect yields the tag");
-                string releaseJson = "{\"tag_name\":\"v2.8.0\",\"html_url\":\"https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v2.8.0\",\"assets\":[{\"name\":\"TIA_MCP_Delivery_v2.8.0_20260921.zip\",\"size\":16147645},{\"name\":\"TIA_MCP_Delivery_v2.8.0_20260921.sha256\",\"size\":64}]}";
+                Assert(UpdateCheck.TagFromLocation("https://github.com/asckye/automation-engineering-workbench/releases/tag/v2.7.62") == "v2.7.62" && UpdateCheck.TagFromLocation("https://github.com/x/y/releases") == null, "update: release page redirect yields the tag");
+                string releaseJson = "{\"tag_name\":\"v2.8.0\",\"html_url\":\"https://github.com/asckye/automation-engineering-workbench/releases/tag/v2.8.0\",\"assets\":[{\"name\":\"TIA_MCP_Delivery_v2.8.0_20260921.zip\",\"size\":16147645},{\"name\":\"TIA_MCP_Delivery_v2.8.0_20260921.sha256\",\"size\":64}]}";
                 var release = UpdateCheck.ParseRelease(releaseJson, "2.7.62", UpdateCheck.Repository);
                 Assert(release.UpdateAvailable && release.Latest == "2.8.0" && release.ZipName == "TIA_MCP_Delivery_v2.8.0_20260921.zip" && release.ZipSize == 16147645 && release.HasSha256 && release.ZipSizeText == "15.4 MB" && release.Source == "api", "update: GitHub release JSON gives version, ZIP asset, size and the .sha256 sidecar");
                 Assert(!UpdateCheck.ParseRelease(releaseJson, "2.8.0", UpdateCheck.Repository).UpdateAvailable && !UpdateCheck.ParseRelease(releaseJson, "2.9.0", UpdateCheck.Repository).UpdateAvailable, "update: same or newer installed version means nothing to do");

@@ -10,7 +10,7 @@ beta.6 V21 M4 记录勘误：`ImportHmiTagTable` 的测试调用把 JSON 路径�
 
 维护者决定（2026-10-20，2026-11-01 修订）：预发布（`X.Y.Z-beta.N`、`X.Y.Z-rc.N`）交给测试者测试，维护方在虚拟机上按[预发布真机验证清单](../guides/beta-tester-checklist.md)回归。下文“发布前必须在真机上完成”
 “失败即停止发布”等真机门槛不约束预发布；预发布说明必须带由本台账与[官方 API 审计 VM 核对清单](api-audit-vm-checklist.md)生成的
-“Not verified on a real TIA Portal”清单（`generate-prerelease-notes`）。正式版本 `X.Y.Z` 的放行条件见 [ADR 0023](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/decisions/0023-release-4-0-final-criteria.md)：本台账列出需要真机确认的项目，由 VM 回归按 [ADR 0020](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/decisions/0020-prereleases-tested-by-users.md) 覆盖。
+“Not verified on a real TIA Portal”清单（`generate-prerelease-notes`）。正式版本 `X.Y.Z` 的放行条件见 [ADR 0023](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/decisions/0023-release-4-0-final-criteria.md)：本台账列出需要真机确认的项目，由 VM 回归按 [ADR 0020](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/decisions/0020-prereleases-tested-by-users.md) 覆盖。
 
 ## 未发布改动的验收边界
 
@@ -569,11 +569,11 @@ family 均为 `state=current`、`L5=NOT RUN`，并列出当前入口。默认构
 
 ## 保留的历史记录
 
-[原逐工具台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/reference/real-machine-ledger.md)保留早期 V21 测试工程、设备、工具行和现场修复过程。该台账主要对应 2.7.39–2.7.62；旧汇总中“调用过”“前置条件拒绝”“环境拒绝”与真实成功分列，不能将总行数称为全部验收通过。
+[原逐工具台账](https://github.com/asckye/automation-engineering-workbench/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/reference/real-machine-ledger.md)保留早期 V21 测试工程、设备、工具行和现场修复过程。该台账主要对应 2.7.39–2.7.62；旧汇总中“调用过”“前置条件拒绝”“环境拒绝”与真实成功分列，不能将总行数称为全部验收通过。
 
 历史证据中，标准 CPU / PLCSIM Advanced 的下载、上线、比较、变量读写与单步场景曾完成；这些结果仅适用于当时设备、工程与软件组合，不能推广到其他版本、F-CPU 或真实生产设备。早期某个 BICO 参数写入成功，也不能证明 `p2051[0]` 读取已通过。
 
-[Unified 改名现场完整快照](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/development/unified-library-rename-incident-20261001.md)保存两个测试位置、时间、调用标识与源工程读回结果。它不是独立于 MCP 的最小 C# 复现，也没有确定所有 V21 补丁的行为。
+[Unified 改名现场完整快照](https://github.com/asckye/automation-engineering-workbench/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/development/unified-library-rename-incident-20261001.md)保存两个测试位置、时间、调用标识与源工程读回结果。它不是独立于 MCP 的最小 C# 复现，也没有确定所有 V21 补丁的行为。
 
 ## 新记录应包含什么
 

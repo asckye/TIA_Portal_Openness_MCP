@@ -29,6 +29,48 @@ internal static class RepositoryChecks
         }
     }
     internal static List<string> ForbiddenScripts(IEnumerable<string> names) => names.Distinct().Order(StringComparer.Ordinal).Where(p => Path.GetExtension(p).ToLowerInvariant() is ".ps1" or ".psm1" or ".bat" or ".cmd").Select(p => "Forbidden tracked script file: " + p).ToList();
+    internal const string FormerRepositoryName = "TIA_Portal_" + "Openness_MCP";
+
+    internal static List<string> RepositoryNameErrors(string root, IEnumerable<string> names)
+    {
+        const string lastPublishedHeading = "## [4.0.0-rc.1]";
+        var changelog = Repository.ReadSource(Path.Combine(root, "CHANGELOG.md"));
+        var historyStart = changelog.IndexOf("\n" + lastPublishedHeading, StringComparison.Ordinal);
+        var history = historyStart < 0 ? "" : changelog[historyStart..];
+        var publishedNotes = Regex.Matches(history, @"^## \[(" + ReleaseVersions.VersionPattern + @")\]", RegexOptions.Multiline)
+            .Select(m => $"docs/releases/v{m.Groups[1].Value}.md").ToHashSet(StringComparer.Ordinal);
+        // These repositories have different owners. A local checkout directory can also retain its original name.
+        var otherReferences = new Regex(@"(?:\b(?:bulaofen0036-coder|chin9933)/|\b[A-Z]:[\\/](?:[\w .-]*[\\/])*)" + FormerRepositoryName,
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        var errors = new List<string>();
+        foreach (var name in names.Distinct().Order(StringComparer.Ordinal))
+        {
+            if (name.StartsWith("docs/archive/", StringComparison.Ordinal) || name.StartsWith("manifest/history/", StringComparison.Ordinal)
+                || Regex.IsMatch(name, @"^manifest/publication-[^/]+\.json$") || publishedNotes.Contains(name)) continue;
+            var path = Path.Combine(root, name);
+            if (!File.Exists(path)) continue;
+            var content = name == "CHANGELOG.md" ? changelog : File.ReadAllText(path);
+            if (!content.Contains(FormerRepositoryName, StringComparison.OrdinalIgnoreCase) || content.Contains('\0')) continue;
+            bool inHistory = false;
+            int number = 0;
+            using var reader = new StringReader(content);
+            while (reader.ReadLine() is { } line)
+            {
+                number++;
+                if (name == "CHANGELOG.md" && line.StartsWith(lastPublishedHeading, StringComparison.Ordinal)) inHistory = true;
+                if (inHistory && !line.StartsWith("[Unreleased]:", StringComparison.OrdinalIgnoreCase)) continue;
+                // The regression for the published beta.6 note asserts its original form URL verbatim.
+                if (name == "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs"
+                    && line.Trim() == "Assert.Contains(\"https://github.com/asckye/" + FormerRepositoryName
+                        + "/issues/new?template=prerelease_report.md\", report, StringComparison.Ordinal);") continue;
+                if (line.Contains(FormerRepositoryName, StringComparison.OrdinalIgnoreCase)
+                    && otherReferences.Replace(line, "").Contains(FormerRepositoryName, StringComparison.OrdinalIgnoreCase))
+                    errors.Add($"{name}:{number}: retired repository name (use asckye/automation-engineering-workbench)");
+            }
+        }
+        return errors;
+    }
+
     internal static List<string> ProductNames(string root, IEnumerable<string> names)
     {
         string[] historical = ["manifest/contracts/", "manifest/history/", "manifest/publication-", "docs/releases/", "docs/archive/", "docs/development/evidence/", "reference/siemens-openness/", "reference/siemens-code-snippets/", "third_party/"];
@@ -129,6 +171,7 @@ internal static class RepositoryChecks
         var package = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json")))!;
         errors.AddRange(ForbiddenScripts(tracked.Where(p => File.Exists(Path.Combine(root, p)))));
         errors.AddRange(ProductNames(root, names));
+        errors.AddRange(RepositoryNameErrors(root, git ? names : names.Where(p => !p.Split('/').Any(Skip.Contains))));
         var count = 0;
         foreach (var source in Documents(root))
         {

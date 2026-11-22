@@ -19,7 +19,7 @@ internal static class PrereleaseNotes
     internal const string LedgerPath = "docs/reference/real-machine-ledger.md";
     internal const string ChecklistPath = "docs/reference/api-audit-vm-checklist.md";
     // Neither source ships in the package, so the notes link to them on GitHub.
-    private const string Repository = "https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/";
+    private const string Repository = "https://github.com/asckye/automation-engineering-workbench/blob/master/";
 
     // Ledger sections whose table rows are open real-machine items for the next release. A renamed or removed section fails the generator.
     internal static readonly string[] LedgerSections =

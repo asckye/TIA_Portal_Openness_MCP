@@ -257,7 +257,7 @@
             <StackPanel>
               <DockPanel>
                 <TextBlock Text="{l:Tr Settings.Homepage}" Style="{StaticResource Primer.Muted}" VerticalAlignment="Center"/>
-                <Button x:Name="OpenProjectPage" HorizontalAlignment="Right" Content="github.com/asckye/TIA_Portal_Openness_MCP"
+                <Button x:Name="OpenProjectPage" HorizontalAlignment="Right" Content="github.com/asckye/automation-engineering-workbench"
                   AutomationProperties.Name="{l:Tr Settings.Homepage}" Style="{StaticResource Primer.Link}" FontFamily="{DynamicResource Ui.FontMono}"/>
               </DockPanel>
               <Border Style="{StaticResource Primer.SettingsDivider}" Height="1" Margin="0,8"/>

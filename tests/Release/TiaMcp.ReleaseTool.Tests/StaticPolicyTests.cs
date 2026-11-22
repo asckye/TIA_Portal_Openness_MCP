@@ -49,6 +49,29 @@ internal sealed class StaticTree(bool tolerateLockedCleanup = false) : IDisposab
 [Trait("Category", "StaticChecks")]
 public sealed class StaticPolicyTests
 {
+    [Fact]
+    public void Retired_repository_names_fail_in_live_files_and_contracts()
+    {
+        using var tree = new StaticTree();
+        var slug = RepositoryChecks.FormerRepositoryName;
+        var old = "asckye/" + slug;
+        var upstream = "https://github.com/bulaofen0036-coder/" + slug;
+        var files = new Dictionary<string, string>
+        {
+            ["CHANGELOG.md"] = $"## [Unreleased]\n{old}\n## [4.0.0-rc.1] - 2026-11-22\n{old}\n[Unreleased]: https://github.com/{old}",
+            ["docs/archive/note.md"] = old, ["docs/releases/v4.0.0-rc.1.md"] = old,
+            ["manifest/history/record.json"] = old, ["manifest/publication-v3.3.0.json"] = old,
+            ["docs/releases/v4.0.0.md"] = "git@github.com:" + old + ".git", ["docs/new.txt"] = slug.ToLowerInvariant(),
+            ["manifest/contracts/v4/baseline/21.json"] = old, ["plugin/new.toml"] = upstream + " " + old,
+            ["NOTICE.md"] = upstream, ["local.config"] = @"D:\Code\" + slug + @"\bin",
+            ["tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs"] = "https://github.com/" + old + "/issues"
+        };
+        foreach (var (name, content) in files) tree.Write(name, content);
+        var errors = RepositoryChecks.RepositoryNameErrors(tree.Root, files.Keys);
+        Assert.Equal(new[] { "CHANGELOG.md:2", "CHANGELOG.md:5", "docs/new.txt:1", "docs/releases/v4.0.0.md:1",
+            "manifest/contracts/v4/baseline/21.json:1", "plugin/new.toml:1", "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs:1" },
+            errors.Select(error => error.Split(": ", 2)[0]));
+    }
 
     [Fact]
     public void CSharpFeatureCasesDeduplicateExactConfigurationsAndKeepDifferentProperties()

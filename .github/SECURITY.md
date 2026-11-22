@@ -12,7 +12,7 @@ version-specific or original-project tracking branches.
 
 Use GitHub's private reporting instead:
 **Security → Advisories → Report a vulnerability** on this repository
-(<https://github.com/asckye/TIA_Portal_Openness_MCP/security/advisories/new>).
+(<https://github.com/asckye/automation-engineering-workbench/security/advisories/new>).
 
 Please include:
 

@@ -99,7 +99,7 @@ Unified button events and global modules use different operations. Document impo
 
 - [Beginner guide (Chinese)](../../docs/getting-started/beginners.zh-CN.md)
 - [Version scope](../../docs/reference/version-tools.md)
-- [Example library and evidence](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md)
+- [Example library and evidence](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/real-machine-testing.md)
 - [Current capabilities](../../docs/reference/capabilities.md)
 - [Known limits](../../docs/troubleshooting/openness-limitations.md)
 

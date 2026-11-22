@@ -11753,7 +11753,7 @@
       "arguments": {},
       "parameters": {
         "repository": {
-          "exampleValue": "asckye/TIA_Portal_Openness_MCP"
+          "exampleValue": "asckye/automation-engineering-workbench"
         },
         "timeoutSeconds": {
           "exampleValue": 15
@@ -34844,7 +34844,7 @@
           "arguments": {},
           "parameters": {
             "repository": {
-              "exampleValue": "asckye/TIA_Portal_Openness_MCP"
+              "exampleValue": "asckye/automation-engineering-workbench"
             },
             "timeoutSeconds": {
               "exampleValue": 15
@@ -50883,7 +50883,7 @@
           "arguments": {},
           "parameters": {
             "repository": {
-              "exampleValue": "asckye/TIA_Portal_Openness_MCP"
+              "exampleValue": "asckye/automation-engineering-workbench"
             },
             "timeoutSeconds": {
               "exampleValue": 15

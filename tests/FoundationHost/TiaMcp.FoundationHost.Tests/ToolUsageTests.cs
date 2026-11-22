@@ -159,6 +159,13 @@ internal static class ToolUsageTests
                 check((string?)usage["profile"] == "plc-foundation", "every tool usage has the common public profile: " + release + "/" + tool.ProtocolTool
                         .Name);
                 check(JsonNode.DeepEquals(usage["inputSchema"], JsonNode.Parse(tool.ProtocolTool.InputSchema.GetRawText())), "usage reflects actual schema");
+                if (tool.ProtocolTool.Name == "CheckProductUpdate")
+                {
+                    const string repository = "asckye/automation-engineering-workbench";
+                    check((string?)usage["inputSchema"]?["properties"]?["repository"]?["default"] == repository
+                        && (string?)usage["parameterSources"]?["repository"]?["exampleValue"] == repository,
+                        "update schema default and usage example name the current repository: " + release);
+                }
                 check((string?)usage["example"]!["kind"] == "parameterized-call-example",
                     "every deployed foundation tool has a maintained call example: " + release + "/" + tool.ProtocolTool.Name
                     + " (" + (string?)usage["example"]!["kind"] + ")");

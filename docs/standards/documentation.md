@@ -236,7 +236,7 @@
 |---|---|
 | MUST | 链接文字说明目标是什么，不用“这里”“此处”“链接”。 |
 | MUST | 两端都随包或都不随包时用相对链接；随包文档之间不用绝对链接。 |
-| MUST | 随包文档链接不随包的文件时，用 `https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/<路径>` 绝对链接（有意偏差 DOC-24）；发布记录中的这类链接在发布提交中固定到发布标签。 |
+| MUST | 随包文档链接不随包的文件时，用 `https://github.com/asckye/automation-engineering-workbench/blob/master/<路径>` 绝对链接（有意偏差 DOC-24）；发布记录中的这类链接在发布提交中固定到发布标签。 |
 | SHOULD | 正文不出现裸 URL，用页面标题作链接文字（`CHANGELOG.md` 的历史条目除外，DOC-25）。 |
 | SHOULD | 章节锚点只链接稳定的标题；改标题时同时修改指向它的链接。 |
 

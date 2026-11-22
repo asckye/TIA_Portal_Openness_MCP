@@ -13,7 +13,7 @@ V20/V21 MCP host 在 TIA 未安装、检测到的 TIA 版本不匹配、Openness
 | 问题 | 当前处理与剩余边界 |
 |---|---|
 | `ManageStartdriveParameter` 读取 BICO `p2051[0]` 时 TIA 崩溃 | 已按官方 `Parameters.Find(name).Value` 路线改为精确单值读取，仅在找不到条目时检查只读视图；不展开位、限值、枚举或继续读取源参数值。离线回归通过，原生复测 **NOT RUN**，根因未确认。返回另一个 `DriveParameter` 表示连接来源，普通值按标量解释，`null` 保留未知，不能当作零、实时值或未连接证明。 |
-| Unified 脚本模块库类型 `Name` 修改 | 指定样本在项目库和独立全局库两次测试中均伴随 TIA 退出，没有已验证修复；“先在全局库改名再同步”也失败。[原生证据](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/history/unified-library-rename-native-20261001.json)。 |
+| Unified 脚本模块库类型 `Name` 修改 | 指定样本在项目库和独立全局库两次测试中均伴随 TIA 退出，没有已验证修复；“先在全局库改名再同步”也失败。[原生证据](https://github.com/asckye/automation-engineering-workbench/blob/master/manifest/history/unified-library-rename-native-20261001.json)。 |
 | PLC 与 Unified 原生交叉引用 | 维护者于 2026-11-20 决定在 V21 默认允许原生查询。PLC 查询曾导致 V21 退出，编译通过也不能保证稳定。未查询时引用数量仍未知。 |
 | HMI 深层属性读取 | 故障或限制下可能仅返回部分快照；`HmiSystemDiagnosisControl.ScriptDiagnosisOverviewText` 暂缓读取。[快照诊断](hmi-snapshots.md)说明完整性、会话阻断与日志。 |
 
@@ -62,4 +62,4 @@ HMI 路径使用绝对 `/Group/Sub/Name`，段按 URI 转义；相对路径和�
 
 导入先检查状态、消息与实际返回对象；SIMATIC SD 使用目录及不带扩展名的文件名。编译检查错误数和完整嵌套诊断，不能只看请求返回。保存工程需要独立保存操作；下载是另一项明确动作。
 
-当返回 `mayHaveChanged`、部分结果或结果未知时，先核对当前工程与日志，避免自动重复写入。`RETURNED` 日志只证明调用返回，最后一个 `BEFORE` 也不能单独证明崩溃根因。真实验收与历史原文见[证据索引](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)。
+当返回 `mayHaveChanged`、部分结果或结果未知时，先核对当前工程与日志，避免自动重复写入。`RETURNED` 日志只证明调用返回，最后一个 `BEFORE` 也不能单独证明崩溃根因。真实验收与历史原文见[证据索引](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/real-machine-ledger.md)。

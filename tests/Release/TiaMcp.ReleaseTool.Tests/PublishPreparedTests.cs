@@ -10,6 +10,13 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class PublishPreparedTests
 {
+    [Fact]
+    public void Publish_commands_default_to_the_renamed_repository()
+    {
+        var options = Options.Parse(["-Version", "4.0.0-rc.2"], Program.BooleanOptions);
+        Assert.Equal("asckye/automation-engineering-workbench", ReleaseCommands.PreparedPublishOptions(options).Repository);
+    }
+
     [Theory]
     [InlineData("old-draft-body", "run upload-draft")]
     [InlineData("missing", "no candidate")]

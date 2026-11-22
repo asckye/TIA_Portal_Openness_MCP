@@ -1,8 +1,10 @@
 # Change Log
 
-格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
+格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/automation-engineering-workbench/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
 
 ## [Unreleased]
+
+- The [repository](https://github.com/asckye/automation-engineering-workbench) moved. Old links redirect to the new address.
 
 ## [4.0.0-rc.1] - 2026-11-22
 
@@ -1059,7 +1061,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 - [v2.7.3](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/archive/release-notes.md)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.2...HEAD
+[Unreleased]: https://github.com/asckye/automation-engineering-workbench/compare/v2.9.2...HEAD
 [2.9.2]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.1...v2.9.2
 [2.9.1]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.1...v2.9.0

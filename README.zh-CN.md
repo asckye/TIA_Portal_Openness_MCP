@@ -1,11 +1,11 @@
 # 自动化工程工作台
 
-[English](README.md) · [新手使用指南](docs/getting-started/beginners.zh-CN.md) · [文档目录](docs/README.md) · [下载交付包](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)
+[English](README.md) · [新手使用指南](docs/getting-started/beginners.zh-CN.md) · [文档目录](docs/README.md) · [下载交付包](https://github.com/asckye/automation-engineering-workbench/releases)
 
 面向 Siemens TIA Portal Openness 的 MCP 服务器与 Windows 桌面工作台，精确支持 **V14 SP1、V15.1 及 V16–V21** 八个版本。既可接入各类 AI 编程客户端，也可在工作台内直接操作项目，提供浏览、PLC/HMI 生成与导入导出、编译、测试与诊断，并默认由“预览预检、工作台人工审批、审计哈希链与会话隔离 worker”保护工程安全。
 
 > [!NOTE]
-> **名称与版本说明**：原名 **TIA Portal Openness MCP**。可执行文件 `TiaOpenness.exe`、Claude Code 插件 ID `tia-portal-openness-mcp`、MCP 服务名 `tia-portal` 和仓库地址保持不变，现有配置无需修改。本页说明尚未正式发布的 4.0 源码（当前预发布：[v4.0.0-rc.1](docs/releases/v4.0.0-rc.1.md)），GitHub 的 **Latest** 仍为稳定版 3.3；已下载版本以包内文档为准。
+> **名称与版本说明**：原名 **TIA Portal Openness MCP**。可执行文件 `TiaOpenness.exe`、Claude Code 插件 ID `tia-portal-openness-mcp` 和 MCP 服务名 `tia-portal` 继续兼容现有配置。GitHub 会将旧仓库链接重定向至新地址。本页说明尚未正式发布的 4.0 源码（当前预发布：[v4.0.0-rc.1](docs/releases/v4.0.0-rc.1.md)），GitHub 的 **Latest** 仍为稳定版 3.3；已下载版本以包内文档为准。
 
 ![AI MCP 客户端与工作台项目页共享 FoundationHost 会话，由匹配版本的隔离 PLC worker 操作 TIA Portal](docs/assets/architecture.zh-CN.svg)
 
@@ -20,7 +20,7 @@
 ## 快速开始
 
 > [!IMPORTANT]
-> 从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) 下载交付 ZIP 及其 `.sha256` 校验文件，完整解压到较短的固定目录。试用 4.0 beta 或 rc 请选择标有 **Pre-release** 的条目。4.0.0 正式发布后，**Latest** 下的交付包名为 `TIA_MCP_v4.0.0_<日期>.zip`。GitHub 的 `Source code` 压缩包不含运行二进制。可执行文件尚未签名，首次运行时 Windows SmartScreen 可能提示警告。
+> 从 [Releases](https://github.com/asckye/automation-engineering-workbench/releases) 下载交付 ZIP 及其 `.sha256` 校验文件，完整解压到较短的固定目录。试用 4.0 beta 或 rc 请选择标有 **Pre-release** 的条目。4.0.0 正式发布后，**Latest** 下的交付包名为 `TIA_MCP_v4.0.0_<日期>.zip`。GitHub 的 `Source code` 压缩包不含运行二进制。可执行文件尚未签名，首次运行时 Windows SmartScreen 可能提示警告。
 
 4.0 交付包不含西门子 TIA Portal 程序集，Openness 从用户自己的 TIA 安装中加载。3.x 已发布附件保持原样。
 
@@ -72,11 +72,11 @@
 
 - **按需发现与统一示例入口**：八个版本默认使用 lite 档以节省上下文；其余工具通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。调用不熟悉的工具前，使用 `GetToolUsage(toolName, operation)` 获取当前版本的参数、完整编程示例 (`language` / `exampleId`) 和结果解释；官方 API 模式与本项目封装示例分别标明。
 - **统一入口与隔离 worker**：交付包根入口为 `TiaOpenness.exe`，八版宿主统一入口为 `runtime/v<发布键>/TiaMcp.FoundationHost.exe --release-key <发布键>`。宿主自动启动 `worker/` 下对应版本的 PLC worker（V20/V21 完整工具目录也由该 worker 执行），八版共有工具使用同一份 Foundation 契约。V14 SP1、V15.1 不等于原版 V14、V15。详细范围见[逐版本工具说明](docs/reference/version-tools.md)和实际服务的 `tools/list`。
-- **契约、容错与安全**：V4 响应信封包含 `ok`、`data`、`error` 和 `meta`。结果未知的写入 (`OUTCOME_UNKNOWN`) 从不自动重放，重试前须先核对目标状态。更多内容见[已接入生态工具](docs/reference/ecosystem-tools.md)和[安全标准与威胁模型](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md)。
+- **契约、容错与安全**：V4 响应信封包含 `ok`、`data`、`error` 和 `meta`。结果未知的写入 (`OUTCOME_UNKNOWN`) 从不自动重放，重试前须先核对目标状态。更多内容见[已接入生态工具](docs/reference/ecosystem-tools.md)和[安全标准与威胁模型](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/security.md)。
 
 ## 环境要求与验收边界
 
-- **运行环境**：按需独立安装对应版本的 TIA Portal、Openness 及许可证，并将当前 Windows 用户加入 `Siemens TIA Openness` 用户组。工作台与宿主所需的 .NET 10 运行时已随包附带 (`runtime/dotnet`)；Openness 桥接进程和 PLC worker 需要 .NET Framework 4.8（Windows 10 1903 及以后已自带）。目录结构见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#3-运行时布局)。
+- **运行环境**：按需独立安装对应版本的 TIA Portal、Openness 及许可证，并将当前 Windows 用户加入 `Siemens TIA Openness` 用户组。工作台与宿主所需的 .NET 10 运行时已随包附带 (`runtime/dotnet`)；Openness 桥接进程和 PLC worker 需要 .NET Framework 4.8（Windows 10 1903 及以后已自带）。目录结构见[运行时布局](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/design.md#3-运行时布局)。
 - **验证边界**：八版本运行文件、工作台、协议、离线功能及官方 SDK / XSD 检查均独立记录于真机验收之外；新增功能的真实 TIA 项目验收仍为 **NOT RUN**。工具目录存在或构建通过不代表所有设备、补丁和选件均已通过真实项目验证，当前范围与限制见[能力与验收说明](docs/reference/capabilities.md)。
 
 ## 开发和维护
@@ -89,7 +89,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1 -BuildOn
 
 `-BuildOnly` 仅构建并打包八个版本，不运行完整检查门禁，也不生成可发布候选。
 
-[构建与验证](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/validation.md) · [发布流程](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/release.md) · [开发进度](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/progress.md) · [变更记录](CHANGELOG.md) · [第三方许可证](docs/licenses/THIRD-PARTY-NOTICES.md)
+[构建与验证](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/validation.md) · [发布流程](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/release.md) · [开发进度](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/plan/progress.md) · [变更记录](CHANGELOG.md) · [第三方许可证](docs/licenses/THIRD-PARTY-NOTICES.md)
 
 ## 来源、许可证和商标
 

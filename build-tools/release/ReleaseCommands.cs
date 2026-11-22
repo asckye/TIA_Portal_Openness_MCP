@@ -42,7 +42,7 @@ internal static partial class ReleaseCommands
 
     internal static PublishOptions PreparedPublishOptions(Options options) => new(
         options.Get("Version") ?? throw new ReleaseException("-Version is required"), options.Get("Token", ""),
-        options.Get("Repository", "asckye/TIA_Portal_Openness_MCP"), options.Get("ApiBaseUrl", "https://api.github.com"),
+        options.Get("Repository", "asckye/automation-engineering-workbench"), options.Get("ApiBaseUrl", "https://api.github.com"),
         false, false, GitExecutable: options.Get("Git", "git"));
 
     private static int UploadPreparedDraft(Options options)

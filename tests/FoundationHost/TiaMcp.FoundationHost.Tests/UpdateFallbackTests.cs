@@ -2,17 +2,63 @@ extern alias toolpipeline;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
+using TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
 public sealed class UpdateFallbackTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Stable_update_uses_the_renamed_repository_and_follows_the_old_API_redirect(bool legacy)
+    {
+        const string current = "asckye/automation-engineering-workbench";
+        const string former = "asckye/TIA_Portal_" + "Openness_MCP";
+        const string renamedPath = "/repos/" + current + "/releases/latest";
+        const string formerPath = "/repos/" + former + "/releases/latest";
+        var requests = new List<string>();
+        await using var api = WebApplication.CreateSlimBuilder().Build();
+        api.Urls.Add("http://127.0.0.1:0");
+        api.MapGet(formerPath, () =>
+        {
+            requests.Add(formerPath);
+            return Results.Redirect(renamedPath, permanent: true);
+        });
+        api.MapGet(renamedPath, () =>
+        {
+            requests.Add(renamedPath);
+            return Results.Json(new { tag_name = "v4.0.0", html_url = "https://github.com/" + current + "/releases/tag/v4.0.0" });
+        });
+        await api.StartAsync();
+        using var http = new HttpClient(new LoopbackApiHandler(new Uri(api.Urls.Single())));
+        var result = await Host.CheckForUpdate(legacy ? former : UpdateLogic.DefaultRepository, 15, "3.3.0", http);
+        Assert.Equal("https://api.github.com" + (legacy ? formerPath : renamedPath), (string?)result.Meta!["releaseApiUrl"]);
+        Assert.Equal(legacy ? new[] { formerPath, renamedPath } : new[] { renamedPath }, requests);
+        Assert.Equal("api", (string?)result.Meta["source"]);
+        Assert.Equal("4.0.0", (string?)result.Meta["latestVersion"]);
+        Assert.True((bool?)result.Meta["updateAvailable"]);
+    }
+
+    // Route the initial GitHub GET to the fixture. HttpClientHandler processes the actual HTTP 301.
+    private sealed class LoopbackApiHandler(Uri endpoint) : DelegatingHandler(new HttpClientHandler { UseProxy = false })
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Assert.Equal("https://api.github.com", request.RequestUri!.GetLeftPart(UriPartial.Authority));
+            request.RequestUri = new Uri(endpoint, request.RequestUri.PathAndQuery);
+            return base.SendAsync(request, cancellationToken);
+        }
+    }
+
     [Fact]
     public async Task Prerelease_install_rate_limited_reports_latest_unknown()
     {
         using var handler = new RecordingHandler(false);
         using var http = new HttpClient(handler);
-        var result = await Host.CheckForUpdate("asckye/TIA_Portal_Openness_MCP", 15, "4.0.0-beta.3", http);
+        var result = await Host.CheckForUpdate("asckye/automation-engineering-workbench", 15, "4.0.0-beta.3", http);
         Assert.False((bool?)result.Meta!["success"]);
         Assert.Null(result.Meta["latestVersion"]);
         Assert.NotNull(result.Meta["apiProblem"]);
@@ -30,7 +76,7 @@ public sealed class UpdateFallbackTests
     {
         using var handler = new RecordingHandler(true);
         using var http = new HttpClient(handler);
-        var result = await Host.CheckForUpdate("asckye/TIA_Portal_Openness_MCP", 15, "3.3.0", http);
+        var result = await Host.CheckForUpdate("asckye/automation-engineering-workbench", 15, "3.3.0", http);
         Assert.True((bool?)result.Meta!["success"]);
         Assert.Equal("3.3.0", (string?)result.Meta["latestVersion"]);
         Assert.Contains(handler.Requests, url => url.EndsWith("/releases/latest", StringComparison.Ordinal));
@@ -42,7 +88,7 @@ public sealed class UpdateFallbackTests
     {
         using var handler = new RecordingHandler(false);
         using var http = new HttpClient(handler);
-        var result = await Host.CheckForUpdate("asckye/TIA_Portal_Openness_MCP", 15, "3.3.0", http);
+        var result = await Host.CheckForUpdate("asckye/automation-engineering-workbench", 15, "3.3.0", http);
         Assert.True((bool?)result.Meta!["success"]);
         Assert.DoesNotContain(" MB", result.Items!.First());
     }
@@ -82,10 +128,10 @@ public sealed class UpdateFallbackTests
             if (url.EndsWith("/releases/latest", StringComparison.Ordinal))
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) {
                     RequestMessage = new HttpRequestMessage(HttpMethod.Get,
-                        "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.3.0"), Content = new StringContent("") });
+                        "https://github.com/asckye/automation-engineering-workbench/releases/tag/v3.3.0"), Content = new StringContent("") });
             Assert.Contains("expanded_assets/v3.3.0", url);
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request,
-                Content = new StringContent("<a href=\"/asckye/TIA_Portal_Openness_MCP/releases/download/v3.3.0/"
+                Content = new StringContent("<a href=\"/asckye/automation-engineering-workbench/releases/download/v3.3.0/"
                     + "TIA_MCP_Delivery_v3.3.0_20260101.zip\">ZIP</a>" + (size ? "<span>512 MB</span>" : "")) });
         }
     }

@@ -124,10 +124,10 @@ V21 默认允许原生查询。PLC 查询曾导致 TIA Portal 退出，有时发
 
 | 情况 | 使用的表单 |
 |---|---|
-| 完成了一个检查项或说明清单中的编号项（通过或失败都报告） | [真机验证结果](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=real_machine_result.yml) |
-| 工具返回错误结果、TIA 或 worker 退出、文档与行为不符 | [问题报告](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=bug_report.yml) |
+| 完成了一个检查项或说明清单中的编号项（通过或失败都报告） | [真机验证结果](https://github.com/asckye/automation-engineering-workbench/issues/new?template=real_machine_result.yml) |
+| 工具返回错误结果、TIA 或 worker 退出、文档与行为不符 | [问题报告](https://github.com/asckye/automation-engineering-workbench/issues/new?template=bug_report.yml) |
 
-每个 Issue 写一个检查项和一个 TIA 版本。维护者把收到的报告记入[测试者反馈台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/progress.md)，复核通过的真机结果再记入[真机验收台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)。已知限制见[Openness 限制和已知问题](../troubleshooting/openness-limitations.md)。
+每个 Issue 写一个检查项和一个 TIA 版本。维护者把收到的报告记入[测试者反馈台账](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/plan/progress.md)，复核通过的真机结果再记入[真机验收台账](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/real-machine-ledger.md)。已知限制见[Openness 限制和已知问题](../troubleshooting/openness-limitations.md)。
 
 ## NO-LOCK Part 1 真机核对
 

@@ -91,7 +91,7 @@ HTTP 服务检查所有请求的 Host 和 Origin（包括健康检查）。允�
 
 ### 工具凭据
 
-需要密码的工具直接接收相应的凭据参数。原来支持保管库的参数收到以 `vault:` 开头的值时会在审批和派发前返回 `INVALID_ARGUMENT`。审批卡、日志和审计对凭据脱敏。详见[安全规范](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md)。
+需要密码的工具直接接收相应的凭据参数。原来支持保管库的参数收到以 `vault:` 开头的值时会在审批和派发前返回 `INVALID_ARGUMENT`。审批卡、日志和审计对凭据脱敏。详见[安全规范](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/security.md)。
 
 ### MCP 会话与 worker
 
@@ -130,7 +130,7 @@ Foundation 的单项软件工具接受工程树中的精确 `softwarePath`，也
 
 Foundation worker 的前置参数错误会把可修正的 worker 消息放在 `error.message`，并在 `INVALID_ARGUMENT` 中标出参数；路径和密钥按既有脱敏规则处理，消息长度有上限。读失败的诊断位于 `error.details.nativeMessage`。未知写入仍返回 `OUTCOME_UNKNOWN`，worker 消息位于错误详情中；先核对 TIA 状态，再按结果要求重置会话。
 
-MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待工作台审批后才派发；`dryRun=true` 和候选工具的 `mode=preview` 不等待审批，也不作为写请求写入审计。`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 的实际执行也须审批，尽管工具目录将它们标为 `SESSION`；连接、附着、打开和断开等其他会话操作仍不审批。拒绝、默认 120 秒超时或工作台不可用时，返回 `CONFIRMATION_REQUIRED`，操作在开始前被拒绝；MCP 客户端不能自行审批。审批、决定和操作结果记录在共享 `data/logs/audit` 哈希链，可通过工作台审计页或 `tia audit verify` 校验。哈希链只验证保留记录间的完整性，不能证明整段日志未被删除。诊断调用包位于 `data/diagnostics`，普通引擎和工作台日志位于 `data/logs`；详细路径和只读安装回退见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md)。
+MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待工作台审批后才派发；`dryRun=true` 和候选工具的 `mode=preview` 不等待审批，也不作为写请求写入审计。`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 的实际执行也须审批，尽管工具目录将它们标为 `SESSION`；连接、附着、打开和断开等其他会话操作仍不审批。拒绝、默认 120 秒超时或工作台不可用时，返回 `CONFIRMATION_REQUIRED`，操作在开始前被拒绝；MCP 客户端不能自行审批。审批、决定和操作结果记录在共享 `data/logs/audit` 哈希链，可通过工作台审计页或 `tia audit verify` 校验。哈希链只验证保留记录间的完整性，不能证明整段日志未被删除。诊断调用包位于 `data/diagnostics`，普通引擎和工作台日志位于 `data/logs`；详细路径和只读安装回退见[运行时布局](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/design.md)。
 
 同一次 MCP 实际写调用只记录一条 `request`，使用响应 `meta.requestId`，已知时带上 `planHash`。获批或关闭审批后的实际派发才记录 `start`；拒绝和超时记录 request、审批决定及 end，不记录 start。各类审计事件用同一 requestId 关联响应和审批决定。
 
@@ -180,9 +180,9 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待工作台审批后才�
 
 手动本机 V21 配置见 [cursor.example.json](cursor.example.json)，替换 `TiaMcp.FoundationHost.exe` 的绝对路径后使用。其他版本和远程模式优先由工作台生成，避免复制不匹配参数。
 
-从源码构建时，兼容启动器位于 `src/Studio/Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/development.md#3-仓库结构)。
+从源码构建时，兼容启动器位于 `src/Studio/Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/development.md#3-仓库结构)。
 
-原生调用诊断默认写入数据根的 `diagnostics`，`TIA_MCP_DIAGNOSTICS_DIRECTORY` 仍有最高优先级；无可用数据根时沿用 `%LOCALAPPDATA%\TiaMcp\diagnostics`。语言与主题位于 `data\ui\ui.settings`，同样只复制缺失的旧偏好。完整位置与回退规则见[运行时布局](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#软件自身的数据目录)。
+原生调用诊断默认写入数据根的 `diagnostics`，`TIA_MCP_DIAGNOSTICS_DIRECTORY` 仍有最高优先级；无可用数据根时沿用 `%LOCALAPPDATA%\TiaMcp\diagnostics`。语言与主题位于 `data\ui\ui.settings`，同样只复制缺失的旧偏好。完整位置与回退规则见[运行时布局](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/design.md#软件自身的数据目录)。
 
 ## 在线目标白名单
 
@@ -198,7 +198,7 @@ MCP 的 `WRITE` / `ONLINE-WRITE` 实际执行默认等待工作台审批后才�
 
 文件不存在时，任何格式正确的显式 IPv4 地址均可通过；创建空文件会拒绝全部地址。已配置文件无法读取或格式无效时拒绝在线目标，避免失去限制；未列出的地址在审批和 worker 调用前拒绝，预览也一样。只支持四段十进制 IPv4，八位组除单个 `0` 外不允许前导零（例如 `192.168.001.010` 会拒绝）；地址参数也不接受前后空白。CIDR 前缀为 0–32，不支持主机名、IPv6 或缩写地址。缺失文件的读取不创建目录或锁文件。
 
-MCP 工具不能修改此文件，包含短文件名和硬链接等别名。在 **设置 > 安全与 AI 控制 > 在线目标** 添加 IPv4 地址或 CIDR 子网，选择条目后可移除，再选择 **保存在线目标** 使整个列表生效。保存空列表会拒绝全部在线目标；未配置、无效和空列表会分别提示。**重新加载列表** 放弃未保存的编辑并读取磁盘。列表同时覆盖 Openness 和运行时 S7、Web API、OPC UA 通道；配置列表时 companion 的 `mode=run` 被拒绝，`catalog`/`help` 保留。人工保存使用原子替换并记录不含地址的审计事件。文件无效或不可读时显示具体文件状态，地址编辑区保持只读，须选择 **替换文件** 并人工确认后才能编辑。保存前按加载时的文件时间及摘要检查并发修改；文件有变化时拒绝保存并提示重新加载。文件格式及实现边界见[SEC-14](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md#sec-14-在线目标只用显式地址)。
+MCP 工具不能修改此文件，包含短文件名和硬链接等别名。在 **设置 > 安全与 AI 控制 > 在线目标** 添加 IPv4 地址或 CIDR 子网，选择条目后可移除，再选择 **保存在线目标** 使整个列表生效。保存空列表会拒绝全部在线目标；未配置、无效和空列表会分别提示。**重新加载列表** 放弃未保存的编辑并读取磁盘。列表同时覆盖 Openness 和运行时 S7、Web API、OPC UA 通道；配置列表时 companion 的 `mode=run` 被拒绝，`catalog`/`help` 保留。人工保存使用原子替换并记录不含地址的审计事件。文件无效或不可读时显示具体文件状态，地址编辑区保持只读，须选择 **替换文件** 并人工确认后才能编辑。保存前按加载时的文件时间及摘要检查并发修改；文件有变化时拒绝保存并提示重新加载。文件格式及实现边界见[SEC-14](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/security.md#sec-14-在线目标只用显式地址)。
 
 ## 下载安全与审批状态
 

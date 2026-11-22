@@ -31,7 +31,7 @@ and `PlcForceTable.Export(FileInfo, ExportOptions.WithDefaults)` through `Export
 Directory exports retain the existing ordered batch preview, confirmation, project/hash binding and one batch approval;
 `tableKind` participates in the batch hash. V14 SP1 has no watch-and-force-table namespace and these tools remain unregistered. Force entries stay read-only;
 import writes offline configuration and never activates forcing. Native acceptance is **NOT RUN**; see the
-[VM checklist](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md#未发布改动的验收边界).
+[VM checklist](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/real-machine-ledger.md#未发布改动的验收边界).
 
 `CompilePlcSoftware` and `CompilePlcDiagnostics` now select exact `software` (default), `block`, `group` or `unit` compiler owners.
 Block/group paths are relative to the program-block root; optional `unitName` selects a standard unit's root on V16–V21.
@@ -60,7 +60,7 @@ The 2026-10-19 API audit (P8-81g, S-11) identified these documented members with
 
 S-4/S-5/S-6: no PUT/GET, certificate assignment or PLC syslog certificate dynamic attribute names have verified owner/type/write semantics. Their exact allow-lists start empty; these operations refuse until documented or VM-verified evidence is recorded. Typed certificate and syslog APIs remain available. `ProtectionProviderBase` describes block protection and is not a project-protection probe. On V17+ the project indicator follows `UmacConfigurator` availability and `EngineeringFunctionRights.Any()`; V15.1/V16 remain unknown.
 
-Native follow-up is recorded in the [API audit VM checklist](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/api-audit-vm-checklist.md). These limitations do not claim native acceptance.
+Native follow-up is recorded in the [API audit VM checklist](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/api-audit-vm-checklist.md). These limitations do not claim native acceptance.
 
 | Release | Domain signatures | Unique member names | Compiled direct references | Names requiring further review |
 |---|---:|---:|---:|---:|
@@ -83,9 +83,9 @@ five names unimplemented. It is only one migration list. The functional review c
 engineering workflows those names represent, existing runtime gates, and additional
 API families. See the [implementation order](version-tools.md#release-differences).
 
-Reproduce with `build-tools/release/CatalogAudits.cs --public-api-root <SDK-root>` after building all targets. [Machine-readable summary and SDK hashes](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/manifest/version-api-audit.json) identify the exact inputs. Detailed identifier-only candidate lists are written under `bin-build/multi-version/api-audit`.
+Reproduce with `build-tools/release/CatalogAudits.cs --public-api-root <SDK-root>` after building all targets. [Machine-readable summary and SDK hashes](https://github.com/asckye/automation-engineering-workbench/blob/master/manifest/version-api-audit.json) identify the exact inputs. Detailed identifier-only candidate lists are written under `bin-build/multi-version/api-audit`.
 
-The previous V21 lexical audit (2.7.42) is preserved in [Git history](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6f3a5e1f2d4554f2adfefce883843c4bb8f5d6d2/docs/reference/openness-coverage.md). It does not describe the newly enabled version routes.
+The previous V21 lexical audit (2.7.42) is preserved in [Git history](https://github.com/asckye/automation-engineering-workbench/blob/6f3a5e1f2d4554f2adfefce883843c4bb8f5d6d2/docs/reference/openness-coverage.md). It does not describe the newly enabled version routes.
 
 ## Functional review
 
@@ -94,10 +94,10 @@ The previous V21 lexical audit (2.7.42) is preserved in [Git history](https://gi
 Each action has a native preview, project/plan binding and readback; the existing delete/move/copy
 actions now require the same binding. Subnet creation needs no anchor node. `EnsureSubnet`
 is unchanged, and `Node.DisconnectFromSubnet` remains outside this addition.
-Native acceptance is **NOT RUN**; see the [unreleased acceptance boundary](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md#未发布改动的验收边界).
+Native acceptance is **NOT RUN**; see the [unreleased acceptance boundary](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/real-machine-ledger.md#未发布改动的验收边界).
 
 Reviewed on 2026-10-03 against the eight supplied SDK XML sets, current source routes
-and the advertised catalogs. The [functional matrix JSON](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json)
+and the advertised catalogs. The [functional matrix JSON](https://github.com/asckye/automation-engineering-workbench/blob/master/reference/version-feature-matrix.json)
 contains exact identifiers, input hashes, source files, tool names and follow-up work
 for every row below. It is separate from the generated member-reference audit and
 does not redistribute the SDKs. The table covers 29 workflows/families, not all
@@ -156,7 +156,7 @@ started by that check. **?** cells deliberately make no equivalent absence claim
 
 `BuildPlcSymbolManifestFromPath` is an offline bounded extractor for native PLC tag-table and GlobalDB XML snapshots. Empty tag tables produce a valid file result with zero symbols; tag comments are ignored; user constants retain their raw value; system constants are omitted with an explicit warning. It does not certify the complete XML schema, import behavior, or program semantics.
 
-The ported catalog follows the 2026-10-09 maintainer decision: at least one implemented action must run on the selected API. PLC protection/instance DB creation start at V15.1; system block groups start at V14 SP1 with system type groups unavailable until V15.1, program updates/cross-references at V18, network domains at V16, transfer areas at V15.1, system diagnostics exchange at V17, and catalog device creation/certificate service objects at V18. Communication connections remain V21 only. Absent whole-tool API means no registration; partial tools keep their action refusals before any native call. `ManageDeviceUserGroup`, module insertion, older attribute-write overloads and Classic HMI compile keep usable old-release paths. Reference seeding imports PLC types/blocks and HMI tag tables/screens on all eight releases through the shared worker route; native acceptance remains NOT RUN. Foundation catalog search and exact device creation start at V18. Single watch-table export starts at V15.1. Schema fragment validation uses each selected release's local schemas; V14 SP1 validates Interface fragments and reports unsuffixed network fragments as skipped. Classic screen building starts at V18, CWC ZIP packaging at V17 (V16 remains uncertain and closed), and the HMI/PLC synchronization precheck suite at V19. ImportMasterCopyFromGlobalLibrary remains registered from V19 but refuses screen-item instantiation: the official API exposes no Unified ScreenItems.CreateFrom(MasterCopy). Use the documented screen XML/document import workflow instead. The six V21-only PLC builders are withheld from V14 SP1–V19; their V20/V21 registrations are unchanged. See the [per-pair recheck and VM acceptance list](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/archive/development/phase8-port-plan.md).
+The ported catalog follows the 2026-10-09 maintainer decision: at least one implemented action must run on the selected API. PLC protection/instance DB creation start at V15.1; system block groups start at V14 SP1 with system type groups unavailable until V15.1, program updates/cross-references at V18, network domains at V16, transfer areas at V15.1, system diagnostics exchange at V17, and catalog device creation/certificate service objects at V18. Communication connections remain V21 only. Absent whole-tool API means no registration; partial tools keep their action refusals before any native call. `ManageDeviceUserGroup`, module insertion, older attribute-write overloads and Classic HMI compile keep usable old-release paths. Reference seeding imports PLC types/blocks and HMI tag tables/screens on all eight releases through the shared worker route; native acceptance remains NOT RUN. Foundation catalog search and exact device creation start at V18. Single watch-table export starts at V15.1. Schema fragment validation uses each selected release's local schemas; V14 SP1 validates Interface fragments and reports unsuffixed network fragments as skipped. Classic screen building starts at V18, CWC ZIP packaging at V17 (V16 remains uncertain and closed), and the HMI/PLC synchronization precheck suite at V19. ImportMasterCopyFromGlobalLibrary remains registered from V19 but refuses screen-item instantiation: the official API exposes no Unified ScreenItems.CreateFrom(MasterCopy). Use the documented screen XML/document import workflow instead. The six V21-only PLC builders are withheld from V14 SP1–V19; their V20/V21 registrations are unchanged. See the [per-pair recheck and VM acceptance list](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/archive/development/phase8-port-plan.md).
 
 All eight-release native acceptance entries remain **NOT RUN**. The compiled
 adapters and functional/transport tests are separate evidence. Neither a build nor
@@ -172,7 +172,7 @@ For audited MCP writes, one `request` row uses the result's `meta.requestId` and
 
 When approval is enabled, writes with a preview first run their own `dryRun:true` or `mode:"preview"` call through the same session and native dispatch lane. A refused precheck returns the original error with `meta.outcome="rejected-before-operation"`, `meta.execution="not-started"`, and a `meta.warnings` entry `{ "code": "APPROVAL_PRECHECK_REFUSED", "details": { "stage": "approval-precheck" } }`. Only the original write records `request` and `end`; the internal preview adds no write audit, approval decision or start. A successful preview releases the lane before approval waits; the real call checks preconditions again under the lane. Approval disabled skips the precheck. Tools without a preview retain their existing gate. Current FILE/EXECUTE tools that were not approval gated retain their classification; promoted export/compile candidates use their own mode preview.
 
-After OUTCOME_UNKNOWN, inspect the affected target before repeating the call. GetSessionState lists unsettled request IDs, and SaveProject and SaveProjectCopy carry UNSETTLED_CALLS while entries remain. Later independent calls continue through normal identity, approval and plan checks. Restarting the worker, disconnecting or losing the binding retains the list. An identical apply with the same reviewed hash is refused before dispatch. A real worker transport fault currently requires RestartOpennessWorker and explicit rebinding, as described in [ADR 0034](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/decisions/0034-no-session-lock.md).
+After OUTCOME_UNKNOWN, inspect the affected target before repeating the call. GetSessionState lists unsettled request IDs, and SaveProject and SaveProjectCopy carry UNSETTLED_CALLS while entries remain. Later independent calls continue through normal identity, approval and plan checks. Restarting the worker, disconnecting or losing the binding retains the list. An identical apply with the same reviewed hash is refused before dispatch. A real worker transport fault currently requires RestartOpennessWorker and explicit rebinding, as described in [ADR 0034](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/decisions/0034-no-session-lock.md).
 
 ## Findings that determine implementation order
 
@@ -447,7 +447,7 @@ run against TIA Portal, a PLC or a VM in this worktree.
 These are bounded evidence summaries from the supplied API sets, source routes, and
 prior read-only reviews. They do not change the functional matrix or mark native
 acceptance complete; the actual release, action, project, and optional product must
-be recorded in the [real-machine ledger](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md).
+be recorded in the [real-machine ledger](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/real-machine-ledger.md).
 
 ## Library, VCI, Safety and reflection audit (2026-10-19)
 
@@ -505,4 +505,4 @@ objects, list content names/types and clashes, and bind every mutation of both t
 Execution uses one typed CreateFrom call, fresh target navigation for scalar readback and the write journal
 for newly created objects. Replaced existing objects have no verified inverse and remain explicit recovery
 items on failure. SDK compilation and offline tests do not establish native acceptance; the V21/V18 project
-and open-global-library checks remain **NOT RUN** in the [real-machine ledger](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md).
+and open-global-library checks remain **NOT RUN** in the [real-machine ledger](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/real-machine-ledger.md).

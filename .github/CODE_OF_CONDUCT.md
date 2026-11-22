@@ -62,7 +62,7 @@ an individual is officially representing the community in public spaces.
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the maintainer privately through GitHub's private reporting form on
 this repository
-(<https://github.com/asckye/TIA_Portal_Openness_MCP/security/advisories/new>),
+(<https://github.com/asckye/automation-engineering-workbench/security/advisories/new>),
 which is the maintainer-only channel used for anything that should not be public.
 All complaints will be reviewed and investigated promptly and fairly.
 

@@ -23,7 +23,7 @@
 
 ## 2. 下载、解压和准备环境
 
-1. 从[发布页](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)选择标有 **Pre-release** 的 4.0 beta，下载交付包 ZIP 和同名 `.sha256`。预发布不会成为 Latest；GitHub 的 `Source code` 压缩包不含运行二进制。
+1. 从[发布页](https://github.com/asckye/automation-engineering-workbench/releases)选择标有 **Pre-release** 的 4.0 beta，下载交付包 ZIP 和同名 `.sha256`。预发布不会成为 Latest；GitHub 的 `Source code` 压缩包不含运行二进制。
 2. 完整解压，建议放在固定位置，例如 `D:\TIA-MCP`。打开后应能看见 `TiaOpenness.exe`、`runtime`、`docs`、`reference` 和 `manifest`。如果外面还有一层同名文件夹，继续进入这一层；下文的“包根目录”指能看见这些内容的文件夹。
 3. 在安装 TIA 的电脑上检查下面的依赖。不要只复制宿主或工作台的 EXE，它们需要同目录下的 DLL、适配器和示例文件。
 4. 用 TIA 打开一个练习工程，确认 TIA 自己能正常查看和编译。首次练习建议使用工程副本，并只打开这一份目标工程。
@@ -119,7 +119,7 @@ V4 工具返回 `ok`、`data`、`error` 和 `meta`；先检查 `meta.outcome`。
 
 ## 4. 第一个 AI 练习：导入加法函数并编译
 
-交付包已有完整的小例子：[FC_Add.scl](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/tool-examples/languages/FC_Add.scl)。它有两个 `Int` 输入 `LeftValue`、`RightValue`，返回二者之和。无需先让 AI 从零编写代码。
+交付包已有完整的小例子：[FC_Add.scl](https://github.com/asckye/automation-engineering-workbench/blob/master/reference/tool-examples/languages/FC_Add.scl)。它有两个 `Int` 输入 `LeftValue`、`RightValue`，返回二者之和。无需先让 AI 从零编写代码。
 
 1. 先完成上一节，选择一个含 S7 PLC 的练习工程及准确 PLC 路径，并在 TIA 中结束工程内所有设备的在线连接后再编译。
 2. 确认工程中还没有自己的 `FC_Add`，避免覆盖同名程序。
@@ -208,9 +208,9 @@ V14 SP1 的生成 API 不返回生成对象列表，因此应查看导入前后�
 
 - [配置指南](configuration.md)：两种连接模式、客户端配置、升级和故障处理。
 - [逐版本工具](../reference/version-tools.md)：所选版本实际提供的工具及差异。
-- [统一工具示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md)：让 AI 使用 `GetToolUsage` 获取参数、语言示例、调用序列和结果解释。
+- [统一工具示例说明](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/real-machine-testing.md)：让 AI 使用 `GetToolUsage` 获取参数、语言示例、调用序列和结果解释。
 - [命令行指南](cli.md)：八版宿主的 `doctor`、`audit verify`、`config` 等命令。
-- [工作台说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/README.md)：桌面工具的工作流和支持范围。
+- [工作台说明](https://github.com/asckye/automation-engineering-workbench/blob/master/src/Studio/README.md)：桌面工具的工作流和支持范围。
 - [文档目录](../README.md)：PLC、HMI、硬件和其他专题。
 
 软件自己的连接记录、界面偏好、普通日志、审计记录和调用诊断分别保存在交付包的 `data\config`、`data\ui`、`data\logs` 和 `data\diagnostics` 中，更新会保留 `data`。MCP 写操作默认在派发前等待工作台审批；`SaveProject`、`SaveProjectCopy`（save-as）和 `CloseProject` 即使在目录中标为 `SESSION` 也须审批；连接、附着、打开和断开仍不审批。拒绝、超时或工作台未连接都不会开始操作。审计写入 `data\logs\audit`，可由 `tia audit verify` 校验保留链，但哈希链不能证明整段记录未被删除。数据根可由绝对路径环境变量 `TIA_MCP_DATA_DIRECTORY` 指定，诊断还可由 `TIA_MCP_DIAGNOSTICS_DIRECTORY` 单独覆盖。包目录不可写或无法定位时，配置仍使用 `%LOCALAPPDATA%\TiaPortalMcp`，诊断仍使用 `%LOCALAPPDATA%\TiaMcp\diagnostics`；首次使用新配置或偏好目录只复制缺失文件，不删除旧记录。伴随 PLC Tools 的 Python 默认解释器是 `%LOCALAPPDATA%\TiaMcp\ecosystem-python\Scripts\python.exe`，可用 `TIA_MCP_PLC_TOOLS_PYTHON` 覆盖。详见[配置说明](configuration.md)。

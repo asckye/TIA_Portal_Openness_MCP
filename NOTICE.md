@@ -6,7 +6,7 @@
 - 原始版权：**Copyright (c) 2026 bulaofen0036-coder**。
 - 原项目贡献者包括 bulaofen0036-coder / bulaofen、xl 及其他贡献者。原有成果的作者身份和权利不因仓库独立维护而转移。
 - 当前维护者版权：**Copyright (c) 2026 asckye**。
-- 完整 MIT 许可证、原始版权声明和当前维护者版权声明保存在根目录 [LICENSE](LICENSE)，必须随软件的复制件或实质性部分一同保留。随包分发的第三方程序集及其许可证逐项列于 [第三方组件许可证清单](docs/licenses/THIRD-PARTY-NOTICES.md)，原文在 [docs/licenses](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/licenses)。4.0 起交付包不再包含 `Siemens.Collaboration.Net.*` 程序集（自有用户组代码取代，P8-76）；该清单保留其许可原文和说明，供 3.x 交付包参考。
+- 完整 MIT 许可证、原始版权声明和当前维护者版权声明保存在根目录 [LICENSE](LICENSE)，必须随软件的复制件或实质性部分一同保留。随包分发的第三方程序集及其许可证逐项列于 [第三方组件许可证清单](docs/licenses/THIRD-PARTY-NOTICES.md)，原文在 [docs/licenses](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/licenses)。4.0 起交付包不再包含 `Siemens.Collaboration.Net.*` 程序集（自有用户组代码取代，P8-76）；该清单保留其许可原文和说明，供 3.x 交付包参考。
 
 4.0 交付包不含西门子 TIA Portal 程序集，Openness 从用户自己的 TIA 安装中加载。独立的 S7 Webserver API 运行库按 MIT 许可证随包分发。3.x 已发布附件保持原样。
 
@@ -16,7 +16,7 @@
 
 ## 名称与商标
 
-公开名称自 4.0 起改为“自动化工程工作台”（Automation Engineering Workbench）。可执行文件（`TiaOpenness.exe`、`TiaMcp.*`）、程序集、命名空间、Claude Code 插件 ID `tia-portal-openness-mcp`、MCP 服务名 `tia-portal` 和 GitHub 仓库地址暂保留原名，以兼容现有配置。
+公开名称自 4.0 起改为“自动化工程工作台”（Automation Engineering Workbench）。可执行文件（`TiaOpenness.exe`、`TiaMcp.*`）、程序集、命名空间、Claude Code 插件 ID `tia-portal-openness-mcp` 和 MCP 服务名 `tia-portal` 沿用原名，以兼容现有配置。GitHub 会将旧仓库链接重定向至新地址。
 
 TIA Portal、SIMATIC、STEP 7、WinCC 和 Openness 是 Siemens AG 的商标；本项目与 Siemens 无关联，也未获得 Siemens 的认可或背书。
 
@@ -30,11 +30,11 @@ TIA Portal, SIMATIC, STEP 7, WinCC and Openness are trademarks of Siemens AG; th
 
 2026-09-29 未发布的生态扩展另包含 Siemens 官方指南、Siemens OPC UA 接口生成源代码、Czarnak 的 TiaGitAddIn.Core 和 core-engineering 的 PLC Tools。固定提交、版权、许可及本地改动逐项记录在[第三方组件清单](docs/licenses/THIRD-PARTY-NOTICES.md)。上述作者不因此成为本项目的维护者或背书方。
 
-2026-10-03: TIA Openness Studio desktop, mock and inspection sources are integrated under `src/Studio`, from asckye/tia-openness-studio commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT, copyright 2026 asckye. The upstream license and file hashes are retained in the [provenance record](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/tia-openness-studio/UPSTREAM.json); the full source snapshot and Git history are available in the [upstream repository](https://github.com/asckye/tia-openness-studio/tree/87099c576fbc06e6b6ac523ddbf763fe0aa2ce02). The integrated desktop uses its own direct Openness bridge; the MCP dependency has been removed.
+2026-10-03: TIA Openness Studio desktop, mock and inspection sources are integrated under `src/Studio`, from asckye/tia-openness-studio commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT, copyright 2026 asckye. The upstream license and file hashes are retained in the [provenance record](https://github.com/asckye/automation-engineering-workbench/blob/master/third_party/tia-openness-studio/UPSTREAM.json); the full source snapshot and Git history are available in the [upstream repository](https://github.com/asckye/tia-openness-studio/tree/87099c576fbc06e6b6ac523ddbf763fe0aa2ce02). The integrated desktop uses its own direct Openness bridge; the MCP dependency has been removed.
 
-The workbench embeds Maple Mono CN under SIL Open Font License 1.1. The fonts, original license and source records are retained together in [the Studio font directory](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/src/Studio/Gui/Fonts); see [the third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md).
+Earlier Workbench versions bundled Maple Mono CN under the SIL Open Font License 1.1. The [original font directory](https://github.com/asckye/automation-engineering-workbench/tree/dbf51538f6269b417704ddf2bba19826466783f5/src/Studio/Gui/Fonts) preserves the font files, license and source records. See the [third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md).
 
-The shared import dependency planner incorporates MIT-licensed code from EidoAut/EidoTiaWorkbench, copyright (c) 2026 EIDO AUTOMATION, S.L.U.; see [license and pinned provenance](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/third_party/eido-import-planner/README.md).
+The shared import dependency planner incorporates MIT-licensed code from EidoAut/EidoTiaWorkbench, copyright (c) 2026 EIDO AUTOMATION, S.L.U.; see [license and pinned provenance](https://github.com/asckye/automation-engineering-workbench/blob/master/third_party/eido-import-planner/README.md).
 
 The AI-facing usage catalog embeds reference text from Siemens AI extensions,
 copyright (c) 2026 Siemens AG, under the retained
@@ -45,6 +45,6 @@ Snippets, copyright Siemens 2025-2026, pinned separately at
 The snippet source code is MIT under section 2 of the complete retained
 [Siemens license](docs/licenses/SiemensCodeSnippets-LICENSE.md).
 The files are reference data, not compiled dependencies; Siemens SDK binaries and
-sample engineering archives are excluded. See [scope and provenance](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md).
+sample engineering archives are excluded. See [scope and provenance](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/real-machine-testing.md).
 
 The .NET 10 extension packages, System.Text.Json and preview.4 companion dependencies use stable 10.0.12, aligned with the bundled runtime. The MCP SDK remains at 0.3.0-preview.4; license terms are unchanged. See [the third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md).

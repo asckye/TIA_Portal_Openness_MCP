@@ -33,7 +33,7 @@ namespace TiaMcpConfigurator
 
     public static class UpdateCheck
     {
-        public const string Repository = "asckye/TIA_Portal_Openness_MCP";
+        public const string Repository = "asckye/automation-engineering-workbench";
         public const string UpdaterRelativePath = @"runtime/tools/TiaMcp.Updater.exe";
         public static string ReleasePageUrl(string repository) { return "https://github.com/" + repository + "/releases/latest"; }
         public static string ReleaseApiUrl(string repository) { return "https://api.github.com/repos/" + repository + "/releases/latest"; }

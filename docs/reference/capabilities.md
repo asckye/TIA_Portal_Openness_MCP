@@ -15,7 +15,7 @@
 
 ## V4 候选发布的行为能力
 
-`GetToolUsage` 空选择器索引的 `data.behaviorCapabilities` 按连接发布键返回八个 D1 行为族，每行包含 `family`、`state`、`l5` 和实际 `entries`。V20/V21 的 `InitializeEnvironment` / `GetPortalInfo` 与 Foundation 的 `InitializeEnvironment` / `RunCapabilitySelfTest` 提供相同能力表。当前八版每个适用 D1 行为族全部为 `current / NOT RUN`；V4 信封和类型输入已迁移，不代表 safe-v4 原生政策已生效。D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原有原生行为继续保留。离线、schema 或构建通过不改变此状态。逐版入口清单见[生成的行为台账](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)及[功能矩阵](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/reference/version-feature-matrix.json)。
+`GetToolUsage` 空选择器索引的 `data.behaviorCapabilities` 按连接发布键返回八个 D1 行为族，每行包含 `family`、`state`、`l5` 和实际 `entries`。V20/V21 的 `InitializeEnvironment` / `GetPortalInfo` 与 Foundation 的 `InitializeEnvironment` / `RunCapabilitySelfTest` 提供相同能力表。当前八版每个适用 D1 行为族全部为 `current / NOT RUN`；V4 信封和类型输入已迁移，不代表 safe-v4 原生政策已生效。D1 描述与每类目标结果均披露 current 和 `UNVERIFIED_BEHAVIOR`，原有原生行为继续保留。离线、schema 或构建通过不改变此状态。逐版入口清单见[生成的行为台账](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/real-machine-ledger.md)及[功能矩阵](https://github.com/asckye/automation-engineering-workbench/blob/master/reference/version-feature-matrix.json)。
 
 ## AI 如何取得正确示例
 
@@ -29,7 +29,7 @@
 - 文件应放在 MCP 服务所在电脑；虚拟机场景中，宿主机路径不会自动映射为虚拟机路径。
 - 先明确目标工程、PLC 和对象，再使用示例中的参数。导入、生成、编译、保存、下载分别对应不同操作。
 
-[统一示例说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/real-machine-testing.md)区分官方源代码、项目封装示例、离线验证及原生验收。示例帮助正确调用，不保证所有设备、补丁和选件都已通过真实工程测试。
+[统一示例说明](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/real-machine-testing.md)区分官方源代码、项目封装示例、离线验证及原生验收。示例帮助正确调用，不保证所有设备、补丁和选件都已通过真实工程测试。
 
 ## 主要工作流
 
@@ -57,7 +57,7 @@
 | 实际 TIA 工程记录 | 仅证明记录中的版本、工程、动作和输入曾得到该结果。 |
 | 工具/API 覆盖统计 | 描述清单或审计范围；不是所有 Siemens API 已封装、全部动作可执行或全部工具真机通过的承诺。 |
 
-本版记录以 `multi-version-build.json`（历史文件，已退役） 为准；其 `engineCompatibility` 段仅保留退役前的 V20/V21 引擎交叉检查历史记录；当前宿主仅使用 PLC worker，Q3 已删除冻结目录与引擎客户端。新增八版工作流的原生工程验收为 **NOT RUN**；旧版本实测不能自动继承为本版验收。实际历史与未解决问题见[真机证据索引](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/reference/real-machine-ledger.md)和[已知限制](../troubleshooting/openness-limitations.md)。
+本版记录以 `multi-version-build.json`（历史文件，已退役） 为准；其 `engineCompatibility` 段仅保留退役前的 V20/V21 引擎交叉检查历史记录；当前宿主仅使用 PLC worker，Q3 已删除冻结目录与引擎客户端。新增八版工作流的原生工程验收为 **NOT RUN**；旧版本实测不能自动继承为本版验收。实际历史与未解决问题见[真机证据索引](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/reference/real-machine-ledger.md)和[已知限制](../troubleshooting/openness-limitations.md)。
 
 **4.0.0-beta.1 预发布**：未在真实 TIA Portal 上验证。构建、离线套件和 CI 已通过；真机未验证的项目列在
 [发布说明](../releases/v4.0.0-beta.1.md#not-verified-on-a-real-tia-portal)生成的 “Not verified on a real TIA Portal” 清单中。
@@ -68,4 +68,4 @@
 
 Unified 脚本库类型改名仍有实测崩溃；`p2051[0]` BICO 读取修正尚未原生复测；原生交叉引用在 API 可用的版本默认允许。V21 默认值由维护者于 2026-11-20 确定，真机确认待完成。这些限制统一记录在[已知限制](../troubleshooting/openness-limitations.md)，不另建调用规范系统。
 
-历版能力叙述已移出本页。[原能力文档快照](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/reference/capabilities.md)仅供追溯，不能代替当前矩阵。
+历版能力叙述已移出本页。[原能力文档快照](https://github.com/asckye/automation-engineering-workbench/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/reference/capabilities.md)仅供追溯，不能代替当前矩阵。

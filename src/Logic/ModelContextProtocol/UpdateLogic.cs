@@ -11,7 +11,7 @@ namespace TiaMcpServer.ModelContextProtocol
     // The engine only REPORTS; the standalone .NET Framework updater replaces delivery files after all bundle processes stop.
     public static class UpdateLogic
     {
-        public const string DefaultRepository = "asckye/TIA_Portal_Openness_MCP";
+        public const string DefaultRepository = "asckye/automation-engineering-workbench";
         public const string UpdaterRelativePath = @"runtime/tools/TiaMcp.Updater.exe";
 
         public sealed class Asset

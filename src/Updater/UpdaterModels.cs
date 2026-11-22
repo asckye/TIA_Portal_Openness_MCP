@@ -20,7 +20,7 @@ namespace TiaMcp.Updater
     {
         public string InstallRoot { get; set; }
         public string Version { get; set; }
-        public string Repository { get; set; } = "asckye/TIA_Portal_Openness_MCP";
+        public string Repository { get; set; } = "asckye/automation-engineering-workbench";
         public int TimeoutSeconds { get; set; } = 60;
         public int WaitForPid { get; set; }
         public bool Check { get; set; }

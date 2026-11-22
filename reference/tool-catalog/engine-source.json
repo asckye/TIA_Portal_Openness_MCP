@@ -17423,7 +17423,7 @@
           "type": "string",
           "default": "UpdateLogic.DefaultRepository",
           "description": "repository: GitHub owner/name to query (default the project's repository).",
-          "value": "asckye/TIA_Portal_Openness_MCP"
+          "value": "asckye/automation-engineering-workbench"
         },
         "timeoutSeconds": {
           "type": "int",

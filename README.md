@@ -1,11 +1,11 @@
 # Automation Engineering Workbench
 
-[中文](README.zh-CN.md) · [Beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)
+[中文](README.zh-CN.md) · [Beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/automation-engineering-workbench/releases)
 
 An MCP server and Windows desktop Workbench for Siemens TIA Portal Openness across eight exact releases: **V14 SP1, V15.1, and V16–V21**. Connect AI coding agents or work directly in the Workbench to browse projects, author PLC/HMI artifacts, compile, test, and diagnose—backed by preview-first write approvals, hash-chained audit logs, and isolated per-session Openness workers.
 
 > [!NOTE]
-> **Name and release status:** Formerly **TIA Portal Openness MCP**. Executables (`TiaOpenness.exe`), the Claude Code plugin ID `tia-portal-openness-mcp`, the MCP server name `tia-portal`, and the repository URL keep their original names so existing configurations continue to work. This page documents the unreleased 4.0 source (current pre-release: [v4.0.0-rc.1](docs/releases/v4.0.0-rc.1.md)); GitHub **Latest** remains stable 3.3. For a downloaded release, use the documentation bundled inside its archive.
+> **Name and release status:** Formerly **TIA Portal Openness MCP**. Executables (`TiaOpenness.exe`), the Claude Code plugin ID `tia-portal-openness-mcp`, and the MCP server name `tia-portal` keep their original names so existing configurations continue to work. GitHub redirects old repository links. This page documents the unreleased 4.0 source (current pre-release: [v4.0.0-rc.1](docs/releases/v4.0.0-rc.1.md)); GitHub **Latest** remains stable 3.3. For a downloaded release, use the documentation bundled inside its archive.
 
 ![AI MCP clients and the Workbench Project page share a FoundationHost session with an isolated version-matched PLC worker](docs/assets/architecture.svg)
 
@@ -20,7 +20,7 @@ An MCP server and Windows desktop Workbench for Siemens TIA Portal Openness acro
 ## Get started
 
 > [!IMPORTANT]
-> Download the delivery ZIP and its `.sha256` sidecar from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases), then extract the entire archive to a short, permanent directory. For a 4.0 beta or rc, select the entry marked **Pre-release**. The 4.0.0 final ZIP will appear under **Latest** as `TIA_MCP_v4.0.0_<date>.zip`. GitHub's `Source code` archives contain no runtime binaries. Because executables are unsigned, Windows SmartScreen may warn on first launch.
+> Download the delivery ZIP and its `.sha256` sidecar from [Releases](https://github.com/asckye/automation-engineering-workbench/releases), then extract the entire archive to a short, permanent directory. For a 4.0 beta or rc, select the entry marked **Pre-release**. The 4.0.0 final ZIP will appear under **Latest** as `TIA_MCP_v4.0.0_<date>.zip`. GitHub's `Source code` archives contain no runtime binaries. Because executables are unsigned, Windows SmartScreen may warn on first launch.
 
 4.0 packages omit Siemens TIA Portal assemblies and load Openness from your own TIA installation. Existing 3.x release assets stay as published.
 
@@ -72,11 +72,11 @@ Some cells use records from an older candidate, marked ᵒ in the full table.
 
 - **Profiles and on-demand discovery:** All eight releases default to the lite profile to keep client context compact; use `FindTools` and `CallTool` for the full catalog, or pass `--profile full`. Call `GetToolUsage(toolName, operation)` before unfamiliar operations to fetch release-matched arguments, complete programming examples (`language` / `exampleId`), and result guidance. Official Siemens API patterns and project-authored wrappers are labeled separately.
 - **Unified host and worker layout:** The root launcher is `TiaOpenness.exe`, and every release uses `runtime/v<key>/TiaMcp.FoundationHost.exe --release-key <key>`. Each host starts the matching `PLC worker` under `worker/` (including the full V20/V21 catalog), while shared Foundation tools expose the same contracts across releases. Original V14 and V15 are not aliases for V14 SP1 and V15.1. See [version scope](docs/reference/version-tools.md) and the connected server's `tools/list`.
-- **Contracts, safety, and recovery:** The V4 response envelope uses `ok`, `data`, `error`, and `meta`. A dispatched write with an unknown outcome (`OUTCOME_UNKNOWN`) is never replayed automatically; inspect target state before retrying. See [ecosystem tools](docs/reference/ecosystem-tools.md) and the [security model](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/security.md).
+- **Contracts, safety, and recovery:** The V4 response envelope uses `ok`, `data`, `error`, and `meta`. A dispatched write with an unknown outcome (`OUTCOME_UNKNOWN`) is never replayed automatically; inspect target state before retrying. See [ecosystem tools](docs/reference/ecosystem-tools.md) and the [security model](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/security.md).
 
 ## Requirements and validation boundary
 
-- **Prerequisites:** Install the matching Siemens TIA Portal release, Openness, and licenses separately, and add your Windows account to the `Siemens TIA Openness` group. The .NET 10 runtime for the Workbench and `FoundationHost` is bundled in `runtime/dotnet`; the Openness bridge and PLC workers use .NET Framework 4.8 (included in Windows 10 1903 and later). See [runtime paths](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/standards/design.md#3-运行时布局).
+- **Prerequisites:** Install the matching Siemens TIA Portal release, Openness, and licenses separately, and add your Windows account to the `Siemens TIA Openness` group. The .NET 10 runtime for the Workbench and `FoundationHost` is bundled in `runtime/dotnet`; the Openness bridge and PLC workers use .NET Framework 4.8 (included in Windows 10 1903 and later). See [runtime paths](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/standards/design.md#3-运行时布局).
 - **Acceptance transparency:** All eight runtimes and the Workbench build locally against the official SDKs, and functional, protocol, API metadata, and XML schema checks are recorded separately from real-project acceptance. New native TIA/project acceptance remains **NOT RUN** across releases unless explicitly noted; a tool catalog or clean build does not guarantee every engineering action on every CPU or patch level. Review current limits in [capabilities](docs/reference/capabilities.md).
 
 ## Development
@@ -89,7 +89,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1 -BuildOn
 
 `-BuildOnly` compiles and packages all eight versions without running the full validation gates or creating a publishable candidate.
 
-[Build and validation](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/validation.md) · [Release workflow](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/manuals/release.md) · [Development progress](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/plan/progress.md) · [Changelog](CHANGELOG.md) · [Third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md)
+[Build and validation](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/validation.md) · [Release workflow](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/release.md) · [Development progress](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/plan/progress.md) · [Changelog](CHANGELOG.md) · [Third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md)
 
 ## Origin, license and trademarks
 
