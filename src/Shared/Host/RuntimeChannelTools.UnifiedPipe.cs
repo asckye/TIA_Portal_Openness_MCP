@@ -13,8 +13,14 @@ using TiaMcpServer.Runtime;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
+    internal sealed class OpenPipeReport : ResponseJsonReport
+    {
+        internal OpenPipeConnectionFailure? ConnectionFailure { get; set; }
+    }
+
     internal sealed partial class RuntimeChannelTools
     {
+        internal Func<string, string, string, string?, int, OpenPipeExchange> Exchange { get; set; } = UnifiedOpenPipeChannel.Exchange;
 
         private static JsonArray OpenPipeTags(OpenPipeResponse resp, bool includeValues)
         {
@@ -63,7 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 string cookie = RuntimeChannelsLogic.NewClientCookie("read");
                 string line = RuntimeChannelsLogic.BuildReadTagRequest(tags, cookie);
-                var ex = UnifiedOpenPipeChannel.Exchange(pipeName, line, cookie, "ReadTag", timeoutMs);
+                var ex = Exchange(pipeName, line, cookie, "ReadTag", timeoutMs);
                 string? failure = OpenPipeFailure(ex, "ReadTag");
                 var data = new JsonObject
                 {
@@ -77,8 +83,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (ex.SkippedLines.Count > 0) data["skippedLines"] = new JsonArray(ex.SkippedLines.Select(s => (JsonNode)s).ToArray());
                 if (failure != null) data["error"] = failure;
                 bool ok = failure == null && ex.Response != null && ex.Response.Tags.All(t => t.Ok);
-                return new ResponseJsonReport
+                return new OpenPipeReport
                 {
+                    ConnectionFailure = ex.ConnectionFailure,
                     Ok = ok,
                     Message = failure ?? (ok
                         ? $"Read {ex.Response!.Tags.Count} runtime tag(s) via Open Pipe in {ex.ElapsedMs} ms."
@@ -126,8 +133,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var names = writes.Select(w => w.Name).ToList();
                 string readCookie = RuntimeChannelsLogic.NewClientCookie("before");
-                var before = UnifiedOpenPipeChannel
-                    .Exchange(pipeName, RuntimeChannelsLogic.BuildReadTagRequest(names, readCookie), readCookie, "ReadTag", timeoutMs);
+                var before = Exchange(pipeName, RuntimeChannelsLogic.BuildReadTagRequest(names, readCookie), readCookie, "ReadTag", timeoutMs);
                 string? failure = OpenPipeFailure(before, "ReadTag");
                 var data = new JsonObject
                 {
@@ -142,7 +148,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     data["error"] = failure;
                     data["requestLine"] = dryRun ? RuntimeChannelsLogic.BuildWriteTagRequest(writes, "<cookie>") : null;
-                    return new ResponseJsonReport { Ok = false, Message = "Pre-write ReadTag failed, nothing written: " + failure, Data = data, Meta = meta };
+                    return new OpenPipeReport { ConnectionFailure = before.ConnectionFailure, Ok = false,
+                        Message = "Pre-write ReadTag failed, nothing written: " + failure, Data = data, Meta = meta };
                 }
                 var beforeTags = before.Response!.Tags.ToDictionary(t => t.Name, t => t, StringComparer.Ordinal);
                 var items = new JsonArray();
@@ -183,21 +190,21 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 meta["mayHaveChanged"] = true;
                 string writeCookie = RuntimeChannelsLogic.NewClientCookie("write");
-                var write = UnifiedOpenPipeChannel
-                    .Exchange(pipeName, RuntimeChannelsLogic.BuildWriteTagRequest(writes, writeCookie), writeCookie, "WriteTag", timeoutMs);
+                var write = Exchange(pipeName, RuntimeChannelsLogic.BuildWriteTagRequest(writes, writeCookie), writeCookie, "WriteTag", timeoutMs);
                 failure = OpenPipeFailure(write, "WriteTag");
                 data["elapsedMs"] = before.ElapsedMs + write.ElapsedMs;
                 if (failure != null)
                 {
                     data["error"] = failure;
-                    return new ResponseJsonReport {
-                        Ok = false, Message = "WriteTag failed (values may or may not have been applied): " + failure, Data = data, Meta = meta };
+                    meta["mayHaveChanged"] = write.ConnectionFailure == null;
+                    return new OpenPipeReport { ConnectionFailure = write.ConnectionFailure, Ok = false, Data = data, Meta = meta,
+                        Message = (write.ConnectionFailure == null ? "WriteTag failed (values may or may not have been applied): "
+                            : "WriteTag could not connect, nothing written: ") + failure };
                 }
                 var writeTags = write.Response!.Tags.ToDictionary(t => t.Name, t => t, StringComparer.Ordinal);
 
                 string afterCookie = RuntimeChannelsLogic.NewClientCookie("after");
-                var after = UnifiedOpenPipeChannel
-                    .Exchange(pipeName, RuntimeChannelsLogic.BuildReadTagRequest(names, afterCookie), afterCookie, "ReadTag", timeoutMs);
+                var after = Exchange(pipeName, RuntimeChannelsLogic.BuildReadTagRequest(names, afterCookie), afterCookie, "ReadTag", timeoutMs);
                 string? afterFailure = OpenPipeFailure(after, "ReadTag");
                 var afterTags = after.Response?.Tags.ToDictionary(t => t.Name, t => t, StringComparer.Ordinal) ?? new Dictionary<string,
                     OpenPipeTagResult>(StringComparer.Ordinal);
@@ -278,8 +285,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 int cap = Math.Min(Math.Max(maxAlarms, 1), 500);
 
                 string cookie = RuntimeChannelsLogic.NewClientCookie("alarms");
-                var ex = UnifiedOpenPipeChannel
-                    .Exchange(pipeName, RuntimeChannelsLogic.BuildReadAlarmRequest(systems, filter ?? "", languageId, cookie), cookie, "ReadAlarm", timeoutMs);
+                var ex = Exchange(pipeName, RuntimeChannelsLogic.BuildReadAlarmRequest(systems, filter ?? "", languageId, cookie),
+                    cookie, "ReadAlarm", timeoutMs);
                 string? failure = OpenPipeFailure(ex, "ReadAlarm");
                 var alarms = new JsonArray();
                 int total = 0;
@@ -304,8 +311,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
                 if (failure != null) data["error"] = failure;
                 bool ok = failure == null;
-                return new ResponseJsonReport
+                return new OpenPipeReport
                 {
+                    ConnectionFailure = ex.ConnectionFailure,
                     Ok = ok,
                     Message = failure ?? $"{total} active alarm(s) reported by the Runtime"
                         + (alarms.Count < total ? $" ({alarms.Count} returned, raise maxAlarms for more)." : "."),
@@ -372,7 +380,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return RuntimeRefusal($"Refused: '{message}' is not a read-only Open Pipe message; sending it requires confirmWrite=true together with dryRun=false. Nothing sent.",
                             data);
 
-                var ex = UnifiedOpenPipeChannel.Exchange(pipeName, line, cookie, message, timeoutMs);
+                var ex = Exchange(pipeName, line, cookie, message, timeoutMs);
                 data["connected"] = ex.Connected;
                 data["elapsedMs"] = ex.ElapsedMs;
                 data["responseLine"] = ex.ResponseLine;
@@ -381,12 +389,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 string? failure = OpenPipeFailure(ex, message);
                 if (failure != null) data["error"] = failure;
                 bool ok = failure == null;
-                return new ResponseJsonReport
+                return new OpenPipeReport
                 {
+                    ConnectionFailure = ex.ConnectionFailure,
                     Ok = ok,
                     Message = failure ?? $"'{message}' answered with '{ex.Response!.Message}' in {ex.ElapsedMs} ms.",
                     Data = data,
-                    Meta = RuntimeMeta(ok, false, !readOnly)
+                    Meta = RuntimeMeta(ok, false, !readOnly && ex.ConnectionFailure == null)
                 };
             }
             catch (Exception ex) when (ex is not McpException)

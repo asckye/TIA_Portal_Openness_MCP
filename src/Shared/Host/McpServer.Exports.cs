@@ -42,6 +42,11 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>超过这个字符数就寄存并只回头部。0 或负数表示不限。</summary>
         public const int DefaultMaxResponseChars = 20000;
 
+        // Keep the complete input contract retrievable when even the compact usage entry exceeds the client budget.
+        internal static CallToolResult PageLargeUsage(CallToolResult result)
+            => result.Content.Count == 1 && result.Content[0] is TextContentBlock text && text.Text.Length + ToolCallTiming.ReservedJsonChars >= 40000
+                ? ResponseGuardTool.Guard(result, "GetToolUsage", null) : result;
+
         // 分页工具自身不能被这一层处理：它们的输出本来就是按 offset 夹紧过的，
         // 再包一层只会套娃出一个永远翻不到底的句柄。
         //

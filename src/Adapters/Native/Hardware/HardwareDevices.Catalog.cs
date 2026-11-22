@@ -98,7 +98,7 @@ namespace TiaMcp.Adapters
 
             try
             {
-                var catalog = OpennessApi.HardwareCatalog.Includes(ReleaseKey) ? HardwareTryProperty(portal, "HardwareCatalog") : null;
+                var catalog = PlcHardwareCatalogPolicy.ReadInstalledCatalog(ReleaseKey, portal, p => HardwareTryProperty(p, "HardwareCatalog"));
                 if (catalog != null)
                 {
                     foreach (var filter in BuildHardwareCatalogFilters(normalizedKeyword))

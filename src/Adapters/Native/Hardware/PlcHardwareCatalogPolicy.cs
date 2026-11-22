@@ -23,6 +23,8 @@ namespace TiaMcp.Adapters
             if(!OpennessApi.HardwareCatalog.Includes(release))
                 throw new NotSupportedException("Hardware catalog search requires release-specific API and manual evidence; this release is not enabled.");
         }
+        internal static object? ReadInstalledCatalog(string release, object? portal, Func<object, object?> readCatalog)
+            => portal != null && OpennessApi.HardwareCatalog.Includes(release) ? readCatalog(portal) : null;
         internal static PlcHardwareCatalogSearchResult Search(string release,string keyword,int limit,Func<string,
                 IEnumerable<PlcHardwareCatalogCandidate>> find,int offset=0)
         {

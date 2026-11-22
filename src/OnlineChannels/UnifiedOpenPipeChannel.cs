@@ -17,9 +17,12 @@ namespace TiaMcpServer.Runtime
     // Each tool call opens its own pipe instance and closes it afterwards, so nothing
     // (no subscription) outlives the call.
 
+    public enum OpenPipeConnectionFailure { TimedOut, NotFound }
+
     public sealed class OpenPipeExchange
     {
         public bool Connected;
+        public OpenPipeConnectionFailure? ConnectionFailure;
         public string RequestLine = "";
         public string? ResponseLine;
         public OpenPipeResponse? Response;
@@ -67,8 +70,15 @@ namespace TiaMcpServer.Runtime
             }
             catch (TimeoutException) /* swallow(teardown): a pipe connect timeout is returned as the existing channel error */
             {
+                ex.ConnectionFailure = OpenPipeConnectionFailure.TimedOut;
                 ex.Error =
                     $"Open Pipe '{name}' is not available (connect timed out after {budget} ms). Is WinCC Unified Runtime running on this machine with a loaded project?";
+                return;
+            }
+            catch (IOException error) when (error is FileNotFoundException or DirectoryNotFoundException || (error.HResult & 0xffff) is 2 or 3)
+            {
+                ex.ConnectionFailure = OpenPipeConnectionFailure.NotFound;
+                ex.Error = $"Open Pipe '{name}' does not exist on this machine. WinCC Unified Runtime (OpennessManager) must be running locally.";
                 return;
             }
             ex.Connected = true;
@@ -111,8 +121,6 @@ namespace TiaMcpServer.Runtime
             if (e is TimeoutException) return $"Open Pipe '{name}' timed out: {e.Message}";
             if (e is UnauthorizedAccessException)
                 return $"Access to Open Pipe '{name}' was denied. The user running this MCP server must be a member of the 'SIMATIC HMI' group.";
-            if (e is FileNotFoundException || (e is IOException io && io.Message.IndexOf("pipe", StringComparison.OrdinalIgnoreCase) >= 0))
-                return $"Open Pipe '{name}' does not exist on this machine. WinCC Unified Runtime (OpennessManager) must be running locally.";
             return e.GetType().Name + ": " + e.Message;
         }
     }

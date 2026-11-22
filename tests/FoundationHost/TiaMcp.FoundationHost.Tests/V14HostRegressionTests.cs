@@ -2,6 +2,7 @@ extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Logic.V4.Inputs;
+using TiaMcpServer.Runtime;
 using Xunit;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Builders = TiaMcpServer.ModelContextProtocol;
@@ -24,10 +25,83 @@ public sealed class V14HostRegressionTests
         var original = JsonNode.Parse(File.ReadAllText(Capture(row)))!["body"]!;
         var data = original["data"]!.AsObject();
         string tool = (string)original["meta"]!["tool"]!;
-        var result = Host.RuntimeToolContract.Map(tool, new Host.ResponseJsonReport { Ok = false, Data = data }, true, true).StructuredContent!;
+        var report = new Host.OpenPipeReport { Ok = false, Data = data, ConnectionFailure = OpenPipeConnectionFailure.TimedOut };
+        var result = Host.RuntimeToolContract.Map(tool, report, true, true).StructuredContent!;
         Assert.Equal("PRECONDITION_FAILED", (string?)result["error"]?["code"]);
-        Assert.Equal("plc-online", (string?)result["error"]?["details"]?["condition"]);
+        Assert.Equal("hmi-runtime-pipe", (string?)result["error"]?["details"]?["condition"]);
         Assert.Equal((string?)data["pipeName"], (string?)result["error"]?["details"]?["target"]);
+    }
+
+    [Theory]
+    [InlineData("GetUnifiedRuntimeTags", true)]
+    [InlineData("GetUnifiedRuntimeAlarms", true)]
+    [InlineData("WriteUnifiedRuntimeTags", false)]
+    [InlineData("InvokeUnifiedOpenPipe", true)]
+    [InlineData("InvokeUnifiedOpenPipe", false)]
+    public void Missing_local_pipe_refuses_before_runtime_dispatch(string name, bool readOnly)
+    {
+        string pipe = "tia-missing-" + Guid.NewGuid().ToString("N");
+        var tools = new Host.RuntimeChannelTools();
+        var report = name switch {
+            "GetUnifiedRuntimeTags" => tools.ReadUnifiedRuntimeTags("""["Fixture"]""", pipe, 500),
+            "GetUnifiedRuntimeAlarms" => tools.ReadUnifiedRuntimeAlarms(pipeName: pipe, timeoutMs: 500),
+            "WriteUnifiedRuntimeTags" => tools.WriteUnifiedRuntimeTags("""[{"name":"Fixture","value":true}]""", pipe, 500, true, false),
+            _ => tools.UnifiedOpenPipeRequest(readOnly ? """{"Message":"ReadTag","Params":{"Tags":["Fixture"]}}"""
+                : """{"Message":"WriteTag","Params":{"Tags":[{"Name":"Fixture","Value":true}]}}""", pipe, 500, !readOnly, false)
+        };
+        Assert.Equal(OpenPipeConnectionFailure.TimedOut, Assert.IsType<Host.OpenPipeReport>(report).ConnectionFailure);
+        report.Data!["error"] = report.Message = "Localized diagnostic";
+        var body = Host.RuntimeToolContract.Map(name, report, readOnly, false).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("hmi-runtime-pipe", (string?)body["error"]?["details"]?["condition"]);
+        Assert.Equal(pipe, (string?)body["error"]?["details"]?["target"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+    }
+
+    [Fact]
+    public void Diagnostic_text_alone_does_not_establish_a_missing_pipe()
+    {
+        var data = JsonNode.Parse(File.ReadAllText(Capture("222-GetUnifiedRuntimeTags")))!["body"]!["data"]!.AsObject();
+        var report = new Host.OpenPipeReport { Ok = false, Data = data };
+        var body = Host.RuntimeToolContract.Map("GetUnifiedRuntimeTags", report, true, false).StructuredContent!;
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+    }
+
+    [Fact]
+    public void Pipe_disappearing_between_read_and_write_refuses_before_any_write()
+    {
+        var commands = new List<string?>();
+        var tools = new Host.RuntimeChannelTools { Exchange = (_, _, cookie, command, _) => {
+            commands.Add(command);
+            if (command == "WriteTag") return new OpenPipeExchange { ConnectionFailure = OpenPipeConnectionFailure.NotFound, Error = "Pipe missing" };
+            var response = new JsonObject { ["Message"] = "NotifyReadTag", ["ClientCookie"] = cookie, ["Params"] = new JsonObject {
+                ["Tags"] = new JsonArray(new JsonObject { ["Name"] = "Fixture", ["Value"] = "0", ["ErrorCode"] = 0 }) } };
+            return new OpenPipeExchange { Connected = true, Response = RuntimeChannelsLogic.ParseResponseLine(response.ToJsonString(), cookie) };
+        } };
+        var report = tools.WriteUnifiedRuntimeTags("""[{"name":"Fixture","value":true}]""", "fixture", confirmWrite: true, dryRun: false);
+        var body = Host.RuntimeToolContract.Map("WriteUnifiedRuntimeTags", report, false, true).StructuredContent!;
+        Assert.Equal(new[] { "ReadTag", "WriteTag" }, commands);
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("hmi-runtime-pipe", (string?)body["error"]?["details"]?["condition"]);
+        Assert.False((bool?)body["data"]?["mayHaveChanged"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+    }
+
+    [Fact]
+    public void Raw_pipe_write_keeps_an_unknown_outcome_when_the_peer_closes_after_receiving_it()
+    {
+        var received = new List<string>();
+        var tools = new Host.RuntimeChannelTools { Exchange = (_, line, _, _, _) => {
+            received.Add(line);
+            return new OpenPipeExchange { Connected = true, RequestLine = line, Error = "Peer closed without a response." };
+        } };
+        var request = TiaMcp.Logic.V4.Domain.DomainValidation.Read<TiaMcp.Logic.V4.Domain.OpenPipeRequest>(
+            """{"message":"WriteTag","params":{"tags":[{"name":"Fixture","value":true}]}}""");
+        var result = tools.UnifiedOpenPipeRequestV4(request, "fixture", 5000, confirmWrite: true, dryRun: false);
+        Assert.True((bool?)result.StructuredContent?["data"]?["connected"], result.StructuredContent!.ToJsonString());
+        Assert.Equal("WriteTag", (string?)JsonNode.Parse(Assert.Single(received))!["Message"]);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)result.StructuredContent!["error"]?["code"]);
+        Assert.True((bool?)result.StructuredContent["data"]?["mayHaveChanged"]);
     }
 
     [Theory]
@@ -212,6 +286,36 @@ public sealed class V14HostRegressionTests
         Assert.Equal("CONFIRMATION_REQUIRED", (string?)result["error"]?["code"]);
         Assert.Contains("confirmWrite=true", (string?)result["error"]?["message"]);
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("false")]
+    [InlineData("\"true\"")]
+    [InlineData("\"yes\"")]
+    [InlineData("1")]
+    [InlineData("{}")]
+    [InlineData("[]")]
+    public async Task Web_write_requires_boolean_true_before_preview(string confirmation)
+    {
+        using var fixture = new PreviewHostFixture("14sp1");
+        using var session = fixture.Pipeline.EnterSession();
+        var call = Host.McpServer.PrecheckBeforeApproval("WritePlcWebVars", """{"dryRun":false,"confirmWrite":""" + confirmation + "}",
+            _ => throw new InvalidOperationException("Invalid confirmation reached the preview."), CancellationToken.None);
+        var body = (await call)!.StructuredContent!;
+        Assert.Equal("CONFIRMATION_REQUIRED", (string?)body["error"]?["code"]);
+        Assert.Contains("confirmWrite=true", (string?)body["error"]?["message"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("""{"dryRun":false,"confirmWrite":true}""")]
+    [InlineData("""{"dryRun":true,"confirmWrite":false}""")]
+    [InlineData("{}")]
+    public void Confirmed_web_writes_and_previews_pass_the_confirmation_precheck(string arguments)
+    {
+        Assert.Null(TiaMcp.Logic.V4.HostBehavior.MissingRuntimeWriteConfirmation("WritePlcWebVars", JsonSerializer.Deserialize<JsonElement>(arguments)));
     }
 
     [Fact]

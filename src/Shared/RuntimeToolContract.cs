@@ -82,14 +82,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 || obj.Any(p => (p.Key == "error" || p.Key.EndsWith("Error", StringComparison.Ordinal)) && p.Value != null || Incomplete(p.Value));
         }
 
-        private static string? UnreachableRuntimeTarget(string tool, JsonObject data)
+        private static PreconditionFailedDetails? UnreachableRuntimeTarget(string tool, JsonObject data, OpenPipeConnectionFailure? pipeFailure)
         {
-            if (tool is "GetUnifiedRuntimeAlarms" or "GetUnifiedRuntimeTags" or "WriteUnifiedRuntimeTags"
-                && Flag(data, "connected") == false && data["pipeName"] is JsonValue pipe && pipe.TryGetValue<string>(out var pipeName)
-                && data["error"] is JsonValue failure && failure.TryGetValue<string>(out var problem)
-                && problem.StartsWith("Open Pipe '", StringComparison.Ordinal)
-                && (problem.Contains("' is not available (connect timed out after ") || problem.Contains("' does not exist on this machine.")))
-                return pipeName;
+            if (pipeFailure.HasValue && data["pipeName"] is JsonValue pipe && pipe.TryGetValue<string>(out var pipeName))
+                return new PreconditionFailedDetails("hmi-runtime-pipe", pipeName);
             string? parameter = TiaMcp.Adapters.Contracts.OnlineTargetPolicy.AddressParameter(tool);
             if (parameter is not ("ip" or "host" or "endpointUrl")) return null;
             string? target = (string?)data[parameter == "endpointUrl" ? "endpoint" : parameter];
@@ -100,7 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             string message = reason.TrimEnd('.');
             if (message.Equals("No online connection", StringComparison.OrdinalIgnoreCase)
-                || message.Equals("Target not reachable", StringComparison.OrdinalIgnoreCase)) return target;
+                || message.Equals("Target not reachable", StringComparison.OrdinalIgnoreCase)) return new PreconditionFailedDetails("plc-online", target);
             bool unreachable = parameter switch {
                 "ip" => reason.StartsWith("Connect failed: TCP: ", StringComparison.Ordinal)
                     || reason.StartsWith("Connect to " + target + " (rack ", StringComparison.Ordinal)
@@ -113,7 +109,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         && reason.EndsWith("unreachable or no UA server enabled).", StringComparison.Ordinal),
                 _ => false
             };
-            return unreachable ? target : null;
+            return unreachable ? new PreconditionFailedDetails("plc-online", target) : null;
         }
 
         internal static CallToolResult Map(string tool, object response, bool readOnly, bool current)
@@ -210,10 +206,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else if (success == false && !issued && succeeded + failed == 0
                 && (readOnly || Flag(data, "mayHaveChanged") == false || Flag(data, "writeAttempted") == false)
-                && UnreachableRuntimeTarget(tool, data) is string target)
+                && UnreachableRuntimeTarget(tool, data, (response as OpenPipeReport)?.ConnectionFailure) is PreconditionFailedDetails prerequisite)
             {
                 outcome = Outcome.RejectedBeforeOperation;
-                error = new Error("The runtime target could not be reached.", new PreconditionFailedDetails("plc-online", target));
+                error = new Error("The runtime target could not be reached.", prerequisite);
             }
             else if (success == true) outcome = Outcome.Succeeded;
             else if (readOnly) { outcome = Outcome.ReadFailed; error = Failure(false, data); }

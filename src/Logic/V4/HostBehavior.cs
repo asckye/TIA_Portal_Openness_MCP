@@ -49,7 +49,7 @@ namespace TiaMcp.Logic.V4
         internal static Error? MissingRuntimeWriteConfirmation(string tool, JsonElement arguments)
             => tool == "WritePlcWebVars" && arguments.ValueKind == JsonValueKind.Object
                 && arguments.TryGetProperty("dryRun", out var dryRun) && dryRun.ValueKind == JsonValueKind.False
-                && (!arguments.TryGetProperty("confirmWrite", out var confirm) || confirm.ValueKind == JsonValueKind.False)
+                && (!arguments.TryGetProperty("confirmWrite", out var confirm) || confirm.ValueKind != JsonValueKind.True)
                 ? new Error("Writing PLC web variables requires confirmWrite=true.", new ConfirmationRequiredDetails(null)) : null;
 
         // Only the top-level credential fields that formerly resolved vault references reserve this prefix.

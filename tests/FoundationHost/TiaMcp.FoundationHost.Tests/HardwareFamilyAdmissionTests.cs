@@ -11,6 +11,25 @@ using Xunit;
 public sealed class HardwareFamilyAdmissionTests
 {
     [Theory]
+    [InlineData("18", false, 0)]
+    [InlineData("21", false, 0)]
+    [InlineData("17", true, 0)]
+    [InlineData("18", true, 1)]
+    public void Installed_gsd_catalog_lookup_requires_a_portal_and_catalog_api(string release, bool attached, int expectedReads)
+    {
+        var portal = attached ? new object() : null;
+        var catalog = new object();
+        int reads = 0;
+        var result = TiaMcp.Adapters.PlcHardwareCatalogPolicy.ReadInstalledCatalog(release, portal, source => {
+            reads++;
+            Assert.Same(portal, source);
+            return catalog;
+        });
+        Assert.Equal(expectedReads, reads);
+        Assert.Same(expectedReads == 0 ? null : catalog, result);
+    }
+
+    [Theory]
     [InlineData(0, 50)]
     [InlineData(22, 50)]
     [InlineData(50, 50)]
