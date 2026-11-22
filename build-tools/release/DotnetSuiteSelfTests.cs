@@ -182,12 +182,20 @@ internal static class DotnetSuiteSelfTests
     private static void PlantedHang()
     {
         var root = Repository.FindRoot();
-        // The Codex sandbox can deny mini-dump collection. Both host runners produced dumps; under load the 2 s fixture
-        // deadline has also fired before VSTest recorded the test name. Both the name and the dump are required below.
+        // The Codex sandbox can deny mini-dump collection. The Windows host gate requires real dumps in both runners.
         // Retain the real collector artifacts for the reviewer, below this worktree.
         var directory = Path.Combine(root, "bin-build/suite-hang-self-tests", Guid.NewGuid().ToString("N")[..8]);
-        Directory.CreateDirectory(directory);
-        var project = Path.Combine(directory, "HangFixture.csproj");
+        var fixture = Directory.CreateDirectory(Path.Combine(directory, "fixture")).FullName;
+        var collector = Directory.CreateDirectory(Path.Combine(directory, "collector")).FullName;
+        foreach (string file in new[] { "TestStartBlameCollector.csproj", "TestStartBlameCollector.cs" })
+            File.Copy(Path.Combine(root, "tests/Fixtures/SuiteHang", file), Path.Combine(collector, file));
+        var project = Path.Combine(fixture, "HangFixture.csproj");
+        var settings = Path.Combine(directory, "planted.runsettings");
+        File.WriteAllText(settings, """
+            <RunSettings><DataCollectionRunSettings><DataCollectors>
+              <DataCollector friendlyName="blame" uri="datacollector://TiaMcp/SuiteHang/TestStartBlame" />
+            </DataCollectors></DataCollectionRunSettings></RunSettings>
+            """);
         var config = Path.Combine(directory, "nuget.config");
         File.WriteAllText(config, "<configuration><packageSources><clear /></packageSources></configuration>");
         File.WriteAllText(project, """
@@ -198,16 +206,30 @@ internal static class DotnetSuiteSelfTests
                 <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps><ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
                 <NuGetAudit>false</NuGetAudit></PropertyGroup>
               <ItemGroup><PackageReference Include="xunit" Version="2.9.2" />
+                <ProjectReference Include="../collector/TestStartBlameCollector.csproj" ReferenceOutputAssembly="false" />
                 <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
                 <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" /></ItemGroup>
               <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
             </Project>
             """);
-        File.WriteAllText(Path.Combine(directory, "Tests.cs"), """
+        File.WriteAllText(Path.Combine(fixture, "Tests.cs"), """
+            using Xunit.Abstractions;
+            using Xunit.Sdk;
             namespace HangFixture;
+            [XunitTestCaseDiscoverer("HangFixture.SlowDiscovery", "HangFixture")]
+            public sealed class PlantedFactAttribute : Xunit.FactAttribute {}
+            public sealed class SlowDiscovery(IMessageSink messages) : FactDiscoverer(messages)
+            {
+                protected override IXunitTestCase CreateTestCase(ITestFrameworkDiscoveryOptions options, ITestMethod method, IAttributeInfo fact)
+                {
+                    // Exercise startup longer than the planted 2 s deadline before VSTest reports TestCaseStart.
+                    if (System.Environment.GetEnvironmentVariable("TIA_MCP_PLANTED_HANG") == "1") System.Threading.Thread.Sleep(2500);
+                    return base.CreateTestCase(options, method, fact);
+                }
+            }
             public sealed class Tests
             {
-                [Xunit.Fact] public async System.Threading.Tasks.Task PlantedHang()
+                [PlantedFact] public async System.Threading.Tasks.Task PlantedHang()
                 {
                     if (System.Environment.GetEnvironmentVariable("TIA_MCP_PLANTED_HANG") == "1")
                         await System.Threading.Tasks.Task.Delay(System.Threading.Timeout.Infinite);
@@ -222,6 +244,7 @@ internal static class DotnetSuiteSelfTests
         var suite = new JsonObject { ["project"] = Path.GetRelativePath(root, project), ["minimumPassed"] = 1,
             ["maximumSkipped"] = 0, ["arguments"] = new JsonArray() };
         var unit = new SuiteBuild((string)suite["project"]!, "default", []);
+        var normalHangLimit = TimeSpan.ParseExact(SuiteHang.Timeout, @"m\m", System.Globalization.CultureInfo.InvariantCulture);
         var failures = new List<string>();
         foreach (var mode in new[] { "test", "test-shard" })
         foreach (var hang in new[] { false, true })
@@ -234,13 +257,21 @@ internal static class DotnetSuiteSelfTests
                 {
                     var args = arguments.ToArray();
                     Require(SuiteHang.TestArguments.All(args.Contains));
-                    // Only the planted hang uses a short limit; production has no override. The normal control runs with the
-                    // production blame-hang settings: the 2-s limit also covers test-host start-up, which took up to 2.0 s here.
-                    if (hang) args = args.Select(a => a == SuiteHang.Timeout ? "2s" : a.Replace("TestTimeout=" + SuiteHang.Timeout, "TestTimeout=2s", StringComparison.Ordinal)).ToArray();
+                    if (hang)
+                    {
+                        args = args.Select(a => a == SuiteHang.Timeout ? "2s" :
+                            a.Replace("TestTimeout=" + SuiteHang.Timeout, "TestTimeout=2s", StringComparison.Ordinal)).ToArray();
+                        args = [.. args, "--settings", settings, "--test-adapter-path", Path.Combine(collector, "bin/Release/net10.0")];
+                    }
                     args = [.. args, "--diag", Path.Combine(output, "vstest.log")];
                     var env = environment == null ? new Dictionary<string, string?>() : new Dictionary<string, string?>(environment);
                     env["TIA_MCP_PLANTED_HANG"] = hang ? "1" : null;
-                    var result = ProcessRunner.Run(executable, args, working, env);
+                    env["TIA_MCP_PLANTED_START"] = hang ? Path.Combine(output, "recorded-start.txt") : null;
+                    // Blame normally supplies this to the macOS testhost during initialization, before launch.
+                    if (hang && OperatingSystem.IsMacOS()) env["COMPlus_DbgEnableElfDumpOnMacOS"] = "1";
+                    // Keep the production hang budget as an outer bound if VSTest never delivers the first test event.
+                    var result = ProcessRunner.Run(executable, args, working, env,
+                        timeoutMilliseconds: hang ? (int)normalHangLimit.TotalMilliseconds : null);
                     File.WriteAllText(Path.Combine(output, "process.log"), result.StandardOutput + result.StandardError);
                     return result;
                 }
@@ -253,6 +284,9 @@ internal static class DotnetSuiteSelfTests
                 Require(hang ? result.ExitCode != 0 : result.ExitCode == 0);
                 if (hang)
                 {
+                    var recorded = Path.Combine(output, "recorded-start.txt");
+                    if (!File.Exists(recorded) || File.ReadAllText(recorded) != "HangFixture.Tests.PlantedHang")
+                        throw new ReleaseException("Missing VSTest start for HangFixture.Tests.PlantedHang; see " + output);
                     Require((result.StandardOutput + result.StandardError).Contains("HangFixture.Tests.PlantedHang", StringComparison.Ordinal));
                     var evidence = JsonNode.Parse(File.ReadAllText(Path.Combine(output, "fixture.hang.json")))!;
                     Require(evidence["tests"]!.AsArray().Any(t => t!.GetValue<string>() == "HangFixture.Tests.PlantedHang"));

@@ -6,7 +6,7 @@ internal static class PythonCheckChanges
 {
     private sealed record Test(string Name, string Body, string Skips, int Line, bool Nested = false)
     {
-        internal string AssertionBody { get; set; } = "";
+        internal string ScopedBody { get; init; } = "";
     }
     private static List<Test> Tests(string source, bool allFunctions = false)
     {
@@ -41,14 +41,19 @@ internal static class PythonCheckChanges
             string decorators = string.Join('\n', lines[start..index]);
             var skips = Regex.Matches(decorators, @"@(?:pytest\.mark\.(?:skip|skipif)|unittest\.skip\w*)\b[^\n]*").Select(match => match.Value.Trim());
             string body = string.Join('\n', lines[index..end]);
-            var markers = skips.Concat(Regex.Matches(body, @"\bpytest\.skip\s*\([^\r\n]*").Select(match => match.Value));
-            var test = new Test(string.Join('/', scopes.Select(scope => scope.Name)), body, string.Join('\n', markers), index + 1, nested);
+            var test = new Test(string.Join('/', scopes.Select(scope => scope.Name)), body, string.Join('\n', skips), index + 1, nested);
             tests.Add(test);
         }
         var scopedLines = Enumerable.Range(0, lines.Length).ToLookup(index => owners[index], index => lines[index]);
-        foreach (var test in tests) test.AssertionBody = string.Join('\n', scopedLines[test.Line]);
+        for (int i = 0; i < tests.Count; i++)
+        {
+            var test = tests[i];
+            string body = string.Join('\n', scopedLines[test.Line]);
+            var calls = Regex.Matches(body, @"\bpytest\.skip\s*\([^\r\n]*").Select(match => match.Value);
+            tests[i] = test with { ScopedBody = body, Skips = string.Join('\n', test.Skips.Split('\n', StringSplitOptions.RemoveEmptyEntries).Concat(calls)) };
+        }
         var module = string.Join('\n', lines.Select((line, index) => owners[index] == 0 ? line : ""));
-        tests.Add(new("<module>", module, "", 1) { AssertionBody = module });
+        tests.Add(new("<module>", module, "", 1) { ScopedBody = module });
         return tests;
     }
 
@@ -76,8 +81,8 @@ internal static class PythonCheckChanges
             if (match >= 0) after.RemoveAt(match);
             AddSkip(replacement.Change, replacement.Test, test.Skips, findings);
             if (change.After == null) continue;
-            var available = Assertions(replacement.Test.AssertionBody).SelectMany(pair => Enumerable.Repeat(pair.Key, pair.Value)).ToList();
-            foreach (var (assertion, count) in Assertions(test.AssertionBody))
+            var available = Assertions(replacement.Test.ScopedBody).SelectMany(pair => Enumerable.Repeat(pair.Key, pair.Value)).ToList();
+            foreach (var (assertion, count) in Assertions(test.ScopedBody))
                 for (int index = 0; index < count; index++)
                 {
                     int found = available.FindIndex(current => CheckLoosening.StricterCondition(assertion, current));

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel" Private="false"
+               HintPath="$(MSBuildBinPath)/Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
+    <Reference Include="Microsoft.TestPlatform.Extensions.BlameDataCollector" Private="false"
+               HintPath="$(MSBuildBinPath)/Extensions/Microsoft.TestPlatform.Extensions.BlameDataCollector.dll" />
+  </ItemGroup>
+</Project>

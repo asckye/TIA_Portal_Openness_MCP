@@ -57,7 +57,7 @@ internal sealed class GateWatchdog(string stage, TimeSpan limit, TimeProvider cl
         lock (sync)
         {
             var now = finished ?? Now;
-            if (finished.HasValue || work?.IsCompleted == true)
+            if (timeoutMessage == null && (finished.HasValue || work?.IsCompleted == true))
             {
                 var elapsed = clock.GetElapsedTime(started, now);
                 if (elapsed > limit) report($"{stage} finished {elapsed - limit:c} after its wall-clock limit {limit:c}.");

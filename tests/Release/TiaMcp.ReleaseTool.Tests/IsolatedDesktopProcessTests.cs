@@ -122,6 +122,30 @@ public sealed class IsolatedDesktopProcessTests
     }
 
     [Fact]
+    public void Verified_worker_job_can_stop_its_descendants_after_the_root_exits()
+    {
+        if (!OperatingSystem.IsWindows()) { AssertWindowsRequired(); return; }
+        using var fixture = new StaticTree();
+        string executable = Path.ChangeExtension(FixtureAssembly, ".exe");
+        string report = Path.Combine(fixture.Root, "worker.json");
+        var start = new ProcessStartInfo(executable) { WorkingDirectory = fixture.Root };
+        foreach (string arg in new[] { "--desktop-parent", report, "orphan", "0" }) start.ArgumentList.Add(arg);
+        var other = Path.Combine(fixture.Root, "other.exe");
+        var rejected = Assert.Throws<IOException>(() => WindowsProcessTree.Start(start, name: null, expectedImagePath: other));
+        Assert.Contains(executable, rejected.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.False(File.Exists(report));
+
+        using var job = WindowsProcessTree.Start(start, name: null, expectedImagePath: executable);
+        job.StandardInput.Close();
+        Assert.True(job.WaitForExit(TestDeadlines.HangMilliseconds));
+        var orphan = JsonSerializer.Deserialize<Probe>(File.ReadAllText(report + ".grandchild"))!;
+        using var descendant = Process.GetProcessById(orphan.Pid);
+        Assert.False(descendant.HasExited);
+        PlcWorkerFixtures.StopWorker(job, executable);
+        Assert.True(descendant.HasExited);
+    }
+
+    [Fact]
     public void Explicit_stream_encodings_round_trip_UTF8_without_an_isolated_desktop()
     {
         using var tree = new StaticTree();

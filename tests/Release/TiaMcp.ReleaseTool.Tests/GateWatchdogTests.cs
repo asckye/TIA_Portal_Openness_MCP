@@ -214,8 +214,15 @@ public sealed class GateWatchdogTests
     {
         var primary = new IOException("launch failed");
         var timeout = new TimeoutException("missing ACTIVE_PROCESS_ZERO");
-        void Close() => throw timeout;
-        WindowsProcessTree.ClosePreservingFailure(primary, Close);
+        void Close(TimeSpan budget)
+        {
+            Assert.Equal(ProcessDeadline.NormalExitCleanupTimeout, budget);
+            throw timeout;
+        }
+        using var diagnostics = new StringWriter();
+        WindowsProcessTree.ClosePreservingFailure(primary, Close, diagnostics);
+        Assert.Contains(primary.Message, diagnostics.ToString());
+        Assert.Contains(timeout.Message, diagnostics.ToString());
         Assert.Same(timeout, primary.Data["ProcessTreeCleanup"]);
         Assert.Same(timeout, Assert.Throws<TimeoutException>(() => WindowsProcessTree.ClosePreservingFailure(null, Close)));
     }
@@ -264,8 +271,25 @@ public sealed class GateWatchdogTests
         int stops = 0;
         using var tree = job.TrackTree(41, () => Interlocked.Increment(ref stops));
         clock.Advance(TimeSpan.FromMinutes(2));
-        Assert.Throws<ReleaseException>(job.RequireTime);
-        Assert.Equal(23, watch.WaitForCompletion(Task.FromResult(23), _ => throw new InvalidOperationException("Work already completed")));
+        var expiry = Assert.Throws<ReleaseException>(job.RequireTime);
+        var reported = Assert.Throws<ReleaseException>(() => watch.WaitForCompletion(Task.FromResult(23), _ => throw new InvalidOperationException()));
+        Assert.Equal(expiry.Message, reported.Message);
+        Assert.Equal(1, stops);
+    }
+
+    [Fact]
+    public void Caught_late_registration_failure_still_expires_completed_work()
+    {
+        var clock = new Clock();
+        var messages = new List<string>();
+        var watch = new GateWatchdog("merge-check", TimeSpan.FromMinutes(1), clock, messages.Add);
+        using var job = new GateWatchdog.Job(watch, "worker", null);
+        int stops = 0;
+        clock.Advance(TimeSpan.FromMinutes(2));
+        var expiry = Assert.Throws<ReleaseException>(() => job.TrackTree(42, () => Interlocked.Increment(ref stops)));
+        var reported = Assert.Throws<ReleaseException>(() => watch.WaitForCompletion(Task.FromResult(23), _ => throw new InvalidOperationException()));
+        Assert.Equal(expiry.Message, reported.Message);
+        Assert.Equal(reported.Message, Assert.Single(messages));
         Assert.Equal(1, stops);
     }
 

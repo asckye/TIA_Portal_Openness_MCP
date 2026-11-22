@@ -35,27 +35,22 @@ internal static class PlcWorkerFixtures
         start.Environment["TIA_MCP_PLC_WORKER_SDK_READY"] = "1";
         var job = GateWatchdog.ActiveJob;
         job?.RequireTime();
-        var tree = WindowsProcessTree.Start(start);
+        var tree = WindowsProcessTree.Start(start, name: null, expectedImagePath: start.FileName);
         Exception? failure = null;
         try
         {
-            void Stop()
-            {
-                if (!tree.WaitForExit(0))
-                {
-                    using var process = Process.GetProcessById(checked((int)tree.ProcessId));
-                    string actual = process.MainModule?.FileName ?? throw new ReleaseException("Cannot verify owned worker image before shutdown.");
-                    if (!string.Equals(Path.GetFullPath(actual), start.FileName, StringComparison.OrdinalIgnoreCase))
-                        throw new ReleaseException("Owned worker image changed before shutdown: " + actual);
-                    Console.Error.WriteLine($"Stopping owned PlcWorker pid={tree.ProcessId} image={actual}");
-                }
-                tree.Finish(ProcessDeadline.CleanupTimeout);
-            }
+            void Stop() => StopWorker(tree, start.FileName);
             using var registration = job?.TrackTree(checked((int)tree.ProcessId), Stop);
             return await SmokeStarted(tree, worker, key, nonce, fault, environmentFault, Stop);
         }
         catch (Exception error) { failure = error; throw; }
         finally { tree.Dispose(failure); }
+    }
+
+    internal static void StopWorker(WindowsProcessTree tree, string imagePath)
+    {
+        try { Console.Error.WriteLine($"Stopping owned PlcWorker pid={tree.ProcessId} image={imagePath}"); }
+        finally { tree.Finish(ProcessDeadline.CleanupTimeout); }
     }
 
     private static async Task<string> SmokeStarted(WindowsProcessTree tree, string worker, string key, string nonce,

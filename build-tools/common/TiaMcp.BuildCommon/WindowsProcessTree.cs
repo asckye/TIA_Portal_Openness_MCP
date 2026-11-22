@@ -53,7 +53,9 @@ public sealed class WindowsProcessTree : IDisposable
         lock (StartLock) process.Start();
     }
 
-    public static WindowsProcessTree Start(ProcessStartInfo start, string? name = null)
+    public static WindowsProcessTree Start(ProcessStartInfo start, string? name = null) => Start(start, name, null);
+
+    public static WindowsProcessTree Start(ProcessStartInfo start, string? name, string? expectedImagePath)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Windows process jobs require Windows.");
         var owned = new WindowsProcessTree(name);
@@ -63,7 +65,7 @@ public sealed class WindowsProcessTree : IDisposable
         {
             try
             {
-                owned.Launch(start);
+                owned.Launch(start, expectedImagePath);
                 return owned;
             }
             catch (Exception error)
@@ -74,7 +76,7 @@ public sealed class WindowsProcessTree : IDisposable
         }
     }
 
-    private void Launch(ProcessStartInfo start)
+    private void Launch(ProcessStartInfo start, string? expectedImagePath)
     {
         _job = CreateJobObject(IntPtr.Zero, null);
         if (_job.IsInvalid) throw Failure("create the owned process job");
@@ -125,6 +127,15 @@ public sealed class WindowsProcessTree : IDisposable
             using var thread = new SafeFileHandle(child.Thread, true);
             if (!AssignProcessToJobObject(_job, _process)) throw Failure("own the owned process");
             _assigned = true;
+            if (expectedImagePath != null)
+            {
+                // Check the original process handle while the child is still suspended. Shutdown needs only the job handle.
+                int size = 32768;
+                var image = new StringBuilder(size);
+                if (!QueryFullProcessImageName(_process, 0, image, ref size)) throw Failure("verify the owned process image");
+                if (!string.Equals(Path.GetFullPath(image.ToString()), Path.GetFullPath(expectedImagePath), StringComparison.OrdinalIgnoreCase))
+                    throw new IOException($"Owned PID {ProcessId} has image '{image}', expected '{expectedImagePath}'.");
+            }
             _output.DisposeLocalCopyOfClientHandle();
             _error.DisposeLocalCopyOfClientHandle();
             _input.DisposeLocalCopyOfClientHandle();
@@ -222,15 +233,22 @@ public sealed class WindowsProcessTree : IDisposable
         new($"Cleanup of owned PID {pid} timed out waiting for {waitingFor} within {timeout:c}.");
 
     // Callers unwinding a failed launch or command pass its exception through their finally block.
-    public void Dispose(Exception? primaryFailure) => ClosePreservingFailure(primaryFailure, Dispose);
+    public void Dispose(Exception? primaryFailure) => ClosePreservingFailure(primaryFailure, Close);
 
-    internal static void ClosePreservingFailure(Exception? primaryFailure, Action close)
+    internal static void ClosePreservingFailure(Exception? primaryFailure, Action<TimeSpan> close, TextWriter? diagnostics = null)
     {
-        try { close(); }
-        catch (Exception cleanup) when (primaryFailure != null) { primaryFailure.Data["ProcessTreeCleanup"] = cleanup; }
+        try { close(ProcessDeadline.NormalExitCleanupTimeout); }
+        catch (Exception cleanup) when (primaryFailure != null)
+        {
+            primaryFailure.Data["ProcessTreeCleanup"] = cleanup;
+            try { (diagnostics ?? Console.Error).WriteLine($"Process tree cleanup after '{primaryFailure.Message}' also failed: {cleanup.Message}"); }
+            catch (Exception logError) when (logError is IOException or ObjectDisposedException) { cleanup.Data["DiagnosticWriteFailure"] = logError; }
+        }
     }
 
-    public void Dispose()
+    public void Dispose() => Dispose(null);
+
+    private void Close(TimeSpan timeout)
     {
         using (_desktop)
         using (_completion)
@@ -243,7 +261,7 @@ public sealed class WindowsProcessTree : IDisposable
         using (StandardOutput)
         using (StandardInput)
         {
-            Finish(ProcessDeadline.CleanupTimeout, disposing: true);
+            Finish(timeout, disposing: true);
         }
     }
 
@@ -355,6 +373,9 @@ public sealed class WindowsProcessTree : IDisposable
     [DllImport("kernel32.dll", SetLastError = true)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern bool GetExitCodeProcess(SafeFileHandle process, out uint code);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern bool QueryFullProcessImageName(SafeFileHandle process, int flags, StringBuilder image, ref int size);
     [DllImport("kernel32.dll", SetLastError = true)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern SafeFileHandle CreateIoCompletionPort(IntPtr file, IntPtr existing, UIntPtr key, uint threads);

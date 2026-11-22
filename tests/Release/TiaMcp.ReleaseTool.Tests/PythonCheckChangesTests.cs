@@ -6,6 +6,19 @@ namespace TiaMcp.ReleaseTool.Tests;
 [Trait("Category", "StaticChecks")]
 public sealed class PythonCheckChangesTests
 {
+    [Fact]
+    public void Nested_skip_calls_report_only_their_own_scope_and_retain_decorator_keys()
+    {
+        const string path = "tests/test_transport.py";
+        const string before = "def test_outer():\n    def helper():\n        pass\n    helper()\n";
+        const string marker = "@pytest.mark.skipif(offline)";
+        const string call = "pytest.skip('offline')";
+        string after = before.Replace("    def helper", $"    {marker}\n    def helper").Replace("pass", call);
+        var finding = Assert.Single(CheckLoosening.Scan([new(path, path, before, after)]));
+        Assert.Equal("test-skipped", finding.Kind);
+        Assert.Equal("test_outer/helper:" + CheckLoosening.Hash(marker + "\n" + call), finding.Identifier);
+    }
+
     [Theory]
     [InlineData("scripts/checks/transport.py", "check_outer")]
     [InlineData("tests/test_transport.py", "test_outer")]
