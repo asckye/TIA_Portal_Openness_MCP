@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using TiaMcp.BuildCommon;
@@ -55,19 +56,24 @@ internal static class RepositoryChecks
     internal static List<string> RepositoryNameErrors(string root, IEnumerable<string> names)
     {
         var changelog = Repository.ReadSource(Path.Combine(root, "CHANGELOG.md"));
-        var headings = Regex.Matches(changelog, @"^## \[(" + ReleaseVersions.VersionPattern + @")\]", RegexOptions.Multiline);
-        var lastPublishedHeading = headings.FirstOrDefault(m => File.Exists(Path.Combine(root, "manifest", $"publication-v{m.Groups[1].Value}.json")))?.Value;
-        // Some published notes have a release tag but predate the next publication record.
-        var publishedNotes = headings.SkipWhile(m => !PrereleaseNotes.Published(root, m.Groups[1].Value))
-            .Select(m => $"docs/releases/v{m.Groups[1].Value}.md").ToHashSet(StringComparer.Ordinal);
+        var headings = Regex.Matches(changelog, @"^## \[(?<version>" + ReleaseVersions.VersionPattern + @")\](?: - (?<date>\d{4}-\d{2}-\d{2})[ \t]*$)?",
+            RegexOptions.Multiline);
+        bool Published(Match heading) => PrereleaseNotes.Published(root, heading.Groups["version"].Value);
+        // Packages have no tags. Their dated release headings supply the missing publication evidence.
+        static bool Dated(Match heading) => DateOnly.TryParseExact(heading.Groups["date"].Value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out _);
+        var frozen = (Path.Exists(Path.Combine(root, ".git")) ? headings.SkipWhile(m => !Published(m))
+            : headings.Where(m => Dated(m) || Published(m))).ToArray();
+        var lastPublishedHeading = frozen.FirstOrDefault()?.Value;
+        var publishedNotes = frozen.Select(m => PrereleaseNotes.NotesPath(m.Groups["version"].Value)).ToHashSet(StringComparer.Ordinal);
         // A qualified upstream source and a local checkout path can retain the name.
         // Anchor paths at a token boundary so a slash inside an HTTPS or SSH URL cannot hide a repository reference.
         const string localRoot = @"(?:[A-Z]:[\\/]|\\\\|~[\\/]|\.{1,2}[\\/]|/(?!/))";
         const string localPath = """(?<![\w./\\:@-])""" + localRoot + """(?:[^\s\/\\:"'`<>|]*[\\/])*""";
         const string quotedPath = """["'`]""" + localRoot + """(?:[^\/\\:"'`<>|\r\n]*[\\/])*""";
         const string windowsPath = """\b[A-Z]:[\\/](?:[^/\\:"'`<>|\r\n]*[\\/])*?""";
-        var otherReferences = new Regex(@"(?:\b(?:bulaofen0036-coder|chin9933)/|" + localPath + "|" + quotedPath + "|" + windowsPath + ")" + FormerRepositoryName,
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        var otherReferences = new Regex(@"(?:\b(?:bulaofen0036-coder|chin9933)/|" + localPath + "|" + quotedPath + "|" + windowsPath + ")"
+            + FormerRepositoryName, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         var errors = new List<string>();
         foreach (var name in names.Distinct().Order(StringComparer.Ordinal))
         {

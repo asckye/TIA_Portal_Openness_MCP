@@ -24,5 +24,6 @@
     <Compile Include="..\Shared\DeliveryPackage.cs" Link="Shared\DeliveryPackage.cs" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 </Project>

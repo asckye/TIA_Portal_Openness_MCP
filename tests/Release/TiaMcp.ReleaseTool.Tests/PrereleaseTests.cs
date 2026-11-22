@@ -167,7 +167,8 @@ public sealed partial class PrereleaseTests
     {
         var status = RealMachineStatusGenerator.Read(Root);
         var block = PrereleaseNotes.DraftBlock(Ledger, Checklist, status, FixtureTranslations(), false);
-        Assert.Contains("https://github.com/asckye/automation-engineering-workbench/blob/master/" + PrereleaseNotes.LedgerPath, block, StringComparison.Ordinal);
+        Assert.Contains("https://github.com/asckye/automation-engineering-workbench/blob/master/" + PrereleaseNotes.LedgerPath,
+            block, StringComparison.Ordinal);
         foreach (var key in CatalogJson.Keys)
         {
             var s = status.Summarize(key);

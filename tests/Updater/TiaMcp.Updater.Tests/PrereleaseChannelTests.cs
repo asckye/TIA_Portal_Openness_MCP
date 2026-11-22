@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using TiaMcp.Updater;
 using Xunit;
 
@@ -113,6 +117,62 @@ namespace TiaMcp.Updater.Tests
             Assert.Contains(lines, line => line.Contains("4.0.0-beta.1 > 3.3.0", StringComparison.Ordinal));
             using var plain = new ChannelFixture("3.3.0") { FailApi = true };
             Assert.DoesNotContain(plain.Check(), line => line.Contains("the release page shows only", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public void Api_redirects_resolve_relative_locations_and_allow_both_github_hosts()
+        {
+            var start = new Uri("https://api.github.com/repos/owner/old/releases/latest");
+            const string canonical = "/repositories/123/releases/latest";
+            const string final = "https://github.com/owner/new/releases/latest";
+            using var handler = new ApiRedirectFixture(canonical, final);
+            Assert.Equal("v4.0.0", handler.Read(start).Tag);
+            Assert.Equal(new[] { start.AbsoluteUri, "https://api.github.com" + canonical, final }, handler.Requests);
+        }
+
+        [Theory]
+        [InlineData("http://api.github.com/releases/latest")]
+        [InlineData("//other.invalid/releases/latest")]
+        [InlineData("https://github.com.other.invalid/releases/latest")]
+        [InlineData("https://user@github.com/releases/latest")]
+        [InlineData("https://api.github.com:8443/releases/latest")]
+        public void Unsafe_api_redirect_is_refused_before_sending_the_next_request(string location)
+        {
+            var start = new Uri("https://api.github.com/repos/owner/old/releases/latest");
+            const string renamed = "https://api.github.com/repositories/123/releases/latest";
+            using var handler = new ApiRedirectFixture(renamed, location);
+            Assert.Throws<InvalidOperationException>(() => handler.Read(start));
+            Assert.Equal(new[] { start.AbsoluteUri, renamed }, handler.Requests);
+        }
+
+        [Fact]
+        public void Api_redirect_loop_has_a_finite_request_limit()
+        {
+            var start = new Uri("https://api.github.com/repositories/123/releases/latest");
+            using var handler = new ApiRedirectFixture(Enumerable.Repeat(start.AbsoluteUri, 6).ToArray());
+            var error = Assert.Throws<InvalidOperationException>(() => handler.Read(start));
+            Assert.Contains("Too many redirects", error.Message);
+            Assert.Equal(Enumerable.Repeat(start.AbsoluteUri, 6), handler.Requests);
+        }
+
+        private sealed class ApiRedirectFixture(params string[] locations) : HttpClientHandler
+        {
+            internal List<string> Requests { get; } = new List<string>();
+
+            internal ReleaseInfo Read(Uri start) =>
+                UpdaterEngine.GetJson<ReleaseInfo>(start.AbsoluteUri, "application/vnd.github+json", 5, new UpdaterOptions(), this);
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
+            {
+                Assert.False(AllowAutoRedirect);
+                Requests.Add(request.RequestUri.AbsoluteUri);
+                if (Requests.Count > locations.Length)
+                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) {
+                        Content = new StringContent(JsonSerializer.Serialize(Release("v4.0.0"))) });
+                var redirect = new HttpResponseMessage(HttpStatusCode.MovedPermanently);
+                redirect.Headers.Location = new Uri(locations[Requests.Count - 1], UriKind.RelativeOrAbsolute);
+                return Task.FromResult(redirect);
+            }
         }
 
         [Fact]

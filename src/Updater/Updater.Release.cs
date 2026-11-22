@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
@@ -196,7 +197,7 @@ namespace TiaMcp.Updater
                 return (int)response.StatusCode >= 300 && (int)response.StatusCode < 400 ? response.Headers[HttpResponseHeader.Location] : null;
         }
 
-        private static T GetJson<T>(string url, string accept, int timeoutSeconds, UpdaterOptions options) where T : class
+        internal static T GetJson<T>(string url, string accept, int timeoutSeconds, UpdaterOptions options, HttpClientHandler handler = null) where T : class
         {
 #if UPDATER_TEST_SOURCE
             string fixture = Environment.GetEnvironmentVariable("TIA_MCP_UPDATER_TEST_SOURCE");
@@ -210,11 +211,31 @@ namespace TiaMcp.Updater
                 using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(options.ReadTextForTest(url, timeoutSeconds)))) return (T)JsonSerializer(typeof(T))
                     .ReadObject(stream);
             }
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.UserAgent = "TiaMcp-Update-Engine/1"; request.Accept = accept; request.Timeout = timeoutSeconds * 1000; request.ReadWriteTimeout = request
-                .Timeout;
-            using (WebResponse response = request.GetResponse()) using (Stream stream = response.GetResponseStream())
-                return (T)new DataContractJsonSerializer(typeof(T)).ReadObject(stream);
+            handler = handler ?? new HttpClientHandler();
+            handler.AllowAutoRedirect = false;
+            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(timeoutSeconds) };
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("TiaMcp-Update-Engine/1");
+            client.DefaultRequestHeaders.Accept.ParseAdd(accept);
+            var uri = new Uri(url);
+            for (int hop = 0; hop <= 5; hop++)
+            {
+                if (uri.Scheme != Uri.UriSchemeHttps || !uri.IsDefaultPort || uri.UserInfo.Length != 0
+                    || (uri.IdnHost != "api.github.com" && uri.IdnHost != "github.com"))
+                    throw new InvalidOperationException("Expected an HTTPS GitHub release API URL.");
+                using (var response = client.GetAsync(uri).GetAwaiter().GetResult())
+                {
+                    if ((int)response.StatusCode is 301 or 302 or 303 or 307 or 308)
+                    {
+                        if (response.Headers.Location == null || !Uri.TryCreate(uri, response.Headers.Location, out uri))
+                            throw new InvalidOperationException("Missing or invalid GitHub release API redirect location.");
+                        continue;
+                    }
+                    response.EnsureSuccessStatusCode();
+                    using (var stream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
+                        return (T)new DataContractJsonSerializer(typeof(T)).ReadObject(stream);
+                }
+            }
+            throw new InvalidOperationException("Too many redirects from the GitHub release API.");
         }
 
         private static bool IsValidRepository(string value) {

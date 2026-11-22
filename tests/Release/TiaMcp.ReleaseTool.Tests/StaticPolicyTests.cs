@@ -76,6 +76,22 @@ public sealed class StaticPolicyTests
             errors.Select(error => error.Split(": ", 2)[0]));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(" - 2026-11-31")]
+    public void Package_uses_dated_changelog_entries_to_freeze_published_notes_without_git_tags(string draftDate)
+    {
+        using var tree = new StaticTree();
+        var old = "https://github.com/asckye/" + RepositoryChecks.FormerRepositoryName;
+        const string draft = "docs/releases/v4.0.0.md", rc = "docs/releases/v4.0.0-rc.1.md", beta = "docs/releases/v4.0.0-beta.6.md";
+        tree.Write("CHANGELOG.md", $"## [Unreleased]\n{old}\n## [4.0.0]{draftDate}\n{old}\n## [4.0.0-rc.1] - 2026-11-22\n{old}\n"
+            + $"## [4.0.0-beta.6] - 2026-11-18\n{old}\n## [4.0.0-beta.2] - 2026-10-27\n{old}\n[Unreleased]: {old}");
+        tree.Write("manifest/publication-v4.0.0-beta.2.json", """{"release":"v4.0.0-beta.2"}""");
+        foreach (var note in new[] { draft, rc, beta }) tree.Write(note, old);
+        var errors = RepositoryChecks.RepositoryNameErrors(tree.Root, ["CHANGELOG.md", draft, rc, beta]);
+        Assert.Equal(new[] { "CHANGELOG.md:2", "CHANGELOG.md:4", "CHANGELOG.md:11", draft + ":1" }, errors.Select(e => e.Split(": ", 2)[0]));
+    }
+
     [Fact]
     public void Frozen_history_advances_only_when_a_publication_is_recorded()
     {
