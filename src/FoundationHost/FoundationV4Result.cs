@@ -564,10 +564,9 @@ internal static class FoundationV4Result
             && !TiaMcpServer.ModelContextProtocol.UpdateLogic.IsValidRepository(repository.GetString()))
             return Reject(release, name, id, new Error("The operation did not establish success; inspect the returned result.",
                 new InvalidArgumentDetails("repository", Array.Empty<string>())));
-        var result = Wire(release, name, id, data, success ? Outcome.Succeeded : Outcome.ReadFailed, Execution.ReadOnly,
+        return Wire(release, name, id, data, success ? Outcome.Succeeded : Outcome.ReadFailed, Execution.ReadOnly,
             name is "InitializeEnvironment" or "RunCapabilitySelfTest" ? Completeness.Partial : Completeness.Complete,
             success ? null : NativeFailure(data), false, candidate, paging);
-        return name == "GetToolUsage" && usageName != null ? HostMcp.PageLargeUsage(result) : result;
     }
 
     private static Error Unknown() => new("The operation outcome is unknown. Do not repeat this call. Read GetCallResult(requestId).",
