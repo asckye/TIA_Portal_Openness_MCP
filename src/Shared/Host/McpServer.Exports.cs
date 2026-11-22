@@ -42,11 +42,6 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>超过这个字符数就寄存并只回头部。0 或负数表示不限。</summary>
         public const int DefaultMaxResponseChars = 20000;
 
-        // Keep the complete input contract retrievable when even the compact usage entry exceeds the client budget.
-        internal static CallToolResult PageLargeUsage(CallToolResult result)
-            => result.Content.Count == 1 && result.Content[0] is TextContentBlock text && text.Text.Length + ToolCallTiming.ReservedJsonChars >= 40000
-                ? ResponseGuardTool.Guard(result, "GetToolUsage", null) : result;
-
         // 分页工具自身不能被这一层处理：它们的输出本来就是按 offset 夹紧过的，
         // 再包一层只会套娃出一个永远翻不到底的句柄。
         //
@@ -255,8 +250,6 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var original = V4Json.Deserialize<Envelope>(full);
                 var export = PlcExchangeContract.DescribeExport(entry);
-                var usage = toolName == "GetToolUsage" && envelope["data"]?["example"] is JsonObject
-                    ? envelope["data"] as JsonObject : null;
                 CallToolResult Render(ExportSlice page)
                 {
                     if (page.Error != null) throw new InvalidOperationException(page.Message);
@@ -269,14 +262,6 @@ namespace TiaMcpServer.ModelContextProtocol
                                 "SaveExportContent(raw=true) saves it in one call. Handles last 24 hours in this session."
                             },
                         ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text };
-                    if (usage != null)
-                    {
-                        foreach (var field in usage)
-                            if (field.Key is not ("inputSchema" or "outputSchema")) data[field.Key] = field.Value?.DeepClone();
-                        data["inputSchemaSource"] = "Read the complete inputSchema from this tool's tools/list entry or the exported usage.";
-                        if (usage["outputSchema"] != null)
-                            data["outputSchemaSource"] = "Read the complete outputSchema from this tool's tools/list entry or the exported usage.";
-                    }
                     var m = original.Meta;
                     var paging = new Paging(PagingMode.Offset, 0, Math.Min(limit, ResponseExports.MaxSliceChars), page.NextOffset, null, null,
                         page.TotalLength, page.Eof, PagingUnit.Utf16);

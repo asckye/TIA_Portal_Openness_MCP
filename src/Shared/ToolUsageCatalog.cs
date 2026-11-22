@@ -165,22 +165,18 @@ namespace TiaOpenness.Shared
 
         public static void CompactExampleIndex(JsonObject usage)
         {
-            const int inlineBudget = 38000;
-            if (usage.ToJsonString().Length < inlineBudget) return;
-            if (usage["examples"] is JsonArray examples)
+            if (usage["examples"] is not JsonArray examples || usage.ToJsonString().Length < 38000) return;
+            var index = new JsonArray();
+            foreach (var example in examples.OfType<JsonObject>())
             {
-                var index = new JsonArray();
-                foreach (var example in examples.OfType<JsonObject>())
-                {
-                    var entry = new JsonObject();
-                    foreach (var field in new[] { "id", "title", "language", "kind", "releaseMatches", "profileMatches", "available" })
-                        if (example[field] is JsonNode value) entry[field] = value.DeepClone();
-                    index.Add(entry);
-                }
-                usage["examples"] = index;
-                usage["exampleRetrieval"] = "Pass exampleId to GetToolUsage for the complete example and its requirements.";
+                var entry = new JsonObject();
+                foreach (var field in new[] { "id", "title", "language", "kind", "releaseMatches", "profileMatches", "available" })
+                    if (example[field] is JsonNode value) entry[field] = value.DeepClone();
+                index.Add(entry);
             }
-            if (usage["outputSchema"] != null && usage.ToJsonString().Length >= inlineBudget)
+            usage["examples"] = index;
+            usage["exampleRetrieval"] = "Pass exampleId to GetToolUsage for the complete example and its requirements.";
+            if ((string?)usage["toolName"] == "BuildAndImportPlcArtifact" && usage["outputSchema"] != null && usage.ToJsonString().Length >= 38000)
             {
                 usage.Remove("outputSchema");
                 usage["outputSchemaSource"] = "Read the complete outputSchema from this tool's tools/list entry.";

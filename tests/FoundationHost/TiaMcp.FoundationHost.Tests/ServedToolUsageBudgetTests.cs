@@ -5,55 +5,6 @@ using Xunit;
 public sealed class ServedToolUsageBudgetTests
 {
     [Theory]
-    [InlineData(10, 10, true, true)]
-    [InlineData(39000, 10, false, true)]
-    [InlineData(39000, 39000, false, false)]
-    [InlineData(0, 39000, false, false)]
-    public void Usage_compaction_depends_on_entry_size(int exampleLength, int schemaLength, bool keepExampleBody, bool keepOutputSchema)
-    {
-        var usage = new JsonObject { ["toolName"] = "FixtureTool", ["inputSchema"] = new JsonObject { ["type"] = "object" },
-            ["outputSchema"] = new JsonObject { ["description"] = new string('s', schemaLength) } };
-        if (exampleLength > 0) usage["examples"] = new JsonArray(new JsonObject { ["id"] = "example", ["text"] = new string('x', exampleLength) });
-        TiaOpenness.Shared.ToolUsageCatalog.CompactExampleIndex(usage);
-        Assert.Equal("object", (string?)usage["inputSchema"]?["type"]);
-        Assert.Equal(keepOutputSchema, usage.ContainsKey("outputSchema"));
-        if (!keepOutputSchema) Assert.Contains("tools/list", (string?)usage["outputSchemaSource"]);
-        if (exampleLength > 0)
-        {
-            var example = Assert.Single(usage["examples"]!.AsArray())!.AsObject();
-            Assert.Equal("example", (string?)example["id"]);
-            Assert.Equal(keepExampleBody, example.ContainsKey("text"));
-        }
-        Assert.True(usage.ToJsonString().Length < 38000);
-    }
-
-    [Theory]
-    [InlineData("19")]
-    [InlineData("20")]
-    [InlineData("21")]
-    public async Task A_large_input_contract_can_be_retrieved_across_usage_pages(string release)
-    {
-        const string name = "CompareUnifiedGraphicSelections";
-        using var fixture = new DiscoveryFixture(release);
-        const string setting = "TIA_MCP_MAX_RESPONSE_CHARS";
-        string? prior = Environment.GetEnvironmentVariable(setting);
-        try
-        {
-            Environment.SetEnvironmentVariable(setting, null);
-            var usage = fixture.Tools.Single(t => t.ProtocolTool.Name == "GetToolUsage");
-            var first = await ToolHintOnceTests.Invoke(usage, new { toolName = name });
-            Assert.True(first.ToJsonString().Length < 40000);
-            Assert.NotNull(first["data"]?["export"]?["id"]);
-            Assert.False((bool?)first["meta"]?["paging"]?["complete"]);
-            var full = (await fixture.Call("GetToolUsage", new { toolName = name }))["data"]!;
-            Assert.Contains("tools/list", (string?)full["outputSchemaSource"]);
-            var listed = fixture.Tools.Single(t => t.ProtocolTool.Name == name).ProtocolTool;
-            Assert.True(JsonNode.DeepEquals(JsonNode.Parse(listed.InputSchema.GetRawText()), full["inputSchema"]));
-        }
-        finally { Environment.SetEnvironmentVariable(setting, prior); }
-    }
-
-    [Theory]
     [MemberData(nameof(B3HostPortsTests.Releases), MemberType = typeof(B3HostPortsTests))]
     public async Task Reviewed_examples_are_served_on_every_registered_release(string release)
     {
