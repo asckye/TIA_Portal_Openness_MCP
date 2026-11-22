@@ -30,6 +30,7 @@ internal static class ParallelPipeline
                 var pipeline = pipelines[index];
                 var timer = Stopwatch.StartNew();
                 PipelineResult result;
+                using var job = GateWatchdog.BeginJob(pipeline.Name);
                 try { result = pipeline.Run(); }
                 catch (Exception ex) { result = new PipelineResult(pipeline.Name, 1, "", ex.ToString()); }
                 timer.Stop();

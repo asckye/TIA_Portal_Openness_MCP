@@ -13,7 +13,8 @@ using TiaMcp.Versioning;
 namespace TiaMcp.ReleaseTool;
 
 internal sealed record PrepareContext(string Root, string Version, string PublicApiRoot, string? NuGetConfig,
-    string Python, string CompanionPython, string OutputDirectory, DateOnly ReleaseDate, int MaxParallelism = 6, int TestParallelism = 0)
+    string Python, string CompanionPython, string OutputDirectory, DateOnly ReleaseDate, int MaxParallelism = 6, int TestParallelism = 0,
+    int CheckTimeoutMinutes = Prepare.DefaultCheckTimeoutMinutes)
 {
     internal string PackageName => DeliveryPackage.Name(ProductReleaseVersion.Parse(Version), ReleaseDate.ToDateTime(TimeOnly.MinValue));
     internal string StageDirectory => Path.Combine(OutputDirectory, PackageName);
@@ -26,6 +27,7 @@ internal sealed record PreparedPackage(string ZipPath, string Sha256, int FileCo
 // release publication remains a separate command; no check-all scheduler is used.
 internal static class Prepare
 {
+    internal const int DefaultCheckTimeoutMinutes = 120;
     internal const string InventoryPath = "manifest/multi-version-build.json";
     internal static readonly string[] GeneratedPaths =
         ["manifest/package-manifest.json", "manifest/delivery.json", "manifest/tools-list.json", InventoryPath];
@@ -131,7 +133,8 @@ internal static class Prepare
         Func<PrepareCheckResults>? checks = null, Func<string, Task>? upload = null)
     {
         if (options.Has("BuildOnly")) return 0;
-        var results = Timed("checks", checks ?? (() => PrepareChecks.Run(context, package, environment)));
+        var results = GateWatchdog.Run("prepare checks", context.CheckTimeoutMinutes,
+            () => Timed("checks", checks ?? (() => PrepareChecks.Run(context, package, environment))));
         Timed("clean-tree", requireUnchanged);
         var candidate = Timed("candidate", () => PrepareChecks.WriteCandidate(context, package, results));
         if (!options.Has("NoDraftUpload"))
@@ -222,6 +225,7 @@ internal static class Prepare
 
     internal static T Timed<T>(string name, Func<T> action)
     {
+        using var job = GateWatchdog.BeginJob(name);
         var clock = Stopwatch.StartNew();
         Console.WriteLine("PREPARE " + name);
         try { return action(); }
@@ -242,6 +246,7 @@ internal static class Prepare
     internal static PrepareContext CreateContext(string root, Options options, SuiteProcess? companionProbe = null)
     {
         root = Path.GetFullPath(root);
+        var checkTimeoutMinutes = FastSuites.Positive(options, "TimeoutMinutes", DefaultCheckTimeoutMinutes);
         var version = ReleaseVersions.Require(options.Get("Version"), "prepare requires -Version X.Y.Z[-beta.N|-rc.N]").Label;
         RequireRepository(Git(root, "status", "--porcelain=v1", "--untracked-files=all"), Git(root, "branch", "--show-current"), options.Has("BuildOnly"));
         GitWorkingBytes.RequireNormalizedWorkingBytes(root, "git");
@@ -267,7 +272,8 @@ internal static class Prepare
         var parallelism = 6;
         if (options.Get("MaxParallelism") is { } value && (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out parallelism) || parallelism < 1))
             throw new ReleaseException("MaxParallelism must be a positive integer");
-        return new(root, version, api, nuget, python, companion, output, date, parallelism, options.Has("MaxParallelism") ? parallelism : Math.Max(1, Environment.ProcessorCount - 4));
+        return new(root, version, api, nuget, python, companion, output, date, parallelism,
+            options.Has("MaxParallelism") ? parallelism : Math.Max(1, Environment.ProcessorCount - 4), checkTimeoutMinutes);
     }
 
     internal static void RequireRepository(string status, string branch, bool buildOnly = false)

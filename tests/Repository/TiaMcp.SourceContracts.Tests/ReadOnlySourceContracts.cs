@@ -483,11 +483,9 @@ public sealed class ReadOnlySourceContracts
     {
         var start = new System.Diagnostics.ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, WorkingDirectory = Root };
         foreach (var argument in new[] { "msbuild", project, "-nologo", "-getProperty:DefineConstants", "-p:Configuration=Release" }) start.ArgumentList.Add(argument);
-        using var process = System.Diagnostics.Process.Start(start)!;
-        var errors = process.StandardError.ReadToEndAsync();
-        string output = process.StandardOutput.ReadToEnd();
-        if (!process.WaitForExit(120000)) { process.Kill(true); throw new TimeoutException(project + " evaluation timed out"); }
-        Assert.True(process.ExitCode == 0, project + " evaluation failed: " + errors.Result);
+        var process = ProcessDeadline.Capture(start, 120000);
+        string output = process.StandardOutput;
+        Assert.True(process.ExitCode == 0, project + " evaluation failed: " + process.StandardError);
         return output.Trim();
     }
 }

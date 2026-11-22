@@ -116,7 +116,12 @@ internal static partial class MergeCheck
     }
 
     internal static int Run(string root, Options options, SuiteProcess? process = null, Func<string[], CommandResult>? git = null,
-        Func<Options, string, int>? prepareDecoder = null)
+        Func<Options, string, int>? prepareDecoder = null) =>
+        GateWatchdog.Run("merge-check", FastSuites.Positive(options, "TimeoutMinutes", 90),
+            () => RunChecks(root, options, process, git, prepareDecoder));
+
+    private static int RunChecks(string root, Options options, SuiteProcess? process, Func<string[], CommandResult>? git,
+        Func<Options, string, int>? prepareDecoder)
     {
         var total = Stopwatch.StartNew();
         var dotnet = ReleaseCommands.Dotnet;
@@ -167,6 +172,7 @@ internal static partial class MergeCheck
         timings.Add(new("selection", selectionEnd, new(0, "", ""), 0, selectionEnd));
         CommandResult Timed(string name, Func<CommandResult> run)
         {
+            using var job = GateWatchdog.BeginJob(name);
             var start = total.Elapsed.TotalSeconds;
             var watch = Stopwatch.StartNew();
             CommandResult result;

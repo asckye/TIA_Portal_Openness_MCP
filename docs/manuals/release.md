@@ -39,6 +39,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1
 
 | 选项 | 用途与边界 |
 |---|---|
+| `-TimeoutMinutes <正整数>` | 从提取 ZIP 到交付检查结束的总时限，默认 120 分钟。每静默 10 分钟显示一次作业心跳。到达总时限时列出运行中的作业及耗时，终止本次检查的子进程树并返回失败。构建阶段的 MSBuild 属性查询另有 5 分钟的单次限时。 |
 | `-BuildOnly` | 跳过漏洞扫描，只构建、暂存校验和打包，不运行交付包检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
 | `-NoDraftUpload` | 仍须通过漏洞扫描；完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |

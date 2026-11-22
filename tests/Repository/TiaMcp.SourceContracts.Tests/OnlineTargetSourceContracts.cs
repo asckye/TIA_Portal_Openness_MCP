@@ -158,11 +158,9 @@ public sealed class OnlineTargetSourceContracts
                 RedirectStandardOutput = true, RedirectStandardError = true };
             foreach (string argument in new[] { "msbuild", project, "-nologo", "-getProperty:DefineConstants", "-p:Configuration=Debug",
                 "-m:1", "-nodeReuse:false" }) start.ArgumentList.Add(argument);
-            using var process = Process.Start(start)!;
-            var error = process.StandardError.ReadToEndAsync();
-            string output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-            Assert.True(process.ExitCode == 0, project + ": " + error.GetAwaiter().GetResult());
+            var process = ProcessDeadline.Capture(start);
+            string output = process.StandardOutput;
+            Assert.True(process.ExitCode == 0, project + ": " + process.StandardError);
             yield return output.Trim().Split(';', StringSplitOptions.RemoveEmptyEntries);
         }
     }

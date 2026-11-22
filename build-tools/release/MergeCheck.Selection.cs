@@ -43,6 +43,7 @@ internal static partial class MergeCheck
 
     internal static Evaluation Evaluate(string root, string project, string[] properties, SuiteProcess process, string dotnet)
     {
+        using var job = GateWatchdog.BeginJob("selection " + project);
         var result = process(dotnet, ["msbuild", Path.Combine(root, project), "-nologo", "-nodeReuse:false",
             "-getItem:Compile,EmbeddedResource,None,Content,Page,ApplicationDefinition,Resource,ProjectReference", "-getProperty:MSBuildAllProjects", .. properties], root,
             new Dictionary<string, string?> { ["TIA_MCP_TEST_PUBLIC_API_ROOT"] = null });

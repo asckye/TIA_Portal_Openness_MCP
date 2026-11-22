@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using TiaMcp.BuildCommon;
 
 namespace TiaMcp.ReleaseTool;
 
@@ -148,12 +149,9 @@ internal sealed record CommandResult(int ExitCode, string StandardOutput, string
 
 internal static class ProcessRunner
 {
-    internal static readonly object StartLock = new();
-
     internal static CommandResult Run(string executable, IEnumerable<string> arguments, string workingDirectory, IDictionary<string, string?>? environment = null, string? logPath = null, string? standardInput = null, int? timeoutMilliseconds = null, bool forwardOutput = false,
         System.Text.Encoding? standardInputEncoding = null, System.Text.Encoding? standardOutputEncoding = null, System.Text.Encoding? standardErrorEncoding = null)
     {
-        var end = timeoutMilliseconds is { } milliseconds ? DateTime.UtcNow.AddMilliseconds(milliseconds) : DateTime.MaxValue;
         var commandArguments = arguments.ToArray();
         var start = new ProcessStartInfo(executable)
         {
@@ -176,10 +174,24 @@ internal static class ProcessRunner
         start.Environment.Remove(GuiTestDesktop.EnvironmentKey);
 
         string? desktop = environment != null && environment.TryGetValue(GuiTestDesktop.EnvironmentKey, out var requested) ? requested : null;
-        using var isolated = desktop == null ? null : IsolatedDesktopProcess.Start(start, desktop);
-        using var process = isolated == null ? new Process { StartInfo = start } : null;
-        try { lock (StartLock) process?.Start(); }
-        catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
+        var deadline = new ProcessDeadline(start, timeoutMilliseconds);
+        var job = GateWatchdog.ActiveJob;
+        bool useJobObject = (job != null || deadline.IsQuery) && OperatingSystem.IsWindows();
+        job?.RequireTime();
+        using var ownedTree = desktop != null ? IsolatedDesktopProcess.Start(start, desktop)
+            : useJobObject ? WindowsProcessTree.Start(start) : null;
+        using var process = ownedTree == null ? new Process { StartInfo = start } : null;
+        if (process != null)
+        {
+            try { WindowsProcessTree.StartRegular(process); }
+            catch (Exception ex) { throw new ReleaseException($"Could not start {executable}: {ex.Message}"); }
+        }
+        void StopTree()
+        {
+            if (ownedTree != null) ownedTree.Finish();
+            else ProcessDeadline.StopTree(process!);
+        }
+        using var registration = job?.TrackTree(ownedTree != null ? checked((int)ownedTree.ProcessId) : process!.Id, StopTree);
         StreamWriter? logWriter = null;
         if (logPath != null)
         {
@@ -193,42 +205,51 @@ internal static class ProcessRunner
             var content = new System.Text.StringBuilder();
             while (await reader.ReadLineAsync() is { } line)
             {
+                job?.Output();
                 content.AppendLine(line);
                 if (logWriter != null) lock (logLock) logWriter.WriteLine(line);
                 if (forwardOutput) target.WriteLine(line);
             }
             return content.ToString();
         }
-        var outputReader = isolated?.StandardOutput ?? process!.StandardOutput;
-        var errorReader = isolated?.StandardError ?? process!.StandardError;
-        var stdout = logPath != null || forwardOutput ? Read(outputReader, Console.Out) : outputReader.ReadToEndAsync();
-        var stderr = logPath != null || forwardOutput ? Read(errorReader, Console.Error) : errorReader.ReadToEndAsync();
+        async Task<string> Capture(StreamReader reader)
+        {
+            if (job == null) return await reader.ReadToEndAsync();
+            var content = new System.Text.StringBuilder();
+            var buffer = new char[4096];
+            int count;
+            while ((count = await reader.ReadAsync(buffer)) > 0)
+            {
+                job.Output();
+                content.Append(buffer, 0, count);
+            }
+            return content.ToString();
+        }
+        var outputReader = ownedTree?.StandardOutput ?? process!.StandardOutput;
+        var errorReader = ownedTree?.StandardError ?? process!.StandardError;
+        var stdout = logPath != null || forwardOutput ? Read(outputReader, Console.Out) : Capture(outputReader);
+        var stderr = logPath != null || forwardOutput ? Read(errorReader, Console.Error) : Capture(errorReader);
         if (standardInput is not null)
         {
-            var input = isolated?.StandardInput ?? process!.StandardInput;
+            var input = ownedTree?.StandardInput ?? process!.StandardInput;
             input.Write(standardInput);
             input.Close();
         }
-        else isolated?.StandardInput.Close();
+        else ownedTree?.StandardInput.Close();
 
-        int Remaining() => end == DateTime.MaxValue ? Timeout.Infinite : (int)Math.Clamp((end - DateTime.UtcNow).TotalMilliseconds, 0, int.MaxValue);
-        void TimedOut()
+        void Wait(Func<int, bool> wait)
         {
-            if (isolated != null) isolated.Finish();
-            else
-            {
-                process!.Kill(entireProcessTree: true);
-                process.WaitForExit();
-            }
-            throw new ReleaseException($"{executable} timed out after {timeoutMilliseconds} ms.");
+            try { deadline.Wait(wait, StopTree); }
+            catch (TimeoutException ex) { throw new ReleaseException(ex.Message); }
         }
-        if (!(isolated?.WaitForExit(Remaining()) ?? process!.WaitForExit(Remaining()))) TimedOut();
-        int exitCode = isolated?.ExitCode ?? process!.ExitCode;
-        isolated?.Finish();
-        if (!Task.WhenAll(stdout, stderr).Wait(Remaining())) TimedOut();
+        Wait(ms => ownedTree?.WaitForExit(ms) ?? process!.WaitForExit(ms));
+        int exitCode = ownedTree?.GetExitCode() ?? process!.ExitCode;
+        if (desktop != null) ownedTree!.Finish();
+        Wait(Task.WhenAll(stdout, stderr).Wait);
         var output = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();
-        return new CommandResult(exitCode, isolated == null ? output : $"DESKTOP {isolated.DesktopPath} PID {isolated.ProcessId}\n" + output, error);
+        if (ownedTree?.DesktopPath != null) output = $"DESKTOP {ownedTree.DesktopPath} PID {ownedTree.ProcessId}\n" + output;
+        return new CommandResult(exitCode, output, error);
     }
 
     internal static void RequireSuccess(CommandResult result, string description)

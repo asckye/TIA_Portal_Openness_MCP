@@ -96,16 +96,9 @@ internal static class AdapterSourceClosureTests
             start.Environment["DOTNET_GENERATE_ASPNET_CERTIFICATE"]="false";
             start.Environment["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"]="false";
             start.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"]="1";
-            using var process=Process.Start(start)??throw new InvalidOperationException("Could not start MSBuild evaluation.");
-            var output=process.StandardOutput.ReadToEndAsync();
-            var error=process.StandardError.ReadToEndAsync();
-            if(!process.WaitForExit(60000))
-            {
-                process.Kill(entireProcessTree:true);
-                throw new TimeoutException("Adapter MSBuild evaluation timed out: "+project);
-            }
-            var stdout=output.GetAwaiter().GetResult();
-            var stderr=error.GetAwaiter().GetResult();
+            var process=TiaMcp.BuildCommon.ProcessDeadline.Capture(start,60000);
+            var stdout=process.StandardOutput;
+            var stderr=process.StandardError;
             // The evaluation JSON carries volatile item metadata (AccessedTime); keep it out of the label of a passing row.
             check(process.ExitCode==0,"Adapter MSBuild evaluation succeeded: "+project+(process.ExitCode==0?"":"\n"+stderr+stdout));
             using var result=JsonDocument.Parse(stdout);

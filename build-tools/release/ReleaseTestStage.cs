@@ -10,6 +10,7 @@ internal static class ReleaseTestSelection
 {
     internal static PipelineResult RunJob(string name, Func<PipelineResult> run)
     {
+        using var job = GateWatchdog.BeginJob(name);
         try
         {
             var result = run();

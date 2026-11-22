@@ -3,8 +3,10 @@
 // Usage: dotnet run src/Adapters/build/Test-AdapterInputs.cs -- --source-root src --public-api-root <sdk> --evidence-directory <path>
 #:property PublishAot=false
 #:property NuGetAudit=false
+#:project ../../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj
 
 using System.Text;
+using static TiaMcp.BuildCommon.ProcessDeadline;
 using System.Text.Json.Nodes;
 
 var options = args.ToList();
@@ -44,7 +46,7 @@ async Task Check(string name, (string Folder, string Key, string ApiRelative) it
         "-p:BaseOutputPath=" + Path.Combine(buildOutput, "bin") + Path.DirectorySeparatorChar
     };
     args.AddRange(extra);
-    var result = await Run(dotnet, args, adapterRoot);
+    var result = RunValidation(dotnet, args, adapterRoot);
     await File.WriteAllTextAsync(log, result.Output, new UTF8Encoding(false));
     var noCompileOutput = !Directory.Exists(buildOutput) || !Directory.EnumerateFiles(buildOutput, "*", SearchOption.AllDirectories).Any();
     var matches = expectedError.Length == 0 ? result.ExitCode == 0 : result.ExitCode != 0 && result.Output.Contains(expectedError, StringComparison.Ordinal);
@@ -90,18 +92,6 @@ void Record(string name, bool ok, int exitCode, string expectedError, bool noCom
         ["noCompileOutput"] = noCompileOutput, ["log"] = log
     });
     Console.WriteLine(name + ": " + ok.ToString().ToLowerInvariant());
-}
-
-static async Task<(int ExitCode, string Output)> Run(string program, IReadOnlyList<string> arguments, string workingDirectory)
-{
-    var start = new System.Diagnostics.ProcessStartInfo(program) {
-        WorkingDirectory = workingDirectory, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
-    foreach (var argument in arguments) start.ArgumentList.Add(argument);
-    using var process = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("Could not start " + program);
-    var outputTask = process.StandardOutput.ReadToEndAsync();
-    var errorTask = process.StandardError.ReadToEndAsync();
-    await process.WaitForExitAsync();
-    return (process.ExitCode, await outputTask + await errorTask);
 }
 
 static string Full(string path) => Path.GetFullPath(path);

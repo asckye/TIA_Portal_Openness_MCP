@@ -3,9 +3,11 @@
 // Usage: dotnet run src/Adapters/build/Test-WorkerIsolation.cs -- --evidence-directory <path> --native-call-weaver <dll>
 #:property PublishAot=false
 #:property NuGetAudit=false
+#:project ../../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj
 #:project ../../Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj
 
 using System.Text;
+using static TiaMcp.BuildCommon.ProcessDeadline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -30,7 +32,7 @@ foreach (var key in TiaMcp.Adapters.Contracts.ReleaseRange.All)
 {
     var selectionLog = Path.Combine(evidenceDirectory, "selection-" + key + ".json");
     var selection =
-        await Run(dotnet, new[] {
+        RunValidation(dotnet, new[] {
             "msbuild", worker, "-nologo", "-v:quiet", "-t:ValidateWorkerAdapter", "-p:TiaReleaseKey=" + key, "-getItem:ProjectReference",
                 "-getProperty:TargetFramework"
         }, repo);
@@ -41,12 +43,12 @@ foreach (var key in TiaMcp.Adapters.Contracts.ReleaseRange.All)
 
     var binary = Path.Combine(repo, "src", "PlcWorker", "bin", key, "Release", "net48", "TiaMcp.Adapter." + key + ".dll");
     var verifyLog = Path.Combine(evidenceDirectory, "verify-" + key + ".log");
-    var verify = await Run(dotnet, new[] { weaver, "verify", binary, Path.Combine(evidenceDirectory, "coverage-" + key + ".json") }, repo);
+    var verify = RunValidation(dotnet, new[] { weaver, "verify", binary, Path.Combine(evidenceDirectory, "coverage-" + key + ".json") }, repo);
     await File.WriteAllTextAsync(verifyLog, verify.Output, new UTF8Encoding(false));
     Record("coverage-" + key, verify.ExitCode == 0, verify.ExitCode);
 
     var rejectionLog = Path.Combine(evidenceDirectory, "coverage-rejection-" + key + ".log");
-    var rejection = await Run(dotnet, new[] { weaver, "self-test", binary }, repo);
+    var rejection = RunValidation(dotnet, new[] { weaver, "self-test", binary }, repo);
     await File.WriteAllTextAsync(rejectionLog, rejection.Output, new UTF8Encoding(false));
     Record("coverage-rejection-" + key, rejection.ExitCode == 0, rejection.ExitCode);
 }
@@ -65,14 +67,14 @@ var cases = new (string Name, string[] Args, string Expected)[]
 foreach (var test in cases)
 {
     var log = Path.Combine(evidenceDirectory, test.Name + ".log");
-    var result = await Run(dotnet, new[] { "msbuild", worker, "-nologo", "-v:minimal", "-t:ValidateWorkerAdapter" }.Concat(test.Args).ToArray(), repo);
+    var result = RunValidation(dotnet, new[] { "msbuild", worker, "-nologo", "-v:minimal", "-t:ValidateWorkerAdapter" }.Concat(test.Args).ToArray(), repo);
     await File.WriteAllTextAsync(log, result.Output, new UTF8Encoding(false));
     Record(test.Name, result.ExitCode != 0 && result.Output.Contains(test.Expected, StringComparison.Ordinal), result.ExitCode);
 }
 
 var identityLog = Path.Combine(evidenceDirectory, "identity-override.json");
 var identity =
-    await Run(dotnet, new[] {
+    RunValidation(dotnet, new[] {
         "msbuild", worker, "-nologo", "-v:quiet", "-t:ValidateWorkerAdapter", "-p:TiaReleaseKey=20", "-p:SelectedAdapterDirectory=V21",
             "-p:SelectedAdapterProject=invalid.csproj", "-getItem:ProjectReference"
     }, repo);
@@ -82,7 +84,7 @@ Record("identity-override-ignored", identity.ExitCode == 0 && HasSelectedReferen
 var adapter = Path.Combine(adapterRoot, "V20", "Adapter.20.csproj");
 var missingWeaverLog = Path.Combine(evidenceDirectory, "missing-weaver.log");
 var missingWeaver =
-    await Run(dotnet, new[] {
+    RunValidation(dotnet, new[] {
         "msbuild", adapter, "-nologo", "-v:minimal", "-t:InstrumentAdapterNativeBoundaries", "-p:NativeCallWeaverPath=" + Path
             .Combine(evidenceDirectory, "absent-weaver.dll")
     }, repo);
@@ -129,18 +131,6 @@ static string TargetFramework(string output)
 {
     try { return JsonNode.Parse(output)!["Properties"]!["TargetFramework"]!.GetValue<string>(); }
     catch /* swallow(parse-fallback): missing or invalid target-framework JSON cannot provide a framework value. */ { return ""; }
-}
-
-static async Task<(int ExitCode, string Output)> Run(string program, IReadOnlyList<string> arguments, string workingDirectory)
-{
-    var start = new System.Diagnostics.ProcessStartInfo(program) {
-        WorkingDirectory = workingDirectory, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
-    foreach (var argument in arguments) start.ArgumentList.Add(argument);
-    using var process = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("Could not start " + program);
-    var outputTask = process.StandardOutput.ReadToEndAsync();
-    var errorTask = process.StandardError.ReadToEndAsync();
-    await process.WaitForExitAsync();
-    return (process.ExitCode, await outputTask + await errorTask);
 }
 
 static string? Take(List<string> values, string key)
