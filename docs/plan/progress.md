@@ -1,20 +1,30 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-18，v4.0.0-beta.6 已发布
+状态：现行 · 最后核对：2026-11-21，准备 v4.0.0-rc.1
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
-- **2026-11-18，[beta.6](../releases/v4.0.0-beta.6.md) 已作为 GitHub 预发布公开（提交 `02107734`）。** 十项新功能均有交付，BATCH-5b 移到 4.1；beta.6 之后不再发 beta.7，直接进入 RC。
-  另纳入 SHOW-EDITOR、VMFIX-10D、UNIFY-1 A–D1、V20 SiVArc 保护及两轮 V21 修复。逐项范围和验收边界见[开发计划](plan.md)。
-- V21 首轮 A、B 批共 129 行通过、28 行按设计拒绝、21 行失败、7 行未运行。复测 69 行中 65 行通过；确认会话状态、库预览和 LAD 分步导入的修复。
-  复测后，V19–V21 拒绝脚本模块创建，V21 拒绝以触点开头的 LAD 扇出分支。两项保护及断开后的身份状态修正尚待真机复验。
-  V20 C2、D 是 beta.5 结果；其余七版均未运行 beta.6 真机测试。
-- RC 代码部分完成（2026-11-19，master `d89d0152`）。VMFIX-12a–f、UNIFY-1 B2、C2、D2、E 和 VMFIX-13a/b 已合并：
-  统一“已证明未改动”的判定，结果确定的写入不再报 `OUTCOME_UNKNOWN`；八版共用包装层、就绪规则、版本目录和
-  API 能力表；V21 全量回归（519 个工具）发现的 HIGH 均已处理。
-  以上均未在真机运行。下一步：RC 候选包，V21 复验，V14 SP1–V20 全量真机测试。
+- **2026-11-21，准备 [4.0.0-rc.1](../releases/v4.0.0-rc.1.md)。** REL-GA 与 LOW-A 合并后用完整 `prepare` 生成，作为 GitHub 预发布公开（不设 latest），
+  维护者亲自测试；仓库暂不改名，RENAME-GH 排在 rc.2 或正式版之前（2026-11-21 维护者决定）。rc.1 的公开已获维护者确认，之后的 rc 各自确认。
+- **RC 代码已全部合并（2026-11-19 至 11-21）。**
+  - UNIFY-1 全部完成：A–D1（beta.6）以及 B2、C2、D2、E。八版共用一个工具包装、一条就绪规则、一个版本目录和一张官方 API 能力表，
+    新出现的按版本号分支由 `ReleaseKeyedSitesTests` 拦下。U3 线程模型（MTA-1）、U6 实机保护、U7 V21 builder 输出按 2026-11-04 决定保留。
+  - 真机回归修复：VMFIX-12a–f、VMFIX-13a/b、VMFIX-14A–C、VMFIX-15、VMFIX-16、VMFIX-17A–D、VMFIX-18A–D、VMFIX-19。
+    主线是结果确定的写入不再报 `OUTCOME_UNKNOWN`；TIA 崩溃后在同一会话恢复；V14 SP1 SCL 移动与导入受保护；V16 告警 XLSX 导出下架；
+    VMFIX-18D 从 VM 记录生成[真机工具状态表](../reference/real-machine-status.md)。
+  - 收件箱 LOW 分批处理：LOW-B（拒绝措辞、结果映射、脱敏）、LOW-C（HMI、SiVArc、库）、LOW-D（硬件、在线、版本控制、工程生命周期）、
+    LOW-E（发布工具、测试卫生、中英文发布说明）、LOW-F（PLC 软件、工艺对象、告警、LAD）。LOW-A（下架 CFC 图表保护、版本保护的示例）待合并。
+  - ADR 0035：工作台改为原生 IDE 布局，去掉 HTTP 访问密钥和凭据保管库。ADR 0036 与 UI-0036A–GC：工作台按最终设计稿重做，审批规则不变。
+  - XREF-1：V21 默认允许原生 PLC 与 Unified 交叉引用，去掉人工开关与同意记录。CRASH-PROBE：隐藏的崩溃探测（SiVArc、V16 母版副本、告警导出），
+    V17–V20 拒绝 SiVArc provider 反射。AUDIT-DOC：按 2026-11-20 API 审计修正版本范围并记录有意不开放的 API。
+  - CI-FIX：GitHub validate-bundle 恢复（PLC 模式输入 LF、SDK 用例只在主机跑）。REL-GA（正式版包名与 latest 规则，3.3 更新器不匹配 4.0 正式包；
+    README/NOTICE 写明不携带 Siemens 程序集）待合并。
+- **八版 RC 候选全量真机回归已完成（2026-11-19 至 11-21）**，逐版结果见下方“真机结果”，逐工具状态见[真机工具状态表](../reference/real-machine-status.md)。
+  VMFIX-14 至 19 修的是这些回归的发现；修复后的复验只在 V17（rc2）和 V21（rc3）做过，V14 SP1、V15.1、V16、V18–V20 的复验由 rc.1 测试承担。
+- **rc.1 之后**：维护者测试反馈；V21 OPC UA 报警类型 nodeId 更新在带界面实例上崩溃待探查；V16–V20 崩溃探测（CRASH-PROBE，需维护者带界面操作）；
+  V21 交叉引用的带界面检查；UNIFY-1E 与 REL-GA 审查的 LOW；`check-loosening` 误报修正；Engine harness 的 CFC 用例；RENAME-GH。
 
 - 2026-11-17 的 beta.5 V21 补测覆盖 142 个工具，确认 79 个 beta.4 问题已修复。余下 5 个高级和 7 个中级问题归入 VMFIX-12。
 
@@ -74,8 +84,17 @@
 | v4.0.0-beta.2，V21 VM，2026-10-31 至 11-01 | 原记录称 511 个工具：通过 213、失败 93、未测 192、按设计拒绝 12；TIA 重启 4 次 | 分类合计为 510，与原总数相差 1，待台账核对；相关任务见计划 |
 | beta.3 测试包（`1dfe2067`），V21 VM，2026-11-02 至 11-03 | 512 个工具：通过 293、缺陷 103、按设计拒绝 60、不确定 1、未测 55；去重缺陷 59 个（HIGH 20）；会话中断 18 次，TIA 重启 2 次 | R1 对应 VMFIX-2 已合并，但这不是修复后复测结果；其余修复与复测待执行 |
 | v4.0.0-beta.4（`48abffe8`），V21 VM，2026-11-05 至 11-06 | **不通过**。839 次调用：通过 578、失败 158、按设计拒绝 103；512 个工具调用 511 个（`ConnectOnlinePlc` 只预览）；去重缺陷 87 个（HIGH 10、MEDIUM 25、LOW 52）；beta.3 的 59 个缺陷已修 15、有变化 12、仍在 32，其中 HIGH 20 个已修 8、有变化 9、仍在 3（B02、B11、B20）；会话中断 12 次，TIA 重启 2 次、宿主重启 2 次（均由维护者操作），TIA 未崩溃 | 只代表 V21，不代表另外七个版本；只读工具 `AnalyzePlcCrossReferences` 会锁会话；修复任务见计划 |
+| RC 候选 `d89d0152`，V14 SP1 VM，2026-11-19 | 287 个工具：通过 157、只有按设计拒绝 58、HIGH 14、MEDIUM 5、LOW 52、未运行 1；会话中断与 TIA 重启 0 | HIGH 由 VMFIX-14 处理（SCL 移动与导入保护、结果确定误报未知等），待 rc.1 复验 |
+| RC 候选 `d89d0152`，V15.1 VM，2026-11-19 | 328 个工具：通过 192、只有按设计拒绝 51、HIGH 14（均为结果确定却报未知）、MEDIUM 4、LOW 48、未运行 19；TIA 重启 0 | VMFIX-14A/B 处理，待 rc.1 复验 |
+| RC 候选 `d89d0152`，V16 VM，2026-11-19 | 354 个注册工具中 349 个有记录；批次 A 通过 38、HIGH 8；批次 B 中 `ExportAlarmTextLists` 使 TIA 崩溃，崩溃后会话无法恢复，B2、C2、D 补跑 | VMFIX-15 下架 V16 告警 XLSX 导出、同会话恢复；VMFIX-16 拒绝 V16 PLC 块母版副本；待 rc.1 复验 |
+| RC2 候选 `9a4274f2`，V17 VM，2026-11-20 | 377 个工具：通过 235、只有按设计拒绝 62、HIGH 3、MEDIUM 6、LOW 63；TIA 崩溃与会话中断 0；VMFIX-14–17 首次真机复验通过 | 余项由 VMFIX-18 处理 |
+| RC 候选 `d89d0152`，V18 VM，2026-11-20 | 405 个工具：通过约 261，HIGH 约 12 类；TIA 崩溃 2 次（`ListSivarcBlockDefinitions`） | VMFIX-17B 仅在 V21 注册 SiVArc 块定义，CRASH-PROBE 拒绝 V17–V20 反射；待 rc.1 复验 |
+| RC 候选 `d89d0152`，V19 VM，2026-11-20 | 481 个工具：通过 319、只有按设计拒绝 86、HIGH 8、MEDIUM 5、LOW 57、未运行 6；TIA 崩溃 1 次（按计划探测） | VMFIX-17/18 处理，待 rc.1 复验 |
+| RC 候选 `d89d0152`，V20 VM，2026-11-20 | 504 个工具：通过 328、只有按设计拒绝 84、HIGH 10、MEDIUM 10、LOW 69、未运行 4；TIA 崩溃与会话中断 0 | `ImportDeviceAml` 独占访问、SiVArc 容器、重名导入误报未知由 VMFIX-17A/B 处理，待 rc.1 复验 |
+| RC3 候选 `aa9c749b`，V21 VM，2026-11-21 | 519 个工具：通过 348、按设计拒绝 69、失败 91（HIGH 3，其余 LOW）、未运行 11；TIA 崩溃 2 次；beta.6 的 V21 HIGH/MEDIUM 除 `ConnectProjectToWorkspace`（未复验）外均已修复 | 标签导入误报未知、PLC syslog 崩溃由 VMFIX-19 处理；OPC UA 报警类型 nodeId 更新崩溃待探查 |
 
-原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具。beta.4 回归的缺陷原因尚未逐条验证。未测的正常流程：`OpenProject`、`CloseProject`（自有工程）、`CreateProject`、`RetrieveProjectArchive`、`ConnectIsolatedPortal`、`PublishGenerationRecord`；在线、下载、上传、强制和仿真只读取或预览。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
+原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，每批一份汇总。
+RC 回归中在线写入、下载和仿真执行只预览（VM 无 PLC，PLCSIM 无实例）。beta.4 回归的缺陷原因尚未逐条验证。未测的正常流程：`OpenProject`、`CloseProject`（自有工程）、`CreateProject`、`RetrieveProjectArchive`、`ConnectIsolatedPortal`、`PublishGenerationRecord`；在线、下载、上传、强制和仿真只读取或预览。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
 
 ## 测试者反馈
 
