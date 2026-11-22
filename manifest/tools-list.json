@@ -1,7 +1,7 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-rc.1_20261122",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-22T22:21:42.0911721+00:00",
+  "generatedAt": "2026-11-22T23:07:49.1936419+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "ec72b1af09da0cace3517e1e1475809a39b9ceca74699cfebd1d4548ac479d04",
@@ -6883,7 +6883,7 @@
         "exportFile"
       ],
       "description": "[L2][Hardware][OFFLINE] Build an AutomationML (CAEX 2.15, *.aml) hardware description for ImportDeviceAml from a JSON spec — the generation half of a TIA Selection Tool / Aml.Engine workflow without extra dependencies. spec: {\"projectName\":\"P\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[{\"name\":\"Rack_0\",\"role\":\"Rack\",\"typeIdentifier\":\"OrderNumber:6ES7 590-1AE80-0AA0\",\"positionNumber\":0,\"deviceItems\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"OrderNumber:6ES7 516-3AN02-0AB0/V2.9\",\"positionNumber\":1,\"deviceItems\":[{\"name\":\"PROFINET interface_1\",\"role\":\"CommunicationInterface\",\"builtIn\":true,\"nodes\":[{\"name\":\"E1\",\"networkAddress\":\"192.168.0.1\",\"subnetMask\":\"255.255.255.0\",\"subnetName\":\"PN/IE_1\"}]}]},{\"name\":\"DI 32x24VDC HF_1\",\"typeIdentifier\":\"OrderNumber:6ES7 521-1BL00-0AB0/V2.0\",\"positionNumber\":2}]}]}],\"subnets\":[{\"name\":\"PN/IE_1\",\"type\":\"Ethernet\"}]}. Roles: Rack | DeviceItem | CommunicationInterface | CommunicationPort; TypeIdentifier uses the TIA catalog form OrderNumber:<MLFB>[/Vx.y] or System:Device.<family>. outputPath must be a NEW absolute .aml file. STRONGLY RECOMMENDED: referenceAmlPath = a file that ExportDeviceAml wrote on the same TIA version — its header, role/interface class libraries are copied verbatim and only the instance hierarchy is generated; without it a built-in skeleton is used and Meta.importVerified=false is returned. Verify with ImportDeviceAml (dry run first). Nothing is saved, compiled or downloaded. Examples: GetToolUsage(toolName: \"BuildDeviceAmlDocument\"), optionally operation or language. outputPath and exportFile are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\Device.aml\",\"spec\":{\"projectName\":\"Example\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[]}]}}"
+      "example": "{\"spec\":{\"projectName\":\"Example\",\"devices\":[{\"name\":\"PLC_1\",\"typeIdentifier\":\"System:Device.S71500\",\"deviceItems\":[]}]}}"
     },
     {
       "name": "BuildClassicHmiTagTable",
