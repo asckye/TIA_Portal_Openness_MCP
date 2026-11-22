@@ -5961,7 +5961,7 @@
         "openWorldHint": true,
         "readOnlyHint": true
       },
-      "descriptionSha256": "38ca95e40dfcd1a9a37cdd72a3c4246703f1d964ac1f11a0217c12c11237d59a",
+      "descriptionSha256": "8d285bdc5fa683f56df1c54755e1724480837944cf529bb9249ecf89ef9479ce",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -7715,7 +7715,7 @@
             "type": "string"
           },
           "serviceTypeSuffix": {
-            "description": "Exact Siemens.Engineering service type name or unique suffix, e.g. ICompilable PlcChecksumProvider is also available on this release.",
+            "description": "Exact Siemens.Engineering service type name or unique suffix, e.g. ICompilable. PlcChecksumProvider is also available on this release.",
             "type": "string"
           },
           "softwarePath": {

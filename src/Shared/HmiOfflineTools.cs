@@ -151,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Registered("BuildUnifiedHmiLayoutDesign") ? "Map the layout to the available Unified HMI design tools."
                             : "Map the layout to screen elements supported by the target runtime.",
                         Registered("ApplyUnifiedHmiScreenDesign")
-                            ? "Apply generated design with ApplyUnifiedHmiScreenDesign and verify by item readback."
+                            ? "Apply generated design with ApplyUnifiedHmiScreenDesign and verify by item readback and action SyntaxCheck."
                             : "Apply and verify the design in TIA Portal.",
                         "Bind controls only to declared PLC symbols or DB members discovered from project exports/readback."),
                     ["analysis"] = analysis

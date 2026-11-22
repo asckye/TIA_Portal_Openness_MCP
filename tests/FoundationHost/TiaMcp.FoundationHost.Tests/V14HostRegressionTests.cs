@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using TiaMcp.Logic.V4.Inputs;
 using Xunit;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Builders = TiaMcpServer.ModelContextProtocol;
 using Services = toolpipeline::TiaMcpServer.Siemens.Services;
 
 namespace TiaMcp.FoundationHost.Tests;
@@ -65,6 +66,65 @@ public sealed class V14HostRegressionTests
     }
 
     [Fact]
+    public void All_release_tools_accept_the_report_written_by_the_offline_suite()
+    {
+        using var fixture = new PreviewHostFixture("14sp1");
+        using var session = fixture.Pipeline.EnterSession();
+        var workspace = Directory.CreateTempSubdirectory("release-suite-");
+        var prior = Host.HostToolServices.Override;
+        try
+        {
+            Host.HostToolServices.Override = (operation, args) => OnlineMonitoringSafetyRuleTests.Observe(fixture, operation, args);
+            var plc = workspace.CreateSubdirectory("TMP_EXPORT/_verify");
+            Builders.PlcUdtXmlBuilder.BuildDocument("UDT_Fault", [new Builders.PlcUdtMemberDefinition("Active", "Bool")], "14sp1")
+                .Save(Path.Combine(plc.FullName, "UDT_Fault.xml"));
+            Builders.PlcGlobalDbXmlBuilder.BuildDocument("Sim_Data", 16, [new Builders.PlcDbMemberDefinition("Running", "Bool")], "14sp1")
+                .Save(Path.Combine(plc.CreateSubdirectory("Sim_Data_roundtrip.xml").FullName, "Sim_Data.xml"));
+            workspace.CreateSubdirectory("docs/hmi_templates");
+            var mapping = workspace.CreateSubdirectory("docs/hmi_template_mappings");
+            File.WriteAllText(Path.Combine(mapping.FullName, "tia-hmi-template-plc-mapping.release.json"), """{"Templates":[]}""");
+            var suite = Host.OfflineReleaseValidationSuite.Run(workspace.FullName, Path.Combine(workspace.FullName, "reports"));
+            string path = (string)suite["jsonPath"]!;
+            var tools = new Host.OfflineSuiteTools();
+            foreach (var (result, format) in new[] {
+                (tools.BuildReleaseDiagnosticReportV4(path), "tia-mcp-release-diagnostic-report-v1"),
+                (tools.BuildReleaseManifestV4(path), "tia-mcp-release-manifest-v1"),
+                (tools.BuildReleaseRunbookV4(path), "tia-mcp-release-runbook-v1"),
+                (tools.RebuildReleaseHandoffArtifactsV4(path, Path.Combine(workspace.FullName, "handoff")), "tia-mcp-release-handoff-artifacts-v1") })
+            {
+                var body = result.StructuredContent!;
+                Assert.True((bool?)body["ok"], body.ToJsonString());
+                Assert.Equal(format, (string?)body["data"]?["format"]);
+            }
+            Assert.Equal(0, fixture.Worker.NativeCalls);
+        }
+        finally
+        {
+            Host.HostToolServices.Override = prior;
+            workspace.Delete(true);
+        }
+    }
+
+    [Fact]
+    public void All_release_tools_refuse_a_missing_suite_before_writing()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("14sp1");
+        using var session = fixture.EnterSession();
+        string path = Path.Combine(fixture.Root, "missing.json");
+        string output = Path.Combine(fixture.Root, "handoff");
+        var tools = new Host.OfflineSuiteTools();
+        foreach (var result in new[] { tools.BuildReleaseDiagnosticReportV4(path), tools.BuildReleaseManifestV4(path),
+            tools.BuildReleaseRunbookV4(path), tools.RebuildReleaseHandoffArtifactsV4(path, output) })
+        {
+            Assert.Equal("NOT_FOUND", (string?)result.StructuredContent!["error"]?["code"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent["meta"]?["execution"]);
+        }
+        Assert.False(Directory.Exists(output));
+        var writeFailure = Host.OfflineContracts.Run("BuildReleaseHandoffArtifacts", () => throw new FileNotFoundException(), writes: true);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)writeFailure.StructuredContent!["error"]?["code"]);
+    }
+
+    [Fact]
     public void Runbook_commands_select_the_session_release()
     {
         var runbook = TiaMcpServer.ModelContextProtocol.ReleaseRunbookBuilder.Build(new JsonObject {
@@ -86,6 +146,42 @@ public sealed class V14HostRegressionTests
         Assert.True((bool?)result["ok"], result.ToJsonString());
         Assert.False((bool?)result["meta"]?["paging"]?["complete"]);
         Assert.Equal("partial", (string?)result["meta"]?["completeness"]);
+    }
+
+    [Theory]
+    [InlineData("GetOpennessGuidance", "total", 0, false, "partial")]
+    [InlineData("GetOpennessGuidance", "total", 1, true, "complete")]
+    [InlineData("ComparePlcBlockDocuments", "hunkCount", 0, false, "complete")]
+    public void Paging_preserves_source_completeness(string tool, string countField, int offset, bool lastPage, string completeness)
+    {
+        using var fixture = new PreviewHostFixture("14sp1");
+        using var session = fixture.Pipeline.EnterSession();
+        var response = new Host.ResponseMessage { Meta = new JsonObject {
+            ["success"] = true, ["dataComplete"] = true, ["offset"] = offset, ["limit"] = 1, [countField] = 2 } };
+        var result = Host.OfflineContracts.Map(tool, response).StructuredContent!;
+        Assert.True((bool?)result["data"]?["dataComplete"]);
+        Assert.Equal(lastPage, (bool?)result["meta"]?["paging"]?["complete"]);
+        Assert.Equal(completeness, (string?)result["meta"]?["completeness"]);
+    }
+
+    [Theory]
+    [InlineData("GetOpennessGuidance", "partial")]
+    [InlineData("GetV21EcosystemCatalog", "complete")]
+    public async Task Catalog_pages_preserve_the_source_completeness_field(string tool, string firstPageCompleteness)
+    {
+        using var fixture = new DiscoveryFixture("21");
+        JsonObject Source(int offset) => (tool == "GetOpennessGuidance"
+            ? new Host.EcosystemTools().ReadOpennessGuidance(offset: offset, limit: 1)
+            : new Host.V21EcosystemTools().ReadV21EcosystemCatalog(offset: offset, limit: 1)).Meta!;
+        var first = await fixture.Call(tool, new { limit = 1 });
+        Assert.Equal((bool?)Source(0)["dataComplete"], (bool?)first["data"]?["dataComplete"]);
+        Assert.False((bool?)first["meta"]?["paging"]?["complete"]);
+        Assert.Equal(firstPageCompleteness, (string?)first["meta"]?["completeness"]);
+        int total = (int)first["meta"]!["paging"]!["total"]!;
+        var last = await fixture.Call(tool, new { offset = total - 1, limit = 1 });
+        Assert.Equal((bool?)Source(total - 1)["dataComplete"], (bool?)last["data"]?["dataComplete"]);
+        Assert.True((bool?)last["meta"]?["paging"]?["complete"]);
+        Assert.Equal("complete", (string?)last["meta"]?["completeness"]);
     }
 
     [Theory]
@@ -249,5 +345,32 @@ public sealed class V14HostRegressionTests
         Assert.True(length < 40000, $"BuildAndImportPlcArtifact usage returned {length} characters");
         var artifact = result["data"]!;
         Assert.NotNull(artifact["inputSchema"]);
+    }
+
+    [Theory]
+    [InlineData("14sp1", false, false, false, false)]
+    [InlineData("15.1", true, false, false, false)]
+    [InlineData("16", true, false, false, false)]
+    [InlineData("17", true, false, false, false)]
+    [InlineData("18", true, true, false, false)]
+    [InlineData("19", true, true, true, false)]
+    [InlineData("20", true, true, true, true)]
+    [InlineData("21", true, true, true, true)]
+    public async Task Descriptions_and_reuse_plan_follow_release_capabilities(string release, bool connect, bool catalog, bool applyDesign, bool export)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        using var session = fixture.EnterSession();
+        async Task<JsonNode> Usage(string tool) => (await fixture.Call("GetToolUsage", new { toolName = tool })).StructuredContent!["data"]!;
+        Assert.Equal(connect, (await Usage("CompareSoftwareToOnline"))["description"]!.ToString().Contains("ConnectOnlinePlc"));
+        Assert.Equal(export, (await Usage("DeletePlcBlock"))["description"]!.ToString().Contains("ExportPlcBlockDocuments"));
+        string gsd = (await Usage("SearchInstalledGsdDevices"))["description"]!.ToString();
+        Assert.Equal(catalog, gsd.Contains("installed hardware catalog"));
+        Assert.Equal(!catalog, gsd.Contains("only installed GSDML files"));
+        Assert.Equal(catalog, gsd.Contains("SearchHardwareCatalog"));
+        string suffix = (await Usage("DescribeService"))["inputSchema"]!["properties"]!["serviceTypeSuffix"]!["description"]!.ToString();
+        Assert.Equal(connect, suffix.Contains("ICompilable. PlcChecksumProvider"));
+        var plan = new Host.HmiOfflineTools().PlanGlobalLibraryTemplateReuse(fixture.Root).Data!["reconstructionPlan"]!.ToJsonString();
+        Assert.Equal(applyDesign, plan.Contains("ApplyUnifiedHmiScreenDesign"));
+        Assert.Equal(applyDesign, plan.Contains("action SyntaxCheck"));
     }
 }

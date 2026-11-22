@@ -180,7 +180,7 @@ public sealed class OnlineMonitoringSafetyRuleTests
         return Assert.IsAssignableFrom<IReadOnlyList<string>>(method.Invoke(null, new object[] { names, find }));
     }
 
-    private static JsonNode? Observe(PreviewHostFixture fixture, string operation, JsonObject arguments) => operation switch
+    internal static JsonNode? Observe(PreviewHostFixture fixture, string operation, JsonObject arguments) => operation switch
     {
         "tool-names" => new JsonArray(fixture.Pipeline.AllTools.Select(tool => (JsonNode)JsonValue.Create(tool.ProtocolTool.Name)!).ToArray()),
         "group" => JsonValue.Create(true),

@@ -98,7 +98,7 @@ namespace TiaMcp.Adapters
 
             try
             {
-                var catalog = portal == null ? null : HardwareTryProperty(portal, "HardwareCatalog");
+                var catalog = OpennessApi.HardwareCatalog.Includes(ReleaseKey) ? HardwareTryProperty(portal, "HardwareCatalog") : null;
                 if (catalog != null)
                 {
                     foreach (var filter in BuildHardwareCatalogFilters(normalizedKeyword))

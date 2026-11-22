@@ -211,7 +211,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string tool = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
                 if (release != null && tool == "DescribeService" && p.Name == "serviceTypeSuffix"
                     && TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("GetPlcChecksums", release))
-                    text += " PlcChecksumProvider is also available on this release.";
+                    text += ". PlcChecksumProvider is also available on this release.";
                 if (release != null && tool == "ProbeGlobalLibrary" && p.Name == "libraryPath")
                     text = $"Full path to a {TiaOpenness.Shared.ToolUsageCatalog.LibraryExtension(release)} library file or its containing folder.";
                 specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, text ?? "", synthesized,
@@ -238,9 +238,18 @@ namespace TiaMcpServer.ModelContextProtocol
             release ??= HardwareContract.ReleaseKey;
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
-            if (name == "SearchInstalledGsdDevices" && !TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("SearchHardwareCatalog", release))
-                description = "[L2][Hardware][READ] Search only installed GSDML files for PROFINET device access points by vendor, order or DAP keyword. "
-                    + "Results are file metadata. The limit bounds the number of candidates returned.";
+            if (name == "CompareSoftwareToOnline" && TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("ConnectOnlinePlc", release))
+                description += " Use ConnectOnlinePlc to establish the online connection.";
+            if (name == "DeletePlcBlock" && TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("ExportPlcBlockDocuments", release))
+                description += " Use ExportPlcBlockDocuments to back up the block before deletion.";
+            if (name == "SearchInstalledGsdDevices")
+            {
+                if (!TiaMcp.Adapters.Contracts.OpennessApi.HardwareCatalog.Includes(release))
+                    description = "[L2][Hardware][READ] Search only installed GSDML files for PROFINET device access points by vendor, order or DAP keyword. "
+                        + "Results are file metadata. The limit bounds the number of candidates returned.";
+                else if (TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("SearchHardwareCatalog", release))
+                    description += " Use SearchHardwareCatalog for exact Siemens catalog rows.";
+            }
             var decorated = TiaOpenness.Shared.ToolUsageCatalog.WithHint(name, ToolExamples.Decorate(name, description, release));
             var tool = ReferenceEquals(decorated, description) || decorated == description
                 ? CreateToolCore(method, null, target)

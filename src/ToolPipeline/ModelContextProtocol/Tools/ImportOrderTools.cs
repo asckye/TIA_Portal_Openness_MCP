@@ -142,7 +142,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, null, new Error(McpServer.InvalidInput("").Message,
                     McpServer.ArgumentDetails(tool, (cause as ArgumentException)?.ParamName)),
                     Outcome.RejectedBeforeOperation, Completeness.None, current);
-            if (!writes && (cause is FileNotFoundException || cause is DirectoryNotFoundException))
+            if (cause is ReleaseHandoffArtifactBuilder.MissingSuiteReportException
+                || !writes && (cause is FileNotFoundException || cause is DirectoryNotFoundException))
                 return Result(tool, null, new Error("Input resource was not found.", new NotFoundDetails(null)), Outcome.RejectedBeforeOperation, Completeness
                         .None, current);
             // The legacy writer can throw after its first side effect. A thrown
@@ -176,11 +177,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (totalField != null)
                 {
                     paging = McpServer.OffsetPage(offset, limit, Count(evidence, totalField));
-                    if (!paging.Complete)
-                    {
-                        incomplete = true;
-                        if (data.ContainsKey("dataComplete")) data["dataComplete"] = false;
-                    }
+                    if (tool == "GetOpennessGuidance" && !paging.Complete) incomplete = true;
                     data.Remove("offset"); data.Remove("limit"); data.Remove("nextOffset");
                 }
             }

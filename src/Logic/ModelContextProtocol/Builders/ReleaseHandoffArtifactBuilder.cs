@@ -15,10 +15,13 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class ReleaseHandoffArtifactBuilder
     {
+        internal sealed class MissingSuiteReportException(string path)
+            : FileNotFoundException("Offline release suite JSON report not found.", path);
+
         public static JsonObject ReadSuite(string offlineReleaseSuiteJsonPath)
         {
             if (string.IsNullOrWhiteSpace(offlineReleaseSuiteJsonPath) || !File.Exists(offlineReleaseSuiteJsonPath))
-                throw new FileNotFoundException("Offline release suite JSON report not found.", offlineReleaseSuiteJsonPath);
+                throw new MissingSuiteReportException(offlineReleaseSuiteJsonPath);
             static bool Boolean(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out _);
             try
             {
@@ -26,6 +29,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     && root["mode"]?.ToString() == "tia-mcp-offline-release-validation-suite" && root["items"] is JsonArray items
                     && Boolean(root["ok"]) && (root["offlineOnly"] == null || Boolean(root["offlineOnly"]))
                     && items.All(item => item is JsonObject && Boolean(item["ok"]))) return root;
+            }
+            catch (IOException error) when (error is FileNotFoundException or DirectoryNotFoundException)
+            {
+                throw new MissingSuiteReportException(offlineReleaseSuiteJsonPath);
             }
             catch (JsonException error)
             {

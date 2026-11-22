@@ -418,7 +418,7 @@ namespace TiaMcpServer.ModelContextProtocol
             Description("[L2][Hardware]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD device access points. " +
                 "Use a precise vendor, order or DAP keyword, such as AFM60A, ATV320 or DL100. File-only GSDML rows are metadata. " +
                 "The limit bounds returned candidates. Truncated results include the total match count. File traversal and the synchronous native Find " +
-                "run to completion. The catalog API has no cancellation or paging overload. Use SearchHardwareCatalog for exact Siemens catalog rows.")]
+                "run to completion. The catalog API has no cancellation or paging overload.")]
         public CallToolResult SearchInstalledGsdDevicesV4(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100', 'SICK AFM60A'")] string keyword,
             [Description("limit: positive maximum number of candidates to return")] int limit = 50)
