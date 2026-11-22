@@ -380,15 +380,16 @@ def check_engine_startup(root: Path, key: str, expected: int, temp_root: Path,
         status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
         if status.get("enabled") is not True or status.get("state") != "NotStarted" or status["fault"] is not None:
             raise CheckFailure(f"V{key} {transport} {mode}: unexpected worker default/state: {status}")
-        # With the SDK present, native admission starts the worker to probe readiness, then refuses the session read.
+        # Native admission refuses the session read from installation evidence alone; without a usable TIA installation the
+        # worker is never started (UNIFY-1 C2), so it must stay NotStarted with no fault.
         diagnostic = call("GetSessionState")
         if (diagnostic.get("error", {}).get("code") != "PRECONDITION_FAILED"
                 or diagnostic.get("error", {}).get("details", {}).get("condition") != "native-admission"
                 or diagnostic.get("meta", {}).get("execution") != "not-started"):
             raise CheckFailure(f"V{key} {transport} {mode}: session diagnostic did not report the readiness refusal: {diagnostic}")
         status = call("GetOpennessWorkerStatus")["data"]["evidence"]["worker"]
-        if status.get("state") != "Ready" or status["fault"] is not None:
-            raise CheckFailure(f"V{key} {transport} {mode}: readiness probe did not start a healthy worker: {status}")
+        if status.get("state") != "NotStarted" or status["fault"] is not None:
+            raise CheckFailure(f"V{key} {transport} {mode}: readiness refusal started the worker or left a fault: {status}")
 
         bootstrap = call("InitializeEnvironment")
         reason = bootstrap.get("data", {}).get("recommendedReason") or ""
