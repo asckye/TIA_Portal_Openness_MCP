@@ -3,7 +3,7 @@
 This package is MIT. The accompanying LICENSE preserves the original repository
 copyright and identifies new content by asckye. No Siemens application library,
 HMI Template Suite, SAF, VASS, SICAR, ISA/IEC text or third-party SCL is included.
-The original project is [bulaofen0036-coder/TIA_Portal_Openness_MCP](https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP).
+The original project is [TIA_Portal_Openness_MCP](https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP).
 `sources.json` records the repository snapshot and original blob hashes for
 every reused template and licence/notice source.
 

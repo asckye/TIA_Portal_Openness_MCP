@@ -61,9 +61,12 @@ public sealed class StaticPolicyTests
             ["CHANGELOG.md"] = $"## [Unreleased]\n{old}\n## [4.0.0-rc.1] - 2026-11-22\n{old}\n[Unreleased]: https://github.com/{old}",
             ["docs/archive/note.md"] = old, ["docs/releases/v4.0.0-rc.1.md"] = old,
             ["manifest/history/record.json"] = old, ["manifest/publication-v3.3.0.json"] = old,
+            ["manifest/publication-v4.0.0-rc.1.json"] = """{"release":"v4.0.0-rc.1"}""",
             ["docs/releases/v4.0.0.md"] = "git@github.com:" + old + ".git", ["docs/new.txt"] = slug.ToLowerInvariant(),
             ["manifest/contracts/v4/baseline/21.json"] = old, ["plugin/new.toml"] = upstream + " " + old,
             ["NOTICE.md"] = upstream, ["local.config"] = @"D:\Code\" + slug + @"\bin",
+            ["templates/standards/tiamcp.basic/NOTICE.md"] = old, ["templates/standards/tiamcp.basic/sources.json"] = old,
+            ["tests/Release/TiaMcp.ReleaseTool.Tests/Fixtures/PublishedReleaseNotes/Beta6.cs"] = old,
             ["tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs"] = "https://github.com/" + old + "/issues"
         };
         foreach (var (name, content) in files) tree.Write(name, content);
@@ -71,6 +74,56 @@ public sealed class StaticPolicyTests
         Assert.Equal(new[] { "CHANGELOG.md:2", "CHANGELOG.md:5", "docs/new.txt:1", "docs/releases/v4.0.0.md:1",
             "manifest/contracts/v4/baseline/21.json:1", "plugin/new.toml:1", "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs:1" },
             errors.Select(error => error.Split(": ", 2)[0]));
+    }
+
+    [Fact]
+    public void Frozen_history_advances_only_when_a_publication_is_recorded()
+    {
+        using var tree = new StaticTree();
+        var old = "https://github.com/asckye/" + RepositoryChecks.FormerRepositoryName;
+        var notes = "docs/releases/v5.1.0-beta.10.md";
+        var changelog = $"## [Unreleased]\n{old}\n## [5.1.0-beta.10]\n{old}\n## [5.1.0-beta.9]\n{old}\n[Unreleased]: {old}";
+        tree.Write("CHANGELOG.md", changelog);
+        tree.Write(notes, old);
+        tree.Write("manifest/publication-v5.1.0-beta.9.json", """{"release":"v5.1.0-beta.9"}""");
+        string[] Errors() => RepositoryChecks.RepositoryNameErrors(tree.Root, ["CHANGELOG.md", notes]).Select(e => e.Split(": ", 2)[0]).ToArray();
+        Assert.Equal(new[] { "CHANGELOG.md:2", "CHANGELOG.md:4", "CHANGELOG.md:7", notes + ":1" }, Errors());
+        tree.Write("manifest/publication-v5.1.0-beta.10.json", """{"release":"v5.1.0-beta.10"}""");
+        Assert.Equal(new[] { "CHANGELOG.md:2", "CHANGELOG.md:7" }, Errors());
+    }
+
+    [Theory]
+    [InlineData(@".\work\{0}\bin")]
+    [InlineData(@"\\server\share\{0}\src")]
+    [InlineData(@"D:\Engineering (old)\{0}")]
+    [InlineData("D:/Old projects/{0}/src")]
+    [InlineData("cd ~/src/{0}")]
+    [InlineData("cd ../{0}")]
+    [InlineData("cd '/opt/Engineering Projects/{0}'")]
+    public void Local_checkout_paths_do_not_hide_a_repository_reference_on_the_same_line(string format)
+    {
+        using var tree = new StaticTree();
+        tree.Write("CHANGELOG.md", "## [Unreleased]");
+        string folder = string.Format(format, RepositoryChecks.FormerRepositoryName);
+        tree.Write("notes.txt", folder + "\n" + folder + " https://github.com/asckye/" + RepositoryChecks.FormerRepositoryName);
+        Assert.StartsWith("notes.txt:2:", Assert.Single(RepositoryChecks.RepositoryNameErrors(tree.Root, ["notes.txt"])));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Non_git_scan_uses_the_source_or_package_inventory_and_leaves_local_notes_alone(bool packaged)
+    {
+        using var tree = new StaticTree();
+        tree.Copy(DeliveryRules.PolicyPath);
+        tree.Write("CHANGELOG.md", "## [Unreleased]");
+        var live = packaged ? "docs/guides/shipped.md" : "docs/guides/version-control.md";
+        if (packaged) tree.Write("manifest/release-file-hashes.json", new JsonObject
+            { ["files"] = new JsonObject { [live] = new string('a', 64) } }.ToJsonString());
+        string[] names = [live, "docs/guides/my-local-notes.md", "scratch.txt"];
+        foreach (var path in names) tree.Write(path, RepositoryChecks.FormerRepositoryName);
+        var selected = RepositoryChecks.NonGitRepositoryNameFiles(tree.Root, names, DeliveryRules.Load(tree.Root));
+        Assert.StartsWith(live + ":1:", Assert.Single(RepositoryChecks.RepositoryNameErrors(tree.Root, selected)));
     }
 
     [Fact]

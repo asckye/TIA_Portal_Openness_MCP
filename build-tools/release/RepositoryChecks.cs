@@ -31,21 +31,49 @@ internal static class RepositoryChecks
     internal static List<string> ForbiddenScripts(IEnumerable<string> names) => names.Distinct().Order(StringComparer.Ordinal).Where(p => Path.GetExtension(p).ToLowerInvariant() is ".ps1" or ".psm1" or ".bat" or ".cmd").Select(p => "Forbidden tracked script file: " + p).ToList();
     internal const string FormerRepositoryName = "TIA_Portal_" + "Openness_MCP";
 
+    internal static IEnumerable<string> NonGitRepositoryNameFiles(string root, IEnumerable<string> names, DeliveryRules rules)
+    {
+        // An extracted tree has no index. Use its recorded package inventory or the checking checkout's
+        // source inventory, plus the explicitly declared delivery files. Local notes can live beside either.
+        var known = DeliveryRules.Strings(rules.Data["include"]!["files"]).Concat(DeliveryRules.Strings(rules.Data["requiredFiles"]))
+            .ToHashSet(StringComparer.Ordinal);
+        var inventory = Path.Combine(root, "manifest/release-file-hashes.json");
+        if (File.Exists(inventory))
+        {
+            var files = JsonNode.Parse(File.ReadAllText(inventory))?["files"] as JsonObject
+                ?? throw new ReleaseException("Missing files inventory in manifest/release-file-hashes.json");
+            known.UnionWith(files.Select(entry => entry.Key));
+        }
+        else
+        {
+            var checkerRoot = Repository.FindRoot();
+            if (Path.Exists(Path.Combine(checkerRoot, ".git"))) known.UnionWith(Repository.GitFiles(checkerRoot));
+        }
+        return names.Where(known.Contains);
+    }
+
     internal static List<string> RepositoryNameErrors(string root, IEnumerable<string> names)
     {
-        const string lastPublishedHeading = "## [4.0.0-rc.1]";
         var changelog = Repository.ReadSource(Path.Combine(root, "CHANGELOG.md"));
-        var historyStart = changelog.IndexOf("\n" + lastPublishedHeading, StringComparison.Ordinal);
-        var history = historyStart < 0 ? "" : changelog[historyStart..];
-        var publishedNotes = Regex.Matches(history, @"^## \[(" + ReleaseVersions.VersionPattern + @")\]", RegexOptions.Multiline)
+        var headings = Regex.Matches(changelog, @"^## \[(" + ReleaseVersions.VersionPattern + @")\]", RegexOptions.Multiline);
+        var lastPublishedHeading = headings.FirstOrDefault(m => File.Exists(Path.Combine(root, "manifest", $"publication-v{m.Groups[1].Value}.json")))?.Value;
+        // Some published notes have a release tag but predate the next publication record.
+        var publishedNotes = headings.SkipWhile(m => !PrereleaseNotes.Published(root, m.Groups[1].Value))
             .Select(m => $"docs/releases/v{m.Groups[1].Value}.md").ToHashSet(StringComparer.Ordinal);
-        // These repositories have different owners. A local checkout directory can also retain its original name.
-        var otherReferences = new Regex(@"(?:\b(?:bulaofen0036-coder|chin9933)/|\b[A-Z]:[\\/](?:[\w .-]*[\\/])*)" + FormerRepositoryName,
+        // A qualified upstream source and a local checkout path can retain the name.
+        // Anchor paths at a token boundary so a slash inside an HTTPS or SSH URL cannot hide a repository reference.
+        const string localRoot = @"(?:[A-Z]:[\\/]|\\\\|~[\\/]|\.{1,2}[\\/]|/(?!/))";
+        const string localPath = """(?<![\w./\\:@-])""" + localRoot + """(?:[^\s\/\\:"'`<>|]*[\\/])*""";
+        const string quotedPath = """["'`]""" + localRoot + """(?:[^\/\\:"'`<>|\r\n]*[\\/])*""";
+        const string windowsPath = """\b[A-Z]:[\\/](?:[^/\\:"'`<>|\r\n]*[\\/])*?""";
+        var otherReferences = new Regex(@"(?:\b(?:bulaofen0036-coder|chin9933)/|" + localPath + "|" + quotedPath + "|" + windowsPath + ")" + FormerRepositoryName,
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         var errors = new List<string>();
         foreach (var name in names.Distinct().Order(StringComparer.Ordinal))
         {
             if (name.StartsWith("docs/archive/", StringComparison.Ordinal) || name.StartsWith("manifest/history/", StringComparison.Ordinal)
+                || name.StartsWith("tests/Release/TiaMcp.ReleaseTool.Tests/Fixtures/PublishedReleaseNotes/", StringComparison.Ordinal)
+                || name is "templates/standards/tiamcp.basic/NOTICE.md" or "templates/standards/tiamcp.basic/sources.json"
                 || Regex.IsMatch(name, @"^manifest/publication-[^/]+\.json$") || publishedNotes.Contains(name)) continue;
             var path = Path.Combine(root, name);
             if (!File.Exists(path)) continue;
@@ -57,12 +85,8 @@ internal static class RepositoryChecks
             while (reader.ReadLine() is { } line)
             {
                 number++;
-                if (name == "CHANGELOG.md" && line.StartsWith(lastPublishedHeading, StringComparison.Ordinal)) inHistory = true;
+                if (name == "CHANGELOG.md" && lastPublishedHeading != null && line.StartsWith(lastPublishedHeading, StringComparison.Ordinal)) inHistory = true;
                 if (inHistory && !line.StartsWith("[Unreleased]:", StringComparison.OrdinalIgnoreCase)) continue;
-                // The regression for the published beta.6 note asserts its original form URL verbatim.
-                if (name == "tests/Release/TiaMcp.ReleaseTool.Tests/PrereleaseTests.cs"
-                    && line.Trim() == "Assert.Contains(\"https://github.com/asckye/" + FormerRepositoryName
-                        + "/issues/new?template=prerelease_report.md\", report, StringComparison.Ordinal);") continue;
                 if (line.Contains(FormerRepositoryName, StringComparison.OrdinalIgnoreCase)
                     && otherReferences.Replace(line, "").Contains(FormerRepositoryName, StringComparison.OrdinalIgnoreCase))
                     errors.Add($"{name}:{number}: retired repository name (use asckye/automation-engineering-workbench)");
@@ -171,7 +195,7 @@ internal static class RepositoryChecks
         var package = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "manifest/package-manifest.json")))!;
         errors.AddRange(ForbiddenScripts(tracked.Where(p => File.Exists(Path.Combine(root, p)))));
         errors.AddRange(ProductNames(root, names));
-        errors.AddRange(RepositoryNameErrors(root, git ? names : names.Where(p => !p.Split('/').Any(Skip.Contains))));
+        errors.AddRange(RepositoryNameErrors(root, git ? tracked : NonGitRepositoryNameFiles(root, names, rules)));
         var count = 0;
         foreach (var source in Documents(root))
         {

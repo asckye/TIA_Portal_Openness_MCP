@@ -91,10 +91,10 @@ namespace TiaMcp.Updater
                 string pageBase = options.ReleasePageBaseUrl ?? ("https://github.com/" + options.Repository);
                 if (tag.Length == 0)
                 {
-                    string location = GetRedirect(pageBase.TrimEnd('/') + "/releases/latest", options.TimeoutSeconds, options);
-                    Match redirect = Regex.Match(location ?? "", @"/releases/tag/([^/?#]+)$");
-                    if (!redirect.Success) throw new InvalidOperationException("Could not determine the latest release tag from " + location);
-                    tag = Uri.UnescapeDataString(redirect.Groups[1].Value);
+                    Uri tagPage = LatestTagPage(new Uri(pageBase.TrimEnd('/') + "/releases/latest"), options);
+                    tag = Uri.UnescapeDataString(tagPage.Segments.Last());
+                    NormalizeVersion(tag);
+                    pageBase = new Uri(tagPage, "../../").AbsoluteUri.TrimEnd('/');
                 }
                 var fallback = new ReleaseInfo { Tag = tag, Assets = new List<ReleaseAsset>() };
                 string html = GetText(pageBase.TrimEnd('/') + "/releases/expanded_assets/" + Uri.EscapeDataString(tag), options.TimeoutSeconds, options);
@@ -167,13 +167,33 @@ namespace TiaMcp.Updater
             using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8)) return reader.ReadToEnd();
         }
 
+        private static Uri LatestTagPage(Uri page, UpdaterOptions options)
+        {
+            if (page.Scheme != Uri.UriSchemeHttps) throw new InvalidOperationException("The latest release page requires HTTPS.");
+            for (int hop = 0; hop < 5; hop++)
+            {
+                string location = GetRedirect(page.AbsoluteUri, options.TimeoutSeconds, options);
+                if (string.IsNullOrWhiteSpace(location) || !Uri.TryCreate(page, location, out var next)
+                    || next.Scheme != Uri.UriSchemeHttps || next.IdnHost != page.IdnHost || next.Port != page.Port || next.UserInfo.Length != 0)
+                    throw new InvalidOperationException("Expected an HTTPS release redirect on the same host.");
+                if (Regex.IsMatch(next.AbsolutePath, @"/releases/tag/[^/]+$")) return next;
+                if (!next.AbsolutePath.EndsWith("/releases/latest", StringComparison.Ordinal) || next == page)
+                    throw new InvalidOperationException("Could not determine the latest release tag from " + location);
+                page = next;
+            }
+            throw new InvalidOperationException("Too many redirects from the latest release page.");
+        }
+
         private static string GetRedirect(string url, int timeoutSeconds, UpdaterOptions options)
         {
             if (options.ReadRedirectForTest != null) return options.ReadRedirectForTest(url, timeoutSeconds);
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.UserAgent = "TiaMcp-Update-Engine/1"; request.AllowAutoRedirect = false; request.Timeout = timeoutSeconds * 1000;
-            try { using (WebResponse response = request.GetResponse()) return response.Headers[HttpResponseHeader.Location]; }
-            catch (WebException error) when (error.Response != null) { using (error.Response) return error.Response.Headers[HttpResponseHeader.Location]; }
+            HttpWebResponse response;
+            try { response = (HttpWebResponse)request.GetResponse(); }
+            catch (WebException error) when (error.Response is HttpWebResponse reply) { response = reply; }
+            using (response)
+                return (int)response.StatusCode >= 300 && (int)response.StatusCode < 400 ? response.Headers[HttpResponseHeader.Location] : null;
         }
 
         private static T GetJson<T>(string url, string accept, int timeoutSeconds, UpdaterOptions options) where T : class

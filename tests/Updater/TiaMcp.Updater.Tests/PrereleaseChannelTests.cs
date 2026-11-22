@@ -115,6 +115,42 @@ namespace TiaMcp.Updater.Tests
             Assert.DoesNotContain(plain.Check(), line => line.Contains("the release page shows only", StringComparison.Ordinal));
         }
 
+        [Fact]
+        public void Renamed_repository_redirects_latest_then_uses_the_new_repository_for_assets()
+        {
+            using var fixture = new ChannelFixture("3.3.0") { FailApi = true };
+            const string renamed = "/asckye/automation-engineering-workbench";
+            var requests = new List<string>();
+            fixture.Redirect = url =>
+            {
+                requests.Add(url);
+                return requests.Count == 1 ? renamed + "/releases/latest" : "tag/v3.3.0";
+            };
+            var lines = fixture.Check();
+            Assert.Equal(new[] { "https://fixture.invalid/github/releases/latest", "https://fixture.invalid" + renamed + "/releases/latest" }, requests);
+            Assert.Contains(renamed + "/releases/expanded_assets/v3.3.0", fixture.Urls);
+            Assert.Contains(lines, line => line.Contains("https://fixture.invalid" + renamed + "/releases/download/v3.3.0/", StringComparison.Ordinal));
+        }
+
+        [Theory]
+        [InlineData("http://fixture.invalid/repo/releases/latest", false)]
+        [InlineData("https://another.invalid/repo/releases/latest", false)]
+        [InlineData("//another.invalid/repo/releases/tag/v3.3.0", true)]
+        [InlineData("https://fixture.invalid:444/repo/releases/tag/v3.3.0", true)]
+        public void Unsafe_release_page_redirect_is_refused_before_following_it(string location, bool afterRename)
+        {
+            using var fixture = new ChannelFixture("3.3.0") { FailApi = true };
+            var requests = new List<string>();
+            fixture.Redirect = url =>
+            {
+                requests.Add(url);
+                return afterRename && requests.Count == 1 ? "/renamed/releases/latest" : location;
+            };
+            Assert.Throws<InvalidOperationException>(() => fixture.Check());
+            Assert.Equal(afterRename ? 2 : 1, requests.Count);
+            Assert.Single(fixture.Urls);
+        }
+
         [Theory]
         [InlineData("4.0.0-rc.1", "TIA_MCP_Delivery_v4.0.0-rc.1_20261021")]
         [InlineData("4.0.0", "TIA_MCP_v4.0.0_20261021")]
@@ -159,6 +195,7 @@ namespace TiaMcp.Updater.Tests
             internal object[] List { get; set; } = Array.Empty<object>();
             internal List<string> Urls { get; } = new List<string>();
             internal bool FailApi { get; set; }
+            internal Func<string, string> Redirect { get; set; } = _ => "https://fixture.invalid/github/releases/tag/v3.3.0";
             internal string ExpandedAssets { get; set; } =
                 "<a href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.zip\">zip</a><a " +
                 "href=\"/releases/download/v3.3.0/TIA_MCP_Delivery_v3.3.0_20261003.sha256\">sha</a>";
@@ -190,7 +227,7 @@ namespace TiaMcp.Updater.Tests
                         if (url.Contains("/releases/tags/", StringComparison.Ordinal) && Tagged != null) return JsonSerializer.Serialize(Tagged);
                         throw new IOException("unexpected request: " + url);
                     },
-                    ReadRedirectForTest = (url, _) => FailApi ? "https://fixture.invalid/github/releases/tag/v3.3.0"
+                    ReadRedirectForTest = (url, _) => FailApi ? Redirect(url)
                         : throw new IOException("the release page is not used here: " + url)
                 };
                 UpdaterEngine.Run(options, lines.Add, _ => new List<string>());
