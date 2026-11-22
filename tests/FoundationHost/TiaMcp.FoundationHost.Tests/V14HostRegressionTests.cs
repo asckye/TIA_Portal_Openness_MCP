@@ -243,8 +243,11 @@ public sealed class V14HostRegressionTests
         var invocation = (await Usage("InvokeObject"))["example"]!["request"]!["params"]!["arguments"]!;
         Assert.Equal("Block", (string?)invocation["objectKind"]);
         Assert.Equal("HeaderAuthor", (string?)invocation["args"]?[0]);
-        var artifact = await Usage("BuildAndImportPlcArtifact");
-        Assert.True(artifact.ToJsonString(new JsonSerializerOptions { WriteIndented = true }).Length < 40000);
+        var getToolUsage = fixture.Tools.Single(tool => tool.ProtocolTool.Name == "GetToolUsage");
+        var result = await ToolHintOnceTests.Invoke(getToolUsage, new { toolName = "BuildAndImportPlcArtifact" });
+        int length = result.ToJsonString().Length;
+        Assert.True(length < 40000, $"BuildAndImportPlcArtifact usage returned {length} characters");
+        var artifact = result["data"]!;
         Assert.NotNull(artifact["inputSchema"]);
     }
 }

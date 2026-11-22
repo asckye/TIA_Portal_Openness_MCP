@@ -41,7 +41,7 @@ public sealed class PreviewToolCallTruthTests
         var response = new toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMessage { Message = "GitHub API rate limit reached.",
             Meta = new JsonObject { ["success"] = false, ["releaseApiUrl"] = "https://example.invalid/releases", ["httpStatus"] = 429 } };
         var body = toolpipeline::TiaMcpServer.ModelContextProtocol.SessionToolContract.Map("CheckProductUpdate", response, false, false).StructuredContent!;
-        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("RESOURCE_UNAVAILABLE", (string?)body["error"]?["code"]);
         Assert.Equal("read-failed", (string?)body["meta"]?["outcome"]);
     }
 
