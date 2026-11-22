@@ -405,21 +405,24 @@ namespace TiaMcp.Adapters
             var raw = (orderNumber ?? "").Trim();
             var requestedVersion = (version ?? "").Trim();
             if (raw.StartsWith("OrderNumber:", StringComparison.Ordinal) || raw.StartsWith("GSD:", StringComparison.Ordinal)) return (raw, "", "");
-            var partial = "OrderNumber:" + raw;
+            var query = "OrderNumber:" + raw;
             List<string> types;
             try
             {
-                types = Hardware.HardwareUtilityPolicy.FindPlugModuleTypes(partial, attempts,
-                    query => HardwareRequireUtility<ModuleInformationProvider>("ModuleInformationProvider").FindModuleTypes(query));
+                types = Hardware.HardwareUtilityPolicy.FindPlugModuleTypes(query, attempts, partial =>
+                {
+                    var provider = HardwareRequireUtility<ModuleInformationProvider>("ModuleInformationProvider");
+                    return provider.FindModuleTypes(partial);
+                });
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 return (null, "InvalidParams",
-                        $"ModuleInformationProvider.FindModuleTypes('{partial}') failed: {ShortExceptionMessage(ex)}. Pass the full TypeIdentifier as orderNumber.");
+                        $"ModuleInformationProvider.FindModuleTypes('{query}') failed: {ShortExceptionMessage(ex)}. Pass the full TypeIdentifier as orderNumber.");
             }
             if (types.Count == 0)
                 return (null, "OrderNumberNotFound",
-                        $"ModuleInformationProvider.FindModuleTypes('{partial}') returned no installed module type. Check the article number (with its spaces) or pass the full TypeIdentifier.");
+                        $"ModuleInformationProvider.FindModuleTypes('{query}') returned no installed module type. Check the article number (with its spaces) or pass the full TypeIdentifier.");
             var matches = requestedVersion.Length == 0 ? types : types.Where(t => t.EndsWith("/" + requestedVersion, StringComparison.Ordinal)).ToList();
             if (matches.Count == 1) return (matches[0], "", "");
             var listed = string.Join("; ", types.Take(12)) + (types.Count > 12 ? "; ..." : "");

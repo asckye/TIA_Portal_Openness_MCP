@@ -366,19 +366,10 @@ internal sealed partial class FoundationTool : McpServerTool
             cancellationToken.ThrowIfCancellationRequested();
             if (definition.ResponseMember is "BatchExport" or "BatchImport" or "BatchDocumentExport" or "BatchDocumentImport" or "CrossReferenceAnalysis")
             {
-                if (values["softwarePath"] is not JsonValue software || !software.TryGetValue<string>(out var path) || string.IsNullOrWhiteSpace(path))
-                    throw new AdapterPreconditionException("A softwarePath is required.", "softwarePath");
-                static bool Rooted(string value) => value.StartsWith("devices/", StringComparison.Ordinal) || value.StartsWith("device-groups/", StringComparison.Ordinal)
-                    || value.StartsWith("ungrouped/", StringComparison.Ordinal);
-                if (!Rooted(path))
-                {
-                    var info = await worker.Call("ReadSoftwareInfo", new JsonObject { ["softwarePath"] = path }, cancellationToken).ConfigureAwait(false);
-                    SoftwareReadContract.Wrap("GetSoftwareInfo", info, McpJsonUtilities.DefaultOptions);
-                    string exact = (string)info!["Meta"]!["softwarePath"]!;
-                    if (!Rooted(exact) || !TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(path, exact))
-                        throw new InvalidDataException("Resolved PLC identity does not match the requested software path.");
-                    values["softwarePath"] = exact;
-                }
+                string path = BatchSoftwarePath.Require(values);
+                // Directory import uses the worker's path namespace. The native transport binds its exact wire identity.
+                if (definition.ResponseMember != "BatchImport")
+                    values["softwarePath"] = await BatchSoftwarePath.Resolve(worker, path, cancellationToken).ConfigureAwait(false);
             }
             dispatched = true;
             if (definition.ResponseMember == "CrossReferenceAnalysis")

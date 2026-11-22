@@ -82,7 +82,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (string.IsNullOrEmpty(identity)) throw new InvalidOperationException("Exact binding identity required.");
                     var scope = identity + "\n" + softwarePath + "\n" + blockPath;
                     return execute(new PlcVerifiedExecution { Request = request, CandidateXml = candidate.Xml, Binding = scope,
-                        Export = Export, ExportType = ExportType, Import = Import, VerifyBinding = Check, Meta = meta,
+                        Export = Export, Import = Import, ExportType = ExportType, VerifyBinding = Check, Meta = meta,
                         Compile = request.CompileAfterImport ? (Action)Compile : null });
                 }
                 catch (Exception ex) {

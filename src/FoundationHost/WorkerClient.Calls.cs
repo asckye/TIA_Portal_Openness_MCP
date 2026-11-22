@@ -23,6 +23,28 @@ using TiaMcp.PlcWorker;
 using TiaMcpServer.Siemens;
 
 namespace TiaMcp.FoundationHost;
+
+internal static class BatchSoftwarePath
+{
+    internal static string Require(JsonObject arguments) =>
+        arguments["softwarePath"] is JsonValue software && software.TryGetValue<string>(out var path) && !string.IsNullOrWhiteSpace(path)
+            ? path : throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("A softwarePath is required.", "softwarePath");
+
+    private static bool Rooted(string path) => path.StartsWith("devices/", StringComparison.Ordinal)
+        || path.StartsWith("device-groups/", StringComparison.Ordinal) || path.StartsWith("ungrouped/", StringComparison.Ordinal);
+
+    internal static async Task<string> Resolve(IFoundationWorker worker, string path, CancellationToken token)
+    {
+        if (Rooted(path)) return path;
+        var info = await worker.Call("ReadSoftwareInfo", new JsonObject { ["softwarePath"] = path }, token).ConfigureAwait(false);
+        SoftwareReadContract.Wrap("GetSoftwareInfo", info, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions);
+        string exact = (string)info!["Meta"]!["softwarePath"]!;
+        if (!Rooted(exact) || !TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(path, exact))
+            throw new InvalidDataException("Resolved PLC identity does not match the requested software path.");
+        return exact;
+    }
+}
+
 internal sealed partial class WorkerClient
 {
     private string? secondaryProjectFile;
@@ -97,7 +119,28 @@ internal sealed partial class WorkerClient
     internal Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)
         => CallCore("HostObserve", new JsonObject { ["operation"] = operation, ["arguments"] = arguments.DeepClone() }, true, false, token);
     public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
-        => CallCore(operation, arguments, false, false, token);
+        => operation is "ImportBlocksFromDirectory" or "ImportPlcProgramFromDirectory"
+            ? CallDirectoryImport(operation, arguments, token) : CallCore(operation, arguments, false, false, token);
+
+    private async Task<JsonNode?> CallDirectoryImport(string operation, JsonObject arguments, CancellationToken token)
+    {
+        try
+        {
+            string path = BatchSoftwarePath.Require(arguments);
+            string exact = await BatchSoftwarePath.Resolve(this, path, token).ConfigureAwait(false);
+            if (exact != path)
+            {
+                arguments = (JsonObject)arguments.DeepClone();
+                arguments["softwarePath"] = exact;
+            }
+        }
+        catch (Exception error)
+        {
+            error.Data["foundationRequestSent"] = false;
+            throw;
+        }
+        return await CallCore(operation, arguments, false, false, token).ConfigureAwait(false);
+    }
     private string[] UnsettledRequestIds()
     {
         var calls = Unsettled.Snapshot();

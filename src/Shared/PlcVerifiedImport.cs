@@ -115,6 +115,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string target = (string?)meta["blockPath"] ?? CandidateName(planned);
             if (meta["softwarePath"] is JsonValue software && software.TryGetValue<string>(out var pathPrefix) && !string.IsNullOrWhiteSpace(pathPrefix))
                 target = pathPrefix + "/" + target;
+            else if (meta["blockPath"] == null && binding.IndexOf('/') > 0 && !binding.Any(char.IsControl)
+                && binding.EndsWith("/" + target, StringComparison.Ordinal))
+                target = binding;
             meta["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = target, ["restoreFrom"] = beforePath,
                 ["action"] =
                     "Compare the exact block with the retained original backup and restore it manually if needed; do not replay an unconfirmed import." });
