@@ -1,22 +1,22 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-rc.1_20261122",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-22T07:44:43.3222229+00:00",
+  "generatedAt": "2026-11-22T14:18:01.9867664+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "ec72b1af09da0cace3517e1e1475809a39b9ceca74699cfebd1d4548ac479d04",
-  "workerSha256": "c7141d00ea70e52299c9072588d3ad698023e58c6a5c0460555ee9625112b3fe",
-  "toolCount": 524,
+  "workerSha256": "41db69b9c7bf400f06e5785b45cdedba96ca9b7814417dfc2a5c484d6d3839d0",
+  "toolCount": 523,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2928,
-    "parametersUndocumented": 843,
-    "parametersFromVocabulary": 687,
-    "toolsWithUndocumentedParameters": 215,
-    "toolsWithEnumHints": 173,
-    "enumHints": 271,
-    "defaultHints": 1688,
-    "examplesCurated": 524,
+    "parameters": 2920,
+    "parametersUndocumented": 841,
+    "parametersFromVocabulary": 685,
+    "toolsWithUndocumentedParameters": 214,
+    "toolsWithEnumHints": 172,
+    "enumHints": 270,
+    "defaultHints": 1682,
+    "examplesCurated": 523,
     "recipes": 54
   },
   "categories": [
@@ -1328,7 +1328,7 @@
         "dryRun"
       ],
       "description": "[L2][PLC-Online][ONLINE-WRITE] read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. read and exportSnapshot use InterfaceSnapshot (V15.1 and later); createSnapshot and the two load actions use ValueService, which exists only in V21, and are refused on V15.1–V20 before TIA is called. Default preview; no save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManagePlcDataBlockSnapshot\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"action\":\"read\",\"confirmValueChange\":false,\"dryRun\":true}"
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"\\u003Cexact data block path from GetSoftwareTree\\u003E\",\"action\":\"read\",\"confirmValueChange\":false,\"dryRun\":true}"
     },
     {
       "name": "ManagePlcCertificate",
@@ -1587,28 +1587,6 @@
       "example": "{\"softwarePath\":\"\\u003Cexact Classic HMI softwarePath from GetProjectTree\\u003E\",\"action\":\"read\",\"confirmDelete\":false,\"dryRun\":true}"
     },
     {
-      "name": "ManageCfcChartProtection",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ManageCfcChartProtection",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "chartName",
-        "action",
-        "currentPassword",
-        "newHashedPassword",
-        "dryRun",
-        "modelVersion",
-        "skipChartPreflight"
-      ],
-      "description": "[L2][PLC-Software][WRITE] CFC chart password of one chart (ChartProviderS7 on the PLC software): read (GetChartProtection -> password hash, empty = unprotected), add (AddChartProtection(chartName, newHashedPassword - the hash as TIA displays it)), change (ChangeChartProtection(chartName, currentPassword as SecureString, newHashedPassword)), remove (RemoveChartProtection(chartName, currentPassword)). Official: the password only protects against unintentional editing (no know-how protection); native bool reported and the hash read back. Passwords are never logged. V18 and later refuse every protection action with UNSUPPORTED_CAPABILITY before provider access: the SDK exposes no independent chart inventory, CompleteExport preflight preceded a V20 crash on a chartless PLC, and unknown-chart GetChartProtection crashed V21. skipChartPreflight cannot bypass the crash guard. Default preview; no automatic save. Examples: GetToolUsage(toolName: \"ManageCfcChartProtection\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"chartName\":\"Chart_1\",\"dryRun\":true,\"action\":\"read\"}"
-    },
-    {
       "name": "ListVersionControlWorkspaces",
       "layer": "L1",
       "category": "project",
@@ -1641,21 +1619,24 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\"}"
     },
     {
-      "name": "ListHmiScreenPaths",
+      "name": "ListUnifiedLibraryFolderEntries",
       "layer": "L2",
       "category": "hmi",
-      "domain": "HMI",
+      "domain": "HMI-Unified",
       "operation": "READ",
       "operationInferred": false,
-      "method": "ListHmiScreenPathsV4",
+      "method": "ListUnifiedLibraryFolderV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "offset",
-        "limit"
+        "expectedProject",
+        "folderPath",
+        "cursor",
+        "limit",
+        "budgetMs"
       ],
-      "description": "[L2][HMI][READ]List full screen group paths, including nested folders. Paths start with /. Within each name, percent-encode %, /, backslash and ASCII controls (e.g. /Area%2F1/Main). offset/limit paginate the list. Exact paths disambiguate same-named screens. Examples: GetToolUsage(toolName: \"ListHmiScreenPaths\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\"}"
+      "description": "[L2][HMI-Unified][READ]Page only direct type/folder names in ONE exact project-library folder, for locating a referenced script/faceplate. No recursive search or default-version substitution. / selects root. Inspect returned folders before choosing the next exact path. Examples: GetToolUsage(toolName: \"ListUnifiedLibraryFolderEntries\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\"}"
     },
     {
       "name": "ListHmiConnections",
@@ -2246,18 +2227,41 @@
       "example": "{\"softwarePath\":\"devices/PLC_1/PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"dryRun\":true,\"confirm\":false,\"fileNamesWithoutExtension\":[\"\\u003Cexact document basename from the import directory\\u003E\"]}"
     },
     {
-      "name": "ListHmiScreens",
+      "name": "ImportPlcBlockVerified",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ImportPlcBlockVerifiedV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "blockPath",
+        "importPath",
+        "evidenceDirectory",
+        "dryRun",
+        "previewToken",
+        "compileAfterImport"
+      ],
+      "description": "[L2][PLC-Software][WRITE] Overwrite one existing non-library PLC block in its exact current user group with a reviewed SimaticML file. Default dryRun=true exports a retained backup, preserves omitted scalar block attributes and returns planned.xml plus binding/content token. Execution requires SAME arguments and previewToken; re-exports current block, rechecks binding/content before import, then re-exports for strict document verification preserving wiring and literal values. Requires Offline and consistent exports. Refuses library-bound blocks, InstanceDB, changed name/type/number/layout/language and empty replacement logic. Missing interface members/networks still mean deletion. compileAfterImport=false by default; true explicitly compiles the imported block before readback, rejecting compile errors. Without compile, inconsistent readback remains failed/unverified. No save/download/rollback/retry; failures may leave changes. Native V20/V21 execution not yet validated. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportPlcBlockVerified\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true}"
+    },
+    {
+      "name": "ListHmiScreenPaths",
       "layer": "L2",
       "category": "hmi",
       "domain": "HMI",
       "operation": "READ",
       "operationInferred": false,
-      "method": "GetHmiScreensV4",
+      "method": "ListHmiScreenPathsV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath"
+        "softwarePath",
+        "offset",
+        "limit"
       ],
-      "description": "[L2][HMI][READ] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist. Examples: GetToolUsage(toolName: \"ListHmiScreens\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][READ]List full screen group paths, including nested folders. Paths start with /. Within each name, percent-encode %, /, backslash and ASCII controls (e.g. /Area%2F1/Main). offset/limit paginate the list. Exact paths disambiguate same-named screens. Examples: GetToolUsage(toolName: \"ListHmiScreenPaths\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\"}"
     },
     {
@@ -2288,58 +2292,35 @@
       "example": "{\"activationTest\":\"Acceptance_1\",\"confirmDelete\":false,\"dryRun\":true,\"action\":\"read\"}"
     },
     {
-      "name": "ListHmiTagTables",
+      "name": "ListHmiScreens",
       "layer": "L2",
       "category": "hmi",
       "domain": "HMI",
       "operation": "READ",
       "operationInferred": false,
-      "method": "GetHmiTagTablesV4",
+      "method": "GetHmiScreensV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath"
       ],
-      "description": "[L2][HMI][READ]List HMI tag table names (Classic/Unified, best-effort) Example: {\"softwarePath\":\"HMI_RT_1\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ListHmiTagTables\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][READ] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: ConnectPortal + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist. Examples: GetToolUsage(toolName: \"ListHmiScreens\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\"}"
     },
     {
-      "name": "ListIoSystems",
-      "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ListIoSystems",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "subnetName",
-        "devicePath",
-        "itemPath",
-        "offset",
-        "limit"
-      ],
-      "description": "[L2][Hardware][READ] Official IoSystem rows (Name, Number, Subnet, ConnectedIoDevices owner paths, HwIdentifiers, dynamic MultipleUseIoSystem/UseIoSystemNameAsDeviceNameExtension/MaxNumberIWlanLinksPerSegment/IsochronousTiTo*) scoped by exact subnetName (Subnet.IoSystems) or by the interface device item (devicePath + itemPath: NetworkInterface.IoControllers[].IoSystem and IoConnectors[].ConnectedToIoSystem, with IoController SyncRole/PnDeviceNumber/Addresses and IoConnector PnUpdateTime*/PnWatchdog*/RtClass/SyncRole rows). Attribute failures are listed per name. Paginated, no modification. Examples: GetToolUsage(toolName: \"ListIoSystems\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact CPU device item from GetProjectTree\\u003E\",\"\\u003Cexact interface device item from GetProjectTree\\u003E\"]}"
-    },
-    {
-      "name": "ListUnifiedLibraryFolderEntries",
+      "name": "ListHmiTags",
       "layer": "L2",
       "category": "hmi",
-      "domain": "HMI-Unified",
+      "domain": "HMI",
       "operation": "READ",
       "operationInferred": false,
-      "method": "ListUnifiedLibraryFolderV4",
+      "method": "GetHmiTagsV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "expectedProject",
-        "folderPath",
-        "cursor",
-        "limit",
-        "budgetMs"
+        "tagTableName"
       ],
-      "description": "[L2][HMI-Unified][READ]Page only direct type/folder names in ONE exact project-library folder, for locating a referenced script/faceplate. No recursive search or default-version substitution. / selects root. Inspect returned folders before choosing the next exact path. Examples: GetToolUsage(toolName: \"ListUnifiedLibraryFolderEntries\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\"}"
+      "description": "[L2][HMI][READ]List HMI tag names (best-effort). If tagTableName empty, returns tags found at root collection if available. Examples: GetToolUsage(toolName: \"ListHmiTags\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\"}"
     },
     {
       "name": "ListUnifiedHmiApiTypes",
@@ -2813,41 +2794,61 @@
       "example": "{\"subnetName\":\"PN_IE_1\"}"
     },
     {
-      "name": "ListHmiTags",
+      "name": "ListIoSystems",
+      "layer": "L2",
+      "category": "hardware",
+      "domain": "Hardware",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "ListIoSystems",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "subnetName",
+        "devicePath",
+        "itemPath",
+        "offset",
+        "limit"
+      ],
+      "description": "[L2][Hardware][READ] Official IoSystem rows (Name, Number, Subnet, ConnectedIoDevices owner paths, HwIdentifiers, dynamic MultipleUseIoSystem/UseIoSystemNameAsDeviceNameExtension/MaxNumberIWlanLinksPerSegment/IsochronousTiTo*) scoped by exact subnetName (Subnet.IoSystems) or by the interface device item (devicePath + itemPath: NetworkInterface.IoControllers[].IoSystem and IoConnectors[].ConnectedToIoSystem, with IoController SyncRole/PnDeviceNumber/Addresses and IoConnector PnUpdateTime*/PnWatchdog*/RtClass/SyncRole rows). Attribute failures are listed per name. Paginated, no modification. Examples: GetToolUsage(toolName: \"ListIoSystems\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact CPU device item from GetProjectTree\\u003E\",\"\\u003Cexact interface device item from GetProjectTree\\u003E\"]}"
+    },
+    {
+      "name": "ListHmiTagTables",
       "layer": "L2",
       "category": "hmi",
       "domain": "HMI",
       "operation": "READ",
       "operationInferred": false,
-      "method": "GetHmiTagsV4",
+      "method": "GetHmiTagTablesV4",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "tagTableName"
+        "softwarePath"
       ],
-      "description": "[L2][HMI][READ]List HMI tag names (best-effort). If tagTableName empty, returns tags found at root collection if available. Examples: GetToolUsage(toolName: \"ListHmiTags\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][HMI][READ]List HMI tag table names (Classic/Unified, best-effort) Example: {\"softwarePath\":\"HMI_RT_1\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ListHmiTagTables\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\"}"
     },
     {
-      "name": "ImportPlcBlockVerified",
+      "name": "ImportPlcBlockDocuments",
       "layer": "L2",
       "category": "plc",
       "domain": "PLC-Software",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ImportPlcBlockVerifiedV4",
+      "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "blockPath",
+        "groupPath",
         "importPath",
-        "evidenceDirectory",
+        "fileNameWithoutExtension",
+        "overwrite",
+        "expectedPlanHash",
         "dryRun",
-        "previewToken",
-        "compileAfterImport"
+        "confirm",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Software][WRITE] Overwrite one existing non-library PLC block in its exact current user group with a reviewed SimaticML file. Default dryRun=true exports a retained backup, preserves omitted scalar block attributes and returns planned.xml plus binding/content token. Execution requires SAME arguments and previewToken; re-exports current block, rechecks binding/content before import, then re-exports for strict document verification preserving wiring and literal values. Requires Offline and consistent exports. Refuses library-bound blocks, InstanceDB, changed name/type/number/layout/language and empty replacement logic. Missing interface members/networks still mean deletion. compileAfterImport=false by default; true explicitly compiles the imported block before readback, rejecting compile errors. Without compile, inconsistent readback remains failed/unverified. No save/download/rollback/retry; failures may leave changes. Native V20/V21 execution not yet validated. Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ImportPlcBlockVerified\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Pumps/FB_Pump\",\"importPath\":\"C:\\\\Temp\\\\FB_Pump.edited.xml\",\"evidenceDirectory\":\"C:\\\\Temp\\\\plc-backups\",\"dryRun\":true,\"compileAfterImport\":true}"
+      "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. Include .s7res when produced. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Syntax/content validity and native acceptance NOT RUN. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"DB_Flags\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
     },
     {
       "name": "ManageSafetyFunctionCondition",
@@ -5395,27 +5396,29 @@
       "example": "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"expectedDocumentHash\":\"\\u003Cfingerprint from GetPlcBlockEditCapabilities\\u003E\",\"dryRun\":true,\"changes\":[{\"action\":\"setBlockText\",\"field\":\"Title\",\"culture\":\"en-US\",\"expectedValue\":\"Old title\",\"value\":\"Example\"},{\"action\":\"setMemberComment\",\"section\":\"Static\",\"memberPath\":\"Motor/Speed\",\"culture\":\"zh-CN\",\"expectedValue\":\"\",\"value\":\"Motor speed\"}]}"
     },
     {
-      "name": "ImportPlcBlockDocuments",
+      "name": "ManageSinumerikArchive",
       "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
+      "category": "hardware",
+      "domain": "Hardware",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
+      "method": "ManageSinumerikArchive",
       "returnType": "CallToolResult",
       "parameters": [
-        "softwarePath",
-        "groupPath",
-        "importPath",
-        "fileNameWithoutExtension",
-        "overwrite",
-        "expectedPlanHash",
-        "dryRun",
-        "confirm",
-        "expectedProjectFile"
+        "action",
+        "filePath",
+        "devicePath",
+        "itemPath",
+        "modifiedDevicePath",
+        "modifiedItemPath",
+        "mode",
+        "comment",
+        "author",
+        "password",
+        "dryRun"
       ],
-      "description": "[PLC foundation; native unverified][WRITE] [document-import-candidate] Exact V20/V21, one ordinary global DB only. Complete bounded lexical admission of primitive Bool/integer scalars; rejects FC/FB/LAD, arrays, expressions, instance DBs, unknown pragmas and extra declarations. Identity comes from .s7dcl, must equal basename; code/resource bytes stay locked and hashed. Include .s7res when produced. Native None only (throw if exists), exact project/target/inventory/hash confirmation; no overwrite/renumber/culture activation. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Syntax/content validity and native acceptance NOT RUN. Examples: GetToolUsage(toolName: \"ImportPlcBlockDocuments\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"DB_Flags\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
+      "description": "[L2][Hardware][WRITE] SINUMERIK Project.HwUtilities archive/retrieve/fAddressArchive (.dsf). Exact device/item paths are Arrays. archive mode OnlyHardware/HardwareAndAllProgramBlocks; F-address archive selects productive and modified PLC items. Optional comment/author/password; passwords are not logged. dryRun defaults true. Existing output files refused; outputs hashed. Retrieve inserts a device without save; V16 returns void and provides no device identity, V17 and later return its name. Available on V16-V20. F-address archive is unavailable on V17. Password Archive/F-address overloads require V19; password Retrieve requires V20. Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSinumerikArchive\"), optionally operation or language.",
+      "example": "{\"action\":\"archive\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Example.dsf\",\"dryRun\":true,\"devicePath\":[\"\\u003Cexact SINUMERIK device from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact NCU PLC item\\u003E\"]}"
     },
     {
       "name": "ImportPlcBlock",
@@ -5442,22 +5445,24 @@
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"groupPath\":\"\",\"importPath\":\"\\u003Cdata.outputFile from completed ExportPlcBlock\\u003E\",\"dryRun\":true,\"confirm\":false,\"overwrite\":false}"
     },
     {
-      "name": "ImportPlcAlarmInstanceTexts",
+      "name": "ImportOpcUaInterface",
       "layer": "L2",
       "category": "plc",
-      "domain": "PLC-Alarms",
+      "domain": "PLC-OpcUA",
       "operation": "WRITE",
       "operationInferred": false,
-      "method": "ImportPlcAlarmInstanceTextsV4",
+      "method": "ImportOpcUaInterfaceV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "filePath",
-        "cultures",
-        "dryRun"
+        "importPath",
+        "interfaceType",
+        "dryRun",
+        "expectedPlanHash",
+        "expectedProjectFile"
       ],
-      "description": "[L2][PLC-Alarms][WRITE] Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportPlcAlarmInstanceTexts\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\AlarmTexts.xlsx\",\"dryRun\":true,\"cultures\":[\"en-US\",\"zh-CN\"]}"
+      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][WRITE] Import an OPC UA server interface or reference namespace from an XML file. If an interface with the same name (derived from the file name) already exists, it is updated in place. Otherwise a new interface is created. Download to PLC after import to apply changes to the CPU. interfaceType: 'ServerInterface' (default), 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportOpcUaInterface\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"dryRun\":true}"
     },
     {
       "name": "DescribeHmiTagTable",
@@ -6555,8 +6560,8 @@
         "confirmPhysicalTarget",
         "promptAnswers"
       ],
-      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware+CheckDownloadReadiness][ONLINE-WRITE] Download the compiled PLC program to the CPU or PLCSIM instance at targetIpAddress. The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload). SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior. Workflow: CompilePlcSoftware → SaveProject → CheckDownloadReadiness → DownloadPlc (preview, then execute). The PLC must be offline (call DisconnectOnlinePlc first): the route is applied with ConnectionConfiguration.ApplyConfiguration, which throws while the device is online, and the download connects by itself. On success State=Success or Warning. On Error check Errors[] for details. Prompt answers: StopModules / StartModules follow stopBeforeDownload / startAfterDownload, DataBlockReinitialization follows keepActualValues, AllBlocksDownload follows consistentBlocksOnly, UserManagementDownload follows userManagementMode; destructive prompts answer NoAction; promptAnswers names others. Refused unless the request allows them: SafetyProgram (allowSafetyProgramDownload), DifferentTargetConfiguration (allowHardwareDifferences), ActiveTestCanBeAborted / ActiveTestCanPreventDownload (allowActiveTestCancel), ExpandDownload (allowExpandedDownload) and LoadIdentificationData (allowIdentificationDataLoad); the download stops at such a prompt and the result names it and the parameter that allows it. The approval request lists every prompt answer the call will give (promptAnswerPlan). PLCSIM downloads must explicitly name the PLCSIM virtual adapter or PLCSIM/Softbus PG/PC interface. An empty interface is physical. A simulator target also requires no non-PLCSIM adapter subnet containing the target in any operational state, and either a matching running PLCSIM Advanced instance address or an exclusive PLCSIM adapter subnet with a contiguous /8 or narrower mask. Otherwise the target is physical. Physical execution requires confirmPhysicalTarget=true and Workbench approval even when approval is switched off. Unsaved or inconsistent projects are refused; unknown consistency is reported. Online write plans expire after 15 minutes by default. Local adapters and subnet matches are reported before downloading; no matching local subnet is a warning (routed networks and Softbus may work). With an empty pgPcInterface the route is picked automatically and the target is treated as physical; Meta.pgPcRoute reports which one was used. Override the interface with pgPcInterface when the pick is wrong; the explicit targetIpAddress is required, and a route that ApplyConfiguration does not apply is refused. An address outside the Workbench online-target list is refused. S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=false (default) makes TIA refuse an untrusted certificate, true answers Trusted; Meta.tlsVerification records the decision and, on V21, the presented certificates. A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Example: {\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DownloadPlc\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\",\"dryRun\":true}"
+      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject+CompilePlcSoftware+CheckDownloadReadiness][ONLINE-WRITE] Download the compiled PLC program to the CPU or PLCSIM instance at targetIpAddress. The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload). SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior. Workflow: CompilePlcSoftware → SaveProject → CheckDownloadReadiness → DownloadPlc (preview, then execute). The PLC must be offline (call DisconnectOnlinePlc first): the route is applied with ConnectionConfiguration.ApplyConfiguration, which throws while the device is online, and the download connects by itself. On success State=Success or Warning. On Error check Errors[] for details. Prompt answers: StopModules / StartModules follow stopBeforeDownload / startAfterDownload, DataBlockReinitialization follows keepActualValues, AllBlocksDownload follows consistentBlocksOnly, UserManagementDownload follows userManagementMode; destructive prompts answer NoAction; promptAnswers names others. Refused unless the request allows them: SafetyProgram (allowSafetyProgramDownload), DifferentTargetConfiguration (allowHardwareDifferences), ActiveTestCanBeAborted / ActiveTestCanPreventDownload (allowActiveTestCancel), ExpandDownload (allowExpandedDownload) and LoadIdentificationData (allowIdentificationDataLoad); the download stops at such a prompt and the result names it and the parameter that allows it. The approval request lists every prompt answer the call will give (promptAnswerPlan). PLCSIM downloads must explicitly name the PLCSIM virtual adapter or PLCSIM/Softbus PG/PC interface. An empty interface is physical. A simulator target also requires no non-PLCSIM adapter subnet containing the target in any operational state, and either a matching running PLCSIM Advanced instance address or an exclusive PLCSIM adapter subnet with a contiguous /8 or narrower mask. Otherwise the target is physical. Physical execution requires confirmPhysicalTarget=true and Workbench approval even when approval is switched off. Unsaved or inconsistent projects are refused; unknown consistency is reported. Online write plans expire after 15 minutes by default. Local adapters and subnet matches are reported before downloading; no matching local subnet is a warning (routed networks and Softbus may work). With an empty pgPcInterface the route is picked automatically and the target is treated as physical; Meta.pgPcRoute reports which one was used. Override the interface with pgPcInterface when the pick is wrong; the explicit targetIpAddress is required, and a route that ApplyConfiguration does not apply is refused. An address outside the Workbench online-target list is refused. S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=false (default) makes TIA refuse an untrusted certificate, true answers Trusted; Meta.tlsVerification records the decision and, on V21, the presented certificates. A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Example: {\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"<exact PG/PC interface name from ListTransferRoutes>\",\"targetIpAddress\":\"<PLC IPv4 address from the allow-list>\",\"dryRun\":true} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"DownloadPlc\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"\\u003Cexact PG/PC interface name from ListTransferRoutes\\u003E\",\"targetIpAddress\":\"\\u003CPLC IPv4 address from the allow-list\\u003E\",\"dryRun\":true}"
     },
     {
       "name": "DisconnectPortal",
@@ -7328,8 +7333,8 @@
         "trustDeviceCertificate",
         "allowNonTlsLogin"
       ],
-      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject][ONLINE] Establish an online connection from TIA Portal to the physical PLC. Not needed before DownloadPlc: DownloadPlc connects through its own route and refuses while the PLC is online (call DisconnectOnlinePlc first). Use it before CompareSoftwareToOnline or online monitoring. Returns State=Online on success; GoOnline returns before the connection is established, so the state is polled while it reads Connecting (up to 10 s). An already online PLC is reported as Online without applying a route (ApplyConfiguration throws while the device is online). Connects only to the given address (V21: GoOnline(ConfigurationAddress); earlier releases apply that address with ApplyConfiguration first); an address outside the Workbench online-target list is refused. The matching ConfigurationAddress comes from the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet). PLCSIM Advanced uses pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'. This selects a route; the interface name does not prove that the destination is a simulator. Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch). Local adapters and subnet matches are reported before connecting; no matching local subnet is a warning (routed networks and Softbus may work). An explicitly requested route that ConnectionConfiguration.ApplyConfiguration does not apply is refused with its reason. S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted and TIA refuses the connection ('The device is not trusted'); trustDeviceCertificate=true answers Trusted for this call - the same prompt TIA shows in the UI. Meta.tlsVerification records PlcName / VerificationInfo / the selection and, on V21, the certificates the device presented. A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Example: {\"softwarePath\":\"PLC_1\",\"ipAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ConnectOnlinePlc\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"ipAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\"}"
+      "description": "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject][ONLINE] Establish an online connection from TIA Portal to the physical PLC. Not needed before DownloadPlc: DownloadPlc connects through its own route and refuses while the PLC is online (call DisconnectOnlinePlc first). Use it before CompareSoftwareToOnline or online monitoring. Returns State=Online on success; GoOnline returns before the connection is established, so the state is polled while it reads Connecting (up to 10 s). An already online PLC is reported as Online without applying a route (ApplyConfiguration throws while the device is online). Connects only to the given address (V21: GoOnline(ConfigurationAddress); earlier releases apply that address with ApplyConfiguration first); an address outside the Workbench online-target list is refused. The matching ConfigurationAddress comes from the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet). PLCSIM Advanced uses pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM'. This selects a route; the interface name does not prove that the destination is a simulator. Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch). Local adapters and subnet matches are reported before connecting; no matching local subnet is a warning (routed networks and Softbus may work). An explicitly requested route that ConnectionConfiguration.ApplyConfiguration does not apply is refused with its reason. S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted and TIA refuses the connection ('The device is not trusted'); trustDeviceCertificate=true answers Trusted for this call - the same prompt TIA shows in the UI. Meta.tlsVerification records PlcName / VerificationInfo / the selection and, on V21, the certificates the device presented. A password is sent only over a TLS-secured connection where the prompt reports IsSecureCommunication, unless allowNonTlsLogin=true. Example: {\"softwarePath\":\"PLC_1\",\"ipAddress\":\"<PLC IPv4 address from the allow-list>\",\"pgPcInterface\":\"<exact PG/PC interface name from ListTransferRoutes>\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ConnectOnlinePlc\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"ipAddress\":\"\\u003CPLC IPv4 address from the allow-list\\u003E\",\"pgPcInterface\":\"\\u003Cexact PG/PC interface name from ListTransferRoutes\\u003E\"}"
     },
     {
       "name": "ConnectIsolatedPortal",
@@ -7852,6 +7857,24 @@
       "example": "{\"offlineReleaseSuiteJsonPath\":\"C:\\\\Examples\\\\reports\\\\offline-release-suite.json\"}"
     },
     {
+      "name": "ImportPlcAlarmInstanceTexts",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-Alarms",
+      "operation": "WRITE",
+      "operationInferred": false,
+      "method": "ImportPlcAlarmInstanceTextsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "filePath",
+        "cultures",
+        "dryRun"
+      ],
+      "description": "[L2][PLC-Alarms][WRITE] Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ImportPlcAlarmInstanceTexts\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\AlarmTexts.xlsx\",\"dryRun\":true,\"cultures\":[\"en-US\",\"zh-CN\"]}"
+    },
+    {
       "name": "ExportHmiConnection",
       "layer": "L2",
       "category": "hmi",
@@ -7871,26 +7894,6 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"connectionName\":\"PLC_Connection\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiConnection.xml\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
-      "name": "ExportHmiProgram",
-      "layer": "L2",
-      "category": "hmi",
-      "domain": "HMI",
-      "operation": "FILE",
-      "operationInferred": false,
-      "method": "ExportHmiProgramV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "exportDir",
-        "exportScreens",
-        "exportTagTables",
-        "exportOptions",
-        "exportDirectory"
-      ],
-      "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language. exportDir and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"exportOptions\":\"WithDefaults\"}"
-    },
-    {
       "name": "ExportHmiScreen",
       "layer": "L2",
       "category": "hmi",
@@ -7908,25 +7911,6 @@
       ],
       "description": "[L2][HMI][FILE]Export one HMI screen to a file (Classic WinCC only; default exportOptions=WithDefaults) Current native policy; V4 safety behavior is not yet accepted. Example: {\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\<directory under GetSessionState data.outputRoot>\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"} (Sample targets require binding; GetToolUsage explains this release's parameters and results.). Examples: GetToolUsage(toolName: \"ExportHmiScreen\"), optionally operation or language. exportPath and exportFile are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"/Screen_1\",\"exportFile\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\\\\ExportHmiScreen.xml\",\"exportOptions\":\"WithDefaults\"}"
-    },
-    {
-      "name": "GetTechnologyObjectTree",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-TechnologyObjects",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "ReadTechnologyObjectTreeV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "groupPath",
-        "includeParameters",
-        "includeMotionView",
-        "maxDepth"
-      ],
-      "description": "[L2][PLC-TechnologyObjects][READ] Typed read of the technology objects of one exact PLC: PlcSoftware.TechnologicalObjectGroup (or the user group at groupPath) as a TechnologicalInstanceDBGroup tree - Name, TechnologicalObjects (TechnologicalInstanceDB Name / Number / OfSystemLibElement / OfSystemLibVersion / IsConsistent / parameter count) and Groups recursive to maxDepth; includeParameters adds TechnologicalParameter Name / Value rows (first 500 per object); includeMotionView adds the typed Motion / Ident view of the root group's objects (actor / sensor / torque / encoder interfaces with modules, addresses, DB member paths, tags and channels; measuring input and output cam connections; master-value couplings; V21 interpreter TO / DB member mappings, superimposing axes and Ident device). No modification, no drive or motion command. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetTechnologyObjectTree\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\"}"
     },
     {
       "name": "GetSoftwareTree",
@@ -8134,6 +8118,25 @@
       "example": "{\"processId\":12345}"
     },
     {
+      "name": "GetTechnologyObjectTree",
+      "layer": "L2",
+      "category": "plc",
+      "domain": "PLC-TechnologyObjects",
+      "operation": "READ",
+      "operationInferred": false,
+      "method": "ReadTechnologyObjectTreeV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "groupPath",
+        "includeParameters",
+        "includeMotionView",
+        "maxDepth"
+      ],
+      "description": "[L2][PLC-TechnologyObjects][READ] Typed read of the technology objects of one exact PLC: PlcSoftware.TechnologicalObjectGroup (or the user group at groupPath) as a TechnologicalInstanceDBGroup tree - Name, TechnologicalObjects (TechnologicalInstanceDB Name / Number / OfSystemLibElement / OfSystemLibVersion / IsConsistent / parameter count) and Groups recursive to maxDepth; includeParameters adds TechnologicalParameter Name / Value rows (first 500 per object); includeMotionView adds the typed Motion / Ident view of the root group's objects (actor / sensor / torque / encoder interfaces with modules, addresses, DB member paths, tags and channels; measuring input and output cam connections; master-value couplings; V21 interpreter TO / DB member mappings, superimposing axes and Ident device). No modification, no drive or motion command. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetTechnologyObjectTree\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\"}"
+    },
+    {
       "name": "GetPlcWebVars",
       "layer": "L2",
       "category": "runtime",
@@ -8152,25 +8155,6 @@
       ],
       "description": "[L2][Online-Monitoring][ONLINE] Read live values of PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (HTTPS JSON-RPC on the CPU; S7-1500 FW>=2.9, S7-1200 G2, ET 200SP CPU, Software Controller, PLCSIM Advanced). Independent of TIA Openness and of PUT/GET; optimized DBs are fine. Names use the Web API form, e.g. \"\\\"DB_Motor\\\".\\\"Speed\\\"\" or \"\\\"Tag_1\\\"\" (quotes may be omitted for plain names; array elements as \"\\\"DB\\\".\\\"Arr\\\"[3]\"). Read-only: never writes, forces or changes CPU mode. Preconditions: web server enabled on the CPU, the user has 'read variables' permission (the default Anonymous user usually has none). The CPU certificate is validated unless ignoreCertificateErrors=true. The password is passed straight to the API and never stored or logged. Each name is read individually; per-name errors are reported in items[].error. Session is cached per host+user and reused. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcWebVars\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\",\"vars\":[\"\\u0022DB_Status\\u0022.\\u0022Ready\\u0022\"]}"
-    },
-    {
-      "name": "GetPlcWebDiagnostics",
-      "layer": "L2",
-      "category": "runtime",
-      "domain": "Online-Monitoring",
-      "operation": "ONLINE",
-      "operationInferred": false,
-      "method": "ReadPlcWebDiagnosticsV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "host",
-        "username",
-        "password",
-        "ignoreCertificateErrors",
-        "timeoutMs"
-      ],
-      "description": "[L2][Online-Monitoring][ONLINE] Read CPU diagnostics through the SIMATIC S7 Web server API: operating mode (RUN/STOP/STARTUP/HOLD/...), mode selector position, Api.Ping, API version, CPU type/order number, CPU system time, cycle-time and load figures, work/retentive memory usage. Read-only: never writes, forces or changes mode. Plc.ReadOperatingMode must succeed; the other calls are best-effort and calls this CPU firmware or user does not support are listed in data.unavailable instead of being faked. Works with PLCSIM Advanced. Certificate validated unless ignoreCertificateErrors=true; password never stored. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcWebDiagnostics\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\"}"
     },
     {
       "name": "GetPlcWatchTableCurrentValuesReadOnly",
@@ -8406,6 +8390,25 @@
       "example": "{\"softwarePath\":\"PLC_1\"}"
     },
     {
+      "name": "GetPlcWebDiagnostics",
+      "layer": "L2",
+      "category": "runtime",
+      "domain": "Online-Monitoring",
+      "operation": "ONLINE",
+      "operationInferred": false,
+      "method": "ReadPlcWebDiagnosticsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "host",
+        "username",
+        "password",
+        "ignoreCertificateErrors",
+        "timeoutMs"
+      ],
+      "description": "[L2][Online-Monitoring][ONLINE] Read CPU diagnostics through the SIMATIC S7 Web server API: operating mode (RUN/STOP/STARTUP/HOLD/...), mode selector position, Api.Ping, API version, CPU type/order number, CPU system time, cycle-time and load figures, work/retentive memory usage. Read-only: never writes, forces or changes mode. Plc.ReadOperatingMode must succeed; the other calls are best-effort and calls this CPU firmware or user does not support are listed in data.unavailable instead of being faked. Works with PLCSIM Advanced. Certificate validated unless ignoreCertificateErrors=true; password never stored. When the online-target list is configured, the target host must be a listed IPv4 literal (no DNS lookup). Examples: GetToolUsage(toolName: \"GetPlcWebDiagnostics\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"host\":\"192.0.2.10\",\"username\":\"\\u003Cconfigured user\\u003E\",\"password\":\"\\u003Cpassword supplied for this target\\u003E\"}"
+    },
+    {
       "name": "GetToolUsage",
       "layer": "L0",
       "category": "session",
@@ -8429,22 +8432,6 @@
       "example": "{\"toolName\":\"ListPlcBlocks\",\"operation\":\"\"}"
     },
     {
-      "name": "GetPlcBlockInfo",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-Software",
-      "operation": "READ",
-      "operationInferred": false,
-      "method": "FoundationV4Tool.InvokeAsync",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "blockPath"
-      ],
-      "description": "[PLC foundation; native unverified][READ] [v17-object-read-safe-v1; manual reconciliation pending] Read exact group-qualified block details; no fallback or write. Examples: GetToolUsage(toolName: \"GetPlcBlockInfo\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"blockPath\":\"Main\"}"
-    },
-    {
       "name": "GetUnifiedAlarmCommon",
       "layer": "L2",
       "category": "hmi",
@@ -8464,41 +8451,23 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"category\":\"alarmClasses\"}"
     },
     {
-      "name": "GetUnifiedCrossReferences",
+      "name": "GetUnifiedAuditSettings",
       "layer": "L2",
       "category": "hmi",
       "domain": "HMI-Unified",
       "operation": "READ",
       "operationInferred": false,
-      "method": "GetUnifiedCrossReferencesV4",
+      "method": "ReadUnifiedAuditSettingsV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "filter",
-        "objectPath"
+        "category",
+        "name",
+        "offset",
+        "limit"
       ],
-      "description": "[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Enabled by default on V19–V21. V21 TIA exits recorded: save before the first query; compilation is no guarantee. Not queried never means zero references; decoded results retain partial-coverage limits. Reflection cannot bypass the policy. No automatic retry after TIA exit. No complete offline replacement for Unified references is established. Native acceptance pending. Examples: GetToolUsage(toolName: \"GetUnifiedCrossReferences\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
-    },
-    {
-      "name": "ImportOpcUaInterface",
-      "layer": "L2",
-      "category": "plc",
-      "domain": "PLC-OpcUA",
-      "operation": "WRITE",
-      "operationInferred": false,
-      "method": "ImportOpcUaInterfaceV4",
-      "returnType": "CallToolResult",
-      "parameters": [
-        "softwarePath",
-        "importPath",
-        "interfaceType",
-        "dryRun",
-        "expectedPlanHash",
-        "expectedProjectFile"
-      ],
-      "description": "[L2][Category:PLC-OpcUA][PreCondition:ConnectPortal+OpenProject][WRITE] Import an OPC UA server interface or reference namespace from an XML file. If an interface with the same name (derived from the file name) already exists, it is updated in place. Otherwise a new interface is created. Download to PLC after import to apply changes to the CPU. interfaceType: 'ServerInterface' (default), 'ReferenceNamespace'. Current native policy; V4 safety behavior is not yet accepted. Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash from this preview, and the exact bound expectedProjectFile. Existing approval and native checks remain. Examples: GetToolUsage(toolName: \"ImportOpcUaInterface\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\",\"dryRun\":true}"
+      "description": "[L2][HMI-Unified][READ] Read-only HmiAudit dump: alarmAuditClasses scalars (comment required, confirmation mode, GMP, function rights) or auditTrails with nested Backup/Segment/Settings and log durations. Exact optional name; live offset/limit pagination; no edit. Examples: GetToolUsage(toolName: \"GetUnifiedAuditSettings\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"category\":\"alarmAuditClasses\"}"
     },
     {
       "name": "ImportMasterCopyFromGlobalLibrary",
@@ -8868,7 +8837,7 @@
         "objectPath"
       ],
       "description": "[L2][HMI-Unified][READ] Exact project PlantView/node and optional property-only JSON path to CPM interfaces/members. Empty plantPath lists views. Live pagination, scalar fields and schema only; no implicit recursive completeness claim. Examples: GetToolUsage(toolName: \"GetUnifiedPlantObject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{}"
+      "example": "{\"plantPath\":\"/\\u003Cplant path segments from GetUnifiedPlantObject with empty plantPath\\u003E\"}"
     },
     {
       "name": "GetUnifiedObjectProperties",
@@ -9046,48 +9015,37 @@
       "example": "{\"softwarePath\":\"HMI_RT_1\",\"expectedProject\":\"Example\",\"screenPath\":\"/Overview\",\"itemName\":\"MotorFaceplate_1\"}"
     },
     {
-      "name": "GetUnifiedAuditSettings",
+      "name": "GetUnifiedCrossReferences",
       "layer": "L2",
       "category": "hmi",
       "domain": "HMI-Unified",
       "operation": "READ",
       "operationInferred": false,
-      "method": "ReadUnifiedAuditSettingsV4",
+      "method": "GetUnifiedCrossReferencesV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "category",
-        "name",
-        "offset",
-        "limit"
+        "filter",
+        "objectPath"
       ],
-      "description": "[L2][HMI-Unified][READ] Read-only HmiAudit dump: alarmAuditClasses scalars (comment required, confirmation mode, GMP, function rights) or auditTrails with nested Backup/Segment/Settings and log durations. Exact optional name; live offset/limit pagination; no edit. Examples: GetToolUsage(toolName: \"GetUnifiedAuditSettings\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"HMI_RT_1\",\"category\":\"alarmAuditClasses\"}"
+      "description": "[L2][HMI-Unified][READ] Read native Unified cross references on an exact typed object path. Enabled by default on V19–V21. V21 TIA exits recorded: save before the first query; compilation is no guarantee. Not queried never means zero references; decoded results retain partial-coverage limits. Reflection cannot bypass the policy. No automatic retry after TIA exit. No complete offline replacement for Unified references is established. Native acceptance pending. Examples: GetToolUsage(toolName: \"GetUnifiedCrossReferences\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"objectPath\":[{\"property\":\"Screens\",\"name\":\"Overview\"},{\"property\":\"ScreenItems\",\"name\":\"StartButton\"}]}"
     },
     {
-      "name": "ManageSinumerikArchive",
+      "name": "GetPlcBlockInfo",
       "layer": "L2",
-      "category": "hardware",
-      "domain": "Hardware",
-      "operation": "WRITE",
+      "category": "plc",
+      "domain": "PLC-Software",
+      "operation": "READ",
       "operationInferred": false,
-      "method": "ManageSinumerikArchive",
+      "method": "FoundationV4Tool.InvokeAsync",
       "returnType": "CallToolResult",
       "parameters": [
-        "action",
-        "filePath",
-        "devicePath",
-        "itemPath",
-        "modifiedDevicePath",
-        "modifiedItemPath",
-        "mode",
-        "comment",
-        "author",
-        "password",
-        "dryRun"
+        "softwarePath",
+        "blockPath"
       ],
-      "description": "[L2][Hardware][WRITE] SINUMERIK Project.HwUtilities archive/retrieve/fAddressArchive (.dsf). Exact device/item paths are Arrays. archive mode OnlyHardware/HardwareAndAllProgramBlocks; F-address archive selects productive and modified PLC items. Optional comment/author/password; passwords are not logged. dryRun defaults true. Existing output files refused; outputs hashed. Retrieve inserts a device without save; V16 returns void and provides no device identity, V17 and later return its name. Available on V16-V20. F-address archive is unavailable on V17. Password Archive/F-address overloads require V19; password Retrieve requires V20. Requires SINUMERIK option; no API in the supplied V21 SDK. Native behaviorPolicy=current; V4 native acceptance is pending. Examples: GetToolUsage(toolName: \"ManageSinumerikArchive\"), optionally operation or language.",
-      "example": "{\"action\":\"archive\",\"filePath\":\"C:\\\\Examples\\\\exports\\\\Example.dsf\",\"dryRun\":true,\"devicePath\":[\"\\u003Cexact SINUMERIK device from GetProjectTree\\u003E\"],\"itemPath\":[\"\\u003Cexact NCU PLC item\\u003E\"]}"
+      "description": "[PLC foundation; native unverified][READ] [v17-object-read-safe-v1; manual reconciliation pending] Read exact group-qualified block details; no fallback or write. Examples: GetToolUsage(toolName: \"GetPlcBlockInfo\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\",\"blockPath\":\"Main\"}"
     },
     {
       "name": "GetPlcBlockHierarchy",
@@ -9103,6 +9061,29 @@
       ],
       "description": "[PLC foundation; native unverified][READ] [v17-read-safe-v1] Actual nested block groups, including empty groups; structure only; use ListPlcBlocks or GetPlcBlockInfo for details. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error. Examples: GetToolUsage(toolName: \"GetPlcBlockHierarchy\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"softwarePath\":\"\\u003Cexact softwarePath from GetProjectTree\\u003E\"}"
+    },
+    {
+      "name": "GetPlcBlockFingerprints",
+      "layer": "L2",
+      "category": "plc-online",
+      "domain": "PLC-Online",
+      "operation": "ONLINE",
+      "operationInferred": false,
+      "method": "ReadPlcBlockFingerprintsV4",
+      "returnType": "CallToolResult",
+      "parameters": [
+        "softwarePath",
+        "targetIpAddress",
+        "pgPcInterface",
+        "password",
+        "offset",
+        "limit",
+        "dryRun",
+        "trustDeviceCertificate",
+        "allowNonTlsLogin"
+      ],
+      "description": "[L2][PLC-Online][ONLINE] Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback, and only over a TLS-secured connection where V21 reports IsSecureCommunication unless allowNonTlsLogin=true. FW >= 2.9 CPUs ask for certificate trust: trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted (TIA refuses the read), true trusts it for this call. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcBlockFingerprints\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"targetIpAddress\":\"192.0.2.10\",\"dryRun\":true}"
     },
     {
       "name": "GetPlcBlockEditCapabilities",
@@ -9757,27 +9738,24 @@
       "example": "{}"
     },
     {
-      "name": "GetPlcBlockFingerprints",
+      "name": "ExportHmiProgram",
       "layer": "L2",
-      "category": "plc-online",
-      "domain": "PLC-Online",
-      "operation": "ONLINE",
+      "category": "hmi",
+      "domain": "HMI",
+      "operation": "FILE",
       "operationInferred": false,
-      "method": "ReadPlcBlockFingerprintsV4",
+      "method": "ExportHmiProgramV4",
       "returnType": "CallToolResult",
       "parameters": [
         "softwarePath",
-        "targetIpAddress",
-        "pgPcInterface",
-        "password",
-        "offset",
-        "limit",
-        "dryRun",
-        "trustDeviceCertificate",
-        "allowNonTlsLogin"
+        "exportDir",
+        "exportScreens",
+        "exportTagTables",
+        "exportOptions",
+        "exportDirectory"
       ],
-      "description": "[L2][PLC-Online][ONLINE] Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback, and only over a TLS-secured connection where V21 reports IsSecureCommunication unless allowNonTlsLogin=true. FW >= 2.9 CPUs ask for certificate trust: trustDeviceCertificate=false (default) leaves an untrusted certificate untrusted (TIA refuses the read), true trusts it for this call. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"GetPlcBlockFingerprints\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"targetIpAddress\":\"192.0.2.10\",\"dryRun\":true}"
+      "description": "[L2][HMI][FILE]Batch export classic WinCC screens/tagtables into a directory; default exportOptions=WithDefaults Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ExportHmiProgram\"), optionally operation or language. exportDir and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"HMI_RT_1\",\"exportDirectory\":\"C:\\\\\\u003Cdirectory under GetSessionState data.outputRoot\\u003E\",\"exportOptions\":\"WithDefaults\"}"
     },
     {
       "name": "GetCallResult",
@@ -9840,7 +9818,7 @@
         "offset",
         "limit"
       ],
-      "description": "[L2][Guide][READ] Search or read the bundled 32 official Siemens Openness guides. Empty document lists matching document IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Guides target V21; see scope. Does not connect to TIA. Examples: GetToolUsage(toolName: \"GetOpennessGuidance\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Guide][READ] Search bundled Siemens Openness guides and supporting documents. Empty document lists matching IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Guides target V21; see scope. Does not connect to TIA. Examples: GetToolUsage(toolName: \"GetOpennessGuidance\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{}"
     },
     {
