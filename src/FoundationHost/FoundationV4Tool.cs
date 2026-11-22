@@ -345,21 +345,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                 return await Recorded(unavailable);
             if (!internalPrecheck && DeclaredHost.OnlinePlanRefusal(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject()) is Error expired)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, expired, true));
-            if (tool.Name != "DisconnectPortal" && inner is FoundationTool nativeTool)
-            {
-                bool runtimeQuery = nativeTool.IsRuntimeQuery && nativeTool.UsesBundledPlcWorker;
-                if (runtimeQuery || nativeTool.RequiresTia && (nativeTool.UsesProductionWorker || readinessForTest != null))
-                {
-                    var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
-                    if (!readiness["ready"]!.GetValue<bool>())
-                    {
-                        var refusal = runtimeQuery ? FoundationV4Result.Reject(release, tool.Name, id,
-                            HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()), true)
-                            : FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness);
-                        return await Recorded(refusal);
-                    }
-                }
-            }
+            if (ReadinessRefusal(id) is { } readinessRefusal)
+                return await Recorded(readinessRefusal);
             string? recoveredIdentity = null;
             if (write && inner is FoundationTool { WorkerRecoveryNeeded: true } recoveryTool)
             {
@@ -524,6 +511,19 @@ internal sealed class FoundationV4Tool : McpServerTool
         catch (Exception) /* swallow(privacy): return a value-free V4 failure; implementation details are not protocol data */
         { return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
         finally { lane?.Dispose(); }
+    }
+
+    internal CallToolResult? ReadinessRefusal(string id)
+    {
+        if (inner is not FoundationTool native || tool.Name == "DisconnectPortal") return null;
+        bool runtimeQuery = native.IsRuntimeQuery && native.UsesBundledPlcWorker;
+        bool checkReadiness = runtimeQuery || native.RequiresTia && (native.UsesProductionWorker || readinessForTest != null);
+        if (!checkReadiness) return null;
+        var readiness = readinessForTest?.Invoke() ?? FoundationPassiveDiagnostics.Readiness(release);
+        if (readiness["ready"]!.GetValue<bool>()) return null;
+        return runtimeQuery ? FoundationV4Result.Reject(release, tool.Name, id,
+            HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Precondition, null, new Dictionary<string, JsonElement>()), true)
+            : FoundationV4Result.ReadinessUnavailable(release, tool.Name, id, readiness);
     }
 
     internal static Error? SoftwareUnitCapabilityError(string release, string tool, IReadOnlyDictionary<string, JsonElement> args)

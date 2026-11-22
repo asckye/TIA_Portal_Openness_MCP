@@ -21,13 +21,14 @@ namespace TiaMcpServer.Dispatch
         internal static bool IsSafeWithoutTia(string name)
         {
 #if TIA_ENGINE_HOST
-            if (TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
+            // Restart is hosted in F01 but controls the Openness worker. Use its normal taxonomy rule.
+            if (name != nameof(McpServer.RestartOpennessWorker) && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
                 && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03") return true;
 #endif
             return ToolTaxonomy.IsSafeWithoutTia(name);
         }
 
-        private static bool RequiresOpenness(string name)
+        internal static bool RequiresOpenness(string name)
         {
 #if TIA_ENGINE_HOST
             // The Foundation target checks readiness after capability admission.
