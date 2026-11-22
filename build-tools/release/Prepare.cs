@@ -243,14 +243,15 @@ internal static class Prepare
 
     internal static void Timed(string name, Action action) => Timed(name, () => { action(); return 0; });
 
-    internal static PrepareContext CreateContext(string root, Options options, SuiteProcess? companionProbe = null)
+    internal static PrepareContext CreateContext(string root, Options options, SuiteProcess? companionProbe = null, int? processorCount = null)
     {
         root = Path.GetFullPath(root);
         var parallelism = 6;
         if (options.Get("MaxParallelism") is { } value
             && (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out parallelism) || parallelism < 1))
             throw new ReleaseException("MaxParallelism must be a positive integer");
-        var checkTimeoutMinutes = GateWatchdog.TimeoutMinutes(options, parallelism, DefaultCheckTimeoutMinutes);
+        int testParallelism = options.Has("MaxParallelism") ? parallelism : Math.Max(1, (processorCount ?? Environment.ProcessorCount) - 4);
+        var checkTimeoutMinutes = GateWatchdog.TimeoutMinutes(options, testParallelism, DefaultCheckTimeoutMinutes);
         var version = ReleaseVersions.Require(options.Get("Version"), "prepare requires -Version X.Y.Z[-beta.N|-rc.N]").Label;
         RequireRepository(Git(root, "status", "--porcelain=v1", "--untracked-files=all"), Git(root, "branch", "--show-current"), options.Has("BuildOnly"));
         GitWorkingBytes.RequireNormalizedWorkingBytes(root, "git");
@@ -273,8 +274,7 @@ internal static class Prepare
         ReleasePrerequisites.RequireEcosystemPython(companion, Path.Combine(root, "scripts/ecosystem/plc_tools_bridge.py"), python, companionProbe);
         var output = Path.Combine(root, "bin-build/prepared", version);
         PrepareBuild.RequireOwnedTree(root, output);
-        return new(root, version, api, nuget, python, companion, output, date, parallelism,
-            options.Has("MaxParallelism") ? parallelism : Math.Max(1, Environment.ProcessorCount - 4), checkTimeoutMinutes);
+        return new(root, version, api, nuget, python, companion, output, date, parallelism, testParallelism, checkTimeoutMinutes);
     }
 
     internal static void RequireRepository(string status, string branch, bool buildOnly = false)

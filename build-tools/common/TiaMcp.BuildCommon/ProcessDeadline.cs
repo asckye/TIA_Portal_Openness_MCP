@@ -6,6 +6,7 @@ namespace TiaMcp.BuildCommon;
 public sealed class ProcessDeadline
 {
     public static readonly TimeSpan CleanupTimeout = TimeSpan.FromSeconds(5);
+    public static readonly TimeSpan NormalExitCleanupTimeout = TimeSpan.FromMinutes(2);
     public const int QueryMilliseconds = 5 * 60 * 1000;
     private readonly TimeProvider clock;
     private readonly long started;
@@ -25,18 +26,30 @@ public sealed class ProcessDeadline
         limit = IsQuery ? Math.Min(QueryMilliseconds, timeoutMilliseconds ?? QueryMilliseconds) : timeoutMilliseconds;
     }
 
+    private int RemainingMilliseconds => limit is int ms
+        ? (int)Math.Clamp(Math.Ceiling(ms - clock.GetElapsedTime(started).TotalMilliseconds), 0, int.MaxValue) : Timeout.Infinite;
+
+    private string Command => start.ArgumentList.FirstOrDefault() == "msbuild"
+        ? string.Join(' ', start.ArgumentList.Prepend(start.FileName)) : start.FileName;
+
     public void Wait(Func<int, bool> wait, Action stopTree)
     {
-        var remaining = limit is int ms ? (int)Math.Clamp(Math.Ceiling(ms - clock.GetElapsedTime(started).TotalMilliseconds), 0, int.MaxValue)
-            : Timeout.Infinite;
-        if (wait(remaining)) return;
-        string command = start.ArgumentList.FirstOrDefault() == "msbuild"
-            ? string.Join(' ', start.ArgumentList.Prepend(start.FileName)) : start.FileName;
+        if (wait(RemainingMilliseconds)) return;
         var elapsed = clock.GetElapsedTime(started);
-        var message = $"{command} timed out after {limit} ms (elapsed {elapsed:c}).";
+        var message = $"{Command} timed out after {limit} ms (elapsed {elapsed:c}).";
         try { stopTree(); }
         catch (Exception ex) { throw new TimeoutException($"{message} Process tree cleanup failed: {ex.Message}", ex); }
         throw new TimeoutException(message);
+    }
+
+    public void FinishAfterExit(Action<TimeSpan> finish)
+    {
+        // A completed root may still have testhosts or queued job notifications. Respect any shorter command budget.
+        int remaining = RemainingMilliseconds;
+        var timeout = remaining == Timeout.Infinite ? NormalExitCleanupTimeout
+            : TimeSpan.FromMilliseconds(Math.Min(remaining, NormalExitCleanupTimeout.TotalMilliseconds));
+        try { finish(timeout); }
+        catch (Exception ex) { throw new IOException($"Process tree cleanup failed after {Command} exited: {ex.Message}", ex); }
     }
 
     public static void StopTree(Process process)
@@ -58,11 +71,11 @@ public sealed class ProcessDeadline
         var stderr = (tree?.StandardError ?? child!.StandardError).ReadToEndAsync();
         void Stop()
         {
-            if (tree != null) tree.Finish();
+            if (tree != null) tree.Finish(CleanupTimeout);
             else StopTree(child!);
         }
         deadline.Wait(ms => tree?.WaitForExit(ms) ?? child!.WaitForExit(ms), Stop);
-        tree?.Finish();
+        if (tree != null) deadline.FinishAfterExit(tree.Finish);
         deadline.Wait(Task.WhenAll(stdout, stderr).Wait, Stop);
         return (tree?.GetExitCode() ?? child!.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
     }

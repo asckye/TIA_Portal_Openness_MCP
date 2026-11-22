@@ -210,6 +210,46 @@ public sealed class GateWatchdogTests
     }
 
     [Fact]
+    public void Normal_exit_succeeds_when_the_tree_finishes_after_the_watchdog_grace()
+    {
+        var clock = new Clock();
+        var start = new ProcessStartInfo("dotnet");
+        start.ArgumentList.Add("test");
+        var deadline = new ProcessDeadline(start, clock: clock);
+        deadline.Wait(_ => true, () => Assert.Fail("The root already exited"));
+        var waits = new List<int>();
+        uint? Read(int remaining)
+        {
+            waits.Add(remaining);
+            if (waits.Count > 1) return 4; // ACTIVE_PROCESS_ZERO
+            clock.Advance(TimeSpan.FromMilliseconds(Math.Min(7000, remaining)));
+            return 7; // EXIT_PROCESS
+        }
+        ProcessRunner.FinishAfterExit(deadline, timeout =>
+            WindowsProcessTree.WaitForEmptyJob(52, clock, clock.GetTimestamp(), Read, timeout));
+        Assert.Equal(new[] { 120000, 113000 }, waits);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Normal_cleanup_preserves_a_shorter_command_budget_and_reports_the_command(bool timeout)
+    {
+        var clock = new Clock();
+        var deadline = new ProcessDeadline(Msbuild("-getProperty:TargetFramework"), 30000, clock);
+        clock.Advance(TimeSpan.FromSeconds(18));
+        var error = Assert.Throws<ReleaseException>(() => ProcessRunner.FinishAfterExit(deadline, remaining =>
+        {
+            Assert.Equal(TimeSpan.FromSeconds(12), remaining);
+            if (timeout) throw new TimeoutException("missing completion");
+            throw new IOException("completion port failed");
+        }));
+        Assert.Contains("dotnet msbuild worker.csproj -getProperty:TargetFramework", error.Message);
+        Assert.Contains(timeout ? "missing completion" : "completion port failed", error.Message);
+        Assert.Equal(timeout ? typeof(TimeoutException) : typeof(IOException), error.GetBaseException().GetType());
+    }
+
+    [Fact]
     public void Expiry_prevents_a_queued_job_or_process_from_starting()
     {
         var clock = new Clock();

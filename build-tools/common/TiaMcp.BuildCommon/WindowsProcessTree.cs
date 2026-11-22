@@ -151,14 +151,16 @@ public sealed class WindowsProcessTree : IDisposable
 
     // Completion messages are event-driven. Wait for the entire owned tree, including an
     // orphaned testhost, before closing its desktop or waiting for redirected pipe EOF.
-    public void Finish() => Finish(disposing: false);
+    public void Finish() => Finish(ProcessDeadline.NormalExitCleanupTimeout);
 
-    private void Finish(bool disposing)
+    public void Finish(TimeSpan timeout) => Finish(timeout, disposing: false);
+
+    private void Finish(TimeSpan timeout, bool disposing)
     {
         var clock = TimeProvider.System;
         long started = clock.GetTimestamp();
-        if (!Monitor.TryEnter(_finishLock, ProcessDeadline.CleanupTimeout))
-            throw CleanupTimedOut(ProcessId, "another cleanup attempt");
+        if (!Monitor.TryEnter(_finishLock, timeout))
+            throw CleanupTimedOut(ProcessId, "another cleanup attempt", timeout);
         try
         {
             if (_finishAttempted)
@@ -168,7 +170,7 @@ public sealed class WindowsProcessTree : IDisposable
                 return;
             }
             _finishAttempted = true;
-            try { FinishTree(clock, started); }
+            try { FinishTree(clock, started, timeout); }
             catch (Exception ex)
             {
                 _finishFailure = ExceptionDispatchInfo.Capture(ex);
@@ -178,17 +180,17 @@ public sealed class WindowsProcessTree : IDisposable
         finally { Monitor.Exit(_finishLock); }
     }
 
-    private void FinishTree(TimeProvider clock, long started)
+    private void FinishTree(TimeProvider clock, long started, TimeSpan timeout)
     {
         if (_assigned)
         {
             if (!TerminateJobObject(_job!, 1)) throw Failure("terminate the owned process job");
-            WaitForEmptyJob(ProcessId, clock, started, ReadJobMessage);
+            WaitForEmptyJob(ProcessId, clock, started, ReadJobMessage, timeout);
         }
         else if (_process != null)
         {
             if (!TerminateProcess(_process, 1)) throw Failure("terminate the suspended process");
-            if (!WaitForExit(RemainingMilliseconds(clock, started))) throw CleanupTimedOut(ProcessId, "suspended process exit");
+            if (!WaitForExit(RemainingMilliseconds(clock, started, timeout))) throw CleanupTimedOut(ProcessId, "suspended process exit", timeout);
         }
     }
 
@@ -200,23 +202,24 @@ public sealed class WindowsProcessTree : IDisposable
         throw Failure("wait for the owned process tree", code);
     }
 
-    internal static void WaitForEmptyJob(uint pid, TimeProvider clock, long started, Func<int, uint?> read)
+    internal static void WaitForEmptyJob(uint pid, TimeProvider clock, long started, Func<int, uint?> read, TimeSpan? cleanupTimeout = null)
     {
+        var timeout = cleanupTimeout ?? ProcessDeadline.CleanupTimeout;
         int remaining;
-        while ((remaining = RemainingMilliseconds(clock, started)) > 0)
+        while ((remaining = RemainingMilliseconds(clock, started, timeout)) > 0)
         {
             uint? message = read(remaining);
             if (message == 4 /* ACTIVE_PROCESS_ZERO */) return;
             if (message == null) break;
         }
-        throw CleanupTimedOut(pid, "ACTIVE_PROCESS_ZERO");
+        throw CleanupTimedOut(pid, "ACTIVE_PROCESS_ZERO", timeout);
     }
 
-    private static int RemainingMilliseconds(TimeProvider clock, long started) =>
-        (int)Math.Max(0, Math.Ceiling((ProcessDeadline.CleanupTimeout - clock.GetElapsedTime(started)).TotalMilliseconds));
+    private static int RemainingMilliseconds(TimeProvider clock, long started, TimeSpan timeout) =>
+        (int)Math.Max(0, Math.Ceiling((timeout - clock.GetElapsedTime(started)).TotalMilliseconds));
 
-    private static TimeoutException CleanupTimedOut(uint pid, string waitingFor) =>
-        new($"Cleanup of owned PID {pid} timed out waiting for {waitingFor} within {ProcessDeadline.CleanupTimeout:c}.");
+    private static TimeoutException CleanupTimedOut(uint pid, string waitingFor, TimeSpan timeout) =>
+        new($"Cleanup of owned PID {pid} timed out waiting for {waitingFor} within {timeout:c}.");
 
     public void Dispose()
     {
@@ -231,7 +234,7 @@ public sealed class WindowsProcessTree : IDisposable
         using (StandardOutput)
         using (StandardInput)
         {
-            Finish(disposing: true);
+            Finish(ProcessDeadline.NormalExitCleanupTimeout, disposing: true);
         }
     }
 

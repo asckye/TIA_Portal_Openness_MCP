@@ -140,7 +140,7 @@ internal sealed class Options
     internal IEnumerable<string> Arguments() => values.SelectMany(pair => pair.Value.SelectMany(value => new[] { "-" + pair.Key + "=" + value }));
 }
 
-internal sealed class ReleaseException(string message, int exitCode = 1) : Exception(message)
+internal sealed class ReleaseException(string message, int exitCode = 1, Exception? innerException = null) : Exception(message, innerException)
 {
     internal int ExitCode { get; } = exitCode;
 }
@@ -188,7 +188,7 @@ internal static class ProcessRunner
         }
         void StopTree()
         {
-            if (ownedTree != null) ownedTree.Finish();
+            if (ownedTree != null) ownedTree.Finish(ProcessDeadline.CleanupTimeout);
             else ProcessDeadline.StopTree(process!);
         }
         using var registration = job?.TrackTree(ownedTree != null ? checked((int)ownedTree.ProcessId) : process!.Id, StopTree);
@@ -240,16 +240,22 @@ internal static class ProcessRunner
         void Wait(Func<int, bool> wait)
         {
             try { deadline.Wait(wait, StopTree); }
-            catch (TimeoutException ex) { throw new ReleaseException(ex.Message); }
+            catch (TimeoutException ex) { throw new ReleaseException(ex.Message, innerException: ex); }
         }
         Wait(ms => ownedTree?.WaitForExit(ms) ?? process!.WaitForExit(ms));
         int exitCode = ownedTree?.GetExitCode() ?? process!.ExitCode;
-        ownedTree?.Finish();
+        if (ownedTree != null) FinishAfterExit(deadline, ownedTree.Finish);
         Wait(Task.WhenAll(stdout, stderr).Wait);
         var output = stdout.GetAwaiter().GetResult();
         var error = stderr.GetAwaiter().GetResult();
         if (ownedTree?.DesktopPath != null) output = $"DESKTOP {ownedTree.DesktopPath} PID {ownedTree.ProcessId}\n" + output;
         return new CommandResult(exitCode, output, error);
+    }
+
+    internal static void FinishAfterExit(ProcessDeadline deadline, Action<TimeSpan> finish)
+    {
+        try { deadline.FinishAfterExit(finish); }
+        catch (IOException ex) { throw new ReleaseException(ex.Message, innerException: ex); }
     }
 
     internal static void RequireSuccess(CommandResult result, string description)

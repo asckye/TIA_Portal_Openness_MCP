@@ -356,6 +356,23 @@ public sealed class PrepareTests
         Assert.Equal("4.0.0-beta.6", context.Version);
     }
 
+    [Theory]
+    [InlineData(2, null, 6, 1, 360)]
+    [InlineData(6, null, 6, 2, 120)]
+    [InlineData(2, "-MaxParallelism=3", 3, 3, 120)]
+    [InlineData(2, "-TimeoutMinutes=17", 6, 1, 17)]
+    public void Check_timeout_uses_effective_test_parallelism(int processors, string? option, int builds, int tests, int minutes)
+    {
+        using var tree = ContextTree();
+        SealRepository(tree);
+        var options = ContextOptions(tree.Root, "python.exe");
+        if (option != null) options = Options.Parse([.. options.Arguments(), option], Program.BooleanOptions);
+        var context = Prepare.CreateContext(tree.Root, options, SuccessfulProbe, processors);
+        Assert.Equal(builds, context.MaxParallelism);
+        Assert.Equal(tests, context.TestParallelism);
+        Assert.Equal(minutes, context.CheckTimeoutMinutes);
+    }
+
     [Fact]
     public void RunEnvironmentIsShortExternalAndRemovedAfterEachRun()
     {

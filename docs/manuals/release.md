@@ -44,7 +44,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1
 | `-NoDraftUpload` | 仍须通过漏洞扫描；完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |
 | `-Python`、`-CompanionPython` | 分别指定解码器和 PLC Tools 的解释器绝对路径 |
-| `-MaxParallelism` | 构建并行度，必须为正整数，默认 6。交付检查的默认时限在并行度大于 1 时为 120 分钟，在并行度为 1 时为 360 分钟。显式指定的 `-TimeoutMinutes` 在两种情况下都按原值生效。 |
+| `-MaxParallelism` | 同时指定构建和交付检查的并行度，必须为正整数。省略时构建默认使用 6，交付检查使用可用逻辑处理器数减 4，最低为 1。交付检查实际串行时默认限时 360 分钟，并行时为 120 分钟。显式指定的 `-TimeoutMinutes` 按原值生效。 |
 
 成功产物位于 `bin-build/prepared/<版本>/`：
 
