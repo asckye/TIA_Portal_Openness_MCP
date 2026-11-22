@@ -7988,6 +7988,18 @@
           "identifier": "TiaMcp.ReleaseTool.Tests.RealMachineStatusTests/DefaultReplayRendersWithoutVmFilesAndNamesToolsRemovedFromOneRelease( ):d491da56b6ab937adf007ea5d02c6c4039260af61184ed1f8e9a445c664c2545:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-20B",
+      "maintainerDate": "2026-11-22",
+      "reason": "VMFIX-20B: maintainer approved 2026-11-22 - an update-check rate limit (HTTP 429/403) is an external resource failure, RESOURCE_UNAVAILABLE instead of NATIVE_OPERATION_FAILED",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/PreviewToolCallTruthTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.PreviewToolCallTruthTests/Update_rate_limit_maps_to_the_external_read_failure( ):93c50597ce42f8b7a74f7bf2ad6babe4dd5ce9c883b0a764f1ea3dbd89808ef0:1"
+        }
+      ]
     }
   ]
 }
