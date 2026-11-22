@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [4.0.0-rc.1] - 2026-11-22
+
 ### Changed
 
 - PLC syslog server creation is preview-only on V19–V21. Add the server in the CPU properties. The V21 process exited during native creation.
