@@ -367,8 +367,8 @@ internal sealed partial class FoundationTool : McpServerTool
             if (definition.ResponseMember is "BatchExport" or "BatchImport" or "BatchDocumentExport" or "BatchDocumentImport" or "CrossReferenceAnalysis")
             {
                 string path = BatchSoftwarePath.Require(values);
-                // Directory import uses the worker's path namespace. The native transport binds its exact wire identity.
-                if (definition.ResponseMember != "BatchImport")
+                // Directory imports and reviewed exports bind their exact wire identity in the native transport.
+                if (!BatchSoftwarePath.BindAtDispatch(definition.Operation, values))
                     values["softwarePath"] = await BatchSoftwarePath.Resolve(worker, path, cancellationToken).ConfigureAwait(false);
             }
             dispatched = true;

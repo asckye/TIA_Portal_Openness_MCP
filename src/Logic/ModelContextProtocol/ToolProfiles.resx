@@ -8567,7 +8567,6 @@
       "entry": "BuildDeviceAmlDocument",
       "family": "F21",
       "example": {
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
         "spec": {
           "projectName": "Example",
           "devices": [
@@ -11260,7 +11259,6 @@
       "entry": "BuildDeviceAmlDocument",
       "family": "F21",
       "example": {
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
         "spec": {
           "projectName": "Example",
           "devices": [
@@ -14269,7 +14267,6 @@
       "entry": "BuildDeviceAmlDocument",
       "family": "F21",
       "example": {
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
         "spec": {
           "projectName": "Example",
           "devices": [
@@ -17513,7 +17510,6 @@
       "entry": "BuildDeviceAmlDocument",
       "family": "F21",
       "example": {
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
         "spec": {
           "projectName": "Example",
           "devices": [
@@ -21086,7 +21082,6 @@
       "entry": "BuildDeviceAmlDocument",
       "family": "F21",
       "example": {
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
         "spec": {
           "projectName": "Example",
           "devices": [
@@ -25791,7 +25786,6 @@
       "entry": "BuildDeviceAmlDocument",
       "family": "F21",
       "example": {
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
         "spec": {
           "projectName": "Example",
           "devices": [
@@ -30722,7 +30716,6 @@
       "entry": "BuildDeviceAmlDocument",
       "family": "F21",
       "example": {
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
         "spec": {
           "projectName": "Example",
           "devices": [
@@ -35896,7 +35889,6 @@
       "entry": "BuildDeviceAmlDocument",
       "family": "F21",
       "example": {
-        "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
         "spec": {
           "projectName": "Example",
           "devices": [
@@ -40650,7 +40642,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -50181,7 +50172,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -59819,7 +59809,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -65250,7 +65239,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -71377,7 +71365,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -77970,7 +77957,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -84967,7 +84953,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [
@@ -92536,7 +92521,6 @@
           "plc-foundation"
         ],
         "arguments": {
-          "exportFile": "C:\\&lt;directory under GetSessionState data.outputRoot&gt;\\Device.aml",
           "spec": {
             "projectName": "Example",
             "devices": [

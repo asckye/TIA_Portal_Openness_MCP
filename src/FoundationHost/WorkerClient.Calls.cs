@@ -26,6 +26,10 @@ namespace TiaMcp.FoundationHost;
 
 internal static class BatchSoftwarePath
 {
+    internal static bool BindAtDispatch(string operation, JsonObject arguments) =>
+        operation is "ImportBlocksFromDirectory" or "ImportPlcProgramFromDirectory"
+        || operation is ("ExportBlocks" or "ExportTypes" or "ExportTagTables") && arguments["dryRun"]?.GetValueKind() == JsonValueKind.False;
+
     internal static string Require(JsonObject arguments) =>
         arguments["softwarePath"] is JsonValue software && software.TryGetValue<string>(out var path) && !string.IsNullOrWhiteSpace(path)
             ? path : throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("A softwarePath is required.", "softwarePath");
@@ -119,10 +123,10 @@ internal sealed partial class WorkerClient
     internal Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)
         => CallCore("HostObserve", new JsonObject { ["operation"] = operation, ["arguments"] = arguments.DeepClone() }, true, false, token);
     public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
-        => operation is "ImportBlocksFromDirectory" or "ImportPlcProgramFromDirectory"
-            ? CallDirectoryImport(operation, arguments, token) : CallCore(operation, arguments, false, false, token);
+        => BatchSoftwarePath.BindAtDispatch(operation, arguments)
+            ? CallWithExactSoftwarePath(operation, arguments, token) : CallCore(operation, arguments, false, false, token);
 
-    private async Task<JsonNode?> CallDirectoryImport(string operation, JsonObject arguments, CancellationToken token)
+    private async Task<JsonNode?> CallWithExactSoftwarePath(string operation, JsonObject arguments, CancellationToken token)
     {
         try
         {
@@ -136,6 +140,7 @@ internal sealed partial class WorkerClient
         }
         catch (Exception error)
         {
+            // Only the identity lookup could have reached the worker. The requested batch operation has not been sent.
             error.Data["foundationRequestSent"] = false;
             throw;
         }
