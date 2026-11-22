@@ -56,6 +56,57 @@ public sealed class CheckLooseningTests
         Assert.Contains("/Old", finding.Identifier);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("Assert.True(Logged());")]
+    public void OneSharedExitCodeAssertionCannotIdentifyARename(string extraCheck)
+    {
+        const string before = """[Fact] void RejectsLoweredThreshold() { var exit = Run("--min 5"); Assert.Equal(1, exit); }""";
+        string after = $$"""[Fact] void AcceptsNewFlag() { var exit = Run("--verbose"); Assert.Equal(1, exit); {{extraCheck}} }""";
+        var finding = Assert.Single(Scan(before, after));
+        Assert.Equal("test-removed", finding.Kind);
+        Assert.Contains("/RejectsLoweredThreshold", finding.Identifier);
+    }
+
+    [Theory]
+    [InlineData("""var exit = Run("--verbose");""")]
+    [InlineData("""var exit = Run("--min 5"); using var stream = File.OpenRead(path); VerifyMetadata(stream, expectedHeader, expectedLength);""")]
+    public void TwoGenericAssertionsAloneCannotIdentifyTheTest(string arrangeAndAct)
+    {
+        const string checks = "Assert.Equal(1, exit); Assert.True(Logged());";
+        string before = $$"""[Fact] void RejectsLoweredThreshold() { var exit = Run("--min 5"); {{checks}} }""";
+        string after = $"[Fact] void ValidatesOtherInput() {{ {arrangeAndAct} {checks} }}";
+        var finding = Assert.Single(Scan(before, after));
+        Assert.Equal("test-removed", finding.Kind);
+        Assert.Contains("/RejectsLoweredThreshold", finding.Identifier);
+    }
+
+    [Fact]
+    public void OneAssertionRenameWithTheSameNormalizedBodyStaysClean()
+    {
+        const string before = """[Fact] void Old() => Assert.Equal(1, Run("--min 5"));""";
+        const string after = """[Fact] void Renamed() => Assert.Equal(1, /* expected exit */ Run("--min 5"));""";
+        Assert.Empty(Scan(before, after));
+    }
+
+    [Fact]
+    public void HighBodyOverlapWithOneRetainedAssertionStillReportsDeletion()
+    {
+        const string body = """var exit = Run("--min 5"); Assert.Equal(1, exit);""";
+        var finding = Assert.Single(Scan($"[Fact] void Old() {{ {body} }}", $"[Fact] void Other() {{ {body} Assert.True(Logged()); }}"));
+        Assert.Equal("test-removed", finding.Kind);
+    }
+
+    [Fact]
+    public void EditedRenameWithRetainedSetupRequiresAUniqueCandidate()
+    {
+        const string before = """[Fact] void Old() { var exit = Run("--min 5"); Assert.Equal(1, exit); Assert.True(Logged()); }""";
+        string renamed = before.Replace("Old()", "Renamed()").Replace("var exit", "Trace(); var exit");
+        Assert.Empty(Scan(before, renamed));
+        var ambiguous = Assert.Single(Scan(before, renamed + renamed.Replace("Renamed()", "Other()")));
+        Assert.Equal("test-removed", ambiguous.Kind);
+    }
+
     [Fact]
     public void MultilineInlineDataShowsTheEntireRemovedRowOnOneLogLine()
     {
@@ -69,5 +120,17 @@ public sealed class CheckLooseningTests
         Assert.DoesNotContain("\n", finding.Message);
         Assert.Contains("[InlineData(1,", finding.Message);
         Assert.Contains($"\"{argument}\")]", finding.Message);
+    }
+
+    [Theory]
+    [InlineData("static TheoryData<int, string> Rows => new() { ", " };", "{ 1,\r\n    \"last value\" }")]
+    [InlineData("static IEnumerable<object[]> Rows() { ", " yield break; }", "yield return new object[] { 1,\n    \"last value\" };")]
+    public void MultilineProviderRowsShowTheEntireRemovedExpressionOnOneLogLine(string start, string end, string row)
+    {
+        const string test = "[Theory][MemberData(nameof(Rows))] public void HasText(int id, string text) { Assert.NotEmpty(text); }";
+        var finding = Assert.Single(Scan(test + start + row + end, test + start + end));
+        Assert.Equal("assertion-removed", finding.Kind);
+        string expression = row.Replace("yield return ", "").TrimEnd(';');
+        Assert.Equal("Test data row removed: " + expression.ReplaceLineEndings("\\n"), finding.Message);
     }
 }

@@ -6,7 +6,8 @@ namespace TiaMcp.Adapters.Contracts;
 /// <summary>Release boundaries of the SDK members used by hosts and adapters.</summary>
 public sealed partial class OpennessApi
 {
-    // The host rejects an omitted device view before dispatch on V20. V14 SP1–V19 also expose only ShowInEditor(View).
+    // The host rejects an omitted device view before dispatch on V20 because Device lacks the IShowable interface used for that call.
+    // V14 SP1–V19 also expose only ShowInEditor(View) on Device.
     public const string DeviceEditorEmptyViewGuardRelease = "20";
 
     // SW.Units.PlcUnitProvider

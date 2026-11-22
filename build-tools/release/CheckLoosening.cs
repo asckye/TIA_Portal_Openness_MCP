@@ -18,6 +18,7 @@ internal static class CheckLoosening
     }
 
     internal static string Tokens(SyntaxNode node) => string.Join(" ", node.DescendantTokens().Select(token => token.Text));
+    private static string SingleLine(SyntaxNode node) => node.ToString().ReplaceLineEndings("\\n");
     internal static string Hash(string value) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
     internal static SyntaxNode Parse(string source) => CSharpSyntaxTree.ParseText(
         System.Text.RegularExpressions.Regex.Replace(source, @"(?m)^[ \t]*#(?:if|elif|else|endif|define|undef)\b[^\r\n]*",
@@ -239,8 +240,8 @@ internal static class CheckLoosening
             int occurrence = occurrences.GetValueOrDefault(key) + 1;
             occurrences[key] = occurrence;
             if (after.GetValueOrDefault(text) > 0) { after[text]--; continue; }
-            findings.Add(new(tree.Change.OldPath, "assertion-removed", "data-row:" + Hash(text) + ":" + occurrence, "Test data row removed: " + row,
-                row.GetLocation().GetLineSpan().StartLinePosition.Line + 1));
+            findings.Add(new(tree.Change.OldPath, "assertion-removed", "data-row:" + Hash(text) + ":" + occurrence,
+                "Test data row removed: " + SingleLine(row), row.GetLocation().GetLineSpan().StartLinePosition.Line + 1));
         }
     }
 
@@ -301,27 +302,51 @@ internal static class CheckLoosening
         }
     }
 
+    private sealed record RenameEvidence(Dictionary<string, int> Assertions, HashSet<string> BodyTokens, string[] SetupAndAction);
+
+    private static RenameEvidence ReadRenameEvidence(Method test, string path)
+    {
+        var calls = Assertions(test.Syntax, ConsoleAssertions(path)).OfType<InvocationExpressionSyntax>().ToHashSet();
+        var counts = calls.Select(Tokens).CountBy(text => text).ToDictionary();
+        var body = (SyntaxNode?)test.Syntax.Body ?? test.Syntax.ExpressionBody;
+        if (body == null) return new(counts, [], []);
+        var bodyTokens = body.DescendantTokens().Select(token => token.Text).ToHashSet(StringComparer.Ordinal);
+        var setupAndAction = body.DescendantTokens(node => node is not InvocationExpressionSyntax call || !calls.Contains(call))
+            .Where(token => !token.IsKind(SyntaxKind.SemicolonToken)).Select(token => token.Text).ToArray();
+        return new(counts, bodyTokens, setupAndAction);
+    }
+
+    private static bool IsEditedRename(RenameEvidence previous, RenameEvidence current)
+    {
+        var shared = previous.Assertions.Keys.Where(current.Assertions.ContainsKey).ToArray();
+        if (shared.Length < 2) return false;
+        int retained = shared.Sum(call => Math.Min(previous.Assertions[call], current.Assertions[call]));
+        if (3 * retained < previous.Assertions.Values.Sum() + current.Assertions.Values.Sum()) return false;
+
+        // Require at least 80% Jaccard similarity across all distinct body tokens, including identifiers and literal values.
+        int intersection = previous.BodyTokens.Count(current.BodyTokens.Contains);
+        int union = previous.BodyTokens.Count + current.BodyTokens.Count - intersection;
+        if (5 * intersection < 4 * union) return false;
+
+        // Common assertions can dominate a short body. Allow added setup, but keep the old setup and action tokens in order.
+        int kept = 0;
+        foreach (string token in current.SetupAndAction)
+            if (kept < previous.SetupAndAction.Length && token == previous.SetupAndAction[kept]) kept++;
+        return kept == previous.SetupAndAction.Length;
+    }
+
     private static void MatchEditedRenames(CheckMemberPairs<Method> pairs)
     {
         var previousTests = pairs.RemainingBefore.Where(item => IsTest(item.Syntax)).ToArray();
         var currentTests = pairs.RemainingAfter.Where(item => IsTest(item.Syntax)).ToLookup(item => ContainingType(item.Syntax));
         if (previousTests.Length == 0 || currentTests.Count == 0) return;
-        Dictionary<string, int> Counts(Method test, string path) => Assertions(test.Syntax, ConsoleAssertions(path))
-            .OfType<InvocationExpressionSyntax>().Select(Tokens).CountBy(text => text).ToDictionary();
-        var counts = currentTests.SelectMany(group => group).ToDictionary(test => test, test => Counts(test, test.Change.Path));
+        var evidence = currentTests.SelectMany(group => group).ToDictionary(test => test, test => ReadRenameEvidence(test, test.Change.Path));
         var candidates = new List<(Method Previous, Method Current)>();
         foreach (var previous in previousTests)
         {
-            var assertions = Counts(previous, previous.Change.OldPath);
-            int total = assertions.Values.Sum();
-            if (total == 0) continue;
+            var original = ReadRenameEvidence(previous, previous.Change.OldPath);
             foreach (var current in currentTests[ContainingType(previous.Syntax)])
-            {
-                // At least two thirds of assertion occurrences across both bodies must belong to exact pairs.
-                var other = counts[current];
-                int retained = assertions.Sum(row => Math.Min(row.Value, other.GetValueOrDefault(row.Key)));
-                if (3 * retained >= total + other.Values.Sum()) candidates.Add((previous, current));
-            }
+                if (IsEditedRename(original, evidence[current])) candidates.Add((previous, current));
         }
         var byCurrent = candidates.ToLookup(pair => pair.Current);
         foreach (var group in candidates.GroupBy(pair => pair.Previous))
@@ -344,7 +369,7 @@ internal static class CheckLoosening
             int match = available.FindIndex(candidate => Tokens(candidate) == text);
             if (match < 0) match = available.FindIndex(candidate => Stronger(assertion, candidate));
             if (match >= 0) { available.RemoveAt(match); continue; }
-            string display = assertion is AttributeSyntax ? "[" + assertion.ToString().ReplaceLineEndings("\\n") + "]" : text;
+            string display = assertion is AttributeSyntax ? "[" + SingleLine(assertion) + "]" : text;
             findings.Add(new(path, "assertion-removed", member + ":" + Hash(text) + ":" + occurrence,
                 "Removed assertion: " + display, assertion.GetLocation().GetLineSpan().StartLinePosition.Line + 1));
         }
