@@ -1866,24 +1866,6 @@
     {
       "rule": "CA2208",
       "path": "src/Logic/Generation/StandardPackageStore.cs",
-      "line": 228,
-      "column": 82,
-      "endLine": 228,
-      "endColumn": 145,
-      "message": "Method Machine passes \u0027machine\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . Logic . Generation/StandardPackageStore/Machine( string action , string id , string version , string machineJson , string inputPath , string outputPath , string format , bool dryRun , string expectedPlanHash )",
-      "anchor": "new ArgumentException ( \u0022Machine JSON exceeds 4 MiB.\u0022 , \u0022machine\u0022 ) ",
-      "fingerprint": "b314e33380476ac1f589c12017186922b9e5ac48b27c59ff02dfc400d6ac9f6c",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE",
-        "ordinary|src/Logic/TiaMcp.Logic.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TIA_APPROVAL_PRIVATE_JOURNAL,TIA_BUNDLE_LAYOUT_PUBLIC,TIA_GENERATION_PLANNER,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/Logic/Generation/StandardPackageStore.cs",
       "line": 189,
       "column": 79,
       "endLine": 189,
