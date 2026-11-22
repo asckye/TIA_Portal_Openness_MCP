@@ -61,10 +61,77 @@ public sealed class V14Sp1RegressionTests
     [Fact]
     public void Invalid_bit_offset_is_rejected_before_target_access()
     {
-        var tool = new Host.RuntimeTools(_ => throw new InvalidOperationException("Unexpected PUT/GET lookup."), true);
+        int lookups = 0, reads = 0;
+        var tool = new Host.RuntimeTools(_ => { lookups++; throw new InvalidOperationException("Unexpected PUT/GET lookup."); }, true,
+            (_, _, _, _, _) => { reads++; throw new InvalidOperationException("Unexpected S7 read."); });
         var reply = tool.ReadPlcLiveValuesS7V4("127.0.0.1", new[] { "DB1.DBX0.9" }, devicePath: "MCP_RC_PLC");
         Rejected(reply.StructuredContent!, "INVALID_ARGUMENT");
+        Assert.Equal(0, lookups);
+        Assert.Equal(0, reads);
         Assert.Equal("/items", (string?)reply.StructuredContent!["error"]?["details"]?["parameter"]);
+        Assert.Equal("INVALID_ARGUMENT", (string?)reply.StructuredContent!["data"]?["items"]?[0]?["errorCode"]);
+    }
+
+    [Fact]
+    public void Mixed_S7_addresses_keep_order_and_read_valid_items()
+    {
+        string[] requested = { "DB1.DBX0.9", "DB1.DBX0.7", "DB9999999999999.DBW0", "MW12", "DB1.DBX0.7" };
+        int readCalls = 0;
+        var tool = new Host.RuntimeTools(_ => new JsonObject(), true, (ip, rack, slot, addresses, expected) => {
+            readCalls++;
+            Assert.Equal(new[] { requested[1], requested[3], requested[4] }, addresses);
+            var result = new TiaMcpServer.Runtime.S7ReadResult { Ok = true };
+            foreach (string address in addresses)
+            {
+                var item = TiaMcpServer.Runtime.S7LiveReader.ParseSpec(address);
+                item.Value = item.Type == "BOOL" ? true : 42;
+                result.Items.Add(item);
+            }
+            return result;
+        });
+        var body = tool.ReadPlcLiveValuesS7V4("127.0.0.1", requested).StructuredContent!;
+        Assert.Equal(1, readCalls);
+        Assert.Equal("partial", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("PARTIAL_FAILURE", (string?)body["error"]?["code"]);
+        var rows = body["data"]!["items"]!.AsArray();
+        Assert.Equal(requested, rows.Select(row => (string?)row!["spec"]));
+        Assert.Equal("INVALID_ARGUMENT", (string?)rows[0]!["errorCode"]);
+        Assert.Equal("INVALID_ARGUMENT", (string?)rows[2]!["errorCode"]);
+        Assert.True((bool?)rows[1]!["value"]);
+        Assert.Equal(42, (int?)rows[3]!["value"]);
+        Assert.True((bool?)rows[4]!["value"]);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Mixed_S7_addresses_retain_each_error_when_the_valid_read_is_unavailable(bool disabled)
+    {
+        int reads = 0;
+        var tool = new Host.RuntimeTools(_ => new JsonObject { ["found"] = true, ["enabled"] = !disabled }, true,
+            (_, _, _, addresses, _) => {
+                reads++;
+                Assert.Equal(new[] { "MW12" }, addresses);
+                return new TiaMcpServer.Runtime.S7ReadResult { Error = "Connect failed." };
+            });
+        var body = tool.ReadPlcLiveValuesS7V4("127.0.0.1", new[] { "MW12", "DB1.DBX0.9" }, devicePath: "MCP_RC_PLC").StructuredContent!;
+        var rows = body["data"]!["items"]!.AsArray();
+        Assert.Equal(disabled ? 0 : 1, reads);
+        Assert.Equal(2, rows.Count);
+        Assert.Equal("MW12", (string?)rows[0]!["spec"]);
+        Assert.Contains(disabled ? "disabled" : "Connect failed", (string?)rows[0]!["error"]);
+        Assert.Null(rows[0]!["errorCode"]);
+        Assert.Equal("INVALID_ARGUMENT", (string?)rows[1]!["errorCode"]);
+    }
+
+    [Fact]
+    public async Task Missing_batch_software_path_is_refused_before_alias_lookup()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("14sp1");
+        using var session = fixture.EnterSession();
+        var reply = await fixture.Call("AnalyzePlcCrossReferences", new { groupPath = "" });
+        Rejected(reply.StructuredContent!, "INVALID_ARGUMENT");
+        Assert.Equal("/softwarePath", (string?)reply.StructuredContent!["error"]?["details"]?["parameter"]);
     }
 
     [Fact]

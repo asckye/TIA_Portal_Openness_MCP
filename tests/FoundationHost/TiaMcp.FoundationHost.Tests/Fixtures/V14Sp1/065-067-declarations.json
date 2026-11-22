@@ -1,0 +1,30 @@
+{
+  "udt": {
+    "name": "MCP_RC_UDT",
+    "members": [
+      {
+        "name": "Run",
+        "datatype": "Bool"
+      },
+      {
+        "name": "Speed",
+        "datatype": "Int"
+      }
+    ]
+  },
+  "globaldb": {
+    "dbName": "MCP_RC_DB",
+    "dbNumber": 9801,
+    "staticMembers": [
+      {
+        "name": "Count",
+        "datatype": "Int",
+        "startValue": "3"
+      },
+      {
+        "name": "Motor",
+        "datatype": "\"MCP_RC_UDT\""
+      }
+    ]
+  }
+}

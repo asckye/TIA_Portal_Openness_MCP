@@ -227,7 +227,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     && evidence["attributeName"] is JsonValue value && value.TryGetValue<string>(out var name)
                     && !attributes.Any(attribute => (string?)attribute == name) ? name : null;
                 string message = missing == null ? "Hardware preconditions were not met."
-                    : HostBehavior.SafeDiagnostic($"Attribute '{missing}' is absent from the device item's attribute list.") ?? "Device item attribute is missing.";
+                    : HostBehavior.SafeDiagnostic($"Attribute '{missing}' is absent from the device item's attribute list.")
+                        ?? "Device item attribute is missing.";
                 outcome = Outcome.RejectedBeforeOperation;
                 error = new Error(message, new PreconditionFailedDetails("hardware-admission", (string?)evidence["deviceItemPath"]));
             }

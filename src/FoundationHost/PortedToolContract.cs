@@ -26,6 +26,65 @@ namespace TiaMcp.FoundationHost;
 // by every port. Only the typed service factory is specific to a family.
 internal static class PortedToolContract
 {
+    // Failure evidence belongs to one dispatch. Only possible mutations accumulate across an invocation.
+    internal sealed class WorkerDispatch(IFoundationWorker worker, CancellationToken token)
+    {
+        internal Exception? LastFailure { get; private set; }
+        internal JsonObject? LastReply { get; private set; }
+        internal JsonObject? Diagnostics { get; private set; }
+        internal bool Dispatched { get; private set; }
+        internal bool MayHaveChanged { get; private set; }
+        private bool failedWriteMayHaveChanged;
+
+        private void RecordFailure(Exception error, bool mayWrite)
+        {
+            LastFailure = error;
+            var workerError = error as WorkerOperationException;
+            var retained = workerError?.EvidenceJson is string json ? JsonNode.Parse(json) : null;
+            if (workerError?.Outcome == "rejected-before-operation" && retained is JsonObject deviceEvidence
+                && deviceEvidence["status"]?.ToString() == "Ambiguous" && deviceEvidence["target"] != null)
+                error.Data["nativeResultEvidence"] = deviceEvidence;
+            if (workerError != null)
+                Diagnostics = FoundationV4Result.NativeDiagnostics(new JsonObject { ["Failure"] = new JsonObject {
+                    ["Message"] = workerError.Message, ["Evidence"] = retained } }, Diagnostics);
+            MayHaveChanged |= TiaOpenness.Shared.HostFailurePolicy.PriorMutation(error);
+            bool unchanged = (workerError?.KnownNoMutation == true || error.Data["foundationRequestSent"] is false
+                || TiaOpenness.Shared.HostFailurePolicy.KnownNoMutation(error)) && !TiaOpenness.Shared.HostFailurePolicy.WorkerOutcomeUnknown(error);
+            error.Data["foundationStepKnownNoMutation"] = unchanged;
+            error.Data["foundationKnownNoMutation"] = !MayHaveChanged && unchanged;
+            failedWriteMayHaveChanged = mayWrite && !unchanged;
+        }
+        internal JsonNode? Call(string operation, JsonObject input)
+        {
+            MayHaveChanged |= failedWriteMayHaveChanged;
+            failedWriteMayHaveChanged = false;
+            LastFailure = null;
+            LastReply = null;
+            bool mayWrite = !TiaMcp.PlcWorker.WorkerOperations.IsReadOnly(operation) && (bool?)input["dryRun"] != true;
+            try
+            {
+                Dispatched = true;
+                if (mayWrite) InvocationJournal.NativeCallStarted();
+                var reply = worker.Call(operation, input, token).GetAwaiter().GetResult();
+                var objectReply = reply as JsonObject;
+                LastReply = objectReply;
+                Diagnostics = FoundationV4Result.NativeDiagnostics(reply, Diagnostics);
+                MayHaveChanged |= mayWrite && (bool?)objectReply?[nameof(MayHaveChanged)] != false;
+                return reply;
+            }
+            catch (WorkerOperationException error) when (PortedToolContract.IsDeviceRefusal(operation, error))
+            {
+                RecordFailure(error, mayWrite);
+                throw PortedToolContract.DeviceRefusal(error);
+            }
+            catch (Exception error)
+            {
+                RecordFailure(error, mayWrite);
+                throw;
+            }
+        }
+    }
+
     // Device creation refuses before a native create, or after a TIA refusal verified by an unchanged device
     // inventory. The worker reports both as a typed precondition; keep it typed for the hardware contract.
     private static readonly HashSet<string> DeviceCreationOperations = new(StringComparer.Ordinal) {
@@ -528,28 +587,7 @@ internal sealed partial class FoundationTool
         bool missingPortal = state != null && state["ProcessId"] == null && (bool?)state["IsAttached"] != true && !hasProject()
             && worker is not IFoundationSessionWorker { HasPendingRebindTarget: true };
         bool portalDispatchRefused = false;
-        Exception? workerFailure = null;
-        JsonObject? nativeDiagnostics = null;
-        JsonObject? lastReply = null;
-        bool operationDispatched = false;
-        bool priorMutation = false;
-        void RecordFailure(Exception error)
-        {
-            workerFailure = error;
-            var workerError = error as WorkerOperationException;
-            var retained = workerError?.EvidenceJson is string json ? JsonNode.Parse(json) : null;
-            if (workerError?.Outcome == "rejected-before-operation" && retained is JsonObject deviceEvidence
-                && deviceEvidence["status"]?.ToString() == "Ambiguous" && deviceEvidence["target"] != null)
-                error.Data["nativeResultEvidence"] = deviceEvidence;
-            if (workerError != null)
-                nativeDiagnostics = FoundationV4Result.NativeDiagnostics(new JsonObject { ["Failure"] = new JsonObject {
-                    ["Message"] = workerError.Message, ["Evidence"] = retained } }, nativeDiagnostics);
-            priorMutation |= TiaOpenness.Shared.HostFailurePolicy.PriorMutation(error);
-            error.Data["foundationStepKnownNoMutation"] = error is WorkerOperationException { KnownNoMutation: true }
-                || error.Data["foundationRequestSent"] is false;
-            error.Data["foundationKnownNoMutation"] = !priorMutation && (error is WorkerOperationException { KnownNoMutation: true }
-                || error.Data["foundationRequestSent"] is false);
-        }
+        var dispatch = new PortedToolContract.WorkerDispatch(worker, token);
         JsonNode? Call(string operation, JsonObject input)
         {
             if (missingPortal && TiaMcp.PlcWorker.WorkerOperations.RequiresPortal(operation))
@@ -557,28 +595,7 @@ internal sealed partial class FoundationTool
                 portalDispatchRefused = true;
                 throw new InvalidOperationException(TiaOpenness.Shared.SessionBehavior.PortalRequired);
             }
-            bool mayWrite = !TiaMcp.PlcWorker.WorkerOperations.IsReadOnly(operation) && (bool?)input["dryRun"] != true;
-            try
-            {
-                operationDispatched = true;
-                if (mayWrite) InvocationJournal.NativeCallStarted();
-                var reply = worker.Call(operation, input, token).GetAwaiter().GetResult();
-                var objectReply = reply as JsonObject;
-                lastReply = objectReply;
-                nativeDiagnostics = FoundationV4Result.NativeDiagnostics(reply, nativeDiagnostics);
-                priorMutation |= mayWrite && (bool?)objectReply?["MayHaveChanged"] != false;
-                return reply;
-            }
-            catch (WorkerOperationException error) when (PortedToolContract.IsDeviceRefusal(operation, error))
-            {
-                RecordFailure(error);
-                throw PortedToolContract.DeviceRefusal(error);
-            }
-            catch (Exception error)
-            {
-                RecordFailure(error);
-                throw;
-            }
+            return dispatch.Call(operation, input);
         }
         Func<string, JsonObject, JsonNode?> call = Call;
         var service = new HardwareAddressingService(call, hasProject, identity);
@@ -683,56 +700,57 @@ internal sealed partial class FoundationTool
                     ? preview.ValueKind == JsonValueKind.True : portedDescriptor.DryRun.Default));
             bool claimsNotStarted = (string?)result.StructuredContent?["meta"]?["outcome"] == "rejected-before-operation"
                 || (string?)result.StructuredContent?["meta"]?["execution"] is "not-started" or "read-only";
-            if (claimsNotStarted && workerFailure != null && priorMutation)
+            if (claimsNotStarted && dispatch.LastFailure != null && dispatch.MayHaveChanged)
             {
-                workerFailure.Data["foundationPriorMutation"] = true;
+                dispatch.LastFailure.Data["foundationPriorMutation"] = true;
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                    true, true, lastReply, workerFailure);
+                    true, true, dispatch.LastReply, dispatch.LastFailure);
             }
-            if (claimsNotStarted && workerFailure?.Data["workerReadTimeout"] is true)
+            if (claimsNotStarted && dispatch.LastFailure?.Data["workerReadTimeout"] is true)
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                    true, false, null, workerFailure);
-            if (tool.Name == "ValidateAutomationContext" && workerFailure is WorkerOperationException { KnownNoMutation: true, Condition: "not-found" } missing)
+                    true, false, null, dispatch.LastFailure);
+            if (tool.Name == "ValidateAutomationContext"
+                && dispatch.LastFailure is WorkerOperationException { KnownNoMutation: true, Condition: "not-found" } missing)
                 return FoundationV4Result.Reject(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
                     new Error(HostBehavior.SafeDiagnostic(missing.Message) ?? "Expected software was not found.", new NotFoundDetails(null)), false);
-            if (!priorMutation && result.IsError == true
-                && workerFailure is WorkerOperationException { CapabilityRefused: true })
+            if (!dispatch.MayHaveChanged && result.IsError == true
+                && dispatch.LastFailure is WorkerOperationException { CapabilityRefused: true })
                 return FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                    true, mutation, null, workerFailure);
-            result = FoundationV4Result
-                .WorkerFailure(result, portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId), mutation, workerFailure);
+                    true, mutation, null, dispatch.LastFailure);
+            result = FoundationV4Result.WorkerFailure(result, portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId), mutation,
+                dispatch.LastFailure, dispatch.MayHaveChanged);
             // Preserve the tool's step report while retaining evidence of the earlier mutation.
-            if (priorMutation && result.StructuredContent is JsonObject body && (string?)body["meta"]?["outcome"] == "unknown")
+            if (dispatch.MayHaveChanged && result.StructuredContent is JsonObject body && (string?)body["meta"]?["outcome"] == "unknown")
             {
                 body["data"] ??= new JsonObject();
                 body["data"]!["earlierMutationMayHaveChanged"] = true;
                 result.Content = new[] { new TextContentBlock { Text = body.ToJsonString() } };
             }
-            return FoundationV4Result.ReconcileWorker(result, nativeDiagnostics, tool.Name,
-                priorMutation ? null : workerFailure);
+            return FoundationV4Result.ReconcileWorker(result, dispatch.Diagnostics, tool.Name,
+                dispatch.MayHaveChanged ? null : dispatch.LastFailure);
         }
         catch (TargetInvocationException error) when (error.InnerException != null)
         {
-            if (FoundationV4Result.Classified(lastReply))
+            if (FoundationV4Result.Classified(dispatch.LastReply))
             {
-                if (tool.Name == "SetUnifiedGlobalScript" && (string?)lastReply!["meta"]?["outcome"] == "unknown")
+                if (tool.Name == "SetUnifiedGlobalScript" && (string?)dispatch.LastReply!["meta"]?["outcome"] == "unknown")
                 {
-                    var facts = HostBehavior.ScriptImportEvidence(lastReply["error"]?["details"]?["evidence"] as JsonObject ?? new JsonObject());
+                    var facts = HostBehavior.ScriptImportEvidence(dispatch.LastReply["error"]?["details"]?["evidence"] as JsonObject ?? new JsonObject());
                     return FoundationV4Result.UnknownScriptImport(portedRelease!, Meta.Correlate(InvocationJournal.CorrelationId),
-                        facts, priorMutation);
+                        facts, dispatch.MayHaveChanged);
                 }
-                return FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)lastReply!["ok"] != true,
-                    StructuredContent = lastReply.DeepClone(), Content = new[] { new TextContentBlock { Text = lastReply.ToJsonString() } } },
-                    nativeDiagnostics);
+                return FoundationV4Result.ReconcileWorker(new CallToolResult { IsError = (bool?)dispatch.LastReply!["ok"] != true,
+                    StructuredContent = dispatch.LastReply.DeepClone(), Content = new[] { new TextContentBlock { Text = dispatch.LastReply.ToJsonString() } } },
+                    dispatch.Diagnostics);
             }
-            var cause = workerFailure ?? error.InnerException;
+            var cause = dispatch.LastFailure ?? error.InnerException;
             bool mutation = portedDescriptor!.Classification?.Operation is not ("READ" or "OFFLINE")
                 && !(portedDescriptor.DryRun.Present && (arguments.TryGetValue("dryRun", out var dry)
                     ? dry.ValueKind == JsonValueKind.True : portedDescriptor.DryRun.Default));
-            if (workerFailure == null && lastReply?["Failure"] is JsonObject failure)
+            if (dispatch.LastFailure == null && dispatch.LastReply?["Failure"] is JsonObject failure)
             {
                 string code = (string?)failure["Code"] ?? cause.GetType().Name;
-                bool changed = (bool?)lastReply["MayHaveChanged"] == true;
+                bool changed = (bool?)dispatch.LastReply["MayHaveChanged"] == true;
                 var evidence = failure["Evidence"] is JsonObject retained ? (JsonObject)retained.DeepClone() : new JsonObject();
                 evidence["exceptionType"] ??= code;
                 cause = new WorkerOperationException((string?)failure["Message"] ?? cause.Message,
@@ -740,15 +758,16 @@ internal sealed partial class FoundationTool
                     changed ? "unknown" : mutation ? "rejected-before-operation" : "read-failed",
                     evidence.ToJsonString());
             }
-            if (!operationDispatched && cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams
+            if (!dispatch.Dispatched && cause is global::ModelContextProtocol.McpException { ErrorCode: global::ModelContextProtocol.McpErrorCode.InvalidParams
                 })
                 cause = new WorkerOperationException(cause.Message, -32602, "rejected-before-operation");
-            if (priorMutation) cause.Data["foundationPriorMutation"] = true;
+            if (dispatch.MayHaveChanged) cause.Data["foundationPriorMutation"] = true;
             var result = FoundationV4Result.Failure(portedRelease!, tool.Name, Meta.Correlate(InvocationJournal.CorrelationId),
-                operationDispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
-                    : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation, lastReply?["Failure"] != null ? lastReply : null, cause);
-            return FoundationV4Result.ReconcileWorker(result, nativeDiagnostics, tool.Name,
-                priorMutation ? null : workerFailure);
+                dispatch.Dispatched && (cause.Data["foundationRequestSent"] is bool sent ? sent
+                    : cause is WorkerOperationException || nativeCalls.NativeCallIssued), mutation,
+                dispatch.LastReply?["Failure"] != null ? dispatch.LastReply : null, cause);
+            return FoundationV4Result.ReconcileWorker(result, dispatch.Diagnostics, tool.Name,
+                dispatch.MayHaveChanged ? null : dispatch.LastFailure);
         }
     }
 }

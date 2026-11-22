@@ -31,6 +31,47 @@ public sealed class FixR1RegressionTests
         Assert.False(FoundationV4Result.Classified(new JsonArray()));
     }
 
+    private sealed class EnsureWorker : IFoundationWorker
+    {
+        public Task<JsonNode?> Call(string operation, JsonObject input, CancellationToken token)
+        {
+            if (operation == "ReadSoftwareInfo")
+                throw new WorkerOperationException("The object does not exist.", -32603, "rejected-before-operation",
+                    """{"condition":"not-found","mayHaveChanged":false}""");
+            Assert.Equal("hardware-devices.HardwareCreateDevice", operation);
+            return Task.FromResult<JsonNode?>(new JsonObject { ["MayHaveChanged"] = true, ["OutcomeUnknown"] = true });
+        }
+        public void Dispose() { }
+    }
+
+    [Fact]
+    public void Ensure_probe_refusal_cannot_settle_a_subsequent_uncertain_create()
+    {
+        using var worker = new EnsureWorker();
+        var dispatch = new PortedToolContract.WorkerDispatch(worker, CancellationToken.None);
+        var args = new JsonObject();
+        var missing = Assert.Throws<WorkerOperationException>(() => dispatch.Call("ReadSoftwareInfo", args));
+        Assert.True((bool)missing.Data["foundationKnownNoMutation"]!);
+        Assert.Same(missing, dispatch.LastFailure);
+        var create = dispatch.Call("hardware-devices.HardwareCreateDevice", args);
+        Assert.True((bool?)create!["MayHaveChanged"]);
+        Assert.True(dispatch.MayHaveChanged);
+        Assert.Null(dispatch.LastFailure);
+        var unknown = FoundationV4Result.Failure("21", "CreateHardwareDevice", "ensure", true, true, create,
+            new WorkerOperationException("Create outcome is unknown.", -32603, "unknown"));
+        var result = FoundationV4Result.WorkerFailure(unknown, "21", "CreateHardwareDevice", "ensure", true, dispatch.LastFailure, dispatch.MayHaveChanged);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)result.StructuredContent!["error"]?["code"]);
+        Assert.Equal("unknown", (string?)result.StructuredContent!["meta"]?["execution"]);
+        Assert.Same(unknown, FoundationV4Result.WorkerFailure(unknown, "21", "CreateHardwareDevice", "ensure", true, missing, priorMutation: true));
+        var finalRead = Assert.Throws<WorkerOperationException>(() => dispatch.Call("ReadSoftwareInfo", args));
+        Assert.True((bool)finalRead.Data["foundationStepKnownNoMutation"]!);
+        Assert.False((bool)finalRead.Data["foundationKnownNoMutation"]!);
+        finalRead.Data["workerPortalLost"] = "TIA process exited";
+        var lost = FoundationV4Result.WorkerFailure(unknown, "21", "CreateHardwareDevice", "ensure", true, dispatch.LastFailure, dispatch.MayHaveChanged);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)lost.StructuredContent!["error"]?["code"]);
+        Assert.True((bool?)lost.StructuredContent!["data"]?["earlierMutationMayHaveChanged"]);
+    }
+
     [Theory]
     [InlineData("rejected-before-operation", "partial", "PARTIAL_FAILURE")]
     [InlineData("unknown", "unknown", "OUTCOME_UNKNOWN")]

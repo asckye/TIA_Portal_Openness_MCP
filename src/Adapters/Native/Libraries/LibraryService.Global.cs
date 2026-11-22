@@ -155,7 +155,8 @@ namespace TiaMcp.Adapters
                 if (!new[] { "read", "create", "rename", "delete" }.Contains(action))
                     throw new ArgumentException("action must be one of: read/create/rename/delete (case-sensitive).");
                 var (name, collection, target) = SelectLibraryFolder(folderPath, action,
-                    path => EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName), path, folderKind == "types" ? "TypeFolder" : "MasterCopyFolder"));
+                    path => EngineeringLibraryFolder(ExactOpenEngineeringLibrary(libraryName), path,
+                        folderKind == "types" ? "TypeFolder" : "MasterCopyFolder"));
                 if ((action=="create") == (target!=null))
                     throw new PlcSoftwareException(action == "create" ? "AlreadyExists" : "NotFound", action=="create" ? "Folder exists."
                         : "Exact folder not found.");

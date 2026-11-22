@@ -101,14 +101,17 @@ namespace TiaMcp.Engine.Tests
             internal string Current;
             internal string After;
             internal int Imports;
+            internal Func<string, string, bool>? ExportType;
+            internal readonly List<string> Calls = new();
             internal Fixture(string xml) { candidateXml = xml; Current = xml; After = xml; }
-            private void Export(string path) => File.WriteAllText(path, Current);
-            private void Import(string path) { Assert.True(File.Exists(path)); Imports++; Current = After; }
+            private void Export(string path) { Calls.Add(Path.GetFileName(path)); File.WriteAllText(path, Current); }
+            private void Import(string path) { Calls.Add("import"); Assert.True(File.Exists(path)); Imports++; Current = File.ReadAllText(path); }
+            private void Compile() { Calls.Add("compile"); Current = After; }
             internal JsonObject Run(bool preview, string token = "", JsonObject? meta = null)
             {
                 meta ??= new JsonObject();
                 PlcVerifiedImport.Execute(candidateXml, "PLC/" + PlcVerifiedImport.CandidateName(candidateXml), directory,
-                    preview, token, Export, Import, () => { }, meta, () => { });
+                    preview, token, Export, Import, () => { }, meta, Compile, ExportType);
                 return meta;
             }
             public void Dispose()
@@ -169,7 +172,6 @@ namespace TiaMcp.Engine.Tests
             string folder = Path.Combine(Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
                 "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/V14Sp1");
             var document = XDocument.Load(Path.Combine(folder, "155-global-db.xml"));
-            var diff = JsonNode.Parse(File.ReadAllText(Path.Combine(folder, "171-interface-diff.json")))!.AsArray();
             PlcDocumentEditing.Child(PlcDocumentEditing.Child(PlcDocumentEditing.Block(document), "AttributeList"), "Name").Value = "MCP_RC_DB";
             var section = document.Descendants().Single(e => e.Name.LocalName == "Section");
             XNamespace ns = section.Name.Namespace;
@@ -178,12 +180,17 @@ namespace TiaMcp.Engine.Tests
                 new XAttribute("Datatype", "\"MCP_RC_UDT\"")));
             var motor = section.Elements().Last();
             var xml = document.ToString();
-            var members = diff.Select(line => (string)line!).Where(line => line.StartsWith("+[Interface] None ", StringComparison.Ordinal))
-                .Select(line => line.Substring("+[Interface] None ".Length).Split(" : "))
-                .Select(pair => new XElement(ns + "Member", new XAttribute("Name", pair[0]), new XAttribute("Datatype", pair[1]))).ToArray();
+            var members = CompiledUdtMembers(folder, ns);
             Assert.Equal(2, members.Length);
             motor.Add(new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None"), members)));
             using var fixture = new Fixture(xml) { Current = change == "noPriorExpansion" ? xml : document.ToString() };
+            var declaration = ProjectUdt(folder);
+            fixture.ExportType = (name, path) => {
+                // This case has neither a prior expansion nor an independent declaration.
+                if (change == "noPriorExpansion" || name != "MCP_RC_UDT") return false;
+                declaration.Save(path);
+                return true;
+            };
             foreach (var member in section.Elements()) member.SetAttributeValue("Remanence", "NonRetain");
             switch (change)
             {
@@ -200,6 +207,126 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(matches, (bool?)applied["verificationSuccess"]);
             Assert.Equal(matches ? "DocumentReadbackMatched" : "DocumentReadbackMismatch", (string?)applied["status"]);
             if (!matches) Assert.Equal("MCP_RC_PLC/MCP_RC_Grp/MCP_RC_DB", (string?)applied["cleanupRequired"]![0]!["target"]);
+        }
+
+        private static XElement[] CompiledUdtMembers(string folder, XNamespace ns)
+        {
+            var diff = JsonNode.Parse(File.ReadAllText(Path.Combine(folder, "171-interface-diff.json")))!.AsArray();
+            return diff.Select(line => (string)line!).Where(line => line.StartsWith("+[Interface] None ", StringComparison.Ordinal))
+                .Select(line => line.Substring("+[Interface] None ".Length).Split(" : "))
+                .Select(pair => new XElement(ns + "Member", new XAttribute("Name", pair[0]), new XAttribute("Datatype", pair[1]))).ToArray();
+        }
+
+        private static XDocument ProjectUdt(string folder)
+        {
+            var udt = JsonNode.Parse(File.ReadAllText(Path.Combine(folder, "065-067-declarations.json")))!["udt"]!;
+            return PlcUdtXmlBuilder.BuildDocument((string)udt["name"]!, udt["members"]!.AsArray()
+                .Select(m => new PlcUdtMemberDefinition((string)m!["name"]!, (string)m["datatype"]!)), "14sp1");
+        }
+
+        [Theory]
+        [InlineData("uncompiledBefore", true)]
+        [InlineData("member", false)]
+        [InlineData("type", false)]
+        [InlineData("value", false)]
+        [InlineData("retain", false)]
+        [InlineData("declared", false)]
+        [InlineData("missingDeclaration", false)]
+        [InlineData("wrongDeclaration", false)]
+        [InlineData("implicitDefaults", true)]
+        [InlineData("declaredDefault", true)]
+        [InlineData("changedDefault", false)]
+        [InlineData("removedDefault", false)]
+        [InlineData("childRetain", false)]
+        [InlineData("extra", false)]
+        [InlineData("missing", false)]
+        [InlineData("order", false)]
+        public void B169_compiled_DB_is_verified_against_the_project_UDT_declaration(string change, bool matches)
+        {
+            string folder = Path.Combine(Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/V14Sp1");
+            var specs = JsonNode.Parse(File.ReadAllText(Path.Combine(folder, "065-067-declarations.json")))!;
+            var db = specs["globaldb"]!;
+            var declaration = ProjectUdt(folder);
+            var document = PlcGlobalDbXmlBuilder.BuildDocument((string)db["dbName"]!, (int)db["dbNumber"]!, db["staticMembers"]!.AsArray()
+                .Select(m => new PlcDbMemberDefinition((string)m!["name"]!, (string)m["datatype"]!, startValue: (string?)m["startValue"] ?? "")), "14sp1");
+            var section = document.Descendants().Single(e => e.Name.LocalName == "Section");
+            XNamespace ns = section.Name.Namespace;
+            var motor = section.Elements().Last();
+            var xml = document.ToString();
+            var members = CompiledUdtMembers(folder, ns);
+            Assert.Equal(2, members.Length);
+            motor.Add(new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None"), members)));
+            using var fixture = new Fixture(xml);
+            if (change is "declaredDefault" or "changedDefault" or "removedDefault")
+                declaration.Descendants(ns + "Member").Last().Add(new XElement(ns + "StartValue", "7"));
+            fixture.ExportType = (name, path) => {
+                Assert.Equal("MCP_RC_UDT", name);
+                fixture.Calls.Add("export type");
+                if (change == "missingDeclaration") return false;
+                if (change == "wrongDeclaration") declaration.Descendants("Name").Single().Value = "OtherType";
+                declaration.Save(path);
+                return true;
+            };
+            foreach (var member in section.Elements()) member.SetAttributeValue("Remanence", "NonRetain");
+            switch (change)
+            {
+                case "extra": members[1].AddAfterSelf(new XElement(ns + "Member", new XAttribute("Name", "Extra"), new XAttribute("Datatype", "Int"))); break;
+                case "missing": members[0].Remove(); break;
+                case "order": members[0].Remove(); members[1].AddAfterSelf(members[0]); break;
+                case "childRetain": members[0].SetAttributeValue("Remanence", "Retain"); break;
+                case "implicitDefaults": members[0].Add(new XElement(ns + "StartValue", "FALSE")); members[1].Add(new XElement(ns + "StartValue", "0")); break;
+                case "declaredDefault": members[1].Add(new XElement(ns + "StartValue", "7")); break;
+                case "changedDefault": members[1].Add(new XElement(ns + "StartValue", "8")); break;
+                case "member": members[0].SetAttributeValue("Name", "Ready"); break;
+                case "type": members[1].SetAttributeValue("Datatype", "DInt"); break;
+                case "value": members[1].Add(new XElement(ns + "StartValue", "4")); break;
+                case "retain": motor.SetAttributeValue("Remanence", "Retain"); break;
+                case "declared": section.Elements().First().Element(ns + "StartValue")!.Value = "4"; break;
+            }
+            fixture.After = document.ToString();
+            var preview = fixture.Run(true);
+            var applied = fixture.Run(false, (string)preview["token"]!, new JsonObject { ["softwarePath"] = "MCP_RC_PLC",
+                ["blockPath"] = "MCP_RC_Grp/MCP_RC_DB" });
+            Assert.Equal(matches, (bool?)applied["verificationSuccess"]);
+            Assert.Equal(matches ? "DocumentReadbackMatched" : "DocumentReadbackMismatch", (string?)applied["status"]);
+            if (!matches) Assert.Equal("MCP_RC_PLC/MCP_RC_Grp/MCP_RC_DB", (string?)applied["cleanupRequired"]![0]!["target"]);
+            Assert.Equal(new[] { "before.xml", "export type", "before.xml", "export type", "import", "compile", "after.xml" }, fixture.Calls);
+            if (change == "uncompiledBefore")
+            {
+                Assert.DoesNotContain(XDocument.Load((string)applied["backup"]!["path"]!).Descendants(ns + "Section"),
+                    s => (string?)s.Attribute("Name") == "None");
+                Assert.DoesNotContain(XDocument.Load((string)applied["plannedPath"]!).Descendants(ns + "Section"),
+                    s => (string?)s.Attribute("Name") == "None");
+                Assert.Null(applied["cleanupRequired"]);
+                Assert.Single(XDocument.Load((string)applied["afterPath"]!).Descendants(ns + "Section"), s => (string?)s.Attribute("Name") == "None");
+            }
+        }
+
+        [Fact]
+        public void Changed_UDT_default_between_preview_and_apply_refuses_before_import()
+        {
+            const string typeName = "MotorType";
+            var candidate = PlcGlobalDbXmlBuilder.BuildDocument("Motors", 1, new[] { new PlcDbMemberDefinition("Motor", "\"MotorType\"") }, "14sp1");
+            var declaration = PlcUdtXmlBuilder.BuildDocument(typeName, new[] { new PlcUdtMemberDefinition("Speed", "Int") }, "14sp1");
+            using var fixture = new Fixture(candidate.ToString());
+            fixture.ExportType = (name, path) => { Assert.Equal(typeName, name); declaration.Save(path); return true; };
+            var preview = fixture.Run(true);
+            var member = declaration.Descendants().Single(e => e.Name.LocalName == "Member");
+            member.Add(new XElement(member.Name.Namespace + "StartValue", "11"));
+            var error = Assert.Throws<AdapterPreconditionException>(() => fixture.Run(false, (string)preview["token"]!));
+            Assert.Equal("preview-stale", error.Condition);
+            Assert.Equal(0, fixture.Imports);
+        }
+
+        [Fact]
+        public void Cleanup_target_without_software_path_is_a_relative_block_identity()
+        {
+            using var fixture = new Fixture(Xml(false));
+            var preview = fixture.Run(true);
+            fixture.After = fixture.Current.Replace("<Text>Original</Text>", "<Text>Changed</Text>");
+            var result = fixture.Run(false, (string)preview["token"]!, new JsonObject { ["blockPath"] = "Group/Block" });
+            Assert.Equal("Group/Block", (string?)result["cleanupRequired"]![0]!["target"]);
         }
 
         [Fact]

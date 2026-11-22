@@ -112,37 +112,93 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return block.ToString(SaveOptions.DisableFormatting);
         }
-        // An omitted UDT expansion may be materialized by compilation. The pre-import export is the witness for its shape and values.
-        public static string NormalizeCompiledReadback(string readback, string planned, string before)
+        private static IEnumerable<XElement> DbMembers(XElement block)
         {
-            var block = XElement.Parse(readback, LoadOptions.PreserveWhitespace);
-            if (block.Name.LocalName != "SW.Blocks.GlobalDB") return readback;
-            XElement? Interface(XElement value) => value.Element("AttributeList")?.Element("Interface");
-            var actual = Interface(block);
-            var plan = Interface(XElement.Parse(planned, LoadOptions.PreserveWhitespace));
-            var baseline = Interface(XElement.Parse(before, LoadOptions.PreserveWhitespace));
-            if (plan == null || baseline == null || actual == null) return readback;
-            foreach (var sections in actual.Elements().Where(e => e.Name.LocalName == "Sections"))
+            if (block.Name.LocalName != "SW.Blocks.GlobalDB") yield break;
+            var sections = block.Element("AttributeList")?.Element("Interface")?.Elements();
+            if (sections == null) yield break;
+            foreach (var root in sections.Where(e => e.Name.LocalName == "Sections"
+                && Regex.IsMatch(e.Name.NamespaceName, @"/SW/Interface/v[0-9]+\z", RegexOptions.CultureInvariant)))
             {
-                XNamespace ns = sections.Name.Namespace;
-                if (!Regex.IsMatch(ns.NamespaceName, @"/SW/Interface/v[0-9]+\z", RegexOptions.CultureInvariant)) continue;
-                foreach (var section in sections.Elements(ns + "Section"))
-                foreach (var member in section.Elements(ns + "Member"))
-                {
-                    string? type = (string?)member.Attribute("Datatype");
-                    if (type == null || type.Length < 3 || type[0] != '"' || type[type.Length - 1] != '"') continue;
-                    XElement? Peer(XElement root) => root.Elements(sections.Name).Elements(section.Name)
-                        .Where(e => (string?)e.Attribute("Name") == (string?)section.Attribute("Name")).Elements(member.Name)
-                        .SingleOrDefault(e => (string?)e.Attribute("Name") == (string?)member.Attribute("Name") && (string?)e.Attribute("Datatype") == type);
-                    var expansion = member.Element(ns + "Sections");
-                    if (expansion == null || expansion.Elements().Count() != 1 || (string?)expansion.Element(ns + "Section")?.Attribute("Name") != "None")
-                        continue;
-                    var declared = Peer(plan);
-                    var original = Peer(baseline)?.Element(expansion.Name);
-                    if (declared != null && declared.Element(expansion.Name) == null && XNode.DeepEquals(original, expansion)) expansion.Remove();
-                }
+                XNamespace ns = root.Name.Namespace;
+                foreach (var member in root.Elements(ns + "Section").Elements(ns + "Member")) yield return member;
+            }
+        }
+
+        private static string? ReferencedType(XElement member)
+        {
+            string? type = (string?)member.Attribute("Datatype");
+            return type != null && type.Length > 2 && type[0] == '"' && type[type.Length - 1] == '"'
+                ? type.Substring(1, type.Length - 2) : null;
+        }
+
+        public static IEnumerable<string> UnexpandedTypes(string planned) => DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace))
+            .Where(member => member.Element(member.Name.Namespace + "Sections") == null)
+            .Select(ReferencedType).OfType<string>().Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal);
+
+        // Capture the declaration from the bound PLC before import. Only its interface participates in the preview token.
+        public static XElement? TypeDeclaration(string xml, string name)
+        {
+            var document = ParseDocument(xml, true);
+            if (Block(document).Name.LocalName != "SW.Types.PlcStruct" || Name(document) != name) return null;
+            var block = XElement.Parse(Canonical(document), LoadOptions.PreserveWhitespace);
+            var sections = block.Element("AttributeList")?.Element("Interface")?.Elements().SingleOrDefault();
+            var section = sections?.Elements().SingleOrDefault();
+            return sections?.Name.LocalName == "Sections" && section?.Name == sections.Name.Namespace + "Section"
+                && (string?)section.Attribute("Name") == "None" ? section : null;
+        }
+
+        public static string NormalizeCompiledReadback(string readback, string planned, IReadOnlyDictionary<string, XElement> declarations)
+        {
+            if (declarations.Count == 0) return readback;
+            var block = XElement.Parse(readback, LoadOptions.PreserveWhitespace);
+            var unexpanded = DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace))
+                .Where(m => m.Element(m.Name.Namespace + "Sections") == null)
+                .ToLookup(m => (m.Parent!.Name, (string?)m.Parent.Attribute("Name"), (string?)m.Attribute("Name"), ReferencedType(m)));
+            foreach (var member in DbMembers(block))
+            {
+                string? type = ReferencedType(member);
+                if (type == null || !declarations.TryGetValue(type, out var declaration)
+                    || !unexpanded.Contains((member.Parent!.Name, (string?)member.Parent.Attribute("Name"), (string?)member.Attribute("Name"), type))) continue;
+                var expansion = member.Element(member.Name.Namespace + "Sections");
+                if (expansion == null || expansion.Attributes().Any(a => !a.IsNamespaceDeclaration) || expansion.Nodes().Count() != 1) continue;
+                var section = expansion.Element(declaration.Name);
+                if (section != null && MatchesDeclaration(section, declaration)) expansion.Remove();
             }
             return block.ToString(SaveOptions.DisableFormatting);
+        }
+
+        private static bool MatchesDeclaration(XElement actual, XElement declaration)
+        {
+            var expected = new XElement(declaration);
+            var observed = new XElement(actual);
+            XNamespace ns = expected.Name.Namespace;
+            var members = observed.Descendants(ns + "Member").ToArray();
+            int index = 0;
+            foreach (var member in expected.Descendants(ns + "Member"))
+            {
+                if (index == members.Length) return false;
+                var compiled = members[index++];
+                // TIA can omit the type's editor comments and external-access flags from an instance expansion.
+                if (compiled.Element(ns + "Comment") == null) member.Element(ns + "Comment")?.Remove();
+                var attributes = member.Element(ns + "AttributeList");
+                if (compiled.Element(ns + "AttributeList") == null && attributes != null && attributes.Elements().All(e =>
+                    e.Name == ns + "BooleanAttribute" && (string?)e.Attribute("SystemDefined") == "true"
+                    && (string?)e.Attribute("Name") is "ExternalWritable" or "ExternalAccessible" or "ExternalVisible")) attributes.Remove();
+                RemoveImplicitDefault(member);
+                RemoveImplicitDefault(compiled);
+            }
+            return XNode.DeepEquals(expected, observed);
+        }
+
+        private static void RemoveImplicitDefault(XElement member)
+        {
+            var start = member.Element(member.Name.Namespace + "StartValue");
+            if (start == null || start.HasAttributes || start.HasElements) return;
+            string? type = (string?)member.Attribute("Datatype");
+            if (type == "Bool" && string.Equals(start.Value, "false", StringComparison.OrdinalIgnoreCase)
+                || start.Value == "0" && type is "SInt" or "USInt" or "Int" or "UInt" or "DInt" or "UDInt" or "LInt" or "ULInt")
+                start.Remove();
         }
 
         public static JsonObject Inspect(string xml)

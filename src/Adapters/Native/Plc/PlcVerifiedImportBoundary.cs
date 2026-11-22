@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Siemens.Engineering;
 using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Types;
 using TiaMcp.Adapters.Contracts;
 namespace TiaMcp.Adapters.Native.Plc
 {
@@ -35,6 +36,17 @@ namespace TiaMcp.Adapters.Native.Plc
                             .Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.WithDefaults | ExportOptions
                                 .WithReadOnly);
                     }
+                    ILookup<string, object>? groupsByType = null;
+                    bool ExportType(string name, string path)
+                    {
+                        groupsByType ??= ExistingTypes(PlcBlockPrimitives.TypeGroup(plc)).ToLookup(t => t.Name, t => t.Parent, StringComparer.Ordinal);
+                        var groups = groupsByType[name].Take(2).ToArray();
+                        if (groups.Length != 1) return false;
+                        var type = ((PlcTypeGroup)groups[0]).Types.Find(name);
+                        if (type == null) return false;
+                        type.Export(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.None);
+                        return true;
+                    }
                     void Import(string path) {
                         Resolve();
                         var result = PlcBlockPrimitives
@@ -60,7 +72,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (string.IsNullOrEmpty(identity)) throw new InvalidOperationException("Exact binding identity required.");
                     var scope = identity + "\n" + softwarePath + "\n" + blockPath;
                     return execute(new PlcVerifiedExecution { Request = request, CandidateXml = candidate.Xml, Binding = scope,
-                        Export = Export, Import = Import, VerifyBinding = Check, Meta = meta, Compile = request.CompileAfterImport ? (Action)Compile : null });
+                        Export = Export, ExportType = ExportType, Import = Import, VerifyBinding = Check, Meta = meta,
+                        Compile = request.CompileAfterImport ? (Action)Compile : null });
                 }
                 catch (Exception ex) {
                     if (TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(ex)) meta["connectionUnavailable"] = true; throw; }

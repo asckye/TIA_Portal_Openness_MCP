@@ -23,13 +23,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 unique: parameter == "vars" || parameter == "tags" || parameter == "systemNames", trim: true);
             return Json(values, parameter, NameListValidator.Create(policy));
         }
-        internal static string S7Addresses(string[] items)
-        {
-            var names = Names(items, nameof(items), false);
-            if (items.Any(spec => S7LiveReader.ParseSpec(spec).Error != null))
-                throw new InputFailureException(McpServer.InvalidInput(nameof(items), "absolute S7 addresses with bit offsets from 0 to 7"));
-            return names;
-        }
 
         internal static string Path(string[] value, string parameter, bool rootAllowed)
             => Json(value, parameter, PathValidator.Create(rootAllowed));
@@ -180,7 +173,21 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!readOnly && success != true && issued && !knownFailure && succeeded + failed == 0) unknown = true;
             Error? error = null;
             Outcome outcome;
-            if (!readOnly && unknown) { outcome = Outcome.Unknown; error = Failure(true); }
+            bool invalidS7Item = tool == "GetPlcLiveValuesS7" && items != null && items.Any(item => (string?)item?["errorCode"] == "INVALID_ARGUMENT");
+            int valuesRead = invalidS7Item ? items!.OfType<JsonObject>().Count(item => item.ContainsKey("value")) : 0;
+            if (invalidS7Item && items!.All(item => (string?)item?["errorCode"] == "INVALID_ARGUMENT")
+                && data["precheck"] == null && data["error"] == null)
+            {
+                outcome = Outcome.RejectedBeforeOperation;
+                error = McpServer.InvalidInput("items", "absolute S7 addresses with bit offsets from 0 to 7");
+            }
+            else if (valuesRead > 0)
+            {
+                outcome = Outcome.Partial;
+                error = new Error("Some S7 addresses could not be read. See each item for its value or error.",
+                    new PartialFailureDetails(valuesRead, items!.Count - valuesRead, 0));
+            }
+            else if (!readOnly && unknown) { outcome = Outcome.Unknown; error = Failure(true); }
             else if (!readOnly && succeeded > 0 && failed + notExecuted > 0)
             {
                 outcome = Outcome.Partial; error =

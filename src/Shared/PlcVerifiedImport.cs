@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -38,7 +40,8 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         public static string Execute(string candidateXml, string binding, string evidenceRoot, bool dryRun, string expectedToken,
-            Action<string> export, Action<string> import, Action verifyBinding, JsonObject meta, Action? compile = null)
+            Action<string> export, Action<string> import, Action verifyBinding, JsonObject meta, Action? compile = null,
+            Func<string, string, bool>? exportType = null)
         {
             meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["operationSuccess"] = false;
             meta["verificationSuccess"] = false; meta["automaticRollback"] = false; meta["compileRequested"] = compile != null;
@@ -68,6 +71,19 @@ namespace TiaMcpServer.ModelContextProtocol
             var expected = PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(planned));
             var tokenData = new JsonObject { ["session"] = Session, ["binding"] = binding, ["compileRequested"] = compile != null,
                 ["before"] = PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(before)), ["planned"] = expected };
+            var declarations = new Dictionary<string, XElement>(StringComparer.Ordinal);
+            if (compile != null && exportType != null)
+            {
+                var typeHashes = new JsonObject();
+                foreach (string name in PlcDocumentEditing.UnexpandedTypes(expected))
+                {
+                    string path = Path.Combine(folder, $"type-{typeHashes.Count}.xml");
+                    var section = exportType(name, path) ? PlcDocumentEditing.TypeDeclaration(PlcDocumentEditing.Read(path), name) : null;
+                    if (section != null) declarations.Add(name, section);
+                    typeHashes[name] = section == null ? null : PlcDocumentEditing.HashText(section.ToString(SaveOptions.DisableFormatting));
+                }
+                if (typeHashes.Count > 0) tokenData["typeDeclarations"] = typeHashes;
+            }
             var token = PlcDocumentEditing.HashText(tokenData.ToJsonString());
             meta["token"] = token; meta["preservedOmittedBlockAttributes"] = preserved;
             meta["plannedFingerprint"] = PlcDocumentEditing.HashText(expected);
@@ -90,12 +106,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 meta["tokenInputs"] = new JsonObject {
                     ["binding"] = PlcDocumentEditing.HashText(binding), ["before"] = PlcDocumentEditing.HashText((string)tokenData["before"]!),
                     ["planned"] = meta["plannedFingerprint"]!.DeepClone() };
-                throw AdapterPreconditionException.Failed("Preview no longer matches binding/current block/candidate. No import attempted.",
+                throw AdapterPreconditionException.Failed(
+                    "The binding, current block, candidate, or referenced UDT declaration differs from the preview. No import attempted.",
                     "preview-stale", "previewToken");
             }
             verifyBinding();
             meta["phase"] = "import"; meta["mayHaveChanged"] = true;
-            var target = meta["blockPath"] is JsonValue blockPath ? meta["softwarePath"] + "/" + blockPath : CandidateName(planned);
+            string target = (string?)meta["blockPath"] ?? CandidateName(planned);
+            if (meta["softwarePath"] is JsonValue software && software.TryGetValue<string>(out var pathPrefix) && !string.IsNullOrWhiteSpace(pathPrefix))
+                target = pathPrefix + "/" + target;
             meta["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = target, ["restoreFrom"] = beforePath,
                 ["action"] =
                     "Compare the exact block with the retained original backup and restore it manually if needed; do not replay an unconfirmed import." });
@@ -113,7 +132,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var readback = PlcDocumentEditing.Parse(PlcDocumentEditing.Read(afterPath));
             var actual = PlcDocumentEditing.Canonical(readback);
-            if (compile != null) actual = PlcDocumentEditing.NormalizeCompiledReadback(actual, expected, (string)tokenData["before"]!);
+            if (compile != null) actual = PlcDocumentEditing.NormalizeCompiledReadback(actual, expected, declarations);
             var matches = expected == actual;
             meta["afterPath"] = afterPath; meta["actualFingerprint"] = PlcDocumentEditing.HashText(actual);
             meta["verificationSuccess"] = matches; meta["operationSuccess"] = matches;

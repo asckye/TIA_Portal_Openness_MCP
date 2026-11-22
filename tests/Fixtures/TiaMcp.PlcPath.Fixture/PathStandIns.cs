@@ -64,7 +64,12 @@ namespace Siemens.Engineering.SW.Types
         public NamedList<PlcTypeGroup> Groups { get; } = new();
         public PlcTypeComposition Types { get; } = new();
     }
-    public sealed class PlcType : CrossReference.ServiceProvider { public string Name { get; set; } = ""; }
+    public sealed class PlcType : CrossReference.ServiceProvider
+    {
+        public string Name { get; set; } = "";
+        public string Declaration { get; set; } = "";
+        public void Export(FileInfo file, Siemens.Engineering.ExportOptions options) => File.WriteAllText(file.FullName, Declaration);
+    }
 }
 namespace TiaMcp.Adapters.Native.Plc
 {
@@ -103,6 +108,7 @@ namespace TiaMcp.Adapters.Native.Plc
     internal static class PlcBlockPrimitives
     {
         internal static PlcBlockGroup BlockGroup(object plc) => PlcOrganisationPrimitives.BlockGroup(plc);
+        internal static PlcTypeGroup TypeGroup(object plc) => ((PlcSoftware)plc).TypeGroup;
         internal static PlcTypeComposition Types(PlcTypeGroup group) => group.Types;
         internal static NamedList<PlcBlock> Blocks(PlcBlockGroup group) => group.Blocks;
         internal static PlcBlock? Find(NamedList<PlcBlock> blocks, string name) => blocks.Find(name);

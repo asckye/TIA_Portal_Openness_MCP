@@ -77,6 +77,46 @@ public sealed class PlcObjectPathTests
     }
 
     [Fact]
+    public void Verified_import_selects_a_unique_UDT_declaration_from_the_bound_PLC_type_groups()
+    {
+        var engine = new PathEngine("14sp1");
+        var block = AddBlock(AddGroup(engine.Plc.BlockGroup, "MCP_RC_Grp"), "MCP_RC_DB");
+        block.Language = "DB";
+        var types = new TypeGroup { Name = "MCP_RC_TGrp" };
+        engine.Plc.TypeGroup.Groups.Add(types);
+        const string declaration = """
+            <Document><Engineering version="V14 SP1"/><SW.Types.PlcStruct ID="0"><AttributeList><Interface>
+            <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v2"><Section Name="None">
+            <Member Name="Run" Datatype="Bool"/><Member Name="Speed" Datatype="Int"/></Section></Sections>
+            </Interface><Name>MCP_RC_UDT</Name></AttributeList></SW.Types.PlcStruct></Document>
+            """;
+        types.Types.Add(new PlcType { Name = "MCP_RC_UDT", Declaration = declaration });
+        var request = new PlcSoftwareRequest { SoftwarePath = "PLC", Path = "MCP_RC_Grp/MCP_RC_DB", CompileAfterImport = true };
+        var candidate = new PlcVerifiedCandidate { Name = "MCP_RC_DB", Xml = """
+            <Document><Engineering version="V14 SP1"/><SW.Blocks.GlobalDB ID="0"><AttributeList>
+            <Name>MCP_RC_DB</Name><ProgrammingLanguage>DB</ProgrammingLanguage><Interface><Sections/></Interface>
+            </AttributeList></SW.Blocks.GlobalDB></Document>
+            """ };
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".xml");
+        try
+        {
+            engine.VerifiedImport(request, candidate, execution => {
+                Assert.False(execution.ExportType("Missing", path));
+                Assert.True(execution.ExportType("MCP_RC_UDT", path));
+                Assert.Equal(declaration, File.ReadAllText(path));
+                return "";
+            });
+            engine.Plc.TypeGroup.Types.Add(new PlcType { Name = "MCP_RC_UDT" });
+            engine.VerifiedImport(request, candidate, execution => {
+                Assert.False(execution.ExportType("MCP_RC_UDT", path));
+                Assert.Equal(declaration, File.ReadAllText(path));
+                return "";
+            });
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
     public void Move_keeps_the_original_when_the_export_has_no_known_SCL_producer()
     {
         var engine = new PathEngine("15.1");

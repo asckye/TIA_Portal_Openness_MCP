@@ -22,6 +22,7 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class RuntimeTools
     {
         private readonly Func<string, JsonObject> _putGet;
+        private readonly Func<string, int, int, IEnumerable<string>, string?, S7ReadResult> _readS7;
 
         public RuntimeTools()
             : this(ReadPutGet, true) {
@@ -40,7 +41,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return body?["data"] as JsonObject ?? new JsonObject();
         }
-        internal RuntimeTools(Func<string, JsonObject> putGet, bool useCallback) => _putGet = putGet;
+        internal RuntimeTools(Func<string, JsonObject> putGet, bool useCallback,
+            Func<string, int, int, IEnumerable<string>, string?, S7ReadResult>? readS7 = null)
+        {
+            _putGet = putGet;
+            _readS7 = readS7 ?? S7LiveReader.ReadItems;
+        }
 #if !TIA_ENGINE_HOST
         public RuntimeTools(IEngineeringSession session) : this(path => session.GetPutGetAccess(path), true) { }
 #endif
@@ -146,7 +152,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "")
             => RuntimeToolContract.Run("GetPlcLiveValuesS7", true, false, () =>
             {
-                var names = RuntimeToolContract.S7Addresses(items);
+                var names = RuntimeToolContract.Names(items, nameof(items), false);
                 return ReadPlcLiveValuesS7(ip, names, rack, slot, expectModuleContains, devicePath);
             });
 
@@ -158,6 +164,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 var specs = ParseItemSpecs(itemsJson);
                 if (specs.Count == 0)
                     return new ResponseJsonReport { Ok = false, Message = "No addresses supplied in itemsJson." };
+
+                var requested = specs.Select(S7LiveReader.ParseSpec).ToArray();
+                var readable = requested.Where(item => item.Error == null).Select(item => item.Spec).ToArray();
+                static JsonObject ItemError(S7ReadItem item, string readError)
+                {
+                    var row = new JsonObject { ["spec"] = item.Spec, ["error"] = item.Error ?? readError };
+                    if (item.Error != null) row["errorCode"] = "INVALID_ARGUMENT";
+                    return row;
+                }
+                if (readable.Length == 0)
+                    return new ResponseJsonReport { Ok = false, Message = "No valid S7 addresses were supplied. See items[].error.",
+                        Data = new JsonObject { ["items"] = new JsonArray(requested.Select(item => ItemError(item, "")).ToArray()) },
+                        Meta = ResponseMeta.Basic(DateTime.Now, false) };
 
                 // Dependency check: an S7 DB read is impossible if the CPU forbids remote PUT/GET.
                 // Surface that as an actionable result rather than a bare TCP timeout.
@@ -174,7 +193,8 @@ namespace TiaMcpServer.ModelContextProtocol
                                 Message = $"PUT/GET access is DISABLED on '{devicePath}' (attribute '{pg["attributeName"]}'). S7 absolute DB reads will fail. "
                                     +
                                           $"Enable it: SetPlcPutGetAccess(devicePath:'{devicePath}', enable:true) then DownloadPlc — or read M/I/Q which are unrestricted.",
-                                Data = new JsonObject { ["putGetAccess"] = pg, ["precheck"] = "putget-disabled" },
+                                Data = new JsonObject { ["putGetAccess"] = pg, ["precheck"] = "putget-disabled",
+                                    ["items"] = new JsonArray(requested.Select(item => ItemError(item, "PUT/GET access is disabled.")).ToArray()) },
                                 Meta = ResponseMeta.Basic(DateTime.Now, false)
                             };
                         }
@@ -183,11 +203,17 @@ namespace TiaMcpServer.ModelContextProtocol
                     { /* swallow(fail-open-guard): an unavailable PUT/GET precheck leaves the direct S7 read to report its own result. */ }
                 }
 
-                var r = S7LiveReader.ReadItems(ip, rack, slot, specs, string.IsNullOrWhiteSpace(expectModuleContains) ? null : expectModuleContains);
-
+                var r = _readS7(ip, rack, slot, readable, string.IsNullOrWhiteSpace(expectModuleContains) ? null : expectModuleContains);
                 var items = new JsonArray();
-                foreach (var it in r.Items)
+                int nextRead = 0;
+                foreach (var requestedItem in requested)
                 {
+                    if (requestedItem.Error != null || nextRead == r.Items.Count)
+                    {
+                        items.Add(ItemError(requestedItem, r.Error ?? "The S7 reader returned no result for this address."));
+                        continue;
+                    }
+                    var it = r.Items[nextRead++];
                     var o = new JsonObject
                     {
                         ["spec"] = it.Spec,
@@ -223,7 +249,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
                 if (r.Error != null) data["error"] = r.Error;
 
-                bool ok = r.Ok && r.Error == null && r.Items.All(i => i.Error == null);
+                bool ok = r.Ok && r.Error == null && r.Items.Count == requested.Length && items.All(item => item?["error"] == null);
                 return new ResponseJsonReport
                 {
                     Ok = ok,

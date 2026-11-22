@@ -377,7 +377,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                         }
                         catch (Exception ex) when (ex is ArgumentException or TiaMcp.Adapters.Contracts.AdapterPreconditionException { IsArgument: true })
                         {
-                            var parameter = ex is ArgumentException argument ? argument.ParamName : ((TiaMcp.Adapters.Contracts.AdapterPreconditionException)ex).ParamName;
+                            var parameter = ex is ArgumentException argument ? argument.ParamName
+                                : ((TiaMcp.Adapters.Contracts.AdapterPreconditionException)ex).ParamName;
                             refusal = FoundationV4Result
                                 .Reject(release, tool.Name, id,
                                     new Error(ex.Message, new InvalidArgumentDetails(parameter ?? "", Array.Empty<string>())),

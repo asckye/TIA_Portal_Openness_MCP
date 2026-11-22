@@ -366,7 +366,8 @@ internal sealed partial class FoundationTool : McpServerTool
             cancellationToken.ThrowIfCancellationRequested();
             if (definition.ResponseMember is "BatchExport" or "BatchImport" or "BatchDocumentExport" or "BatchDocumentImport" or "CrossReferenceAnalysis")
             {
-                string path = (string)values["softwarePath"]!;
+                if (values["softwarePath"] is not JsonValue software || !software.TryGetValue<string>(out var path) || string.IsNullOrWhiteSpace(path))
+                    throw new AdapterPreconditionException("A softwarePath is required.", "softwarePath");
                 static bool Rooted(string value) => value.StartsWith("devices/", StringComparison.Ordinal) || value.StartsWith("device-groups/", StringComparison.Ordinal)
                     || value.StartsWith("ungrouped/", StringComparison.Ordinal);
                 if (!Rooted(path))

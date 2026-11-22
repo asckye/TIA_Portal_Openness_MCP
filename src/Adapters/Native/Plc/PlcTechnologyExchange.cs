@@ -96,7 +96,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (row.To.IsKnowHowProtected)
                     throw new AdapterPreconditionException($"Technology object '{row.To.Name}' is know-how protected.", "export-plan", false);
                 if (!row.To.IsConsistent)
-                    throw new AdapterPreconditionException($"Technology object '{row.To.Name}' is inconsistent. Compile it before export.", "export-plan", false);
+                    throw new AdapterPreconditionException($"Technology object '{row.To.Name}' is inconsistent. Compile it before export.",
+                        "export-plan", false);
                 string name = WatchNative.Name(row.To) ?? "";
                 var parts = row.Folder.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(ObjectPathEncoding.DecodeSegment).Concat(new[] { name }).ToArray();

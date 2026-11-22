@@ -24,12 +24,18 @@ namespace TiaMcpServer.Runtime
                 s = s.Substring(0, colon).Trim();
             }
 
+            bool Offset(Group number, out int value)
+            {
+                if (int.TryParse(number.Value, NumberStyles.None, CultureInfo.InvariantCulture, out value)) return true;
+                item.Error = $"Address number '{number.Value}' is out of range.";
+                return false;
+            }
+
             var mDb = DbRx.Match(s);
             if (mDb.Success)
             {
                 item.Area = "DB";
-                item.Db = int.Parse(mDb.Groups["db"].Value, CultureInfo.InvariantCulture);
-                item.ByteOffset = int.Parse(mDb.Groups["byte"].Value, CultureInfo.InvariantCulture);
+                if (!Offset(mDb.Groups["db"], out item.Db) || !Offset(mDb.Groups["byte"], out item.ByteOffset)) return item;
                 string sz = mDb.Groups["sz"].Value.ToUpperInvariant();
                 if (sz == "X")
                 {
@@ -45,7 +51,7 @@ namespace TiaMcpServer.Runtime
             if (mBit.Success)
             {
                 item.Area = mBit.Groups["area"].Value.ToUpperInvariant();
-                item.ByteOffset = int.Parse(mBit.Groups["byte"].Value, CultureInfo.InvariantCulture);
+                if (!Offset(mBit.Groups["byte"], out item.ByteOffset)) return item;
                 item.BitOffset = int.Parse(mBit.Groups["bit"].Value, CultureInfo.InvariantCulture);
                 item.Type = "BOOL";
                 return item;
@@ -55,7 +61,7 @@ namespace TiaMcpServer.Runtime
             if (mSz.Success)
             {
                 item.Area = mSz.Groups["area"].Value.ToUpperInvariant();
-                item.ByteOffset = int.Parse(mSz.Groups["byte"].Value, CultureInfo.InvariantCulture);
+                if (!Offset(mSz.Groups["byte"], out item.ByteOffset)) return item;
                 string sz = mSz.Groups["sz"].Value.ToUpperInvariant();
                 item.Type = DefaultTypeForSize(sz);
                 ApplyTypeOverride(item, typeOverride, sz);
