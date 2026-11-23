@@ -8000,6 +8000,18 @@
           "identifier": "TiaMcp.FoundationHost.Tests.PreviewToolCallTruthTests/Update_rate_limit_maps_to_the_external_read_failure( ):93c50597ce42f8b7a74f7bf2ad6babe4dd5ce9c883b0a764f1ea3dbd89808ef0:1"
         }
       ]
+    },
+    {
+      "task": "REV-DESK",
+      "maintainerDate": "2026-11-23",
+      "reason": "REV-DESK: maintainer approved 2026-11-23 - a damaged ui.settings falls back to AI control off",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Switch_defaults_on_and_roundtrips_without_other_settings_changes( ):878c6fd5de1e4fae1246c22e33ce21696ba4bddeb71bdc81c9fc1b3d5a659b40:2"
+        }
+      ]
     }
   ]
 }
