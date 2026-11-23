@@ -119,7 +119,9 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
                         if (code != null) Assert.Contains(code + ": fixture result", mapped.Evidence, StringComparison.Ordinal);
                     }
                     var row = EnvironmentCheckCatalogue.Row(mapped);
-                    Assert.Equal(expected == "Pass" ? string.Empty : Loc.Current[expected == "FixFailed" ? "Env.FixButton" : "Env.ManualButton"], row.FixAction.Resolve());
+                    Assert.Equal(
+                        expected == "Pass" ? string.Empty : Loc.Current[expected == "FixFailed" ? "Env.FixButton" : "Env.ManualButton"],
+                        row.FixAction.Resolve());
                     if (expected == "NewLogon") Assert.Contains(Loc.Current["Env.FixLogon"], row.Detail.Resolve(), StringComparison.Ordinal);
                     Assert.DoesNotContain("[Env.", row.Detail.Resolve(), StringComparison.Ordinal);
                 }

@@ -69,7 +69,9 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Assert.Single(Descendants<TextBlock>(doctor.PassedList), text => text.IsVisible && text.Text == Loc.Current["Env.Passed"]);
                 Assert.DoesNotContain(Descendants<Button>(doctor.PassedList), button => button.IsVisible);
                 var buttons = Descendants<Button>(doctor.CheckList).Where(button => button.IsVisible).ToArray();
-                Assert.Equal(new[] { "membership", "proxy-remote", "firewall", "port" }, buttons.Select(button => ((EnvironmentRow)button.DataContext).Check.Id));
+                Assert.Equal(
+                    new[] { "membership", "proxy-remote", "firewall", "port" },
+                    buttons.Select(button => ((EnvironmentRow)button.DataContext).Check.Id));
                 Assert.All(buttons, button => Assert.DoesNotContain("_", Assert.IsType<string>(button.Content)));
                 var firewall = buttons.Single(button => ((EnvironmentRow)button.DataContext).Check.Id == "firewall");
                 Assert.Equal(language == AppLanguage.English ? "Configure network permission" : "配置网络权限", firewall.Content);
