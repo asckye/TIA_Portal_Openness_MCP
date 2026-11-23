@@ -368,9 +368,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "Tag path is empty.";
             }
 
-            if (Regex.IsMatch(tagPath, @"^%?[MIQ][BWD]?\d+(\.\d+)?$", RegexOptions.IgnoreCase))
+            if (PlcBlockServicesLogic.WatchEntryAddressAttribute(tagPath) == "Address"
+                || Regex.IsMatch(tagPath, @"^(?:P?[IQEA][XBWD]?|[ML][XBWD]?|[TCZ]|DB)\d+(?:\.\d+)?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
             {
-                return "Absolute I/Q/M address is not accepted for HMI/online planning. Use a declared PLC symbol or DB member read back from the project.";
+                return "Absolute PLC addresses are not accepted for HMI/online planning. Use a declared PLC symbol or DB member read back from the project.";
             }
 
             if (!Regex.IsMatch(tagPath, @"^(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+"")(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+""))*$"))

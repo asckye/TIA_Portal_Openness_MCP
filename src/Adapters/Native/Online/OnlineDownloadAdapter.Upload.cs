@@ -48,11 +48,32 @@ namespace TiaMcp.Adapters.Native.Online
                     ?? throw new NotSupportedException("StationUploadProvider service unavailable on this project/version.");
                 var picks = EnumeratePcInterfaces(provider.Configuration);
                 var pick = PickPcInterface(picks, pgPcInterface);
-                var uploadInterface = (ConfigurationPcInterface)pick.Interface;
-                var (address, plcRoute, knownAddresses) = StationUploadRoute.Resolve(targetIpAddress, UploadTargetAddresses(uploadInterface),
-                    AddressText, ConfiguredPlcTargets(pick));
+                var seen = new List<string>();
+                var address = FindTargetAddress(pick, targetIpAddress, seen);
                 meta["pgPcInterface"] = new HmiObject { ["mode"] = pick.ModeName, ["name"] = pick.Name, ["number"] = pick.Number };
-                meta["knownTargetAddresses"] = knownAddresses;
+                meta["knownTargetAddresses"] = string.Join(", ", seen.Distinct(StringComparer.OrdinalIgnoreCase));
+
+                string DescribeAddress()
+                {
+                    if (address != null) seen.Add(targetIpAddress);
+                    var plcTargets = new List<string>();
+                    try
+                    {
+                        plcTargets.AddRange(ConfiguredPlcTargets(pick));
+                        if (pick.Interface is ConfigurationPcInterface pc)
+                            seen.AddRange(RouteTargetAddresses(pc).Select(AddressText));
+                    }
+                    catch (Exception ex) { meta["transferRoutesError"] = ex.GetBaseException().Message; }
+                    var route = StationUploadRoute.Resolve(targetIpAddress, seen, value => value, plcTargets);
+                    meta["knownTargetAddresses"] = route.KnownAddresses;
+                    if (address != null) return "The station upload provider has a usable address on the selected interface.";
+                    meta["targetAddressSource"] = route.FromPlc ? "DownloadProvider route tree"
+                        : route.Address != null ? "StationUploadProvider route tree" : "unresolved by station upload provider";
+                    meta["targetAddress"] = targetIpAddress;
+                    return route.FromPlc || route.Address != null
+                        ? $"The transfer route lists '{targetIpAddress}', but the station upload provider has no usable address on the selected interface."
+                        : $"The station upload provider has no usable configured address '{targetIpAddress}' on the selected interface.";
+                }
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 meta["trustDeviceCertificate"] = request.TrustDeviceCertificate;
                 meta["devicesBefore"] = _session.CurrentProject.Devices.Count;
@@ -60,63 +81,41 @@ namespace TiaMcp.Adapters.Native.Online
                 // only ("'02-C0-A8-00-C8-00' does not specify a valid address"); the official page creates "192.68.0.1". A MAC from the scan is
                 // therefore never a valid target, and a virtual PLC that has not been downloaded to (IP 0.0.0.0) cannot be uploaded from.
                 if (address == null && LooksLikeMacAddress(targetIpAddress))
-                    throw new PortalException(PortalErrorCode.NotFound, "'" + targetIpAddress
+                    throw AdapterPreconditionException.NotFound(DescribeAddress() + " '" + targetIpAddress
                             + "' is a MAC address: ConfigurationAddressComposition.Create accepts IP addresses only, so pass the device's IP as listed by " +
                             "ScanAccessibleDevices (a PLC that shows only a MAC, e.g. a PLCSIM Advanced instance before its first download, has no IP yet - " +
-                            "assign one by downloading first).");
+                            "assign one by downloading first).", "targetIpAddress");
                 if (address != null) { meta["targetAddressSource"] = "route tree"; meta["targetAddress"] = AddressText(address); }
-                if (plcRoute)
-                {
-                    meta["targetAddressSource"] = "DownloadProvider route tree";
-                    meta["targetAddress"] = targetIpAddress;
-                    meta["executionEffects"] = new HmiArray("Resolve or create the listed address on the station upload interface");
-                }
-#if !ONLINE_SCAN
-                if (address == null && !plcRoute)
-                    throw AdapterPreconditionException.NotFound("The target address is absent from the selected interface's target interfaces, " +
-                        "subnets and gateways. Accessible-device scanning requires V19 or later.", "targetIpAddress");
-#endif
                 if (dryRun)
                 {
-                    if (plcRoute)
-                        return "Station upload preview: the selected interface lists the target in a PLC transfer route. " +
-                            "Execution binds that address to the station upload interface. No network scan or project change during preview.";
-                    if (address != null)
-                        return "Station upload preview: provider, PG/PC interface and target address resolved from the route tree; no PLC contact, no " +
-                        "project change.";
+                    string reason = DescribeAddress();
+                    if (address != null) return "Station upload preview: " + reason + " No PLC contact or project change.";
 #if ONLINE_SCAN
-                    meta["targetAddressSource"] = "not in the route tree"; meta["targetAddress"] = targetIpAddress;
-                    meta["executionEffects"] =
-                        new HmiArray("DCP network scan (ConfigurationPcInterface.GetAccessibleDevices)",
-                            "route address creation (ConfigurationAddressComposition.Create)");
-                    return "Station upload preview: '" + targetIpAddress
-                        + "' is not in the route tree of the selected PG/PC interface. Execution (after approval) runs a DCP network scan on it and creates " +
-                        "the route address before uploading; this preview sent nothing to the network and changed nothing.";
+                    meta["executionEffects"] = new HmiArray("DCP network scan (ConfigurationPcInterface.GetAccessibleDevices)",
+                        "route address creation (ConfigurationAddressComposition.Create)");
+                    return "Station upload preview: " + reason + " Execution requires a DCP scan on this interface to find the exact address. " +
+                        "No scan or project change during preview.";
+#else
+                    throw AdapterPreconditionException.NotFound(reason + " Accessible-device scanning requires V19 or later.", "targetIpAddress");
 #endif
                 }
                 if (!confirmUpload)
                     throw new InvalidOperationException("Station upload adds a new device to the project from the live PLC; set confirmUpload=true to " +
                     "execute.");
                 using var access = _session.AcquireHmiEditAccess();
-                if (plcRoute)
-                {
-                    var uploadAddresses = uploadInterface.Addresses;
-                    address = uploadAddresses.Find(targetIpAddress);
-                    if (address == null)
-                    {
-                        meta["mayHaveChanged"] = true;
-                        address = uploadAddresses.Create(targetIpAddress);
-                    }
-                }
                 if (address == null)
                 {
-                    meta["mayHaveChanged"] = true;   // the scan and the address creation may change the route configuration
-                    address = CreateScannedAddress(pick, targetIpAddress, out var addressSource);
+                    meta["mayHaveChanged"] = true;
+                    address = CreateScannedAddress(pick, targetIpAddress, out var addressSource, out bool scanMatched);
                     meta["addressCreation"] = addressSource;
                     if (address == null)
-                        throw new PortalException(PortalErrorCode.NotFound,
-                                "Target address not present on the selected PG/PC interface and not creatable from the network scan (" + addressSource + "). "
-                            + "Run ScanAccessibleDevices on the same interface first; only the exact IP address listed there is accepted.");
+                    {
+                        // Without an exact scan match, no address creation or upload was attempted.
+                        meta["mayHaveChanged"] = scanMatched;
+                        string reason = DescribeAddress() + " " + addressSource;
+                        if (scanMatched) throw new PortalException(PortalErrorCode.NotFound, reason);
+                        throw AdapterPreconditionException.NotFound(reason, "targetIpAddress");
+                    }
                     meta["targetAddressSource"] = "network scan"; meta["targetAddress"] = AddressText(address);
                 }
                 using var legitimationScope =

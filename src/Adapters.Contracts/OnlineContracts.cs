@@ -110,7 +110,8 @@ internal static class StationUploadRoute
             known.Add(value);
             if (string.Equals(value, target, StringComparison.OrdinalIgnoreCase)) selected ??= address;
         }
-        if (selected == null) known.UnionWith(plcAddresses);
+        foreach (var value in plcAddresses)
+            if (!string.IsNullOrWhiteSpace(value)) known.Add(value);
         return (selected, selected == null && known.Contains(target), string.Join(", ", known));
     }
 }

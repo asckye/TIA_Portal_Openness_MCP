@@ -39,6 +39,9 @@ public sealed class OnlinePortTests
         var direct = StationUploadRoute.Resolve(target, new[] { target }, value => value, plcTargets);
         Assert.Equal(target, direct.Address);
         Assert.False(direct.FromPlc);
+        var both = StationUploadRoute.Resolve("192.168.0.2", new[] { "192.168.0.2" }, value => value, plcTargets);
+        Assert.Equal("192.168.0.2", both.Address);
+        Assert.Equal("192.168.0.1, 192.168.0.2", both.KnownAddresses);
     }
 
     private sealed class FingerprintDataProvider : Siemens.Engineering.IEngineeringService { }

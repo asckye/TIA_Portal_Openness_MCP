@@ -346,6 +346,35 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
     }
 
     [Theory]
+    [InlineData("", true, null, null)]
+    [InlineData("", false, true, "/confirmDelete")]
+    [InlineData("", true, false, "/confirm")]
+    [InlineData("Sources", true, null, "/confirm")]
+    public async Task Delete_apply_uses_the_confirmations_for_its_scope(string group, bool confirmDelete, bool? confirm, string? missing)
+    {
+        var source = new ActionSpy("ManagePlcExternalSources");
+        var target = new ActionSpy("DeletePlcExternalSource");
+        var forward = new CompatibilityTools.ActionForwarder(source, new Dictionary<string, McpServerTool> { [target.ProtocolTool.Name] = target }, "15.1");
+        var args = new JsonObject { ["action"] = "delete", ["softwarePath"] = "MCP_RC_PLC3", ["name"] = "Source.scl",
+            ["groupPath"] = group, ["dryRun"] = false, ["confirmDelete"] = confirmDelete };
+        if (confirm.HasValue) args["confirm"] = confirm.Value;
+        var result = await forward.InvokeAsync(Request(source.ProtocolTool.Name, args));
+        if (missing == null)
+        {
+            Assert.Same(target.Result, result);
+            Assert.True((bool?)target.Arguments?["confirm"]);
+            Assert.Equal(1, target.Calls);
+        }
+        else
+        {
+            Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal(missing, (string?)result.StructuredContent?["error"]?["details"]?["parameter"]);
+            Assert.Equal(0, target.Calls);
+        }
+        Assert.Equal(0, source.Calls);
+    }
+
+    [Theory]
     [InlineData("unitName", "UnitA")]
     [InlineData("targetKind", "block")]
     [InlineData("generateOption", "KeepOnError")]

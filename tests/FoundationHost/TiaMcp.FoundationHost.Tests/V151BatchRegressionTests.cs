@@ -82,6 +82,35 @@ public sealed class V151BatchRegressionTests
         Assert.Equal(0, fixture.Worker.Calls);
     }
 
+    [Theory]
+    [InlineData("", true, null, null)]
+    [InlineData("", true, false, "confirm")]
+    [InlineData("", false, true, "confirmDelete")]
+    [InlineData("Sources", true, null, "confirm")]
+    [InlineData("Sources", true, true, null)]
+    public void Batch_uses_the_root_or_scoped_delete_confirmation(string group, bool confirmDelete, bool? confirm, string? missing)
+    {
+        using var fixture = new PreviewHostFixture("15.1");
+        using var session = fixture.Pipeline.EnterSession();
+        var args = new JsonObject { ["action"] = "delete", ["softwarePath"] = "MCP_RC_PLC3", ["name"] = "Source.scl",
+            ["groupPath"] = group, ["confirmDelete"] = confirmDelete };
+        if (confirm.HasValue) args["confirm"] = confirm.Value;
+        var call = new ToolCall("ManagePlcExternalSources", new ToolArguments(JsonSerializer.SerializeToElement(args)));
+        var error = Host.McpServer.ValidateBatch([call], true, out var validated);
+        if (missing == null)
+        {
+            Assert.Null(error);
+            Assert.Equal(call.Name, Assert.Single(validated!).Name);
+        }
+        else
+        {
+            var details = Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(error?.Details);
+            Assert.Equal("/operations/0/arguments/" + missing, details.Parameter);
+            Assert.Null(validated);
+        }
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
     [Fact]
     public void Export_completeness_tracks_each_returned_slice()
     {
@@ -174,6 +203,22 @@ public sealed class V151BatchRegressionTests
         finally { Directory.Delete(directory, true); }
     }
 
+    [Theory]
+    [InlineData("PIW256")]
+    [InlineData("IX0")]
+    [InlineData("T1")]
+    [InlineData("DB1")]
+    [InlineData("mw10")]
+    [InlineData("LW10")]
+    [InlineData("DB1.DBX0.0")]
+    public void Monitoring_plan_preserves_the_raw_address_path(string address)
+    {
+        var tool = new Host.PlcWatchTools(new Services.PlcOrganisationPortService((_, _) => throw new InvalidOperationException("Unexpected dispatch."),
+            () => true, () => "C:/Project.ap15_1"));
+        var body = tool.PlanOnlineReadOnlyMonitoringV4("MCP_RC_PLC3", [address]).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+    }
+
     [Fact]
     public void Monitoring_plan_accepts_global_symbols_and_preserves_absolute_address_refusals()
     {
@@ -182,6 +227,8 @@ public sealed class V151BatchRegressionTests
         var plan = tool.PlanOnlineReadOnlyMonitoringV4("MCP_RC_PLC3", ["MCP_RC_DB.Run", "MCP_RC_TagC", "\"Global tag\""]).StructuredContent!;
         Assert.True((bool?)plan["ok"]);
         Assert.Equal(3, plan["data"]!["acceptedTags"]!.AsArray().Count);
+        var symbols = tool.PlanOnlineReadOnlyMonitoringV4("MCP_RC_PLC3", ["DB1Ready", "T1_Running", "\"DB1\""]).StructuredContent!;
+        Assert.True((bool?)symbols["ok"]);
         var refused = tool.PlanOnlineReadOnlyMonitoringV4("MCP_RC_PLC3", ["%M110.1"]).StructuredContent!;
         Assert.Equal("INVALID_ARGUMENT", (string?)refused["error"]?["code"]);
     }

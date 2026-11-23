@@ -109,8 +109,10 @@ namespace TiaMcp.Adapters.Native.Plc
                             if (action == "setParameter")
                             {
                                 if (valueError.Length != 0) throw new ArgumentException(valueError);
-                                var info = (p as IEngineeringObject)?.GetAttributeInfos().FirstOrDefault(attribute => attribute.Name == "Value");
-                                PlcTechnologyRefusal.RequireWritableParameter(parameter, info?.AccessMode.ToString());
+                                string? accessMode = ValueAccessMode(p);
+                                if (accessMode == null)
+                                    meta["writabilityNote"] = "Value access metadata is unavailable. The setter determines writability on apply.";
+                                PlcTechnologyRefusal.RequireWritableParameter(parameter, accessMode);
                                 var edits = HardwareAddressingPolicy.Prepare(p.GetType(), new Dictionary<string, HardwareScalar> { ["Value"] = value });
                                 var existingValue = p.GetType().GetProperty("Value")!.GetValue(p);
                                 if (existingValue != null && edits[0].Property.PropertyType == typeof(object))
@@ -132,6 +134,12 @@ namespace TiaMcp.Adapters.Native.Plc
             if (creating && PlcTechnologyRefusal.Record(result, typeIdentifier, version))
                 MutationStarted = false;
             return result;
+        }
+
+        private static string? ValueAccessMode(object parameter)
+        {
+            try { return (parameter as IEngineeringObject)?.GetAttributeInfos().FirstOrDefault(info => info.Name == "Value")?.AccessMode.ToString(); }
+            catch (Exception) /* swallow(probe-optional): Value metadata may be unavailable on this instance. */ { return null; }
         }
 
         // ---- ReadTechnologyObjectTree ---------------------------------------------------------------------------------------------------

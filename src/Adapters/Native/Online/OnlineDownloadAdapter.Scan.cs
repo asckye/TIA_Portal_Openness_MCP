@@ -103,7 +103,21 @@ namespace TiaMcp.Adapters.Native.Online
         }
 
 #if ONLINE_DOWNLOAD
-        private static IEnumerable<ConfigurationAddress> UploadTargetAddresses(ConfigurationPcInterface pc)
+        private ConfigurationAddress? FindTargetAddress(PcInterfacePick pick, string targetIpAddress, List<string> seen)
+        {
+            foreach (var target in _session.EnumerateReflectedProperty(pick.Interface, "TargetInterfaces"))
+                foreach (var address in _session.EnumerateReflectedProperty(target, "Addresses"))
+                {
+                    var value = _session.ReadReflectedString(address, "Address");
+                    if (!string.IsNullOrWhiteSpace(value)) seen.Add(value);
+                    if (string.Equals(value, targetIpAddress, StringComparison.OrdinalIgnoreCase) && address is ConfigurationAddress typed) return typed;
+                }
+            // subnet / gateway addresses of the PC interface (where TIA lists configured CPU addresses)
+            return FindSubnetOrGatewayAddress(pick.Interface, targetIpAddress, out _);
+        }
+
+        // Only collect the target-side addresses from ListTransferRoutes. PcInterface.Addresses describes the local adapter.
+        private static IEnumerable<ConfigurationAddress> RouteTargetAddresses(ConfigurationPcInterface pc)
         {
 #if ONLINE_TARGET_ADDRESSES
             foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(pc.TargetInterfaces))
@@ -128,7 +142,7 @@ namespace TiaMcp.Adapters.Native.Online
                     if (mode.Name != selected.ModeName) continue;
                     foreach (ConfigurationPcInterface pc in PlcGroupOperations.Items(mode.PcInterfaces))
                         if (pc.Name == selected.Name && pc.Number == selected.Number)
-                            foreach (var address in UploadTargetAddresses(pc)) yield return AddressText(address);
+                            foreach (var address in RouteTargetAddresses(pc)) yield return AddressText(address);
                 }
             }
         }
@@ -137,8 +151,9 @@ namespace TiaMcp.Adapters.Native.Online
         // an address that ScanAccessibleDevices reported on the same PG/PC interface (IP or MAC of a station TIA has not
         // seen in the route tree) is created on the first target interface - or, without target interfaces (project-level
         // StationUploadProvider), on the first subnet - through the official ConfigurationAddressComposition.Create.
-        private static ConfigurationAddress? CreateScannedAddress(PcInterfacePick pick, string targetAddress, out string note)
+        private static ConfigurationAddress? CreateScannedAddress(PcInterfacePick pick, string targetAddress, out string note, out bool scanMatched)
         {
+            scanMatched = false;
 #if ONLINE_SCAN
             note = "";
             if (pick.Interface is not ConfigurationPcInterface typed) { note = "PC interface is not typed"; return null; }
@@ -152,6 +167,7 @@ namespace TiaMcp.Adapters.Native.Online
                 { note = "address not reported by the network scan on this PG/PC interface"; return null; }
             }
             catch (Exception ex) { note = "network scan failed: " + ex.Message; return null; }
+            scanMatched = true;
             foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(typed.TargetInterfaces).Cast<ConfigurationTargetInterface>())
             {
                 try {

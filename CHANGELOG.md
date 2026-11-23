@@ -22,6 +22,15 @@
 
 ### Fixed
 
+- `ManagePlcSimAdvancedInstance` returns `NOT_FOUND` and identifies `instanceName` when an action requires an instance that is unregistered.
+- `GetPlcWatchTableCurrentValuesReadOnly` returns `PROJECT_NOT_BOUND` without a bound project, `NOT_FOUND` for a missing PLC or watch table,
+  and `UNSUPPORTED_CAPABILITY` when the release cannot enumerate entries or the API exposes no readable current value.
+- Below V17, `MonitorPlcWatchTableS7` reports partial completeness because the release cannot enumerate watch table entries.
+- `PreviewToolBatch` returns `INVALID_ARGUMENT` at the item's confirmation field when a forwarded write lacks the confirmation required on apply.
+- `ShowWorkbenchCall` returns `NOT_FOUND` when no call matches. Completed batches have their own request IDs in Calls.
+- `UploadStationFromPlc` returns `NOT_FOUND` when the address precheck fails and reports known targets from the selected transfer route.
+  On V19 and later, a target listed only by the download provider still requires an exact match from the network scan before upload.
+- `AnalyzePlcReferences` in `callers` mode returns `TARGET_AMBIGUOUS` with candidate export paths when a block name matches multiple files.
 - `ExportDeviceAml` with an export path outside the output root is refused before the worker call. The call no longer reports `OUTCOME_UNKNOWN` or stays
   unsettled.
 - `ManageHardwareUtilities` `exportOpcUa` reports a definite native failure, such as an uncompiled PLC, with the native cause and file evidence instead of

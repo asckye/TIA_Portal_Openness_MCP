@@ -268,9 +268,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (write && targetMethod.DryRun.Present) args["dryRun"] = true;
                 var error = ToolInvoker.Bind(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out _);
                 if (error != null) return InvalidArgumentDetails.Prefix(error, row + "/arguments");
-                if (write && MissingBatchConfirmation(name, args) is string field)
-                    return new Error($"Batch execution requires {field}=true for this item.",
-                        new InvalidArgumentDetails(row + "/arguments/" + field, Array.Empty<string>()));
+                if (write && CompatibilityActionConfirmation.Check(name, call.Arguments.Json, executing: true).Error is { } confirmation)
+                    return InvalidArgumentDetails.Prefix(confirmation, row + "/arguments");
                 targets[call.Name] =
                     new ToolTarget(call.Name, new InputSchema(targetMethod.Tool.InputSchema), new InputBudget(), read, preview, orchestration: orchestration);
             }
@@ -278,22 +277,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Validate(operations, "operations");
             validated = result.Value;
             return result.Error;
-        }
-
-        private static string? MissingBatchConfirmation(string name, JsonObject args)
-        {
-            string? action = (string?)args["action"];
-            if (name == "ManagePlcExternalSources" && action is "deleteGroup" or "delete")
-            {
-                if ((bool?)args["confirmDelete"] != true) return "confirmDelete";
-                // Root deletion forwards confirmDelete as the canonical tool's confirmation.
-                if (action == "delete" && string.IsNullOrEmpty((string?)args["unitName"]) && string.IsNullOrEmpty((string?)args["groupPath"]))
-                    return args["confirm"] == null || (bool?)args["confirm"] == true ? null : "confirm";
-            }
-            bool reviewed = name == "ManagePlcTagDefinition" && action is "create" or "update"
-                || name == "ManagePlcExternalSources" && action is "createFromFile" or "createFromMasterCopy" or "generateBlocks"
-                    or "createGroup" or "renameGroup" or "deleteGroup" or "delete";
-            return reviewed && (bool?)args["confirm"] != true ? "confirm" : null;
         }
 
         internal static bool IsBatchOrchestration(ToolDescriptor tool) => tool.Name.Contains("Batch")

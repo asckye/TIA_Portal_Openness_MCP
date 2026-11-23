@@ -164,7 +164,8 @@ internal static class CompatibilityTools
                 default)
         {
             var arguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
-            var error = inputSchema.Validate(JsonSerializer.SerializeToElement(arguments), "arguments");
+            var input = JsonSerializer.SerializeToElement(arguments);
+            var error = inputSchema.Validate(input, "arguments");
             if (error != null) return Reject(error);
             string Text(string name, string fallback = "") => arguments.TryGetValue(name, out var value) ? value.GetString() ?? fallback : fallback;
             bool Flag(string name, bool fallback = false) => arguments.TryGetValue(name, out var value) ? value.GetBoolean() : fallback;
@@ -187,8 +188,6 @@ internal static class CompatibilityTools
             {
                 if (action is "createGroup" or "renameGroup" or "deleteGroup")
                 {
-                    if (action == "deleteGroup" && !Flag("dryRun", true) && !Flag("confirmDelete"))
-                        return Reject(new Error("confirmDelete=true is required.", new InvalidArgumentDetails("confirmDelete", Array.Empty<string>())));
                     target = "ManagePlcUserGroup"; Set("family", "externalSources");
                     Set("groupPath", string.Join("/", new[] { Text("groupPath"), Text("name") }.Where(part => part.Length > 0)));
                     Set("action", action == "createGroup" ? "create" : action == "renameGroup" ? "rename" : "deleteEmpty"); Copy("newName", "newName");
@@ -210,18 +209,12 @@ internal static class CompatibilityTools
                     }
                     else Copy("name", "externalSourceName");
                     Set("groupPath", "");
-                    if (action == "delete")
-                    {
-                        if (!Flag("dryRun", true) && !Flag("confirmDelete"))
-                            return Reject(new Error("confirmDelete=true is required.", new InvalidArgumentDetails("confirmDelete", Array.Empty<string>())));
-                        if (arguments.TryGetValue("confirm", out var explicitConfirmation) && explicitConfirmation.GetBoolean() != Flag("confirmDelete"))
-                            return Reject(new Error("confirm and confirmDelete must agree for deletion.",
-                                        new InvalidArgumentDetails("confirm", Array.Empty<string>())));
-                        Copy("confirmDelete", "confirm");
-                    }
+                    if (action == "delete") Copy("confirmDelete", "confirm");
                 }
                 Copy("softwarePath", "softwarePath");
             }
+            var confirmation = CompatibilityActionConfirmation.Check(tool.Name, input, executing: !Flag("dryRun", true));
+            if (confirmation.Error != null) return Reject(confirmation.Error);
             if (target != null)
             {
                 Copy("dryRun", "dryRun");
@@ -245,9 +238,7 @@ internal static class CompatibilityTools
                 }
                 return await Invoke(targetTool, adapted);
             }
-            if (tool.Name == "ManagePlcTagDefinition" && action == "update"
-                || tool.Name == "ManagePlcExternalSources" && action is "createFromFile" or "createFromMasterCopy" or "delete"
-                    or "generateBlocks" or "createGroup" or "renameGroup" or "deleteGroup")
+            if (confirmation.Reviewed)
             {
                 adapted = arguments.Where(pair => !ConfirmationFields.Contains(pair.Key, StringComparer.Ordinal))
                     .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
@@ -270,19 +261,12 @@ internal static class CompatibilityTools
                 string? project = (string?)binding?["projectPath"];
                 var deciding = JsonSerializer.SerializeToNode(adapted)!.AsObject();
                 deciding.Remove("dryRun");
-                if (tool.Name == "ManagePlcExternalSources" && action is "delete" or "deleteGroup")
-                {
-                    deciding.Remove("confirmDelete");
-                    if (!dry && !Flag("confirmDelete"))
-                        return Reject(new Error("Deletion requires confirmDelete=true.", new InvalidArgumentDetails("confirmDelete", Array.Empty<string>())));
-                }
+                if (confirmation.Delete) deciding.Remove("confirmDelete");
                 var hash = PendingApproval.Hash(PendingApproval.Canonical(new JsonObject {
                     ["release"] = release, ["tool"] = tool.Name, ["action"] = action, ["target"] = destination.ProtocolTool.Name,
                     ["arguments"] = deciding, ["binding"] = binding, ["hostLifetime"] = CallJournalPayload.PlanHostLifetime }));
                 if (!dry)
                 {
-                    if (!Flag("confirm"))
-                        return Reject(new Error("Apply requires confirm=true.", new InvalidArgumentDetails("confirm", Array.Empty<string>())));
                     if (string.IsNullOrEmpty(project)) return Reject(new Error("Bind the reviewed project before applying.", new ProjectNotBoundDetails()));
                     if (!string.Equals(Text("expectedProjectFile").Replace('/', '\\'), project.Replace('/', '\\'), StringComparison.OrdinalIgnoreCase))
                         return Reject(new Error("The project binding differs from the reviewed project.",

@@ -7,6 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcTechnology.cs" Link="PlcTechnology.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareScalarEvidence.cs" Link="HardwareScalarEvidence.cs" />
+    <Compile Include="../../../src/Logic/ModelContextProtocol/PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
+    <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="ProcessLossPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcWatchTables.cs" Link="PlcWatchTables.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcWatchPolicy.cs" Link="PlcWatchPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcIntegrityPolicy.cs" Link="PlcIntegrityPolicy.cs" />
