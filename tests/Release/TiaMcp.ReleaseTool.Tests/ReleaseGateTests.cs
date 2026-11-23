@@ -94,17 +94,6 @@ public sealed class ReleaseGateTests
         Assert.Null(Require("-BuildOnly", "-SkipMergeCheck"));
     }
 
-    [Fact]
-    public void Removed_merge_check_switch_cannot_bypass_release_evidence()
-    {
-        using var checkout = new StaticTree();
-        MergeCheckRun? Require(params string[] flags) => MergeCheckRuns.RequirePassing(checkout.Root,
-            Options.Parse(flags, Program.BooleanOptions), args => Git(checkout.Root, args));
-        Assert.Equal(64, Assert.Throws<ReleaseException>(() => Require("-SkipMergeCheck", "-NoDraftUpload")).ExitCode);
-        Assert.Equal(64, Assert.Throws<ReleaseException>(() => Require("-BuildOnly", "-SkipMergeCheck")).ExitCode);
-        Assert.Contains("merge-check -All", Assert.Throws<ReleaseException>(() => Require("-SkipMergeCheck=true")).Message);
-    }
-
     [Theory]
     [InlineData(0)]
     [InlineData(1)]

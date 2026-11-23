@@ -28,6 +28,7 @@ internal static class MergeCheckRuns
     internal static MergeCheckRun? RequirePassing(string root, Options options, Func<string[], CommandResult> git)
     {
         if (options.Has("BuildOnly")) return null;
+        if (options.Has("SkipMergeCheck")) throw new ReleaseException("-SkipMergeCheck requires -BuildOnly.");
 
         var head = CleanRevision(git);
         var path = Path.Combine(Scorecard.PrimaryCheckout(root, git), RelativePath);
