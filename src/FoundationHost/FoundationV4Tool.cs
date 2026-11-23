@@ -486,6 +486,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                 if (IsNonPreviewMutation(JsonSerializer.SerializeToNode(args)!.AsObject(), write))
                     dispatch = DispatchJournal.BeginNativeCallScope();
                 var result = await inner.InvokeAsync(request, cancellationToken);
+                dispatch?.Dispose();
+                dispatch = null;
                 JsonNode? body;
                 try
                 {
@@ -495,8 +497,8 @@ internal sealed class FoundationV4Tool : McpServerTool
                 }
                 catch (Exception ex) when (ex is JsonException or InvalidOperationException or InvalidCastException)
                 {
-                    /* swallow(privacy): malformed inner replies cannot establish the write outcome */
-                    return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id, dispatch != null));
+                    /* swallow(privacy): report a malformed inner reply without exposing its text */
+                    return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id));
                 }
                 if (inner is GenerationTool) return await Recorded(result);
                 return await Recorded(FoundationV4Result
