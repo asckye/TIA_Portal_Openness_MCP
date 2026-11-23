@@ -217,6 +217,8 @@ public sealed class V151RegressionTests
         Assert.Null(dispatch.LastFailure);
         var result = dispatch.CaughtRefusal("15.1", tool, "read-probe", false, true);
         Assert.Equal(code, (string?)result?.StructuredContent?["error"]?["code"]);
+        if (tool == "ValidateAutomationContext")
+            Assert.Equal("expectedPlcSoftwarePath", (string?)result?.StructuredContent?["error"]?["details"]?["target"]);
         dispatch.Call("hardware-devices.HardwareCreateDevice", new JsonObject());
         Assert.Null(dispatch.CaughtRefusal("15.1", tool, "write", true, true));
     }

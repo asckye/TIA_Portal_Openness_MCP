@@ -198,8 +198,13 @@ namespace TiaMcpServer.ModelContextProtocol
             else if (status == "INVALID_ARGUMENT" || status == "InvalidParams")
             { outcome = Outcome.RejectedBeforeOperation;
                 error = new Error(McpServer.InvalidInput("").Message, McpServer.ArgumentDetails(tool, null, data)); }
-            else if (status == "NOT_FOUND")
-            { outcome = Outcome.RejectedBeforeOperation; error = new Error("The target was not found.", McpServer.MissingTargetDetails(tool, evidence: data)); }
+            else if (status == "NOT_FOUND" || tool == "UploadStationFromPlc" && !issued
+                && (status == "NotFound" || (string?)data["v4FailureCode"] == "NOT_FOUND"))
+            {
+                outcome = Outcome.RejectedBeforeOperation;
+                error = new Error(HostBehavior.SafeDiagnostic((string?)data["nativeMessage"]) ?? "The target was not found.",
+                    McpServer.MissingTargetDetails(tool, evidence: data));
+            }
             else if (status == "CONFIRMATION_REQUIRED")
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("Explicit confirmation is required.", new ConfirmationRequiredDetails(null)); }
             else if (status == "NotSupported" || status == "UNSUPPORTED_CAPABILITY")

@@ -34,7 +34,8 @@ namespace TiaMcpServer.ModelContextProtocol
             private readonly CallSpan? previous = CurrentCall.Value;
             internal string Id => id;
             internal string Tool => tool;
-            private readonly string id, tool, host;
+            private readonly string id, tool, host, journalTool;
+            private readonly string? batchId;
             private readonly string? release;
             private readonly string actor;
             private readonly string? mcpSession;
@@ -47,7 +48,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
             internal CallSpan(string id, string tool, string host, string? release, bool write, Func<string> arguments)
             {
-                this.id = id; this.tool = tool; this.host = host; this.release = release; this.write = write;
+                batchId = previous != null && IsBatch(previous.journalTool) ? previous.Id : previous?.batchId;
+                this.id = id == batchId ? Guid.NewGuid().ToString("N") : id;
+                this.tool = tool; this.host = host; this.release = release; this.write = write;
                 CurrentCall.Value = this;
                 actor = ActorScope.Actor; mcpSession = ActorScope.McpSession;
                 try { this.arguments = arguments(); }
@@ -55,9 +58,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 JsonElement diagnosticArguments = default;
                 try { diagnosticArguments = JsonSerializer.Deserialize<JsonElement>(this.arguments); }
                 catch (JsonException) /* swallow(logging-failure): legacy journal text cannot prevent the call */ { }
-                diagnosticScope = TiaMcp.Logic.V4.NativeFailureDiagnostics.Begin(id, diagnosticArguments);
+                journalTool = tool;
+                if (tool == "CallTool" && diagnosticArguments.ValueKind == JsonValueKind.Object
+                    && diagnosticArguments.TryGetProperty("name", out var forwarded) && forwarded.ValueKind == JsonValueKind.String
+                    && IsBatch(forwarded.GetString())) journalTool = forwarded.GetString()!;
+                diagnosticScope = TiaMcp.Logic.V4.NativeFailureDiagnostics.Begin(this.id, diagnosticArguments);
                 Emit(() => Row(null, "BEFORE"));
             }
+
+            private static bool IsBatch(string? name) => name is "RunReadOnlyToolBatch" or "PreviewToolBatch" or "ApplyToolBatch";
 
             internal void Complete(Func<string> result)
             {
@@ -94,9 +103,11 @@ namespace TiaMcpServer.ModelContextProtocol
                             .Where(p => new[] { "target", "softwarePath", "devicePath", "blockPath", "typePath", "projectPath", "projectFile", "name", "action"
                             }.Contains(p.Key))
                         .Select(p => p.Key + "=" + p.Value?.ToJsonString()));
+                // An internal preview can inherit the parent write's audit ID. Keep the batch independently locatable in Calls.
+                string? resultId = (string?)meta?["requestId"];
                 var details = new JsonLineObject().Number("callProjection", 1).String("host", host).String("releaseKey", release)
                     .String("actor", actor).String("mcpSession", mcpSession)
-                    .String("requestId", (string?)meta?["requestId"] ?? id).Raw("isWrite", write ? "true" : "false")
+                    .String("requestId", resultId == batchId ? id : resultId ?? id).Raw("isWrite", write ? "true" : "false")
                     .String("startedUtc", time.ToString("O")).Number("durationMs", phase == "BEFORE" ? (long?)null :
                         (long)((Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency))
                     .String("target", CallJournalPayload.Bound(target)).String("arguments", parameters).String("result", response)
@@ -105,7 +116,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     .Raw("ok", envelope?["schemaVersion"]?.ToJsonString() == "4" ? envelope?["ok"]?.ToJsonString() : null)
                     .String("outcome", (string?)meta?["outcome"]).String("execution", (string?)meta?["execution"])
                     .String("completeness", (string?)meta?["completeness"]).String("errorCode", (string?)envelope?["error"]?["code"]);
-                return FormatRow(DateTime.UtcNow, id, tool, phase, ProcessId, null, null, null,
+                return FormatRow(DateTime.UtcNow, id, journalTool, phase, ProcessId, null, null, null,
                     System.Threading.Thread.CurrentThread.ManagedThreadId, System.Threading.Thread.CurrentThread.GetApartmentState().ToString(), details);
             }
         }

@@ -4,6 +4,12 @@ namespace TiaMcp.Adapters.Contracts;
 
 public static class PlcTechnologyRefusal
 {
+    internal static void RequireWritableParameter(string parameter, string? accessMode)
+    {
+        if (accessMode != null && accessMode is not ("Write" or "ReadWrite"))
+            throw new AdapterPreconditionException($"Technology parameter '{parameter}' is read-only.", nameof(parameter));
+    }
+
     public static bool Record(HardwareAddressingReply result, string typeIdentifier, string version)
     {
         var meta = result.Meta;

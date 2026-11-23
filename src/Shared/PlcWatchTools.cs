@@ -373,9 +373,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "Absolute I/Q/M address is not accepted for HMI/online planning. Use a declared PLC symbol or DB member read back from the project.";
             }
 
-            if (!Regex.IsMatch(tagPath, @"^(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+"")(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+""))+$"))
+            if (!Regex.IsMatch(tagPath, @"^(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+"")(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+""))*$"))
             {
-                return "Use a symbolic PLC path with at least one member separator, for example DB_HMI.MotorRun.";
+                return "Use a declared PLC tag or a symbolic member path, for example MotorRun or DB_HMI.MotorRun.";
             }
 
             return null;

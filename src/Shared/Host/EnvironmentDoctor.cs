@@ -191,9 +191,6 @@ namespace TiaMcpServer.Runtime
                 install.FixZh = install.FixZh!.Replace(SupportedVersions, supported);
             }
             var version = EngineVersionMatch(release.MajorVersion, detected, _ => "host");
-            string? detectedName = detected.HasValue ? detected.Value == release.MajorVersion ? release.DisplayName : "V" + detected.Value : null;
-            version.DetailEn = "exe built for " + release.DisplayName + (detectedName != null ? ", machine has " + detectedName : ", machine version unknown");
-            version.DetailZh = "该 exe 为 " + release.DisplayName + " 构建" + (detectedName != null ? "，本机装的是 " + detectedName : "，本机版本未知");
             var checks = new List<Check> { install, OpennessAssemblies(assemblies, release), version, DotNetFramework48(), FilesNotBlocked(binaryDirectories) };
             if (startup != null && (bool?)startup["ready"] != true)
                 checks.Add(new Check {
@@ -207,17 +204,22 @@ namespace TiaMcpServer.Runtime
         }
 #endif
 
+        private static string ReleaseNumber(int major)
+            => TiaMcp.Versioning.TiaVersionCatalog.All.FirstOrDefault(release => release.MajorVersion == major)?.DisplayName.TrimStart('V')
+                ?? major.ToString(CultureInfo.InvariantCulture);
+
         private static Check TiaInstall(int? detected)
         {
             bool ok = detected != null;
+            string? number = detected.HasValue ? ReleaseNumber(detected.Value) : null;
             return new Check
             {
                 Id = "tia-install",
                 Ok = ok,
                 NameEn = "TIA Portal installation",
                 NameZh = "TIA Portal 安装",
-                DetailEn = ok ? $"detected V{detected}" : "no TIA Portal detected (registry / TiaPortalLocation / default folder)",
-                DetailZh = ok ? $"检测到 V{detected}" : "未检测到 TIA Portal（注册表 / TiaPortalLocation 环境变量 / 默认安装目录都查过了）",
+                DetailEn = ok ? $"detected V{number}" : "no TIA Portal detected (registry / TiaPortalLocation / default folder)",
+                DetailZh = ok ? $"检测到 V{number}" : "未检测到 TIA Portal（注册表 / TiaPortalLocation 环境变量 / 默认安装目录都查过了）",
                 FixEn = ok ? null
                     : $"Install TIA Portal {SupportedVersions} including the Openness option, or set the TiaPortalLocation environment variable to the install folder (e.g. D:\\TIA21\\Portal V21).",
                 FixZh = ok ? null : $"安装 TIA Portal {SupportedVersions}（安装时要勾选 Openness 组件），或把用户环境变量 TiaPortalLocation 指向安装根目录（例如 D:\\TIA21\\Portal V21）。",
@@ -271,14 +273,16 @@ namespace TiaMcpServer.Runtime
         {
             var releases = TiaMcp.Versioning.TiaVersionCatalog.Runnable;
             var target = releases.FirstOrDefault(v => v.MajorVersion == detected);
+            string compiledNumber = ReleaseNumber(compiled);
+            string? detectedNumber = detected.HasValue ? ReleaseNumber(detected.Value) : null;
             var check = new Check
             {
                 Id = "engine-version",
                 Ok = true,
                 NameEn = "Engine exe / TIA version",
                 NameZh = "引擎 exe 与 TIA 版本匹配",
-                DetailEn = $"exe built for V{compiled}" + (detected != null ? $", machine has V{detected}" : ", machine version unknown"),
-                DetailZh = $"该 exe 为 V{compiled} 构建" + (detected != null ? $"，本机装的是 V{detected}" : "，本机版本未知"),
+                DetailEn = $"exe built for V{compiledNumber}" + (detected != null ? $", machine has V{detectedNumber}" : ", machine version unknown"),
+                DetailZh = $"该 exe 为 V{compiledNumber} 构建" + (detected != null ? $"，本机装的是 V{detectedNumber}" : "，本机版本未知"),
             };
             if (!releases.Any(v => v.MajorVersion == compiled) || (detected.HasValue && target == null))
             {

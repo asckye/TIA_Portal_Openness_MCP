@@ -71,10 +71,12 @@ namespace TiaMcp.PlcWorker.Runtime
                 var cause = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
                 // envelope: legacy-plcsim-failure: Failed would append dataComplete, which this executor does not set.
                 meta["success"] = false; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
-                meta["status"] = cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported"
+                meta["status"] = cause is KeyNotFoundException && meta["parameter"]?.ToString() == "instanceName" ? "NOT_FOUND"
+                      : cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported"
                     : cause is PlcSimApiUnavailableException ? "ApiNotFound"
                     : cause.GetType().Name == "SimulationRuntimeException" && cause.Message.Contains("DoesNotExist", StringComparison.Ordinal)
                         ? "NOT_FOUND" : "ReadOrWriteFailed";
+                if (meta["status"]?.ToString() == "NOT_FOUND") meta["nativeMessage"] = cause.Message;
                 meta["error"] = cause.Message;
                 return new PlcSimAdvancedReport { Ok = false, Message = tool + " failed: " + cause.Message, Data = data, Meta = meta };
             }
@@ -135,7 +137,10 @@ namespace TiaMcp.PlcWorker.Runtime
                     }
                     if (act == "register" && registered) throw new ArgumentException("Instance '" + name + "' is already registered; use powerOn/run instead.");
                     if (act != "register" && !registered)
-                        throw new ArgumentException("Instance '" + name + "' is not registered; register it first (or check ListPlcSimAdvancedInstances).");
+                    {
+                        meta["parameter"] = "instanceName";
+                        throw new KeyNotFoundException($"PLCSIM Advanced instance '{name}' is not registered.");
+                    }
                     if (dryRun || !confirmInstanceChange)
                     {
                         meta["mayHaveChanged"] = false;

@@ -82,7 +82,7 @@ public sealed partial class PlcFoundationEngine
 
             if (!string.IsNullOrWhiteSpace(expectedPlcSoftwarePath))
             {
-                var plc = PlcB5Session.GetSoftwareContainer(expectedPlcSoftwarePath)?.Software as PlcSoftware;
+                var plc = ExpectedSoftware(expectedPlcSoftwarePath, nameof(expectedPlcSoftwarePath)) as PlcSoftware;
                 meta["expectedPlcSoftwarePath"] = expectedPlcSoftwarePath;
                 meta["expectedPlcFound"] = plc != null;
                 if (plc == null) problems.Add($"PLC software not found at '{expectedPlcSoftwarePath}'.");
@@ -90,7 +90,7 @@ public sealed partial class PlcFoundationEngine
 
             if (!string.IsNullOrWhiteSpace(expectedHmiSoftwarePath))
             {
-                var hmi = PlcB5Session.GetSoftwareContainer(expectedHmiSoftwarePath)?.Software;
+                var hmi = ExpectedSoftware(expectedHmiSoftwarePath, nameof(expectedHmiSoftwarePath));
                 meta["expectedHmiSoftwarePath"] = expectedHmiSoftwarePath;
                 meta["expectedHmiFound"] = hmi != null && hmi.GetType().FullName?.IndexOf("Hmi", StringComparison.OrdinalIgnoreCase) >= 0;
                 if (hmi == null) problems.Add($"HMI software not found at '{expectedHmiSoftwarePath}'.");
@@ -111,6 +111,16 @@ public sealed partial class PlcFoundationEngine
                 Message = problems.Count == 0 ? "Automation context OK" : "Automation context has problems",
                 Meta = meta
             };
+
+            object? ExpectedSoftware(string path, string parameter)
+            {
+                try { return PlcB5Session.GetSoftwareContainer(path)?.Software; }
+                catch (AdapterPreconditionException missing) when (missing.Condition == "not-found")
+                {
+                    throw AdapterPreconditionException.NotFound($"Expected software was not found at '{path}'. Use the exact address from GetProjectTree.",
+                        parameter);
+                }
+            }
 
             void TryAddSoftwareInfo(DeviceItem item, HmiArray target)
             {

@@ -9,6 +9,18 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static class PlcOfflineReferences
     {
+        internal sealed class AmbiguousTarget : ArgumentException
+        {
+            internal string Target { get; }
+            internal string[] Candidates { get; }
+            internal AmbiguousTarget(string target, string[] candidates)
+                : base($"Several exports match '{target}'. Use an exact relative file identifier.", nameof(target))
+            {
+                Target = target;
+                Candidates = candidates;
+            }
+        }
+
         private sealed class Entry
         {
             public string Id = "", Name = "", Kind = "";
@@ -128,7 +140,8 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 if (byId.ContainsKey(target)) return target;
                 if (names.TryGetValue(target, out var found) && found.Length == 1) return found[0].Id;
-                throw new ArgumentException("Target is absent or ambiguous; use the exact file identifier from summary.");
+                if (found != null) throw new AmbiguousTarget(target, found.Select(entry => entry.Id).ToArray());
+                throw new ArgumentException("Target not found. Use an exact file identifier from summary.", nameof(target));
             }
             var rows = new JsonArray(); var truncated = false; var cycles = 0;
             if (action == "blocks")

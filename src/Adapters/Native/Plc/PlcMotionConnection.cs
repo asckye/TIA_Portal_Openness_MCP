@@ -10,6 +10,13 @@ namespace TiaMcp.Adapters.Native.Plc
 {
     public sealed partial class PlcOrganisationAdapter
     {
+        internal static void PlanHardwareAddresses(Dictionary<string, object?> meta, int inputBitAddress, int outputBitAddress)
+        {
+            if (inputBitAddress < 0 || outputBitAddress < 0) throw new ArgumentException("Nonnegative BIT addresses required; no implicit byte conversion.");
+            meta["inputBitAddress"] = inputBitAddress;
+            meta["outputBitAddress"] = outputBitAddress;
+        }
+
         internal static void ProbeMotionConnect(Dictionary<string, object?> meta, Func<object> resolveService,
             Func<object, string> identity, Func<Dictionary<string, object?>, string> serialize, Action connect)
         {

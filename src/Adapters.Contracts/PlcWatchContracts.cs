@@ -15,6 +15,15 @@ namespace TiaMcp.Adapters.Contracts
         public Dictionary<string, object?>? Data { get; set; }
         public string[]? Warnings { get; set; }
         public Dictionary<string, object?>? Meta { get; set; }
+        internal static PlcWatchReport? EntryAccessLimit(string release, Dictionary<string, object?> data, bool monitoring)
+        {
+            if (OpennessApi.WatchForceEntries.Includes(release)) return null;
+            string message = $"Watch table entries cannot be read on release {release}. Typed entry access requires V17 or later.";
+            return new PlcWatchReport { Ok = monitoring, Message = message, Data = data, Meta = new Dictionary<string, object?> {
+                ["dataComplete"] = false, ["mayHaveChanged"] = false,
+                ["status"] = monitoring ? "Partial" : "NotSupportedOnVersion", ["nativeMessage"] = message } };
+        }
+
         public PlcWatchRow[] Rows { get; set; } = Array.Empty<PlcWatchRow>();
     }
 }

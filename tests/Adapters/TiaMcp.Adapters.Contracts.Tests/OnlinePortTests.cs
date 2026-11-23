@@ -17,6 +17,30 @@ public sealed class OnlinePortTests
         ["ScanAccessibleDevices"] = 5, ["UploadDeviceParameters"] = 7
     };
 
+    [Fact]
+    public void Upload_uses_the_selected_PLC_route_when_the_station_provider_has_no_target()
+    {
+        const string target = "192.168.0.1";
+        const string listing = """
+            {"name":"Siemens PLCSIM Virtual Ethernet Adapter","number":1,"addresses":[],
+             "subnets":[{"name":"MCP_RC_PN","addresses":[{"name":"192.168.0.1","address":"192.168.0.1"}],"gateways":[]}],
+             "targetInterfaces":[{"name":"1 X1","addresses":[]}]}
+            """;
+        using var pc = JsonDocument.Parse(listing);
+        var plcTargets = pc.RootElement.GetProperty("subnets")[0].GetProperty("addresses").EnumerateArray()
+            .Select(address => address.GetProperty("address").GetString()!);
+        var match = StationUploadRoute.Resolve(target, Array.Empty<string>(), value => value, plcTargets);
+        Assert.Null(match.Address);
+        Assert.True(match.FromPlc);
+        Assert.Equal(target, match.KnownAddresses);
+        var missing = StationUploadRoute.Resolve("192.168.0.2", Array.Empty<string>(), value => value, plcTargets);
+        Assert.False(missing.FromPlc);
+        Assert.Equal(target, missing.KnownAddresses);
+        var direct = StationUploadRoute.Resolve(target, new[] { target }, value => value, plcTargets);
+        Assert.Equal(target, direct.Address);
+        Assert.False(direct.FromPlc);
+    }
+
     private sealed class FingerprintDataProvider : Siemens.Engineering.IEngineeringService { }
     private sealed class LoadableProvider : Siemens.Engineering.IEngineeringService { }
 

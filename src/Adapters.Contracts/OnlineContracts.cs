@@ -96,6 +96,25 @@ public sealed class OnlineDownloadResult
     public Dictionary<string, object?>? Meta { get; set; }
 }
 
+internal static class StationUploadRoute
+{
+    internal static (T? Address, bool FromPlc, string KnownAddresses) Resolve<T>(string target, IEnumerable<T> uploadAddresses,
+        Func<T, string> addressText, IEnumerable<string> plcAddresses) where T : class
+    {
+        var known = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        T? selected = null;
+        foreach (var address in uploadAddresses)
+        {
+            string value = addressText(address);
+            if (string.IsNullOrWhiteSpace(value)) continue;
+            known.Add(value);
+            if (string.Equals(value, target, StringComparison.OrdinalIgnoreCase)) selected ??= address;
+        }
+        if (selected == null) known.UnionWith(plcAddresses);
+        return (selected, selected == null && known.Contains(target), string.Join(", ", known));
+    }
+}
+
 public sealed class OnlineCompareEntry
 {
     public string? Path { get; set; }

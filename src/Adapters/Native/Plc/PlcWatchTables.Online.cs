@@ -46,16 +46,16 @@ namespace TiaMcp.Adapters.Native.Plc
             try
             {
                 if (IsProjectNull())
-                    return new PlcWatchReport { Ok = false, Message = "Project is null. Attach to the open project first.", Data = data };
+                    return new PlcWatchReport { Ok = false, Message = "Project is null. Attach to the open project first.", Data = data,
+                        Meta = new Dictionary<string, object?> { ["v4Rejection"] = "PROJECT_NOT_BOUND" } };
 
                 var plc = _session.GetPlcSoftware(softwarePath);
                 if (plc == null)
-                    return new PlcWatchReport {
-                        Ok = false, Message = "PLC software not found at '" + softwarePath + "'" + _session.AvailablePlcPathsSuffix(), Data = data };
+                    return Missing("PLC software not found at '" + softwarePath + "'" + _session.AvailablePlcPathsSuffix(), "softwarePath");
 
                 var group = ResolvePlcWatchAndForceTableGroup(plc);
                 if (group == null)
-                    return new PlcWatchReport { Ok = false, Message = "WatchAndForceTableGroup not found.", Data = data };
+                    return Missing("WatchAndForceTableGroup not found.", "softwarePath");
 
                 var tables = EnumeratePlcWatchTables(group);
                 data["watchTables"] = new List<object?>(tables.Select(x => x.Path).ToArray());
@@ -63,21 +63,17 @@ namespace TiaMcp.Adapters.Native.Plc
                     string.Equals(x.Path, watchTableName, StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(x.Name, watchTableName, StringComparison.OrdinalIgnoreCase)).Table;
                 if (table == null)
-                    return new PlcWatchReport { Ok = false, Message = "Watch table not found.", Data = data, Meta = new Dictionary<string, object?> {
-                        ["status"] = "NotFound", ["mayHaveChanged"] = false, ["nativeMessage"] = "Watch table not found.",
-                        ["parameter"] = "watchTableName" } };
+                    return Missing("Watch table not found.", "watchTableName");
 
-                data["tableType"] = table.GetType().FullName ?? table.GetType().Name;
-                data["tableMembers"] = new List<object?>(DescribeMembers(table, 220).Select(m => $"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}").ToArray());
+                if (PlcWatchReport.EntryAccessLimit(_session.ReleaseKey, data, monitoring: false) is { } limit) return limit;
                 var entries = WatchProperty(table, "Entries", "WatchTableEntries", "Rows", "Items");
-                data["entriesCollectionType"] = entries?.GetType().FullName ?? "";
                 var rows = new List<object?>();
                 if (entries is IEnumerable enumerable && entries is not string)
                 {
                     foreach (var entry in enumerable)
                     {
                         if (entry == null) continue;
-                        rows.Add(ReadWatchTableEntryReadOnly(entry, rows.Count == 0));
+                        rows.Add(ReadWatchTableEntryReadOnly(entry));
                         if (rows.Count >= Math.Max(1, maxEntries)) break;
                     }
                 }
@@ -86,22 +82,29 @@ namespace TiaMcp.Adapters.Native.Plc
                 data["entryCountRead"] = rows.Count;
                 data["currentValueReadOk"] = rows.OfType<Dictionary<string, object?>>()
                     .Any(x => new[] { "currentValue", "monitorValue", "value" }.Any(k => x.TryGetValue(k, out var value) && value != null));
-                data["evidence"] = Equals(data["currentValueReadOk"], true)
+                bool readable = Equals(data["currentValueReadOk"], true);
+                data["evidence"] = readable
                     ? "online-current-value-read"
                     : "No explicit current/monitor value property was readable from the public watch-table API.";
                 return new PlcWatchReport
                 {
-                    Ok = Equals(data["currentValueReadOk"], true),
-                    Message = Equals(data["currentValueReadOk"], true) ? "Read current values from existing watch table without writes."
+                    Ok = readable,
+                    Meta = readable ? null : new Dictionary<string, object?> {
+                        ["status"] = "NotSupported", ["mayHaveChanged"] = false, ["nativeMessage"] = data["evidence"] },
+                    Message = readable ? "Read current values from existing watch table without writes."
                         : "Watch table was read, but no current value property was exposed.",
                     Data = data
                 };
             }
             catch (Exception ex)
             {
-                data["error"] = FormatExceptionDetail(ex);
-                return new PlcWatchReport { Ok = false, Message = ex.Message, Data = data };
+                return new PlcWatchReport { Ok = false, Message = ex.Message, Data = data, Meta = new Dictionary<string, object?> {
+                    ["status"] = "ReadOrWriteFailed", ["mayHaveChanged"] = false, ["nativeMessage"] = ex.GetBaseException().Message } };
             }
+
+            PlcWatchReport Missing(string message, string parameter) => new PlcWatchReport { Ok = false, Message = message, Data = data,
+                Meta = new Dictionary<string, object?> { ["status"] = "NotFound", ["mayHaveChanged"] = false, ["nativeMessage"] = message,
+                    ["parameter"] = parameter } };
         }
 
         public PlcWatchReport ProbePlcMonitorOnlineCapabilities(string softwarePath)
@@ -250,7 +253,7 @@ namespace TiaMcp.Adapters.Native.Plc
             }
         }
 
-        private Dictionary<string, object?> ReadWatchTableEntryReadOnly(object entry, bool includeMembers)
+        private Dictionary<string, object?> ReadWatchTableEntryReadOnly(object entry)
         {
             var row = new Dictionary<string, object?>
             {
@@ -304,8 +307,6 @@ namespace TiaMcp.Adapters.Native.Plc
 
             if (attributes.Count > 0)
                 row["attributes"] = attributes;
-            if (includeMembers)
-                row["members"] = new List<object?>(DescribeMembers(entry, 180).Select(m => $"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}").ToArray());
 
             return row;
         }
@@ -345,6 +346,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 return new PlcWatchReport { Ok = false, Message = $"Watch table '{watchTableName}' not found.", Data = data,
                     Meta = new Dictionary<string, object?> { ["status"] = "NotFound", ["mayHaveChanged"] = false,
                         ["nativeMessage"] = "Watch table not found.", ["parameter"] = "watchTableName" } };
+
+            if (PlcWatchReport.EntryAccessLimit(_session.ReleaseKey, data, monitoring: true) is { } limit) return limit;
 
             // Extract entry rows (address + name + display format).
             var rows = new List<(string name, string address, string fmt)>();

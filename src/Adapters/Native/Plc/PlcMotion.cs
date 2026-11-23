@@ -436,7 +436,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     : selected.GetType().GetMethod("Disconnect",Type.EmptyTypes);
                 if(action!="read"&&method==null)throw new NotSupportedException("Native hardware connection signature unavailable.");
                 object? mode=null;if(action=="connect") {
-                    if(inputBitAddress<0||outputBitAddress<0)throw new ArgumentException("Nonnegative BIT addresses required; no implicit byte conversion.");
+                    PlanHardwareAddresses(meta, inputBitAddress, outputBitAddress);
                     mode=HardwareAddressingPolicy
                         .ConvertValue(new HardwareScalar { Kind = "string", Text = connectOption },method!.GetParameters()[2].ParameterType);
                 }

@@ -124,6 +124,9 @@ internal sealed class WorkbenchControlTool : McpServerTool
         bool read = operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection;
         bool done = response.Status == WorkbenchControlStatus.Done;
         var refusal = response.Refusal;
+        if (operation == WorkbenchControlOperation.DisplayCall
+            && refusal is { Condition: "call-not-found", Code: WorkbenchControlError.TargetAmbiguous, Candidates.Length: 0 })
+            refusal.Code = WorkbenchControlError.NotFound;
         ErrorDetails? details = refusal?.Code switch
         {
             WorkbenchControlError.ResourceUnavailable => new ResourceUnavailableDetails(refusal.Resource ?? "workbench-control"),
@@ -151,7 +154,8 @@ internal sealed class WorkbenchControlTool : McpServerTool
             data.Remove("paging");
         }
         bool failed = response.Status == WorkbenchControlStatus.Failed && refusal?.Code != WorkbenchControlError.Timeout;
-        string message = "Workbench control " + (failed ? "failed." : "was refused.");
+        string message = operation == WorkbenchControlOperation.DisplayCall && refusal?.Code == WorkbenchControlError.NotFound
+            ? "The call was not found in the selected Workbench session." : "Workbench control " + (failed ? "failed." : "was refused.");
         if (callerSessionKey != null && (done && operation == WorkbenchControlOperation.ReadState || refusal?.Condition == "workbench-project-not-selected"))
         {
             string? selected = done ? response.Data?.Session?.SessionKey : refusal?.SelectedSessionKey;

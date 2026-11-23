@@ -7,6 +7,17 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class PlcWatchTechnologyPortTests
 {
+    [Fact]
+    public void Parameter_preview_respects_the_Value_attribute_access_mode()
+    {
+        const string name = "Retain.CtrlParams.Gain";
+        var refusal = Assert.Throws<AdapterPreconditionException>(() => PlcTechnologyRefusal.RequireWritableParameter(name, "Read"));
+        Assert.Equal("parameter", refusal.ParamName);
+        Assert.Contains(name, refusal.Message);
+        PlcTechnologyRefusal.RequireWritableParameter(name, "ReadWrite");
+        PlcTechnologyRefusal.RequireWritableParameter(name, null);
+    }
+
     [Theory]
     [InlineData("21", "TO_PositioningAxis", "6.0", "create", true)]
     [InlineData("21", "TO_PositioningAxis", "5.0", "create", false)]

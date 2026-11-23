@@ -44,7 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 CallToolResult result;
                 try
                 {
-                    result = await BridgeWait.On(CallToolCoreAsync(call.Name, call.Arguments, expectedProject.Length == 0 ? null : async () =>
+                    result = await BridgeWait.On(BatchChildAsync(call.Name, call.Arguments, expectedProject.Length == 0 ? null : async () =>
                     {
                         try { await BridgeWait.On(BatchStateAsync(expectedProject)).ConfigureAwait(false); return null; }
                         catch (Exception) /* swallow(privacy): retain the original batch identity rejection before target dispatch */
@@ -88,7 +88,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var rows = new JsonArray();
                 foreach (var call in validated!)
                 {
-                    var result = await BridgeWait.On(CallToolAsync(call.Name, call.Arguments)).ConfigureAwait(false);
+                    var result = await BridgeWait.On(BatchChildAsync(call.Name, call.Arguments)).ConfigureAwait(false);
                     rows.Add(BatchRow(rows.Count, call.Name, result));
                     if (ResultSucceeded(ResultBody(result)) != true)
                     {
@@ -140,8 +140,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 int index = 0;
                 foreach (var op in plan.Operations.OfType<JsonObject>())
                 {
-                    var result = await BridgeWait.On(CallToolAsync((string)op["name"]!, new ToolArguments(JsonSerializer.SerializeToElement(op["arguments"]))))
-                        .ConfigureAwait(false);
+                    var arguments = new ToolArguments(JsonSerializer.SerializeToElement(op["arguments"]));
+                    var result = await BridgeWait.On(BatchChildAsync((string)op["name"]!, arguments)).ConfigureAwait(false);
                     if (ResultSucceeded(ResultBody(result)) != true || StablePreview(ResultBody(result)) != StablePreview(plan.Previews[index++]))
                         return V4Reject(tool, new Error("A stored preview changed.", new PlanStaleDetails(null, "preview", previewToken)));
                 }
@@ -203,6 +203,14 @@ namespace TiaMcpServer.ModelContextProtocol
             return BatchResult(tool, rows, true);
         }
 
+        private static async Task<CallToolResult> BatchChildAsync(string name, ToolArguments arguments, Func<Task<CallToolResult?>>? beforeDispatch = null)
+        {
+            string id = Guid.NewGuid().ToString("N");
+            using var correlation = InvocationJournal.UseCorrelation(id);
+            using var diagnostics = NativeFailureDiagnostics.Begin(id, arguments.Json);
+            return await BridgeWait.On(CallToolCoreAsync(name, arguments, beforeDispatch)).ConfigureAwait(false);
+        }
+
         private static Error? FillBatchPlanArguments(string name, JsonObject args, JsonArray previews, int index)
         {
             try
@@ -260,6 +268,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (write && targetMethod.DryRun.Present) args["dryRun"] = true;
                 var error = ToolInvoker.Bind(name, new ToolArguments(JsonSerializer.SerializeToElement(args)), out _);
                 if (error != null) return InvalidArgumentDetails.Prefix(error, row + "/arguments");
+                if (write && MissingBatchConfirmation(name, args) is string field)
+                    return new Error($"Batch execution requires {field}=true for this item.",
+                        new InvalidArgumentDetails(row + "/arguments/" + field, Array.Empty<string>()));
                 targets[call.Name] =
                     new ToolTarget(call.Name, new InputSchema(targetMethod.Tool.InputSchema), new InputBudget(), read, preview, orchestration: orchestration);
             }
@@ -267,6 +278,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Validate(operations, "operations");
             validated = result.Value;
             return result.Error;
+        }
+
+        private static string? MissingBatchConfirmation(string name, JsonObject args)
+        {
+            string? action = (string?)args["action"];
+            if (name == "ManagePlcExternalSources" && action is "deleteGroup" or "delete")
+            {
+                if ((bool?)args["confirmDelete"] != true) return "confirmDelete";
+                // Root deletion forwards confirmDelete as the canonical tool's confirmation.
+                if (action == "delete" && string.IsNullOrEmpty((string?)args["unitName"]) && string.IsNullOrEmpty((string?)args["groupPath"]))
+                    return args["confirm"] == null || (bool?)args["confirm"] == true ? null : "confirm";
+            }
+            bool reviewed = name == "ManagePlcTagDefinition" && action is "create" or "update"
+                || name == "ManagePlcExternalSources" && action is "createFromFile" or "createFromMasterCopy" or "generateBlocks"
+                    or "createGroup" or "renameGroup" or "deleteGroup" or "delete";
+            return reviewed && (bool?)args["confirm"] != true ? "confirm" : null;
         }
 
         internal static bool IsBatchOrchestration(ToolDescriptor tool) => tool.Name.Contains("Batch")

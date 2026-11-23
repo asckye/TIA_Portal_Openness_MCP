@@ -71,6 +71,16 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseMessage { Message = reason, Meta = meta };
                 }
                 if (cause is TiaMcp.Adapters.Contracts.AdapterPreconditionException) throw;
+                if (cause is PlcOfflineReferences.AmbiguousTarget ambiguous)
+                {
+                    ResponseMeta.Failed(meta);
+                    meta["status"] = "Ambiguous";
+                    meta["target"] = ambiguous.Target;
+                    meta["candidates"] = JsonSerializer.SerializeToNode(ambiguous.Candidates);
+                    meta["mayHaveChanged"] = false;
+                    meta["nativeMessage"] = ambiguous.Message;
+                    return new ResponseMessage { Message = ambiguous.Message, Meta = meta };
+                }
                 meta["error"] = cause.ToString();
                 if (cause is ArgumentException || cause is JsonException)
                     meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";

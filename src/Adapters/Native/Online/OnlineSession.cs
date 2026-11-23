@@ -35,6 +35,7 @@ internal sealed class OnlineSession
     internal object ExactMasterCopyPlcSource(string path, string block, bool isBlock) => _session.ExactMasterCopyPlcSource(path, block, isBlock);
     internal Siemens.Engineering.HW.HardwareObject ExactEngineeringHardware(string devicePath, string itemPath)
         => _session.ExactEngineeringHardware(_request.DevicePath, _request.ItemPath);
+    internal string PlcSoftwarePath(PlcSoftware plc) => _session.PlcSoftwarePath(plc);
     internal List<PlcSoftware> GetAllPlcSoftware() => _plcs();
     internal string AvailablePlcPathsSuffix() => _session.AvailablePlcPathsSuffix();
     internal List<(string Path, bool? Consistent)> ReadPlcConsistency(string path) => _session.ReadPlcConsistency(path);

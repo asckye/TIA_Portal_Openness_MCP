@@ -215,6 +215,11 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         var previews = preview["data"]!["items"]!.AsArray();
         var results = applied["data"]!["items"]!.AsArray();
         Assert.Equal(2, results.Count);
+        foreach (var body in new[] { preview, applied })
+        {
+            var requests = body["data"]!["items"]!.AsArray().Select(item => (string)item!["result"]!["meta"]!["requestId"]!);
+            Assert.Equal(3, requests.Append((string)body["meta"]!["requestId"]!).Distinct(StringComparer.Ordinal).Count());
+        }
         Assert.NotEqual((string?)previews[0]!["result"]!["data"]!["planHash"], (string?)previews[1]!["result"]!["data"]!["planHash"]);
         for (int i = 0; i < results.Count; i++)
         {

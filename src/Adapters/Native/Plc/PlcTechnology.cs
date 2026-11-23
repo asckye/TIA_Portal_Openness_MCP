@@ -109,6 +109,8 @@ namespace TiaMcp.Adapters.Native.Plc
                             if (action == "setParameter")
                             {
                                 if (valueError.Length != 0) throw new ArgumentException(valueError);
+                                var info = (p as IEngineeringObject)?.GetAttributeInfos().FirstOrDefault(attribute => attribute.Name == "Value");
+                                PlcTechnologyRefusal.RequireWritableParameter(parameter, info?.AccessMode.ToString());
                                 var edits = HardwareAddressingPolicy.Prepare(p.GetType(), new Dictionary<string, HardwareScalar> { ["Value"] = value });
                                 var existingValue = p.GetType().GetProperty("Value")!.GetValue(p);
                                 if (existingValue != null && edits[0].Property.PropertyType == typeof(object))

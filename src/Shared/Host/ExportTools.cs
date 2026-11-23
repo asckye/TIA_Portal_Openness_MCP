@@ -49,6 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return ResponseGuardTool.FitTextPage(slice, length => ResponseExports.SliceRetained(entry, offset, length), page =>
                 page.Error != null ? Missing(tool, exportId) : PlcExchangeContract.Result(tool,
                     new JsonObject { ["export"] = export.DeepClone(), ["returned"] = page.Returned, ["text"] = page.Text },
+                    completeness: page.Eof ? Completeness.Complete : Completeness.Partial,
                     paging: new Paging(PagingMode.Offset, offset, limit, page.NextOffset, null, null,
                         page.TotalLength, page.Eof, PagingUnit.Utf16),
                     pageLimit: requested > limit ? new Warning(WarningCode.PageLimitCapped, $"Requested {requested} UTF-16 code units. The limit is {limit}.",
@@ -414,7 +415,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 .Add(new Warning(WarningCode.UnverifiedBehavior, BehaviorCapabilities.CurrentDisclosure,
                         new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial || completeness == Completeness.Unknown) warnings.Add(new Warning(WarningCode.IncompleteData,
-                "The retained observations do not establish complete content or post-operation state.", new Dictionary<string, JsonElement>()));
+                tool == "GetExportContent" && paging?.Complete == false ? "More content is available on the next page."
+                    : "The retained observations do not establish complete content or post-operation state.", new Dictionary<string, JsonElement>()));
             if ((data?["warnings"] as JsonArray)?.Count > 0 || data?["warning"] != null
                 || outcome == null && (data?["failures"] as JsonArray)?.Count > 0)
                 warnings

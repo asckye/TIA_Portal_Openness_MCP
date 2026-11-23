@@ -102,21 +102,37 @@ namespace TiaMcp.Adapters.Native.Online
             return picks.FirstOrDefault(p => string.Equals(p.ModeName, "PN/IE", StringComparison.OrdinalIgnoreCase)) ?? picks[0];
         }
 
-        // 在所选 PG/PC 接口的 TargetInterfaces.Addresses 中精确匹配目标地址。扫描后 TIA 才会填充可达目标。
-        private ConfigurationAddress? FindTargetAddress(PcInterfacePick pick, string targetIpAddress, List<string> seen)
+#if ONLINE_DOWNLOAD
+        private static IEnumerable<ConfigurationAddress> UploadTargetAddresses(ConfigurationPcInterface pc)
         {
-            foreach (var target in _session.EnumerateReflectedProperty(pick.Interface, "TargetInterfaces"))
-                foreach (var address in _session.EnumerateReflectedProperty(target, "Addresses"))
-                {
-                    var value = _session.ReadReflectedString(address, "Address");
-                    if (!string.IsNullOrWhiteSpace(value)) seen.Add(value);
-                    if (string.Equals(value, targetIpAddress, StringComparison.OrdinalIgnoreCase) && address is ConfigurationAddress typed) return typed;
-                }
-            // subnet / gateway addresses of the PC interface (where TIA lists configured CPU addresses)
-            var viaSubnet = FindSubnetOrGatewayAddress(pick.Interface, targetIpAddress, out _);
-            if (viaSubnet != null) return viaSubnet;
-            return null;
+#if ONLINE_TARGET_ADDRESSES
+            foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(pc.TargetInterfaces))
+                foreach (ConfigurationAddress address in PlcGroupOperations.Items(target.Addresses)) yield return address;
+#endif
+            foreach (ConfigurationSubnet subnet in PlcGroupOperations.Items(pc.Subnets))
+            {
+                foreach (ConfigurationAddress address in PlcGroupOperations.Items(subnet.Addresses)) yield return address;
+                foreach (ConfigurationGateway gateway in PlcGroupOperations.Items(subnet.Gateways))
+                    foreach (ConfigurationAddress address in PlcGroupOperations.Items(gateway.Addresses)) yield return address;
+            }
         }
+
+        private IEnumerable<string> ConfiguredPlcTargets(PcInterfacePick selected)
+        {
+            foreach (var plc in _session.GetAllPlcSoftware())
+            {
+                var download = _session.ResolvePlcService<DownloadProvider>(_session.PlcSoftwarePath(plc), plc);
+                if (download?.Configuration is not { } configuration) continue;
+                foreach (ConfigurationMode mode in PlcGroupOperations.Items(configuration.Modes))
+                {
+                    if (mode.Name != selected.ModeName) continue;
+                    foreach (ConfigurationPcInterface pc in PlcGroupOperations.Items(mode.PcInterfaces))
+                        if (pc.Name == selected.Name && pc.Number == selected.Number)
+                            foreach (var address in UploadTargetAddresses(pc)) yield return AddressText(address);
+                }
+            }
+        }
+#endif
 
         // an address that ScanAccessibleDevices reported on the same PG/PC interface (IP or MAC of a station TIA has not
         // seen in the route tree) is created on the first target interface - or, without target interfaces (project-level

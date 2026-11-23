@@ -61,7 +61,8 @@ internal static class PortedToolContract
             if (tool == "ValidateAutomationContext"
                 && lastCaughtFailure is WorkerOperationException { KnownNoMutation: true, Condition: "not-found" } missing)
                 return FoundationV4Result.Reject(release, tool, id,
-                    new Error(HostBehavior.SafeDiagnostic(missing.Message) ?? "Expected software was not found.", new NotFoundDetails(null)), false);
+                    new Error(HostBehavior.SafeDiagnostic(missing.Message) ?? "Expected software was not found.",
+                        new NotFoundDetails(missing.Parameter ?? "softwarePath")), false);
             if (isError && lastCaughtFailure is WorkerOperationException { CapabilityRefused: true } capability)
                 return FoundationV4Result.Failure(release, tool, id, true, mutation, null, capability);
             return null;

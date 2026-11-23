@@ -10,6 +10,17 @@ namespace TiaMcp.Adapters.Contracts.Tests
     public sealed class MotionConnectionRefusalTests
     {
         [Fact]
+        public void Preview_retains_requested_bit_addresses_alongside_the_current_interface()
+        {
+            var before = new Dictionary<string, object?> { ["inputAddress"] = -1, ["outputAddress"] = -1, ["isConnected"] = false };
+            var meta = new Dictionary<string, object?> { ["before"] = before, ["dryRun"] = true };
+            PlcOrganisationAdapter.PlanHardwareAddresses(meta, 800, 808);
+            Assert.Equal(800, meta["inputBitAddress"]);
+            Assert.Equal(808, meta["outputBitAddress"]);
+            Assert.Equal(-1, before["inputAddress"]);
+        }
+
+        [Fact]
         public void Missing_or_throwing_connection_state_stays_unknown()
         {
             foreach (Func<bool?> read in new Func<bool?>[] { () => null, () => throw new IOException("Unavailable") })
