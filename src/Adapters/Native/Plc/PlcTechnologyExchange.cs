@@ -29,6 +29,8 @@ namespace TiaMcp.Adapters.Native.Plc
 
             var imported = new List<string>();
             var failed = new List<PlcSeedImportFailure>();
+            bool unconfirmed = false;
+            int completed = 0;
 
             try
             {
@@ -58,21 +60,28 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (regex != null && !regex.IsMatch(name)) continue;
 
                     // Preserve native returned identities, including those read before an enumeration failure.
-                    try { ImportTechnologyObject(softwarePath, folderPath, file, overwrite, imported); }
-                    catch (Exception pex) when (pex is PlcSoftwareException || pex is AdapterPreconditionException)
+                    try
+                    {
+                        ImportTechnologyFile(softwarePath, folderPath, file, overwrite, imported, false, out unconfirmed);
+                        unconfirmed = false;
+                        completed++;
+                    }
+                    catch (Exception pex)
                     {
                         failed.Add(new PlcSeedImportFailure { Path = file, Error = pex.Message + " Batch stopped; later files were not attempted." });
                         break;
                     }
                 }
-
-                return new PlcSeedHmiReply { Imported = imported, Failed = failed };
             }
             catch (Exception ex)
             {
                 failed.Add(new PlcSeedImportFailure { Path = dir, Error = ex.ToString() });
-                return new PlcSeedHmiReply { Imported = imported, Failed = failed };
             }
+            var meta = LegacyResponseMetadata.Basic(null, failed.Count == 0);
+            meta["completedImports"] = completed;
+            meta["mayHaveChanged"] = MutationStarted;
+            meta["writeOutcomeUnknown"] = unconfirmed;
+            return new PlcSeedHmiReply { Imported = imported, Failed = failed, Meta = meta };
         }
 
         public PlcSeedHmiReply ExportTechnologyObjectsToDirectory(
@@ -163,7 +172,12 @@ namespace TiaMcp.Adapters.Native.Plc
 
         public void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames, bool dryRun =
                 false)
+            => ImportTechnologyFile(softwarePath, folderPath, importPath, overwrite, importedNames, dryRun, out _);
+
+        private void ImportTechnologyFile(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames,
+            bool dryRun, out bool dispatched)
         {
+            dispatched = false;
             if (IsProjectNull())
                 throw new PlcSoftwareException("InvalidState",
                     "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
@@ -185,7 +199,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 if (!overwrite && WatchNative.Find(col, name) != null)
                     throw new AdapterPreconditionException("Technology object already exists. Set overwrite=true to replace it.", "overwrite", false);
                 if (dryRun) return;
-                if (TryImportEngineeringObjectIntoCollection(col, importPath, overwrite, importedNames, out var err)) return;
+                if (TryImportEngineeringObjectIntoCollection(col, importPath, overwrite, importedNames, out var err, out dispatched)) return;
                 throw new PlcSoftwareException("ImportFailed", err ?? "ImportTechnologyObject failed");
             }
             catch (AdapterPreconditionException) { throw; }
@@ -200,10 +214,10 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 
         private bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, bool overwrite, List<string> importedNames, out string
-                ? error)
+                ? error, out bool nativeEntered)
         {
             error = null;
-            var nativeEntered = false;
+            nativeEntered = false;
             var firstNameIndex = importedNames.Count;
             try
             {

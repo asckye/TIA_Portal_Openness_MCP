@@ -127,7 +127,10 @@ namespace TiaMcpServer.ModelContextProtocol
             succeeded += (nativeResult?["imported"] as JsonArray)?.Count ?? (nativeResult?["exportedDocuments"] as JsonArray)?.Count ?? 0;
             bool unknown = writes && (Flag(evidence, "verified") == false || Flag(evidence, "verifiedAbsent") == false
                 || state != null && !nativeKnown || evidence.ContainsKey("nativeState") && state == null || reset && issued);
-            if (failed > 0) { success = false; unknown |= writes && !before && !nativeKnown; }
+            bool settledImports = tool == "ImportTechnologyObjectsFromDirectory" && Flag(evidence, "writeOutcomeUnknown") == false;
+            if (settledImports && evidence["completedImports"] is JsonValue completed && completed.TryGetValue<int>(out var completedImports))
+                succeeded = completedImports;
+            if (failed > 0) { success = false; unknown |= writes && !before && !nativeKnown && !settledImports; }
             Outcome outcome; Error? error = null;
             if ((HostBehavior.DocumentedRefusal(evidence)
                 ?? HostBehavior
@@ -136,7 +139,7 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success, allowWrittenFiles: (string?)evidence["action"] == "export"))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
-            else if (unknown || writes && success != true && !before && !nativeKnown && !projectMissing && status != "HmiReadSessionBlocked")
+            else if (unknown || writes && success != true && !before && !nativeKnown && !settledImports && !projectMissing && status != "HmiReadSessionBlocked")
             { outcome = Outcome.Unknown; error = Unknown(); }
             else if (projectMissing)
             { outcome = Outcome.RejectedBeforeOperation; error = new Error("No project is bound.", new ProjectNotBoundDetails()); }
@@ -168,7 +171,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 && evidence["limit"] is JsonValue limit && limit.TryGetValue<int>(out var size)
                 && (evidence["total"] ?? evidence["totalCount"]) is JsonValue total && total.TryGetValue<int>(out var count)
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
-            Clean(data);
+            Clean(data, tool == "ImportTechnologyObjectsFromDirectory" ? data["failed"] as JsonArray : null);
             bool technologyCreateRefused = tool == "ManageTechnologyObject" && Flag(evidence, "nothingCreated") == true
                 && error?.Details is PreconditionFailedDetails { Condition: "technology-type-version-unavailable" };
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)
@@ -196,19 +199,21 @@ namespace TiaMcpServer.ModelContextProtocol
                         "blocks", "types", "groups", "documents", "tagTables", "externalSources", "system", "user", "systemBlockGroups" }.Contains(p.Key))
                 || obj.Any(p => p.Key.EndsWith("Error", StringComparison.Ordinal) && p.Value != null || Incomplete(p.Value));
         }
-        private static void Clean(JsonNode? node)
+        private static void Clean(JsonNode? node, JsonArray? importFailures)
         {
-            if (node is JsonArray array) { foreach (var item in array) Clean(item); return; }
+            if (node is JsonArray array) { foreach (var item in array) Clean(item, importFailures); return; }
             if (!(node is JsonObject obj)) return;
             foreach (var pair in obj.ToArray())
             {
                 if (pair.Key == "timestamp" || pair.Key == "messageData" || pair.Key == "detailMessageData" || pair.Key == "lastFailure"
                     || pair.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) >= 0 || pair.Key
                         .Equals("password", StringComparison.OrdinalIgnoreCase)) obj.Remove(pair.Key);
+                else if (pair.Key == "error" && importFailures != null && obj.Parent == importFailures)
+                    obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());
                 else if (pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) obj[pair.Key] =
                     "Native diagnostic details are retained in the server log.";
                 else if (pair.Key == "nativeMessage") obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());
-                else Clean(pair.Value);
+                else Clean(pair.Value, importFailures);
             }
         }
         private static Error NativeFailure(string? nativeMessage = null) =>

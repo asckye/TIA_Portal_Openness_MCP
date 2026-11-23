@@ -134,19 +134,36 @@ namespace TiaMcp.Adapters.Native.Plc
         }
         internal static ImportOptions General(bool overwrite, string[]? cultures)
             => PlcImportOptionPolicy.Combine(overwrite ? ImportOptions.Override : ImportOptions.None, cultures);
-        internal static IList<PlcBlock> Blocks(PlcBlockComposition blocks, FileInfo file, ImportOptions options, string[]? sw)
+        internal static IList<PlcBlock> Blocks(PlcBlockComposition blocks, FileInfo file, ImportOptions options, string[]? sw, Action? dispatch = null)
         {
 #if PLC_SOURCE_RESULTS
-            if (sw != null && sw.Length > 0) return blocks.Import(file, options, Software(sw));
+            if (sw != null && sw.Length > 0)
+            {
+                var optionsForSoftware = Software(sw);
+                dispatch?.Invoke();
+                return blocks.Import(file, options, optionsForSoftware);
+            }
 #endif
+            dispatch?.Invoke();
             return blocks.Import(file, options);
         }
-        internal static IList<PlcType> Types(PlcTypeComposition types, FileInfo file, ImportOptions options, string[]? sw)
+        internal static IList<PlcType> Types(PlcTypeComposition types, FileInfo file, ImportOptions options, string[]? sw, Action? dispatch = null)
         {
 #if PLC_SOURCE_RESULTS
-            if (sw != null && sw.Length > 0) return types.Import(file, options, Software(sw));
+            if (sw != null && sw.Length > 0)
+            {
+                var optionsForSoftware = Software(sw);
+                dispatch?.Invoke();
+                return types.Import(file, options, optionsForSoftware);
+            }
 #endif
+            dispatch?.Invoke();
             return types.Import(file, options);
+        }
+        internal static IList<PlcTagTable> TagTables(PlcTagTableComposition tables, FileInfo file, ImportOptions options, Action? dispatch)
+        {
+            dispatch?.Invoke();
+            return tables.Import(file, options);
         }
 #if PLC_SOURCE_RESULTS
         private static SWImportOptions Software(string[] sw)

@@ -144,23 +144,23 @@ namespace TiaMcp.Adapters
                            .Adapters.Contracts.AdapterPreconditionException("Destination group identity changed.","softwarePath",false);
                     RequireTargetOffline(fresh);
                 };
-                PlcBatchImportObject[] Import(FileInfo file,PlcBatchImportObject planned,ImportOptions option,bool recovery=false)
+                PlcBatchImportObject[] Import(FileInfo file,PlcBatchImportObject planned,ImportOptions option,bool recovery=false,Action? dispatch=null)
                 {
                     var sw=recovery ? Array.Empty<string>() : request.SwImportOptions;
                     PlcNativeImportOptions.Validate(ReleaseKey,planned.Kind,sw,recovery ? null : request.ImportOptions,request.UnitName);
-                    if(planned.Kind=="UDT") return PlcNativeImportOptions.Types(PlcNative.Types(types!),file,option,sw)
+                    if(planned.Kind=="UDT") return PlcNativeImportOptions.Types(PlcNative.Types(types!),file,option,sw,dispatch)
                         .Select(t=>new PlcBatchImportObject {
                             Name=PlcNative.Name(t),Kind=t.GetType().Name=="PlcStruct" ? "UDT" : t.GetType().Name,GroupPath=
                                 BatchReturnedGroup(t,types!,request.TypeGroup)
                         })
                         .ToArray();
-                    if(planned.Kind=="TagTable") return PlcNative.TagTables(tags!).Import(file,option)
+                    if(planned.Kind=="TagTable") return PlcNativeImportOptions.TagTables(PlcNative.TagTables(tags!),file,option,dispatch)
                         .Select(t=>new PlcBatchImportObject {
                             Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=
                                 BatchReturnedGroup(t,tags!,request.TagGroup)
                         })
                         .ToArray();
-                    return ImportBlocksWithReadback(PlcNative.Blocks(blocks), file, option, sw, request.Overwrite || recovery ? null : planned.Name)
+                    return ImportBlocksWithReadback(PlcNative.Blocks(blocks), file, option, sw, request.Overwrite || recovery ? null : planned.Name, dispatch)
                         .Select(b=>BatchReturnedBlock(b,request.BlockGroup,blocks)).ToArray();
                 }
                 string Blocker(PlcBatchImportObject target)
@@ -182,7 +182,7 @@ namespace TiaMcp.Adapters
                 }
                 prepared=true;
                 return PlcBatchImportPolicy
-                    .Run(request,inventory,check,(file,target)=>Import(file,target,PlcNativeImportOptions.General(request.Overwrite,request.ImportOptions)),
+                    .Run(request,inventory,check,(file,target,dispatch)=>Import(file,target,PlcNativeImportOptions.General(request.Overwrite,request.ImportOptions),dispatch:dispatch),
                     Backup,(file,target)=>Import(file,target,ImportOptions.Override,true),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,
                         Blocker);
             }

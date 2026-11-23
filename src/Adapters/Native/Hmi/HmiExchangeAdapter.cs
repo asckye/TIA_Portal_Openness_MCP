@@ -211,13 +211,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                     ?? throw new PlcSoftwareException("NotFound", "Screens collection unavailable: " + folderPath);
                 HmiExchangePolicy.BeforeImport(screens, importPath, "Hmi.Screen.Screen", overwrite);
 
+                int before = _session.ImportDispatchCount;
                 if (_session.TryImportEngineeringObjectIntoCollection(screens, importPath, out _, out var err, overwrite))
                     return;
 
                 // A failed native call can already have modified the project. Its error text is not
                 // proof of rollback: never strip attributes and replay an import after failure.
                 throw new PlcSoftwareException("ImportFailed", (err ?? "ImportHmiScreen failed")
-                    + " The project may have changed. No automatic retry was attempted; inspect the project before another import.");
+                    + (_session.ImportDispatchCount == before ? "" : " The project may have changed. No automatic retry was attempted; inspect the project before another import."));
             }
             catch (PlcSoftwareException)
             {
@@ -433,136 +434,95 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             var evidence = new HmiObject { ["operationSuccess"] = success };
             if (status != null) evidence["status"] = status;
-            if (exception is PlcSoftwareException portal && (portal.Code == "InvalidState" || portal.Code == "NotFound"))
+            if (exception != null)
             {
-                evidence["status"] = portal.Code == "InvalidState" && portal.Message.StartsWith("HMI import target already exists:", StringComparison.Ordinal)
-                    ? "ImportTargetExists" : portal.Code;
-                evidence["nativeMessage"] = portal.Message;
-                if (portal.Data["missingFolderPath"] is string folder) evidence["missingFolderPath"] = folder;
+                evidence["exceptionType"] = exception.GetType().Name;
+                evidence["nativeMessage"] = exception.Message;
+                if (status == "ImportUnconfirmed") evidence["writeOutcomeUnknown"] = true;
+                else if (exception is PlcSoftwareException portal)
+                {
+                    if (portal.Code is "InvalidState" or "NotFound" or "InvalidParams")
+                        evidence["status"] = portal.Code == "InvalidState" && portal.Message.StartsWith("HMI import target already exists:", StringComparison.Ordinal)
+                            ? "ImportTargetExists" : portal.Code;
+                    if (portal.Data["missingFolderPath"] is string folder) evidence["missingFolderPath"] = folder;
+                    if (portal.Code == "PreconditionFailed" && portal.Data["mayHaveChanged"] is false)
+                    {
+                        evidence["mayHaveChanged"] = false;
+                        EngineeringCredentialRules.TryRecordRefusal(portal, evidence);
+                    }
+                }
             }
-            if (exception is PlcSoftwareException { Code: "PreconditionFailed" } refusal && refusal.Data["mayHaveChanged"] is false)
-            {
-                evidence["mayHaveChanged"] = false;
-                EngineeringCredentialRules.TryRecordRefusal(refusal, evidence);
-            }
-            if (exception != null) evidence["exceptionType"] = exception.GetType().Name;
             return new HmiObject { ["target"] = target, ["evidence"] = evidence };
         }
 
         public HmiImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = false)
-        {
-            if (!_session.IsProjectNull()) HmiExchangePolicy.RequireClassic(_session.ResolveHmiSoftwareOrThrow(softwarePath));
-            var imported = new List<string>();
-            var failed = new List<HmiImportFailure>();
-            var items = new HmiArray();
-
-            try
-            {
-                if (_session.IsProjectNull())
-                {
-                    failed.Add(new HmiImportFailure { Path = dir, Error = "Project is null" });
-                    items.Add(ImportItem(dir, false, status: "InvalidState"));
-                    return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
-                }
-
-                if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
-                {
-                    failed.Add(new HmiImportFailure { Path = dir, Error = "Directory not found" });
-                    items.Add(ImportItem(dir, false, status: "NotFound"));
-                    return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
-                }
-
-                Regex? regex = null;
-                if (!string.IsNullOrWhiteSpace(regexName))
-                {
-                    regex = new Regex(regexName, RegexOptions.IgnoreCase);
-                }
-
-                foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly))
-                {
-                    var name = Path.GetFileNameWithoutExtension(file);
-                    if (regex != null && !regex.IsMatch(name)) continue;
-
-                    try
-                    {
-                        ImportHmiScreen(softwarePath, folderPath, file, overwrite);
-                        imported.Add(name);
-                        items.Add(ImportItem(file, true));
-                    }
-                    catch (Exception ex)
-                    {
-                        failed.Add(new HmiImportFailure { Path = file, Error = ex.ToString() + " Batch stopped; later matching files were not attempted." });
-                        items.Add(ImportItem(file, false, ex));
-                        ((HmiObject)items[items.Count - 1]!.Field("evidence")!)["batchStopped"] = true;
-                        break;
-                    }
-                }
-
-                return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
-            }
-            catch (Exception ex)
-            {
-                failed.Add(new HmiImportFailure { Path = dir, Error = ex.ToString() });
-                items.Add(ImportItem(dir, false, ex));
-                return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
-            }
-        }
+            => ImportDirectory(softwarePath, dir, regexName, file => ImportHmiScreen(softwarePath, folderPath, file, overwrite), stopOnFailure: true);
 
         public HmiImportBatch ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = false)
+            => ImportDirectory(softwarePath, dir, regexName, file => ImportHmiTagTable(softwarePath, folderPath, file, overwrite), stopOnFailure: false);
+
+        private HmiImportBatch ImportDirectory(string softwarePath, string dir, string regexName, Action<string> import, bool stopOnFailure)
         {
             if (!_session.IsProjectNull()) HmiExchangePolicy.RequireClassic(_session.ResolveHmiSoftwareOrThrow(softwarePath));
-            var imported = new List<string>();
-            var failed = new List<HmiImportFailure>();
+            return ImportFiles(dir, regexName, import, stopOnFailure, _session.IsProjectNull, () => _session.ImportDispatchCount);
+        }
+
+        internal static HmiImportBatch ImportFiles(string dir, string regexName, Action<string> import, bool stopOnFailure,
+            Func<bool> projectMissing, Func<int> dispatchCount)
+        {
+            var batch = new HmiImportBatch();
             var items = new HmiArray();
+            bool unknown = false;
 
             try
             {
-                if (_session.IsProjectNull())
+                if (projectMissing())
                 {
-                    failed.Add(new HmiImportFailure { Path = dir, Error = "Project is null" });
+                    batch.Failed.Add(new HmiImportFailure { Path = dir, Error = "Project is null" });
                     items.Add(ImportItem(dir, false, status: "InvalidState"));
-                    return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
                 }
-
-                if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
+                else if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
                 {
-                    failed.Add(new HmiImportFailure { Path = dir, Error = "Directory not found" });
+                    batch.Failed.Add(new HmiImportFailure { Path = dir, Error = "Directory not found" });
                     items.Add(ImportItem(dir, false, status: "NotFound"));
-                    return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
                 }
-
-                Regex? regex = null;
-                if (!string.IsNullOrWhiteSpace(regexName))
+                else
                 {
-                    regex = new Regex(regexName, RegexOptions.IgnoreCase);
-                }
-
-                foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly))
-                {
-                    var name = Path.GetFileNameWithoutExtension(file);
-                    if (regex != null && !regex.IsMatch(name)) continue;
-
-                    try
+                    var regex = string.IsNullOrWhiteSpace(regexName) ? null : new Regex(regexName, RegexOptions.IgnoreCase);
+                    foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly))
                     {
-                        ImportHmiTagTable(softwarePath, folderPath, file, overwrite);
-                        imported.Add(name);
+                        var name = Path.GetFileNameWithoutExtension(file);
+                        if (regex != null && !regex.IsMatch(name)) continue;
+                        int before = dispatchCount();
+                        try { import(file); }
+                        catch (Exception ex)
+                        {
+                            bool dispatched = dispatchCount() != before;
+                            unknown |= dispatched;
+                            var item = ImportItem(file, false, ex, dispatched ? "ImportUnconfirmed" : "ImportNotStarted");
+                            items.Add(item);
+                            string suffix = stopOnFailure ? " Batch stopped; later matching files were not attempted." : "";
+                            batch.Failed.Add(new HmiImportFailure { Path = file, Error = ex + suffix });
+                            if (stopOnFailure)
+                            {
+                                ((HmiObject)item["evidence"]!)["batchStopped"] = true;
+                                break;
+                            }
+                            continue;
+                        }
+                        batch.Imported.Add(name);
                         items.Add(ImportItem(file, true));
                     }
-                    catch (Exception ex)
-                    {
-                        failed.Add(new HmiImportFailure { Path = file, Error = ex.ToString() });
-                        items.Add(ImportItem(file, false, ex));
-                    }
                 }
-
-                return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
             }
             catch (Exception ex)
             {
-                failed.Add(new HmiImportFailure { Path = dir, Error = ex.ToString() });
-                items.Add(ImportItem(dir, false, ex));
-                return new HmiImportBatch { Imported = imported, Failed = failed, Meta = HmiMeta.Basic( failed.Count == 0, ("items", items)) };
+                batch.Failed.Add(new HmiImportFailure { Path = dir, Error = ex.ToString() });
+                items.Add(ImportItem(dir, false, ex, "ImportNotStarted"));
             }
+            batch.Meta = HmiMeta.Basic(batch.Failed.Count == 0, ("items", items));
+            if (unknown) batch.Meta["writeOutcomeUnknown"] = true;
+            return batch;
         }
 
         #endregion

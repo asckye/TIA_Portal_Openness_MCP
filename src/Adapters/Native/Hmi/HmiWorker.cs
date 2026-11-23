@@ -126,8 +126,8 @@ namespace TiaMcp.Adapters
                     reply.OutcomeUnknown = !request.DryRun && session.MayHaveChanged
                         && (partial || !restored && !partial && message.Meta.TryGetValue("operationSuccess", out var success) && success is false);
                 }
-                if (reply.Value is HmiImportBatch batch && session.MayHaveChanged && batch.Failed.Count != 0)
-                    reply.OutcomeUnknown = !request.DryRun;
+                if (reply.Value is HmiImportBatch batch)
+                    reply.OutcomeUnknown = !request.DryRun && batch.Meta?.TryGetValue("writeOutcomeUnknown", out var unknown) == true && unknown is true;
             }
             catch (Exception error) when (error.GetBaseException() is not Siemens.Engineering.NonRecoverableException)
             {

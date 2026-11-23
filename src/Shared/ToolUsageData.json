@@ -41473,6 +41473,7 @@
           "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN."
         },
         "DescribeHmiTagTable": {
+          "note": "The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table"
@@ -41486,6 +41487,7 @@
           "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN."
         },
         "DescribeHmiTag": {
+          "note": "The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table",
@@ -41597,7 +41599,7 @@
           },
           "operations": {},
           "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
-          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling. The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables."
         },
         "ExportHmiConnection": {
           "arguments": {
@@ -52171,6 +52173,7 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "DescribeHmiTag": {
+          "note": "The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table",
@@ -52185,6 +52188,7 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "DescribeHmiTagTable": {
+          "note": "The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table"
@@ -53246,7 +53250,7 @@
           },
           "operations": {},
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
-          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
+          "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling. The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables."
         },
         "ExportOpcUaInterface": {
           "arguments": {
@@ -72553,7 +72557,7 @@
       "id": "sequence/hmi-unified-screen",
       "topic": "hmi-unified-screen",
       "purpose": "Unified HMI: connection -> tag bound to a PLC tag -> screen -> button -> compile.",
-      "preconditions": "connect-project done; the PLC side (tags / DB) exists; the HMI is WinCC Unified (classic panels cannot get connections via Openness).",
+      "preconditions": "connect-project done; the PLC side (tags / DB) exists; the HMI is WinCC Unified (classic panels cannot get connections via Openness). The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
       "notes": "PLC side first. Text labels use itemType Text; a Rectangle has no Text. Read the schemaVersion=4 envelope first: ok, error.code/message/details and meta.outcome, execution and completeness. Then inspect the operation-specific fields in data and meta.warnings. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. Continue pages only from meta.paging within the same release/session/binding/query snapshot; meta.paging.complete=true means this snapshot is paged to its end, not that the engineering project was completely observed. Batch data.items preserve each result envelope and order. P6-35 behavior family P6-COMPILE is current for applicable release key(s) 20, 21; L5 is NOT RUN. Do not treat this sequence or offline checks as safe-v4/native acceptance. For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained.",
       "releaseKeys": [
         "20",
@@ -77910,7 +77914,7 @@
       "id": "sequence/unified-tags-excel",
       "topic": "unified-tags-excel",
       "purpose": "Review Unified external tag definitions in Excel, validate PLC bindings row by row and apply approved tags through a batch.",
-      "preconditions": "Bind the intended V19-V21 project, exact HMI software path, existing tag table and HMI connection. Export the CURRENT PLC tag table(s) for every selected PLC binding and retain their exact PLC identity. Sample Start/Stop are Bool PLC tags. Replace sample rows and paths using project reads and the intended change.",
+      "preconditions": "Bind the intended V19-V21 project, exact HMI software path, existing tag table and HMI connection. Export the CURRENT PLC tag table(s) for every selected PLC binding and retain their exact PLC identity. Sample Start/Stop are Bool PLC tags. Replace sample rows and paths using project reads and the intended change. The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
       "notes": "The table is the review artefact; ApplyToolBatch is the write. ConvertEngineeringTable kind=rows only converts flat scalar rows; it does not validate PLC bindings or turn rows into calls automatically. Read all source pages from an unchanged project. Flatten only reviewed editable fields; keep object paths and identities exact. Split path segments before decoding and encode reserved characters within names. fromTable returns strings: parse integer and boolean cells to the tool schema types, reject invalid values and unknown columns, and map each approved row to one single-object call. Use offset=0, limit=50, then the returned nextOffset (V4 meta.paging); 60 rows require two separately reviewed batches of 50 and 10. Preview and apply the current page before proceeding to the next. Review every child preview and target identity; ApplyToolBatch fills missing expectedPlanHash/expectedProjectFile from each stored child preview, never replacing explicit values. Obtain Workbench approval for the stored batch. A failed item is rolled back by its own journal; inspect cleanupRequired/rollback evidence. Earlier items stay and later items are NOT_EXECUTED. Inspect unknown outcomes before any replay. Read back the affected objects after every batch, including a failed one; never automatically replay a whole page. No implicit save, compile or download. Classic HMI alarms have no Openness API on any release. Native acceptance NOT RUN. ListUnifiedTagDefinitions yields path-addressed evidence records for roots, members, UDTs and arrays; limit counts records, not tags. Follow nextCursor until null and inspect cumulative failures/gaps. Select supported external scalar root tags explicitly; do not flatten members or inferred root fields into invented tags. Before any batch preview, compare every proposed PLC binding against the current PLC export using exact PLC/tag identity: check hmiDataType compatibility and requested read/write access against DataType, ExternalAccessible, ExternalVisible and ExternalWritable. Do not guess type equivalence or assume a missing access flag means allowed. Report row number, PLC/tag, expected/actual type or access and reason for every mismatch or missing evidence; exclude unresolved rows from the batch until corrected and reviewed. The table codec does not perform this compatibility/access validation; it is a required caller review step. No new native validation is claimed. Keep requireVerifiedBinding=true and use explicit connectionName. EnsureUnifiedHmiTag creates or verifies a tag; it is not a general replacement/update tool for existing definitions.",
       "releaseKeys": [
         "19",
@@ -78142,9 +78146,9 @@
     "tagTableName": {
       "tools": [
         "ListPlcTagTables",
-        "GetHmiTagTables"
+        "ListHmiTagTables"
       ],
-      "meaning": "Use a table name/path in the selected software; names belong to that software."
+      "meaning": "Use the exact table name or path returned for the selected software. The default table name is localized."
     },
     "pgPcInterface": {
       "tools": [

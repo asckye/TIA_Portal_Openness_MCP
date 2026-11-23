@@ -252,8 +252,8 @@ namespace TiaMcp.Adapters
                     }));
         }
         private static IList<PlcBlock> ImportBlocksWithReadback(PlcBlockComposition blocks, FileInfo file, ImportOptions options,
-            string[]? softwareOptions, string? newBlock)
-            => ImportWithReadback(() => PlcNativeImportOptions.Blocks(blocks, file, options, softwareOptions), newBlock,
+            string[]? softwareOptions, string? newBlock, Action? dispatch = null)
+            => ImportWithReadback(() => PlcNativeImportOptions.Blocks(blocks, file, options, softwareOptions, dispatch), newBlock,
                 options == ImportOptions.None && (softwareOptions == null || softwareOptions.Length == 0),
                 name => PlcFoundationPolicy.SymbolExists(blocks, n => blocks.Find(n), b => b.Name, name));
 

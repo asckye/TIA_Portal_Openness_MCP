@@ -255,8 +255,10 @@ namespace TiaMcp.Adapters.Native.Plc
                 RequireKind(prepared, false, false, "importPath");
                 RequireImportTarget("tag table", prepared.Name, ExistingTagTables(plc.TagTableGroup), group, overwrite);
 
+                var tables = PlcOrganisationPrimitives.TagTables(group);
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path));
                 MutationStarted = true;
-                var imported = PlcOrganisationPrimitives.TagTables(group).Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path)), overwrite ? ImportOptions.Override : ImportOptions.None);
+                var imported = tables.Import(file, overwrite ? ImportOptions.Override : ImportOptions.None);
                 if (imported == null || imported.Count == 0)
                     throw new PlcSoftwareException("ImportFailed", "TagTables.Import returned an empty collection");
             }

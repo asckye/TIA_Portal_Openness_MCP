@@ -26,18 +26,19 @@ namespace TiaMcpServer.Siemens.Services
             var refusal = PlcSoftwareCapabilities.Unsupported(HardwareContract.ReleaseKey, tool, family: kind); if (refusal != null)
                 throw new NotSupportedException(refusal); buildFormat = kind;
         }
-        private JsonObject Invoke(string action, string path, string group = "", string file = "", bool overwrite = false)
+        private JsonObject Invoke(string action, string path, string group = "", string file = "", bool overwrite = false, Action? beforeDispatch = null)
             => service
                 .Artifact(new PlcSoftwareRequest {
                     Operation = tool, Family = buildFormat, Action = action, SoftwarePath = path, GroupPath = group, FilePath = file, Overwrite = overwrite,
                         DryRun = action == "softwarePath"
-                });
+                }, beforeDispatch);
         // overwrite=false refuses an existing object of the same name before the native import (API audit 2026-10-19 F25).
         public bool ImportBlock(string path, string group, string file, bool overwrite) =>
             (bool?)Invoke("importBlock", path, group, file, overwrite)["Found"] == true;
         public bool ImportType(string path, string group, string file, bool overwrite) =>
             (bool?)Invoke("importType", path, group, file, overwrite)["Found"] == true;
-        public void ImportPlcTagTable(string path, string group, string file, bool overwrite) => Invoke("importTagTable", path, group, file, overwrite);
+        public bool ImportPlcTagTable(string path, string group, string file, bool overwrite, Action? beforeDispatch = null)
+            => (bool?)Invoke("importTagTable", path, group, file, overwrite, beforeDispatch)["Found"] == true;
         public string SoftwarePath(string path) => (string?)Invoke("softwarePath", path)["Message"] ?? "";
         public PlcArtifactBlock? ExportBlock(string path, string block, string folder)
         {
@@ -84,13 +85,13 @@ namespace TiaMcpServer.Siemens.Services
     }
     internal sealed partial class PlcOrganisationPortService
     {
-        internal JsonObject Artifact(PlcSoftwareRequest request)
+        internal JsonObject Artifact(PlcSoftwareRequest request, Action? beforeDispatch = null)
         {
             if (!hasProject())
                 throw new PortalException(PortalErrorCode.InvalidState, request.Action == "compile" ? "Project is null"
                     : "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
                     "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
-            return Invoke(request);
+            return Invoke(request, beforeDispatch);
         }
         private ResponseImportBatch SeedHmiImport(string kind, string path, string folder, string directory)
         {

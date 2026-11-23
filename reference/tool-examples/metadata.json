@@ -92,9 +92,9 @@
     "tagTableName": {
       "tools": [
         "ListPlcTagTables",
-        "GetHmiTagTables"
+        "ListHmiTagTables"
       ],
-      "meaning": "Use a table name/path in the selected software; names belong to that software."
+      "meaning": "Use the exact table name or path returned for the selected software. The default table name is localized."
     },
     "pgPcInterface": {
       "tools": [

@@ -18,6 +18,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         private readonly IPlcOrganisationSession session;
         private readonly HmiRequest request;
         internal bool MayHaveChanged { get; private set; }
+        internal int ImportDispatchCount { get; private set; }
         internal HmiSession(PlcFoundationEngine engine, IPlcOrganisationSession session, HmiRequest request)
         { this.engine = engine; this.session = session; this.request = request; }
         internal void MarkHmiChanged() => MayHaveChanged = true;
@@ -64,7 +65,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal object? FindExistingByName(object value, string name) => HmiAccessHelpers.FindExistingByName(value, name);
         internal object? TryResolveChildGroupByPath(object value, string path) => HmiAccessHelpers.TryResolveChildGroupByPath(value, path);
         internal bool TryImportEngineeringObjectIntoCollection(object value, string path, out string? name, out string? error, bool overwrite = false)
-            => HmiAccessHelpers.TryImportEngineeringObjectIntoCollection(value, path, out name, out error, () => MayHaveChanged = true, overwrite);
+            => HmiAccessHelpers.TryImportEngineeringObjectIntoCollection(value, path, out name, out error, () => { MayHaveChanged = true; ImportDispatchCount++; }, overwrite);
         internal IEnumerable<object> FindHardwareCatalogEntries(object value, string filter) => HmiAccessHelpers.FindHardwareCatalogEntries(value, filter);
         internal string MakeSafeFileName(string name) => HmiAccessHelpers.MakeSafeFileName(name);
         internal HmiObject Attributes(string raw, bool required)

@@ -83,9 +83,11 @@ namespace TiaMcp.Adapters
                     case "ImportTechnologyObject": adapter
                         .ImportTechnologyObject(request.SoftwarePath, request.GroupPath, request.FilePath, request.Overwrite, new List<string>(), dryRun); reply
                             .Found = true; break;
-                    case "ImportTechnologyObjectsFromDirectory": reply.Batch = adapter
-                        .ImportTechnologyObjectsFromDirectory(request.SoftwarePath, request.GroupPath, request.FilePath, request.RegexName, request.Overwrite);
-                    break;
+                    case "ImportTechnologyObjectsFromDirectory":
+                        reply.Batch = adapter.ImportTechnologyObjectsFromDirectory(request.SoftwarePath, request.GroupPath, request.FilePath,
+                            request.RegexName, request.Overwrite);
+                        reply.OutcomeUnknown = reply.Batch.Meta?.TryGetValue("writeOutcomeUnknown", out var unknown) == true && unknown is true;
+                        break;
                     case "ExportTechnologyObjectsToDirectory": reply.Batch = adapter
                         .ExportTechnologyObjectsToDirectory(request.SoftwarePath, request.FilePath, request.RegexName, dryRun, request.ExpectedPlanHash); break;
                     case "TraceTagCause": reply.Report = adapter.TraceTagCause(request.SoftwarePath, request.Name, request.RegexName); break;

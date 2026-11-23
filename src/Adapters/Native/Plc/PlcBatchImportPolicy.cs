@@ -198,12 +198,19 @@ namespace TiaMcp.Adapters
                 PlcBatchImportObject,PlcBatchImportObject[]> import,
             Action<PlcBatchImportObject,FileInfo>? backup=null,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]>? restore=null,Func<string>
                 ? recoveryDirectory=null,Action? recoveryPrecheck=null,Func<PlcBatchImportObject,string>? inspectBlocker=null)
+            => Run(request, existing, recheck, (file, item, dispatch) => { dispatch(); return import(file, item); },
+                backup, restore, recoveryDirectory, recoveryPrecheck, inspectBlocker);
+
+        internal static PlcBatchImportResult Run(PlcBatchImportRequest request,IEnumerable<PlcBatchImportObject> existing,Action recheck,Func<FileInfo,
+                PlcBatchImportObject,Action,PlcBatchImportObject[]> import,
+            Action<PlcBatchImportObject,FileInfo>? backup=null,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]>? restore=null,Func<string>
+                ? recoveryDirectory=null,Action? recoveryPrecheck=null,Func<PlcBatchImportObject,string>? inspectBlocker=null)
         {
             bool issued=false;
             try
             {
-                return RunCore(request,existing,recheck,(file,item)=>{issued=true;return import(file,item);},backup,restore,recoveryDirectory,recoveryPrecheck,
-                        inspectBlocker);
+                return RunCore(request, existing, recheck, import, () => issued = true,
+                    backup, restore, recoveryDirectory, recoveryPrecheck, inspectBlocker);
             }
             catch(NotSupportedException) { throw; }
             catch(AdapterPreconditionException) { throw; }
@@ -211,7 +218,7 @@ namespace TiaMcp.Adapters
             { throw new AdapterPreconditionException("Batch import admission failed before any import: "+error.Message,request.InputParameter,false,error); }
         }
         private static PlcBatchImportResult RunCore(PlcBatchImportRequest request,IEnumerable<PlcBatchImportObject> existing,Action recheck,Func<FileInfo,
-                PlcBatchImportObject,PlcBatchImportObject[]> import,
+                PlcBatchImportObject,Action,PlcBatchImportObject[]> import, Action markIssued,
             Action<PlcBatchImportObject,FileInfo>? backup,Func<FileInfo,PlcBatchImportObject,PlcBatchImportObject[]>? restore,Func<string>? recoveryDirectory,
                 Action? recoveryPrecheck,Func<PlcBatchImportObject,string>? inspectBlocker)
         {
@@ -385,21 +392,24 @@ namespace TiaMcp.Adapters
                     for(int i=0;i<items.Count;i++)
                     {
                         var item=items[i];if(stopped){item.Status="not-attempted";continue;}
-                        bool returned=false;
+                        bool returned=false, targetChecked=false;
                         try
                         {
-                            recheck();item.Attempted=true;
-                            var actual=import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(byRelative[item.RelativePath])),item.Planned);returned=
-                                true;
+                            recheck();
+                            targetChecked=true;
+                            var file=new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(byRelative[item.RelativePath]));
+                            var actual=import(file, item.Planned, () => { item.Attempted = true; markIssued(); });
+                            returned=true;
                             item.ReturnedObjects=actual ?? new PlcBatchImportObject[0];
                             Verify(actual,item.Planned);
                             item.Status="imported";
                         }
-                        catch(Exception) when(i==0 && !item.Attempted) { throw; }
+                        catch(Exception) when(i==0 && !targetChecked) { throw; }
                         catch(Exception error) /* swallow(native-fallback): a failed recheck after prior imports or an issued import stops the batch and retains recovery evidence */
                         {
                             bool absent = item.Attempted && !returned && !request.Overwrite && error.Data["verifiedAbsent"] is true;
-                            item.NativeMessage = error.Data["nativeMessage"] as string;
+                            item.NativeMessage = item.Attempted ? error.Data["nativeMessage"] as string
+                                : NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
                             bool unknown=item.Attempted && !absent && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailureException));
                             item.Status="failed";item.Failure=absent ? "native-import-refused-absent" : unknown ? "native-outcome-uncertain"
                                 : item.Attempted ? "native-import-or-verification-failed"

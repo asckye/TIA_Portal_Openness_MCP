@@ -12091,6 +12091,7 @@
         "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN."
       },
       "DescribeHmiTagTable": {
+        "note": "The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table"
@@ -12104,6 +12105,7 @@
         "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN."
       },
       "DescribeHmiTag": {
+        "note": "The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
@@ -12215,7 +12217,7 @@
         },
         "operations": {},
         "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
-        "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
+        "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling. The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables."
       },
       "ExportHmiConnection": {
         "arguments": {
@@ -22785,6 +22787,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "DescribeHmiTag": {
+        "note": "The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table",
@@ -22799,6 +22802,7 @@
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
       },
       "DescribeHmiTagTable": {
+        "note": "The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
         "arguments": {
           "softwarePath": "HMI_RT_1",
           "tagTableName": "/Default tag table"
@@ -23860,7 +23864,7 @@
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN. HMI XML export defaults to WithDefaults; None and WithReadOnly are explicit choices. Native acceptance NOT RUN.",
-        "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling."
+        "note": "Output paths containing <directory under GetSessionState data.outputRoot> are bindings: replace the entire value, including the sample drive, with a new path under this session output root before calling. The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables."
       },
       "ExportOpcUaInterface": {
         "arguments": {

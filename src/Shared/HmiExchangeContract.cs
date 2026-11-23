@@ -54,6 +54,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             ErrorDetails? details = status == "InvalidState" && message?.StartsWith("HMI import target already exists:", StringComparison.Ordinal) == true
                 ? new PreconditionFailedDetails(message, null)
+                : status == "ImportNotStarted" ? new PreconditionFailedDetails("hmi-import", null)
                 : status == "InvalidState" ? new ProjectNotBoundDetails()
                 : status == "InvalidParams" ? McpServer.ArgumentDetails(tool, parameter, evidence)
                 : status == "ImportTargetExists" ? new PreconditionFailedDetails("HMI import target already exists; set overwrite=true explicitly.", null)
@@ -170,6 +171,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         && rows[0]?["evidence"]?["missingFolderPath"] is JsonValue missing && missing.TryGetValue<string>(out var folder)
                         && rows.All(row => (string?)row?["evidence"]?["missingFolderPath"] == folder))
                         error = new Error("HMI folder not found: " + folder, new NotFoundDetails(folder));
+                    else if (items.Count == 1 && outcome == Outcome.RejectedBeforeOperation
+                        && tool is "ImportHmiScreensFromDirectory" or "ImportHmiTagTablesFromDirectory")
+                        error = V4Json.Deserialize<Error>(items[0]!["result"]!["error"]!.ToJsonString());
                 }
                 if (failed > 0 || items.Any(i => (string?)i!["result"]!["meta"]!["completeness"] == "partial")) incomplete = true;
             }

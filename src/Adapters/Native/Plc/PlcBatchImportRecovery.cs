@@ -74,7 +74,7 @@ namespace TiaMcp.Adapters
                         throw new AdapterPreconditionException("Exact destination group is unavailable.","groupPath");
                 prepared=true;
                 return PlcBatchImportPolicy.Run(request,inventory.Select(Map),recheck,
-                    (file,item)=>new[]{Map(adapter.Import(Input(file,item),request.Overwrite))},
+                    (file,item,dispatch)=>new[]{Map(adapter.ImportXml(Input(file,item),request.Overwrite,dispatch))},
                     (item,file)=>adapter.ExportRecovery(inventory.Single(x=>x.Name==item.Name && x.Kind==item.Kind && x.GroupPath==item.GroupPath),file),
                     (file,item)=>new[]{Map(adapter.Restore(Input(file,item)))},PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,
                     item=>adapter.RecoveryBlocker(inventory.Single(x=>x.Name==item.Name && x.Kind==item.Kind && x.GroupPath==item.GroupPath)));
