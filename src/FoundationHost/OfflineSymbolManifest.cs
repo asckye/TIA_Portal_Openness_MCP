@@ -238,16 +238,24 @@ internal static class OfflineSymbolManifest
                         .Elements().Single().Attribute("Name") == "Static", "unsupported-or-nonstatic-section");
                 var section = sections.Elements().Single(); consumedDeclarations.Add(section);
                 Require(section.Elements().All(x => x.Name == ns + "Member"), "unsupported-static-member-shape");
-                void Member(XElement member, string prefix)
+                void Member(XElement member, string? prefix)
                 {
                     consumedDeclarations.Add(member);
-                    Require(member.Elements()
-                            .All(x => x.Name == ns + "Member" || x.Name == ns + "AttributeList" || x
-                                .Name == ns + "StartValue" || x.Name == ns + "Comment"),
-                            "unsupported-nested-member-shape");
-                    var name = Symbol(member.Attribute("Name")?.Value ?? ""); var path = prefix + "." + name;
-                    Add(path, member.Attribute("Datatype")?.Value ?? "", "GlobalDBMember");
+                    string? path = null;
+                    if (prefix != null)
+                    {
+                        Require(member.Elements().All(x => x.Name == ns + "Member" || x.Name == ns + "Sections" || x.Name == ns + "AttributeList"
+                            || x.Name == ns + "StartValue" || x.Name == ns + "Comment"), "unsupported-nested-member-shape");
+                        path = prefix + "." + Symbol(member.Attribute("Name")?.Value ?? "");
+                        Add(path, member.Attribute("Datatype")?.Value ?? "", "GlobalDBMember");
+                    }
                     foreach (var child in member.Elements(ns + "Member")) Member(child, path);
+                    // An expanded type is one symbol. Account for its declarations without adding instance fields to the manifest.
+                    foreach (var expanded in member.Elements(ns + "Sections").Elements(ns + "Section"))
+                    {
+                        consumedDeclarations.Add(expanded);
+                        foreach (var child in expanded.Elements(ns + "Member")) Member(child, null);
+                    }
                 }
                 foreach (var member in section.Elements(ns + "Member")) Member(member, dbName);
             }

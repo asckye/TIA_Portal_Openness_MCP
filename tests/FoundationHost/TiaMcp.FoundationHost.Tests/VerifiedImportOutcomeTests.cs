@@ -18,6 +18,19 @@ using Xunit;
 
 public sealed class VerifiedImportOutcomeTests
 {
+    [Fact]
+    public void Compiled_db_manifest_keeps_the_type_reference_and_omits_its_expansion()
+    {
+        string directory = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/V14Sp1");
+        var manifest = OfflineSymbolManifest.Build(directory, new[] { "compiled-udt-db.xml" }, OfflineSymbolManifest.ExpectedOrigin);
+        Assert.True((bool?)manifest["ok"], manifest["errors"]!.ToJsonString());
+        Assert.Equal(new[] { "MCP_RC_DB.Count", "MCP_RC_DB.Motor" }, manifest["symbols"]!.AsArray().Select(row => (string?)row!["symbol"]));
+        var reference = Assert.Single(manifest["unresolvedReferences"]!.AsArray());
+        Assert.Equal("MCP_RC_DB.Motor", (string?)reference!["symbol"]);
+        Assert.Equal("\"MCP_RC_UDT\"", (string?)reference["dataType"]);
+    }
+
     public static IEnumerable<object[]> Releases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(key => new object[] { key });
 

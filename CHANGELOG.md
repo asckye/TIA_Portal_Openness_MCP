@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Verified DB import compares compiled UDT members with their declarations and reports readback differences. Offline symbol manifests keep the UDT reference.
+
 ## [4.0.0-rc.2] - 2026-11-23
 
 ### Changed

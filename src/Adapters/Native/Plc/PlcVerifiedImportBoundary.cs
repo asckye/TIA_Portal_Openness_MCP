@@ -27,14 +27,14 @@ namespace TiaMcp.Adapters.Native.Plc
                     PlcBlock Resolve() => PlcBlockPrimitives.Find(PlcBlockPrimitives.Blocks(group), parts.Last())
                         ?? throw new PlcSoftwareException("NotFound", "Exact existing block not found in its target group.");
                     void Check() { _session.VerifyBinding("ImportPlcBlockVerified"); _session.ExactPlcForEngineering(softwarePath, true); }
+                    const ExportOptions verifiedOptions = ExportOptions.WithDefaults | ExportOptions.WithReadOnly;
                     void Export(string path) {
                         var block = Resolve();
                         if (!PlcBlockPrimitives.IsConsistent(block))
                             throw new PlcSoftwareException("BlockInconsistent",
                                 "Block is inconsistent; export verification is unavailable. No automatic compile or further import.");
                         PlcBlockPrimitives
-                            .Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.WithDefaults | ExportOptions
-                                .WithReadOnly);
+                            .Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), verifiedOptions);
                     }
                     ILookup<string, object>? groupsByType = null;
                     bool ExportType(string name, string path)
@@ -47,7 +47,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
                         try
                         {
-                            type.Export(file, ExportOptions.None);
+                            type.Export(file, verifiedOptions);
                             return true;
                         }
                         catch (Exception ex) when (ex is not OperationCanceledException && !TiaMcpServer.ModelContextProtocol.PortalFailureClassifier

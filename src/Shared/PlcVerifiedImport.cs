@@ -135,12 +135,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var readback = PlcDocumentEditing.Parse(PlcDocumentEditing.Read(afterPath));
             var actual = PlcDocumentEditing.Canonical(readback);
-            if (compile != null) actual = PlcDocumentEditing.NormalizeCompiledReadback(actual, expected, declarations);
+            string? difference = null;
+            if (compile != null) actual = PlcDocumentEditing.NormalizeCompiledReadback(actual, expected, declarations, out difference);
             var matches = expected == actual;
             meta["afterPath"] = afterPath; meta["actualFingerprint"] = PlcDocumentEditing.HashText(actual);
             meta["verificationSuccess"] = matches; meta["operationSuccess"] = matches;
             meta["status"] = matches ? "DocumentReadbackMatched" : "DocumentReadbackMismatch";
             if (matches) meta.Remove("cleanupRequired");
+            else meta["readbackDifference"] = difference ?? PlcDocumentEditing.ReadbackDifference(expected, actual);
             meta["phase"] = "complete";
             return matches
                 ? "Imported and re-exported document matches after identifier normalization. Inspect compileRequested/compileReturned for compilation; " +

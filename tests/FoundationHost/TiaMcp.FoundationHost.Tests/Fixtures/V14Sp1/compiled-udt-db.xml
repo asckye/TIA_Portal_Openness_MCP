@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V14 SP1" />
+  <DocumentInfo>
+    <Created>2000-01-01T00:00:00.0000000Z</Created>
+    <ExportSetting>WithDefaults, WithReadOnly</ExportSetting>
+    <InstalledProducts />
+  </DocumentInfo>
+  <SW.Blocks.GlobalDB ID="0">
+    <AttributeList>
+      <Interface>
+        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v2">
+          <Section Name="Static">
+            <Member Name="Count" Datatype="Int" Remanence="NonRetain">
+              <AttributeList>
+                <IntegerAttribute Name="Offset" SystemDefined="true">0</IntegerAttribute>
+                <BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="UserVisible" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="UserReadOnly" SystemDefined="true">false</BooleanAttribute>
+                <BooleanAttribute Name="UserDeletable" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="SetPoint" SystemDefined="true">false</BooleanAttribute>
+              </AttributeList>
+              <StartValue>3</StartValue>
+            </Member>
+            <Member Name="Motor" Datatype="&quot;MCP_RC_UDT&quot;" Remanence="NonRetain">
+              <AttributeList>
+                <IntegerAttribute Name="Offset" SystemDefined="true">2</IntegerAttribute>
+                <BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="UserVisible" SystemDefined="true">true</BooleanAttribute>
+                <BooleanAttribute Name="UserReadOnly" SystemDefined="true">false</BooleanAttribute>
+                <BooleanAttribute Name="UserDeletable" SystemDefined="true">true</BooleanAttribute>
+              </AttributeList>
+              <Sections>
+                <Section Name="None">
+                  <Member Name="Run" Datatype="Bool" Remanence="NonRetain">
+                    <AttributeList>
+                      <IntegerAttribute Name="Offset" SystemDefined="true">2</IntegerAttribute>
+                      <BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="UserVisible" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="UserReadOnly" SystemDefined="true">false</BooleanAttribute>
+                      <BooleanAttribute Name="UserDeletable" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="SetPoint" SystemDefined="true">false</BooleanAttribute>
+                    </AttributeList>
+                  </Member>
+                  <Member Name="Speed" Datatype="Int" Remanence="NonRetain">
+                    <AttributeList>
+                      <IntegerAttribute Name="Offset" SystemDefined="true">4</IntegerAttribute>
+                      <BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="UserVisible" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="UserReadOnly" SystemDefined="true">false</BooleanAttribute>
+                      <BooleanAttribute Name="UserDeletable" SystemDefined="true">true</BooleanAttribute>
+                      <BooleanAttribute Name="SetPoint" SystemDefined="true">false</BooleanAttribute>
+                    </AttributeList>
+                  </Member>
+                </Section>
+              </Sections>
+            </Member>
+          </Section>
+        </Sections>
+      </Interface>
+      <MemoryLayout>Standard</MemoryLayout>
+      <Name>MCP_RC_DB</Name>
+      <Number>9801</Number>
+      <ProgrammingLanguage>DB</ProgrammingLanguage>
+    </AttributeList>
+  </SW.Blocks.GlobalDB>
+</Document>

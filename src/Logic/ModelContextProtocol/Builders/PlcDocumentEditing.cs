@@ -121,9 +121,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 && Regex.IsMatch(e.Name.NamespaceName, @"/SW/Interface/v[0-9]+\z", RegexOptions.CultureInvariant)))
             {
                 XNamespace ns = root.Name.Namespace;
-                foreach (var member in root.Elements(ns + "Section").Elements(ns + "Member")) yield return member;
+                foreach (var member in root.Elements(ns + "Section").SelectMany(DeclaredMembers)) yield return member;
             }
         }
+
+        private static IEnumerable<XElement> DeclaredMembers(XElement container)
+        {
+            foreach (var member in container.Elements(container.Name.Namespace + "Member"))
+            {
+                yield return member;
+                if ((string?)member.Attribute("Datatype") == "Struct")
+                    foreach (var child in DeclaredMembers(member)) yield return child;
+            }
+        }
+
+        private static string MemberLocation(XElement element) => string.Join("/", element.AncestorsAndSelf().Reverse()
+            .Where(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Section" && (string?)e.Attribute("Name") != "None")
+            .Select(e => ObjectPathEncoding.EncodeSegment((string?)e.Attribute("Name") ?? "")));
 
         private static string? ReferencedType(XElement member)
         {
@@ -132,8 +146,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 ? type.Substring(1, type.Length - 2) : null;
         }
 
-        public static IEnumerable<string> UnexpandedTypes(string planned) => DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace))
-            .Where(member => member.Element(member.Name.Namespace + "Sections") == null)
+        private static bool Unexpanded(XElement member) => member.Element(member.Name.Namespace + "Sections") == null
+            && member.Element(member.Name.Namespace + "Member") == null;
+
+        public static IEnumerable<string> UnexpandedTypes(string planned) => DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace)).Where(Unexpanded)
             .Select(ReferencedType).OfType<string>().Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal);
 
         // Capture the declaration from the bound PLC before import. Only its interface participates in the preview token.
@@ -143,52 +159,68 @@ namespace TiaMcpServer.ModelContextProtocol
             if (Block(document).Name.LocalName != "SW.Types.PlcStruct" || Name(document) != name) return null;
             var block = XElement.Parse(Canonical(document), LoadOptions.PreserveWhitespace);
             var sections = block.Element("AttributeList")?.Element("Interface")?.Elements().SingleOrDefault();
-            var section = sections?.Elements().SingleOrDefault();
-            return sections?.Name.LocalName == "Sections" && section?.Name == sections.Name.Namespace + "Section"
+            return DeclarationSection(sections);
+        }
+
+        private static XElement? DeclarationSection(XElement? sections)
+        {
+            if (sections?.Name.LocalName != "Sections") return null;
+            XNamespace ns = sections.Name.Namespace;
+            var content = sections.Nodes().Where(n => n is not XComment && !(n is XElement e && e.Name == ns + "AttributeList")).Take(2).ToArray();
+            return content.Length == 1 && content[0] is XElement section && section.Name == ns + "Section"
                 && (string?)section.Attribute("Name") == "None" ? section : null;
         }
 
         public static string NormalizeCompiledReadback(string readback, string planned, IReadOnlyDictionary<string, XElement> declarations)
+            => NormalizeCompiledReadback(readback, planned, declarations, out _);
+
+        public static string NormalizeCompiledReadback(string readback, string planned, IReadOnlyDictionary<string, XElement> declarations,
+            out string? difference)
         {
+            difference = null;
             if (declarations.Count == 0) return readback;
             var block = XElement.Parse(readback, LoadOptions.PreserveWhitespace);
-            var unexpanded = DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace))
-                .Where(m => m.Element(m.Name.Namespace + "Sections") == null)
-                .ToLookup(m => (m.Parent!.Name, (string?)m.Parent.Attribute("Name"), (string?)m.Attribute("Name"), ReferencedType(m)));
+            var shapes = declarations.ToDictionary(pair => pair.Key, pair => DeclarationShape(pair.Value), StringComparer.Ordinal);
+            var unexpanded = DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace)).Where(Unexpanded)
+                .ToLookup(m => (m.Name, MemberLocation(m), ReferencedType(m)));
+            bool removed = false;
             foreach (var member in DbMembers(block))
             {
                 string? type = ReferencedType(member);
-                if (type == null || !declarations.TryGetValue(type, out var declaration)
-                    || !unexpanded.Contains((member.Parent!.Name, (string?)member.Parent.Attribute("Name"), (string?)member.Attribute("Name"), type))) continue;
+                if (type == null || !shapes.TryGetValue(type, out var expected)) continue;
+                string path = MemberLocation(member);
+                if (!unexpanded.Contains((member.Name, path, type))) continue;
                 var expansion = member.Element(member.Name.Namespace + "Sections");
-                if (expansion == null || expansion.Attributes().Any(a => !a.IsNamespaceDeclaration) || expansion.Nodes().Count() != 1) continue;
-                var section = expansion.Element(declaration.Name);
-                if (section != null && MatchesDeclaration(section, declaration)) expansion.Remove();
+                if (expansion == null || expansion.Attributes().Any(a => !a.IsNamespaceDeclaration && a.Name != "ID")) continue;
+                var section = DeclarationSection(expansion);
+                if (section?.Name != expected.Name) continue;
+                var actual = DeclarationShape(section);
+                if (XNode.DeepEquals(expected, actual)) { expansion.Remove(); removed = true; }
+                else difference ??= DescribeDifference(expected, actual, path);
             }
-            return block.ToString(SaveOptions.DisableFormatting);
+            // IDs on a derived member can shift the canonical IDs of later block objects.
+            return removed ? Canonical(new XDocument(new XElement("Document", block))) : readback;
         }
 
-        private static bool MatchesDeclaration(XElement actual, XElement declaration)
+        private static XElement DeclarationShape(XElement section)
         {
-            var expected = new XElement(declaration);
-            var observed = new XElement(actual);
-            XNamespace ns = expected.Name.Namespace;
-            var members = observed.Descendants(ns + "Member").ToArray();
-            int index = 0;
-            foreach (var member in expected.Descendants(ns + "Member"))
+            var shape = new XElement(section);
+            XNamespace ns = section.Name.Namespace;
+            // Compare the declared interface in order, including nested Sections, Struct members and array start values.
+            shape.Descendants(ns + "AttributeList").Remove();
+            shape.Descendants(ns + "Comment").Remove();
+            shape.DescendantNodes().OfType<XComment>().Remove();
+            foreach (var member in shape.Descendants(ns + "Member"))
             {
-                if (index == members.Length) return false;
-                var compiled = members[index++];
-                // TIA can omit the type's editor comments and external-access flags from an instance expansion.
-                if (compiled.Element(ns + "Comment") == null) member.Element(ns + "Comment")?.Remove();
-                var attributes = member.Element(ns + "AttributeList");
-                if (compiled.Element(ns + "AttributeList") == null && attributes != null && attributes.Elements().All(e =>
-                    e.Name == ns + "BooleanAttribute" && (string?)e.Attribute("SystemDefined") == "true"
-                    && (string?)e.Attribute("Name") is "ExternalWritable" or "ExternalAccessible" or "ExternalVisible")) attributes.Remove();
+                member.ReplaceAttributes(member.Attribute("Name"), member.Attribute("Datatype"), member.Attribute("Version"), member.Attribute("Remanence"));
                 RemoveImplicitDefault(member);
-                RemoveImplicitDefault(compiled);
+                // Start values describe their owner; only the order among sibling declarations matters.
+                var starts = member.Elements(ns + "StartValue").ToArray();
+                starts.Remove();
+                member.AddFirst(starts);
             }
-            return XNode.DeepEquals(expected, observed);
+            shape.DescendantsAndSelf().Attributes().Where(a => a.IsNamespaceDeclaration || a.Name == "ID" || a.Name == "Informative").Remove();
+            return shape;
         }
 
         private static void RemoveImplicitDefault(XElement member)
@@ -199,6 +231,61 @@ namespace TiaMcpServer.ModelContextProtocol
             if (type == "Bool" && string.Equals(start.Value, "false", StringComparison.OrdinalIgnoreCase)
                 || start.Value == "0" && type is "SInt" or "USInt" or "Int" or "UInt" or "DInt" or "UDInt" or "LInt" or "ULInt")
                 start.Remove();
+        }
+
+        public static string ReadbackDifference(string planned, string readback) => DescribeDifference(
+            XElement.Parse(planned, LoadOptions.PreserveWhitespace), XElement.Parse(readback, LoadOptions.PreserveWhitespace), "");
+
+        private static string DescribeDifference(XElement expected, XElement actual, string prefix)
+        {
+            string At(XElement node, string aspect)
+            {
+                string path = MemberLocation(node);
+                if (prefix.Length > 0) path = path.Length == 0 ? prefix : prefix + "/" + path;
+                if (path.Length == 0) path = node.Name.LocalName;
+                return (path.Length <= 200 ? path : "..." + path.Substring(path.Length - 197)) + ": " + aspect;
+            }
+            while (true)
+            {
+                if (expected.Name != actual.Name) return At(expected, "element");
+                if (expected.Name.LocalName == "Member")
+                {
+                    string? name = (string?)expected.Attribute("Name");
+                    string? observed = (string?)actual.Attribute("Name");
+                    if (name != observed)
+                    {
+                        var plannedSiblings = expected.Parent!.Elements(expected.Name);
+                        var actualSiblings = actual.Parent!.Elements(actual.Name);
+                        bool found = actualSiblings.Any(e => (string?)e.Attribute("Name") == name);
+                        bool known = plannedSiblings.Any(e => (string?)e.Attribute("Name") == observed);
+                        if (found && known) return At(expected, "order");
+                        if (found) return At(actual, "extra member");
+                        return At(expected, known ? "missing member" : "name");
+                    }
+                    if ((string?)expected.Attribute("Datatype") != (string?)actual.Attribute("Datatype")) return At(expected, "type");
+                    if ((string?)expected.Attribute("Remanence") != (string?)actual.Attribute("Remanence")) return At(expected, "remanence");
+                }
+                if (expected.Name.LocalName == "StartValue") return At(expected, "startValue");
+                if (expected.Parent?.Name == "AttributeList" && expected.Parent.Parent?.Parent == null && expected.Name != "Interface")
+                    return At(expected, "block attribute");
+                if (expected.Attributes().Any(a => (string?)actual.Attribute(a.Name) != a.Value)
+                    || expected.Attributes().Count() != actual.Attributes().Count()) return At(expected, "attribute");
+                var left = expected.Elements().ToArray();
+                var right = actual.Elements().ToArray();
+                int index = 0;
+                while (index < left.Length && index < right.Length && XNode.DeepEquals(left[index], right[index])) index++;
+                if (index < left.Length && index < right.Length && left[index].Name == right[index].Name)
+                {
+                    expected = left[index]; actual = right[index]; continue;
+                }
+                if (index == left.Length && index == right.Length) return At(expected, "content");
+                bool missing = index == right.Length || index < left.Length && !right.Skip(index).Any(e => e.Name == left[index].Name);
+                var changed = missing ? left[index] : right[index];
+                if (changed.Name.LocalName == "Member") return At(changed, missing ? "missing member" : "extra member");
+                if (changed.Name.LocalName == "StartValue") return At(changed, "startValue");
+                if (expected.Name == "AttributeList" && expected.Parent?.Parent == null) return At(changed, "block attribute");
+                return At(changed, changed.Name.LocalName);
+            }
         }
 
         public static JsonObject Inspect(string xml)

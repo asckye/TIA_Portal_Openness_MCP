@@ -225,6 +225,104 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Theory]
+        [InlineData("full", null)]
+        [InlineData("oldWitness", null)]
+        [InlineData("exportIds", null)]
+        [InlineData("struct", null)]
+        [InlineData("nested", null)]
+        [InlineData("nestedType", "Static/Motor/Drive/Config/Speed: type")]
+        [InlineData("rename", "Static/Motor/Run: name")]
+        [InlineData("reorder", "Static/Motor/Run: order")]
+        [InlineData("extra", "Static/Motor/Extra: extra member")]
+        [InlineData("missing", "Static/Motor/Run: missing member")]
+        [InlineData("type", "Static/Motor/Speed: type")]
+        [InlineData("value", "Static/Motor/Speed: startValue")]
+        [InlineData("topValue", "Static/Count: startValue")]
+        [InlineData("topType", "Static/Count: type")]
+        [InlineData("retain", "Static/Motor: remanence")]
+        [InlineData("block", "MemoryLayout: block attribute")]
+        public void Verified_import_compares_compiled_members_with_export_metadata(string change, string? difference)
+        {
+            string folder = Path.Combine(Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/V14Sp1");
+            var document = XDocument.Load(Path.Combine(folder, "compiled-udt-db.xml"));
+            var motor = document.Descendants().Single(e => (string?)e.Attribute("Name") == "Motor");
+            XNamespace ns = motor.Name.Namespace;
+            var count = motor.ElementsBeforeSelf(ns + "Member").Single();
+            var expansion = motor.Element(ns + "Sections")!;
+            var members = expansion.Element(ns + "Section")!.Elements(ns + "Member").ToArray();
+            if (change == "exportIds")
+            {
+                members[0].SetAttributeValue("ID", "1");
+                PlcDocumentEditing.Block(document).Add(new XElement("ObjectList",
+                    new XElement("MultilingualText", new XAttribute("ID", "2"), new XAttribute("CompositionName", "Comment"))));
+            }
+            var declaration = XDocument.Load(Path.Combine(folder, "compiled-udt-declaration.xml"));
+            var declared = declaration.Descendants(ns + "Member").ToArray();
+            if (change == "oldWitness") declared.Elements(ns + "AttributeList").Remove();
+            if (change is "nested" or "nestedType")
+            {
+                XElement Drive() => new XElement(ns + "Member", new XAttribute("Name", "Drive"), new XAttribute("Datatype", "Struct"),
+                    new XElement(ns + "Member", new XAttribute("Name", "Config"), new XAttribute("Datatype", "\"ConfigType\""),
+                        new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None")))));
+                foreach (var speed in new[] { members[1], declared[1] })
+                {
+                    var drive = Drive();
+                    speed.ReplaceWith(drive);
+                    drive.Descendants(ns + "Section").Single().Add(speed);
+                }
+            }
+            if (change == "struct")
+            {
+                var group = new XElement(ns + "Member", new XAttribute("Name", "Group"), new XAttribute("Datatype", "Struct"));
+                motor.ReplaceWith(group);
+                group.Add(motor);
+            }
+            var planned = new XDocument(document);
+            var plannedMotor = planned.Descendants(ns + "Member").Single(e => (string?)e.Attribute("Name") == "Motor");
+            plannedMotor.Element(ns + "Sections")!.Remove();
+            planned.Descendants(ns + "Member").Attributes("Remanence").Remove();
+            planned.Descendants(ns + "Member").Elements(ns + "AttributeList").Remove();
+            using var fixture = new Fixture(planned.ToString()) { Current = document.ToString() };
+            fixture.ExportType = (name, path) => { Assert.Equal("MCP_RC_UDT", name); declaration.Save(path); return true; };
+            switch (change)
+            {
+                case "rename": members[0].SetAttributeValue("Name", "Ready"); break;
+                case "reorder": members[0].Remove(); members[1].AddAfterSelf(members[0]); break;
+                case "extra": members[0].AddBeforeSelf(new XElement(ns + "Member", new XAttribute("Name", "Extra"), new XAttribute("Datatype", "Int"))); break;
+                case "missing": members[0].Remove(); break;
+                case "type": case "nestedType": members[1].SetAttributeValue("Datatype", "DInt"); break;
+                case "value": members[1].Add(new XElement(ns + "StartValue", "4")); break;
+                case "topValue": count.Element(ns + "StartValue")!.Value = "4"; break;
+                case "topType": count.SetAttributeValue("Datatype", "DInt"); break;
+                case "retain": motor.SetAttributeValue("Remanence", "Retain"); break;
+                case "block": document.Descendants("MemoryLayout").Single().Value = "Optimized"; break;
+            }
+            fixture.After = document.ToString();
+            var preview = fixture.Run(true);
+            var result = fixture.Run(false, (string)preview["token"]!);
+            Assert.Equal(difference == null ? "DocumentReadbackMatched" : "DocumentReadbackMismatch", (string?)result["status"]);
+            Assert.Equal(difference, (string?)result["readbackDifference"]);
+            Assert.Equal(difference == null, (string?)result["plannedFingerprint"] == (string?)result["actualFingerprint"]);
+            if (difference != null)
+            {
+                var reply = PlcToolContract.Map("ImportPlcBlockVerified", new { meta = result }, true, true).StructuredContent!;
+                Assert.Equal("NATIVE_OPERATION_FAILED", (string?)reply["error"]!["code"]);
+                Assert.Equal(difference, (string?)reply["data"]!["evidence"]!["readbackDifference"]);
+            }
+        }
+
+        [Fact]
+        public void Block_and_witness_share_the_verified_export_options()
+        {
+            string source = File.ReadAllText(Path.Combine(Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                "src/Adapters/Native/Plc/PlcVerifiedImportBoundary.cs"));
+            Assert.Contains("const ExportOptions verifiedOptions = ExportOptions.WithDefaults | ExportOptions.WithReadOnly;", source);
+            Assert.Matches(@"\.Export\(block,\s*new FileInfo\(TiaOpenness.Shared.NativeInputPolicy.FullPath\(path\)\),\s*verifiedOptions\)", source);
+            Assert.Contains("type.Export(file, verifiedOptions)", source);
+        }
+
+        [Theory]
         [InlineData("uncompiledBefore", true)]
         [InlineData("member", false)]
         [InlineData("type", false)]
