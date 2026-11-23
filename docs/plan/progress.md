@@ -1,6 +1,6 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-23，v4.0.0-rc.2 已发布（2026-11-23，预发布）；v4.0.0-rc.3 准备中
+状态：现行 · 最后核对：2026-11-23，master `e26a3249f`；v4.0.0-rc.3 已发布（2026-11-23，预发布）
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
@@ -10,7 +10,7 @@
   rc.1 的公开已获维护者确认，之后的 rc 各自确认。GitHub latest 仍为 v3.3.0。
 - **2026-11-22，GitHub 仓库改名为 `asckye/automation-engineering-workbench`。** 旧网址经 GitHub 重定向，旧名永不再用，
   因为 3.3 和 beta 更新器经重定向读取发布（[ADR 0039](../standards/decisions/0039-repository-rename-never-reuse-old-name.md)）。
-- **v4.0.0-rc.3 准备中。** rc.2 在 V14 SP1、V15.1 真机定向复验中各有 2 个 HIGH（带 UDT 成员的 DB 验证导入报读回不一致；带口令的编译在无该 API 的版本上报结果未知），修复（VMFIX-23、VMFIX-24）与工作台界面修复（UI-CENTER、UI-POLISH）已合并，尚未在真机上复验。任务见[开发计划](plan.md#400-rc3)。
+- **v4.0.0-rc.3 已于 2026-11-23 发布（`e26a3249f`，GitHub 预发布，不设为 latest）。** rc.2 在 V14 SP1、V15.1 真机定向复验中各有 2 个 HIGH（带 UDT 成员的 DB 验证导入报读回不一致；带口令的编译在无该 API 的版本上报结果未知），修复（VMFIX-23、VMFIX-24）与工作台界面修复（UI-CENTER、UI-POLISH）已合并，尚未在真机上复验。任务见[开发计划](plan.md#400-rc3)。
 - **v4.0.0-rc.2 已于 2026-11-23 发布（`bb154034d`，GitHub 预发布，不设为 latest）。** 完整门禁 `merge-check -All` 与 `prepare` 在该提交上通过；rc.1 反馈的修复和 LOW 审查发现都在这个 rc 中。任务与状态见[开发计划](plan.md#400-rc2)。
   - rc.1 之后已合并：LOW-A（`ManageCfcChartProtection` 八版不再注册，[ADR 0041](../standards/decisions/0041-unregister-cfc-chart-protection.md)）、CHECK-FP、GATE-HANG、RC2-LOW（会启动 worker 的工具在无 TIA 时审批前拒绝，[ADR 0040](../standards/decisions/0040-readiness-before-approval.md)）、LOW-TOOLS、VMFIX-20B（含更新检查限流改报 `RESOURCE_UNAVAILABLE`）、RENAME-GH、LOW-RC2C、VMFIX-20A（`ExportDeviceAml` 输出根外与 OPC UA 导出给出确定结果、V14 SP1 读回对照 UDT 声明、审批宿主读取计划）、LOW-RC2D、文档与 ADR 更新（`16f764d6c`）、VMFIX-21（V15.1 目录导入批次汇总）、REV-REL、REV-DESK、REV-SEC、VMFIX-22（V15.1 批次 C、D 的 LOW）。
   - 2026-11-22 全面审查的修复：REV-SEC 宿主拒绝通配与公网绑定地址、AI 调用拒绝网络与设备输入路径（S8）、可备份目标备份失败或读不到状态时拒绝覆盖导入、审计开始记录写不进时拒绝写入、审批卡转义控制与双向字符、派发后异常报未知、用户 XML 禁用 DTD；REV-DESK 审批防误点、第二实例检测、设置原子写入且损坏时 AI 控制关闭、崩溃日志与诊断编号、诊断包隐私、更新器替换前核对暂存包；REV-REL `prepare` 须有同一提交的 `merge-check -All` 通过记录、golden 重新生成不能通过门禁、工作流动作固定、公开时报告 CI 状态。
