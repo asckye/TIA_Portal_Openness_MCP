@@ -368,15 +368,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "Tag path is empty.";
             }
 
-            if (PlcBlockServicesLogic.WatchEntryAddressAttribute(tagPath) == "Address"
-                || Regex.IsMatch(tagPath, @"^(?:P?[IQEA][XBWD]?|[ML][XBWD]?|[TCZ]|DB)\d+(?:\.\d+)?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+            if (Regex.IsMatch(tagPath, @"^%?[MIQ][BWD]?\d+(\.\d+)?$", RegexOptions.IgnoreCase))
             {
-                return "Absolute PLC addresses are not accepted for HMI/online planning. Use a declared PLC symbol or DB member read back from the project.";
+                return "Absolute I/Q/M address is not accepted for HMI/online planning. Use a declared PLC symbol or DB member read back from the project.";
             }
 
-            if (!Regex.IsMatch(tagPath, @"^(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+"")(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+""))*$"))
+            if (!Regex.IsMatch(tagPath, @"^(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+"")(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+""))+$"))
             {
-                return "Use a declared PLC tag or a symbolic member path, for example MotorRun or DB_HMI.MotorRun.";
+                if (Regex.IsMatch(tagPath, @"^(?:[A-Za-z_][A-Za-z0-9_]*|""[^""]+"")$"))
+                    return "This planner accepts DB member paths such as \"DB\".Member. Tag-table tags are not supported here.";
+                return "Use a symbolic PLC path with at least one member separator, for example DB_HMI.MotorRun.";
             }
 
             return null;

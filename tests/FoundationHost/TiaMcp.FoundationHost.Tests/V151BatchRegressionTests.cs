@@ -204,6 +204,7 @@ public sealed class V151BatchRegressionTests
     }
 
     [Theory]
+    [InlineData("%M110.1")]
     [InlineData("PIW256")]
     [InlineData("IX0")]
     [InlineData("T1")]
@@ -219,17 +220,16 @@ public sealed class V151BatchRegressionTests
         Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
     }
 
-    [Fact]
-    public void Monitoring_plan_accepts_global_symbols_and_preserves_absolute_address_refusals()
+    [Theory, InlineData("MotorRun"), InlineData("\"Global tag\"")]
+    public void Monitoring_plan_explains_the_DB_member_requirement_for_a_bare_symbol(string symbol)
     {
         var tool = new Host.PlcWatchTools(new Services.PlcOrganisationPortService((_, _) => throw new InvalidOperationException("Unexpected dispatch."),
             () => true, () => "C:/Project.ap15_1"));
-        var plan = tool.PlanOnlineReadOnlyMonitoringV4("MCP_RC_PLC3", ["MCP_RC_DB.Run", "MCP_RC_TagC", "\"Global tag\""]).StructuredContent!;
-        Assert.True((bool?)plan["ok"]);
-        Assert.Equal(3, plan["data"]!["acceptedTags"]!.AsArray().Count);
-        var symbols = tool.PlanOnlineReadOnlyMonitoringV4("MCP_RC_PLC3", ["DB1Ready", "T1_Running", "\"DB1\""]).StructuredContent!;
-        Assert.True((bool?)symbols["ok"]);
-        var refused = tool.PlanOnlineReadOnlyMonitoringV4("MCP_RC_PLC3", ["%M110.1"]).StructuredContent!;
-        Assert.Equal("INVALID_ARGUMENT", (string?)refused["error"]?["code"]);
+        var body = tool.PlanOnlineReadOnlyMonitoringV4("MCP_RC_PLC3", [symbol]).StructuredContent!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)body["error"]?["code"]);
+        Assert.Equal("/tagPaths", (string?)body["error"]?["details"]?["parameter"]);
+        string message = Assert.IsType<string>((string?)body["error"]?["message"]);
+        Assert.Contains("\"DB\".Member", message);
+        Assert.Contains("Tag-table tags are not supported", message);
     }
 }
