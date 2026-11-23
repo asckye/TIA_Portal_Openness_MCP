@@ -22,7 +22,7 @@
 ### Fixed
 
 - Workbench reading columns now stay centred as the window, navigation panes and scrollbars change width.
-- Environment checks show actionable failures and one worker-file summary across all eight releases. Diagnostic exports on the Logs page retain the per-release findings.
+- Environment checks show actionable failures and one worker-file summary across all eight releases. First-connection help stays available on the Environment page and no longer raises an attention badge. Diagnostic exports on the Logs page retain the first-connection and per-release findings.
 - Maximized Workbench windows keep their caption controls and status bar inside the screen. The status bar hides the participant separator when there is no participant text.
 
 ## [4.0.0-rc.2] - 2026-11-23

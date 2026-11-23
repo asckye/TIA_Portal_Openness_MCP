@@ -1047,6 +1047,7 @@ public sealed record EnvironmentRow(EnvironmentCheck Check)
         CheckStatus.Checking => "Env.Checking", _ => "Env.Unchecked",
     }];
     public string Fix => Check.FixAction.Resolve();
+    public string FixName => Check.Issue is { Endpoint: not null } issue ? issue.ActionName : Fix;
     public string Detail => Check.Detail.Resolve();
     public bool ShowManual => !Passed && Detail.Length > 0;
     public bool HasFix => Warning && Check.CanRepair;

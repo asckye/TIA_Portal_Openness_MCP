@@ -184,15 +184,23 @@
     <Setter Property="ToolTip" Value="{Binding Detail}"/>
     <Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="ux:ContrastSelection.Active" Value="False"/></Trigger></Style.Triggers>
   </Style>
-  <Style x:Key="Primer.DoctorSummary" TargetType="Border" BasedOn="{StaticResource Primer.Tag}">
+  <Style x:Key="Primer.DoctorTagGlyph" TargetType="TextBlock">
+    <Setter Property="Text" Value="•"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.10_5}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Margin" Value="0,0,4,0"/>
     <Style.Triggers>
-      <DataTrigger Binding="{Binding EnvironmentTone}" Value="Error">
-        <Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/>
-        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.destructiveText}"/>
+      <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource Self}}" Value="Success">
+        <Setter Property="Text" Value="✓"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.ok}"/>
       </DataTrigger>
-      <DataTrigger Binding="{Binding EnvironmentTone}" Value="Success">
-        <Setter Property="Background" Value="{DynamicResource Primer.okBg}"/>
-        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.ok}"/>
+      <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource Self}}" Value="Error">
+        <Setter Property="Text" Value="✕"/>
+        <Setter Property="Foreground" Value="{DynamicResource Ant.colorError}"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource Self}}" Value="Accent">
+        <Setter Property="Foreground" Value="{DynamicResource Primer.accent}"/>
       </DataTrigger>
     </Style.Triggers>
   </Style>

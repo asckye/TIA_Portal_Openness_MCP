@@ -83,8 +83,8 @@
           <Border x:Name="GlobalEnvironmentBanner" Visibility="Collapsed" Style="{StaticResource Primer.Workbench.EnvironmentBanner}">
             <DockPanel>
               <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                <Button x:Name="EnvironmentAction" Content="" Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnEnvironmentAction"
-                  AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self}}"/>
+                <Button x:Name="EnvironmentAction" Content="" Tag="" Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnEnvironmentAction"
+                  AutomationProperties.Name="{Binding Tag,RelativeSource={RelativeSource Self}}"/>
                 <Button Content="×" Margin="6,0,0,0" Style="{StaticResource Primer.IdeToolButton}" Click="OnDismissEnvironment"
                   AutomationProperties.Name="{l:Tr Access.Dismiss}"/>
               </StackPanel>

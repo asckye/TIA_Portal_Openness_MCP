@@ -192,7 +192,8 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
     };
 
     private static bool WorkerFiles(string id) => id.StartsWith("engine-", StringComparison.Ordinal);
-    private static IEnumerable<string> PageIds => WorkbenchEnvironmentChecks.Ids.Select(id => WorkerFiles(id) ? "engines" : id).Distinct();
+    private static bool IndividualPageCheck(string id) => id != "confirmation" && !WorkerFiles(id);
+    private static IEnumerable<string> PageIds => WorkbenchEnvironmentChecks.Ids.Where(IndividualPageCheck).Prepend("engines");
 
     private IReadOnlyList<EnvironmentGroup> CompletedGroups(IReadOnlyList<EnvironmentFinding> findings)
     {
@@ -202,13 +203,13 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
             : problems.Length > 0 ? EnvironmentFindingStatus.Unknown : EnvironmentFindingStatus.Pass;
         var files = new EnvironmentFinding("engines", status, status.ToString(),
             string.Join("\n", problems.Select(f => TiaMcp.Versioning.TiaVersionCatalog.Get(f.Id[7..]).DisplayName + "\n" + f.Evidence)));
-        return Group(findings.Where(f => !WorkerFiles(f.Id)).Prepend(files).Select(f => EnvironmentCheckCatalogue.Row(f, _allowFix)).ToArray());
+        return Group(findings.Where(f => IndividualPageCheck(f.Id)).Prepend(files).Select(f => EnvironmentCheckCatalogue.Row(f, _allowFix)).ToArray());
     }
 
     private static IReadOnlyList<EnvironmentGroup> Group(IReadOnlyList<EnvironmentCheck> rows) =>
     [
         new(LocalizedText.Literal("TIA Portal"), rows
-                .Where(r => r.Id is "installations" or "membership" or "openness-readiness" or "confirmation" or "openness-allowlist").ToArray()),
+                .Where(r => r.Id is "installations" or "membership" or "openness-readiness" or "openness-allowlist").ToArray()),
         new(LocalizedText.Key("Env.Runtime"), rows.Where(r => r.Id is "framework" or "runtime").ToArray()),
         new(LocalizedText.Key("Env.Application"), rows.Where(r => r.Id is "engines" or "data").ToArray()),
         new(LocalizedText.Key("Env.Network"), rows.Where(r => r.Id is "port" or "url" or "firewall" or "proxy-remote").ToArray()),
@@ -343,7 +344,7 @@ public static class EnvironmentCheckCatalogue
             ? LocalizedText.Key("Shell.PortOwners", new DiagnosticRedactor().Redact(string.Join(", ", lines.Skip(2))).Text, endpoint.Port)
             : LocalizedText.Key(port ? "Shell.PortHelp" : "Shell.FirewallHelp");
         return new(finding.Id, endpoint, LocalizedText.Key(port ? "Shell.PortUsed" : "Shell.FirewallBlocked", endpoint.Port),
-            description, LocalizedText.Key(port ? "Shell.ChangePort" : "Config.Network"));
+            description, LocalizedText.Key(port ? "Shell.ChangePort" : "Env.ConfigureNetworkPermission"));
     }
 
     public static string ResultKey(EnvironmentFinding finding) => finding.Result switch

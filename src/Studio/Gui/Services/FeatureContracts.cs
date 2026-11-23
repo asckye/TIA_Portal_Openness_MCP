@@ -85,7 +85,10 @@ public sealed record EnvironmentCheck(string Id, CheckStatus Status, LocalizedTe
     internal EnvironmentIssue? Issue { get; init; }
 }
 
-internal sealed record EnvironmentIssue(string Id, Uri? Endpoint, LocalizedText Title, LocalizedText Description, LocalizedText Action);
+internal sealed record EnvironmentIssue(string Id, Uri? Endpoint, LocalizedText Title, LocalizedText Description, LocalizedText Action)
+{
+    public string ActionName => Id == "port" ? Action.Resolve().TrimEnd(' ', '→') : Action.Resolve();
+}
 public sealed record EnvironmentGroup(LocalizedText Name, IReadOnlyList<EnvironmentCheck> Rows);
 
 public interface IEnvironmentCheckService : INotifyPropertyChanged

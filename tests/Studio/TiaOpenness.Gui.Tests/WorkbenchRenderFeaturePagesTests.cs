@@ -45,6 +45,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 new("membership", failed, "Fail"),
                 new("proxy-remote", failed, "Fail"),
                 new("firewall", failed, "Fail", "http://127.0.0.1:8765/"),
+                new("port", failed, "PortUsed", "http://127.0.0.1:8765/"),
                 new("framework", failed, "Fail"),
             }.Select(Services.EnvironmentCheckCatalogue.Row).ToArray();
             environment.Replace([new(LocalizedText.Literal("TIA Portal"), rows)]);
@@ -56,15 +57,26 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 window.Navigate("Environment"); WpfContext.ShowWindow(window); WpfContext.Drain(); window.UpdateLayout();
                 var doctor = window.EnvironmentContent;
                 Assert.Equal(FeatureTone.Error, window.Features.EnvironmentTone);
-                Assert.Same(window.FindResource("Ant.colorErrorBg"), doctor.SummaryChip.Background);
-                var tag = Assert.Single(Descendants<Border>(doctor.PassedList), border =>
-                    border.IsVisible && border.Style == window.FindResource("Primer.Tag.Ok"));
-                Assert.Equal(Loc.Current["Env.Passed"], Assert.IsType<TextBlock>(tag.Child).Text);
+                var neutralTag = window.FindResource("Primer.Tag");
+                Assert.Same(neutralTag, doctor.SummaryChip.Style);
+                Assert.Equal("✕", doctor.SummaryGlyph.Text);
+                Assert.Same(window.FindResource("Ant.colorError"), doctor.SummaryGlyph.Foreground);
+                var tag = Assert.Single(Descendants<Border>(doctor.PassedList), border => border.IsVisible && border.Name == "PassedTag");
+                Assert.Same(neutralTag, tag.Style);
+                Assert.Collection(Assert.IsType<StackPanel>(tag.Child).Children.Cast<TextBlock>(),
+                    glyph => { Assert.Equal("✓", glyph.Text); Assert.Same(window.FindResource("Primer.ok"), glyph.Foreground); },
+                    label => Assert.Equal(Loc.Current["Env.Passed"], label.Text));
                 Assert.Single(Descendants<TextBlock>(doctor.PassedList), text => text.IsVisible && text.Text == Loc.Current["Env.Passed"]);
                 Assert.DoesNotContain(Descendants<Button>(doctor.PassedList), button => button.IsVisible);
                 var buttons = Descendants<Button>(doctor.CheckList).Where(button => button.IsVisible).ToArray();
-                Assert.Equal(new[] { "membership", "proxy-remote", "firewall" }, buttons.Select(button => ((EnvironmentRow)button.DataContext).Check.Id));
+                Assert.Equal(new[] { "membership", "proxy-remote", "firewall", "port" }, buttons.Select(button => ((EnvironmentRow)button.DataContext).Check.Id));
                 Assert.All(buttons, button => Assert.DoesNotContain("_", Assert.IsType<string>(button.Content)));
+                var firewall = buttons.Single(button => ((EnvironmentRow)button.DataContext).Check.Id == "firewall");
+                Assert.Equal(language == AppLanguage.English ? "Configure network permission" : "配置网络权限", firewall.Content);
+                var port = buttons.Single(button => ((EnvironmentRow)button.DataContext).Check.Id == "port");
+                Assert.Equal(Loc.Current["Shell.ChangePort"], port.Content);
+                Assert.Equal(language == AppLanguage.English ? "Change port in MCP" : "前往 MCP 更改端口",
+                    new System.Windows.Automation.Peers.ButtonAutomationPeer(port).GetName());
                 foreach (var row in window.Features.FailedChecks)
                 {
                     var name = Assert.Single(Descendants<TextBlock>(doctor.CheckList), text => text.IsVisible && text.Text == row.Name);
@@ -74,6 +86,10 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 }
                 Assert.Contains("8765", window.Features.FailedChecks.Single(row => row.Check.Id == "firewall").Result);
                 Assert.DoesNotContain(Descendants<Button>(doctor), button => Equals(button.Content, Loc.Current["Env.Generate"]));
+                environment.Replace([new(LocalizedText.Key("Env.Runtime"), [Services.EnvironmentCheckCatalogue.Checking("runtime")])]);
+                WpfContext.Drain();
+                Assert.Equal("•", doctor.SummaryGlyph.Text);
+                Assert.Same(window.FindResource("Primer.accent"), doctor.SummaryGlyph.Foreground);
                 window.Navigate("Log"); WpfContext.Drain(); window.UpdateLayout();
                 var export = window.LogContent.GenerateButton;
                 Assert.True(export.IsVisible && export.IsEnabled);

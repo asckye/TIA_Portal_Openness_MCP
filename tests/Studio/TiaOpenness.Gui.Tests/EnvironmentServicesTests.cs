@@ -4,6 +4,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Core.Environment;
 using TiaOpenness.Gui.Localization;
@@ -44,6 +46,9 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
                     var error = Assert.Throws<InvalidOperationException>(() => EnvironmentCheckService.RequireDoctorSuccess(2));
                     Assert.Contains("2", error.Message); Assert.Contains("lusrmgr.msc", error.Message);
                     Assert.DoesNotContain("V20/V21", Loc.Current["Env.NoDoctorHost"]);
+                    var row = EnvironmentCheckCatalogue.Row(service.Findings.Single(f => f.Id == "membership"));
+                    Assert.Equal(language == AppLanguage.English ? "The repair did not complete. Use the manual steps below." : "修复未完成。请按下方步骤手动处理。",
+                        row.Result.Resolve());
                     EnvironmentCheckService.RequireDoctorSuccess(0);
                 }
                 finally { Loc.Current.Language = previous; }
@@ -455,9 +460,64 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         bundle.Export(); await bundle.Completion;
         using var archive = ZipFile.OpenRead(bundle.Progress.Path);
         var checks = JsonNode.Parse(Read(archive, "environment/checks.json"))!["checks"]!.AsArray();
+        Assert.Equal("Guidance", (string?)Assert.Single(checks, item => (string?)item!["id"] == "confirmation")!["status"]);
         var workers = checks.Where(c => ((string)c!["id"]!).StartsWith("engine-", StringComparison.Ordinal)).ToArray();
         Assert.Equal(8, workers.Length);
         Assert.Equal(new[] { "engine-19", "engine-21" }, workers.Where(c => (string?)c!["status"] == "Fail").Select(c => (string?)c!["id"]));
+    }
+
+    [Fact]
+    public void Healthy_environment_keeps_first_connection_help_and_clears_the_attention_badge()
+    {
+        using var fixture = new Fixture();
+        var sources = Sources();
+        var doctor = sources.Doctor();
+        sources.Doctor = () => doctor;
+        sources.ProxyConnection = _ => new("proxy-remote", EnvironmentFindingStatus.Pass, "Pass");
+        var modified = new DateTime(2026, 10, 19, 13, 9, 44, DateTimeKind.Utc);
+        var hash = System.Security.Cryptography.SHA256.HashData("fixture worker"u8);
+        var workers = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(v => Path.GetFullPath(BundleLayout.WorkerPath(fixture.Root, v.Key)))
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(path => Path.GetFileName(path));
+        sources.FileIdentity = _ => new(modified, hash);
+        sources.AllowListEntry = name => OpennessAllowList.Expected(workers[name], modified, hash);
+        var service = new EnvironmentCheckService(() => fixture.Context, () => sources, _ => { });
+        Assert.DoesNotContain(service.Groups.SelectMany(g => g.Rows), row => row.Id == "confirmation");
+
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(false), new FeaturePageFixtures.Diagnostics());
+            try
+            {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), service);
+                window.Navigate("Environment");
+                WpfContext.ShowWindow(window);
+                WpfContext.Complete(service.Completion);
+                var features = window.Features;
+                Assert.True(features.EnvironmentAttentionCount > 0);
+                Assert.Equal(Visibility.Visible, window.EnvironmentCountBadge.Visibility);
+                doctor.Checks.Single(check => check.Id == "TIA-GROUP").Status = CheckStatus.Pass;
+                service.Recheck();
+                WpfContext.Complete(service.Completion);
+                window.UpdateLayout();
+                Assert.All(service.Findings.Where(f => f.Id != "confirmation"), f => Assert.Equal(EnvironmentFindingStatus.Pass, f.Status));
+                Assert.Equal(EnvironmentFindingStatus.Guidance, Assert.Single(service.Findings, f => f.Id == "confirmation").Status);
+                Assert.Equal(12, features.PassedChecks.Count);
+                Assert.Equal(Loc.Current.T("Env.AllPassedCount", 12), features.EnvironmentSummary);
+                Assert.Empty(features.FailedChecks);
+                Assert.Equal(0, features.EnvironmentAttentionCount);
+                Assert.Equal(Visibility.Collapsed, window.EnvironmentCountBadge.Visibility);
+                var page = window.EnvironmentContent;
+                Assert.Equal("✓", page.SummaryGlyph.Text);
+                Assert.Same(window.FindResource("Primer.ok"), page.SummaryGlyph.Foreground);
+                var help = Assert.Single(DesktopCapture.Descendants<Expander>(page),
+                    expander => Equals(expander.Header, Loc.Current["Env.FirstConnection"]));
+                help.IsExpanded = true;
+                window.UpdateLayout();
+                Assert.Contains(DesktopCapture.Descendants<TextBlock>(help),
+                    text => text.IsVisible && text.Text == Loc.Current["Env.FirstConnectionHelp"]);
+            }
+            finally { window.Close(); }
+        });
     }
 
     private static EnvironmentProbeSources Sources() => new()

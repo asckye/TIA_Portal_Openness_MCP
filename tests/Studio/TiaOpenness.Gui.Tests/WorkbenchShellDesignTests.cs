@@ -271,11 +271,15 @@ public sealed partial class WorkbenchShellDesignTests(WpfContext wpf)
                 Dismiss();
                 Assert.Contains("8123", window.EnvironmentTitle.Text);
                 Assert.Contains("PID 17", window.EnvironmentDescription.Text);
+                Assert.Equal(Loc.Current["Shell.ChangePort"], window.EnvironmentAction.Content);
+                Assert.Equal(Loc.Current.IsChinese ? "前往 MCP 更改端口" : "Change port in MCP",
+                    new System.Windows.Automation.Peers.ButtonAutomationPeer(window.EnvironmentAction).GetName());
                 UnifiedDesktopTests.ClickControl(window.EnvironmentAction);
                 Assert.True(window.RailMcp.IsChecked);
                 Assert.True(window.Configuration!.RemoteNav.IsChecked);
                 Dismiss();
                 Assert.Same(window.FindResource("Primer.warnBg"), window.GlobalEnvironmentBanner.Background);
+                Assert.Equal(Loc.Current["Env.ConfigureNetworkPermission"], window.EnvironmentAction.Content);
                 UnifiedDesktopTests.ClickControl(window.EnvironmentAction);
                 Assert.True(window.Configuration.RemoteNav.IsChecked);
                 Assert.NotEqual("8123", window.Configuration.ServerPort.Text);

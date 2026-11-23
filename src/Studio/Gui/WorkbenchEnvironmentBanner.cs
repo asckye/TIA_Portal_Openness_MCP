@@ -30,6 +30,7 @@ public partial class MainWindow
         EnvironmentTitle.Text = current.Title.Resolve();
         EnvironmentDescription.Text = "· " + current.Description.Resolve();
         EnvironmentAction.Content = current.Action.Resolve();
+        EnvironmentAction.Tag = current.ActionName;
     }
 
     private void OnDismissEnvironment(object sender, RoutedEventArgs e)

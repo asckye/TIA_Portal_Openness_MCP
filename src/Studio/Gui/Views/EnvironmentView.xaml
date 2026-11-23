@@ -23,10 +23,13 @@
             </Expander>
           </StackPanel>
           <Grid Grid.Column="2">
-            <Border Style="{StaticResource Primer.Tag.Ok}" VerticalAlignment="Center" Visibility="{Binding Passed, Converter={StaticResource BoolToVisibility}}">
-              <TextBlock Text="{Binding Status}" VerticalAlignment="Center"/>
+            <Border x:Name="PassedTag" Style="{StaticResource Primer.Tag}" Visibility="{Binding Passed, Converter={StaticResource BoolToVisibility}}">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource Primer.DoctorTagGlyph}" Tag="Success"/>
+                <TextBlock Text="{Binding Status}" VerticalAlignment="Center"/>
+              </StackPanel>
             </Border>
-            <Button Content="{Binding Fix}" AutomationProperties.Name="{Binding Fix}" Style="{StaticResource Primer.Button.Primary.Small}" CommandParameter="Mcp"
+            <Button Content="{Binding Fix}" AutomationProperties.Name="{Binding FixName}" Style="{StaticResource Primer.Button.Primary.Small}" CommandParameter="Mcp"
               Click="OnFix" VerticalAlignment="Top" Visibility="{Binding HasFix, Converter={StaticResource BoolToVisibility}}"/>
           </Grid>
         </Grid>
@@ -38,8 +41,11 @@
       <ux:PageHeadPanel VerticalAlignment="Center">
         <StackPanel Orientation="Horizontal">
           <TextBlock Text="{l:Tr Env.Doctor}" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-          <Border x:Name="SummaryChip" Style="{StaticResource Primer.DoctorSummary}" ToolTip="{l:Tr Env.AttentionGroup}" VerticalAlignment="Center">
-            <TextBlock Text="{Binding EnvironmentSummary}" VerticalAlignment="Center"/>
+          <Border x:Name="SummaryChip" Style="{StaticResource Primer.Tag}" ToolTip="{l:Tr Env.AttentionGroup}">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock x:Name="SummaryGlyph" Style="{StaticResource Primer.DoctorTagGlyph}" Tag="{Binding EnvironmentTone}"/>
+              <TextBlock Text="{Binding EnvironmentSummary}" VerticalAlignment="Center"/>
+            </StackPanel>
           </Border>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
