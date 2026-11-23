@@ -1,5 +1,6 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias toolpipeline;
+using DispatchJournal = toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal;
 using McpServer = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using ImportStagingTools = toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingTools;
 using WorkerSupervisorReplies = toolpipeline::TiaMcp.FoundationHost.WorkerSupervisorReplies;
@@ -10,6 +11,7 @@ using LateCalls = toolpipeline::TiaMcp.FoundationHost.LateCalls;
 using UnknownSettlement = toolpipeline::TiaMcp.FoundationHost.UnknownSettlement;
 using ResponseGuardTool = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
 #else
+using DispatchJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal;
 using McpServer = TiaMcpServer.ModelContextProtocol.McpServer;
 using ImportStagingTools = TiaMcpServer.ModelContextProtocol.ImportStagingTools;
 using ResponseGuardTool = TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
@@ -87,7 +89,8 @@ internal sealed partial class WorkerClient
                 process.BeginErrorReadLine();
                 channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
                     new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce)) {
-                    UnsettledRequests = UnsettledRequestIds, ObserveReplyTime = TiaOpenness.Shared.ToolCallTiming.RecordWorkerReply };
+                    UnsettledRequests = UnsettledRequestIds, ObserveReplyTime = TiaOpenness.Shared.ToolCallTiming.RecordWorkerReply,
+                    ObserveWriteDispatch = DispatchJournal.NativeCallStarted };
             }
         }
     }

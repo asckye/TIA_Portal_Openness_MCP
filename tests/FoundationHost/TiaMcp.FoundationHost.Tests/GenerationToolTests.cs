@@ -26,6 +26,66 @@ public sealed class GenerationToolTests : IDisposable
             (pending, _, _) => { observe?.Invoke(pending); return Task.FromResult(new ApprovalOutcome(pending, false, refusal)); });
     private static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments)
         => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) { Params = new CallToolRequestParams { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
+    [Fact]
+    public async Task ApplyGenerationPlan_rejects_a_missing_execution_session_before_dispatch()
+    {
+        const string name = "ApplyGenerationPlan";
+        var args = new JsonObject { ["planId"] = "fixture", ["expectedPlanHash"] = new string('a', 64),
+            ["expectedProjectFile"] = Path.Combine(root, "Fixture.ap21"), ["dryRun"] = false };
+        var result = await Tool(name, "21").InvokeAsync(Request(name, args));
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+    }
+
+    [Theory]
+    [InlineData("argument", false, "INVALID_ARGUMENT")]
+    [InlineData("state", false, "INVALID_ARGUMENT")]
+    [InlineData("params", false, "INVALID_ARGUMENT")]
+    [InlineData("argument", true, "OUTCOME_UNKNOWN")]
+    [InlineData("state", true, "OUTCOME_UNKNOWN")]
+    [InlineData("params", true, "OUTCOME_UNKNOWN")]
+    [InlineData("io", false, "OUTCOME_UNKNOWN")]
+    public async Task Inner_write_exceptions_use_dispatch_evidence(string failure, bool dispatched, string code)
+    {
+        const string name = "SaveProject";
+        var inner = new FailingWrite(failure, dispatched);
+        var tool = new FoundationV4Tool(inner, "21", () => new ApprovalSettings(false));
+        var result = (await tool.InvokeAsync(Request(name, new JsonObject { ["dryRun"] = false }))).StructuredContent!;
+        Assert.True(inner.Entered);
+        Assert.Equal(code, (string?)result["error"]?["code"]);
+        Assert.Equal(code == "INVALID_ARGUMENT" ? "not-started" : "unknown", (string?)result["meta"]?["execution"]);
+    }
+
+    private sealed class FailingWrite(string failure, bool dispatched) : McpServerTool
+    {
+        internal bool Entered { get; private set; }
+        public override Tool ProtocolTool { get; } = new() { Name = "SaveProject", InputSchema = JsonSerializer.SerializeToElement(new {
+            type = "object", properties = new { dryRun = new { type = "boolean" } } }) };
+        public override ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
+        {
+            Entered = true;
+            if (dispatched) toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.NativeCallStarted();
+            throw failure switch {
+                "argument" => new ArgumentException("Invalid fixture argument."),
+                "state" => new InvalidOperationException("Invalid fixture state."),
+                "params" => new ModelContextProtocol.McpException("Invalid fixture parameters.", null, ModelContextProtocol.McpErrorCode.InvalidParams),
+                _ => new IOException("Unclassified I/O failure.")
+            };
+        }
+    }
+
+    [Fact]
+    public async Task ListStandardPackages_reads_the_catalog_when_audit_is_unavailable()
+    {
+        const string name = "ListStandardPackages";
+        string file = Path.Combine(root, "unavailable-audit-directory");
+        File.WriteAllText(file, "fixture");
+        using var scope = AuditInvocation.UseLog(new AuditLog(file));
+        var result = (await Tool(name, "21").InvokeAsync(Request(name, new JsonObject()))).StructuredContent!;
+        Assert.True((bool?)result["ok"], result.ToJsonString());
+        Assert.Contains("tiamcp.basic", result["data"]!.ToJsonString());
+    }
+
     [Theory]
     [InlineData("unknown", "/machine/devices/0", "Unknown property.")]
     [InlineData("station", "/machine/devices/0/station", "Select one of the declared PLC stations.")]

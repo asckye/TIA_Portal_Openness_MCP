@@ -17,6 +17,33 @@ public sealed class EngineProfileTests
     }
 
     [Fact]
+    public async Task Dispatch_signal_follows_validation_and_precedes_the_reply()
+    {
+        using var input = new FeedStream(); using var output = new CaptureStream();
+        using var client = new ChannelClient(input, output, Identity, ChannelProfile.Engine);
+        input.Feed(Hello); await client.ConnectAsync(Budget);
+        int sends = 0;
+        client.ObserveWriteDispatch = () => sends++;
+        Task<string> Call(string method, CancellationToken token = default) => client.CallAsync(method, "{}", BindingChange.None, false, Budget, token);
+        await Assert.ThrowsAsync<ArgumentException>(() => Call("invalid"));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Call("engine.invoke", new CancellationToken(true)));
+        Assert.Equal(0, sends);
+        Assert.Empty(output.Writes);
+        var read = client.CallAsync("engine.status", "{}", BindingChange.None, true, Budget);
+        input.Feed(Reply());
+        await read;
+        Assert.Equal(0, sends);
+        var reply = Call("engine.invoke");
+        Assert.Equal(2, output.Writes.Count);
+        Assert.Equal(1, sends);
+        Assert.False(reply.IsCompleted);
+        input.End();
+        await Assert.ThrowsAsync<ChannelFaultException>(() => reply);
+        Assert.True(client.OutcomeUnknown);
+        Assert.Equal(1, sends);
+    }
+
+    [Fact]
     public async Task Answered_unknown_permits_independent_project_and_simulator_calls()
     {
         using var input = new FeedStream(); using var output = new CaptureStream();

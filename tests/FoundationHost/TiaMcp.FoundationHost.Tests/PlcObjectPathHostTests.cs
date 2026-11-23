@@ -92,6 +92,22 @@ public sealed class PlcObjectPathHostTests
         }
     }
 
+    [Theory]
+    [InlineData("14sp1", "SCL", true, false, "V14 SP1 SCL interface-only XML")]
+    [InlineData("14sp1", "LAD", true, false, "")]
+    [InlineData("15.1", "SCL", true, false, "")]
+    [InlineData("21", "SCL", false, false, "inconsistent")]
+    [InlineData("21", "LAD", true, true, "know-how-protected")]
+    [InlineData("21", "LAD", false, true, "know-how-protected")]
+    public void Block_recovery_identifies_the_api_limit_for_the_target(string release, string language, bool consistent, bool protectedBlock,
+        string expected)
+    {
+        var reason = TiaOpenness.Shared.NativeExportPolicy.BlockRecoveryBlocker(release,
+            () => TiaMcp.Adapters.PlcBlockXmlPolicy.Export(release, language).FullProgramRestoreSupported == false,
+            () => consistent, () => protectedBlock);
+        Assert.Equal(expected, reason);
+    }
+
     [Theory, InlineData("14sp1", true), InlineData("15.1", false)]
     public void Describe_block_logic_reports_the_native_export_limit(string release, bool interfaceOnly)
     {

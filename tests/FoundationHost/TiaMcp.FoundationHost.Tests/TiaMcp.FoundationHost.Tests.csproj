@@ -14,6 +14,7 @@
     <ProjectReference Include="../../../build-tools/common/TiaMcp.BuildCommon/TiaMcp.BuildCommon.csproj" />
     <Compile Include="../../Shared/SourceFamily.cs" Link="Shared/SourceFamily.cs" />
     <Compile Include="../../Shared/DecoderRuntimeFixture.cs" Link="Shared/DecoderRuntimeFixture.cs" />
+    <Compile Include="../../../src/Shared/RemoteProxyPolicy.cs" Link="Shared/RemoteProxyPolicy.cs" />
     <Compile Include="../../../src/Shared/HttpEndpoint.cs" Link="Shared/HttpEndpoint.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerAssemblyResolver.cs" Link="WorkerAssemblyResolver.cs" />

@@ -106,7 +106,8 @@ namespace TiaMcp.FoundationHost
         internal static Error? ValidateToolArguments(ToolDescriptor tool, JsonElement arguments, JsonElement schema,
             IToolCatalogView? catalog = null, bool typedFamiliesOnly = false)
         {
-            var presetError = ParameterPresets.Refusal(tool.Name, JsonNode.Parse(arguments.GetRawText())!.AsObject(),
+            var supplied = JsonNode.Parse(arguments.GetRawText())!.AsObject();
+            var presetError = ParameterPresets.Refusal(tool.Name, supplied,
                 CanonicalParameterTool.PresetNames(tool), EngineHostConfiguration.CurrentOrNull?.Presets ?? ParameterPresets.Empty);
             if (presetError != null) return presetError;
             if (tool.Name == "GetNativeInvocationLog" && TiaMcp.Logic.ModelContextProtocol.NativeJournalReader.PagingError(arguments) is { } paging)
@@ -151,13 +152,15 @@ namespace TiaMcp.FoundationHost
             family ??= Families(tool, arguments);
             if (family != null || typedFamiliesOnly) return family;
             bool canonical = CanonicalToolParameters.Aliases(tool.Name).Count != 0 || CanonicalToolParameters.HasStringDevice(tool.Name);
-            var shape = (canonical ? CanonicalToolParameters.ValidateAliases(tool.Name,
-                JsonNode.Parse(arguments.GetRawText())!.AsObject(), tool.ImplementationRequired) : null)
+            var shape = (canonical ? CanonicalToolParameters.ValidateAliases(tool.Name, supplied, tool.ImplementationRequired) : null)
                 ?? new InputSchema(schema).Validate(arguments, "arguments");
             if (shape != null) return shape;
+            // Readiness admission also binds arguments, before a workspace can be opened.
+            try { CallerInputFiles.RequireLocalWorkspace(tool.Name, supplied); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            { return new Error(error.Message, new InvalidArgumentDetails("workspaceRoot", Array.Empty<string>())); }
             if (canonical)
-                arguments = JsonSerializer.SerializeToElement(CanonicalToolParameters.LegacyArguments(tool.Name,
-                    JsonNode.Parse(arguments.GetRawText())!.AsObject()));
+                arguments = JsonSerializer.SerializeToElement(CanonicalToolParameters.LegacyArguments(tool.Name, supplied));
             foreach (var parameter in tool.Parameters)
             {
                 var type = ParameterType(parameter.ClrType);
@@ -244,14 +247,18 @@ namespace TiaMcp.FoundationHost
                 try
                 {
                     var unsettledBeforeSave = tool.Name is "SaveProject" or "SaveProjectCopy" ? worker.Unsettled.SaveWarnings() : null;
-                    var reply = await worker.Invoke(id, tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(), preview, token)
-                        .ConfigureAwait(false);
-                    if (reply.NativeCallIssued) InvocationJournal.NativeCallStarted();
+                    var input = JsonNode.Parse(arguments.Json.GetRawText())!.AsObject();
+                    bool write = HostBehavior.ApprovalWrite(tool.Name, input, tool.Classification?.Operation is "WRITE" or "ONLINE-WRITE",
+                        tool.DryRun.Present, tool.DryRun.Default);
+                    bool dispatchWrite = !preview && (write || tool.Classification?.Operation is "FILE" or "EXECUTE"
+                        && !HostBehavior.IsPreview(input, tool.DryRun.Present && tool.DryRun.Default));
+                    var pending = dispatchWrite ? worker.DispatchWrite(id, tool.Name, input, InvocationJournal.NativeCallStarted, token)
+                        : worker.Invoke(id, tool.Name, input, preview, token);
+                    var reply = await pending.ConfigureAwait(false);
+                    if (!dispatchWrite && reply.NativeCallIssued) InvocationJournal.NativeCallStarted();
                     phase = "RETURNED";
                     return new ToolInvocationResult(McpServer.ObserveSessionOutcome(tool.Name, reply.Result,
-                        HostBehavior.ApprovalWrite(tool.Name, JsonNode.Parse(arguments.Json.GetRawText())!.AsObject(),
-                            tool.Classification?.Operation is "WRITE" or "ONLINE-WRITE", tool.DryRun.Present, tool.DryRun.Default),
-                        arguments.Json.GetRawText(), preview, unsettledBeforeSave), reply.NativeCallIssued);
+                        write, arguments.Json.GetRawText(), preview, unsettledBeforeSave), reply.NativeCallIssued);
                 }
                 finally { InvocationJournal.Write(id, "worker:" + tool.Name, phase); }
             }

@@ -6,6 +6,33 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class HmiAuditRegressionTests
 {
+    [Fact]
+    public void Safe_reader_preserves_the_callers_stream_and_enforces_its_character_budget()
+    {
+        using var file = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("<Document/>"));
+        using (var reader = SafeXml.Open(file))
+            Assert.Equal("Document", System.Xml.Linq.XDocument.Load(reader).Root!.Name.LocalName);
+        file.Position = 0;
+        Assert.Throws<System.Xml.XmlException>(() =>
+        {
+            using var reader = SafeXml.Open(file, 4);
+            System.Xml.Linq.XDocument.Load(reader);
+        });
+    }
+
+    [Fact]
+    public void Hmi_import_refuses_a_document_type_before_inspecting_targets()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "<!DOCTYPE Document><Document><Hmi.Screen.Screen><AttributeList>"
+                + "<Name>A</Name></AttributeList></Hmi.Screen.Screen></Document>");
+            Assert.Throws<System.Xml.XmlException>(() => HmiExchangePolicy.BeforeImport(Array.Empty<object>(), path, "Hmi.Screen.Screen", false));
+        }
+        finally { File.Delete(path); }
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

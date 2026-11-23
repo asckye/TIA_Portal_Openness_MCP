@@ -558,6 +558,24 @@ public sealed class StagedGenerationTests
         var result = f.Apply(); Assert.Equal("rejected-before-operation", (string?)result["data"]!["status"]);
         Assert.Equal(0, f.Worker.Writes); Assert.Contains("InvalidOperationException", (string?)result["data"]!["stoppingReason"]);
     }
+    [Fact]
+    public async Task Apply_tool_reports_unknown_after_the_dispatched_import_throws()
+    {
+        using var f = new Fixture("21");
+        var plan = f.Plan();
+        f.Failure = "throw";
+        const string name = "ApplyGenerationPlan";
+        var tool = new FoundationV4Tool(new GenerationTool(name, f.Release, executionSession: f.Session), f.Release);
+        var args = new JsonObject { ["planId"] = (string?)plan["planId"], ["expectedPlanHash"] = (string?)plan["planHash"],
+            ["expectedProjectFile"] = f.Project, ["dryRun"] = false };
+        var request = new RequestContext<CallToolRequestParams>(System.Reflection.DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
+        { Params = new CallToolRequestParams { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(args.ToJsonString()) } };
+        var result = (await tool.InvokeAsync(request)).StructuredContent!;
+        Assert.Equal(1, f.Worker.Writes);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)result["error"]?["code"]);
+        Assert.Equal("unknown", (string?)result["meta"]?["outcome"]);
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public void WorkerExitIsUnknownWithoutReplay(string release)
     {

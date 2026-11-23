@@ -49,6 +49,7 @@
     <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringFileOutput.cs" />
     <Compile Include="../../../src/Adapters/Native/Safety/SafetyFileOutput.cs" />
     <Compile Include="../../../src/Adapters/Native/Options/OptionalProductFiles.cs" />
+    <Compile Include="../../../src/Adapters/Native/Options/CfcInventory.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcOrganisationWorker.Services.cs" />
     <Compile Include="../../../src/Logic/Siemens/NativeFileOutput.cs" />
     <Compile Include="../../../src/Logic/Siemens/ArgumentRules.cs" />

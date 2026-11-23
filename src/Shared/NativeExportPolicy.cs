@@ -52,11 +52,17 @@ namespace TiaOpenness.Shared
                 if (handle.IsInvalid) throw new IOException("Directory is not writable; attempted path: " + path);
             }
         }
+        internal const string InterfaceOnlyScl = "V14 SP1 SCL interface-only XML";
         internal sealed class RecoveryEvidence
         {
             internal string? Directory, Warning;
             internal readonly List<Dictionary<string, string>> Skipped = new List<Dictionary<string, string>>();
             internal readonly Dictionary<string, string> Files = new Dictionary<string, string>();
+            internal void RequireExportableBackups()
+            {
+                if (Skipped.All(item => item["reason"] is "inconsistent" or "know-how-protected" or InterfaceOnlyScl)) return;
+                throw AdapterPreconditionException.Failed("Overwrite refused. " + Warning, "backup-unavailable", "overwrite");
+            }
             internal string Status => Warning != null ? "backup-skipped" : Directory != null ? "backup-ready" : "not-needed";
         }
         internal sealed class RecoveryTarget
@@ -77,6 +83,14 @@ namespace TiaOpenness.Shared
         }
         internal static string ExportBlocker(bool consistent, bool protectedObject = false) =>
             !consistent ? "inconsistent" : protectedObject ? "know-how-protected" : "";
+        internal static string BlockRecoveryBlocker(string release, Func<bool> interfaceOnlyXml, Func<bool> consistent, Func<bool> protectedBlock)
+        {
+            if (release == "14sp1" && interfaceOnlyXml()) return InterfaceOnlyScl;
+            bool isConsistent = consistent();
+            return protectedBlock() ? "know-how-protected" : ExportBlocker(isConsistent);
+        }
+
+        // Batch plans reject a replacement when inspection cannot establish consistency.
         internal static string InspectBlocker(Func<string> inspect)
         {
             try { return inspect(); }
@@ -84,7 +98,7 @@ namespace TiaOpenness.Shared
             { return "unknown-consistency"; }
         }
         internal static string BackupWarning(IEnumerable<Dictionary<string, string>> skipped) => "Backup skipped for "
-            + string.Join("; ", skipped.Select(x => x["object"] + ": " + x["reason"])) + ". Import proceeds without a complete recovery backup.";
+            + string.Join("; ", skipped.Select(x => x["object"] + ": " + x["reason"])) + ".";
         internal static RecoveryEvidence SingleImportRecovery(IEnumerable<Action<FileInfo>> backups, Func<string> directory, string attemptedPath)
             =>
                 SingleImportRecovery(backups.Select((export, index) => new RecoveryTarget { Object = index.ToString(), Export = export }), directory,
@@ -95,7 +109,7 @@ namespace TiaOpenness.Shared
             RecoveryTarget[] exports;
             try { exports = backups.ToArray(); }
             catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
-            catch (Exception error) /* swallow(native-fallback): unexpected backup enumeration failure is best effort */
+            catch (Exception error) /* swallow(native-fallback): report inspection failure before import */
             {
                 result.Skipped
                     .Add(new Dictionary<string, string> {
@@ -103,35 +117,39 @@ namespace TiaOpenness.Shared
                 result.Warning = BackupWarning(result.Skipped); return result;
             }
             if (exports.Length == 0) return result;
-            var ready = new List<KeyValuePair<int, RecoveryTarget>>();
+            var ready = new List<(int Index, RecoveryTarget Target)>();
             void Skip(RecoveryTarget target, string reason) => result.Skipped
                 .Add(new Dictionary<string, string> { ["object"] = target.Object, ["reason"] = reason });
             for (int index = 0; index < exports.Length; index++)
             {
                 var target = exports[index];
-                string blocker = target.InspectBlocker == null ? target.Blocker : InspectBlocker(target.InspectBlocker);
-                if (blocker != "") Skip(target, blocker); else ready.Add(new KeyValuePair<int, RecoveryTarget>(index, target));
+                try
+                {
+                    string blocker = target.InspectBlocker?.Invoke() ?? target.Blocker;
+                    if (blocker == "") ready.Add((index, target));
+                    else Skip(target, blocker);
+                }
+                catch (Exception error) /* swallow(native-fallback): an unreadable target refuses the overwrite */
+                { Skip(target, "target-inspection-failed (" + error.GetType().Name + ")"); }
             }
             if (ready.Count > 0)
             {
                 try { result.Directory = directory(); }
                 catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
-                catch (Exception error) /* swallow(native-fallback): recovery location failures do not block a single import */
+                catch (Exception error) /* swallow(native-fallback): retain the location error for the pre-import decision */
                 {
                     foreach (var target in ready)
-                        Skip(target.Value, "recovery-location-unavailable (" + error.GetType().Name + "); attempted path: " + attemptedPath);
+                        Skip(target.Target, "recovery-location-unavailable (" + error.GetType().Name + "); attempted path: " + attemptedPath);
                 }
             }
             long total = 0;
             if (result.Directory != null)
-                for (int i = 0; i < ready.Count; i++)
+                foreach (var (index, target) in ready)
                 {
-                    var target = ready[i].Value;
                     try
                     {
-                        var file =
-                            new FileInfo(Path
-                                .Combine(result.Directory, ready[i].Key.ToString("D3", System.Globalization.CultureInfo.InvariantCulture) + ".xml"));
+                        string name = index.ToString("D3", System.Globalization.CultureInfo.InvariantCulture) + ".xml";
+                        var file = new FileInfo(Path.Combine(result.Directory, name));
                         target.Export(file);
                         using var saved = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
                         if (saved.Length < 1 || saved.Length > 4 * 1024 * 1024 || (total += saved.Length) > 32 * 1024 * 1024)
@@ -140,7 +158,7 @@ namespace TiaOpenness.Shared
                             .ToLowerInvariant();
                     }
                     catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
-                    catch (Exception error) /* swallow(native-fallback): export refusal must not prevent a single overwrite import */
+                    catch (Exception error) /* swallow(native-fallback): retain successful recovery files and identify each refused export */
                     { Skip(target, "export-or-validation-refused (" + error.GetType().Name + ")"); }
                 }
             if (result.Skipped.Count > 0) result.Warning = BackupWarning(result.Skipped);

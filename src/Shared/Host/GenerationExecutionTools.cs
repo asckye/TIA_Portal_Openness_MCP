@@ -18,7 +18,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     internal sealed partial class GenerationTools
     {
-        private GenerationExecutionSession ExecutionSession => executionSession ?? TiaMcp.FoundationHost.EngineHostConfiguration.Current.Generation;
+        internal GenerationExecutionSession ExecutionSession => executionSession ?? TiaMcp.FoundationHost.EngineHostConfiguration.Current.Generation;
 
         [McpServerTool(Name = "PlanProjectGeneration"),
                 Description("[L1][Project][READ] Expand an exact standard package and structured machine against the bound project's complete READ " +
@@ -444,6 +444,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (backup != null) run["backupPath"] = backup.Arguments["archivePath"].GetString();
             string runId = records.Begin(run);
             ApprovalOutcome? approval = null;
+            Error? auditError = null;
             int succeeded = 0; bool dispatched = false; string status = "rejected-before-operation", stopping = "approval", activePhase = ""; JsonObject? last =
                 null;
             var facts = new RunFacts(plan);
@@ -548,6 +549,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     try
                     {
                         dispatched = true;
+                        InvocationJournal.GenerationStepStarted();
                         count++;
                         var result = call(step.Tool, finalArguments, () => {
                             try { Check(stored, fresh: count == 1); VerifyArtifacts(stored); return null; }
@@ -638,6 +640,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (succeeded == steps.Length && status != "effect-diverged" && stopping != "transition-diverged") {
                     status = "succeeded"; stopping = "complete"; }
             }
+            catch (AuditStartException ex)
+            {
+                auditError = new Error(ex.Message, new ResourceUnavailableDetails("audit-log"));
+                last = new JsonObject { ["error"] = JsonSerializer.SerializeToNode(auditError) }; stopping = ex.Message;
+            }
             catch (GenerationCallRejectionException ex) {
                 last = new JsonObject { ["error"] = JsonSerializer.SerializeToNode(ex.Error) }; stopping = ex.Error.Message; }
             catch (ArgumentException ex) { stopping = ex.Message; }
@@ -691,6 +698,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 new Error("The first generation step failed; inspect its retained evidence before replanning.",
                         new PreconditionFailedDetails("generation-step", stopping)),
                 Outcome.Failed, Execution.Completed, Completeness.None, current: true);
+            if (auditError != null) return McpServer.V4Reject("ApplyGenerationPlan", auditError, data);
             return McpServer.V4Reject("ApplyGenerationPlan", approval?.Reason != null ? HostBehavior.Confirmation(approval.Reason, Digest(hash), parentId)
                 : new Error("Generation stopped before any successful step: " + stopping, new PreconditionFailedDetails("generation", stored.Project)), data);
         }

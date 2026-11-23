@@ -47,9 +47,7 @@ namespace TiaMcp.Adapters
                 XDocument document;
                 using(var stream=new FileStream(staged.FullName,FileMode.Open,FileAccess.Read,FileShare.Read|FileShare.Delete))
                 {
-                    var settings=new XmlReaderSettings {
-                        DtdProcessing=DtdProcessing.Prohibit,XmlResolver=null,MaxCharactersInDocument=64*1024*1024,CloseInput=false };
-                    using(var reader=XmlReader.Create(stream,settings))
+                    using(var reader=TiaMcp.Adapters.Contracts.SafeXml.Open(stream))
                     {
                         document=XDocument.Load(reader,LoadOptions.PreserveWhitespace);
                         if(document.Root==null || document.Root.Name.LocalName!="Document") throw new IOException("Invalid Openness XML root.");

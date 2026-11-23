@@ -247,7 +247,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             int? xmlWidth = null, xmlHeight = null;
             try
             {
-                var document = XDocument.Load(importPath);
+                var document = TiaMcp.Adapters.Contracts.SafeXml.Load(importPath);
                 var screen = document.Descendants().FirstOrDefault(e => e.Name.LocalName == "Hmi.Screen.Screen");
                 var attributes = screen?.Element("AttributeList");
                 if (int
@@ -259,6 +259,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                             .InvariantCulture, out var h))
                     xmlHeight = h;
             }
+            catch (System.Xml.XmlException error)
+            { throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Invalid screen XML.", "importPath", true, error); }
             catch (Exception) { /* swallow(parse-fallback): unrecognized screen XML is left to the native importer for diagnosis */ return; }                                              // not a screen document we understand - TIA reports its own error
             if (xmlWidth == null || xmlHeight == null) return;
 

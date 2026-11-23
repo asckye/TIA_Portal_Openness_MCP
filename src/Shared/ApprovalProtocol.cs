@@ -66,18 +66,19 @@ namespace TiaOpenness.Shared
                 ["identity"] = ApprovalDisplayPayload.RedactArguments(target), ["arguments"] = args.DeepClone() }));
             string? plan = args["expectedPlanHash"] is JsonValue value && value.TryGetValue<string>(out var hash) && IsHash(hash) ? hash : null;
             var display = Display(original, tool);
-            foreach (var output in outputs) display[output.Key] = output.Value;
+            foreach (var output in outputs) display[output.Key] = ApprovalDisplayPayload.DisplayText(output.Value);
             if (Encoding.UTF8.GetByteCount(display.ToJsonString()) > 64 * 1024)
             {
                 display = new JsonObject { ["displayTruncated"] = true };
-                foreach (var output in outputs) display[output.Key] = output.Value;
+                foreach (var output in outputs) display[output.Key] = ApprovalDisplayPayload.DisplayText(output.Value);
             }
             if (Encoding.UTF8.GetByteCount(display.ToJsonString()) > 64 * 1024)
                 throw new ArgumentException("Filesystem targets exceed the approval display limit.", nameof(arguments));
             var objects = display.Where(p => p.Key.EndsWith("Path", StringComparison.Ordinal) || p.Key.EndsWith("Name", StringComparison.Ordinal)
                 || p.Key.EndsWith("Directory", StringComparison.Ordinal) || p.Key.EndsWith("Dir", StringComparison.Ordinal)
                 || p.Key == "dir" || p.Key == "directory" || p.Key == "plc" || p.Key == "target" || tool == "DownloadPlc" && p.Key == "targetIpAddress")
-                .Select(p => p.Key + "=" + p.Value?.ToJsonString()).ToArray();
+                // Keep the display escape legible in the JSON-formatted target.
+                .Select(p => p.Key + "=" + p.Value?.ToJsonString().Replace("(U\\u002B", "(U+")).ToArray();
             string risk = ClassifyRisk(tool, original);
             return new PendingApproval { RequestId = requestId ?? Guid.NewGuid().ToString("N"), Host = host, ReleaseKey = release,
                 Tool = tool, Risk = risk, RiskAction = risk == "write" ? "execute" : Deletes(tool, original) ? "delete" : "online",
@@ -179,7 +180,7 @@ namespace TiaOpenness.Shared
             string json = compact.ToJsonString();
             if (Encoding.UTF8.GetByteCount(json) > 64 * 1024)
                 compact = new JsonObject { ["displayTruncated"] = true, ["argumentByteLength"] = Encoding.UTF8.GetByteCount(args.ToJsonString()) };
-            try { return JsonNode.Parse(ApprovalDisplayPayload.Sanitize(compact.ToJsonString(), boundedText: true))!.AsObject(); }
+            try { return JsonNode.Parse(ApprovalDisplayPayload.Sanitize(compact.ToJsonString(), boundedText: true, forDisplay: true))!.AsObject(); }
             catch (Exception error) when (error is JsonException || error is InvalidOperationException)
             { return new JsonObject { ["displayUnavailable"] = true }; }
         }
@@ -491,8 +492,9 @@ namespace TiaOpenness.Shared
     internal sealed class ApprovalAction
     {
         public string Tool { get; set; } = "";
-        public string Action { get; set; } = "";
-        public string Target { get; set; } = "";
+        private string action = "", target = "";
+        public string Action { get => action; set => action = ApprovalDisplayPayload.DisplayText(value); }
+        public string Target { get => target; set => target = ApprovalDisplayPayload.DisplayText(value); }
     }
     [System.Text.Json.Serialization.JsonUnmappedMemberHandling(System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
     internal sealed class ApprovalDecision

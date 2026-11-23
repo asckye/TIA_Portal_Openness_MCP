@@ -24,8 +24,7 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] ExternalSourceExtensions = { ".scl", ".awl", ".db", ".udt" };
         // A drive-relative ("C:foo.scl") or root-relative ("\foo.scl") path is rooted but not fully qualified (API audit F12).
         internal static bool FullyQualified(string path)
-            => path.Length >= 3 && char.IsLetter(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/')
-                || path.StartsWith("\\\\", StringComparison.Ordinal) || path.StartsWith("//", StringComparison.Ordinal);
+            => path.Length >= 3 && char.IsLetter(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/');
 
         internal static bool ValidateExternalSourceRequest(string action, string name, string unitName, string unitKind, string filePath, string libraryName,
                 string masterCopyPath, string copyMode,
@@ -40,8 +39,8 @@ namespace TiaMcpServer.Siemens
             if (action == "createFromFile")
             {
                 if (string.IsNullOrWhiteSpace(filePath) || !FullyQualified(filePath))
-                    throw new ArgumentException("createFromFile needs the fully qualified filePath (drive or UNC) of an existing source file on the TIA " +
-                    "Portal machine.");
+                    throw new ArgumentException("createFromFile needs the fully qualified filePath of an existing source file on a local or mapped drive " +
+                    "on the TIA Portal machine.");
                 if (!ExternalSourceExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant()))
                     throw new ArgumentException("filePath must be an ASCII source file (" + string.Join(" / ", ExternalSourceExtensions) + ").");
             }

@@ -35,6 +35,26 @@ public sealed class PlcTestLibraryTests : IDisposable
         Assert.Equal("/testCase", (string?)missing["error"]!["details"]!["parameter"]);
     }
 
+    [Fact]
+    public void Run_returns_the_audit_refusal_before_creating_run_history()
+    {
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, "21");
+        Store.Save(PlcTestCaseDocument.Parse(Scenario));
+        var tool = Tool;
+        var preview = tool.RunPlcTestLibrary().StructuredContent!;
+        Assert.True((bool?)preview["ok"], preview.ToJsonString());
+        string path = Path.Combine(root, "unavailable-audit");
+        File.WriteAllText(path, "fixture");
+        using var audit = TiaOpenness.Shared.AuditInvocation.Begin(true, "fixture", "21", "RunPlcTestLibrary",
+            log: new TiaOpenness.Shared.AuditLog(path));
+        var result = tool.RunPlcTestLibrary(dryRun: false, expectedPlanHash: (string)preview["data"]!["planHash"]!).StructuredContent!;
+        Assert.Equal("RESOURCE_UNAVAILABLE", (string?)result["error"]?["code"]);
+        Assert.Contains("audit start", (string?)result["error"]?["message"]);
+        Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+        Assert.False(Directory.Exists(Runs));
+    }
+
     private const string Scenario = """
         {"schemaVersion":1,"id":"conveyor-start","title":"Conveyor starts when Start is pressed","requirement":"REQ-012",
         "tags":["fat","conveyor"],"kind":"plcsimScenario","scenario":{"instance":"PLC_1","mode":"singleStep","stopOnFailure":true,

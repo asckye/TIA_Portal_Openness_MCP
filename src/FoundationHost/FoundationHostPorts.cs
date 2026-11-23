@@ -126,9 +126,11 @@ internal static class FoundationHostPorts
             if (result["worker"] is JsonObject snapshot) result["worker"] = SessionSnapshot(snapshot);
             return result;
         }
+        private IEngineWorker Engine => worker as IEngineWorker ?? throw new InvalidOperationException("This release has no engine dispatch route.");
         public Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
-            => worker is IEngineWorker engine ? engine.Invoke(id, name, arguments, preview, token)
-                : throw new InvalidOperationException("This release has no engine dispatch route.");
+            => Engine.Invoke(id, name, arguments, preview, token);
+        public Task<EngineReply> DispatchWrite(string id, string name, JsonObject arguments, Action sending, CancellationToken token)
+            => Engine.DispatchWrite(id, name, arguments, sending, token);
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
             => worker.Call(operation, arguments, token);
         public async Task<JsonNode?> Observe(string operation, JsonObject arguments, CancellationToken token)

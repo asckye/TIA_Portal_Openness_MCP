@@ -12,6 +12,18 @@ namespace TiaOpenness.Shared
         internal static string NormalizeSeparators(string path) => NativePathSelection.NormalizeSeparators(path);
         internal static string FullPath(string path) => NativePathSelection.FullPath(path);
 
+        internal static void RequireLocal(string path, string parameter)
+        {
+            if (string.IsNullOrEmpty(path)) return;
+            string candidate = path.TrimStart();
+            static bool DeviceOrNetwork(string value) =>
+                value.Length >= 2 && value[0] is '/' or '\\' && value[1] is '/' or '\\'
+                || value.Length >= 4 && value[0] is '/' or '\\' && value[1] == '?' && value[2] == '?' && value[3] is '/' or '\\';
+            bool inheritsDrive = candidate.Length < 2 || candidate[1] != ':';
+            if (DeviceOrNetwork(candidate) || Path.DirectorySeparatorChar == '\\' && inheritsDrive && DeviceOrNetwork(Environment.CurrentDirectory))
+                throw new AdapterPreconditionException("Network and device input paths are refused. Use a local or mapped drive path.", parameter);
+        }
+
         internal static T Read<T>(string parameter, Func<T> read)
         {
             try { return read(); }
@@ -41,6 +53,7 @@ namespace TiaOpenness.Shared
 
         internal static FileStream OpenRead(string path, string parameter)
         {
+            RequireLocal(path, parameter);
             if (path?.Any(char.IsControl) == true)
                 throw new AdapterPreconditionException("File paths cannot contain control characters. Check backslash escaping in the JSON path.", parameter);
             return Read(parameter, () => new FileStream(FullPath(path), FileMode.Open, FileAccess.Read, FileShare.Read));
@@ -50,6 +63,7 @@ namespace TiaOpenness.Shared
         {
             Read(parameter, () =>
             {
+                RequireLocal(path, parameter);
                 if (directory)
                 {
                     try { using (var entries = Directory.EnumerateFileSystemEntries(FullPath(path)).GetEnumerator()) entries.MoveNext(); }

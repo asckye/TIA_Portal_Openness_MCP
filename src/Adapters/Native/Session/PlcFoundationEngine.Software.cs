@@ -244,11 +244,13 @@ namespace TiaMcp.Adapters
                         PlcNativeImportOptions.General(overwrite, importOptions), swImportOptions, newBlock).Select(b=>b.Name)),
                     ()=>PlcBlockXmlPolicy.Import(ReleaseKey,input.FullName), Precheck, unitName: unitName,
                     swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target.Blocks
-                    .Where(b => ImportNames(document).Contains(b.Name))
+                    .Where(b => ImportNames(document).Contains(b.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(b => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget {
-                        Object = groupPath + "/" + b.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy
-                            .ExportBlocker(b.IsConsistent, b.IsKnowHowProtected), Export = file =>
-                            WithTargetOffline(selected, () => { b.Export(file, ExportOptions.WithDefaults); return true; })
+                        Object = groupPath + "/" + b.Name,
+                        InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy.BlockRecoveryBlocker(ReleaseKey,
+                            () => PlcBlockXmlPolicy.Export(ReleaseKey, b.ProgrammingLanguage.ToString()).FullProgramRestoreSupported == false,
+                            () => b.IsConsistent, () => b.IsKnowHowProtected),
+                        Export = file => WithTargetOffline(selected, () => { b.Export(file, ExportOptions.WithDefaults); return true; })
                     }));
         }
         private static IList<PlcBlock> ImportBlocksWithReadback(PlcBlockComposition blocks, FileInfo file, ImportOptions options,
@@ -288,10 +290,10 @@ namespace TiaMcp.Adapters
                         PlcNativeImportOptions.General(overwrite, importOptions), swImportOptions, newType).Select(t=>t.Name)),
                     precheck: Precheck, unitName: unitName, swImportOptions: swImportOptions, importOptions: importOptions,
                     backups: !overwrite ? null : document => target.Types
-                    .Where(t => ImportNames(document).Contains(t.Name))
+                    .Where(t => ImportNames(document).Contains(t.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget {
-                        Object = groupPath + "/" + t.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(t.IsConsistent), Export =
-                            file => WithTargetOffline(selected, () => { t.Export(file, ExportOptions.WithDefaults); return true; })
+                        Object = groupPath + "/" + t.Name, InspectBlocker = () => TiaOpenness.Shared.NativeExportPolicy.ExportBlocker(t.IsConsistent),
+                        Export = file => WithTargetOffline(selected, () => { t.Export(file, ExportOptions.WithDefaults); return true; })
                     }));
         }
         public PlcMutationResult ImportTagTables(string softwarePath, string folderPath, string importPath, bool overwrite = false, bool dryRun = true) =>
@@ -310,12 +312,14 @@ namespace TiaMcp.Adapters
                 name => TagGroups(PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName))
                     .Any(g => PlcFoundationPolicy.SymbolExists(g.Value.TagTables, selectedName => g.Value.TagTables.Find(selectedName), t => t.Name, name))),
                     unitName: unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target
-                    .TagTables.Where(t => ImportNames(document).Contains(t.Name))
+                    .TagTables.Where(t => ImportNames(document).Contains(t.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget {
                         Object = folderPath + "/" + t.Name, Export = file => t.Export(file, ExportOptions.WithDefaults) }));
         }
         private static string[] ImportNames(System.Xml.Linq.XDocument document) => document.Root!.Elements()
-            .Where(e => e.Name.LocalName.StartsWith("SW.", StringComparison.Ordinal)).SelectMany(e => e.Elements("AttributeList").Elements("Name"))
+            .Where(e => e.Name.LocalName.StartsWith("SW.", StringComparison.Ordinal))
+            .SelectMany(e => e.Elements().Where(a => a.Name.LocalName == "AttributeList"))
+            .SelectMany(a => a.Elements().Where(n => n.Name.LocalName == "Name"))
             .Select(e => e.Value).ToArray();
         private PlcMutationResult ImportXml(string operation,FileInfo input,bool dryRun,Func<IEnumerable<string>> import,Func<PlcBlockXmlCapability>? format=
                 null, Action<System.Xml.Linq.XDocument>? precheck=null, Func<System.Xml.Linq.XDocument, IEnumerable<TiaOpenness.Shared.NativeExportPolicy
@@ -328,28 +332,37 @@ namespace TiaMcp.Adapters
                 PlcFoundationPolicy.XmlInput(input.FullName, out var document);
                 precheck?.Invoke(document);
                 var hash=BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
-                string? recoveryDirectory=null,recoveryWarning=null; var recoveryFiles=new Dictionary<string,string>(); var recoverySkipped=
-                    new Dictionary<string,string>[0];
+                TiaOpenness.Shared.NativeExportPolicy.RecoveryEvidence? recovery = null;
                 try
                 {
                     var capability=format?.Invoke();
                     if(!dryRun) capability?.RequireImport();
                     if(!dryRun && backups!=null)
                     {
-                        var recovery=TiaOpenness.Shared.NativeExportPolicy
-                            .SingleImportRecovery(backups(document),PlcBatchImportRecovery.Directory,TiaOpenness.Shared.DataLocations.Current
-                                .RecoveryAttemptedPath);
-                        recoveryDirectory=recovery.Directory; recoveryWarning=recovery.Warning; recoveryFiles=recovery.Files; recoverySkipped=recovery.Skipped
-                            .ToArray();
+                        try
+                        {
+                            recovery = TiaOpenness.Shared.NativeExportPolicy.SingleImportRecovery(backups(document),
+                                PlcBatchImportRecovery.Directory, TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath);
+                        }
+                        catch (Exception error) when (error is not AdapterPreconditionException { ParamName: "groupPath" or "softwarePath" })
+                        {
+                            throw AdapterPreconditionException.Failed("Overwrite refused because recovery preparation failed (" + error.GetType().Name + ").",
+                                "backup-unavailable", "overwrite");
+                        }
+                        recovery.RequireExportableBackups();
                     }
                     var result=Mutation(operation,dryRun,dryRun ? null : import(),scoped:true);
                     capability?.Apply(result);
                     var scope=(PlcScopedMutationResult)result;
                     scope.UnitName=unitName; scope.SwImportOptions=swImportOptions ?? Array.Empty<string>(); scope.ImportOptions=importOptions ?? Array
                         .Empty<string>();
-                    result.InputFile=input.FullName; result.InputSha256=hash; result.RecoveryDirectory=recoveryDirectory; result.RecoveryFiles=recoveryFiles;
-                    result.RecoveryStatus=dryRun && backups!=null ? "not-attempted-preview" : recoveryWarning!=null ? "backup-skipped"
-                        : recoveryDirectory!=null ? "backup-ready" : "not-needed";
+                    result.InputFile=input.FullName; result.InputSha256=hash;
+                    if (recovery != null)
+                    {
+                        result.RecoveryDirectory = recovery.Directory; result.RecoveryFiles = recovery.Files;
+                        result.RecoveryWarning = recovery.Warning; result.RecoverySkipped = recovery.Skipped.ToArray();
+                    }
+                    result.RecoveryStatus = dryRun && backups != null ? "not-attempted-preview" : recovery?.Status ?? "not-needed";
                     if (operation == "ImportBlocks" && backups != null)
                         result.Warnings = result.Warnings
                             .Concat(new[] {
@@ -360,21 +373,22 @@ namespace TiaMcp.Adapters
                     if (dryRun && backups != null)
                         result.Warnings = result.Warnings
                             .Concat(new[] {
-                                "Preview does not export recovery files. Apply reports backup-ready or backup-skipped from the actual backup attempt; " +
-                                    "inspect that result before further work."
+                                "Preview does not export recovery files. Apply warns for API-limited targets and refuses if an available backup fails."
                             })
                             .ToArray();
-                    result.RecoveryWarning=recoveryWarning; result.RecoverySkipped=recoverySkipped;
                     return result;
                 }
                 catch(Exception ex)
                 {
                     ex.Data["inputFile"]=input.FullName; ex.Data["inputSha256"]=hash;
-                    if(recoveryDirectory!=null) ex.Data["recoveryDirectory"]=recoveryDirectory;
-                    if(!ex.Data.Contains("recoveryFiles")) ex.Data["recoveryFiles"]=recoveryFiles;
-                    if(recoveryWarning!=null) {
-                        ex.Data["recoveryStatus"]="backup-skipped";ex.Data["recoveryWarning"]=recoveryWarning;ex.Data["recoverySkipped"]=recoverySkipped;ex
-                            .Data["attemptedPath"]=TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath;
+                    if (recovery?.Directory != null) ex.Data["recoveryDirectory"] = recovery.Directory;
+                    if (!ex.Data.Contains("recoveryFiles")) ex.Data["recoveryFiles"] = recovery?.Files ?? new Dictionary<string, string>();
+                    if (recovery?.Warning != null)
+                    {
+                        ex.Data["recoveryStatus"] = recovery.Status;
+                        ex.Data["recoveryWarning"] = recovery.Warning;
+                        ex.Data["recoverySkipped"] = recovery.Skipped.ToArray();
+                        ex.Data["attemptedPath"] = TiaOpenness.Shared.DataLocations.Current.RecoveryAttemptedPath;
                     }
                     throw;
                 }

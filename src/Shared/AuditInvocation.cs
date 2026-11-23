@@ -6,9 +6,14 @@ using System.Threading;
 
 namespace TiaOpenness.Shared
 {
+    internal sealed class AuditStartException : IOException
+    {
+        internal AuditStartException(Exception cause) : base("Write refused because the audit start record could not be written.", cause) { }
+    }
+
     internal sealed class AuditInvocation : IDisposable
     {
-        private readonly AuditLog log;
+        private AuditLog? log;
         private readonly string requestId, host, release, tool, actor;
         private readonly AuditInvocation? previous;
         private bool completed, requestWritten, started;
@@ -36,7 +41,7 @@ namespace TiaOpenness.Shared
             internal PreviewScope() { PreviewDepth.Value = previous + 1; }
             public void Dispose() => PreviewDepth.Value = previous;
         }
-        private AuditInvocation(AuditLog log, string requestId, string host, string release, string tool, string actor)
+        private AuditInvocation(AuditLog? log, string requestId, string host, string release, string tool, string actor)
         {
             this.log = log; this.requestId = requestId; this.host = host; this.release = release; this.tool = tool; this.actor = actor; previous = Current
                 .Value; Current.Value = this;
@@ -48,11 +53,7 @@ namespace TiaOpenness.Shared
             ? Begin(bool write, string host, string release, string tool, string? requestId = null, AuditLog? log = null, string? actor = null)
         {
             if (!write || PreviewDepth.Value > 0) return null;
-            try {
-                return new AuditInvocation(log ?? CurrentLog ?? AuditLog.Current, requestId ?? Guid.NewGuid().ToString("N"), host, release, tool, actor
-                        ?? ActorScope.Actor);
-            }
-            catch (Exception ex) { ReportFailure(ex); return null; }
+            return new AuditInvocation(log ?? CurrentLog, requestId ?? Guid.NewGuid().ToString("N"), host, release, tool, actor ?? ActorScope.Actor);
         }
         internal static IDisposable UseLog(AuditLog log)
         {
@@ -77,7 +78,7 @@ namespace TiaOpenness.Shared
         internal void Start()
         {
             if (started || completed) return;
-            RecordRequest(); started = true; Emit("start");
+            RecordRequest(); Emit("start"); started = true;
         }
         internal static void StartCurrent() { if (PreviewDepth.Value == 0) Current.Value?.Start(); }
         internal void Complete(string? json)
@@ -108,10 +109,14 @@ namespace TiaOpenness.Shared
             {
                 var generation = Generation.Value;
                 string? recordedHash = generation == null ? planHash : kind == "request" && generation[4].Length != 0 ? generation[4] : null;
-                log.Append(kind, requestId, host, release, tool, outcome, recordedHash, actor: actor,
+                (log ??= AuditLog.Current).Append(kind, requestId, host, release, tool, outcome, recordedHash, actor: actor,
                     planId: generation?[0], stepId: generation?[1], runId: generation?[2], parentRequestId: generation?[3]);
             }
-            catch (Exception ex) { ReportFailure(ex); }
+            catch (Exception ex)
+            {
+                ReportFailure(ex);
+                if (kind == "start") throw new AuditStartException(ex);
+            }
         }
         private static void ReportFailure(Exception ex)
             => DataLocations.ReportFailure("DIAGNOSTIC_WRITE_FAILED", ex);

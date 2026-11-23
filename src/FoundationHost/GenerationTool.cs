@@ -15,11 +15,12 @@ namespace TiaMcp.FoundationHost;
 
 internal sealed class GenerationTool : McpServerTool
 {
+    private readonly GenerationTools target;
     private readonly McpServerTool inner;
     private readonly Tool tool;
     internal GenerationTool(string name, string release, Func<StandardPackageStore>? store = null, GenerationExecutionSession? executionSession = null)
     {
-        var target = new GenerationTools(release, store, executionSession);
+        target = new GenerationTools(release, store, executionSession);
         var method = typeof(GenerationTools).GetMethods().Single(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name == name);
         inner = DeclaredToolMetadata.Create(name, method, _ => target, out _);
         var schema = System.Text.Json.Nodes.JsonNode.Parse(inner.ProtocolTool.InputSchema.GetRawText())!.AsObject();
@@ -54,6 +55,8 @@ internal sealed class GenerationTool : McpServerTool
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        // Check before the SDK converts a missing session into an untyped error reply.
+        if (OwnsApproval) _ = target.ExecutionSession;
         using var progress = FoundationHostPorts.GenerationRequest(request, cancellationToken);
         return await inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
     }

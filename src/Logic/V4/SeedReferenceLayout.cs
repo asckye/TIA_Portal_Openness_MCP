@@ -29,6 +29,7 @@ namespace TiaMcp.Logic.V4
 
         internal static SeedReferenceLayout Read(string root, string release, JsonObject? placeholders) => NativeInputPolicy.Read("referenceDir", () =>
         {
+            NativeInputPolicy.RequireLocal(root, "referenceDir");
             var layout = new SeedReferenceLayout();
             if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root)) throw Missing();
             string manifest = Path.Combine(root, "manifest.json");
@@ -46,6 +47,7 @@ namespace TiaMcp.Logic.V4
             {
                 string directory = layout.Manifest?[key]?.ToString() ?? destination;
                 string source = Path.GetFullPath(Path.Combine(root, directory));
+                NativeInputPolicy.RequireLocal(source, "referenceDir");
                 CallerInputFiles.RefuseHumanSettingsTargets(new JsonObject { ["referenceDir"] = source });
                 if (!Directory.Exists(source)) return;
                 foreach (string file in Directory.EnumerateFiles(source, "*.xml", SearchOption.TopDirectoryOnly).OrderBy(f => f, StringComparer.Ordinal))

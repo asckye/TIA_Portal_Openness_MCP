@@ -42,9 +42,7 @@ namespace TiaMcp.Adapters
             : Export(release,language);
         internal static PlcBlockXmlCapability Import(string release,string file)
         {
-            var settings=new XmlReaderSettings { DtdProcessing=DtdProcessing.Prohibit,XmlResolver=null,MaxCharactersInDocument=64*1024*1024 };
-            XDocument document;
-            using(var reader=XmlReader.Create(file,settings)) document=XDocument.Load(reader);
+            var document = Contracts.SafeXml.Load(file);
             var content = Contracts.SimaticMlImportWindow.BlockContent(release, document);
             if (content == "interface-only") return InterfaceOnly();
             if (content == "unverified")

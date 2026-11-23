@@ -22,6 +22,25 @@ public sealed class NoLockTakeoverTests
 {
     public static IEnumerable<object[]> Releases() => NoLockRecoveryTests.Releases();
 
+    [Fact]
+    public async Task Audit_failure_refuses_takeover_with_the_holder_still_connected()
+    {
+        using var scope = new Scope("21");
+        await scope.Bind();
+        string path = Path.Combine(scope.Leases, "unavailable-audit");
+        File.WriteAllText(path, "fixture");
+        using var audit = AuditInvocation.UseLog(new AuditLog(path));
+        var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "ConnectPortal"), scope.Newcomer), "21");
+        var response = await scope.NewSession.Invoke(tool, Request("ConnectPortal", new() {
+            ["processId"] = Environment.ProcessId, ["takeOver"] = true }), true, CancellationToken.None);
+        var body = response.StructuredContent!;
+        Assert.Equal("RESOURCE_UNAVAILABLE", (string?)body["error"]?["code"]);
+        Assert.Contains("audit start", (string?)body["error"]?["message"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.False(scope.Child.HasExited);
+        Assert.DoesNotContain("adapter.Disconnect", scope.Trace);
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public async Task Approval_wait_counts_as_a_call_in_flight(string release)
     {

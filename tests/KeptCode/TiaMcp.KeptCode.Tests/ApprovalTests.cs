@@ -142,6 +142,96 @@ namespace TiaMcp.Engine.Tests
             Assert.Throws<System.Text.Json.JsonException>(() => V4Json.Deserialize<Error>("{\"code\":\"CONFIRMATION_REQUIRED\",\"message\":\"Refused.\",\"details\":{\"planHash\":null}}"));
         }
         [Fact]
+        public void Audit_start_failure_refuses_writes_and_leaves_the_approval_switch_enabled()
+        {
+            string folder = Scratch();
+            Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, "approval.settings");
+            File.WriteAllText(path, "enabled=true\ntimeoutSeconds=120\n");
+            var unavailable = new AuditLog(path);
+            using var scope = AuditInvocation.UseLog(unavailable);
+            Assert.Null(AuditInvocation.Begin(false, "fixture", "21", "GetProjectTree"));
+            using var write = AuditInvocation.Begin(true, "fixture", "21", "SaveProject")!;
+            Assert.Contains("audit start", Assert.Throws<AuditStartException>(write.Start).Message);
+            Assert.Throws<AuditStartException>(write.Start);
+            Assert.Contains("audit record", Assert.Throws<IOException>(() => new ApprovalSettings(false).Save(path, unavailable)).Message);
+            Assert.True(ApprovalSettings.Load(path).Enabled);
+            File.WriteAllText(path, "enabled=false\ninvalid timeout\n");
+            Assert.Throws<IOException>(() => new ApprovalSettings(false).Save(path, unavailable));
+            Assert.Equal("enabled=false\ninvalid timeout\n", File.ReadAllText(path));
+            new ApprovalSettings(false).Save(path, new AuditLog(folder));
+            Assert.False(ApprovalSettings.Load(path).Enabled);
+            new ApprovalSettings(true).Save(path, unavailable);
+            Assert.True(ApprovalSettings.Load(path).Enabled);
+        }
+
+        [Fact]
+        public void Approval_masks_nested_credentials_and_preserves_both_escaped_display_keys()
+        {
+            var nested = new System.Text.Json.Nodes.JsonObject {
+                ["moduleAccessPassword"] = "private-fixture", ["A\u202e"] = 1, ["A(U+202E)"] = 2 };
+            var args = new System.Text.Json.Nodes.JsonObject { ["items"] = new System.Text.Json.Nodes.JsonArray(nested) };
+            PendingApproval Card() => PendingApproval.Create("fixture", "21", "DownloadPlc", args.ToJsonString(), null, 30);
+            var card = Card();
+            Assert.DoesNotContain("private-fixture", card.ParametersJson);
+            var shown = System.Text.Json.Nodes.JsonNode.Parse(card.ParametersJson)!["items"]![0]!;
+            Assert.Equal(1, (int)shown["A(U+202E)"]!);
+            Assert.Equal(2, (int)shown["A(U+202E) [2]"]!);
+            Assert.Equal(CallJournalPayload.Hidden, (string?)shown["moduleAccessPassword"]);
+            Assert.DoesNotContain("private-fixture", System.Text.Json.JsonSerializer.Serialize(card));
+            Assert.Equal("private-fixture", (string?)nested["moduleAccessPassword"]);
+            nested["moduleAccessPassword"] = "changed-fixture";
+            Assert.Equal(card.ArgumentDigest, Card().ArgumentDigest);
+        }
+
+        [Theory]
+        [InlineData("Door_Key")]
+        [InlineData("TokenCount")]
+        public void Approval_redacts_sensitive_tag_values_and_credentials_from_the_card_and_digest(string name)
+        {
+            PendingApproval Tag(int n) => PendingApproval.Create("fixture", "21", "WriteUnifiedRuntimeTags",
+                System.Text.Json.JsonSerializer.Serialize(new { writes = new[] { new { name, value = n } } }), null, 30);
+            var card = Tag(41);
+            Assert.Equal(CallJournalPayload.Hidden, (string?)System.Text.Json.Nodes.JsonNode.Parse(card.ParametersJson)!["writes"]![0]!["value"]!);
+            Assert.Equal(card.ArgumentDigest, Tag(42).ArgumentDigest);
+            PendingApproval Download(string password) => PendingApproval.Create("fixture", "21", "DownloadPlc",
+                System.Text.Json.JsonSerializer.Serialize(new { password }), null, 30);
+            Assert.DoesNotContain("test-credential", Download("test-credential").ParametersJson);
+            Assert.Equal(Download("first").ArgumentDigest, Download("second").ArgumentDigest);
+        }
+
+        [Fact]
+        public void Approval_escapes_controls_direction_marks_and_tags_in_project_text()
+        {
+            const string name = "PLC\u202e\u0085\U000e0061";
+            string args = System.Text.Json.JsonSerializer.Serialize(new { softwarePath = name });
+            var card = PendingApproval.Create("fixture", "21", "CreatePlcTag", args, args, 30);
+            const string shown = "PLC(U+202E)(U+0085)(U+E0061)";
+            Assert.Equal(shown, (string?)System.Text.Json.Nodes.JsonNode.Parse(card.ParametersJson)!["softwarePath"]);
+            Assert.Contains(shown, card.Operations.Single().Target);
+            Assert.Equal(shown, (string?)System.Text.Json.Nodes.JsonNode.Parse(card.ProjectIdentity)!["softwarePath"]);
+            var displayResult = CallJournalPayload.Redact(args);
+            Assert.Equal(shown, (string?)System.Text.Json.Nodes.JsonNode.Parse(displayResult)!["softwarePath"]);
+            Assert.NotEqual(card.ArgumentDigest, PendingApproval.Create("fixture", "21", "CreatePlcTag",
+                System.Text.Json.JsonSerializer.Serialize(new { softwarePath = shown }), args, 30).ArgumentDigest);
+        }
+
+        [Fact]
+        public void Approval_preserves_source_diff_line_boundaries_and_escapes_other_project_controls()
+        {
+            const string source = "one\r\ntwo\u202e\nthree\t";
+            var args = new System.Text.Json.Nodes.JsonObject { ["before"] = source, ["after"] = source, ["name"] = source };
+            var card = PendingApproval.Create("fixture", "21", "ImportPlcBlock", args.ToJsonString(), null, 30);
+            foreach (var json in new[] { card.ParametersJson, CallJournalPayload.Redact(args.ToJsonString()) })
+            {
+                var shown = System.Text.Json.Nodes.JsonNode.Parse(json)!;
+                Assert.Equal("one\r\ntwo(U+202E)\nthree(U+0009)", (string?)shown["before"]);
+                Assert.Equal((string?)shown["before"], (string?)shown["after"]);
+                Assert.Equal("one(U+000D)(U+000A)two(U+202E)(U+000A)three(U+0009)", (string?)shown["name"]);
+            }
+        }
+
+        [Fact]
         public void Digest_binds_identity_and_redacted_arguments_and_redacts_display_only()
         {
             var request = Request();

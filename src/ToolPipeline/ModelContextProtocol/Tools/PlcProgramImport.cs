@@ -16,7 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
             objectName = Path.GetFileNameWithoutExtension(file);
             try
             {
-                var doc = XDocument.Load(file);
+                var doc = TiaMcp.Adapters.Contracts.SafeXml.Load(file);
                 var obj = doc.Root?.Elements().FirstOrDefault(e =>
                     e.Name.LocalName.StartsWith("SW.Types.", StringComparison.OrdinalIgnoreCase) ||
                     e.Name.LocalName.StartsWith("SW.Tags.", StringComparison.OrdinalIgnoreCase) ||

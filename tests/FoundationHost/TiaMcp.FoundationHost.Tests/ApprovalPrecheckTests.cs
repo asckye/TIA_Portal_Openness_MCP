@@ -146,6 +146,26 @@ public sealed class ApprovalPrecheckTests
                 $"foundation enabled={enabled} changed={changed}: {watch.Elapsed.TotalMilliseconds:F3} ms; previews={worker.Previews}\n");
     }
     [Fact]
+    public async Task Audit_start_failure_refuses_apply_before_worker_dispatch()
+    {
+        string unavailable = Path.GetTempFileName();
+        try
+        {
+            using var audit = AuditInvocation.UseLog(new AuditLog(unavailable));
+            using var worker = new Worker();
+            var tool = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "CreatePlcTag"), worker),
+                "19", () => new(false, 1));
+            var args = Arguments("CreatePlcTag");
+            args["dryRun"] = false; args["confirm"] = true; args["expectedProjectFile"] = "C:/Test.ap19";
+            var result = await tool.InvokeAsync(Request("CreatePlcTag", args));
+            Assert.Equal("RESOURCE_UNAVAILABLE", (string?)result.StructuredContent?["error"]?["code"]);
+            Assert.Equal("not-started", (string?)result.StructuredContent?["meta"]?["execution"]);
+            Assert.Equal(0, worker.Writes);
+        }
+        finally { File.Delete(unavailable); }
+    }
+
+    [Fact]
     public async Task Warm_fixture_reports_added_preview_latency()
     {
         bool enabled = true;

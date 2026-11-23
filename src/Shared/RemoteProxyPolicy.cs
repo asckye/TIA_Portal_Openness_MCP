@@ -49,6 +49,13 @@ namespace TiaOpenness.Shared
             return address.IsIPv6LinkLocal || (bytes[0] & 0xfe) == 0xfc;
         }
 
+        internal static bool BindAddressAllowed(IPAddress address)
+        {
+            if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
+            var bytes = address.GetAddressBytes();
+            return PrivateAddress(address) || bytes.Length == 4 && bytes[0] == 100 && (bytes[1] & 0xc0) == 64;
+        }
+
         internal bool PrivateDestination(Uri destination)
         {
             string host = destination.DnsSafeHost;

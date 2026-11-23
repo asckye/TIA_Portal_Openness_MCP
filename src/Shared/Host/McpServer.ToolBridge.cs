@@ -240,6 +240,8 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult TargetFailure(string tool, Exception error, bool issued, string? arguments = null)
         {
             error = TiaOpenness.Shared.HostFailurePolicy.Unwrap(error);
+            if (error is AuditStartException)
+                return V4Reject(tool, new Error(error.Message, new ResourceUnavailableDetails("audit-log")));
             if (!issued && error is TiaMcp.Adapters.Contracts.AdapterPreconditionException { Condition: SeedReferenceLayout.Condition } layout)
                 return V4Reject(tool, new Error(layout.Message, new PreconditionFailedDetails(layout.Condition, null, layout.ParamName)));
 #if TIA_ENGINE_HOST
@@ -362,7 +364,11 @@ namespace TiaMcpServer.ModelContextProtocol
         private static JsonObject WritePreviewPlan(string tool, object arguments, bool writing, Func<JsonArray>? plannedFiles)
         {
             var normalized = JsonSerializer.SerializeToNode(arguments)!.AsObject();
-            if (plannedFiles != null) CallerInputFiles.RefuseHumanSettingsTargets(normalized);
+            if (plannedFiles != null)
+            {
+                CallerInputFiles.RequireLocalInputs(tool, normalized);
+                CallerInputFiles.RefuseHumanSettingsTargets(normalized);
+            }
             var seedFiles = plannedFiles?.Invoke();
             var inputs = CallerInputFiles.Snapshot(tool, normalized);
             if (seedFiles != null) inputs.Add(new JsonObject { ["parameter"] = "referenceDir", ["plannedFiles"] = seedFiles.DeepClone() });

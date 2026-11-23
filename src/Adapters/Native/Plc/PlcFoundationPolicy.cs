@@ -36,9 +36,8 @@ namespace TiaMcp.Adapters
             var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.GetFullPath(path)));
             if (!file.Exists || !file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase))
                 throw new AdapterPreconditionException("An existing Openness XML file is required.", "importPath");
-            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 64 * 1024 * 1024 };
             using (var stream = TiaOpenness.Shared.NativeInputPolicy.OpenRead(file.FullName, "importPath"))
-            using (var reader = XmlReader.Create(stream, settings))
+            using (var reader = SafeXml.Open(stream))
             {
                 try { document = XDocument.Load(reader); }
                 catch (XmlException ex) { throw new AdapterPreconditionException("Import input must be valid Openness XML.", "importPath", true, ex); }
@@ -50,7 +49,6 @@ namespace TiaMcp.Adapters
 
         internal static void RequireImportAvailable(XDocument document, string prefix, bool overwrite, Func<string, bool> exists)
         {
-            if (overwrite) return;
             var objects = document.Root!.Elements().Where(e => e.Name.LocalName.StartsWith(prefix, StringComparison.Ordinal)).ToArray();
             if (objects.Length == 0) throw new AdapterPreconditionException("Import input has no supported target object.", "importPath");
             foreach (var item in objects)
@@ -59,7 +57,7 @@ namespace TiaMcp.Adapters
                     .Elements().Where(e => e.Name.LocalName == "Name").ToArray();
                 if (names.Length != 1 || string.IsNullOrWhiteSpace(names[0].Value))
                     throw new AdapterPreconditionException("Import input requires an explicit object Name.", "importPath");
-                if (exists(names[0].Value))
+                if (!overwrite && exists(names[0].Value))
                     throw new AdapterPreconditionException("Object '" + names[0].Value + "' already exists; overwrite=false refuses replacement.", "overwrite");
             }
         }

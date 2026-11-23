@@ -117,41 +117,56 @@ namespace TiaOpenness.Shared
                 using (JournalFileLock.Acquire(path + ".lock"))
                 {
                     if (!File.Exists(path)) return new ApprovalSettings();
-                    var lines = File.ReadAllLines(path);
-                    if (lines.Length is not (2 or 3) || (lines[0] != "enabled=true" && lines[0] != "enabled=false")
-                        || !lines[1].StartsWith("timeoutSeconds=", StringComparison.Ordinal)
-                        || !int.TryParse(lines[1].Substring(15), NumberStyles.None, CultureInfo.InvariantCulture, out int seconds))
-                        throw new InvalidDataException("Invalid approval settings.");
-                    int lifetime = 900;
-                    if (lines.Length == 3 && (!lines[2].StartsWith("onlinePlanLifetimeSeconds=", StringComparison.Ordinal)
-                        || !int.TryParse(lines[2].Substring(26), NumberStyles.None, CultureInfo.InvariantCulture, out lifetime)))
-                        throw new InvalidDataException("Invalid online plan lifetime.");
-                    return new ApprovalSettings(lines[0] == "enabled=true", seconds, lifetime);
+                    return Parse(File.ReadAllLines(path));
                 }
             }
             catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException || ex is ArgumentException)
             { Trace.TraceWarning("Approval settings unavailable: " + ex.GetType().Name); return new ApprovalSettings(); }
         }
+        private static ApprovalSettings Parse(string[] lines)
+        {
+            if (lines.Length is not (2 or 3) || (lines[0] != "enabled=true" && lines[0] != "enabled=false")
+                || !lines[1].StartsWith("timeoutSeconds=", StringComparison.Ordinal)
+                || !int.TryParse(lines[1].Substring(15), NumberStyles.None, CultureInfo.InvariantCulture, out int seconds))
+                throw new InvalidDataException("Invalid approval settings.");
+            int lifetime = 900;
+            if (lines.Length == 3 && (!lines[2].StartsWith("onlinePlanLifetimeSeconds=", StringComparison.Ordinal)
+                || !int.TryParse(lines[2].Substring(26), NumberStyles.None, CultureInfo.InvariantCulture, out lifetime)))
+                throw new InvalidDataException("Invalid online plan lifetime.");
+            return new ApprovalSettings(lines[0] == "enabled=true", seconds, lifetime);
+        }
+
         internal void Save(string path, AuditLog? audit = null)
         {
-            bool changed;
             using (JournalFileLock.Acquire(path + ".lock"))
             {
-                var previous = File.Exists(path) ? File.ReadAllLines(path) : Array.Empty<string>();
-                bool before = previous.Length == 0 || previous[0] != "enabled=false";
-                changed = before != Enabled;
+                bool enabledBefore = true;
+                if (File.Exists(path))
+                {
+                    var previous = File.ReadAllLines(path);
+                    try { enabledBefore = Parse(previous).Enabled; }
+                    catch (Exception ex) when (ex is InvalidDataException || ex is ArgumentOutOfRangeException)
+                    { Trace.TraceWarning("Invalid approval settings default to enabled: " + ex.GetType().Name); }
+                }
+                if (enabledBefore != Enabled)
+                {
+                    try { (audit ?? AuditLog.Current).ApprovalSwitch("workbench", Enabled); }
+                    catch (Exception error)
+                    {
+                        if (!Enabled) throw new IOException("Approval switch change refused because its audit record could not be written.", error);
+                        Trace.TraceWarning("Enabling approval without its audit record: " + error.GetType().Name);
+                    }
+                }
                 using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
                 using (var writer = new StreamWriter(stream, new UTF8Encoding(false)))
                 {
-                    writer
-                        .Write("enabled=" + (Enabled ? "true" : "false") + "\ntimeoutSeconds=" + TimeoutSeconds.ToString(CultureInfo.InvariantCulture) + "\n");
+                    writer.Write("enabled=" + (Enabled ? "true" : "false") + "\ntimeoutSeconds="
+                        + TimeoutSeconds.ToString(CultureInfo.InvariantCulture) + "\n");
                     if (OnlinePlanLifetimeSeconds != 900)
                         writer.Write("onlinePlanLifetimeSeconds=" + OnlinePlanLifetimeSeconds.ToString(CultureInfo.InvariantCulture) + "\n");
                     writer.Flush(); stream.Flush(true);
                 }
             }
-            try { if (changed) (audit ?? AuditLog.Current).ApprovalSwitch("workbench", Enabled); }
-            catch (Exception ex) { Trace.TraceWarning("Approval switch audit unavailable: " + ex.GetType().Name); }
         }
     }
 }

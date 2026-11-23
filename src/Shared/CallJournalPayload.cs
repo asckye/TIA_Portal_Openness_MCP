@@ -32,7 +32,7 @@ namespace TiaOpenness.Shared
         { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
         public static string Redact(string json)
-            => Bound(Sanitize(json));
+            => Bound(Sanitize(json, boundedText: false, forDisplay: true));
 
         // Hash inputs have no display limits. Do not substitute secrets collected from
         // other positions: that would make an ordinary argument depend on the secret.
@@ -86,7 +86,9 @@ namespace TiaOpenness.Shared
 
         public static string Sanitize(string json) => Sanitize(json, boundedText: false);
 
-        public static string Sanitize(string json, bool boundedText)
+        public static string Sanitize(string json, bool boundedText) => Sanitize(json, boundedText, forDisplay: false);
+
+        public static string Sanitize(string json, bool boundedText, bool forDisplay)
         {
             try
             {
@@ -95,10 +97,50 @@ namespace TiaOpenness.Shared
                 Collect(node, secrets, 0, boundedText);
                 if (node is JsonValue value && value.TryGetValue<string>(out var text)) node = JsonValue.Create(Text(text, secrets, 0, boundedText));
                 else Scrub(node, secrets, 0, boundedText);
-                return node?.ToJsonString(DisplayOptions) ?? "null";
+                return (forDisplay ? CleanDisplay(node) : node)?.ToJsonString(DisplayOptions) ?? "null";
             }
             catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is RegexMatchTimeoutException)
             { return Hidden; }
+        }
+
+        private static JsonNode? CleanDisplay(JsonNode? node, bool sourceLines = false)
+        {
+            if (node is JsonValue value && value.TryGetValue<string>(out var text)) return JsonValue.Create(DisplayText(text, sourceLines));
+            if (node is JsonArray array) return new JsonArray(array.Select(item => CleanDisplay(item)).ToArray());
+            if (node is JsonObject obj)
+            {
+                var result = new JsonObject();
+                foreach (var pair in obj)
+                {
+                    string name = DisplayText(pair.Key);
+                    string unique = name;
+                    for (int suffix = 2; result.ContainsKey(unique); suffix++)
+                        unique = name + " [" + suffix.ToString(CultureInfo.InvariantCulture) + "]";
+                    // The source comparison renders before/after one line at a time.
+                    result.Add(unique, CleanDisplay(pair.Value, pair.Key is "before" or "after"));
+                }
+                return result;
+            }
+            return node?.DeepClone();
+        }
+
+        public static string DisplayText(string text, bool sourceLines = false)
+        {
+            StringBuilder? result = null;
+            int copied = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (sourceLines && c is '\r' or '\n') continue;
+                int code = char.IsSurrogatePair(text, i) ? char.ConvertToUtf32(text, i) : c;
+                if (!char.IsControl(c) && code is not (0x061c or 0x200e or 0x200f or >= 0x202a and <= 0x202e
+                    or >= 0x2066 and <= 0x206f or >= 0xe0000 and <= 0xe007f)) continue;
+                result ??= new StringBuilder(text.Length);
+                result.Append(text, copied, i - copied).Append("(U+").Append(code.ToString("X4", CultureInfo.InvariantCulture)).Append(')');
+                if (code > char.MaxValue) i++;
+                copied = i + 1;
+            }
+            return result == null ? text : result.Append(text, copied, text.Length - copied).ToString();
         }
 
         public static string Bound(string text)

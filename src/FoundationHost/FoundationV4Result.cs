@@ -169,8 +169,11 @@ internal static class FoundationV4Result
         => Wire(release, "GetSessionState", id, data, Outcome.Succeeded,
             Execution.ReadOnly, Completeness.Partial, null, true);
 
-    internal static CallToolResult HostFailure(string release, string name, string id)
-        => Wire(release, name, id, null, Outcome.ReadFailed, Execution.ReadOnly, Completeness.None,
+    internal static CallToolResult HostFailure(string release, string name, string id, bool writeDispatched = false)
+        => writeDispatched
+            ? Wire(release, name, id, null, Outcome.Unknown, Execution.Unknown, Completeness.Unknown,
+                HostBehavior.FailureError(TiaOpenness.Shared.HostFailureKind.Unknown, null, Empty), false)
+            : Wire(release, name, id, null, Outcome.ReadFailed, Execution.ReadOnly, Completeness.None,
             new Error("Foundation host operation failed.", new InternalErrorDetails(id)), false);
 
     internal static bool IsMutation(Definition definition, JsonObject args) =>
@@ -242,6 +245,8 @@ internal static class FoundationV4Result
             data["earlierMutationMayHaveChanged"] = true;
             return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, EarlierMutation(Empty), true);
         }
+        if (exception is TiaOpenness.Shared.AuditStartException auditError)
+            return Reject(release, name, id, new Error(auditError.Message, new ResourceUnavailableDetails("audit-log")));
         var worker = exception as WorkerOperationException;
         bool scriptRefusal = name == "SetUnifiedGlobalScript" && worker?.KnownNoMutation == true;
         string? exceptionType = worker == null ? exception?.GetType().Name : worker.ExceptionType;

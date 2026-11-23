@@ -36,7 +36,7 @@ namespace TiaMcpConfigurator
             Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765";
             if (!loadExisting || !File.Exists(StatePath)) { DetectTiaPath(false); return; }
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
-            ConfigCore.Prefix(settings.Address, settings.Port);
+            ConfigCore.EndpointPrefix(settings.Address, settings.Port);
             if (settings.EffectiveReleaseKey != SelectedVersion) throw new InvalidDataException(Loc.Current["Config.SavedReleaseMismatch"]);
             Find<TextBox>("TiaPath").Text = settings.TiaPath; Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text =
                 settings.Port.ToString();
@@ -44,7 +44,7 @@ namespace TiaMcpConfigurator
         }
         private ServerSettings Settings()
         {
-            ReadEndpoint(out int port);
+            ReadEndpoint(out int port, bind: true);
             ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion);
             return new ServerSettings {
                 Version = TiaVersionCatalog.Get(SelectedVersion).MajorVersion, ReleaseKey = SelectedVersion, Address = Text("ServerAddress"), Port = port,
@@ -65,7 +65,7 @@ namespace TiaMcpConfigurator
             if (busy) return;
             try
             {
-                string ip = Text("ServerAddress"); ReadEndpoint(out int port);
+                string ip = Text("ServerAddress"); ReadEndpoint(out int port, bind: true);
                 if (TiaOpenness.Gui.Controls.WorkbenchMessageBox
                         .Show(Window, Loc.Current["Config.NetworkPrompt"], Loc.Current["Config.Network"], MessageBoxButton.OKCancel, MessageBoxImage
                             .Information) != MessageBoxResult

@@ -400,6 +400,21 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         Assert.Equal("http://127.0.0.1:8766/", fixture.Context.HttpPrefix);
     }
 
+    [Theory]
+    [InlineData("192.0.2.10", "http://192.0.2.10:8766/")]
+    [InlineData("0.0.0.0", "http://0.0.0.0:8766/")]
+    public void Invalid_client_record_preserves_the_saved_server_endpoint(string address, string prefix)
+    {
+        using var fixture = new Fixture();
+        var config = Directory.CreateDirectory(fixture.Context.ConfigDirectory).FullName;
+        File.WriteAllText(Path.Combine(config, "http-v21.json"), System.Text.Json.JsonSerializer.Serialize(new { Address = address, Port = 8766 }));
+        File.WriteAllText(Path.Combine(config, "client.json"), """{"Address":"invalid","Port":8765}""");
+        EnvironmentServiceContext.LoadEndpoint(fixture.Context);
+        Assert.Equal(new[] { prefix + "mcp" }, fixture.Context.RemoteEndpoints);
+        Assert.Equal(prefix, fixture.Context.HttpPrefix);
+        Assert.Equal(EnvironmentFindingStatus.Pass, new WorkbenchEnvironmentChecks(fixture.Context, Sources()).Run().Single(f => f.Id == "url").Status);
+    }
+
     [Fact]
     public void Damaged_saved_endpoint_does_not_hide_data_or_runtime_checks()
     {

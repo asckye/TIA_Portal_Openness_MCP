@@ -401,12 +401,13 @@ namespace TiaMcpConfigurator
             UpdateLink();
         }
 
-        private string ReadEndpoint(out int port)
+        private string ReadEndpoint(out int port, bool bind = false)
         {
             try
             {
                 port = int.Parse(Text("ServerPort"), System.Globalization.CultureInfo.InvariantCulture);
-                return ConfigCore.Prefix(Text("ServerAddress"), port);
+                string address = Text("ServerAddress");
+                return bind ? ConfigCore.Prefix(address, port) : ConfigCore.EndpointPrefix(address, port);
             }
             catch (Exception error) when (error is FormatException or OverflowException or ArgumentException)
             {

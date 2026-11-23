@@ -209,7 +209,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("unitName: software unit holding the sources ('' = the PLC program).")] string unitName="",
             [Description("unitKind: unit | safety - which unit collection unitName refers to.")] string unitKind="unit",
             [Description("groupPath: 'Folder/Subfolder' inside the external sources ('' = root).")] string groupPath="",
-            [Description("filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA " +
+            [Description("filePath: for createFromFile - fully qualified path (local or mapped drive) of the .scl / .awl / .db / .udt file on the TIA " +
                 "machine.")] string filePath=
                 "",
             [Description("libraryName: for createFromMasterCopy - global library name ('' = the project library).")] string libraryName="",
@@ -249,7 +249,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("unitName: software unit holding the sources ('' = the PLC program).")] string unitName="",
             [Description("unitKind: unit | safety - which unit collection unitName refers to.")] string unitKind="unit",
             [Description("groupPath: 'Folder/Subfolder' inside the external sources ('' = root).")] string groupPath="",
-            [Description("filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA " +
+            [Description("filePath: for createFromFile - fully qualified path (local or mapped drive) of the .scl / .awl / .db / .udt file on the TIA " +
                 "machine.")] string filePath=
                 "",
             [Description("libraryName: for createFromMasterCopy - global library name ('' = the project library).")] string libraryName="",

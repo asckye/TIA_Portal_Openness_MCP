@@ -151,8 +151,10 @@ internal sealed class HostOptions
         if (transport == "http")
         {
             if (!Uri.TryCreate(prefix, UriKind.Absolute, out var uri) || uri.Scheme != "http" || uri.AbsolutePath != "/" || !System.Net.IPAddress
-                    .TryParse(uri.Host, out _) || uri.Query.Length != 0 || uri.Fragment.Length != 0 || uri.UserInfo.Length != 0)
+                    .TryParse(uri.Host, out var address) || uri.Query.Length != 0 || uri.Fragment.Length != 0 || uri.UserInfo.Length != 0)
                 throw new ArgumentException("HTTP prefix must be an explicit IP address and port at the root path.");
+            if (!TiaOpenness.Shared.RemoteProxyPolicy.BindAddressAllowed(address))
+                throw new ArgumentException("--http-prefix requires a loopback, private, link-local or shared (CGNAT) IP address.");
         }
         var api = Value("--public-api");
         string? apiSource = string.IsNullOrWhiteSpace(api) ? null : "host-option";

@@ -306,9 +306,9 @@ namespace TiaMcpConfigurator
                 Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text.Contains("2"), "link bar follows the client selection");
                 choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items.Cast<ClientProfile>().Single(profile => profile.Id == "deepseek"));
                 window.Navigate("Mcp");
-                ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text = "192.0.2.10";
+                ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text = "192.168.2.10";
                 form.CapturePage(Path.Combine(output, "remote.png"), 0);
-                Assert(((System.Windows.Documents.Run)form.FindName("EndpointAddress")).Text == "192.0.2.10:8765"
+                Assert(((System.Windows.Documents.Run)form.FindName("EndpointAddress")).Text == "192.168.2.10:8765"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "idle"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text == "1 selected"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).ToolTip.ToString() == "DeepSeek", "remote mode shows the live endpoint, state and selected client");
@@ -366,7 +366,7 @@ namespace TiaMcpConfigurator
                 Assert(((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP 服务"
                     && ((System.Windows.Controls.Button)clients.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "空闲", "Chinese page updates title, action and service state");
-                Assert(port.Text == "8766" && ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text == "192.0.2.10"
+                Assert(port.Text == "8766" && ((System.Windows.Controls.TextBox)form.FindName("ServerAddress")).Text == "192.168.2.10"
                     && choices.SelectedItems.Count == 1 && (string)versions.SelectedValue == "21", "language switch preserves the port, address, client and version");
                 ((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked = true;
                 Assert(((System.Windows.Controls.TextBlock)window.FindName("CurrentPageTitle")).Text == "MCP 服务"
@@ -497,10 +497,13 @@ namespace TiaMcpConfigurator
                     Console.WriteLine("UI checks passed: " + passed); return 0;
                 }
                 string temp = Path.Combine(output, "run-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(temp);
-                Assert(ConfigCore.Prefix("192.0.2.10", 8765) == "http://192.0.2.10:8765/", "canonical IPv4 endpoint");
+                Assert(ConfigCore.Prefix("192.168.2.10", 8765) == "http://192.168.2.10:8765/", "canonical private IPv4 endpoint");
+                Assert(ConfigCore.Prefix("100.64.0.1", 8765) == "http://100.64.0.1:8765/", "CGNAT listener");
+                Assert(ConfigCore.Prefix("::1", 8765) == "http://[::1]:8765/", "IPv6 loopback listener");
+                Reject(() => ConfigCore.Prefix("192.0.2.10", 8765), "reject non-private listener");
                 Reject(() => ConfigCore.Prefix("[http://192.0.2.10/](http://192.0.2.10/)", 8765), "reject markdown URL");
                 Reject(() => ConfigCore.Prefix("0.0.0.0", 8765), "reject wildcard binding");
-                Reject(() => ConfigCore.Prefix("192.0.2.10", 0), "reject invalid port");
+                Reject(() => ConfigCore.Prefix("192.168.2.10", 0), "reject invalid port");
                 // 安装目录自动探测：只读且不抛异常；环境变量指向没有 Openness 的目录时必须拒绝，而不是把它当成安装根
                 string savedLocation = Environment.GetEnvironmentVariable("TiaPortalLocation");
                 try

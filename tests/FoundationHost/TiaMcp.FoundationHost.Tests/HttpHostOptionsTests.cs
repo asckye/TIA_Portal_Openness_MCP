@@ -8,6 +8,35 @@ using HttpHostOptions = foundationhost::TiaMcp.FoundationHost.HttpHostOptions;
 // The HTTP hosts must not watch the working directory they were started from.
 public sealed class HttpHostOptionsTests
 {
+    [Theory]
+    [InlineData("0.0.0.0", false)]
+    [InlineData("[::]", false)]
+    [InlineData("255.255.255.255", false)]
+    [InlineData("203.0.113.7", false)]
+    [InlineData("[2001:db8::1]", false)]
+    [InlineData("[::ffff:203.0.113.7]", false)]
+    [InlineData("127.0.0.1", true)]
+    [InlineData("172.31.0.1", true)]
+    [InlineData("192.168.12.1", true)]
+    [InlineData("100.64.0.0", true)]
+    [InlineData("100.127.255.255", true)]
+    [InlineData("[::ffff:100.64.1.2]", true)]
+    [InlineData("100.63.255.255", false)]
+    [InlineData("100.128.0.0", false)]
+    [InlineData("169.254.1.2", true)]
+    [InlineData("[::1]", true)]
+    [InlineData("[fe80::1]", true)]
+    [InlineData("[fd00::1]", true)]
+    public void Listener_requires_a_private_literal(string address, bool allowed)
+    {
+        string root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        string prefix = $"http://{address}:8765/";
+        string[] options = ["--bundle-root", root, "--release-key", "21", "--public-api", root, "--transport", "http", "--http-prefix", prefix];
+        if (allowed) Assert.Equal(prefix, foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(options, root).HttpPrefix);
+        else Assert.Contains("--http-prefix", Assert.Throws<ArgumentException>(() =>
+            foundationhost::TiaMcp.FoundationHost.HostOptions.Parse(options, root)).Message);
+    }
+
     [Fact]
     public void Removed_http_key_reports_the_migration_without_echoing_the_value()
     {

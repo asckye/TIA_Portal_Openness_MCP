@@ -41,7 +41,9 @@ namespace TiaMcpServer.ModelContextProtocol
         internal sealed class NativeCallScope : IDisposable
         {
             internal readonly NativeCallScope? Parent;
-            private int calls;
+            private int calls, generationSteps;
+            internal bool GenerationStepIssued => Volatile.Read(ref generationSteps) != 0;
+            internal void RecordGenerationStep() => Interlocked.Increment(ref generationSteps);
             internal bool NativeCallIssued => Volatile.Read(ref calls) != 0;
             internal NativeCallScope(NativeCallScope? parent) { Parent = parent; }
             internal void Record() => Interlocked.Increment(ref calls);
@@ -56,6 +58,11 @@ namespace TiaMcpServer.ModelContextProtocol
             var scope = new NativeCallScope(ActiveNativeCallScope.Value);
             ActiveNativeCallScope.Value = scope;
             return scope;
+        }
+
+        internal static void GenerationStepStarted()
+        {
+            for (var scope = ActiveNativeCallScope.Value; scope != null; scope = scope.Parent) scope.RecordGenerationStep();
         }
 
         internal static void NativeCallStarted()

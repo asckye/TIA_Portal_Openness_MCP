@@ -22,19 +22,20 @@ public sealed class SharedPipelineTests
         public IReadOnlyList<Descriptor> Lite => All.Values.ToArray();
         public JsonArray BehaviorCapabilities => new();
         public Descriptor? Find(string name, bool includeUnavailable = false) => All.TryGetValue(name, out var tool) ? tool : null;
-        internal Catalog()
+        internal Catalog(string name = SessionFixtureTool.Name)
         {
-            var tool = new Tool { Name = SessionFixtureTool.Name, Description = "[L1][Hardware][WRITE] Fixture engine-only operation.",
+            var tool = new Tool { Name = name, Description = "[L1][Hardware][WRITE] Fixture engine-only operation.",
                 InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["properties"] = new JsonObject(), ["additionalProperties"] = false }),
                 OutputSchema = FoundationV4Result.Schema };
             All = new Dictionary<string, Descriptor> { [tool.Name] = new(tool.Name, tool.Description, tool,
-                new("L1", "Hardware", "WRITE", false, true), SessionFixtureTool.Name + "()",
+                new("L1", "Hardware", "WRITE", false, true), name + "()",
                 Array.Empty<toolpipeline::TiaMcpServer.ModelContextProtocol.ToolParameterDescriptor>(), new(false, false), null, "worker") };
         }
     }
     internal sealed class Worker : IFoundationSessionWorker, toolpipeline::TiaMcp.FoundationHost.IEngineWorker
     {
         internal bool EngineUnknown, FoundationUnknown;
+        internal Func<Exception>? EngineFailure;
         internal int FoundationCalls, EngineCalls, FoundationPreviews, FoundationWrites;
         internal string? FoundationId, EngineId;
         public bool Faulted => false;
@@ -65,6 +66,7 @@ public sealed class SharedPipelineTests
         public Task<toolpipeline::TiaMcp.FoundationHost.EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token)
         {
             EngineCalls++; EngineId = id;
+            if (EngineFailure != null) throw EngineFailure();
             var result = EngineUnknown ? Host.V4Result(name, new JsonObject { ["nativeOutcomeUnknown"] = true },
                 new Error("fixture interruption", new OutcomeUnknownDetails("engine", new Dictionary<string, JsonElement>())), Outcome.Unknown, Execution.Unknown, Completeness.Unknown)
                 : Host.V4Result(name, Binding!.AsObject());
@@ -95,6 +97,33 @@ public sealed class SharedPipelineTests
         internal static RequestContext<CallToolRequestParams> Request(string name, JsonObject arguments) => new(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>())
         { Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(arguments.ToJsonString()) } };
         public void Dispose() => lifetime.Dispose();
+    }
+
+    [Theory]
+    [InlineData("no-route", "INVALID_ARGUMENT", "not-started", 0)]
+    [InlineData("cancelled", "OUTCOME_UNKNOWN", "unknown", 1)]
+    [InlineData("pipe", "OUTCOME_UNKNOWN", "unknown", 1)]
+    [InlineData("timeout", "OUTCOME_UNKNOWN", "unknown", 1)]
+    public async Task Forwarded_write_distinguishes_an_unsent_request_from_a_lost_reply(string failure, string code, string execution, int calls)
+    {
+        const string name = "BuildAndImportPlcArtifact";
+        using var scope = new Scope();
+        using var lifetime = new toolpipeline::TiaMcpServer.ModelContextProtocol.ImportStagingHostLifetime();
+        var catalog = new Catalog(name);
+        using var noRoute = new FakeWorker();
+        var services = FoundationHostPorts.CreateServices(failure == "no-route" ? noRoute : scope.Worker, "21", scope.Worker.Snapshot, null);
+        var invoker = new toolpipeline::TiaMcp.FoundationHost.WorkerToolInvoker(catalog, services, lifetime);
+        Host.ConfigureToolBridge(catalog, invoker, () => false, new HashSet<string>());
+        var tool = new FoundationV4Tool(invoker.CreateTool(catalog.All[name]), "21", () => new ApprovalSettings(false));
+        scope.Worker.EngineFailure = () => failure switch {
+            "cancelled" => new OperationCanceledException(), "pipe" => new EndOfStreamException(),
+            _ => new TimeoutException()
+        };
+        var result = await tool.InvokeAsync(Scope.Request(name, new()));
+        Assert.Equal(0, noRoute.Calls);
+        Assert.Equal(calls, scope.Worker.EngineCalls);
+        Assert.Equal(code, (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal(execution, (string?)result.StructuredContent?["meta"]?["execution"]);
     }
 
     [Fact]

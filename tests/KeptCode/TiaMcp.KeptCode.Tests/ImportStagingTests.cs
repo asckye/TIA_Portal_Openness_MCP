@@ -366,6 +366,67 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(2, batch["files"]!.AsArray().Count);
             store.Cleanup((string)batch["batchId"]!, false); Assert.Empty(store.List()["batches"]!.AsArray());
         }
+        [Theory]
+        [InlineData("inconsistent")]
+        [InlineData("know-how-protected")]
+        [InlineData(NativeExportPolicy.InterfaceOnlyScl)]
+        public void Single_overwrite_proceeds_with_a_named_warning_for_api_limits(string reason)
+        {
+            int exports = 0;
+            var recovery = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget {
+                Object = "Group/Existing", InspectBlocker = () => reason == "inconsistent" ? NativeExportPolicy.ExportBlocker(false) : reason,
+                Export = _ => { exports++; throw new InvalidOperationException("This target cannot be exported."); }
+            } }, () => Directory.CreateDirectory(bundle).FullName, bundle);
+            recovery.RequireExportableBackups();
+            Assert.Equal("backup-skipped", recovery.Status);
+            var warning = TiaMcp.Logic.V4.HostBehavior.BackupSkipped(new JsonObject {
+                ["recoveryStatus"] = recovery.Status, ["recoveryWarning"] = recovery.Warning,
+                ["recoverySkipped"] = JsonSerializer.SerializeToNode(recovery.Skipped) });
+            Assert.Equal(TiaMcp.Logic.V4.WarningCode.BackupSkipped, warning!.Code);
+            Assert.Contains("Group/Existing: " + reason, warning.Message);
+            Assert.Equal(reason, warning.Details["objects"][0].GetProperty("reason").GetString());
+            Assert.Null(recovery.Directory);
+            Assert.False(warning.Details["objects"][0].TryGetProperty("exportFailure", out _));
+            Assert.Equal(0, exports);
+            Assert.Empty(recovery.Files);
+        }
+
+        [Theory]
+        [InlineData("language")]
+        [InlineData("consistency")]
+        [InlineData("protection")]
+        public void Single_overwrite_refuses_when_target_inspection_throws(string property)
+        {
+            Exception failure = property switch {
+                "language" => new System.Runtime.InteropServices.COMException("Call rejected.", unchecked((int)0x80010001)),
+                "consistency" => new ObjectDisposedException("block"),
+                _ => new InvalidOperationException("Property unavailable.")
+            };
+            bool Read(string name) => name == property ? throw failure : false;
+            int exports = 0;
+            var recovery = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget {
+                Object = "Group/Existing", InspectBlocker = () => NativeExportPolicy.BlockRecoveryBlocker("14sp1",
+                    () => Read("language"), () => Read("consistency"), () => Read("protection")), Export = _ => exports++
+            } }, () => bundle, bundle);
+            var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(recovery.RequireExportableBackups);
+            Assert.Equal("backup-unavailable", refusal.Condition);
+            Assert.Equal("overwrite", refusal.ParamName);
+            Assert.Contains("Group/Existing: target-inspection-failed (" + failure.GetType().Name + ")", refusal.Message);
+            Assert.Equal(0, exports);
+            Assert.Null(recovery.Directory);
+        }
+
+        [Fact]
+        public void Single_overwrite_refuses_when_an_exportable_target_cannot_be_backed_up()
+        {
+            var recovery = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget {
+                Object = "Group/Ready", Export = _ => throw new IOException("Export failed.") } }, () => bundle, bundle);
+            var error = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(recovery.RequireExportableBackups);
+            Assert.Equal("backup-unavailable", error.Condition);
+            Assert.Equal("overwrite", error.ParamName);
+            Assert.Contains("Group/Ready: export-or-validation-refused (IOException)", error.Message);
+        }
+
         [Fact]
         public void Single_import_recovery_is_best_effort_and_identifies_skipped_objects()
         {
@@ -394,6 +455,10 @@ namespace TiaMcp.Engine.Tests
             var oversized = NativeExportPolicy.SingleImportRecovery(new Action<FileInfo>[] {
                 file => System.IO.File.WriteAllText(file.FullName,new string('x',4194305)) }, () => bundle, bundle);
             Assert.Equal("backup-skipped", oversized.Status);
+            foreach (var evidence in new[] { missing, failed, typedExport, typedLocation, oversized })
+                Assert.Equal("backup-unavailable", Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(
+                    evidence.RequireExportableBackups).Condition);
+            mixed.RequireExportableBackups();
         }
         [Theory]
         [InlineData("14sp1")][InlineData("15.1")][InlineData("16")][InlineData("17")][InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
@@ -540,7 +605,10 @@ namespace TiaMcp.Engine.Tests
             var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(() => NativeExportPolicy.SingleImportRecovery(InvalidTargets(), () => { directories++; return bundle; }, bundle));
             Assert.Equal(parameter, refusal.ParamName); Assert.Equal(0, directories);
             var result = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget { Object = "Group/A", InspectBlocker = () => throw new IOException() } }, () => { directories++; return bundle; }, bundle);
-            Assert.Equal(0, directories); Assert.Equal("unknown-consistency", result.Skipped[0]["reason"]); Assert.Contains("Group/A", result.Warning);
+            Assert.Equal(0, directories); Assert.Equal("target-inspection-failed (IOException)", result.Skipped[0]["reason"]);
+            Assert.Contains("Group/A", result.Warning);
+            Assert.Equal("backup-unavailable", Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(
+                result.RequireExportableBackups).Condition);
         }
         [Fact]
         public void Existing_staging_directory_needs_no_add_file_right_on_bundle_root()

@@ -25,6 +25,25 @@ public sealed partial class PipelineTests
         Assert.Empty(fixture.Worker.Calls);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Forwarded_write_records_dispatch_before_a_broken_pipe_or_timed_out_reply(bool timeout)
+    {
+        using var fixture = new Fixture();
+        new ApprovalSettings(false, 1).Save(ApprovalSettings.SettingsPath);
+        using var dispatch = InvocationJournal.BeginNativeCallScope();
+        bool recordedAtWorker = false;
+        fixture.Worker.ThrowAfterResolution = () => {
+            recordedAtWorker = dispatch.NativeCallIssued;
+            return timeout ? new TimeoutException("Reply timed out.") : new EndOfStreamException("Worker pipe closed.");
+        };
+        var result = await fixture.Call("SaveProject", "{}");
+        Assert.True(recordedAtWorker);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["execution"]);
+    }
+
     [Fact]
     public async Task A_changed_project_path_after_dispatch_keeps_the_final_unknown_envelope()
     {
@@ -242,6 +261,22 @@ public sealed partial class PipelineTests
             fixture.Worker.Binding = new JsonObject { ["project"] = "other" }; return Task.FromResult(new ApprovalOutcome(pending, false, null)); };
         var result = await fixture.Call("SaveProject", "{}");
         Assert.Equal("CONFIRMATION_REQUIRED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Empty(fixture.Worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("RunClassicHmiTemporaryImportPreflight")]
+    [InlineData("RunOfflineReleaseValidationSuite")]
+    public async Task Workspace_input_is_refused_before_environment_readiness(string name)
+    {
+        using var fixture = new Fixture(all: true);
+        fixture.Worker.Ready = false;
+        var args = new JsonObject { ["workspaceRoot"] = @"\\.\NUL", ["reportDirectory"] = AppContext.BaseDirectory };
+        var result = await fixture.Call(name, args.ToJsonString());
+        var error = result.StructuredContent!["error"]!;
+        Assert.Equal("INVALID_ARGUMENT", (string?)error["code"]);
+        Assert.Equal("workspaceRoot", ((string?)error["details"]?["parameter"])?.TrimStart('/'));
+        Assert.Contains("Network and device", (string?)error["message"]);
         Assert.Empty(fixture.Worker.Calls);
     }
 

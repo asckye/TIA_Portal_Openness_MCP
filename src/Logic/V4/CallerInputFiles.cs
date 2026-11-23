@@ -56,6 +56,7 @@ namespace TiaMcp.Logic.V4
         // Output checks use the explicit native-format table, not the input-file heuristic.
         internal static void Validate(string tool, JsonObject arguments)
         {
+            RequireLocalInputs(tool, arguments);
             RefuseHumanSettingsTargets(arguments);
             TechnologyImportFilter(tool, arguments);
             ValidateNativeFile(tool, arguments);
@@ -73,14 +74,14 @@ namespace TiaMcp.Logic.V4
                         "Input file changed or became unreadable; preview again.", input.Parameter, error.IsArgument, error);
                 }
             }
-            string projectParameter = tool == "OpenProject" ? "path" : tool == "ConnectProject" ? "projectPath"
-                : tool == "OpenLocalSession" ? "localSessionPath" : "";
-            if (projectParameter.Length > 0 && TextArgument(arguments, projectParameter) is string project && project.Length > 0)
+            string? projectParameter = ProjectParameter(tool);
+            if (projectParameter != null && TextArgument(arguments, projectParameter) is string project && project.Length > 0)
                 NativeInputPolicy.RequireExists(project, projectParameter);
         }
 
         internal static JsonArray Snapshot(string tool, JsonObject arguments)
         {
+            RequireLocalInputs(tool, arguments);
             RefuseHumanSettingsTargets(arguments);
             var technologyFilter = TechnologyImportFilter(tool, arguments);
             var inputs = new JsonArray();
@@ -154,7 +155,7 @@ namespace TiaMcp.Logic.V4
             throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Select a SIMATIC XML export of a technology object.", parameter);
         }
 
-        private static IEnumerable<(string Parameter, string Path, bool Directory)> Inputs(string tool, JsonObject arguments)
+        private static IEnumerable<(string Parameter, string Path, bool Directory)> Inputs(string tool, JsonObject arguments, bool classifyDirectories = true)
         {
             string? action = arguments["action"] is JsonValue actionValue && actionValue.TryGetValue<string>(out var actionText) ? actionText : null;
             bool import = tool.StartsWith("Import", StringComparison.Ordinal) || tool == "PlanPlcExternalSourceImport"
@@ -185,21 +186,64 @@ namespace TiaMcp.Logic.V4
                 {
                     continue;
                 }
-                if (!input) continue;
+                if (!input || tool == "ManageMachineDescription" && pair.Key == "inputPath" && action != "import") continue;
                 // Unified exchange imports identify a file by directory + fileName.
                 if (pair.Key == "directory" && import && arguments["fileName"] is JsonValue fileValue
                     && fileValue.TryGetValue<string>(out var fileName) && !string.IsNullOrEmpty(fileName))
+                {
+                    NativeInputPolicy.RequireLocal(path, pair.Key);
+                    NativeInputPolicy.RequireLocal(fileName, "fileName");
                     yield return ("fileName", Path.Combine(path, fileName), false);
+                }
                 else yield return (pair.Key, path,
                     pair.Key is "dir" or "directoryPath" or "directory" or "sourceDir" or "referenceDir" or "templateDirectory" or "schemaDirectory"
                     || pair
                         .Key is "inputPath" or "path" or "libraryPath" or "plcXmlPath" or "referenceGlobalLibraryPath" or "referenceProjectPath" or "apiPath"
-                        && Directory.Exists(path) || tool.Contains("Documents") && pair.Key == "importPath");
+                        && classifyDirectories && Directory.Exists(path) || tool.Contains("Documents") && pair.Key == "importPath");
             }
             if ((import || tool == "BuildPlcSymbolManifestFromPath") && arguments["files"] is JsonArray files)
                 foreach (var file in files)
                     if (file is JsonValue fileValue && fileValue.TryGetValue<string>(out var path)) yield return ("files", path, false);
         }
+
+        internal static void RequireLocalWorkspace(string tool, JsonObject arguments)
+        {
+            if (tool is "RunClassicHmiTemporaryImportPreflight" or "RunOfflineReleaseValidationSuite")
+                NativeInputPolicy.RequireLocal(TextArgument(arguments, "workspaceRoot"), "workspaceRoot");
+        }
+
+        internal static void RequireLocalInputs(string tool, JsonObject arguments)
+        {
+            foreach (var input in Inputs(tool, arguments, classifyDirectories: false))
+                NativeInputPolicy.RequireLocal(input.Path, input.Parameter);
+            if (NativeFile(tool, arguments) is { Output: false } file)
+                NativeInputPolicy.RequireLocal(TextArgument(arguments, file.Parameter), file.Parameter);
+            if (tool == "BuildPlcSymbolManifestFromPath")
+                NativeInputPolicy.RequireLocal(TextArgument(arguments, "inputRoot"), "inputRoot");
+            RequireLocalWorkspace(tool, arguments);
+            bool exchange = tool is "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules";
+            bool importing = TextArgument(arguments, "action") == "import";
+            if ((!exchange || importing) && CanonicalToolParameters.Aliases(tool).Any(alias => alias.Canonical == "sourceDirectory"))
+                NativeInputPolicy.RequireLocal(TextArgument(arguments, "sourceDirectory"), "sourceDirectory");
+            if (exchange && importing)
+                NativeInputPolicy.RequireLocal(TextArgument(arguments, "fileName"), "fileName");
+            if (tool == "ValidateStandardPackage" || tool == "ManageStandardPackage" && TextArgument(arguments, "action") == "import")
+                NativeInputPolicy.RequireLocal(TextArgument(arguments, "sourcePath"), "sourcePath");
+            if (tool is "CallTool" or "PreviewToolCall") RequireLocalCall(arguments);
+            if (tool is "PreviewToolBatch" or "RunReadOnlyToolBatch" or "ApplyToolBatch" && arguments["operations"] is JsonArray calls)
+                foreach (var call in calls.OfType<JsonObject>()) RequireLocalCall(call);
+        }
+
+        private static void RequireLocalCall(JsonObject call)
+        {
+            if (call["arguments"] is JsonObject nested && call["name"] is JsonValue name && name.TryGetValue<string>(out var tool))
+                RequireLocalInputs(tool, nested);
+        }
+
+        private static string? ProjectParameter(string tool) => tool switch
+        {
+            "OpenProject" => "path", "ConnectProject" => "projectPath", "OpenLocalSession" => "localSessionPath", _ => null
+        };
 
         internal static void RefuseHumanSettingsTargets(JsonObject arguments)
         {

@@ -89,7 +89,7 @@ namespace TiaMcpConfigurator
             var entry = new Dictionary<string, object> {
                 ["type"] = "stdio", ["command"] = "<bundle>/runtime/v" + TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(releaseKey).Key
                     + "/TiaMcp.FoundationHost.exe",
-                ["args"] = new[] { "--bundle-root", "<bundle>", "--relay", ConfigCore.Prefix(address, port) + "mcp" } };
+                ["args"] = new[] { "--bundle-root", "<bundle>", "--relay", ConfigCore.EndpointPrefix(address, port) + "mcp" } };
             return ConfigCore.Json()
                 .Serialize(new Dictionary<string, object> { ["mcpServers"] = new Dictionary<string, object> { ["tia-portal-vm"] = entry } });
         }

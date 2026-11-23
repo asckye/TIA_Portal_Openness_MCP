@@ -85,7 +85,7 @@ namespace TiaOpenness.Shared
             if (GenerationStepApproval.Match(request) is { } granted) return granted;
             if (!settings.Enabled) return new ApprovalOutcome(request, true, null);
             string? reason = "workbench-unavailable";
-            var log = audit ?? AuditInvocation.CurrentLog ?? AuditLog.Current;
+            AuditLog Log() => audit ?? AuditInvocation.CurrentLog ?? AuditLog.Current;
             bool connected = false;
             using (var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
             {
@@ -96,7 +96,8 @@ namespace TiaOpenness.Shared
                     if (!Used.TryAdd(request.RequestId, request.PlanHash + request.ArgumentDigest))
                     {
                         try {
-                            log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied", request.PlanHash, request.EffectiveActor);
+                            Log().Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool, "denied",
+                                request.PlanHash, request.EffectiveActor);
                         }
                         catch (Exception ex) { Trace.TraceWarning("Replay refusal audit unavailable: " + ex.GetType().Name); }
                         return new ApprovalOutcome(request, false, "denied");
@@ -117,7 +118,7 @@ namespace TiaOpenness.Shared
                         .Deadline ? "timeout" : "workbench-unavailable";
                 }
             }
-            try { log.Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool,
+            try { Log().Approval(request.RequestId, request.Host, request.ReleaseKey, request.Tool,
                 reason == null ? "granted" : reason == "timeout" ? "timeout" : "denied", request.PlanHash, request.EffectiveActor); }
             catch (Exception ex) { Trace.TraceWarning("Approval decision audit unavailable: " + ex.GetType().Name); }
             return new ApprovalOutcome(request, false, reason);

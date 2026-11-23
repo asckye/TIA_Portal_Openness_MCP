@@ -464,7 +464,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!dryRun || result.IsError == true) return result;
             try
             {
-                var document = XDocument.Load(importPath);
+                var document = TiaMcp.Adapters.Contracts.SafeXml.Load(importPath);
                 var objects = document.Root?.Elements().Select(e => e.Name.LocalName)
                     .Where(name => name.StartsWith("Hmi.", StringComparison.Ordinal)).ToArray();
                 if (document.Root?.Name.LocalName == "Document" && objects?.Length > 0

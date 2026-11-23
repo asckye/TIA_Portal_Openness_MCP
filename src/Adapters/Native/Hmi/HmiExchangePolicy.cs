@@ -189,7 +189,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             string replaceOption = "overwrite=true")
         {
             // Read the exported identities, never infer object names from the filename.
-            var document = XDocument.Load(path);
+            var document = TiaMcp.Adapters.Contracts.SafeXml.Load(path);
             bool slidein = objectType == "Hmi.Screen.ScreenSlidein";
             string identity = slidein ? "SlideinType" : "Name";
             var names = document.Descendants().Where(e => e.Name.LocalName == objectType)

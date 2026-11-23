@@ -87,7 +87,10 @@ namespace TiaMcpServer.ModelContextProtocol
         private CallToolResult Run(PlcTestLibraryRunner.Entry[] entries, string hash, string projectFile, string[] ids, string[] tags)
         {
             string directory = runsDirectory();
-            var run = runner.Execute(entries, directory, McpServer.ReleaseKey, hash, projectFile, ids, tags);
+            PlcTestRunRecord run;
+            try { run = runner.Execute(entries, directory, McpServer.ReleaseKey, hash, projectFile, ids, tags); }
+            catch (AuditStartException error)
+            { return McpServer.V4Reject("RunPlcTestLibrary", new Error(error.Message, new ResourceUnavailableDetails("audit-log"))); }
             var data = new JsonObject {
                 ["runId"] = run.RunId, ["totals"] = run.Totals, ["exitCode"] = run.ExitCode,
                 ["runDirectory"] = Path.Combine(directory, run.RunId), ["junitFile"] = Path.Combine(directory, run.RunId, "junit.xml"),

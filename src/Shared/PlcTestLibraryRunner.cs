@@ -37,7 +37,6 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             string tool = operation == "runtime-channels.ExecutePlcSimAdvanced" ? "RunPlcSimAdvancedTestScenario" : "RunTestSuiteCase";
             using var lane = Dispatch.ToolDispatchLanes.Enter(tool, McpServer.WorkerDispatchCancellation);
-            AuditInvocation.StartCurrent();
             InvocationJournal.NativeCallStarted();
             return ((IHostToolServices)McpServer.Worker).Call(operation, arguments, McpServer.WorkerDispatchCancellation).GetAwaiter().GetResult();
         }
@@ -87,6 +86,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal PlcTestRunRecord Execute(Entry[] entries, string runsDirectory, string release, string hash, string projectFile,
             string[] ids, string[] tags)
         {
+            AuditInvocation.StartCurrent();
             var run = NewRecord(entries, release, hash, projectFile, ids, tags);
             run.Save(runsDirectory);
             bool finished = false;

@@ -1,6 +1,7 @@
 #if TIA_FOUNDATION_TEST_HOST
 extern alias toolpipeline;
 using ResponseGuard = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
+using DispatchJournal = toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal;
 using DeclaredHost = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = toolpipeline::TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
 using ProgressHeartbeat = toolpipeline::TiaMcpServer.ModelContextProtocol.ProgressHeartbeat;
@@ -14,6 +15,7 @@ using UnifiedInputAdmission = toolpipeline::TiaMcpServer.Siemens.Services.Unifie
 using PresetProjectGuard = toolpipeline::TiaMcp.FoundationHost.PresetProjectGuard;
 #else
 using ResponseGuard = TiaMcpServer.ModelContextProtocol.ResponseGuardTool;
+using DispatchJournal = TiaMcpServer.ModelContextProtocol.InvocationJournal;
 using DeclaredHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using InvocationHost = TiaMcpServer.ModelContextProtocol.McpServer;
 using DeclaredToolMetadata = TiaMcpServer.ModelContextProtocol.DeclaredToolMetadata;
@@ -157,10 +159,13 @@ internal sealed class FoundationV4Tool : McpServerTool
     private bool IsNonPreviewMutation(JsonObject arguments, bool write)
     {
         var properties = tool.InputSchema.GetProperty("properties");
-        bool preview = HostBehavior.IsPreview(arguments, properties.TryGetProperty("dryRun", out var dryRun)
-            && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False));
-        return !preview
-            && (write || TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation is "FILE" or "EXECUTE");
+        bool hasDryRun = properties.TryGetProperty("dryRun", out var dryRun);
+        bool defaultPreview = hasDryRun && (!dryRun.TryGetProperty("default", out var defaultValue) || defaultValue.ValueKind != JsonValueKind.False);
+        if (HostBehavior.IsPreview(arguments, defaultPreview)) return false;
+        string operation = TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool.Name, null).Operation;
+        if (write || operation is "FILE" or "EXECUTE") return true;
+        return inner is not (FoundationTool or GenerationTool) && operation is ("WRITE" or "ONLINE-WRITE")
+            && HostBehavior.ApprovalWrite(tool.Name, arguments, classifiedWrite: true, hasDryRun, defaultPreview);
     }
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
@@ -279,6 +284,9 @@ internal sealed class FoundationV4Tool : McpServerTool
             journal?.Complete(() => JsonSerializer.Serialize(result, McpJsonUtilities.DefaultOptions));
             return result;
         }
+        DispatchJournal.NativeCallScope? dispatch = null;
+        // Generation planning reads the worker before dispatching its first write step.
+        bool WriteDispatched() => inner is GenerationTool { OwnsApproval: true } ? dispatch?.GenerationStepIssued == true : dispatch?.NativeCallIssued == true;
         IDisposable? lane = null;
         try
         {
@@ -286,6 +294,7 @@ internal sealed class FoundationV4Tool : McpServerTool
             if ((HostBehavior.RemovedVaultReference(tool.Name, argumentsInput)
                 ?? HostBehavior.MissingRuntimeWriteConfirmation(tool.Name, argumentsInput)) is { } admissionError)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, admissionError));
+            CallerInputFiles.RequireLocalInputs(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject());
             var capabilityInput = argumentsInput;
             if (inner is FoundationTool { Ported: true } declared)
             {
@@ -473,6 +482,9 @@ internal sealed class FoundationV4Tool : McpServerTool
                     var reply = await foundation.InvokeV4Async(request, release, id, cancellationToken);
                     return await Recorded(reply, guardResponse: declaredPortInputAndPaging);
                 }
+                cancellationToken.ThrowIfCancellationRequested();
+                if (IsNonPreviewMutation(JsonSerializer.SerializeToNode(args)!.AsObject(), write))
+                    dispatch = DispatchJournal.BeginNativeCallScope();
                 var result = await inner.InvokeAsync(request, cancellationToken);
                 JsonNode? body;
                 try
@@ -481,14 +493,22 @@ internal sealed class FoundationV4Tool : McpServerTool
                         ? result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null")
                         : JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text);
                 }
-                catch (JsonException) /* swallow(privacy): SDK error text is an internal failure, not client data or invalid input */
-                { return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
+                catch (Exception ex) when (ex is JsonException or InvalidOperationException or InvalidCastException)
+                {
+                    /* swallow(privacy): malformed inner replies cannot establish the write outcome */
+                    return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id, dispatch != null));
+                }
                 if (inner is GenerationTool) return await Recorded(result);
                 return await Recorded(FoundationV4Result
                         .Host(release, tool.Name, id, body, parameter != null && parameter != "artifacts", result.IsError == true, args));
             }
             finally { request.Params = original; }
         }
+        catch (TiaOpenness.Shared.AuditStartException error)
+        { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, new Error(error.Message, new ResourceUnavailableDetails("audit-log")))); }
+        catch (Exception error) when (WriteDispatched() && error is not TiaMcp.Adapters.Contracts.AdapterPreconditionException
+            && error is not WorkerOperationException { Condition: "worker-call-running" })
+        { return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id, true)); }
         catch (OperationCanceledException) /* swallow(privacy): cancellation is represented by the stable V4 code, without exception text */
         {
             return await Recorded(FoundationV4Result
@@ -512,8 +532,8 @@ internal sealed class FoundationV4Tool : McpServerTool
         { return await Recorded(FoundationV4Result.Reject(release, tool.Name, id,
             FoundationV4Result.Invalid((ex as ArgumentException)?.ParamName ?? ""))); }
         catch (Exception) /* swallow(privacy): return a value-free V4 failure; implementation details are not protocol data */
-        { return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id)); }
-        finally { lane?.Dispose(); }
+        { return await Recorded(FoundationV4Result.HostFailure(release, tool.Name, id, dispatch != null)); }
+        finally { dispatch?.Dispose(); lane?.Dispose(); }
     }
 
     internal CallToolResult? ReadinessRefusal(string id)

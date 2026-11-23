@@ -40,6 +40,13 @@ namespace TiaMcp.FoundationHost
         public Task<JsonObject> Restart(bool confirmed, CancellationToken token);
         public Task<IDisposable> Acquire(CancellationToken token);
         public Task<EngineReply> Invoke(string id, string name, JsonObject arguments, bool preview, CancellationToken token);
+        // In-process workers receive the request at Invoke. A transport observes its own send boundary.
+        public Task<EngineReply> DispatchWrite(string id, string name, JsonObject arguments, Action sending, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            sending();
+            return Invoke(id, name, arguments, false, token);
+        }
     }
     public interface IEngineWorkerProgress
     {

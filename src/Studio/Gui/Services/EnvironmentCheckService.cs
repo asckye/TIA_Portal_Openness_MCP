@@ -228,21 +228,34 @@ public static class EnvironmentServiceContext
         {
             var configurations = Directory.Exists(context.ConfigDirectory) ? Directory.GetFiles(context.ConfigDirectory, "http-v*.json") : [];
             var client = Path.Combine(context.ConfigDirectory, "client.json");
+            var latest = configurations.OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
+            if (latest != null) context.HttpConfigurationPath = latest;
             var endpoints = new List<string>();
             foreach (string path in File.Exists(client) ? configurations.Append(client) : configurations)
             {
-                using var record = JsonDocument.Parse(File.ReadAllText(path));
-                if (record.RootElement.TryGetProperty("Address", out var address))
-                    endpoints.Add(ConfigCore.Prefix(address.GetString() ?? throw new InvalidDataException("Missing remote address."),
-                        record.RootElement.GetProperty("Port").GetInt32()) + "mcp");
+                try
+                {
+                    using var record = JsonDocument.Parse(File.ReadAllText(path));
+                    var settings = record.RootElement;
+                    if (!settings.TryGetProperty("Address", out var address))
+                    {
+                        if (path == latest) throw new InvalidDataException("Missing remote address.");
+                        continue;
+                    }
+                    string prefix = ConfigCore.EndpointPrefix(address.GetString() ?? throw new InvalidDataException("Missing remote address."),
+                        settings.GetProperty("Port").GetInt32());
+                    endpoints.Add(prefix + "mcp");
+                    if (path == latest) context.HttpPrefix = prefix;
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException
+                    or FormatException or InvalidOperationException or KeyNotFoundException or InvalidDataException)
+                {
+                    string message = new DiagnosticRedactor().Redact(ex.Message).Text;
+                    if (path == latest || latest == null) context.HttpEndpointError = message;
+                    else Trace.TraceWarning("Cannot read saved endpoint: " + message);
+                }
             }
             context.RemoteEndpoints = endpoints.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-            var latest = configurations.OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
-            if (latest == null) return;
-            context.HttpConfigurationPath = latest;
-            var settings = JsonSerializer.Deserialize<ServerSettings>(File.ReadAllText(latest));
-            if (settings == null) throw new InvalidDataException("Empty HTTP configuration.");
-            context.HttpPrefix = ConfigCore.Prefix(settings.Address, settings.Port);
         }
         catch (Exception ex) { context.HttpEndpointError = new DiagnosticRedactor().Redact(ex.Message).Text; }
     }

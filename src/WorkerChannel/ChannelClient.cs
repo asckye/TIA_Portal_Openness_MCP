@@ -23,6 +23,7 @@ namespace TiaMcp.WorkerChannel
         public Exception? LastFault { get { lock (gate) return lastFault; } }
         public Func<IReadOnlyList<string>>? UnsettledRequests { get; set; }
         public Action<long?>? ObserveReplyTime { get; set; }
+        public Action? ObserveWriteDispatch { get; set; }
         public bool Poisoned { get { lock (gate) return poisoned; } }
         public bool CanDisconnect { get { lock (gate) return verified && !poisoned && !disposed && pending == null; } }
         public bool CanCallIndependentRuntime {
@@ -151,6 +152,7 @@ namespace TiaMcp.WorkerChannel
 
         private async Task<ChannelResponse> Exchange(byte[] bytes, Pending call)
         {
+            if (!call.ReadOnly) ObserveWriteDispatch?.Invoke();
             await output.WriteAsync(bytes, 0, bytes.Length, lifetime.Token).ConfigureAwait(false);
             await output.FlushAsync(lifetime.Token).ConfigureAwait(false);
             lock (gate) call.Written = true;

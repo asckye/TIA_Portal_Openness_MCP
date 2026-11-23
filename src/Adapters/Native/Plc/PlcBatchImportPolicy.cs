@@ -104,16 +104,14 @@ namespace TiaMcp.Adapters
         private static PlcBatchImportObject Parse(Stream stream,PlcBatchImportRequest request,out PlcBatchImportDependency[] dependencies)
         {
             stream.Position=0;
-            var settings=new XmlReaderSettings {DtdProcessing=DtdProcessing.Prohibit,XmlResolver=null,MaxCharactersInDocument=MaximumFileBytes,CloseInput=false
-            };
             // Enforce depth before materializing any XML tree.
             XDocument document;
             try
             {
-                using(var reader=XmlReader.Create(stream,settings)) while(reader.Read()) if(reader.Depth>64)
+                using(var reader=SafeXml.Open(stream, MaximumFileBytes)) while(reader.Read()) if(reader.Depth>64)
                     throw new AdapterPreconditionException("XML nesting exceeds 64.",request.InputParameter);
                 stream.Position=0;
-                using(var reader=XmlReader.Create(stream,settings)) document=XDocument.Load(reader);
+                using(var reader=SafeXml.Open(stream, MaximumFileBytes)) document=XDocument.Load(reader);
             }
             catch(XmlException ex) { throw new AdapterPreconditionException("Input must be valid bounded XML.","dir",true,ex); }
             if(document.Root==null || document.Root.Name!=XName.Get("Document"))

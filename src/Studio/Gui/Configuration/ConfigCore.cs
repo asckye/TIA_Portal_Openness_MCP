@@ -33,14 +33,21 @@ namespace TiaMcpConfigurator
         public static string ClaudePath { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude.json"); } }
         public static JavaScriptSerializer Json() { return new JavaScriptSerializer { MaxJsonLength = 32 * 1024 * 1024, RecursionLimit = 256 }; }
 
-        public static string Prefix(string address, int port)
+        public static string Prefix(string address, int port) => EndpointPrefix(address, port, TiaOpenness.Shared.RemoteProxyPolicy.BindAddressAllowed);
+
+        private static string RelayPrefix(string address, int port) => EndpointPrefix(address, port,
+            ip => TiaOpenness.Shared.RemoteProxyPolicy.BindAddressAllowed(ip)
+                || ip.AddressFamily == AddressFamily.InterNetwork && !ip.Equals(IPAddress.Any) && !ip.Equals(IPAddress.Broadcast));
+
+        internal static string EndpointPrefix(string address, int port, Func<IPAddress, bool> allowed = null)
         {
             IPAddress ip;
-            if (!IPAddress.TryParse(address, out ip) || ip.AddressFamily != AddressFamily.InterNetwork ||
-                ip.Equals(IPAddress.Any) || ip.Equals(IPAddress.Broadcast) || port < 1 || port > 65535 ||
-                address != ip.ToString())
+            if (!IPAddress.TryParse(address, out ip) || port < 1 || port > 65535
+                || ip.AddressFamily == AddressFamily.InterNetwork && address != ip.ToString()
+                || allowed != null && !allowed(ip))
                 throw new ArgumentException(Loc.Current["Config.InvalidEndpoint"]);
-            return "http://" + ip + ":" + port + "/";
+            string host = ip.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + ip + "]" : ip.ToString();
+            return "http://" + host + ":" + port.ToString(CultureInfo.InvariantCulture) + "/";
         }
 
         // Windows CommandLineToArgvW/CRT quoting, including embedded quotes and trailing backslashes.
@@ -181,7 +188,7 @@ namespace TiaMcpConfigurator
         {
             // Reuse the bundle resolution and executable identity checks of the local launcher.
             var local = LocalArguments(engine, versionKey, "");
-            return new[] { local[0], local[1], "--relay", Prefix(address, port) + "mcp" };
+            return new[] { local[0], local[1], "--relay", RelayPrefix(address, port) + "mcp" };
         }
 
         public static string VersionArgument(string releaseKey)
@@ -219,7 +226,7 @@ namespace TiaMcpConfigurator
 
         public static string TestRemote(string address, int port)
         {
-            string prefix = Prefix(address, port);
+            string prefix = RelayPrefix(address, port);
             var health = GetJson(prefix + "mcp/health");
             var ready = GetJson(prefix + "mcp/ready");
             object isReady;

@@ -231,13 +231,13 @@ namespace TiaMcpConfigurator
             string path = Path.Combine(ConfigCore.StateDirectory, "client.json");
             if (!File.Exists(path)) return;
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(path));
-            ConfigCore.Prefix(settings.Address, settings.Port);
+            ConfigCore.EndpointPrefix(settings.Address, settings.Port);
             Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString();
         }
         // Save endpoint settings on the client machine even when the service is installed on a different machine.
         private void OnSaveBoth()
         {
-            ReadEndpoint(out int port);
+            ReadEndpoint(out int port, bind: true);
             string ip = Text("ServerAddress");
             ConfigCore
                 .AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings {
@@ -258,7 +258,7 @@ namespace TiaMcpConfigurator
             if (selected.Count == 0) throw new InvalidOperationException(Loc.Current["Config.SelectClientsFirst"]);
             string engine = null, ip = null; int port = 0;
             if (remote) {
-                ip = Text("ServerAddress"); ReadEndpoint(out port);
+                ip = Text("ServerAddress"); ReadEndpoint(out port, bind: true);
                 engine = ConfigCore.Engine(root, SelectedVersion);
             }
             else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }

@@ -13,6 +13,127 @@ namespace TiaMcp.Engine.Tests
         public CallerInputFilesTests() => Directory.CreateDirectory(root);
         public void Dispose() => Directory.Delete(root, true);
 
+        [Theory]
+        [InlineData("OpenProject", "path")]
+        [InlineData("ConnectProject", "projectPath")]
+        [InlineData("OpenLocalSession", "localSessionPath")]
+        [InlineData("SaveProject", "expectedProjectFile")]
+        [InlineData("ManagePlcGitRepository", "repositoryPath")]
+        [InlineData("RunPlcCompanionTool", "workingDirectory")]
+        [InlineData("PublishGenerationRecord", "recordPath")]
+        [InlineData("CloseProject", "secondaryProjectFile")]
+        [InlineData("SaveExportContent", "exportFile")]
+        public void Network_identity_and_output_paths_pass_input_admission(string tool, string parameter)
+        {
+            var args = new JsonObject { [parameter] = @"\\server\share\project" };
+            TiaMcp.Logic.V4.CallerInputFiles.RequireLocalInputs(tool, args);
+        }
+
+        [Theory]
+        [InlineData("AnalyzePlcSclSource", "filePath")]
+        [InlineData("ImportTechnologyObjectsFromDirectory", "dir")]
+        [InlineData("SeedProjectFromReference", "referenceDir")]
+        [InlineData("AnalyzeGlobalLibraryPackage", "libraryPath")]
+        [InlineData("RetrieveProjectArchive", "archivePath")]
+        [InlineData("ImportHmiTagTable", "importPath")]
+        [InlineData("ImportPlcProgram", "files")]
+        [InlineData("ImportSinumerikAlarmTexts", "files")]
+        [InlineData("BuildPlcSymbolManifestFromPath", "inputRoot")]
+        [InlineData("RunClassicHmiTemporaryImportPreflight", "workspaceRoot")]
+        [InlineData("RunOfflineReleaseValidationSuite", "workspaceRoot")]
+        [InlineData("ValidateStandardPackage", "sourcePath")]
+        [InlineData("AnalyzePlcReferences", "sourceDirectory")]
+        public void Admission_and_snapshot_refuse_network_and_device_inputs(string tool, string parameter)
+        {
+            foreach (string path in new[] { @"\\localhost\fixture\input.xml", "//localhost/fixture/input.xml",
+                @"\\?\UNC\localhost\fixture", @"\\.\NUL", @"/??\NUL" })
+            {
+                var args = new JsonObject { [parameter] = parameter == "files" ? new JsonArray(path) : JsonValue.Create(path) };
+                void Check(Action call)
+                {
+                    var refusal = Assert.Throws<AdapterPreconditionException>(call);
+                    Assert.True(refusal.IsArgument);
+                    Assert.Equal(parameter, refusal.ParamName);
+                    Assert.Contains("Network and device", refusal.Message);
+                }
+                Check(() => TiaMcp.Logic.V4.CallerInputFiles.Validate(tool, args));
+                Check(() => TiaMcp.Logic.V4.CallerInputFiles.Snapshot(tool, args));
+            }
+        }
+
+        [Theory]
+        [InlineData("ManagePlcDataBlockSnapshot", "exportSnapshot")]
+        [InlineData("ManageDriveSafetyAcceptanceTest", "createProtocol")]
+        public void Snapshot_and_protocol_outputs_are_absent_from_approval_inputs(string tool, string action)
+        {
+            var args = new JsonObject { ["action"] = action, ["filePath"] = @"\\server\share\output.xml" };
+            TiaMcp.Logic.V4.CallerInputFiles.RequireLocalInputs(tool, args);
+            args["filePath"] = Path.Combine(root, "output.xml");
+            Assert.Empty(TiaMcp.Logic.V4.CallerInputFiles.Snapshot(tool, args));
+        }
+
+        [Theory]
+        [InlineData("ExchangeCfcCharts", "filePath")]
+        [InlineData("ExchangeUnifiedTags", "directory")]
+        [InlineData("ExchangeUnifiedScriptModules", "fileName")]
+        [InlineData("ManageStandardPackage", "sourcePath")]
+        [InlineData("ManageMachineDescription", "inputPath")]
+        public void Direction_of_exchange_controls_network_input_admission(string tool, string parameter)
+        {
+            var args = new JsonObject { ["action"] = "import", [parameter] = @"\\server\share\fixture" };
+            var error = Assert.Throws<AdapterPreconditionException>(() => TiaMcp.Logic.V4.CallerInputFiles.RequireLocalInputs(tool, args));
+            Assert.Equal(parameter, error.ParamName);
+            args["action"] = "export";
+            TiaMcp.Logic.V4.CallerInputFiles.RequireLocalInputs(tool, args);
+        }
+
+        [Theory]
+        [InlineData("CallTool")]
+        [InlineData("PreviewToolCall")]
+        [InlineData("RunReadOnlyToolBatch")]
+        [InlineData("PreviewToolBatch")]
+        public void Forwarded_input_is_refused_before_the_outer_administrative_path_check(string tool)
+        {
+            var operation = new JsonObject { ["name"] = "AnalyzePlcSclSource",
+                ["arguments"] = new JsonObject { ["filePath"] = @"\\.\NUL" } };
+            var args = tool.EndsWith("Batch", StringComparison.Ordinal)
+                ? new JsonObject { ["operations"] = new JsonArray(operation) } : operation;
+            var error = Assert.Throws<AdapterPreconditionException>(() => TiaMcp.Logic.V4.CallerInputFiles.RequireLocalInputs(tool, args));
+            Assert.Equal("filePath", error.ParamName);
+        }
+
+        [Fact]
+        public void Drive_letter_admission_does_not_probe_the_drive_or_require_a_mapping()
+            => TiaOpenness.Shared.NativeInputPolicy.RequireLocal(@"Z:\offline-fixture\input.xml", "filePath");
+
+        [Fact]
+        public void Directory_and_filename_and_seed_manifest_paths_are_checked_before_enumeration()
+        {
+            var pair = new JsonObject { ["directory"] = root, ["fileName"] = @"\\.\NUL", ["action"] = "import" };
+            var file = Assert.Throws<AdapterPreconditionException>(() => TiaMcp.Logic.V4.CallerInputFiles.Snapshot("ExchangeUnifiedTags", pair));
+            Assert.Equal("fileName", file.ParamName);
+            File.WriteAllText(Path.Combine(root, "manifest.json"), new JsonObject { ["plcTypesDir"] = @"\\.\NUL" }.ToJsonString());
+            var dir = Assert.Throws<AdapterPreconditionException>(() => TiaMcp.Logic.V4.SeedReferenceLayout.Read(root, "21", null));
+            Assert.Equal("referenceDir", dir.ParamName);
+            Assert.True(dir.IsArgument);
+        }
+
+        [Fact]
+        public void Native_input_checks_refuse_device_paths_and_identify_the_parameter()
+        {
+            const string path = @"\\.\NUL", parameter = "inputFile";
+            void Check(Action call)
+            {
+                var refusal = Assert.Throws<AdapterPreconditionException>(call);
+                Assert.True(refusal.IsArgument);
+                Assert.Equal(parameter, refusal.ParamName);
+                Assert.Contains("Network and device", refusal.Message);
+            }
+            Check(() => TiaOpenness.Shared.NativeInputPolicy.RequireReadable(path, parameter, false));
+            Check(() => TiaOpenness.Shared.NativeInputPolicy.RequireReadable(path, parameter, true));
+            Check(() => TiaOpenness.Shared.NativeInputPolicy.OpenRead(path, parameter).Dispose());
+        }
+
         [Fact]
         public void Missing_seed_reference_directory_reports_the_expected_layout_at_file_admission()
         {
