@@ -2463,23 +2463,6 @@
       ]
     },
     {
-      "rule": "CA5389",
-      "path": "src/Updater/Updater.cs",
-      "line": 278,
-      "column": 41,
-      "endLine": 278,
-      "endColumn": 125,
-      "message": "When creating path for \u0027FileStream.FileStream(string path, FileMode mode, FileAccess access, FileShare share) in method string UpdaterEngine.ExtractPackage(string zipFile, string extraction, Action\u003Cstring\u003E say)\u0027 from relative archive item path to extract file and the source is an untrusted zip archive, make sure to sanitize relative archive item path \u0027string ZipArchiveEntry.FullName in method string UpdaterEngine.ExtractPackage(string zipFile, string extraction, Action\u003Cstring\u003E say)\u0027",
-      "member": "TiaMcp . Updater/UpdaterEngine/ExtractPackage( string zipFile , string extraction , Action \u003C string \u003E say )",
-      "anchor": "new FileStream ( Prefix ( target ) , FileMode . CreateNew , FileAccess . Write , FileShare . None ) ",
-      "fingerprint": "0cbba36121a6c5aaa5d0210f9d3c1974ea49d3895d8aa6da810a37b2e6edf71a",
-      "reason": "false positive: the entry name passes IsSafeRelativePath just above, and an unsafe entry refuses the whole ZIP",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/Updater/TiaMcp.Updater.csproj|net48|NET20_OR_GREATER,NET30_OR_GREATER,NET35_OR_GREATER,NET40_OR_GREATER,NET451_OR_GREATER,NET452_OR_GREATER,NET45_OR_GREATER,NET461_OR_GREATER,NET462_OR_GREATER,NET46_OR_GREATER,NET471_OR_GREATER,NET472_OR_GREATER,NET47_OR_GREATER,NET48,NET48_OR_GREATER,NETFRAMEWORK,RELEASE,TRACE"
-      ]
-    },
-    {
       "rule": "CA5392",
       "path": "scripts/operations/vci-watch/WindowsProcesses.cs",
       "line": 23,
