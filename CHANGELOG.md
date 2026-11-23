@@ -19,6 +19,11 @@
   an invalid declared field, the error identifies that field. Unknown-key diagnostics list accepted parameter names and keep the supplied key private.
 - Corrected the rc.2 export guidance. A missing output parent is refused before dispatch. Exporting outside the output root requires
   approval when write approval is on and proceeds when it is off.
+### Fixed
+
+- Workbench reading columns now stay centred as the window, navigation panes and scrollbars change width.
+- Environment checks show actionable failures and one worker-file summary across all eight releases. Diagnostic exports on the Logs page retain the per-release findings.
+- Maximized Workbench windows keep their caption controls and status bar inside the screen. The status bar hides the participant separator when there is no participant text.
 
 ## [4.0.0-rc.2] - 2026-11-23
 

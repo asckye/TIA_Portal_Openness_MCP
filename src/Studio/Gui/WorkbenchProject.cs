@@ -139,13 +139,6 @@ public partial class MainWindow
             ? Visibility.Visible : Visibility.Collapsed;
         DocumentHost.RowDefinitions[0].Height = compile ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
         DocumentHost.RowDefinitions[1].Height = compile ? new GridLength(1, GridUnitType.Star) : GridLength.Auto;
-        Grid.SetRow(CompileDocument, 1);
-        Grid.SetColumn(CompileDocument, 0);
-        Grid.SetColumnSpan(CompileDocument, 2);
-        CompileDocument.HorizontalAlignment = HorizontalAlignment.Left;
-        CompileDocument.Width = Math.Max(0, ProjectOverview.ActualWidth - 48);
-        CompileDocument.Margin = new Thickness(24, 16, 24, 20);
-        CompileDocument.MaxWidth = 920;
     }
 
     private bool OpenTreePage(string page, bool keepTreeOpen)

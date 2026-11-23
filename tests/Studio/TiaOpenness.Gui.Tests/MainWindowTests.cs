@@ -106,6 +106,59 @@ public class MainWindowTests(WpfContext wpf)
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern IntPtr SendMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
 
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern int GetSystemMetricsForDpi(int metric, uint dpi);
+
+    [Theory]
+    [InlineData(AppLanguage.Chinese)]
+    [InlineData(AppLanguage.English)]
+    public void Maximizing_insets_the_frame_and_offers_restore(AppLanguage language) => wpf.RunWithLanguage(language, () =>
+    {
+        var window = new MainWindow(ProjectPageTestSupport.Model(), false);
+        try
+        {
+            WpfContext.ShowWindow(window);
+            var peer = new System.Windows.Automation.Peers.ButtonAutomationPeer(window.MaximizeWindowButton);
+            var normal = (window.Root.Margin, window.ShellFrame.CornerRadius, window.ShellFrame.BorderThickness, window.MaximizeGlyph.Data);
+            window.WindowState = WindowState.Maximized;
+            WpfContext.Drain();
+            var scale = VisualTreeHelper.GetDpi(window);
+            uint dpi = (uint)Math.Round(scale.PixelsPerInchX);
+            double x = (GetSystemMetricsForDpi(32, dpi) + GetSystemMetricsForDpi(92, dpi)) / scale.DpiScaleX;
+            double y = (GetSystemMetricsForDpi(33, dpi) + GetSystemMetricsForDpi(92, dpi)) / scale.DpiScaleY;
+            Assert.Equal(new Thickness(x, y, x, y), window.Root.Margin);
+            Assert.Equal(new CornerRadius(0), window.ShellFrame.CornerRadius);
+            Assert.Equal(new Thickness(0), window.ShellFrame.BorderThickness);
+            Assert.Equal(Loc.Current["Access.Restore"], peer.GetName());
+            Assert.NotSame(normal.Data, window.MaximizeGlyph.Data);
+            window.WindowState = WindowState.Normal;
+            WpfContext.Drain();
+            Assert.Equal(normal, (window.Root.Margin, window.ShellFrame.CornerRadius, window.ShellFrame.BorderThickness, window.MaximizeGlyph.Data));
+            Assert.Equal(Loc.Current["Access.Maximize"], peer.GetName());
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
+    public void An_attached_session_without_participant_text_hides_its_separator() => wpf.Run(() =>
+    {
+        var session = new ProjectPageInteractionTests.DocumentSession((_, _) => "{}");
+        var model = new ViewModels.MainViewModel(new Services.McpProjectClient(session), new FakeDialogService());
+        var window = new MainWindow(model, false);
+        try
+        {
+            WpfContext.Complete(model.Session.ApplySharedStateAsync(null));
+            WorkbenchRenderTests.CreateHost(window, 1366, 860);
+            Assert.True(model.Panel!.Attached);
+            Assert.Empty(window.ClientStatus.Text);
+            Assert.Equal(Visibility.Collapsed, window.TiaProcessStatus.Visibility);
+            Assert.Equal(Visibility.Collapsed, window.ParticipantStatus.Visibility);
+            Assert.Equal("·", window.ParticipantStatus.Children.OfType<TextBlock>().First().Text);
+        }
+        finally { window.Close(); }
+    });
+
     [Fact]
     public void Window_chrome_returns_the_native_maximize_hit_for_Snap_Layouts()
     {

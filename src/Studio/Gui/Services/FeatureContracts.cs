@@ -81,6 +81,7 @@ public interface IAuditLogService : INotifyPropertyChanged
 public sealed record EnvironmentCheck(string Id, CheckStatus Status, LocalizedText Name, LocalizedText Result,
     LocalizedText FixAction, LocalizedText Detail)
 {
+    internal bool CanRepair { get; init; }
     internal EnvironmentIssue? Issue { get; init; }
 }
 

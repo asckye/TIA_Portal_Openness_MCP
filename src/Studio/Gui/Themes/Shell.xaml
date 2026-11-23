@@ -377,8 +377,7 @@
     <Setter Property="Margin" Value="24"/>
     <Setter Property="Template"><Setter.Value>
       <ControlTemplate TargetType="ux:WorkbenchState">
-        <Grid>
-          <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="720"/><ColumnDefinition Width="0"/></Grid.ColumnDefinitions>
+        <Grid x:Name="ErrorColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="720">
           <Border Style="{StaticResource Primer.Container}" CornerRadius="12" Padding="24">
             <StackPanel>
               <DockPanel>

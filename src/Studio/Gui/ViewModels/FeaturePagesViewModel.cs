@@ -14,7 +14,7 @@ using TiaOpenness.Gui.Services.Stubs;
 
 namespace TiaOpenness.Gui.ViewModels;
 
-public enum FeatureTone { Normal, Muted, Accent, Warning, Success, Unchecked }
+public enum FeatureTone { Normal, Muted, Accent, Warning, Success, Unchecked, Error }
 
 public enum ToastKind { Success, Warning, Error, Info }
 public readonly record struct FeatureFeedback(LocalizedText Message, ToastKind Kind = ToastKind.Success, string Source = "feature");
@@ -315,7 +315,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public int EnvironmentPendingCount => _groups.Sum(g => g.Group.Rows.Count(r => r.Status is CheckStatus.Unchecked or CheckStatus.Checking));
     public string EnvironmentSummary => EnvironmentTone == FeatureTone.Success
         ? Loc.Current.T("Env.AllPassedCount", EnvironmentPassedCount) : CheckSummary(Environment.Groups.SelectMany(g => g.Rows).ToArray());
-    public FeatureTone EnvironmentTone => CheckTone(Environment.Groups.SelectMany(g => g.Rows).ToArray());
+    public FeatureTone EnvironmentTone => EnvironmentNeedsAction ? FeatureTone.Error : CheckTone(Environment.Groups.SelectMany(g => g.Rows).ToArray());
     /// <summary>Shows the warning Alert above the groups while any check warns or fails.</summary>
     public bool EnvironmentNeedsAction => EnvironmentAttentionCount > 0;
     /// <summary>The menu badge: checks that warn or fail.</summary>
@@ -1040,6 +1040,7 @@ public sealed record EnvironmentRow(EnvironmentCheck Check)
     public string Name => Check.Name.Resolve();
     public string Result => Check.Result.Resolve();
     public bool Passed => Check.Status == CheckStatus.Pass;
+    public bool ShowResult => !Passed || Result != Status;
     public string Status => Loc.Current[Check.Status switch
     {
         CheckStatus.Pass => "Env.Passed", CheckStatus.Warn => "Env.StatusWarning", CheckStatus.Fail => "Env.Failed",
@@ -1047,8 +1048,8 @@ public sealed record EnvironmentRow(EnvironmentCheck Check)
     }];
     public string Fix => Check.FixAction.Resolve();
     public string Detail => Check.Detail.Resolve();
-    public bool ShowManual => Detail.Length > 0;
-    public bool HasFix => Fix.Length > 0 && Check.Status != CheckStatus.Checking;
+    public bool ShowManual => !Passed && Detail.Length > 0;
+    public bool HasFix => Warning && Check.CanRepair;
     public FeatureTone ResultTone => Warning ? FeatureTone.Warning : FeatureTone.Muted;
     public bool Warning => Check.Status is CheckStatus.Warn or CheckStatus.Fail;
     public FeatureTone Tone => Check.Status switch

@@ -12,6 +12,9 @@
   <ResourceDictionary.MergedDictionaries>
     <themes:WorkbenchFonts/>
   </ResourceDictionary.MergedDictionaries>
+  <Style x:Key="Primer.PageColumn" TargetType="FrameworkElement">
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+  </Style>
   <ux:AccessibleNameConverter x:Key="Primer.AccessibleName"/>
   <ux:DisplayValueConverter x:Key="Primer.Value"/>
   <ux:EnumIndexConverter x:Key="Primer.EnumIndex"/>

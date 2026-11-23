@@ -35,8 +35,8 @@
           IsEnabled="{Binding Engineering.CanReadTags}" Style="{StaticResource Primer.IdeToolButton}"/>
       </StackPanel>
     </Border>
-    <Grid Margin="24"><Grid.ColumnDefinitions><ColumnDefinition MaxWidth="920"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions>
-      <DockPanel MaxWidth="920" VerticalAlignment="Top">
+    <Grid>
+      <DockPanel x:Name="TagsColumn" Style="{StaticResource Primer.PageColumn}" Margin="24" MaxWidth="920" VerticalAlignment="Top">
         <TextBlock DockPanel.Dock="Bottom" Text="{Binding Engineering.TagStatus}" ux:AccessibleStatus.Text="{Binding Engineering.TagStatus}"
           AutomationProperties.LiveSetting="Polite" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
         <Border Style="{StaticResource Primer.ProjectTagTable}" Padding="0">

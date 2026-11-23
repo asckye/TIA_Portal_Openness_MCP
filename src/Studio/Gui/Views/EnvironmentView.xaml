@@ -2,7 +2,7 @@
   <UserControl.Resources>
 
     <DataTemplate DataType="{x:Type vm:EnvironmentRow}">
-      <Border Padding="16,12" Style="{StaticResource Primer.DoctorRowSurface}">
+      <Border Style="{StaticResource Primer.DoctorRowSurface}">
 
         <Grid>
           <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -11,25 +11,24 @@
             <TextBlock Text="×" Foreground="{DynamicResource Primer.onDanger}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <StackPanel Grid.Column="1" Margin="0,0,12,0">
-            <WrapPanel VerticalAlignment="Center">
-              <TextBlock Text="{Binding Name}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold" Margin="0,0,8,0" VerticalAlignment="Center"/>
-              <Border Style="{StaticResource Primer.Tag}"><TextBlock Text="{Binding Category}"/></Border>
-            </WrapPanel>
-            <TextBlock Text="{Binding Result}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+            <Grid HorizontalAlignment="Left">
+              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+              <TextBlock Text="{Binding Name}" ToolTip="{Binding Name}" TextTrimming="CharacterEllipsis" Style="{StaticResource Primer.Text}" FontWeight="SemiBold" Margin="0,0,8,0" VerticalAlignment="Center"/>
+              <Border Grid.Column="1" Style="{StaticResource Primer.Tag}"><TextBlock Text="{Binding Category}"/></Border>
+            </Grid>
+            <TextBlock Text="{Binding Result}" Style="{StaticResource Primer.DoctorResult}" TextWrapping="Wrap" Margin="0,3,0,0"
+              Visibility="{Binding ShowResult, Converter={StaticResource BoolToVisibility}}"/>
             <Expander Header="{l:Tr Env.ManualSteps}" AutomationProperties.Name="{l:Tr Env.ManualSteps}" IsExpanded="False" Style="{StaticResource Primer.DoctorEvidence}">
               <TextBlock Text="{Binding Detail}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" TextTrimming="None"/>
             </Expander>
           </StackPanel>
-          <StackPanel Grid.Column="2" VerticalAlignment="Center">
-            <Border Style="{StaticResource Primer.Tag}" Visibility="{Binding HasFix, Converter={StaticResource NotBoolToVisibility}}">
-              <StackPanel Orientation="Horizontal">
-                <TextBlock Text="✓" Foreground="{DynamicResource Primer.ok}" Margin="0,0,4,0" Visibility="{Binding Passed, Converter={StaticResource BoolToVisibility}}"/>
-                <TextBlock Text="{Binding Status}" Style="{StaticResource Primer.Muted}"/>
-              </StackPanel>
+          <Grid Grid.Column="2">
+            <Border Style="{StaticResource Primer.Tag.Ok}" VerticalAlignment="Center" Visibility="{Binding Passed, Converter={StaticResource BoolToVisibility}}">
+              <TextBlock Text="{Binding Status}" VerticalAlignment="Center"/>
             </Border>
             <Button Content="{Binding Fix}" AutomationProperties.Name="{Binding Fix}" Style="{StaticResource Primer.Button.Primary.Small}" CommandParameter="Mcp"
-              Click="OnFix" Visibility="{Binding HasFix, Converter={StaticResource BoolToVisibility}}"/>
-          </StackPanel>
+              Click="OnFix" VerticalAlignment="Top" Visibility="{Binding HasFix, Converter={StaticResource BoolToVisibility}}"/>
+          </Grid>
         </Grid>
       </Border>
     </DataTemplate>
@@ -39,23 +38,21 @@
       <ux:PageHeadPanel VerticalAlignment="Center">
         <StackPanel Orientation="Horizontal">
           <TextBlock Text="{l:Tr Env.Doctor}" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-          <ContentControl Style="{StaticResource Primer.StatusChip}" Tag="{Binding EnvironmentTone}" ToolTip="{l:Tr Env.AttentionGroup}" HorizontalAlignment="Left">
-            <TextBlock Text="{Binding EnvironmentSummary}" Style="{StaticResource Primer.StatusText}"/>
-          </ContentControl>
+          <Border x:Name="SummaryChip" Style="{StaticResource Primer.DoctorSummary}" ToolTip="{l:Tr Env.AttentionGroup}" VerticalAlignment="Center">
+            <TextBlock Text="{Binding EnvironmentSummary}" VerticalAlignment="Center"/>
+          </Border>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
-          <Button Content="{l:Tr Env.Generate}" AutomationProperties.Name="{l:Tr Env.Generate}" Style="{StaticResource Primer.IdeToolButton}" ContentTemplate="{StaticResource Primer.CommandText}"
-            Click="OnGenerate" IsEnabled="{Binding DiagnosticCanStart}" Margin="0,0,8,0"/>
           <Button x:Name="RecheckButton" ToolTip="{l:Tr Pages.EnvironmentDescription}" AutomationProperties.HelpText="{l:Tr Pages.EnvironmentDescription}" Content="{l:Tr Env.Recheck}" AutomationProperties.Name="{l:Tr Env.Recheck}" Style="{StaticResource Primer.Button.Primary.Small}" ContentTemplate="{StaticResource Primer.CommandText}" IsDefault="True" Click="OnRecheck"/>
         </StackPanel>
       </ux:PageHeadPanel>
     </Border>
     <ScrollViewer x:Name="DoctorScroll" AutomationProperties.Name="{l:Tr Env.Checks}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
       <Grid Margin="24">
-        <StackPanel MaxWidth="860" HorizontalAlignment="Left" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}">
+        <StackPanel x:Name="EnvironmentColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="860">
           <StackPanel Margin="0,0,0,16" Style="{StaticResource Primer.DoctorFailedGroup}">
 
-            <TextBlock Text="{Binding FailedHeader}" Style="{StaticResource Primer.Muted}" FontWeight="SemiBold" Margin="2,0,0,8"/>
+            <TextBlock Text="{Binding FailedHeader}" Foreground="{DynamicResource Ant.colorError}" Style="{StaticResource Primer.Muted}" FontWeight="SemiBold" Margin="2,0,0,8"/>
             <Border Padding="0" Style="{StaticResource Primer.DoctorIssueGroup}">
               <ListBox x:Name="CheckList" AutomationProperties.Name="{Binding FailedHeader}" ItemsSource="{Binding FailedChecks}"
                 SelectedItem="{Binding SelectedEnvironment, Mode=TwoWay}" Style="{StaticResource Primer.List}" ItemContainerStyle="{StaticResource Primer.DoctorRow}"

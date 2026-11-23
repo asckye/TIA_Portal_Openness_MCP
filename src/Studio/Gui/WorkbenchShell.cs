@@ -117,7 +117,8 @@ public partial class MainWindow
         Controls.Ux.SetNarrow(Root, NarrowContent);
         var secondary = NarrowContent ? Visibility.Collapsed : Visibility.Visible;
         BrandVersion.Visibility = EnvironmentDescription.Visibility = secondary;
-        ParticipantStatus.Visibility = !NarrowContent && _model.Panel?.Attached == true ? Visibility.Visible : Visibility.Collapsed;
+        bool hasParticipants = !string.IsNullOrWhiteSpace(ClientStatus.Text) || TiaProcessStatus.Visibility == Visibility.Visible;
+        ParticipantStatus.Visibility = !NarrowContent && _model.Panel?.Attached == true && hasParticipants ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnLeftPaneToggle(object sender, RoutedEventArgs e)

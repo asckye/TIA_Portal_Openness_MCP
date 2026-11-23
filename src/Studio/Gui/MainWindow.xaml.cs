@@ -26,6 +26,8 @@ public partial class MainWindow : Window
         _loadExistingConfiguration = loadExistingConfiguration;
         _model.SelectedReleaseKey = preview?.ReleaseKey ?? InitialReleaseKey(System.Environment.GetCommandLineArgs());
         InitializeComponent();
+        StateChanged += (_, _) => UpdateWindowFrame(System.Windows.Media.VisualTreeHelper.GetDpi(this));
+        DpiChanged += (_, change) => UpdateWindowFrame(change.NewDpi);
         DataContext = _model;
         Root.Tag = new Controls.ResultPresentation(_model);
         InitializeToast();
@@ -94,6 +96,35 @@ public partial class MainWindow : Window
         base.OnSourceInitialized(e);
         ((HwndSource)PresentationSource.FromVisual(this)).AddHook(CaptionHitTest);
     }
+
+    private void UpdateWindowFrame(DpiScale dpi)
+    {
+        bool maximized = WindowState == WindowState.Maximized;
+        if (maximized)
+        {
+            uint monitorDpi = (uint)Math.Round(dpi.PixelsPerInchX);
+            const int sizeFrameX = 32, sizeFrameY = 33, paddedBorder = 92;
+            int padding = GetSystemMetricsForDpi(paddedBorder, monitorDpi);
+            double x = (GetSystemMetricsForDpi(sizeFrameX, monitorDpi) + padding) / dpi.DpiScaleX;
+            double y = (GetSystemMetricsForDpi(sizeFrameY, monitorDpi) + padding) / dpi.DpiScaleY;
+            Root.Margin = new Thickness(x, y, x, y);
+            ShellFrame.BorderThickness = new Thickness(0);
+            ShellFrame.CornerRadius = new CornerRadius(0);
+        }
+        else
+        {
+            Root.ClearValue(MarginProperty);
+            ShellFrame.ClearValue(Border.BorderThicknessProperty);
+            ShellFrame.ClearValue(Border.CornerRadiusProperty);
+        }
+        MaximizeGlyph.SetResourceReference(System.Windows.Shapes.Path.DataProperty, maximized ? "Icon.Restore" : "Icon.Maximize");
+        MaximizeWindowButton.SetBinding(System.Windows.Automation.AutomationProperties.NameProperty,
+            Localization.TrExtension.CreateBinding(maximized ? "Access.Restore" : "Access.Maximize"));
+    }
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern int GetSystemMetricsForDpi(int metric, uint dpi);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct MouseTracking

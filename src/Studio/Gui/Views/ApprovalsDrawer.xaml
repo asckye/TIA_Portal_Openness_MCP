@@ -40,8 +40,8 @@
           </ListBox.ItemTemplate>
         </ListBox>
       </Border>
-      <Grid Grid.Column="1" Margin="24">
-      <Grid MaxWidth="780" HorizontalAlignment="Left" VerticalAlignment="Top" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}">
+      <Grid x:Name="DetailViewport" Grid.Column="1">
+      <Grid x:Name="DetailColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="780" Margin="24" VerticalAlignment="Top">
         <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <ScrollViewer x:Name="DetailScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
           Visibility="{Binding RequestsEmpty, Converter={StaticResource NotBoolToVisibility}}">
@@ -187,8 +187,8 @@
       </Grid>
       </Grid>
       </Grid>
-      <Grid Visibility="{Binding ShowHistoryTable, Converter={StaticResource BoolToVisibility}}" Margin="24">
-        <Border Style="{StaticResource Primer.Container}" MaxWidth="960" HorizontalAlignment="Left" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}" VerticalAlignment="Top" Padding="0"
+      <Grid x:Name="HistoryColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="960" Margin="24" Visibility="{Binding ShowHistoryTable, Converter={StaticResource BoolToVisibility}}">
+        <Border Style="{StaticResource Primer.Container}" VerticalAlignment="Top" Padding="0"
           Visibility="{Binding RequestsEmpty, Converter={StaticResource NotBoolToVisibility}}">
           <ListView x:Name="HistoryList" ItemContainerStyle="{StaticResource Primer.ApprovalHistoryItem}" AutomationProperties.Name="{Binding HistoryLabel}" ItemsSource="{Binding VisibleRequests}"
             BorderThickness="0" Background="{DynamicResource Primer.card}">

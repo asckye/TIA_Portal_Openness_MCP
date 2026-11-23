@@ -114,7 +114,7 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
                         if (code != null) Assert.Contains(code + ": fixture result", mapped.Evidence, StringComparison.Ordinal);
                     }
                     var row = EnvironmentCheckCatalogue.Row(mapped);
-                    Assert.Equal(Loc.Current[expected == "FixFailed" ? "Env.FixButton" : "Env.ManualButton"], row.FixAction.Resolve());
+                    Assert.Equal(expected == "Pass" ? string.Empty : Loc.Current[expected == "FixFailed" ? "Env.FixButton" : "Env.ManualButton"], row.FixAction.Resolve());
                     if (expected == "NewLogon") Assert.Contains(Loc.Current["Env.FixLogon"], row.Detail.Resolve(), StringComparison.Ordinal);
                     Assert.DoesNotContain("[Env.", row.Detail.Resolve(), StringComparison.Ordinal);
                 }
@@ -426,6 +426,38 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         Assert.Equal(EnvironmentFindingStatus.Pass, findings.Single(f => f.Id == "data").Status);
         Assert.Equal(EnvironmentFindingStatus.Unknown, findings.Single(f => f.Id == "url").Status);
         Assert.DoesNotContain("private-config", fixture.Context.HttpEndpointError);
+    }
+
+    [Fact]
+    public async Task Worker_summary_requires_every_release_and_exports_each_finding()
+    {
+        using var fixture = new Fixture();
+        var sources = Sources();
+        var service = new EnvironmentCheckService(() => fixture.Context, () => sources, _ => { });
+        EnvironmentCheck Summary() => Assert.Single(service.Groups.SelectMany(g => g.Rows), row => row.Id == "engines");
+        Assert.Equal(Services.CheckStatus.Unchecked, Summary().Status);
+        service.Recheck(); await service.Completion;
+        Assert.Equal(Services.CheckStatus.Pass, Summary().Status);
+        Assert.Empty(Summary().FixAction.Resolve());
+
+        string missing19 = EnvironmentBundleFiles.Required(fixture.Root, "19").First();
+        string missing21 = EnvironmentBundleFiles.Required(fixture.Root, "21").Last();
+        sources.FileExists = file => file != missing19 && file != missing21;
+        service.Recheck(); await service.Completion;
+        Assert.DoesNotContain(service.Groups.SelectMany(g => g.Rows), row => row.Id.StartsWith("engine-", StringComparison.Ordinal));
+        var summary = Summary();
+        Assert.Equal(Services.CheckStatus.Fail, summary.Status);
+        Assert.Contains(missing19, summary.Detail.Resolve());
+        Assert.Contains(missing21, summary.Detail.Resolve());
+        Assert.Contains("V19", summary.Detail.Resolve());
+        Assert.Contains("V21", summary.Detail.Resolve());
+        var bundle = new DiagnosticBundleService(() => fixture.Context, service.Capture, _ => [], _ => { }, _ => true);
+        bundle.Export(); await bundle.Completion;
+        using var archive = ZipFile.OpenRead(bundle.Progress.Path);
+        var checks = JsonNode.Parse(Read(archive, "environment/checks.json"))!["checks"]!.AsArray();
+        var workers = checks.Where(c => ((string)c!["id"]!).StartsWith("engine-", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(8, workers.Length);
+        Assert.Equal(new[] { "engine-19", "engine-21" }, workers.Where(c => (string?)c!["status"] == "Fail").Select(c => (string?)c!["id"]));
     }
 
     private static EnvironmentProbeSources Sources() => new()

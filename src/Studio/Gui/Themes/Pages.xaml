@@ -184,9 +184,29 @@
     <Setter Property="ToolTip" Value="{Binding Detail}"/>
     <Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="ux:ContrastSelection.Active" Value="False"/></Trigger></Style.Triggers>
   </Style>
+  <Style x:Key="Primer.DoctorSummary" TargetType="Border" BasedOn="{StaticResource Primer.Tag}">
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding EnvironmentTone}" Value="Error">
+        <Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.destructiveText}"/>
+      </DataTrigger>
+      <DataTrigger Binding="{Binding EnvironmentTone}" Value="Success">
+        <Setter Property="Background" Value="{DynamicResource Primer.okBg}"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.ok}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.DoctorResult" TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+    <Style.Triggers><DataTrigger Binding="{Binding Warning}" Value="True">
+      <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
+      <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.12_5}"/>
+    </DataTrigger></Style.Triggers>
+  </Style>
   <Style x:Key="Primer.DoctorRowSurface" TargetType="Border">
+    <Setter Property="Padding" Value="20,14"/>
     <Setter Property="BorderThickness" Value="0,0,0,1"/><Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
     <Style.Triggers><DataTrigger Binding="{Binding Warning}" Value="True">
+      <Setter Property="Padding" Value="16"/>
       <Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/>
     </DataTrigger></Style.Triggers>
   </Style>

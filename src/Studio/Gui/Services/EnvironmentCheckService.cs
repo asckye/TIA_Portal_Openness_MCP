@@ -42,19 +42,19 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
     {
         _allowFix = allowFix;
         _context = context; _sources = sources; _fixMembership = runDoctor;
-        Groups = Group(WorkbenchEnvironmentChecks.Ids.Select(id => EnvironmentCheckCatalogue.Unchecked(id)).ToArray());
+        Groups = Group(PageIds.Select(EnvironmentCheckCatalogue.Unchecked).ToArray());
     }
 
     public LocalizedText Recheck()
     {
         if (Interlocked.CompareExchange(ref _busy, 1, 0) != 0) return LocalizedText.Empty;
-        Groups = Group(WorkbenchEnvironmentChecks.Ids.Select(EnvironmentCheckCatalogue.Checking).ToArray()); Raise(nameof(Groups));
+        Groups = Group(PageIds.Select(EnvironmentCheckCatalogue.Checking).ToArray()); Raise(nameof(Groups));
         Completion = Task.Run(() =>
         {
             try
             {
                 Findings = Capture();
-                Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
+                Groups = CompletedGroups(Findings);
                 var context = _context();
                 LogTail = ReadLogTail(context.LogReadRoots ?? new[] { context.LogsDirectory });
             }
@@ -63,7 +63,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
                 Findings = WorkbenchEnvironmentChecks.Ids
                     .Select(id => new EnvironmentFinding(id, EnvironmentFindingStatus.Unknown, "Unknown", new DiagnosticRedactor().Redact(ex.Message).Text))
                     .ToArray();
-                Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
+                Groups = CompletedGroups(Findings);
             }
             finally { Interlocked.Exchange(ref _busy, 0); Raise(nameof(Groups)); Raise(nameof(LogTail)); }
         });
@@ -117,7 +117,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
                 }
                 Findings = Capture();
                 if (report is { } outcome) Findings = Findings.Select(f => f.Id == checkId ? FixOutcome(f, outcome) : f).ToArray();
-                Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
+                Groups = CompletedGroups(Findings);
             }
             catch (Exception ex)
             {
@@ -125,7 +125,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
                 LogTail = [error, .. doctor];
                 Findings = Findings.Select(f => f.Id == checkId
                     ? new EnvironmentFinding(checkId, EnvironmentFindingStatus.Fail, "FixFailed", error) : f).ToArray();
-                Groups = Group(Findings.Select(EnvironmentCheckCatalogue.Row).ToArray());
+                Groups = CompletedGroups(Findings);
             }
             finally { Interlocked.Exchange(ref _busy, 0); Raise(nameof(Groups)); Raise(nameof(LogTail)); }
         });
@@ -191,12 +191,26 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
         _ => "Env.FixFailed",
     };
 
+    private static bool WorkerFiles(string id) => id.StartsWith("engine-", StringComparison.Ordinal);
+    private static IEnumerable<string> PageIds => WorkbenchEnvironmentChecks.Ids.Select(id => WorkerFiles(id) ? "engines" : id).Distinct();
+
+    private IReadOnlyList<EnvironmentGroup> CompletedGroups(IReadOnlyList<EnvironmentFinding> findings)
+    {
+        // Keep Capture and Findings at release granularity for diagnostic exports.
+        var problems = findings.Where(f => WorkerFiles(f.Id) && f.Status != EnvironmentFindingStatus.Pass).ToArray();
+        var status = problems.Any(f => f.Status == EnvironmentFindingStatus.Fail) ? EnvironmentFindingStatus.Fail
+            : problems.Length > 0 ? EnvironmentFindingStatus.Unknown : EnvironmentFindingStatus.Pass;
+        var files = new EnvironmentFinding("engines", status, status.ToString(),
+            string.Join("\n", problems.Select(f => TiaMcp.Versioning.TiaVersionCatalog.Get(f.Id[7..]).DisplayName + "\n" + f.Evidence)));
+        return Group(findings.Where(f => !WorkerFiles(f.Id)).Prepend(files).Select(f => EnvironmentCheckCatalogue.Row(f, _allowFix)).ToArray());
+    }
+
     private static IReadOnlyList<EnvironmentGroup> Group(IReadOnlyList<EnvironmentCheck> rows) =>
     [
         new(LocalizedText.Literal("TIA Portal"), rows
                 .Where(r => r.Id is "installations" or "membership" or "openness-readiness" or "confirmation" or "openness-allowlist").ToArray()),
         new(LocalizedText.Key("Env.Runtime"), rows.Where(r => r.Id is "framework" or "runtime").ToArray()),
-        new(LocalizedText.Key("Env.Application"), rows.Where(r => r.Id.StartsWith("engine-", StringComparison.Ordinal) || r.Id == "data").ToArray()),
+        new(LocalizedText.Key("Env.Application"), rows.Where(r => r.Id is "engines" or "data").ToArray()),
         new(LocalizedText.Key("Env.Network"), rows.Where(r => r.Id is "port" or "url" or "firewall" or "proxy-remote").ToArray()),
     ];
 }
@@ -278,7 +292,7 @@ public static class EnvironmentCheckCatalogue
     {
         "installations" => "Env.FixInstall", "membership" => newLogon ? "Env.FixLogon" : "Env.FixMembership",
         "openness-readiness" => "Env.FixOpennessReadiness",
-        "framework" => "Env.FixFramework", "runtime" => "Env.FixRuntime", "data" => "Env.FixData",
+        "engines" => "Env.FixFiles", "framework" => "Env.FixFramework", "runtime" => "Env.FixRuntime", "data" => "Env.FixData",
         "port" => "Env.FixPort", "url" => "Env.FixUrl", "firewall" => "Env.FixFirewall", "proxy-remote" => "Env.FixProxyRemote", "openness-allowlist" =>
             "Env.FixOpennessAllowList", _ => "Env.FirstConnectionHelp",
     };
@@ -286,18 +300,32 @@ public static class EnvironmentCheckCatalogue
     public static EnvironmentCheck Unchecked(string id) =>
         new(id, CheckStatus.Unchecked, Name(id), LocalizedText.Key("Env.Unchecked"), LocalizedText.Empty, LocalizedText.Empty);
     public static EnvironmentCheck Checking(string id) => Unchecked(id) with { Status = CheckStatus.Checking, Result = LocalizedText.Key("Env.Checking") };
-    public static EnvironmentCheck Row(EnvironmentFinding finding)
+    public static EnvironmentCheck Row(EnvironmentFinding finding) => Row(finding, true);
+
+    internal static EnvironmentCheck Row(EnvironmentFinding finding, bool allowFix)
     {
         var status = finding.Status switch {
             EnvironmentFindingStatus.Pass => CheckStatus.Pass, EnvironmentFindingStatus.Fail => CheckStatus.Fail, _ => CheckStatus.Warn };
-        var result = LocalizedText.Key(ResultKey(finding));
+        var issue = BannerIssue(finding);
+        var result = finding.Result switch
+        {
+            "Unknown" => LocalizedText.Key("Env.CheckUnknown", Name(finding.Id)),
+            "PortUsed" when issue?.Endpoint is { } endpoint => LocalizedText.Key("Env.PortInUse", endpoint.Port),
+            "Fail" when issue is { Id: "firewall", Endpoint: { } endpoint } => LocalizedText.Key("Env.FirewallPortMissing", endpoint.Port),
+            _ => LocalizedText.Key(ResultKey(finding)),
+        };
         string evidence = new DiagnosticRedactor().Redact(finding.Evidence ?? "").Text;
-        return new(finding.Id, status, Name(finding.Id), result,
-            LocalizedText
-                .Key(finding.Id == "proxy-remote" ? "Env.ProxyFixButton" : finding.Id == "membership" && finding.Result != "NewLogon" && status == CheckStatus
-                    .Fail ? "Env.FixButton" : "Env.ManualButton"),
+        LocalizedText? action = finding switch
+        {
+            { Id: "membership", Status: EnvironmentFindingStatus.Fail, Result: not "NewLogon" } => LocalizedText.Key("Env.FixButton"),
+            { Id: "proxy-remote", Result: "ProxyCaptured" or "Fail" } => LocalizedText.Key("Env.ProxyFixButton"),
+            _ when issue?.Endpoint != null => issue.Action,
+            _ => null,
+        };
+        var label = status == CheckStatus.Pass ? LocalizedText.Empty : action ?? LocalizedText.Key("Env.ManualButton");
+        return new(finding.Id, status, Name(finding.Id), result, label,
             LocalizedText.Key("Env.CheckDetail", result, Fix(finding.Id, finding.Result == "NewLogon"), evidence))
-            { Issue = BannerIssue(finding) };
+            { Issue = issue, CanRepair = allowFix && action.HasValue };
     }
 
     private static EnvironmentIssue? BannerIssue(EnvironmentFinding finding)
@@ -320,7 +348,16 @@ public static class EnvironmentCheckCatalogue
 
     public static string ResultKey(EnvironmentFinding finding) => finding.Result switch
     {
-        "Pass" => "Env.Passed", "Fail" => "Env.Failed", "Unknown" => "Env.Unknown", "NewLogon" => "Env.NewLogon",
+        "Pass" => finding.Id == "engines" ? "Env.FilesPresent" : "Env.Passed",
+        "Fail" => finding.Id switch
+        {
+            "membership" => "Env.GroupMissing", "installations" => "Env.InstallationMissing", "framework" => "Env.FrameworkMissing",
+            "runtime" => "Env.RuntimeMissing", "data" => "Env.DataReadOnly", "url" => "Env.UrlMissing",
+            "firewall" => "Env.FirewallMissing", "openness-allowlist" => "Env.AllowListMismatch", "proxy-remote" => "Env.ProxyUnreachable",
+            _ when finding.Id == "engines" || finding.Id.StartsWith("engine-", StringComparison.Ordinal) => "Env.FilesMissing",
+            _ => "Env.Failed",
+        },
+        "Unknown" => "Env.Unknown", "NewLogon" => "Env.NewLogon",
         "NotReady" => "Env.NotReady",
         "ProxyCaptured" => "Env.ProxyCaptured",
         "FixFailed" => "Env.FixFailed",

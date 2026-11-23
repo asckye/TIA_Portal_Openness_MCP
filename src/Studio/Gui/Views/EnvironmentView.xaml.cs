@@ -19,8 +19,7 @@ public partial class EnvironmentView : UserControl
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
     private void OnRecheck(object sender, RoutedEventArgs e) => Model.Run(Model.Environment.Recheck);
-    private void OnGenerate(object sender, RoutedEventArgs e) => Model.Export();
-    private void OnFix(object sender, RoutedEventArgs e)
+    private async void OnFix(object sender, RoutedEventArgs e)
     {
         e.Handled = true;
         var button = (Button)sender;
@@ -29,6 +28,11 @@ public partial class EnvironmentView : UserControl
         {
             WorkbenchCommands.Navigate.Execute(button.CommandParameter, button);
             if (window.CurrentPage == "Mcp") window.Configuration?.RepairRemoteClients();
+            return;
+        }
+        if (row.Check.Issue is { Endpoint: not null } issue && Window.GetWindow(this) is MainWindow shell)
+        {
+            await shell.ReviewEnvironmentIssue(issue);
             return;
         }
         Model.Run(() => Model.Environment.Fix(row.Check.Id), kind: ToastKind.Info);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using TiaOpenness.Gui.Localization;
@@ -39,7 +40,11 @@ public partial class MainWindow
 
     private async void OnEnvironmentAction(object sender, RoutedEventArgs e)
     {
-        if (_environmentIssue is not { } issue) return;
+        if (_environmentIssue is { } issue) await ReviewEnvironmentIssue(issue);
+    }
+
+    internal async Task ReviewEnvironmentIssue(EnvironmentIssue issue)
+    {
         try
         {
             if (issue.Id == "membership")

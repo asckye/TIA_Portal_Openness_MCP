@@ -17,7 +17,7 @@
       </StackPanel>
     </Border>
     <ScrollViewer x:Name="DetailScroll" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
-      <Grid Margin="24"><StackPanel MaxWidth="740" HorizontalAlignment="Left" Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}" VerticalAlignment="Top">
+      <Grid Margin="24"><StackPanel x:Name="SettingsColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="740" VerticalAlignment="Top">
         <StackPanel x:Name="AppearancePanel">
           <Border Style="{StaticResource Primer.Container}" Padding="20">
             <StackPanel>

@@ -82,4 +82,6 @@
   <PathGeometry x:Key="Icon.WorkbenchSun" Figures="M17 12 A5 5 0 1 1 7 12 A5 5 0 1 1 17 12 Z M12 1 V3 M12 21 V23 M1 12 H3 M21 12 H23
     M4.22 4.22 L5.64 5.64 M18.36 18.36 L19.78 19.78 M4.22 19.78 L5.64 18.36 M18.36 5.64 L19.78 4.22"/>
   <PathGeometry x:Key="Icon.WorkbenchMoon" Figures="M21 12.79 A9 9 0 1 1 11.21 3 A7 7 0 0 0 21 12.79 Z"/>
+  <Geometry x:Key="Icon.Maximize">M1.5,1.5 H8.5 V8.5 H1.5 Z</Geometry>
+  <Geometry x:Key="Icon.Restore">M3.5,3.5 V1.5 H8.5 V6.5 H6.5 M1.5,3.5 H6.5 V8.5 H1.5 Z</Geometry>
 </ResourceDictionary>

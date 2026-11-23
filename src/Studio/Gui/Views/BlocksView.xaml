@@ -3,8 +3,7 @@
   xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization">
   <Grid>
     <Grid x:Name="BlockBackdrop">
-    <Grid><Grid.ColumnDefinitions><ColumnDefinition MaxWidth="968"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions>
-    <Border Style="{StaticResource Primer.ProjectLayoutSurface}" Margin="24,24,24,0" MaxWidth="920" x:Name="BlocksCard">
+    <Border x:Name="BlocksCard" Style="{StaticResource Primer.PageColumn}" Margin="24,24,24,0" MaxWidth="920">
       <Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <Border Style="{StaticResource Primer.ProjectLayoutSurface}" x:Name="BlocksHeaderCard" MinHeight="44">
@@ -252,7 +251,6 @@
         </Grid>
       </Grid>
     </Border>
-    </Grid>
     <DockPanel x:Name="NodeDocument" Visibility="Collapsed">
       <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}"><DockPanel>
         <Border DockPanel.Dock="Left" x:Name="NodeBadge" Style="{StaticResource Primer.ProjectNodeBadge}" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
@@ -264,9 +262,9 @@
         <TextBlock x:Name="NodeSubtitle" DockPanel.Dock="Right" Style="{StaticResource Project.Caption}" Margin="8,0" VerticalAlignment="Center"/>
         <TextBlock x:Name="NodeTitle" Style="{StaticResource Primer.Mono}" FontWeight="SemiBold"/>
       </DockPanel></Border>
-      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-      <Grid><Grid.ColumnDefinitions><ColumnDefinition MaxWidth="948"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions><StackPanel>
-      <Border x:Name="HmiMetrics" Style="{StaticResource Primer.ProjectResultCard}" Margin="24,24,24,0" MaxWidth="900" Padding="0">
+      <ScrollViewer x:Name="NodeScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <StackPanel x:Name="NodeColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="900" Margin="24">
+      <Border x:Name="HmiMetrics" Style="{StaticResource Primer.ProjectResultCard}" Margin="0,0,0,24" Padding="0">
         <UniformGrid Columns="3">
           <StackPanel Margin="16"><TextBlock Text="{l:Tr Project.HmiScreens}" Style="{StaticResource Project.Caption}"/>
             <TextBlock Text="{Binding Engineering.HmiScreens,TargetNullValue=—}" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.18}" FontWeight="SemiBold"/>
@@ -279,7 +277,7 @@
           </StackPanel>
         </UniformGrid>
       </Border>
-      <Border Style="{StaticResource Primer.ProjectResultCard}" Margin="24" Padding="20" MaxWidth="900">
+      <Border Style="{StaticResource Primer.ProjectResultCard}" Padding="20">
         <StackPanel>
           <TextBlock x:Name="NodeHeading" Style="{StaticResource Primer.ContainerTitle}"/>
           <TextBlock x:Name="NodeDescription" Style="{StaticResource Project.Caption}"/>
@@ -300,7 +298,7 @@
           </ScrollViewer>
         </StackPanel>
       </Border>
-      </StackPanel></Grid></ScrollViewer>
+      </StackPanel></ScrollViewer>
     </DockPanel>
     <ux:WorkbenchState x:Name="EmptyBlocks" Style="{StaticResource Primer.Workbench.EmptyState}" Visibility="Collapsed"
       Title="{l:Tr Shell.EmptyBlocks}" Description="{l:Tr Shell.ImportBlocksHint}" ActionLabel="{l:Tr Shell.ImportBlocks}"/>

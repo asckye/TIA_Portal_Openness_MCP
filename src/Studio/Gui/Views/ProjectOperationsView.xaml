@@ -150,8 +150,8 @@
           <TextBlock Text="{l:Tr Project.ReconnectHint}" Style="{StaticResource Project.Caption}"/></StackPanel>
       </DockPanel>
     </Border>
-    <Grid Margin="24,18,24,0"><Grid.ColumnDefinitions><ColumnDefinition MaxWidth="920"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions>
-      <StackPanel>
+    <Grid>
+      <StackPanel x:Name="SnapshotColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="920" Margin="24,18,24,0">
         <StackPanel Orientation="Horizontal">
           <Border DataContext="{Binding Engineering.Snapshot}" Style="{StaticResource Primer.BlkBadge}" Margin="0,0,8,0"><TextBlock Text="{Binding Kind}"
             Style="{StaticResource Primer.BlkBadgeText}"/></Border>
@@ -178,8 +178,7 @@
     </Grid>
   </StackPanel>
   <Grid Visibility="{Binding Session.ShowConnectionForm,Converter={StaticResource BoolToVisibility}}">
-    <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="868"/><ColumnDefinition Width="0*"/></Grid.ColumnDefinitions>
-  <StackPanel x:Name="ConnectionForms" AutomationProperties.Name="{l:Tr Blocks.Empty.Title}" MaxWidth="820" Margin="24" Visibility="{Binding Session.ShowConnectionForm,Converter={StaticResource BoolToVisibility}}">
+  <StackPanel x:Name="ConnectionForms" Style="{StaticResource Primer.PageColumn}" AutomationProperties.Name="{l:Tr Blocks.Empty.Title}" MaxWidth="820" Margin="24" Visibility="{Binding Session.ShowConnectionForm,Converter={StaticResource BoolToVisibility}}">
     <Border Style="{StaticResource Primer.Container}" Padding="20" Margin="0,0,0,20">
       <StackPanel>
         <DockPanel>

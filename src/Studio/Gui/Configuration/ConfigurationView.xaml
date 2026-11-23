@@ -51,8 +51,7 @@
     </Border>
     <ScrollViewer x:Name="Panes" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
       <Grid Margin="24">
-        <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="880"/></Grid.ColumnDefinitions>
-        <StackPanel MaxWidth="880">
+        <StackPanel x:Name="McpColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="880">
           <ContentControl Style="{StaticResource Primer.Box}" Padding="20,20,20,0">
             <StackPanel>
               <ux:PageHeadPanel x:Name="ModeHead" Spacing="16" Title="{Binding ElementName=ModeTitle}">

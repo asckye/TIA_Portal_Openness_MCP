@@ -11,6 +11,7 @@ using TiaOpenness.Gui.Services;
 using TiaOpenness.Gui.Themes;
 using TiaOpenness.Gui.ViewModels;
 using Xunit;
+using static TiaOpenness.Gui.Tests.WorkbenchRenderFeaturePagesTests;
 
 namespace TiaOpenness.Gui.Tests;
 
@@ -23,6 +24,8 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
     [InlineData(1360, 812, AppTheme.Dark, AppLanguage.Chinese, false)]
     [InlineData(1360, 812, AppTheme.Light, AppLanguage.Chinese, true)]
     [InlineData(1024, 640, AppTheme.Light, AppLanguage.Chinese, false)]
+    [InlineData(1366, 860, AppTheme.Light, AppLanguage.Chinese, false)]
+    [InlineData(1920, 1080, AppTheme.Light, AppLanguage.Chinese, false)]
     public void Project_states_follow_session_documents_and_command_results(int width, int height, AppTheme theme, AppLanguage language, bool contrast)
     {
         wpf.RunWithLanguage(language, () =>
@@ -71,6 +74,13 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 Assert.Equal(Loc.Current["Project.GoToMcp"], forms.GoToMcp.Content);
                 Assert.Equal("Mcp", forms.GoToMcp.CommandParameter);
                 Capture("state-disconnected");
+                AssertCenteredColumn(forms.ConnectionForms, window.ProjectOverview, 820);
+                window.Navigate("Mcp"); host.UpdateLayout();
+                var config = window.Configuration!;
+                AssertCenteredColumn(config.McpColumn, Viewport(config.Panes), 880);
+                window.Navigate("Clients"); host.UpdateLayout();
+                AssertCenteredColumn(config.Clients.ClientsColumn, Viewport(config.Clients.ClientsScroll), 860);
+                window.Navigate("Engineering");
                 var attachedProject = client.AttachedProject;
                 client.AttachedProject = null;
                 model.Session.Connect.Execute(null);
@@ -93,6 +103,17 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 OpenBlock("FB_MixerRun");
                 Assert.Contains(editor.SourceLines, line => line.Contains("#Running", StringComparison.Ordinal));
                 Capture("project-code");
+                AssertCenteredColumn(blocks.BlocksCard, window.BlockDocument, 920);
+                foreach (var document in new[] { ProjectDocument.Hmi, ProjectDocument.SoftwareUnit })
+                {
+                    editor.Document = document;
+                    host.UpdateLayout();
+                    AssertCenteredColumn(blocks.NodeColumn, Viewport(blocks.NodeScroll), 900);
+                }
+                editor.Document = ProjectDocument.Tags; host.UpdateLayout();
+                var tags = (Views.PlcTagsView)window.PlcTagsContent.Content;
+                AssertCenteredColumn(tags.TagsColumn, tags, 920);
+                editor.Document = ProjectDocument.Render;
                 editor.FocusedBlock!.Selected = true;
                 editor.OutputDirectory = Path.Combine(McpOperatorFixture.RepositoryRoot, "bin-build", "refactor", "UI-0036GB1", "exports");
                 editor.ImportPathsText = Path.Combine(McpOperatorFixture.RepositoryRoot, "templates", "mcp-full-e2e-verify", "plc", "blocks",
@@ -115,6 +136,8 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 editor.Compile.Execute(null);
                 Assert.Equal(CompileSeverity.Warning, Assert.Single(editor.CompilerMessages).Severity);
                 Capture("project-diag");
+                AssertCenteredColumn(blocks.BlocksCard, window.BlockDocument, 920);
+                AssertCenteredColumn(window.CompileDocument, window.DocumentHost, 920);
                 OpenBlock("Main");
                 Assert.True(blocks.LadderPanel.Visibility == Visibility.Visible);
                 Assert.Equal(4, Assert.Single(editor.Networks[0].Rungs).Elements.Count);
@@ -187,27 +210,34 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                     file.ClearValue(UIElement.OpacityProperty);
                 }
                 Capture("project-vci-normal");
+                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 920);
                 var vc = model.VersionControl;
                 vc.VcPush.Execute(null);
                 Assert.True(vc.SyncResult?.DryRun);
                 Capture("project-vci-preview");
+                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 900);
                 var sync = new TaskCompletionSource<SyncResult>();
                 client.SyncHandler = (_, _) => sync.Task;
                 vc.VcDryRun = false;
                 vc.VcPush.Execute(null);
                 Assert.True(vc.Synchronizing);
                 Capture("project-vci-syncing");
+                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 740);
                 sync.SetResult(Sync(false)); WpfContext.Drain();
                 Assert.Equal(2, vc.SyncResult?.Items.Count);
                 Capture("project-vci-done");
+                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 780);
                 client.Workspaces.Clear(); WpfContext.Complete(vc.VcRefreshAsync());
                 Assert.False(vc.HasWorkspace);
                 Capture("project-vci-no-ws");
+                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 640);
 
                 window.Navigate("Engineering");
                 var originalLogic = client.LogicHandler!;
                 client.LogicHandler = (_, _) => Task.FromException<string>(new IOException("Block read timed out."));
                 OpenBlock("Main"); Assert.True(editor.SourceFailed); Capture("state-error");
+                var errorColumn = (Grid)blocks.SourceError.Template.FindName("ErrorColumn", blocks.SourceError);
+                AssertCenteredColumn(errorColumn, blocks.BlockBackdrop, 720);
                 var cachedBlocks = client.Blocks.ToArray();
                 client.Blocks.Clear(); editor.Refresh.Execute(null);
                 Assert.True(editor.EmptyBlockList);
@@ -225,6 +255,7 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 Assert.Contains(editor.Snapshot!.Lines, line => line.Contains("Last source", StringComparison.Ordinal));
                 Assert.False(editor.Compile.CanExecute(null));
                 Capture("state-crashed");
+                AssertCenteredColumn(ops.SnapshotColumn, window.ProjectOverview, 920);
                 UnifiedDesktopTests.ClickControl(ops.CrashLogs); WpfContext.Drain();
                 Assert.True(window.RailLog.IsChecked);
             }
@@ -251,7 +282,7 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
         string? output = Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR");
         if (output == null) return;
         string palette = contrast ? "hc" : theme.ToString().ToLowerInvariant();
-        string variant = palette + (language == AppLanguage.Chinese ? "-zh" : "-en") + (width == 1024 ? "-1024x640" : "");
+        string variant = palette + (language == AppLanguage.Chinese ? "-zh" : "-en") + (width == 1360 ? "" : $"-{width}x{height}");
         string dir = Directory.CreateDirectory(Path.Combine(output, "states")).FullName;
         WorkbenchRenderTests.SaveRender(host, Path.Combine(dir, view + "-" + variant + ".png"), width, height);
     }

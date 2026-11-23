@@ -69,7 +69,7 @@
                   <Path Width="8" Height="10" Data="M0,5 L8,5" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
                 </Button>
                 <Button x:Name="MaximizeWindowButton" AutomationProperties.Name="{l:Tr Access.Maximize}" Style="{StaticResource Primer.Workbench.MaximizeButton}" Click="OnMaximize">
-                  <Path Width="10" Height="10" Data="M1.5,1.5 H8.5 V8.5 H1.5 Z" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
+                  <Path x:Name="MaximizeGlyph" Width="10" Height="10" Data="{StaticResource Icon.Maximize}" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
                 </Button>
                 <Button x:Name="CloseWindowButton" AutomationProperties.Name="{l:Tr Access.Close}" Style="{StaticResource Primer.WindowButton}" Click="OnClose">
                   <Path Width="10" Height="10" Data="M1.5,1.5 L8.5,8.5 M8.5,1.5 L1.5,8.5" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1"/>
@@ -203,7 +203,7 @@
                       <Grid x:Name="BlockDocument">
                         <views:BlocksView x:Name="BlocksContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
                       </Grid>
-                      <Grid x:Name="CompileDocument" Grid.Column="1" Width="300" Margin="16,0,0,0" Visibility="Collapsed">
+                      <Grid x:Name="CompileDocument" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Primer.PageColumn}" MaxWidth="920" Margin="24,16,24,20" Visibility="Collapsed">
                         <views:EngineeringSideView x:Name="EngineeringSideContent" Tag="{Binding Tag,ElementName=Root}"/>
                       </Grid>
                       <ContentControl x:Name="PlcTagsContent" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"

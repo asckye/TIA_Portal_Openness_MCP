@@ -16,6 +16,75 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
 {
+    internal static void AssertCenteredColumn(FrameworkElement column, FrameworkElement viewport, double maximum)
+    {
+        double left = column.TranslatePoint(new Point(), viewport).X;
+        double right = viewport.ActualWidth - left - column.ActualWidth;
+        Assert.Equal(Visibility.Visible, column.Visibility);
+        Assert.True(column.ActualHeight > 0);
+        Assert.True(viewport.ActualWidth > 48);
+        Assert.Equal(Math.Min(maximum, viewport.ActualWidth - 48), column.ActualWidth);
+        Assert.InRange(Math.Abs(left - right), 0, 1);
+    }
+
+    internal static ScrollContentPresenter Viewport(ScrollViewer scroll) =>
+        (ScrollContentPresenter)scroll.Template.FindName("PART_ScrollContentPresenter", scroll);
+
+    [Theory]
+    [InlineData(AppLanguage.Chinese)]
+    [InlineData(AppLanguage.English)]
+    public void Doctor_renders_failures_and_repairs_and_logs_owns_the_export_access_key(AppLanguage language)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var environment = new FeaturePageFixtures.Environment();
+            var failed = Core.Environment.EnvironmentFindingStatus.Fail;
+            var rows = new Core.Environment.EnvironmentFinding[]
+            {
+                new("runtime", Core.Environment.EnvironmentFindingStatus.Pass, "Pass"),
+                new("membership", failed, "Fail"),
+                new("proxy-remote", failed, "Fail"),
+                new("firewall", failed, "Fail", "http://127.0.0.1:8765/"),
+                new("framework", failed, "Fail"),
+            }.Select(Services.EnvironmentCheckCatalogue.Row).ToArray();
+            environment.Replace([new(LocalizedText.Literal("TIA Portal"), rows)]);
+            var diagnostics = new FeaturePageFixtures.Diagnostics();
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(false), diagnostics);
+            try
+            {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), environment);
+                window.Navigate("Environment"); WpfContext.ShowWindow(window); WpfContext.Drain(); window.UpdateLayout();
+                var doctor = window.EnvironmentContent;
+                Assert.Equal(FeatureTone.Error, window.Features.EnvironmentTone);
+                Assert.Same(window.FindResource("Ant.colorErrorBg"), doctor.SummaryChip.Background);
+                var tag = Assert.Single(Descendants<Border>(doctor.PassedList), border =>
+                    border.IsVisible && border.Style == window.FindResource("Primer.Tag.Ok"));
+                Assert.Equal(Loc.Current["Env.Passed"], Assert.IsType<TextBlock>(tag.Child).Text);
+                Assert.Single(Descendants<TextBlock>(doctor.PassedList), text => text.IsVisible && text.Text == Loc.Current["Env.Passed"]);
+                Assert.DoesNotContain(Descendants<Button>(doctor.PassedList), button => button.IsVisible);
+                var buttons = Descendants<Button>(doctor.CheckList).Where(button => button.IsVisible).ToArray();
+                Assert.Equal(new[] { "membership", "proxy-remote", "firewall" }, buttons.Select(button => ((EnvironmentRow)button.DataContext).Check.Id));
+                Assert.All(buttons, button => Assert.DoesNotContain("_", Assert.IsType<string>(button.Content)));
+                foreach (var row in window.Features.FailedChecks)
+                {
+                    var name = Assert.Single(Descendants<TextBlock>(doctor.CheckList), text => text.IsVisible && text.Text == row.Name);
+                    Assert.Equal(row.Name, name.ToolTip);
+                    Assert.NotEqual(Loc.Current["Env.Failed"], row.Result);
+                    Assert.Contains(Descendants<TextBlock>(doctor.CheckList), text => text.IsVisible && text.Text == row.Result);
+                }
+                Assert.Contains("8765", window.Features.FailedChecks.Single(row => row.Check.Id == "firewall").Result);
+                Assert.DoesNotContain(Descendants<Button>(doctor), button => Equals(button.Content, Loc.Current["Env.Generate"]));
+                window.Navigate("Log"); WpfContext.Drain(); window.UpdateLayout();
+                var export = window.LogContent.GenerateButton;
+                Assert.True(export.IsVisible && export.IsEnabled);
+                Assert.Equal('G', char.ToUpperInvariant(Assert.Single(Descendants<AccessText>(export)).AccessKey));
+                System.Windows.Input.AccessKeyManager.ProcessKey(PresentationSource.FromVisual(export), "g", false);
+                Assert.True(window.Features.DiagnosticRunning);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [WorkbenchRenderFact]
     public void Render_feature_pages_and_drawers_without_services()
     {
@@ -232,6 +301,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
     [InlineData(1360, 812, AppTheme.Light, AppLanguage.Chinese)]
     [InlineData(1360, 812, AppTheme.Light, AppLanguage.English)]
     [InlineData(1360, 812, AppTheme.Dark, AppLanguage.Chinese)]
+    [InlineData(1920, 1080, AppTheme.Light, AppLanguage.Chinese)]
     public void Final_feature_views_use_the_design_sizes_and_actual_request_fields(int width, int height, AppTheme theme, AppLanguage language)
     {
         Render(false);
@@ -339,7 +409,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                     if (directory != null) WorkbenchRenderTests.SaveRender(host, Path.Combine(directory, view + "-" + suffix + ".png"), width, height);
                 }
 
-                void CheckColumn(FrameworkElement column, double left, double expectedWidth)
+                void CheckSheet(FrameworkElement column, double left, double expectedWidth)
                 {
                     Assert.Equal(expectedWidth, column.ActualWidth);
                     Assert.InRange(column.TranslatePoint(new Point(), host).X, left - 1, left + 1);
@@ -371,6 +441,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 arguments.IsExpanded = false;
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.HistoryTab);
                 Capture("agent-approvals-history");
+                AssertCenteredColumn(window.ApprovalsContent.HistoryColumn, window.ApprovalsContent.PageBody, 960);
                 var history = window.ApprovalsContent.HistoryList.Items.Cast<ApprovalRow>().ToArray();
                 Assert.Equal(5, history.Length);
                 var handled = Assert.Single(history, row => row.Request.Id == "previous-import");
@@ -388,12 +459,15 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                     .Single(button => button.DataContext == handled && Equals(button.Content, handled.HistoryTools));
                 UnifiedDesktopTests.ClickControl(review);
                 Assert.True(window.Features.HistoryDetailOpen);
+                host.UpdateLayout();
+                AssertCenteredColumn(window.ApprovalsContent.DetailColumn, window.ApprovalsContent.DetailViewport, 780);
                 Assert.False(window.ApprovalsContent.DecisionArea.IsVisible);
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.HistoryTab);
                 Assert.True(window.Features.ShowHistoryTable);
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.PendingTab);
 
-                if (width == 1366) CheckColumn(window.ApprovalsContent.DetailScroll, 344, 780);
+                host.UpdateLayout();
+                AssertCenteredColumn(window.ApprovalsContent.DetailScroll, window.ApprovalsContent.DetailViewport, 780);
                 Assert.Equal(Loc.Current["Approval.ApproveImport"], window.ApprovalsContent.ApproveRequest.Content);
                 void CheckButton(System.Windows.Controls.Primitives.ButtonBase button, int height)
                 {
@@ -417,7 +491,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.ApproveRequest);
                 Capture("danger-sheet");
                 var sheet = Descendants<Border>(window.ApprovalsContent.ConfirmationSheet).Single(b => b.Width == 420);
-                CheckColumn(sheet, (width - 420) / 2d, 420);
+                CheckSheet(sheet, (width - 420) / 2d, 420);
                 double middle = sheet.TranslatePoint(new Point(0, sheet.ActualHeight / 2), host).Y;
                 Assert.InRange(middle, height / 2d - 1, height / 2d + 1);
                 Assert.True(window.ApprovalsContent.ConfirmationSheet.IsVisible);
@@ -466,11 +540,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Capture("doctor-pass");
                 Assert.Empty(window.EnvironmentContent.CheckList.Items);
                 Assert.NotEmpty(window.EnvironmentContent.PassedList.Items);
-                if (width == 1366)
-                {
-                    var column = Descendants<StackPanel>(window.EnvironmentContent).Single(panel => panel.MaxWidth == 860);
-                    CheckColumn(column, 84, 860);
-                }
+                AssertCenteredColumn(window.EnvironmentContent.EnvironmentColumn, Viewport(window.EnvironmentContent.DoctorScroll), 860);
                 window.Navigate("Audit");
                 Assert.Equal(64, window.Features.SelectedAudit!.Hash.Length);
                 Capture("audit");
@@ -484,10 +554,9 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 WpfContext.Complete(window.SettingsContent.LoadSafetyAsync());
                 Capture("settings-safety");
                 var settingsView = window.SettingsContent;
+                AssertCenteredColumn(settingsView.SettingsColumn, Viewport(settingsView.DetailScroll), 740);
                 if (width == 1366)
                 {
-                    var column = Descendants<StackPanel>(settingsView).Single(panel => panel.MaxWidth == 740);
-                    CheckColumn(column, 312, 740);
                     Assert.Contains(Descendants<TextBlock>(settingsView.SectionList),
                         text => text.Text == (Loc.Current.IsChinese ? "偏好与安全" : "Settings"));
                 }
@@ -503,6 +572,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 if (width == 1366) Assert.Equal(228, ((Border)window.SettingsContent.SectionList.Parent).ActualWidth);
                 CaptureConfirmation(window, host, settingsView.ReviewSafety, "confirm-safety", directory, suffix);
                 settingsView.ShowSection("Appearance"); Capture("settings-appearance");
+                AssertCenteredColumn(settingsView.SettingsColumn, Viewport(settingsView.DetailScroll), 740);
                 settingsView.ShowSection("Service");
                 string bundleRoot = MainWindow.FindBundleRoot(AppContext.BaseDirectory);
                 bool hasVersion = TiaMcpConfigurator.UpdateCheck.Installed(bundleRoot) != null;
@@ -517,6 +587,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Assert.Equal(hasVersion, settingsView.CheckUpdate.IsEnabled);
                 Assert.False(settingsView.SourceCheckoutHint.IsVisible);
                 Capture("settings-service");
+                AssertCenteredColumn(settingsView.SettingsColumn, Viewport(settingsView.DetailScroll), 740);
                 settingsView.SetUpdateAvailability(hasVersion, sourceCheckout);
                 Assert.Equal(Path.Combine(settingsView.DataPath.Text, "reports"), settingsView.ExportsPath.Text);
                 long bytes = new DirectoryInfo(journalDirectory).GetFiles("calls-*.jsonl*").Sum(file => file.Length);
