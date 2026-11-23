@@ -147,13 +147,16 @@ internal sealed class FoundationV4Tool : McpServerTool
     public override Tool ProtocolTool => DeclaredToolMetadata.V4(tool, foundation: true);
     internal static JsonObject RecoverySchema(string name, JsonElement input)
         => JsonNode.Parse(CanonicalToolParameters.Schema(name, input).GetRawText())!.AsObject();
-    private bool IsApprovalWrite(JsonObject args)
+    // The admission tests also exercise this predicate directly with malformed dryRun values.
+    private bool IsApprovalWrite(JsonObject args) => ApprovalWriteCandidate(args).HasValue;
+
+    private WriteApprovalOperation? ApprovalWriteCandidate(JsonObject args)
     {
         var properties = inner.ProtocolTool.InputSchema.GetProperty("properties");
         bool hasDryRun = properties.TryGetProperty("dryRun", out var schema);
         bool defaultPreview = !hasDryRun || !schema.TryGetProperty("default", out var defaultValue)
             || defaultValue.ValueKind != JsonValueKind.False;
-        return HostBehavior.ApprovalWrite(tool.Name, args,
+        return HostBehavior.ApprovalWriteCandidate(tool.Name, args,
             inner is FoundationTool { IsWrite: true } || inner is GenerationTool generation && generation.ApprovalWrite(args), hasDryRun, defaultPreview);
     }
     private bool IsNonPreviewMutation(JsonObject arguments, bool write)
@@ -186,9 +189,10 @@ internal sealed class FoundationV4Tool : McpServerTool
         using var stagingSession = (inner as FoundationTool)?.EnterStagingRequest();
         var inputArguments = request.Params?.Arguments ?? new Dictionary<string, JsonElement>();
         var arguments = JsonSerializer.SerializeToNode(inputArguments) as JsonObject ?? new JsonObject();
-        bool write = IsApprovalWrite(arguments);
+        var candidate = ApprovalWriteCandidate(arguments);
+        bool write = candidate.HasValue;
         var settings = approvalSettings?.Invoke() ?? TiaOpenness.Shared.ApprovalSettings.Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);
-        settings = settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool.Name, arguments));
+        settings = settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool.Name, arguments, candidate));
         TiaOpenness.Shared.ApprovalOutcome? approval = null;
         string id = Meta.Correlate(TiaOpenness.Shared.AuditInvocation.CurrentRequestId
             ?? (sharedSession

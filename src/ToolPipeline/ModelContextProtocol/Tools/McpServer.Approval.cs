@@ -122,6 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ?? HostBehavior.MissingRuntimeWriteConfirmation(name, input)) is { } admissionError) return V4Reject(name, admissionError);
             if (ApprovalPreviewDepth.Value > 0) return null;
             var args = JsonObject.Create(input)!;
+            WriteApprovalOperation? candidate;
             try
             {
                 try { ApprovalOutputTargets.ValidateWhitespace(name, args); }
@@ -130,7 +131,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (ReviewedApplyRefusal(name, arguments) is { } whitespaceReplay) return whitespaceReplay;
                     throw;
                 }
-                if (ApprovalWrite(name, arguments)) ApprovalOutputTargets.Normalize(name, args);
+                candidate = ApprovalWriteCandidate(name, args);
+                if (candidate.HasValue) ApprovalOutputTargets.Normalize(name, args);
                 if (ReviewedApplyRefusal(name, arguments) is { } replayRefusal) return replayRefusal;
 #if TIA_ENGINE_HOST
                 if (Worker.LateResults.Running is { } running && !Worker.LateResults.ContinuesCurrentCall
@@ -148,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var fenced = GenerationFenceRefusal(name, arguments);
             if (fenced != null) return fenced;
             if (OnlinePlanRefusal(name, args) is Error expired) return V4Reject(name, expired);
-            var settings = EffectiveApprovalSettings(name, arguments);
+            var settings = EffectiveApprovalSettings(name, arguments, candidate);
             // A write that will wait for approval refuses a missing or unreadable caller file first, so no approval is
             // requested. Other calls validate inside their journaled lane (isolated host/child journals stay correlated).
             if (settings.Enabled && ApprovalWrite(name, arguments))
@@ -191,13 +193,15 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static bool PreviewHasNoEffect(JsonNode? body)
             => HostBehavior.PreviewHasNoEffect(body);
         internal static bool ApprovalDisabled(string tool, string arguments)
-            => ApprovalResultWrite(tool, arguments) && !EffectiveApprovalSettings(tool, arguments).Enabled;
+            => ApprovalResultCandidate(tool, arguments) is { } candidate && !EffectiveApprovalSettings(tool, arguments, candidate).Enabled;
 
         internal static bool ApprovalWrite(string tool, string arguments)
+            => ApprovalWriteCandidate(tool, JsonNode.Parse(arguments)!.AsObject()).HasValue;
+
+        private static WriteApprovalOperation? ApprovalWriteCandidate(string tool, JsonObject args)
         {
-            var args = JsonNode.Parse(arguments)!.AsObject();
             bool hasDryRun = TryDryRunDefault(tool, out var defaultPreview);
-            return HostBehavior.ApprovalWrite(tool, args,
+            return HostBehavior.ApprovalWriteCandidate(tool, args,
                 IsWriteTool(tool), hasDryRun, defaultPreview);
         }
         private static bool TryDryRunDefault(string tool, out bool defaultPreview)
@@ -209,7 +213,7 @@ namespace TiaMcpServer.ModelContextProtocol
             defaultPreview = method.DryRun.Default;
             return method.DryRun.Present;
         }
-        internal static ApprovalSettings EffectiveApprovalSettings(string tool, string arguments)
+        private static ApprovalSettings EffectiveApprovalSettings(string tool, string arguments, WriteApprovalOperation? candidate)
         {
             var settings = ApprovalSettings.Load(ApprovalSettings.SettingsPath);
             var args = JsonNode.Parse(arguments)!.AsObject();
@@ -218,16 +222,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 tool = target;
                 args = args["arguments"] as JsonObject ?? new JsonObject();
             }
-            return settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool, args));
+            return settings.WithRequiredApproval(HostBehavior.ApprovalRequired(settings.Enabled, tool, args, candidate));
         }
         internal static bool ApprovalResultWrite(string tool, string arguments)
+            => ApprovalResultCandidate(tool, arguments).HasValue;
+
+        private static WriteApprovalOperation? ApprovalResultCandidate(string tool, string arguments)
         {
-            if (!string.Equals(tool, "CallTool", StringComparison.OrdinalIgnoreCase)) return ApprovalWrite(tool, arguments);
             var args = JsonNode.Parse(arguments)!.AsObject();
+            if (!string.Equals(tool, "CallTool", StringComparison.OrdinalIgnoreCase)) return ApprovalWriteCandidate(tool, args);
             return args["name"] is JsonValue name && name.TryGetValue<string>(out var target)
                 && !string.Equals(target, "CallTool", StringComparison.OrdinalIgnoreCase)
                 && AllToolDescriptors(includeUnavailable: true).ContainsKey(target)
-                && ApprovalWrite(target, (args["arguments"] as JsonObject)?.ToJsonString() ?? "{}");
+                ? ApprovalWriteCandidate(target, args["arguments"] as JsonObject ?? new JsonObject()) : null;
         }
         internal static async Task<ApprovalOutcome?> WaitForApproval(string tool, string arguments, CancellationToken token)
         {
@@ -239,10 +246,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 TiaOpenness.Shared.AuditInvocation.RecordCurrentRequest(rejected.PlanHash);
                 return ApprovalClient.RejectAdministrativeWrite(rejected);
             }
-            if (!ApprovalWrite(tool, arguments) || tool == "ApplyToolBatch"
-                || ApprovalPreviewDepth.Value > 0 || AuditInvocation.IsReadOnlyPreview) return null;
             var args = JsonNode.Parse(arguments)!.AsObject();
-            var settings = EffectiveApprovalSettings(tool, arguments);
+            var candidate = ApprovalWriteCandidate(tool, args);
+            if (!candidate.HasValue || tool == "ApplyToolBatch"
+                || ApprovalPreviewDepth.Value > 0 || AuditInvocation.IsReadOnlyPreview) return null;
+            var settings = EffectiveApprovalSettings(tool, arguments, candidate);
             string? identity = await BridgeWait.On(BridgeApprovalIdentityAsync()).ConfigureAwait(false);
             var pending = PendingApproval
                 .Create(McpServer.InvocationHostTag, ReleaseKey, tool, arguments, identity, settings.TimeoutSeconds, TiaOpenness.Shared.AuditInvocation

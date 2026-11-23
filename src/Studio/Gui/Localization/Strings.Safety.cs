@@ -1,3 +1,9 @@
+extern alias PlcRendering;
+
+using System;
+using System.Linq;
+using PlcRendering::TiaMcp.Logic.V4;
+
 namespace TiaOpenness.Gui.Localization;
 
 internal static partial class Strings
@@ -11,7 +17,7 @@ internal static partial class Strings
         ("Settings.AppearanceSubtitle", "Light and dark themes, accent and language", "浅色 / 深色主题、精密钴蓝 / 西门子青碧主色与语言"),
         ("Settings.StorageSubtitle", "Log retention, diagnostics, data paths and updates", "日志轮转保留、脱敏诊断包、数据目录与版本更新"),
         ("Settings.ApprovalRule", "Require approval for MCP writes", "普通写操作默认工作台人工审批"),
-        ("Settings.ApprovalRuleHint", "Changes immediately. Physical PLC writes still require confirmation.", "切换后立即生效，真实 PLC 写入仍须人工确认。"),
+        ApprovalRuleHint(),
         ("Settings.ExpiryHint", "Auto-deny on expiry", "倒计时归零自动拒绝"),
         ("Settings.PlanHint", "Expired plans require a new preview", "过期后须重新预检"),
         ("Settings.DurationCustom", "Custom", "自定义"),
@@ -65,4 +71,39 @@ internal static partial class Strings
         ("Settings.SafetySaveFailed", "Could not complete the save and audit. The file may already have changed; reload and check the audit log.",
             "未能完成保存和审计。文件可能已经改变；请重新加载并检查审计日志。"),
     ];
+
+    private static (string Key, string En, string Zh) ApprovalRuleHint()
+    {
+        static (string En, string Zh) Names(bool alwaysConfirmed)
+        {
+            var names = Enum.GetValues<WriteApprovalOperation>().Where(op => op.AlwaysConfirmed() == alwaysConfirmed)
+                .Select(ApprovalOperationName).ToArray();
+            var english = names.Select(name => name.En).ToArray();
+            string list = english.Length <= 2 ? string.Join(" and ", english) : string.Join(", ", english[..^1]) + ", and " + english[^1];
+            return (list, string.Join("、", names.Select(name => name.Zh)));
+        }
+        var ordinary = Names(alwaysConfirmed: false);
+        var always = Names(alwaysConfirmed: true);
+        return ("Settings.ApprovalRuleHint",
+            $"Changes immediately. Turning this off removes confirmation for {ordinary.En}.\nYou still confirm {always.En}.",
+            $"切换后立即生效。关闭后，{ordinary.Zh}无需人工确认。\n{always.Zh}仍须人工确认。");
+    }
+
+    internal static (string En, string Zh) ApprovalOperationName(WriteApprovalOperation operation) => operation switch
+    {
+        WriteApprovalOperation.OfflineWrite => ("offline writes (including edits and deletes)", "离线写入（含工程修改和删除）"),
+        WriteApprovalOperation.SaveOrCloseProject => ("saving and closing projects normally", "保存或正常关闭工程"),
+        WriteApprovalOperation.ImportStaging => ("staging and clearing imports", "暂存或清理导入文件"),
+        WriteApprovalOperation.OutsideOutputFolder => ("file writes outside the output folder", "向输出目录外写文件"),
+        WriteApprovalOperation.GitStageOrCommit => ("Git staging and commits", "暂存或提交 Git 更改"),
+        WriteApprovalOperation.OpennessGroupChange => ("Windows Openness group changes", "更改 Windows 的 Openness 用户组"),
+        WriteApprovalOperation.CompileWithSafetyPassword => ("compiling with a safety password", "使用安全密码编译"),
+        WriteApprovalOperation.EnvironmentRepair => ("environment repairs", "修复环境"),
+        WriteApprovalOperation.SimulatorWrite => ("PLCSIM operations and verified simulator downloads", "PLCSIM 专用操作和已验证的仿真下载"),
+        WriteApprovalOperation.SnapshotReadExportOrCapture => ("snapshot reads, exports and captures", "读取、导出或创建快照"),
+        WriteApprovalOperation.OpenPipeRead => ("Open Pipe reads and browsing", "通过 Open Pipe 读取或浏览数据"),
+        WriteApprovalOperation.DiscardOnClose => ("discarding changes on close", "关闭工程时放弃修改"),
+        WriteApprovalOperation.OnlineWrite => ("physical PLC downloads and other online writes", "向真实 PLC 下载或执行其他在线写操作"),
+        _ => throw new ArgumentOutOfRangeException(nameof(operation))
+    };
 }

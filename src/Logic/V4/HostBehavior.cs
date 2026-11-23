@@ -128,47 +128,60 @@ namespace TiaMcp.Logic.V4
 
         internal static bool ApprovalWrite(string tool, JsonObject args, bool classifiedWrite,
             bool hasDryRun, bool defaultPreview)
+            => ApprovalWriteCandidate(tool, args, classifiedWrite, hasDryRun, defaultPreview).HasValue;
+
+        internal static WriteApprovalOperation? ApprovalWriteCandidate(string tool, JsonObject args, bool classifiedWrite,
+            bool hasDryRun, bool defaultPreview)
         {
             // A present non-boolean value fails closed as a write. Only an absent value follows the schema default.
             if (tool == "ManageTestSuiteCase" && args["action"] is JsonValue editorAction
-                && editorAction.TryGetValue<string>(out var editorOperation) && editorOperation == "showInEditor") return false;
-            if (hasDryRun && IsPreview(args, defaultPreview)) return false;
-            if (PendingApproval.HasCompilePassword(tool, args)) return true;
+                && editorAction.TryGetValue<string>(out var editorOperation) && editorOperation == "showInEditor") return null;
+            if (hasDryRun && IsPreview(args, defaultPreview)) return null;
+            if (PendingApproval.HasCompilePassword(tool, args)) return WriteApprovalOperation.CompileWithSafetyPassword;
             if (tool == "CloseProject" && args["secondaryProjectFile"] is JsonValue secondary
-                && secondary.TryGetValue<string>(out var secondaryFile) && !string.IsNullOrWhiteSpace(secondaryFile)) return false;
+                && secondary.TryGetValue<string>(out var secondaryFile) && !string.IsNullOrWhiteSpace(secondaryFile)) return null;
             if (tool is "ExchangeSystemDiagnosticsSettings" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules")
-                if (args["action"] is JsonValue action && action.TryGetValue<string>(out var operation) && operation == "import") return true;
+                if (args["action"] is JsonValue action && action.TryGetValue<string>(out var operation) && operation == "import")
+                    return WriteApprovalOperation.OfflineWrite;
             if (tool == "ManagePlcGitRepository" && ActorScope.Actor == ActorScope.Mcp
                 && args["action"] is JsonValue gitAction && gitAction.TryGetValue<string>(out var gitOperation)
-                && gitOperation is "stage" or "commit") return true;
+                && gitOperation is "stage" or "commit") return WriteApprovalOperation.GitStageOrCommit;
             if (tool == "GetEnvironmentDiagnostics")
-                return args["fix"] is JsonValue fix && fix.TryGetValue<bool>(out var repair) && repair;
-            return classifiedWrite || tool is "EnsureOpennessUserGroup" or "SaveProject" or "SaveProjectCopy" or "CloseProject"
-                || CallerInputFiles.WritesOutsideOutputRoot(tool, args);
+                return args["fix"] is JsonValue fix && fix.TryGetValue<bool>(out var repair) && repair ? WriteApprovalOperation.EnvironmentRepair : null;
+            if (tool == "EnsureOpennessUserGroup") return WriteApprovalOperation.OpennessGroupChange;
+            if (tool is "SaveProject" or "SaveProjectCopy" or "CloseProject") return WriteApprovalOperation.SaveOrCloseProject;
+            if (classifiedWrite) return tool is "StageImportFiles" or "CleanupStagedImportFiles"
+                ? WriteApprovalOperation.ImportStaging : WriteApprovalOperation.OfflineWrite;
+            return CallerInputFiles.WritesOutsideOutputRoot(tool, args) ? WriteApprovalOperation.OutsideOutputFolder : null;
         }
 
         internal static string DownloadTargetKind(string? targetIpAddress, string? pgPcInterface = null)
             => TiaMcpServer.Siemens.DownloadTargetPolicy.OnlineTargetKind(targetIpAddress, pgPcInterface);
 
-        internal static bool ApprovalRequired(bool switchEnabled, string tool, JsonObject arguments)
+        internal static bool ApprovalRequired(bool switchEnabled, string tool, JsonObject arguments, WriteApprovalOperation? candidate = null)
+            => switchEnabled || !IsPreview(arguments, true) && AppliedWriteOperation(tool, arguments, candidate)?.AlwaysConfirmed() == true;
+
+        // Resolve the target and action only when deciding whether an applied write still needs approval.
+        internal static WriteApprovalOperation? AppliedWriteOperation(string tool, JsonObject arguments, WriteApprovalOperation? candidate)
         {
-            if (switchEnabled) return true;
-            if (IsPreview(arguments, true)) return false;
-            if (tool == "CloseProject")
-                return arguments["discardChanges"] is JsonValue discard && discard.TryGetValue<bool>(out var requested) && requested;
-            if (TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool, null).Operation != "ONLINE-WRITE") return false;
+            if (tool == "CloseProject" && arguments["discardChanges"] is JsonValue discard && discard.TryGetValue<bool>(out var requested) && requested)
+                return WriteApprovalOperation.DiscardOnClose;
+            if (TiaMcpServer.ModelContextProtocol.ToolTaxonomy.OperationOf(tool, null).Operation != "ONLINE-WRITE")
+                return candidate;
             if (tool == "ManagePlcDataBlockSnapshot")
-                return !(arguments["action"] is JsonValue action && action.TryGetValue<string>(out var operation)
-                    && operation is "read" or "exportSnapshot" or "createSnapshot");
+                return arguments["action"] is JsonValue action && action.TryGetValue<string>(out var operation)
+                    && operation is "read" or "exportSnapshot" or "createSnapshot"
+                    ? WriteApprovalOperation.SnapshotReadExportOrCapture : WriteApprovalOperation.OnlineWrite;
             if (tool == "InvokeUnifiedOpenPipe")
             {
-                if (arguments["request"] is not JsonObject request) return true;
+                if (arguments["request"] is not JsonObject request) return WriteApprovalOperation.OnlineWrite;
                 var bound = Domain.DomainValidation.Contract<Domain.OpenPipeRequest>().Read(request.ToJsonString(), "request");
-                return bound.Error != null || !bound.Value!.IsReadOnly;
+                return bound.Error == null && bound.Value!.IsReadOnly ? WriteApprovalOperation.OpenPipeRead : WriteApprovalOperation.OnlineWrite;
             }
-            if (tool is "ManagePlcSimAdvancedInstance" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario") return false;
-            return tool != "DownloadPlc"
-                || DownloadTargetKind((string?)arguments["targetIpAddress"], (string?)arguments["pgPcInterface"]) != "plcsim";
+            if (tool is "ManagePlcSimAdvancedInstance" or "WritePlcSimAdvancedTags" or "RunPlcSimAdvancedTestScenario"
+                || tool == "DownloadPlc" && DownloadTargetKind((string?)arguments["targetIpAddress"], (string?)arguments["pgPcInterface"]) == "plcsim")
+                return WriteApprovalOperation.SimulatorWrite;
+            return WriteApprovalOperation.OnlineWrite;
         }
 
         internal static bool NeedsPrecheck(bool internalPreview, bool write, bool enabled, bool hasPreview)

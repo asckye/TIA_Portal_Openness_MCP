@@ -1,10 +1,14 @@
+extern alias PlcRendering;
+
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Threading.Tasks;
+using PlcRendering::TiaMcp.Logic.V4;
 using TiaMcp.Engine.Tests.Shared;
 using TiaOpenness.Gui.Services;
 using TiaOpenness.Shared;
@@ -17,6 +21,61 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class SafetySettingsViewTests(WpfContext wpf)
 {
+    [Theory]
+    [InlineData(AppLanguage.English)]
+    [InlineData(AppLanguage.Chinese)]
+    public void Approval_hint_shows_each_host_category_in_its_confirmation_group(AppLanguage language)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var view = new SettingsView();
+            var approvals = new Services.Stubs.ApprovalServiceStub();
+            try
+            {
+                view.Initialize(approvals);
+                foreach (bool enabled in new[] { true, false })
+                {
+                    approvals.Enabled = enabled;
+                    WpfContext.Drain();
+                    Assert.Equal(Visibility.Visible, view.ApprovalRuleHint.Visibility);
+                    Assert.Equal(TextWrapping.Wrap, view.ApprovalRuleHint.TextWrapping);
+                    string hint = view.ApprovalRuleHint.Text;
+                    Assert.Equal(hint, AutomationProperties.GetHelpText(view.ApprovalOff));
+                    Assert.Equal(hint, AutomationProperties.GetHelpText(view.ApprovalOn));
+                    string immediate = language == AppLanguage.Chinese ? "切换后立即生效。" : "Changes immediately. ";
+                    Assert.StartsWith(immediate, hint);
+                    var groups = hint[immediate.Length..].Split('\n');
+                    Assert.Equal(2, groups.Length);
+                    List<string>[] expected = [[], []];
+                    foreach (var operation in Enum.GetValues<WriteApprovalOperation>())
+                    {
+                        var (en, zh) = Strings.ApprovalOperationName(operation);
+                        Assert.False(string.IsNullOrWhiteSpace(en) || string.IsNullOrWhiteSpace(zh));
+                        Assert.NotEqual(en, zh);
+                        string name = language == AppLanguage.Chinese ? zh : en;
+                        int group = operation.AlwaysConfirmed() ? 1 : 0;
+                        expected[group].Add(name);
+                        Assert.Contains(name, groups[group]);
+                        Assert.DoesNotContain(name, groups[1 - group]);
+                    }
+                    if (language == AppLanguage.Chinese)
+                    {
+                        Assert.Equal($"关闭后，{string.Join("、", expected[0])}无需人工确认。", groups[0]);
+                        Assert.Equal($"{string.Join("、", expected[1])}仍须人工确认。", groups[1]);
+                    }
+                    else
+                    {
+                        static string EnglishList(List<string> names) => names.Count < 3 ? string.Join(" and ", names)
+                            : string.Join(", ", names.SkipLast(1)) + ", and " + names[^1];
+                        Assert.Equal($"Turning this off removes confirmation for {EnglishList(expected[0])}.", groups[0]);
+                        Assert.Equal($"You still confirm {EnglishList(expected[1])}.", groups[1]);
+                    }
+                }
+            }
+            finally { view.Dispose(); }
+        });
+    }
+
     [Fact]
     public void Settings_has_no_native_cross_reference_toggle()
     {

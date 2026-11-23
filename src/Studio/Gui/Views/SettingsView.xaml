@@ -268,23 +268,25 @@
         <StackPanel x:Name="AiPanel" Visibility="Collapsed">
           <Border Style="{StaticResource Primer.Container}" Padding="20,6">
             <StackPanel>
-              <DockPanel Margin="0,10">
+              <DockPanel Margin="0,10,0,0">
                 <Grid DockPanel.Dock="Right" Width="40" Height="28" Margin="12,0,0,0" VerticalAlignment="Center"
                   ToolTip="{l:Tr Settings.ApprovalRule}" PreviewKeyDown="OnPolicySwitchKeyDown">
                   <Border Style="{StaticResource Primer.PolicySwitchTrack}"/>
                   <RadioButton x:Name="ApprovalOff" GroupName="WriteApproval" Content="{l:Tr Settings.Off}" Style="{StaticResource Primer.PolicySwitchPosition}"
-                    AutomationProperties.Name="{l:Tr Settings.Off}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsApproval}" Click="OnApprovalClick"/>
+                    AutomationProperties.Name="{l:Tr Settings.Off}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsApproval}"
+                    AutomationProperties.HelpText="{l:Tr Settings.ApprovalRuleHint}" Click="OnApprovalClick"/>
                   <RadioButton x:Name="ApprovalOn" GroupName="WriteApproval" Content="{l:Tr Settings.On}" Tag="On" Style="{StaticResource Primer.PolicySwitchPosition}"
-                    AutomationProperties.Name="{l:Tr Settings.On}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsApproval}" Click="OnApprovalClick"/>
+                    AutomationProperties.Name="{l:Tr Settings.On}" AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsApproval}"
+                    AutomationProperties.HelpText="{l:Tr Settings.ApprovalRuleHint}" Click="OnApprovalClick"/>
                 </Grid>
                 <ToggleButton x:Name="ShowPolicyDetails" DockPanel.Dock="Right" Style="{StaticResource Primer.Link}" Foreground="{DynamicResource Primer.textFaint}"
                   Content="{l:Tr Settings.PolicyDetails}" AutomationProperties.Name="{l:Tr Settings.PolicyDetails}" VerticalAlignment="Center"/>
                 <StackPanel VerticalAlignment="Center">
                   <TextBlock ToolTip="{l:Tr Settings.Approval}" x:Name="GroupSettingsApproval" Text="{l:Tr Settings.ApprovalRule}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                   <TextBlock Visibility="{Binding IsChecked, ElementName=ShowPolicyDetails, Converter={StaticResource BoolToVisibility}}" Text="{l:Tr Settings.AlwaysConfirmed}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
-                  <TextBlock Text="{l:Tr Settings.ApprovalRuleHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
                 </StackPanel>
               </DockPanel>
+              <TextBlock x:Name="ApprovalRuleHint" Text="{l:Tr Settings.ApprovalRuleHint}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,0,0,10"/>
               <DockPanel Margin="0,10">
                 <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}" Margin="12,0,0,0">
                   <StackPanel Orientation="Horizontal">

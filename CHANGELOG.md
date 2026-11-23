@@ -6,6 +6,7 @@
 
 ### Changed
 
+- Workbench AI settings list which operations run without confirmation when write approval is off and which still require approval.
 - The [repository](https://github.com/asckye/automation-engineering-workbench) moved. Old links redirect to the new address.
 - On all eight releases, tools that would start the PLC worker are refused before Workbench approval when the TIA Openness environment isn't ready.
   They return `RESOURCE_UNAVAILABLE` with condition `tia-openness-environment`, the cause and the fix. Previews and file-only operations remain available.
