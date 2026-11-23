@@ -87,7 +87,9 @@ public sealed class DirectoryImportRegressionTests
         string root = Directory.CreateTempSubdirectory().FullName;
         try
         {
-            var request = new PlcBatchImportRequest { Release = "17", Directory = root, Program = program, Project = "Fixture.ap17", Software = "PLC", ProcessId = 42 };
+            var request = new PlcBatchImportRequest {
+                Release = "17", Directory = root, Program = program, Project = "Fixture.ap17", Software = "PLC", ProcessId = 42
+            };
             for (int i = 0; i <= completed; i++) File.WriteAllText(Path.Combine(root, $"{i}.xml"), BatchImportTests.Xml($"FC_{i}", number: i + 1));
             int visits = 0;
             PlcBatchImportResult Run() => PlcBatchImportPolicy.Run(request, [], () => { }, (file, planned, dispatch) => {
@@ -176,7 +178,8 @@ public sealed class DirectoryImportRegressionTests
             return JsonSerializer.SerializeToNode(new { MayHaveChanged = false, OutcomeUnknown = false, Value = new {
                 Imported = Array.Empty<string>(), Failed = new[] { new { Path = file, Error = reason } },
                 Meta = new { success = false, items = new[] { new { target = file, evidence = new {
-                    operationSuccess = false, status = "InvalidParams", nativeMessage = reason, exceptionType = "PlcSoftwareException", batchStopped = true } } } }
+                    operationSuccess = false, status = "InvalidParams", nativeMessage = reason,
+                    exceptionType = "PlcSoftwareException", batchStopped = true } } } }
             } });
         });
         var raw = PortedToolContract.Create(worker, "15.1").Single(t => t.ProtocolTool.Name == tool);

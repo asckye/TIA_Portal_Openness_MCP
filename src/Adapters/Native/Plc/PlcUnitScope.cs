@@ -160,11 +160,6 @@ namespace TiaMcp.Adapters.Native.Plc
             dispatch?.Invoke();
             return types.Import(file, options);
         }
-        internal static IList<PlcTagTable> TagTables(PlcTagTableComposition tables, FileInfo file, ImportOptions options, Action? dispatch)
-        {
-            dispatch?.Invoke();
-            return tables.Import(file, options);
-        }
 #if PLC_SOURCE_RESULTS
         private static SWImportOptions Software(string[] sw)
             => PlcImportOptionPolicy.Combine(SWImportOptions.None, sw);

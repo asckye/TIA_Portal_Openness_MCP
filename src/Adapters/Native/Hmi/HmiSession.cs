@@ -66,7 +66,8 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal object? FindExistingByName(object value, string name) => HmiAccessHelpers.FindExistingByName(value, name);
         internal object? TryResolveChildGroupByPath(object value, string path) => HmiAccessHelpers.TryResolveChildGroupByPath(value, path);
         internal bool TryImportEngineeringObjectIntoCollection(object value, string path, out string? name, out string? error, bool overwrite = false)
-            => HmiAccessHelpers.TryImportEngineeringObjectIntoCollection(value, path, out name, out error, () => { MayHaveChanged = true; ImportDispatchCount++; }, overwrite);
+            => HmiAccessHelpers.TryImportEngineeringObjectIntoCollection(value, path, out name, out error,
+                () => { MayHaveChanged = true; ImportDispatchCount++; }, overwrite);
         internal IEnumerable<object> FindHardwareCatalogEntries(object value, string filter) => HmiAccessHelpers.FindHardwareCatalogEntries(value, filter);
         internal string MakeSafeFileName(string name) => HmiAccessHelpers.MakeSafeFileName(name);
         internal HmiObject Attributes(string raw, bool required)

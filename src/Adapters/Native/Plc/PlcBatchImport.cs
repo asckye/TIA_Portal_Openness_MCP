@@ -154,7 +154,7 @@ namespace TiaMcp.Adapters
                                 BatchReturnedGroup(t,types!,request.TypeGroup)
                         })
                         .ToArray();
-                    if(planned.Kind=="TagTable") return PlcNativeImportOptions.TagTables(PlcNative.TagTables(tags!),file,option,dispatch)
+                    if(planned.Kind=="TagTable") return PlcImportAdapter.ImportTagTables(PlcNative.TagTables(tags!),file,option,dispatch)
                         .Select(t=>new PlcBatchImportObject {
                             Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=
                                 BatchReturnedGroup(t,tags!,request.TagGroup)
@@ -181,10 +181,11 @@ namespace TiaMcp.Adapters
                     });
                 }
                 prepared=true;
-                return PlcBatchImportPolicy
-                    .Run(request,inventory,check,(file,target,dispatch)=>Import(file,target,PlcNativeImportOptions.General(request.Overwrite,request.ImportOptions),dispatch:dispatch),
-                    Backup,(file,target)=>Import(file,target,ImportOptions.Override,true),PlcBatchImportRecovery.Directory,PlcBatchImportRecovery.Precheck,
-                        Blocker);
+                return PlcBatchImportPolicy.Run(request, inventory, check,
+                    (file, target, dispatch) => Import(file, target,
+                        PlcNativeImportOptions.General(request.Overwrite, request.ImportOptions), dispatch: dispatch),
+                    Backup, (file, target) => Import(file, target, ImportOptions.Override, true),
+                    PlcBatchImportRecovery.Directory, PlcBatchImportRecovery.Precheck, Blocker);
             }
             catch(NotSupportedException) { throw; }
             catch(AdapterPreconditionException) { throw; }

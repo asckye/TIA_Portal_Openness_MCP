@@ -218,7 +218,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 // A failed native call can already have modified the project. Its error text is not
                 // proof of rollback: never strip attributes and replay an import after failure.
                 throw new PlcSoftwareException("ImportFailed", (err ?? "ImportHmiScreen failed")
-                    + (_session.ImportDispatchCount == before ? "" : " The project may have changed. No automatic retry was attempted; inspect the project before another import."));
+                    + (_session.ImportDispatchCount == before ? ""
+                        : " The project may have changed. No automatic retry was attempted; inspect the project before another import."));
             }
             catch (PlcSoftwareException)
             {
@@ -442,7 +443,8 @@ namespace TiaMcp.Adapters.Native.Hmi
                 else if (exception is PlcSoftwareException portal)
                 {
                     if (portal.Code is "InvalidState" or "NotFound" or "InvalidParams")
-                        evidence["status"] = portal.Code == "InvalidState" && portal.Message.StartsWith("HMI import target already exists:", StringComparison.Ordinal)
+                        evidence["status"] = portal.Code == "InvalidState"
+                            && portal.Message.StartsWith("HMI import target already exists:", StringComparison.Ordinal)
                             ? "ImportTargetExists" : portal.Code;
                     if (portal.Data["missingFolderPath"] is string folder) evidence["missingFolderPath"] = folder;
                     if (portal.Code == "PreconditionFailed" && portal.Data["mayHaveChanged"] is false)
