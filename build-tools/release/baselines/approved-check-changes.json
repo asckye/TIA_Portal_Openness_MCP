@@ -8012,6 +8012,18 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Switch_defaults_on_and_roundtrips_without_other_settings_changes( ):878c6fd5de1e4fae1246c22e33ce21696ba4bddeb71bdc81c9fc1b3d5a659b40:2"
         }
       ]
+    },
+    {
+      "task": "REV-SEC",
+      "maintainerDate": "2026-11-23",
+      "reason": "REV-SEC: maintainer approved 2026-11-23 - a failed backup inspection refuses the overwrite instead of skipping the backup as unknown-consistency",
+      "items": [
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/ImportStagingTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.ImportStagingTests/Single_import_keeps_typed_target_refusals_and_never_creates_a_directory_for_all_blocked_targets( string parameter ):8aaad14eb209c7c1cd4e4f16e3cecbb01800d83d0670388c23e24a2fa31c43fb:1"
+        }
+      ]
     }
   ]
 }
