@@ -166,8 +166,13 @@ namespace TiaMcp.Updater
 
         private static void OpenLog(string root)
         {
-            string data = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
-            log = UpdaterLog.Open(string.IsNullOrWhiteSpace(data) ? Path.Combine(root, "data") : data);
+            // Keep the update record with the delivery being serviced, including when the worker runs from TEMP.
+            log = UpdaterLog.Open(Path.Combine(root, "data"));
+            if (log == null)
+            {
+                string fallback = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+                if (!string.IsNullOrWhiteSpace(fallback)) log = UpdaterLog.Open(fallback);
+            }
             if (log != null) Say("Updater log: " + log.FilePath);
         }
 

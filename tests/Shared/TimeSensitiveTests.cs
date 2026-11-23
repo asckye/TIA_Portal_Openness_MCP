@@ -405,6 +405,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Escape_rejects_a_destructive_request_only_after_its_confirmation_sheet_closes"
             },
             ["TiaOpenness.Gui.Tests.ApprovalPageTests"] = new[] {
+                "Capture_loss_releases_keyboard_but_a_normal_mouse_release_keeps_the_press_guard",
+                "Press_started_on_first_request_cannot_decide_second_after_guard_expires",
                 "Destructive_rejection_is_default_and_Enter_on_Approve_rejects",
                 "Enter_never_approves_write_and_Escape_does_not_reject",
                 "Focused_Reject_keeps_its_normal_Enter_activation_for_write_requests",

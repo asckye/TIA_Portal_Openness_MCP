@@ -368,8 +368,6 @@ internal static partial class Strings
                 "环境修复失败（退出码 {0}），宿主未返回修复结果。使用 lusrmgr.msc 添加用户，再注销重登。"),
         ("Env.BundleChecks", "Checking environment…", "正在检查环境…"),
         ("Env.BundleRedact", "Redacting logs and config…", "正在脱敏日志和配置…"),
-        ("Config.ScanCancelled", "Installation scan cancelled.", "已取消安装检测。"),
-        ("Config.Detecting", "Detecting installations…", "正在检测安装…"),
         ("Env.BundlePreview", "Review files in the diagnostic ZIP", "核对诊断 ZIP 中的文件"),
         ("Env.BundleFileSize", "{0}  ({1:N0} bytes)", "{0}  （{1:N0} 字节）"),
         ("Env.BundleWrite", "Writing diagnostic zip…", "正在写入诊断 zip…"),

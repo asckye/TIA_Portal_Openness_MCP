@@ -70,9 +70,6 @@ namespace TiaMcpConfigurator
         private readonly ConcurrentQueue<string> pendingLog = new();
         private int logQueued;
         private bool tiaDetected;
-        private CancellationTokenSource? scan;
-        private Dictionary<string, KeyValuePair<string, string>> detections = new();
-        private (string Release, string Path)? requestedPath;
         private string lastTestResult;
         private bool lastTestFailed;
         private bool busy, closing;
@@ -120,11 +117,7 @@ namespace TiaMcpConfigurator
                         Description = Loc.Current.T("Config.BrowseTiaDescription", SelectedVersion), SelectedPath = Text("TiaPath") })
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
-            ClickAsync("DetectTia", async () =>
-            {
-                if (scan != null) scan.Cancel();
-                else if (preview == null) await RefreshDetectionsAsync(true);
-            });
+            Click("DetectTia", delegate { RefreshReleaseDetections(); UpdateReleaseSelection(); DetectTiaPath(true); });
             TiaPath.TextChanged += (_, _) => { UpdateAssemblyStatus(); UpdateJsonPreview(); };
             Click("SaveBoth", OnSaveBoth);
             Click("StartServer", OnStartServer);
@@ -185,7 +178,6 @@ namespace TiaMcpConfigurator
             Loc.Current.LanguageChanged += OnLanguageChanged;
             Append(Loc.Current["Config.Ready"]);
             Window.Closing += OnClosing;
-            if (preview == null) _ = RefreshDetectionsAsync(false);
             if (preview != null)
             {
                 activityLog = preview.Log;
@@ -217,7 +209,7 @@ namespace TiaMcpConfigurator
             ReleaseSummary.Text = Loc.Current["Config.ReleaseHint"];
             ReleaseSummary.ToolTip = Loc.Current.T(count == 1 ? "Config.OneRelease" : "Config.ReleaseCount", count);
             UpdateAssemblyStatus();
-            DetectionSource.Text = Loc.Current[scan != null ? "Config.Detecting" : tiaDetected ? "Config.Detected" : "Config.NotDetected"];
+            DetectionSource.Text = Loc.Current[tiaDetected ? "Config.Detected" : "Config.NotDetected"];
             DetectionChip.Tag = tiaDetected ? TiaOpenness.Gui.ViewModels.FeatureTone.Accent : TiaOpenness.Gui.ViewModels.FeatureTone.Muted;
         }
 
@@ -235,20 +227,12 @@ namespace TiaMcpConfigurator
             ToolCount.ToolTip = Loc.Current.T("Config.ToolCount", counts.Tools);
         }
 
-        private int assemblyProbe;
-        private async void UpdateAssemblyStatus()
+        private void UpdateAssemblyStatus()
         {
-            int probe = ++assemblyProbe;
             var release = (TiaVersionDescriptor)Version.SelectedItem;
             var path = TiaPath.Text.Trim();
-            bool verified;
-            if (preview == null)
-            {
-                AssemblyStatus.Text = Loc.Current["Config.Detecting"];
-                verified = await Task.Run(() => release.FindApiDirectory(path) != null);
-                if (closing || probe != assemblyProbe) return;
-            }
-            else verified = preview.Detected && release.Key == preview.ReleaseKey && path.Equals(preview.InstallPath, StringComparison.OrdinalIgnoreCase);
+            bool verified = preview == null ? release.FindApiDirectory(path) != null :
+                preview.Detected && release.Key == preview.ReleaseKey && path.Equals(preview.InstallPath, StringComparison.OrdinalIgnoreCase);
             AssemblyStatus.Text = Loc.Current[verified ? "Config.AssembliesReady" : "Config.AssembliesMissing"];
             AssemblyStatus.SetResourceReference(TextBlock.ForegroundProperty, verified ? "Primer.ok" : "Primer.textFaint");
         }
@@ -267,51 +251,17 @@ namespace TiaMcpConfigurator
                 tile.Checked += (_, _) => Version.SelectedValue = release.Key;
                 ReleaseTiles.Children.Add(tile);
             }
-            foreach (RadioButton tile in ReleaseTiles.Children)
-                SetTileDetection(tile, preview?.Detected == true && preview.ReleaseKey == ((TiaVersionDescriptor)tile.Content).Key);
+            RefreshReleaseDetections();
             UpdateReleaseSelection();
         }
 
-        private async Task RefreshDetectionsAsync(bool explicitRequest)
+        private void RefreshReleaseDetections()
         {
-            using var operation = new CancellationTokenSource();
-            scan = operation;
-            var token = operation.Token;
-            var startingPath = (SelectedVersion, Text("TiaPath"));
-            if (explicitRequest) requestedPath = startingPath;
-            try
+            foreach (RadioButton tile in ReleaseTiles.Children)
             {
-                DetectTia.SetBinding(ContentControl.ContentProperty, TrExtension.CreateBinding("Dialog.Cancel"));
-                DetectTia.SetBinding(AutomationProperties.NameProperty, TrExtension.CreateBinding("Dialog.Cancel"));
-                DetectTia.SetBinding(ToolTipProperty, TrExtension.CreateBinding("Dialog.Cancel"));
-                DetectionSource.Text = Loc.Current["Config.Detecting"];
-                UpdateInstructions();
-                var cards = Clients.ClientChoices.Items.Count == 0 ? ClientProfiles.Catalogue() : null;
-                var found = await ScanInstallations(cards, ClientProfiles.Detect, ConfigCore.DetectTia, token);
-                token.ThrowIfCancellationRequested();
-                if (closing) return;
-                if (cards != null) ShowClientCards(cards);
-                detections = found;
-                foreach (RadioButton tile in ReleaseTiles.Children)
-                    SetTileDetection(tile, found[((TiaVersionDescriptor)tile.Content).Key].Key != null);
-                UpdateReleaseSelection();
-                if (requestedPath == (SelectedVersion, Text("TiaPath")))
-                    PresentDetection(found[SelectedVersion], explicitRequest && requestedPath == startingPath);
-            }
-            catch (OperationCanceledException cancelled) when (cancelled.CancellationToken == token && token.IsCancellationRequested)
-            { if (!closing) Append(Loc.Current["Config.ScanCancelled"]); }
-            catch (Exception error) { if (!closing) Report(error); }
-            finally
-            {
-                scan = null;
-                if (!closing)
-                {
-                    DetectTia.SetBinding(ContentControl.ContentProperty, TrExtension.CreateBinding("Config.Detect"));
-                    DetectTia.SetBinding(AutomationProperties.NameProperty, TrExtension.CreateBinding("Config.Detect"));
-                    DetectTia.SetBinding(ToolTipProperty, TrExtension.CreateBinding("Config.AutoDetect"));
-                    UpdateDetectionLabel();
-                    UpdateInstructions();
-                }
+                var release = (TiaVersionDescriptor)tile.Content;
+                bool installed = preview == null ? ConfigCore.DetectTia(release.Key).Key != null : preview.Detected && preview.ReleaseKey == release.Key;
+                SetTileDetection(tile, installed);
             }
         }
 
@@ -485,8 +435,7 @@ namespace TiaMcpConfigurator
         private void DetectTiaPath(bool explicitRequest)
         {
             if (preview != null) return;
-            requestedPath = (SelectedVersion, Text("TiaPath"));
-            if (detections.TryGetValue(SelectedVersion, out var found)) PresentDetection(found, explicitRequest);
+            PresentDetection(ConfigCore.DetectTia(SelectedVersion), explicitRequest);
         }
 
         internal void PresentDetection(KeyValuePair<string, string> found, bool explicitRequest)
@@ -534,7 +483,6 @@ namespace TiaMcpConfigurator
             Window.Closing -= OnClosing;
             Loc.Current.LanguageChanged -= OnLanguageChanged;
             closing = true;
-            scan?.Cancel();
             if (server != null && server.HasExited) { server.Dispose(); server = null; }
         }
     }

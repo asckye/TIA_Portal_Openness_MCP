@@ -4,7 +4,6 @@ using System.Windows;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Shared;
 using System;
-using System.Threading;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -183,9 +182,7 @@ namespace TiaMcpConfigurator
         // ---- where is the client on THIS machine? ------------------------------------------------------------
         // Evidence, in order: the config folder / file the card writes, the executable on PATH (npm shims are .cmd), a known install
         // folder, an uninstall entry in the registry. Nothing here needs the client to be running; nothing is written.
-        public static void Detect(ClientProfile profile) => Detect(profile, CancellationToken.None);
-
-        internal static void Detect(ClientProfile profile, CancellationToken cancellation)
+        public static void Detect(ClientProfile profile)
         {
             var found = new List<LocalizedText>();
             try
@@ -200,10 +197,10 @@ namespace TiaMcpConfigurator
                 }
                 foreach (var folder in InstallFolders(profile.Client))
                     if (Directory.Exists(folder)) { found.Add(LocalizedText.Key("Config.ClientInstallDirectory", folder)); break; }
-                string registry = UninstallEntry(RegistryKeywords(profile.Client), cancellation);
+                string registry = UninstallEntry(RegistryKeywords(profile.Client));
                 if (registry != null) found.Add(LocalizedText.Key("Config.ClientInstalledProgram", registry));
             }
-            catch (Exception) when (!cancellation.IsCancellationRequested) /* swallow(env-probe): client detection is advisory; retain evidence collected before a local installation probe failed */ { }
+            catch (Exception) /* swallow(env-probe): client detection is advisory; retain evidence collected before a local installation probe failed */ { }
             profile.Detected = found.Count > 0;
             profile.SetDetectionEvidence(found);
         }
@@ -279,7 +276,7 @@ namespace TiaMcpConfigurator
         }
 
         // DisplayName of the first uninstall entry (HKCU / HKLM, 64- and 32-bit views) containing one of the keywords, or null.
-        private static string UninstallEntry(string[] keywords, CancellationToken cancellation)
+        private static string UninstallEntry(string[] keywords)
         {
             if (keywords.Length == 0) return null;
             var roots = new[] {
@@ -298,7 +295,6 @@ namespace TiaMcpConfigurator
                         if (key == null) continue;
                         foreach (string sub in key.GetSubKeyNames())
                         {
-                            cancellation.ThrowIfCancellationRequested();
                             using (var entry = key.OpenSubKey(sub))
                             {
                                 string display = entry == null ? null : entry.GetValue("DisplayName") as string;
@@ -307,7 +303,7 @@ namespace TiaMcpConfigurator
                         }
                     }
                 }
-                catch (Exception) when (!cancellation.IsCancellationRequested) /* swallow(env-probe): an inaccessible uninstall registry root does not prevent checking the remaining roots */ { }
+                catch (Exception) /* swallow(env-probe): an inaccessible uninstall registry root does not prevent checking the remaining roots */ { }
             }
             return null;
         }
