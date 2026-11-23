@@ -1,6 +1,6 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-23，master `b9f2f597e`；v4.0.0-rc.1 已发布，rc.2 的任务除 REV-AUTH（主机门禁中）外均已合并
+状态：现行 · 最后核对：2026-11-23，master `bb154034d`；v4.0.0-rc.2 已发布（2026-11-23，预发布）
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
@@ -10,15 +10,15 @@
   rc.1 的公开已获维护者确认，之后的 rc 各自确认。GitHub latest 仍为 v3.3.0。
 - **2026-11-22，GitHub 仓库改名为 `asckye/automation-engineering-workbench`。** 旧网址经 GitHub 重定向，旧名永不再用，
   因为 3.3 和 beta 更新器经重定向读取发布（[ADR 0039](../standards/decisions/0039-repository-rename-never-reuse-old-name.md)）。
-- **rc.2 准备中，目标 2026-11-24 至 11-26**，只在 rc.1 反馈的修复合并后发布；LOW 审查发现在同一个 rc 中修复。任务与状态见[开发计划](plan.md#400-rc2)。
+- **v4.0.0-rc.2 已于 2026-11-23 发布（`bb154034d`，GitHub 预发布，不设为 latest）。** 完整门禁 `merge-check -All` 与 `prepare` 在该提交上通过；rc.1 反馈的修复和 LOW 审查发现都在这个 rc 中。任务与状态见[开发计划](plan.md#400-rc2)。
   - rc.1 之后已合并：LOW-A（`ManageCfcChartProtection` 八版不再注册，[ADR 0041](../standards/decisions/0041-unregister-cfc-chart-protection.md)）、CHECK-FP、GATE-HANG、RC2-LOW（会启动 worker 的工具在无 TIA 时审批前拒绝，[ADR 0040](../standards/decisions/0040-readiness-before-approval.md)）、LOW-TOOLS、VMFIX-20B（含更新检查限流改报 `RESOURCE_UNAVAILABLE`）、RENAME-GH、LOW-RC2C、VMFIX-20A（`ExportDeviceAml` 输出根外与 OPC UA 导出给出确定结果、V14 SP1 读回对照 UDT 声明、审批宿主读取计划）、LOW-RC2D、文档与 ADR 更新（`16f764d6c`）、VMFIX-21（V15.1 目录导入批次汇总）、REV-REL、REV-DESK、REV-SEC、VMFIX-22（V15.1 批次 C、D 的 LOW）。
   - 2026-11-22 全面审查的修复：REV-SEC 宿主拒绝通配与公网绑定地址、AI 调用拒绝网络与设备输入路径（S8）、可备份目标备份失败或读不到状态时拒绝覆盖导入、审计开始记录写不进时拒绝写入、审批卡转义控制与双向字符、派发后异常报未知、用户 XML 禁用 DTD；REV-DESK 审批防误点、第二实例检测、设置原子写入且损坏时 AI 控制关闭、崩溃日志与诊断编号、诊断包隐私、更新器替换前核对暂存包；REV-REL `prepare` 须有同一提交的 `merge-check -All` 通过记录、golden 重新生成不能通过门禁、工作流动作固定、公开时报告 CI 状态。
-  - 主机门禁中：REV-AUTH（带安全密码的编译须审批、HTTP 审计记录客户端远程地址、审查小修），计入 rc.2。
+  - 最后合并：REV-AUTH（带安全密码的编译须审批、HTTP 审计记录客户端远程地址、审查小修）、REV-APPR（写入审批开关旁说明关闭后哪些操作不再确认、哪些始终确认）。
   - 移到 4.1：更新器整目录切换、配置页后台检测、审批摘要绑定真实参数值并在卡片上显示未遮蔽的值、只读监视计划接受变量表全局变量、批处理短 PLC 名别名（B099）、通用大用法分页规则、Engine harness 完整形状模式。
 - **2026-11-23 维护者按建议批准全面审查的决定**：MCP 连接继续不设密码或访问密钥（[ADR 0038](../standards/decisions/0038-keyless-http-transport.md)）；
   工具参数中的密码与更新包不签名是 4.0 接受的风险（[ADR 0042](../standards/decisions/0042-accepted-risks-for-4-0.md)）；审批开关范围不变；
   带安全密码的编译须审批。详见[开发计划](plan.md#待维护者决定)。
-- **4.0 正式版之前还剩**：REV-AUTH 合并与 rc.2 发布；V16、V18、V19、V20 在 rc.2 上复验，rc.2 对 V14 SP1、V15.1 的修复也待真机复验；崩溃探查（V21 OPC UA 报警类型 nodeId、V16–V20 探测、V21 交叉引用带界面检查，需维护者带界面操作）；11 条 ADR 补写；计划中标为待核对的 4.0 前项（T2、T3、U3、U4、C2、S4、S9、COV-V21）；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
+- **4.0 正式版之前还剩**：V16、V18、V19、V20 在 rc.2 上复验，rc.2 对 V14 SP1、V15.1 的修复也待真机复验；崩溃探查（V21 OPC UA 报警类型 nodeId、V16–V20 探测、V21 交叉引用带界面检查，需维护者带界面操作）；11 条 ADR 补写；计划中标为待核对的 4.0 前项（T2、T3、U3、U4、C2、S4、S9、COV-V21）；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
 - **RC 代码已全部合并（2026-11-19 至 11-21）。**
   - UNIFY-1 全部完成：A–D1（beta.6）以及 B2、C2、D2、E。八版共用一个工具包装、一条就绪规则、一个版本目录和一张官方 API 能力表，
     新出现的按版本号分支由 `ReleaseKeyedSitesTests` 拦下。U3 线程模型（MTA-1）、U6 实机保护、U7 V21 builder 输出按 2026-11-04 决定保留。
