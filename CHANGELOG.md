@@ -4,7 +4,50 @@
 
 ## [Unreleased]
 
+### Changed
+
 - The [repository](https://github.com/asckye/automation-engineering-workbench) moved. Old links redirect to the new address.
+- On all eight releases, tools that would start the PLC worker are refused before Workbench approval when the TIA Openness environment isn't ready.
+  They return `RESOURCE_UNAVAILABLE` with condition `tia-openness-environment`, the cause and the fix. Previews and file-only operations remain available.
+- **Breaking:** `CheckProductUpdate` reports a GitHub rate limit (HTTP 403 or 429) as `RESOURCE_UNAVAILABLE` instead of `NATIVE_OPERATION_FAILED`, and keeps the
+  external cause.
+- The update check follows release API redirects only to GitHub HTTPS hosts and checks certificate revocation.
+- Tool descriptions name only the tools available on the selected release. Paged catalog and guidance results keep the source completeness of the whole result.
+- `GetToolUsage` keeps the `BuildAndImportPlcArtifact` example on the first page and serves its full input contract across later usage pages.
+
+### Removed
+
+- **Breaking:** `ManageCfcChartProtection` is no longer registered on any release, and direct calls are refused. Every action was already refused on V18–V21,
+  where chart protection calls could end TIA. The V18, V19, V20 and V21 catalogs now list 402, 478, 499 and 518 tools.
+
+### Fixed
+
+- `ExportDeviceAml` with an export path outside the output root is refused before the worker call. The call no longer reports `OUTCOME_UNKNOWN` or stays
+  unsettled.
+- `ManageHardwareUtilities` `exportOpcUa` reports a definite native failure, such as an uncompiled PLC, with the native cause and file evidence instead of
+  `OUTCOME_UNKNOWN`.
+- On V14 SP1, `ImportPlcBlockVerified` verifies a compiled DB against the referenced UDT declaration from the bound PLC's type groups.
+  A UDT change between preview and apply is refused before import.
+- A refused existence probe no longer settles a later uncertain create of the same object.
+- `ManagePlcProtection` `setAccessLevel` reaches the worker after approval with the reviewed arguments. Protection refusals name the missing input before
+  dispatch.
+- Transfer-area and network-plan previews refuse fields and types that the selected release doesn't support, and name the field.
+- `ImportHmiTagTable` previews refuse a missing HMI device. `GetHmiProgramInfo` refuses PLC software.
+- SiVArc rule refusals name the requested action. Hardware and SiVArc examples returned by `GetToolUsage` match the selected release.
+- S7 live reads with mixed addresses keep their order, read the valid items and report an error for each invalid address. An invalid bit offset is refused
+  before target access.
+- Technology-object directory export refusals name the object and the reason. Directory imports name a missing input directory, and `importOrder` errors name
+  the parameter.
+- `PlugDeviceItem` without a version reports the catalog lookup and the installed versions. Device network info keeps successful attribute reads,
+  and a missing hardware attribute names the attribute and target.
+- An empty library folder path reads the library root, and root changes are refused. Library overviews report nested read errors as incomplete data.
+- `WritePlcWebVars` refuses an apply without `confirmWrite: true` before the preview instead of previewing silently.
+- Release manifest, runbook and handoff tools refuse a missing or malformed suite report before writing. Runbook commands use the session's release.
+- `GenerateAcceptanceReport` includes the bound project tree without requesting a connection. `GenerateErrorReport` writes both files to the requested
+  directory.
+- Unified Runtime tools report a missing local pipe as `PRECONDITION_FAILED` before dispatch. A busy or failing Open Pipe again shows a readable message.
+- `DeletePlcBlock` previews recommend a backup tool that is registered on the selected release. Library probes, reuse plans and machine templates follow the
+  session's release.
 
 ## [4.0.0-rc.1] - 2026-11-22
 
@@ -1061,7 +1104,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 - [v2.7.3](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/archive/release-notes.md)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/automation-engineering-workbench/compare/v2.9.2...HEAD
+[Unreleased]: https://github.com/asckye/automation-engineering-workbench/compare/v4.0.0-rc.1...HEAD
 [2.9.2]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.1...v2.9.2
 [2.9.1]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.1...v2.9.0

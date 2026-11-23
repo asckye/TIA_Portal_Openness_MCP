@@ -1,6 +1,6 @@
 # 架构决策记录
 
-状态：现行 · 最后核对：2026-11-04，master `55f9c737`
+状态：现行 · 最后核对：2026-11-23，master `1908c9a99`
 
 [设计规范](../design.md) · [文档规范](../documentation.md) · [ADR 模板](0000-template.md) · [开发进度](../../plan/progress.md) · [开发计划](../../plan/plan.md)
 
@@ -46,9 +46,15 @@
 | [0032](0032-published-engineering-standards.md) | 引用已发布的《工程开发规范》2.0，不保存副本；采纳 MCP 草案前 MCP 和厂商 API 规则仍按 1.1 | 已采纳 | 2026-11-05 | 不适用 |
 | [0033](0033-canonical-tool-parameters.md) | 统一工具参数形式并保留一代别名 | 已采纳 | 2026-11-04 | DES-4-P1 |
 | [0034](0034-no-session-lock.md) | 结果未知只影响本次调用，取消会话锁 | 已关闭 | 2026-11-15 | NO-LOCK |
-| [0035](0035-workbench-native-ide-dual-accent.md) | 工作台采用原生桌面 IDE 布局与双强调色工程色板 | 已采纳 | 2026-11-19 | — |
+| [0035](0035-workbench-native-ide-dual-accent.md) | 工作台采用原生桌面 IDE 布局与双强调色工程色板 | 已采纳；布局与部分配色被 0036 取代，HTTP 密钥与保管库的移除由 0038 单独记录 | 2026-11-19 | — |
 | [0036](0036-workbench-final-ide-layout.md) | 工作台最终 IDE 布局：活动栏、命令面板、合并页面，审批红线不变 | 已采纳 | 2026-11-20 | — |
 | [0037](0037-undeclared-map-keys.md) | 未声明的映射键与原生诊断 | 已采纳 | 2026-11-13 | — |
+| [0038](0038-keyless-http-transport.md) | HTTP 传输不设访问密钥，局域网使用由用户在可信网络中自行启用 | 已采纳 | 2026-11-19、2026-11-23 | — |
+| [0039](0039-repository-rename-never-reuse-old-name.md) | GitHub 仓库改名为 automation-engineering-workbench，旧名永不再用 | 已采纳 | 2026-11-22 | RENAME-GH |
+| [0040](0040-readiness-before-approval.md) | 没有就绪的 TIA 环境时，会启动 worker 的工具在审批前拒绝（补充 0004） | 已采纳 | 2026-11-22 | RDY-RESTART |
+| [0041](0041-unregister-cfc-chart-protection.md) | 撤下 ManageCfcChartProtection，八个版本都不注册 | 已采纳 | 2026-11-21 | LOW-A |
+| [0042](0042-accepted-risks-for-4-0.md) | 4.0 接受的风险：更新包不签名，密码作为工具参数传入 | 已采纳 | 2026-11-23 | — |
+| [0043](0043-recording-maintainer-approvals.md) | 主导代理只为维护者明确批准的事项登记批准记录 | 已采纳 | 2026-11-23 | — |
 
 ## 待补写的决定
 
@@ -61,7 +67,7 @@
 | B04 | 2026-10-03 | PLC 名称解析（G9）：非空名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与候选路径；空名称只在工程内唯一 PLC 时选中 | `engine-decomposition.md`“G9”；`phase6-review.md` §6 决策 5 | 已采纳 | 否 |
 | B06 | 2026-10-03 | 所有 worker 与适配器统一为 .NET Framework 4.8；删除未接线的预览 worker 协议，PLC worker 与 Studio 桥接统一使用 WorkerChannel 协议 2 | `adapter-merge.md`“待维护者决定”D4、D7 | 已采纳 | 否 |
 | B12 | 2026-10-07 | 4.0 保留 Foundation 宿主与 V20/V21 引擎（当时称“完整引擎”）两个程序，两类宿主共用一份行为规则，合并推迟到 4.x | `refactor-plan.md` P6-65 | 已被 0005 取代 | 否（回溯） |
-| B13 | 2026-10-08 | 已知 TIA 崩溃路径的原生防护在移植中保留：V20/V21 拒绝 CFC 图表保护与导出；SiVArc 块级工具只接受 FB/FC；PLC 原生交叉引用当时默认禁用（2026-11-20 起在 API 可用时默认允许）；HMI 诊断控件属性暂缓读取 | `phase8-port-plan.md` §3.1 I9 与相关维护者决定；`troubleshooting/openness-limitations.md` | 已采纳 | 是 |
+| B13 | 2026-10-08 | 已知 TIA 崩溃路径的原生防护在移植中保留：V20/V21 拒绝 CFC 图表保护与导出（2026-11-21 起 `ManageCfcChartProtection` 不再注册，见 ADR 0041）；SiVArc 块级工具只接受 FB/FC；PLC 原生交叉引用当时默认禁用（2026-11-20 起在 API 可用时默认允许）；HMI 诊断控件属性暂缓读取 | `phase8-port-plan.md` §3.1 I9 与相关维护者决定；`troubleshooting/openness-limitations.md` | 已采纳 | 是 |
 | B17 | 2026-10-08 | 新开与审批管道分开的工作台控制通道，提供显示、读取、预填三类共 8 个宿主工具；通道上不提供审批、审批开关、服务启停；“允许 AI 控制界面”默认开启，人正在操作时优先 | `phase8-workbench-control.md` §0、§4 与“维护者决定（2026-10-08）”；`runtime-layout.md`“工作台控制通道” | 已采纳 | 是 |
 | B18 | 2026-10-08 | 工程操作页改为共享 MCP 会话的操作面板：默认附着 AI 正在使用的会话；没有 AI 会话时只在工作台启动的宿主中自建会话；面板发起的写仍须审批；“人/AI”由传输决定 | `phase8-workbench-control.md` §5 与“维护者决定”；`refactor-plan.md` P8-21 | 已采纳 | 是 |
 | B20 | 2026-10-08 | 审计链只记录写调用与审批；工作台控制调用只进调用日志与工作台控制日志；迁移期 V16–V19 版本控制页经 Studio 桥接只读 VCI；`--mock` 演示只显示离线页面 | `phase8-workbench-control.md`“维护者决定”与 §5.6 | 已采纳 | 否 |

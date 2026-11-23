@@ -1,6 +1,6 @@
 # 本项目采用的开发规范
 
-状态：现行 · 最后核对：2026-11-05，beta.4 候选基线 `13eb7725`
+状态：现行 · 最后核对：2026-11-23，master `1908c9a99`（v4.0.0-rc.1 之后）
 
 本仓库遵循[《工程开发规范》2.0](https://github.com/asckye/engineering-standards/tree/v2.0)（asckye/engineering-standards，tag `v2.0`）；规范只有这一个来源，本仓库不保存副本（[ADR 0032](decisions/0032-published-engineering-standards.md)）。本页只记录采用范围、项目偏差、外部参考和本目录的文件，外部参考一节取代了[参考资料与落地对照](../archive/development/references.md)。与规范冲突时以本页和 [ADR](decisions/README.md) 为准。
 
@@ -22,20 +22,23 @@
 | 支持的版本 | TIA Portal V14 SP1、V15.1、V16–V21 八个版本，功能按各版本官方 API 注册 | [ADR 0022](decisions/0022-engine-retirement-and-eight-release-unification.md) |
 | 合并与发布 | 主机合并门 `merge-check`，FAST-GATE 目标约 10 分钟，当前宽范围运行报告约 12 分钟，优化前约 21 分钟。候选前手动运行 `merge-check -All`。`prepare` 构建、打包、检查 ZIP 并上传私有草稿，扫描接入前实测约 6 分钟，`publish-prepared` 公开的硬预算为 300 秒。取消 nightly，GitHub CI 不阻塞合并 | [ADR 0031](decisions/0031-release-path.md)与[进度](../plan/progress.md) |
 | MCP-11 输入 schema | 工具 `inputSchema` 根节点不使用 `oneOf`、`allOf`、`anyOf`，以兼容拒绝根组合器的客户端。互斥参数和表单字段规则写入描述并在运行时拒绝不合法组合，嵌套属性仍可用组合器。目录测试守住全部八版，`PrefillWorkbenchForm` 使用平铺 schema | 维护者 2026-11-04 决定，DES-4 Part 1。[ADR 0033](decisions/0033-canonical-tool-parameters.md)与[设计规范](design.md) |
-| 工作台视觉 | EplanMcp 工作台设计系统；表格行高 36；审批按钮等权重、拒绝在左、回车不批准、拒绝后不撤销 | [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md) |
+| 工作台视觉 | 原生桌面 IDE 布局，浅色、深色与系统高对比主题，钴蓝或青碧强调色。普通写请求：拒绝键在左、次级样式，批准键在右、品牌实底，两键同高 32 epx，无默认键；破坏性请求以拒绝为默认键，批准键打开确认面板。Enter 永不批准，Esc 不拒绝 | [ADR 0036](decisions/0036-workbench-final-ide-layout.md)、[ADR 0035](decisions/0035-workbench-native-ide-dual-accent.md)（视觉部分取代 [ADR 0028](decisions/0028-workbench-visual-design-eplanmcp.md)） |
 | 用语 | 界面和文档用“服务”“项目”（TIA 的 project） | [ADR 0026](decisions/0026-documentation-structure-and-language.md) |
 | 根目录布局 | `runtime/`、根启动器 `TiaOpenness.exe` 与项目 `bin`/`obj` 保留为忽略的构建输出；checkout 检查依赖与 `manifest/`、`templates/` 同根的运行布局，项目输出沿用 .NET 标准布局。`TiaMcp_Output/` 保留供生态 Python 环境、发布前置检查和产品使用。将 checkout 检查改为从提取的 ZIP 运行安排在 beta.4 之后；`hooks/` 不搬入 `plugin/`，避免旧安装遗留的钩子重复加载 | [ADR 0030 修订](decisions/0030-documentation-and-repository-structure.md#2026-11-04-修订保留运行输出和根目录钩子) |
 | 文档目录 | 开发文档分为 `docs/standards/`、`docs/plan/`、`docs/manuals/`、`docs/archive/`，不用通用规范第 2.6 节的目录；ADR 在 `docs/standards/decisions/`（通用规范 DOC-04 写 `docs/adr/`），交接与计划分别在 `docs/plan/progress.md`、`docs/plan/plan.md`（通用规范 DOC-11） | [ADR 0030](decisions/0030-documentation-and-repository-structure.md) |
+| 局域网 HTTP 不认证（桌面规范 SEC-16） | MCP 连接不设密码或访问密钥，回环与局域网相同；HTTP 默认关闭，rc.2 起宿主拒绝通配和公网绑定地址，校验 Host/Origin，写入须审批，物理在线写入始终由人确认，防火墙规则只放行本地子网。局域网 HTTP 是明文，只在可信网络或虚拟机仅主机网络中启用 | [ADR 0038](decisions/0038-keyless-http-transport.md) |
+| 更新包不签名（工程规范 2.1 起的 MIG-05、桌面 DSK-07） | 更新器只用同一发布的 SHA-256 核对 ZIP，GitHub 账户被控制即可发布恶意更新；签名在 4.1 决定 | [ADR 0042](decisions/0042-accepted-risks-for-4-0.md) |
+| 密码作为工具参数（通用规范 SEC-19） | 保管库移除后，PLC 与工程密码由 AI 客户端作为参数传入，会到达模型服务商和对话记录；本产品的审批卡、日志和审计仍脱敏。工作台专用密码输入计划在 4.1 | [ADR 0042](decisions/0042-accepted-risks-for-4-0.md) |
 | 规范版本并存 | 通用规则和桌面规则按 2.0；MCP 和厂商 API 规则按 1.1，链接固定到提交 `ec8e722`（v2.0 已没有这部分正文，也没有 v1.1 tag）。采纳 `mcp/` 时结束 | [ADR 0032](decisions/0032-published-engineering-standards.md) |
 
 ## MCP 草案：待采纳
 
-`mcp/`（[工程软件 MCP 开发规范](https://github.com/asckye/engineering-standards/blob/v2.0/mcp/README.md)，草稿 0.1）取代 1.1 的领域 A、C。本项目还没有采纳它，是否采纳、何时采纳由维护者决定。
+MCP 规范草案（[mcp-server-standard](https://github.com/asckye/engineering-standards/tree/v3.0/skills/mcp-server-standard)，3.0 中为草稿 0.2；下表对照的是 2.0 中的[草稿 0.1](https://github.com/asckye/engineering-standards/blob/v2.0/mcp/README.md)）取代 1.1 的领域 A、C。本项目还没有采纳它，是否采纳、何时采纳由维护者决定。
 
 - 采纳前：MCP 和厂商 API 规则按 1.1，文档写“1.1 MCP-xx”“1.1 VND-xx”，链接固定到提交 `ec8e722`。新旧编号的对应和每处变化见[对照表](https://github.com/asckye/engineering-standards/blob/v2.0/mcp/handbook-mapping.md)。
 - 采纳时：把引用改为新编号，更新本页和 [ADR 0032](decisions/0032-published-engineering-standards.md)，并把下面的差距登记为偏差。对 MUST 的例外写 ADR（G-04），偏离 SHOULD 写一行理由。按 `mcp/` 的要求，已发布的工具名和字段不改名，还在 MCP 旧修订上要写明迁移计划。
 
-下面的清单来自 2026-11-05 的逐条对照（master `3de70327`，MCP 2025-06-18，SDK 0.3.0-preview.4）。对照早于草案定稿，部分规则之后改过措辞，所以这不是合规结论；采纳时按当时的代码和规则重新核对。
+下面的清单来自 2026-11-05 的逐条对照（master `3de70327`，MCP 2025-06-18，SDK 0.3.0-preview.4）。对照早于草案定稿，部分规则之后改过措辞，所以这不是合规结论；采纳时按当时的代码和规则重新核对。2026-11-22 的审查确认 `PRO-18` 已满足（Host 已校验，缺 `Origin` 时放行符合现行规则），已从下表删除；0.2 中 `WS-02`、`TL-31`、`VER-01` 改为 SHOULD，并新增 PRO-23、PRO-24、TL-42、TL-43、WS-37–WS-44、ENG-26、VER-14 等规则，采纳时一并核对。
 
 ### 有差距的 MUST
 
@@ -45,13 +48,12 @@
 | `PRO-09` | 预览令牌和导出句柄是显式的；项目绑定和会话锁仍是隐式会话状态（设计规范偏差 MCP-01） |
 | `PRO-12` | 普通写工具的计划哈希不消费，客户端重发会再走审批后再次执行 |
 | `PRO-13` | 取消通知已处理，但没有把 HTTP 客户端断开明确当作取消 |
-| `PRO-18` | 不符回 403，但允许列表默认含回环同端口，缺 `Origin` 时放行 |
-| `PRO-19` | 局域网免密钥 HTTP 传输不启用 Bearer 密钥；未配置连续失败限流 |
+| `PRO-19` | HTTP 传输不设访问密钥（[ADR 0038](decisions/0038-keyless-http-transport.md)）；未配置连续失败限流 |
 | `PRO-21`、`ENG-05` | 调用串行，但等待队列没有长度上限，也没有速率限制（设计规范偏差 MCP-16） |
 | `TL-14` | 顶层都设了 `additionalProperties: false`；90 个嵌套对象有 63 个未封闭，也未声明 JSON Schema 2020-12 |
 | `TL-17` | 211 个写工具中只有 52 个带目标身份参数，其余依赖会话绑定 |
 | `TL-30` | 错误对象没有 `retryable` |
-| `TL-31` | 不少消息没有说明下一步 |
+| `TL-43`（0.1 中误记为 `TL-31`） | 不少消息没有说明下一步；0.2 中为 SHOULD |
 | `WS-01`、`WS-02` | 没有独立的破坏性级别，审批风险按工具名前缀判定；`BuildDeviceAmlDocument` 会写文件却标 `readOnlyHint: true` |
 | `WS-03` | 命令组固定且经审批，但参数不逐个校验，项目内的测试和配置文件可以含可执行 Python |
 | `WS-04` | 4 个 WRITE 工具没有预览；22 个 FILE 工具没有预览，要按草案对写工具和本地工具的定义逐个判断；通用预览的变更清单只是规范化后的参数 |
@@ -81,6 +83,15 @@
 - 有差距的 SHOULD：PRO-01、PRO-02、PRO-07、TL-01–TL-06、TL-08–TL-10、TL-13、TL-15、TL-18、TL-19、TL-25、TL-26、TL-32、TL-34、WS-12、ENG-06、ENG-17、ENG-18、VER-04、VER-05、VER-11–VER-13。已发布的 PascalCase 工具名按 `TL-06` 登记，不改名。
 - 还没有核对：PRO-22、PRO-23、TL-36–TL-39、WS-36–WS-43、ENG-20–ENG-25、VER-14。
 - 目前不适用：PRO-16、WS-16、ENG-04；WS-19 在错误对象加上 `retryable` 后适用。
+
+## 升级到 3.0
+
+以下是采纳《工程开发规范》3.0（tag `v3.0`）需要做的事，尚未开始，由维护者排期（来源：2026-11-22 全面审查 DD-11）：
+
+1. 写一份新 ADR 采纳 3.0，取代 [ADR 0032](decisions/0032-published-engineering-standards.md)；本页链接改到 `skills/<skill>/references/`。3.0 的规则编号、正文和级别与 2.1 相同。
+2. 吸收 2.1 新增的 56 条 MUST 和升级的 21 条，包括 `SEC-15`、`SEC-13`、`SEC-24`、`ERR-16`、签名更新 `MIG-05`/`DSK-07`、第 27–29 章的 ACC、OPS、EOL、SUP 规则和 `SEC-43`；不满足的按 G-04 写 ADR 或登记偏差。
+3. 按模板 T.1 在 README 加“工程规范”一行。
+4. 对照 MCP 草案 0.2 重新做差距检查，登记剩余偏差，删除过时行。
 
 ## 本目录的文件
 

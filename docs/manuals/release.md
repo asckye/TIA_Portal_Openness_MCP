@@ -22,6 +22,7 @@
 - 解码器使用固定 CPython，必要时由 `-Python` 或 `TIA_MCP_DECODER_PYTHON` 指定；PLC Tools 伴随 Python 的依赖导入检查通过。伴随解释器按 `-CompanionPython`、`TIA_MCP_PLC_TOOLS_PYTHON`、已有的 `TiaMcp_Output/ecosystem-python/Scripts/python.exe` 解析。
 - 本机已有校验过的随包 .NET 压缩包缓存 `bin-build/cache/dotnet-10.0.12/`；SDK、缓存、密钥和私人项目均不随包分发。
 - GitHub 凭据能上传草稿、推送 master 和创建标签。上传和公开按 `-Token`、`GITHUB_TOKEN`、Git Credential Manager 的顺序取令牌；不要把令牌写进文档或命令历史。
+- 仓库为 `asckye/automation-engineering-workbench`。旧名（`asckye/` 下以产品旧名 TIA Portal Openness MCP 命名、单词以下划线连接的仓库名）永不再用于新仓库、复刻或改名，3.3 和 beta 更新器经 GitHub 的重定向读取发布（[ADR 0039](../standards/decisions/0039-repository-rename-never-reuse-old-name.md)）。
 
 准备会重建当前检出的 `runtime/`（保留其中的 `README.md`）和 `bin-build/prepared/<版本>/`，并清理 `src`、`tests`、`third_party`、`build-tools/native-call-weaver` 下的全部 `bin`/`obj`，避免旧依赖进入交付包；运行中的 `build-tools/release` 不清理。`TEMP`、`TMP`、`TMPDIR` 和 `DOTNET_CLI_HOME` 使用仓库外的短 `tmr-<8位标识>` 目录，运行结束后删除；占用中的文件导致清理失败时保留目录并打印警告。重跑前保留仍需审查的旧日志；不要让运行中的程序占用这些输出。命令会验证跟踪文件未被改写，生成的包清单只写入暂存目录。
 

@@ -1,6 +1,6 @@
 # 安全标准与威胁模型
 
-状态：现行 · 最后核对：2026-11-05，beta.4 候选基线 `13eb7725`
+状态：现行 · 最后核对：2026-11-23，master `1908c9a99`（SEC-05、SEC-11、SEC-16 与第 6 节）
 
 [文档目录](../README.md) · [设计规范](design.md) · [开发规范](development.md) · [漏洞报告方式](../../.github/SECURITY.md)
 
@@ -106,10 +106,11 @@
 
 ### SEC-05 HTTP 传输
 
-- 默认前缀是 `http://127.0.0.1:8735/`。HTTP 传输要求前缀是明确的 IP 字面量（拒绝 `0.0.0.0` 和广播地址），局域网 / 虚拟机直连免 Bearer 访问密钥。
+- HTTP 默认关闭，默认传输是 stdio；启用后默认前缀是 `http://127.0.0.1:8735/`。HTTP 传输要求前缀是明确的 IP 字面量。rc.1 及更早只有工作台配置器拒绝 `0.0.0.0` 和广播地址，宿主本身接受任何 IP 字面量；从 rc.2 起，宿主拒绝通配地址（`0.0.0.0`、IPv6 任意地址）和公网绑定地址（REV-SEC）。
+- MCP 连接不设密码或访问密钥，回环与局域网相同（[ADR 0038](decisions/0038-keyless-http-transport.md)）。可达端点的设备都能调用工具，链路是明文；只在可信局域网或虚拟机仅主机网络中启用。
 - 所有请求（包括健康检查）校验 Host 和可选 Origin。允许配置端点、同端口回环源与 `--http-allowed-origins` 明确列出的源；其他值返回 403 并记录不含原始头值的审计事件，防止 DNS rebinding。
 - `/mcp/health` 返回版本、发布键和档位；`/mcp/ready` 返回宿主就绪状态。
-- 配置网络时，以提升权限添加只授予当前用户的 URL ACL，并添加只允许本地子网的入站防火墙规则。
+- 配置网络时，以提升权限添加只授予当前用户的 URL ACL，并添加只允许本地子网（`LocalSubnet`）的入站防火墙规则；规则对全部网络配置文件生效，含公用网络。
 - 远程客户端使用随包 stdio 中继连接远程 HTTP 端点，中继不添加 HTTP 访问密钥。工具调用可能包含 PLC 或工程凭据。私网、回环和链路本地地址绕过代理，其他地址遵守环境/系统代理及 NO_PROXY。不跟随重定向，不记录 HTTP 异常正文或凭据，不自动重放请求。
 - 实现：`src/FoundationHost/HostOptions.cs`、`EngineReleaseHost.cs`、`HttpRequestBoundary.cs`、`StdioHttpRelay.cs`、`src/Shared/HttpEndpoint.cs`、`RemoteProxyPolicy.cs`、`src/Studio/Gui/Configuration/ConfigCore.cs`、`src/Shared/WindowsFirewallRule.cs`。
 - 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs`、`HttpHostOptionsTests.cs`、`HttpRequestBoundaryTests.cs`、`HttpRelayTests.cs`、`tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs`、`tests/Studio/TiaOpenness.Core.Tests/WindowsFirewallRuleTests.cs`。
@@ -151,7 +152,7 @@
 ### SEC-11 更新器核对完整性
 
 - 更新器从本仓库的 GitHub Releases 获取交付 ZIP，与同一发布的 `.sha256` 比较；解压时核对每个条目都是安全的相对路径；包内交付清单的发布号必须等于标签。
-- 限制与接受的风险（维护者 2026-11-04 决定，S3）。更新签名尚未完成，ZIP 与 `.sha256` 来自同一发布。控制 GitHub 账户或发布令牌的人可以同时替换包和摘要，发布恶意更新。此风险由维护者接受，发布账户保护另由 S4 处理。
+- 限制与接受的风险（维护者 2026-11-04 决定，S3；2026-11-23 记入 [ADR 0042](decisions/0042-accepted-risks-for-4-0.md)）。更新签名尚未完成，ZIP 与 `.sha256` 来自同一发布。控制 GitHub 账户或发布令牌的人可以同时替换包和摘要，发布恶意更新。此风险由维护者接受，发布账户保护另由 S4 处理。
 - 实现：`src/Updater/Updater.cs`。
 - 测试：`tests/Updater/TiaMcp.Updater.Tests/UpdaterTests.cs`。
 
@@ -187,6 +188,7 @@
 ### SEC-16 机密保管库（已移除）
 
 - 为减少桌面端本机/局域网使用时的维护复杂度，已移除 DPAPI 机密保管库及 `vault:<name>` 引用语法；凭据参数直接按 SEC-06 的参数名脱敏规则在审批卡、日志、审计和响应中被屏蔽，不落盘保存。旧版留下的 `config/secrets.vault` 仍受 MCP 文件工具访问限制保护。
+- 接受的风险（[ADR 0042](decisions/0042-accepted-risks-for-4-0.md)）：作为工具参数传入的密码由 AI 客户端组成，会到达模型服务商并留在客户端的对话记录中，经局域网 HTTP 时以明文传输。本产品的脱敏不能消除这一点。工作台专用的密码输入计划在 4.1。
 
 ### SEC-17 审批状态只读与会话隔离
 
@@ -201,10 +203,11 @@
 |---|---|---|
 | PLC companion 的自由参数无法逐主机约束（TIA-SAFE-5 Round 2） | `RunPlcCompanionTool mode=run` 的 net、sim、trace 等命令可能通过参数、配置或脚本连接任意设备，无法保证只连接白名单主机 | 白名单文件存在时（含空、无效或不可读状态），在审批和启动 companion 前以 `online-target-not-allowed` 或 `online-target-list-invalid` 拒绝 mode=run，预览同样拒绝。catalog/help 不执行命令回调，继续允许；文件不存在时保留原有行为。不按自由参数猜测目标，也不提供 MCP 绕过开关 |
 | HTTP 请求的 Origin 与 Host 头 | RELAY-1 已实现每请求校验、403 与审计，含伪造头测试 | 已补齐；新增可信源须显式配置 |
-| 局域网免密钥 HTTP 传输 | 为简化局域网/虚拟机直连，已移除 Bearer 访问密钥与 `--http-api-key` | 仅在可信局域网或虚拟机的仅主机网络中使用。可达端点的设备均可调用工具，写入仍遵循审批规则 |
-| UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批，输入、预览和审批前的身份检查仍可能查询远程主机并暴露 Windows NTLM 凭据 | 维护者 2026-11-04 已决定在 AI 准入层拒绝网络路径，含指向 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。尚未实现，排 4.0 前 |
+| 局域网免密钥 HTTP 传输 | MCP 连接不设密码或访问密钥，`--http-api-key` 已移除；维护者 2026-11-23 考虑并否决了局域网可选密钥 | 接受的风险，见 [ADR 0038](decisions/0038-keyless-http-transport.md)。HTTP 默认关闭；rc.2 起宿主拒绝通配和公网绑定地址；Host/Origin 校验、写入审批和物理在线写入的人工确认照常。仅在可信局域网或虚拟机的仅主机网络中使用 |
+| UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批，输入、预览和审批前的身份检查仍可能查询远程主机并暴露 Windows NTLM 凭据 | 维护者 2026-11-04 已决定在 AI 准入层拒绝网络路径，含指向 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。由 REV-SEC 实现（进行中），目标 rc.2 |
 | `BuildDeviceAmlDocument` 分类 | 按文件目标审批，但仍为 OFFLINE / readOnlyHint=true | 单独重分类并重捕获八版基线，本任务不改契约 |
-| 更新包没有签名（S3） | 只有同一发布的 `.sha256`，GitHub 账户被控制后可发布恶意更新 | 维护者 2026-11-04 接受风险，签名尚未完成，移出 4.0 前实施清单 |
+| 更新包没有签名（S3） | 只有同一发布的 `.sha256`，GitHub 账户被控制后可发布恶意更新 | 4.0 接受的风险（维护者 2026-11-04 接受，2026-11-23 记入 [ADR 0042](decisions/0042-accepted-risks-for-4-0.md)），签名在 4.1 决定 |
+| 密码作为工具参数 | 保管库移除后，密码只能由 AI 客户端作为参数传入，会到达模型服务商和对话记录 | 4.0 的已知风险，写进发布说明（[ADR 0042](decisions/0042-accepted-risks-for-4-0.md)）；4.1 计划工作台专用密码输入 |
 | 局域网传输未加密（S5） | 使用明文 HTTP，链路上的监听者可以读取请求和响应，包括工程数据及直接传入的 PLC 密码 | 维护者 2026-11-04 接受风险，保留明文 HTTP，移出 4.0 前实施清单。只在可信局域网或虚拟机的仅主机网络中使用 |
 | 凭据按参数名替换 | 没有 UMAC、PLC 保护、Web 服务器凭据的专用名单 | 新增带凭据参数的工具时按 SEC-06 的命名规则命名，并在测试中证明被替换 |
 | 原生失败的诊断信息 | DES-4R3 返回去敏消息首行和 `innererror` 的短异常类型、HResult、关联请求号，worker 从解包异常产生数值 HResult，ported 工具读取该证据 | 当前调用的凭据字符串在诊断构造时替换，数字与布尔值保持文本含义，堆栈只进日志，见[设计规范](design.md)第 6.5 节 |
