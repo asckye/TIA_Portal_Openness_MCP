@@ -1,10 +1,8 @@
 #nullable disable
-using System;
 using System.Collections.Generic;
 using System.IO;
 using global::Siemens.Engineering;
 using global::Siemens.Engineering.SW;
-using global::Siemens.Engineering.SW.TechnologicalObjects;
 #if PLC_WATCH_READ
 using global::Siemens.Engineering.SW.WatchAndForceTables;
 #endif
@@ -13,16 +11,8 @@ namespace TiaMcp.Adapters
 {
     // Raw native operations only. Hosts retain lookup, traversal, import options,
     // reflection fallbacks, readback, error handling and their existing threads.
-    public static class WatchTechnologyPrimitives
+    public static partial class WatchTechnologyPrimitives
     {
-        public static TechnologicalInstanceDBGroup TechnologyGroup(PlcSoftware software) => software.TechnologicalObjectGroup;
-        public static TechnologicalInstanceDBComposition Objects(TechnologicalInstanceDBGroup group) => group.TechnologicalObjects;
-        public static string Name(TechnologicalInstanceDB item) => item.Name;
-        public static string Name(TechnologicalInstanceDBGroup group) => group.Name;
-#if PLC_TECH_GROUP_READ
-        public static TechnologicalInstanceDBUserGroupComposition Groups(TechnologicalInstanceDBGroup group) => group.Groups;
-        public static string Name(TechnologicalInstanceDBUserGroup group) => group.Name;
-#endif
 #if PLC_WATCH_READ
         public static PlcWatchAndForceTableSystemGroup WatchGroup(PlcSoftware software) => software.WatchAndForceTableGroup;
         public static PlcWatchTableComposition WatchTables(PlcWatchAndForceTableGroup group) => group.WatchTables;
@@ -38,15 +28,6 @@ namespace TiaMcp.Adapters
 
         public static object Attribute(IEngineeringObject target, string name) => target.GetAttribute(name);
         public static void SetAttribute(IEngineeringObject target, string name, object value) => target.SetAttribute(name, value);
-        public static TechnologicalInstanceDB Create(TechnologicalInstanceDBComposition objects, string name, string typeIdentifier, Version version) => objects
-            .Create(name, typeIdentifier, version);
-        public static TechnologicalInstanceDB Find(TechnologicalInstanceDBComposition objects, string name) => objects.Find(name);
-        public static TechnologicalParameter Find(TechnologicalParameterComposition parameters, string name) => parameters.Find(name);
-        public static TechnologicalParameterComposition Parameters(TechnologicalInstanceDB item) => item.Parameters;
-        public static int Count(TechnologicalInstanceDBComposition objects) => objects.Count;
-#if PLC_TECH_GROUP_READ
-        public static int Count(TechnologicalInstanceDBUserGroupComposition groups) => groups.Count;
-#endif
 #if PLC_WATCH_READ
         public static PlcWatchTable Find(PlcWatchTableComposition tables, string name) => tables.Find(name);
         public static PlcWatchTable Create(PlcWatchTableComposition tables, string name) => tables.Create(name);

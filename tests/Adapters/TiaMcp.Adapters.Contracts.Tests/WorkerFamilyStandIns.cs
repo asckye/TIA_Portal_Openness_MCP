@@ -21,6 +21,7 @@ namespace Siemens.Engineering
     }
 }
 namespace Siemens.Engineering.SW { public sealed class PlcSoftware {
+        public TechnologicalObjects.TechnologicalInstanceDBGroup TechnologicalObjectGroup { get; } = new();
         public Blocks.PlcBlockGroup BlockGroup { get; } = new();
         public Types.PlcTypeGroup TypeGroup { get; } = new();
         public Tags.PlcTagTableGroup TagTableGroup { get; } = new();

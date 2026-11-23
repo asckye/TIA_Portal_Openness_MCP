@@ -92,13 +92,6 @@ namespace TiaMcp.Adapters.Native.Plc
                 foreach (var table in EnumeratePlcWatchTables(child))
                     yield return (ObjectPathEncoding.EncodeSegment(child.Name) + "/" + table.Path, table.Name, table.Table);
         }
-        private static Dictionary<string, object?> TechnologyObjectRow(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB db)
-            => new() { ["name"] = db.Name };
-        private static Dictionary<string, object?> ParameterRow(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalParameter parameter)
-            => new() { ["name"] = parameter.Name, ["value"] = parameter.Value };
-        private static object TypedMotionView(Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB db) => throw new NotSupportedException();
-        private static void Safe(Dictionary<string, object?> row, string key, Func<object?> read) => row[key] = read();
-
         private static Dictionary<string, object?> TechnologyExport(object target, string path, bool overwrite)
         {
             ((PlcWatchTable)target).Export(new FileInfo(path), Siemens.Engineering.ExportOptions.None);

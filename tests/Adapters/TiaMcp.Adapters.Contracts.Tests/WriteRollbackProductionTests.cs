@@ -304,6 +304,8 @@ namespace TiaMcp.Adapters.Native.Plc
 
     internal sealed class GroupSession(PlcFoundationEngine engine, Siemens.Engineering.SW.PlcSoftware software)
     {
+        public Siemens.Engineering.SW.PlcSoftware ExactPlcForEngineering(string path, bool writing) =>
+            path == software.Name ? software : throw new ArgumentException("Unknown PLC.", nameof(path));
         public IDisposable AcquireHmiEditAccess() => new MemoryStream();
         public object ResolveSoftwareContainerUncached(string path) => software;
         public T? ResolvePlcService<T>(string path, Siemens.Engineering.SW.PlcSoftware plc) where T : class

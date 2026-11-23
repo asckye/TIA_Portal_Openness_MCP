@@ -1,6 +1,8 @@
 using Siemens.Engineering;
+using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.TechnologicalObjects;
 using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Contracts.Tests;
 using TiaMcp.Adapters.Native.Plc;
 using Xunit;
 
@@ -14,9 +16,16 @@ public sealed class TechnologyParameterPortTests
     public void Set_parameter_uses_instance_metadata_and_defers_to_the_setter_if_unavailable(EngineeringAttributeAccessMode? access, bool rejectWrite)
     {
         const string name = "Retain.CtrlParams.Gain";
-        var session = new WatchShapeSession();
-        var port = new PlcOrganisationAdapter(session);
-        var db = session.Software.TechnologicalObjectGroup.TechnologicalObjects.Create("MCP_RC_PIDC", "PID_Compact", new Version(2, 3));
+        var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+        engine.EngineeringServicesStep = (_, _, execute) =>
+        {
+            var reply = new HardwareAddressingReply();
+            reply.Message = execute(reply.Meta);
+            return reply;
+        };
+        var software = new PlcSoftware();
+        var port = new PlcOrganisationAdapter(new GroupSession(engine, software));
+        var db = software.TechnologicalObjectGroup.TechnologicalObjects.Create("MCP_RC_PIDC", "PID_Compact", new Version(2, 3));
         var parameter = new TechnologicalParameter { Name = name, ValueAccess = access, RejectValueWrite = rejectWrite };
         db.Parameters.Add(parameter);
         HardwareAddressingReply Call(bool preview) => port.ManageTechnologyObject("PLC", db.Name, "setParameter", "", "", name,

@@ -14,7 +14,6 @@ using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
 using TiaMcp.Adapters.Native.Engineering;
-using Logic = TiaMcp.Adapters.Native.Plc.PlcMotionPolicy;
 using WatchNative = TiaMcp.Adapters.WatchTechnologyPrimitives;
 
 namespace TiaMcp.Adapters.Native.Plc

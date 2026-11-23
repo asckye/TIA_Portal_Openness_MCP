@@ -4,11 +4,8 @@ namespace Siemens.Engineering
 {
     public enum ExportOptions { None, WithDefaults }
     public enum ImportOptions { None, Override }
-    public enum EngineeringAttributeAccessMode { Read, ReadWrite }
-    public sealed record EngineeringAttributeInfo(string Name, EngineeringAttributeAccessMode AccessMode);
     public interface IEngineeringObject
     {
-        public IEnumerable<EngineeringAttributeInfo> GetAttributeInfos() => Array.Empty<EngineeringAttributeInfo>();
         public object GetAttribute(string name);
         public void SetAttribute(string name, object value);
     }
@@ -119,39 +116,10 @@ namespace Siemens.Engineering.SW.TechnologicalObjects
             var db = new TechnologicalInstanceDB { Name = name }; Add(db); return db; }
         public TechnologicalInstanceDB? Find(string name) => this.SingleOrDefault(db => db.Name == name);
     }
-    public sealed class TechnologicalParameter : IEngineeringObject
-    {
-        public string Name { get; init; } = "";
-        public EngineeringAttributeAccessMode? ValueAccess { get; init; }
-        public bool RejectValueWrite { get; init; }
-        public int MetadataReads { get; private set; }
-        public int SetCalls { get; private set; }
-        private object value = 1.0f;
-        public object Value
-        {
-            get => value;
-            set
-            {
-                SetCalls++;
-                if (RejectValueWrite || ValueAccess == EngineeringAttributeAccessMode.Read) throw new InvalidOperationException("Value is read-only.");
-                this.value = value;
-            }
-        }
-        public IEnumerable<EngineeringAttributeInfo> GetAttributeInfos()
-        {
-            MetadataReads++;
-            return new[] { new EngineeringAttributeInfo("Value", ValueAccess ?? throw new InvalidOperationException("Parameter metadata unavailable.")) };
-        }
-        public object GetAttribute(string name) => name == "Value" ? Value : throw new ArgumentException(name);
-        public void SetAttribute(string name, object value)
-        {
-            if (name != "Value") throw new ArgumentException(name);
-            Value = value;
-        }
-    }
+    public sealed class TechnologicalParameter { }
     public sealed class TechnologicalParameterComposition : List<TechnologicalParameter>
     {
-        public TechnologicalParameter? Find(string name) => this.SingleOrDefault(parameter => parameter.Name == name);
+        public TechnologicalParameter? Find(string name) => null;
     }
     public sealed class TechnologicalInstanceDB
     {

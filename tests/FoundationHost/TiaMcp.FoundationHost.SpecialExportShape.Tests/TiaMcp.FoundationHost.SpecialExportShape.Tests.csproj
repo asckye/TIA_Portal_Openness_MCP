@@ -7,10 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
-    <Compile Include="../../../src/Adapters/Native/Plc/PlcTechnology.cs" Link="PlcTechnology.cs" />
-    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareScalarEvidence.cs" Link="HardwareScalarEvidence.cs" />
-    <Compile Include="../../../src/Logic/ModelContextProtocol/PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
-    <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="ProcessLossPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcWatchTables.cs" Link="PlcWatchTables.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcWatchPolicy.cs" Link="PlcWatchPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcIntegrityPolicy.cs" Link="PlcIntegrityPolicy.cs" />
@@ -22,6 +18,7 @@
     <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" Link="EngineeringWriteJournal.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSpecialExport.cs" Link="PlcSpecialExport.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/WatchTechnologyPrimitives.cs" Link="WatchTechnologyPrimitives.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/WatchTechnologyPrimitives.Technology.cs" Link="WatchTechnologyPrimitives.Technology.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.Compile.cs" Link="PlcFoundationEngine.Compile.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareDeviceTree.cs" Link="HardwareDeviceTree.cs" />
