@@ -13,6 +13,7 @@
     <Compile Include="../../../src/Updater/Updater.cs" Link="Updater/Updater.cs" />
     <Compile Include="../../../src/Updater/UpdaterModels.cs" Link="Updater/UpdaterModels.cs" />
     <Compile Include="../../../src/Updater/Updater.Release.cs" Link="Updater/Updater.Release.cs" />
+    <Compile Include="../../../src/Updater/UpdaterLog.cs" Link="Updater/UpdaterLog.cs" />
     <Compile Include="../../../src/Updater/Updater.Files.cs" Link="Updater/Updater.Files.cs" />
     <Compile Include="../../../src/Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
     <Compile Include="../../../src/Shared/ProductReleaseVersion.cs" Link="Shared/ProductReleaseVersion.cs" />

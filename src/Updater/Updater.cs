@@ -178,6 +178,7 @@ namespace TiaMcp.Updater
             EnsurePathSupported(extraction);
             EnsurePathSupported(backup);
             bool backupReady = false;
+            bool installedSuccessfully = false;
             try
             {
                 CreateDirectory(extraction);
@@ -225,6 +226,7 @@ namespace TiaMcp.Updater
                 var now = ReadJson<DeliveryManifest>(DeliveryFilePath(root)) ?? throw new InvalidDataException("Missing installed delivery manifest.");
                 say(UpdaterText.Bilingual("UpdateDone", "DONE") + ": " + installed.Release + " -> " + now.Release + "; -Rollback restores " + installed.Package
                         + ".");
+                installedSuccessfully = true;
             }
             catch
             {
@@ -246,7 +248,47 @@ namespace TiaMcp.Updater
             }
             finally
             {
-                if (DirectoryExists(extraction)) RemoveTree(extraction);
+                // Give rollback the available disk space before retaining diagnostic copies.
+                if (DirectoryExists(extraction) && (installedSuccessfully || KeepFailedDownloads(root, extraction, say))) RemoveTree(extraction);
+            }
+
+            try
+            {
+                string downloads = FailedDownloadDirectory(root);
+                if (DirectoryExists(downloads)) RemoveTree(downloads);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            { say(UpdaterText.Bilingual("FailedDownloadsCleanup", "Could not clean up failed downloads") + ": " + ex.Message); }
+        }
+
+        private static string FailedDownloadDirectory(string root)
+        {
+            string path = Combine(root, ".update");
+            if (ExistsAny(path) && (File.GetAttributes(Prefix(path)) & FileAttributes.ReparsePoint) != 0)
+                throw new IOException("Refusing a redirected update directory: " + path);
+            return path;
+        }
+
+        private static bool KeepFailedDownloads(string root, string temporary, Action<string> say)
+        {
+            try
+            {
+                // The ZIP and sidecar are the only top-level files. Extracted package contents stay in TEMP.
+                string[] files = GetFiles(temporary);
+                if (files.Length == 0) return true;
+                string directory = FailedDownloadDirectory(root);
+                if (files.Any(file => ExistsAny(Combine(directory, Path.GetFileName(file)))))
+                    directory = Combine(directory, Path.GetFileName(temporary));
+                CreateDirectory(directory);
+                foreach (string file in files)
+                    RetryLocked(() => File.Copy(Prefix(file), Prefix(Combine(directory, Path.GetFileName(file))), false));
+                say(UpdaterText.Bilingual("FailedDownloadsRetained", "Failed downloads retained in") + " " + directory);
+                return true;
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                say(UpdaterText.Bilingual("FailedDownloadsRetained", "Failed downloads retained in") + " " + temporary + ": " + ex.Message);
+                return false;
             }
         }
 

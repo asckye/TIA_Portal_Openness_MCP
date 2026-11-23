@@ -68,6 +68,7 @@ public sealed class StagedReplacementTests
             var error = Assert.Throws<InvalidOperationException>(() => Run(options));
             Assert.Contains(wrongVersion ? "selected release" : "missing", error.Message);
             Assert.False(Directory.Exists(Path.Combine(f.Root, ".previous")));
+            ExpectDownload(original, options, f, attempt);
             Assert.Equal(original.OrderBy(p => p.Key), f.Inventory().OrderBy(p => p.Key));
         }
     }
@@ -94,7 +95,8 @@ public sealed class StagedReplacementTests
         using var f = new Fixture(longPath: true);
         var original = f.Inventory();
         string staged = null;
-        Assert.Throws<IOException>(() => Run(SmallDelivery(f), message =>
+        var options = SmallDelivery(f);
+        Assert.Throws<IOException>(() => Run(options, message =>
         {
             if (!Extracted(message, out var package)) return;
             staged = package;
@@ -106,6 +108,7 @@ public sealed class StagedReplacementTests
         }));
         Assert.NotNull(staged);
         Assert.False(Directory.Exists(staged));
+        ExpectDownload(original, options, f);
         Assert.Equal(original.OrderBy(p => p.Key), f.Inventory().OrderBy(p => p.Key));
     }
 
@@ -172,6 +175,7 @@ public sealed class StagedReplacementTests
         }));
         if (damage == "unexpected") Assert.Contains("outside delivery set", Assert.IsType<InvalidOperationException>(error).Message);
         else Assert.Contains(damage == "missing" ? "missing files" : "inventory mismatch", Assert.IsType<InvalidDataException>(error).Message);
+        ExpectDownload(original, options, f);
         Assert.False(Directory.Exists(Path.Combine(f.Root, ".previous")));
         Assert.Equal(original.OrderBy(p => p.Key), f.Inventory().OrderBy(p => p.Key));
     }
@@ -223,9 +227,81 @@ public sealed class StagedReplacementTests
         Assert.True(launcher.WaitForExit(TestDeadlines.HangMilliseconds));
         Assert.Equal(0, launcher.ExitCode);
         Assert.Contains("release asset", launcher.StandardOutput.ReadToEnd());
-        Assert.Contains("release asset", File.ReadAllText(Assert.Single(Directory.GetFiles(Path.Combine(source, "logs", "updater")))));
+        Assert.False(Directory.Exists(Path.Combine(source, "logs", "updater")));
         Assert.Equal("old-launcher", f.Text("TiaOpenness.exe"));
         Assert.Equal("kept", f.Text("data/config/user.json"));
+    }
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public void Failed_bytes_survive_check_and_are_removed_only_after_success(bool missingSidecar)
+    {
+        using var f = new Fixture();
+        var options = SmallDelivery(f);
+        var read = options.ReadBytesForTest;
+        byte[] partial = { 80, 75, 3 };
+        options.ReadBytesForTest = (url, timeout) =>
+        {
+            if (url.EndsWith("/bundle", StringComparison.Ordinal)) return partial;
+            if (missingSidecar) throw new IOException("interrupted sidecar download");
+            return read(url, timeout);
+        };
+        var error = Record.Exception(() => Run(options));
+        if (missingSidecar) Assert.IsType<IOException>(error);
+        else Assert.Contains("SHA-256 mismatch", Assert.IsType<InvalidOperationException>(error).Message);
+        const string asset = ".update/TIA_MCP_Delivery_v4.0.0_20261006";
+        Assert.Equal(partial, f.Read(asset + ".zip"));
+        Assert.Equal(!missingSidecar, f.Exists(asset + ".sha256"));
+        if (!missingSidecar) Assert.Equal(read("/hash", 1), f.Read(asset + ".sha256"));
+        Assert.Equal("old-launcher", f.Text("TiaOpenness.exe"));
+        options.Check = true;
+        Assert.Equal(0, Run(options));
+        Assert.Equal(partial, f.Read(asset + ".zip"));
+        options.Check = false;
+        options.ReadBytesForTest = read;
+        Assert.Equal(0, Run(options));
+        Assert.Equal("new", f.Text("TiaOpenness.exe"));
+        Assert.False(Directory.Exists(Path.Combine(f.Root, ".update")));
+    }
+
+    [Fact]
+    public void An_unwritable_diagnostic_directory_preserves_the_original_error_and_the_download_after_rollback()
+    {
+        using var f = new Fixture();
+        f.Write(".update", "occupied");
+        var options = SmallDelivery(f);
+        options.TemporaryDirectoryForTest = Path.Combine(f.Root, "data", "test-temp");
+        string retained = null;
+        var error = Assert.Throws<IOException>(() => Run(options, message =>
+        {
+            if (message.Contains(" / DONE")) throw new IOException("replacement interrupted");
+            if (!message.Contains("Failed downloads retained in ", StringComparison.Ordinal)) return;
+            Assert.Equal("old-launcher", f.Text("TiaOpenness.exe"));
+            retained = Assert.Single(Directory.GetDirectories(options.TemporaryDirectoryForTest));
+            Assert.Contains(retained, message);
+        }));
+        Assert.Equal("replacement interrupted", error.Message);
+        Assert.NotNull(retained);
+        Assert.Equal(options.ReadBytesForTest("/bundle", 1), File.ReadAllBytes(Assert.Single(Directory.GetFiles(retained, "*.zip"))));
+        Assert.Equal(options.ReadBytesForTest("/hash", 1), File.ReadAllBytes(Assert.Single(Directory.GetFiles(retained, "*.sha256"))));
+        Assert.Equal("occupied", f.Text(".update"));
+    }
+
+    private static void ExpectDownload(Dictionary<string, string> expected, UpdaterOptions options, Fixture f, int attempt = 0)
+    {
+        const string asset = "TIA_MCP_Delivery_v4.0.0_20261006";
+        string folder = ".update";
+        if (attempt > 0)
+        {
+            var retry = Assert.Single(Directory.GetDirectories(Path.Combine(f.Root, folder)));
+            Assert.StartsWith("tia-mcp-update-", Path.GetFileName(retry));
+            folder += "/" + Path.GetFileName(retry);
+        }
+        foreach (var pair in new[] { (".zip", "/bundle"), (".sha256", "/hash") })
+        {
+            byte[] bytes = options.ReadBytesForTest(pair.Item2, 1);
+            expected.Add(folder + "/" + asset + pair.Item1, Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant());
+        }
     }
 
     private static bool Extracted(string message, out string package)

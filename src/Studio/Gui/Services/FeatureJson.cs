@@ -37,8 +37,17 @@ public static class FeatureJson
         }
     }
 
-    // Match complete field names. Engineering identifiers such as Door_Key and TokenCount are approval evidence.
-    private static bool IsCredential(string name) => name.Replace("_", "").Replace("-", "").ToLowerInvariant() is
+    private static bool IsCredential(string name)
+    {
+        if (DeclaredCredential(name.Replace("_", "").Replace("-", "").ToLowerInvariant())) return true;
+        if (name.Length == 0 || !char.IsAsciiLetterLower(name[0]) || !name.All(char.IsAsciiLetterOrDigit)) return false;
+        // Only the final camelCase word can be a credential suffix.
+        for (int i = name.Length - 1; i > 0; i--)
+            if (char.IsAsciiLetterUpper(name[i])) return DeclaredCredential(name[i..].ToLowerInvariant());
+        return false;
+    }
+
+    private static bool DeclaredCredential(string name) => name is
         "key" or "keys" or "privatekey" or "protectedkey" or "apikey" or "xapikey" or "token" or "accesstoken" or "refreshtoken"
         or "password" or "passwd" or "pwd" or "passphrase" or "secret" or "clientsecret"
         or "credential" or "credentials" or "authorization" or "proxyauthorization" or "cookie"

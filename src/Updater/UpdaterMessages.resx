@@ -25,6 +25,8 @@
   <data name="PrereleaseFallback" xml:space="preserve"><value>发布页只显示最新的正式版本；GitHub API 恢复后才能看到更新的预发布</value></data>
   <data name="GitHubApi" xml:space="preserve"><value>GitHub 接口</value></data>
   <data name="ReleasePage" xml:space="preserve"><value>发布页</value></data>
+  <data name="FailedDownloadsRetained" xml:space="preserve"><value>失败的下载文件保存在</value></data>
+  <data name="FailedDownloadsCleanup" xml:space="preserve"><value>无法清理失败的下载文件</value></data>
   <data name="Downloading" xml:space="preserve"><value>正在下载</value></data>
   <data name="ChecksumMismatch" xml:space="preserve"><value>SHA-256 不匹配，未更改安装</value></data>
   <data name="ChecksumVerified" xml:space="preserve"><value>SHA-256 已验证</value></data>

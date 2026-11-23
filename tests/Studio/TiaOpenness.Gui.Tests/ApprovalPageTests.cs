@@ -65,12 +65,20 @@ public sealed class ApprovalPageTests(WpfContext wpf)
 
     [Theory]
     [InlineData("password")] [InlineData("moduleAccessPassword")] [InlineData("secret")]
+    [InlineData("plcPassword")] [InlineData("authToken")] [InlineData("dbPassword")] [InlineData("apiKey")]
     public void Drawer_masks_unfiltered_credentials_and_preserves_operation_data(string credential)
     {
         wpf.Run(() =>
         {
             using var fixture = new Fixture();
             var args = new System.Text.Json.Nodes.JsonObject { [credential] = "unfiltered-value", ["Door_Key"] = "Loading bay", ["TokenCount"] = 18 };
+            args["door_Key"] = "dock";
+            args["tokenCount"] = 19;
+            args["monkey"] = "animal";
+            args["door-Token"] = "tag";
+            args["PLCPassword"] = "tag";
+            args["valveKEY"] = "tag";
+            args["plcPasswordHint"] = "prompt";
             var fields = new System.Text.Json.Nodes.JsonObject {
                 ["arguments"] = new System.Text.Json.Nodes.JsonArray(args), ["path"] = @"D:\TokenCount\Door_Key",
                 ["before"] = "Door_Key := 1;", ["after"] = "Door_Key := 2;" };

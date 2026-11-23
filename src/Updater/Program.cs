@@ -9,7 +9,7 @@ namespace TiaMcp.Updater
 {
     internal static class Program
     {
-        private static string logPath;
+        private static UpdaterLog log;
         private static int Main(string[] args)
         {
             UpdaterOptions options;
@@ -24,12 +24,6 @@ namespace TiaMcp.Updater
             {
                 options.InstallRoot = Path.GetFullPath(root);
                 UpdaterEngine.RequireDelivery(options.InstallRoot);
-                var data = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
-                string logs = Path.Combine(string.IsNullOrWhiteSpace(data) ? Path.Combine(options.InstallRoot, "data") : Path.GetFullPath(data),
-                    "logs", "updater");
-                Directory.CreateDirectory(logs);
-                logPath = Path.Combine(logs, "updater-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N") + ".log");
-                Say("Updater log: " + logPath);
             }
             catch (Exception error) { return Fail(error); }
 
@@ -42,10 +36,12 @@ namespace TiaMcp.Updater
                     return StartStaged(stagedArgs);
                 }
                 catch (Exception error) {
+                    OpenLog(options.InstallRoot);
                     return Fail(error);
                 }
             }
 
+            if (!options.Check) OpenLog(options.InstallRoot);
             try { return UpdaterEngine.Run(options, Say); }
             catch (Exception error)
             {
@@ -168,22 +164,25 @@ namespace TiaMcp.Updater
             catch (Exception error) { Console.Error.WriteLine(UpdaterText.Bilingual("SelfTestFailed", "self-test failed") + ": " + error.Message); return 1; }
         }
 
+        private static void OpenLog(string root)
+        {
+            string data = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+            log = UpdaterLog.Open(string.IsNullOrWhiteSpace(data) ? Path.Combine(root, "data") : data);
+            if (log != null) Say("Updater log: " + log.FilePath);
+        }
+
         private static void Say(string message)
         {
             var line = "[" + DateTime.UtcNow.ToString("O") + "] " + message;
             Console.WriteLine(line);
-            if (logPath != null) File.AppendAllText(logPath, line + Environment.NewLine, new UTF8Encoding(false));
+            log?.Write(line);
         }
 
         private static int Fail(Exception error, string label = null)
         {
             string message = (label ?? UpdaterText.Bilingual("Failure", "FAIL")) + ": " + error.Message;
             Console.Error.WriteLine(message);
-            if (logPath != null)
-            {
-                try { File.AppendAllText(logPath, DateTime.UtcNow.ToString("O") + " " + error + Environment.NewLine, new UTF8Encoding(false)); }
-                catch (Exception io) when (io is IOException || io is UnauthorizedAccessException) { Console.Error.WriteLine(io.Message); }
-            }
+            log?.Write(DateTime.UtcNow.ToString("O") + " " + error);
             if (Environment.UserInteractive && !Console.IsInputRedirected && !Console.IsOutputRedirected)
             {
                 Console.Error.WriteLine(UpdaterText.Bilingual("PressEnter", "Press Enter to close."));

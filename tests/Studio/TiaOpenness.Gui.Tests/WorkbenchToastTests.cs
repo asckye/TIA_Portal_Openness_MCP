@@ -49,6 +49,42 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
     }
 
     [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public void Fatal_worker_logs_first_and_returns_when_dispatch_or_dialog_is_blocked(bool dialogStarted)
+    {
+        string path = Path.Combine(McpOperatorFixture.RepositoryRoot, "bin-build", Guid.NewGuid() + ".crash.log");
+        using var returned = new System.Threading.ManualResetEventSlim();
+        int shown = 0;
+        bool loggedBeforeDialog = false, workerReturnedDuringDialog = false;
+        try
+        {
+            wpf.Run(() =>
+            {
+                void Show(Window _, string message)
+                {
+                    shown++;
+                    loggedBeforeDialog = File.ReadAllText(path).Contains("blocked-dispatcher-fixture") && message.Contains("blocked-dispatcher-fixture");
+                    workerReturnedDuringDialog = returned.Wait(TimeSpan.FromSeconds(10));
+                }
+                var worker = Task.Run(() =>
+                {
+                    try { App.ReportFatalException(new IOException("blocked-dispatcher-fixture"), path, Show); }
+                    finally { returned.Set(); }
+                });
+                if (dialogStarted) WpfContext.Complete(worker);
+                else Assert.True(returned.Wait(TimeSpan.FromSeconds(10))); // Block the dispatcher just as a UI waiting on the crashing worker would.
+                WpfContext.Complete(worker);
+                Assert.Contains("blocked-dispatcher-fixture", File.ReadAllText(path));
+                WpfContext.Drain();
+                Assert.Equal(dialogStarted ? 1 : 0, shown);
+                Assert.Equal(dialogStarted, loggedBeforeDialog);
+                Assert.Equal(dialogStarted, workerReturnedDuringDialog);
+            });
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Theory]
     [InlineData(ToastKind.Success, 4)]
     [InlineData(ToastKind.Info, 4)]
     [InlineData(ToastKind.Info, 4, true)]

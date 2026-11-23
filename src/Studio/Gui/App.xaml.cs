@@ -149,8 +149,13 @@ public partial class App : Application
     private static void OnDomainException(object sender, UnhandledExceptionEventArgs e)
     {
         // The runtime may terminate when this handler returns.
-        var message = CrashReport(e.ExceptionObject as Exception ?? new InvalidOperationException(e.ExceptionObject?.ToString()));
-        PresentUiError(message, fatal: true);
+        ReportFatalException(e.ExceptionObject as Exception ?? new InvalidOperationException(e.ExceptionObject?.ToString()));
+    }
+
+    internal static void ReportFatalException(Exception error, string? path = null, Action<Window, string>? showDialog = null)
+    {
+        var message = CrashReport(error, path);
+        PresentUiError(message, fatal: true, showDialog: showDialog);
     }
 
     private void OnTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
@@ -215,7 +220,11 @@ public partial class App : Application
         else
         {
             var pending = app.Dispatcher.InvokeAsync(Present, DispatcherPriority.Send);
-            if (fatal) pending.Task.GetAwaiter().GetResult();
+            if (!fatal) return;
+            // Returning from the domain handler lets the runtime terminate even if the UI never dismisses the dialog.
+            var finished = ((IAsyncResult)pending.Task).AsyncWaitHandle;
+            if (!finished.WaitOne(TimeSpan.FromSeconds(5)) && pending.Abort())
+                Interlocked.Exchange(ref presentingCrash, 0);
         }
     }
 }

@@ -16,6 +16,39 @@ namespace TiaMcp.Updater.Tests
     public sealed class UpdaterTests
     {
         [Fact]
+        public void A_locked_updater_log_cannot_roll_back_a_successful_update()
+        {
+            using var fixture = new Fixture();
+            var log = UpdaterLog.Open(Path.Combine(fixture.Root, "data"));
+            Assert.NotNull(log);
+            using (File.Open(log.FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                Assert.Equal(0, UpdaterEngine.Run(fixture.Options(), log.Write, _ => Array.Empty<string>()));
+            Assert.Equal("new-launcher", fixture.Text("TiaOpenness.exe"));
+            Assert.Equal("4.0.0", fixture.Json("manifest/delivery.json").GetProperty("release").GetString());
+            log.Write("log available again");
+            Assert.Contains("log available again", File.ReadAllText(log.FilePath));
+        }
+
+        [Fact]
+        public void Log_rotation_keeps_the_ten_newest_updater_logs_and_leaves_other_files_alone()
+        {
+            using var fixture = new Fixture();
+            string data = Path.Combine(fixture.Root, "data");
+            string directory = Directory.CreateDirectory(Path.Combine(data, "logs", "updater")).FullName;
+            var older = Enumerable.Range(0, 12).Select(index => Path.Combine(directory, "updater-" + index + ".log")).ToArray();
+            for (int i = 0; i < older.Length; i++)
+            {
+                File.WriteAllText(older[i], "prior run");
+                File.SetLastWriteTimeUtc(older[i], DateTime.UnixEpoch.AddDays(i));
+            }
+            File.WriteAllText(Path.Combine(directory, "operator.log"), "keep");
+            var log = UpdaterLog.Open(data);
+            Assert.NotNull(log);
+            Assert.Equal(older.Skip(3).Append(log.FilePath).OrderBy(p => p), Directory.GetFiles(directory, "updater-*.log").OrderBy(p => p));
+            Assert.Equal("keep", File.ReadAllText(Path.Combine(directory, "operator.log")));
+        }
+
+        [Fact]
         public void A_transient_sharing_violation_retries_publication()
         {
             using var fixture = new Fixture();
