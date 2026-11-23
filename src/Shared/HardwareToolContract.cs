@@ -135,6 +135,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (error != null && !write) return Result(tool, null, error, Outcome.RejectedBeforeOperation, current);
                 if (tool == "ImportDeviceAml" && write && HostBehavior.WorkerReplyEvidence(tool, ex) is { } retained)
                     return Result(tool, null, AmlImportFailure(retained), Outcome.Unknown, current, write);
+                if (tool == "ExportDeviceAml" && HostBehavior.WorkerReplyEvidence(tool, ex) is { } export && export.ContainsKey("filePath"))
+                    return Result(tool, JsonSerializer.SerializeToNode(export)!.AsObject(),
+                        new Error(HostBehavior.PartialExportHint + " Rebuild the session and inspect the target before continuing.",
+                            new OutcomeUnknownDetails("hardware-operation", export)), Outcome.Unknown, current, write);
                 return Result(tool, null, NativeFailureDiagnostics.FromException(Failure(write, new JsonObject()), ex),
                     write ? Outcome.Unknown : Outcome.ReadFailed, current);
             }

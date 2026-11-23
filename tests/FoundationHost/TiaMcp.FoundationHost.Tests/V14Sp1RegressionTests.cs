@@ -1,8 +1,12 @@
+extern alias adaptertests;
 extern alias toolpipeline;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
+using TiaMcp.PlcWorker;
+using TiaMcp.WorkerChannel;
+using CaxProvider = adaptertests::Siemens.Engineering.Cax.CaxProvider;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
@@ -12,7 +16,7 @@ public sealed class V14Sp1RegressionTests
         TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
         "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/V14Sp1", file)))!;
 
-    internal sealed class AmlWorker : IFoundationWorker
+    internal sealed class AmlWorker(Func<JsonObject, JsonNode?>? export = null) : IFoundationWorker
     {
         internal int Exports;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
@@ -21,6 +25,7 @@ public sealed class V14Sp1RegressionTests
                 ["ProjectFile"] = "C:/Fixture/Project.ap14", ["ProcessId"] = 42, ["IsAttached"] = true });
             Assert.Equal("hardware-aml.ExportHardwareAml", operation);
             Exports++;
+            if (export != null) return Task.FromResult(export(arguments));
             throw new WorkerOperationException("Output parent must already exist.", -32603, "rejected-before-operation",
                 """{"parameter":"exportPath","exceptionType":"AdapterPreconditionException","condition":"output-parent-missing"}""");
         }
@@ -45,6 +50,37 @@ public sealed class V14Sp1RegressionTests
         Rejected(second.StructuredContent!, "PRECONDITION_FAILED");
         Assert.Equal(1, worker.Exports);
         Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot());
+    }
+
+    [Theory, InlineData("14sp1", false), InlineData("14sp1", true), InlineData("21", false), InlineData("21", true)]
+    public async Task Interrupted_Aml_export_reports_the_resolved_file_and_stays_unknown(string release, bool useFolder)
+    {
+        using var worker = new AmlWorker(args => {
+            var native = adaptertests::TiaMcp.Adapters.Contracts.Tests.LowBetaRegressionTests.ExportFixture(release);
+            native.Engine.ResolveEngineeringDevice = _ => native.Project.Devices.Single();
+            native.Project.Services[typeof(CaxProvider)] = new CaxProvider { OnExport = file => {
+                File.WriteAllText(file.FullName, "<CAEXFile");
+                throw new IOException("CAx export interrupted.");
+            } };
+            var error = Assert.Throws<IOException>(() => native.Engine.ExportHardwareAml((string)args["devicePath"]!, (string)args["exportPath"]!));
+            var failure = WorkerFailurePolicy.Classify(error, enteredOperation: true, readOnly: false);
+            throw WorkerOperationException.FromChannelFailure(
+                new ChannelFailureException(error.Message, failure.Code, failure.Outcome, WorkerJson.Evidence(error)));
+        });
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release, worker: worker);
+        using var session = fixture.EnterSession();
+        string filePath = Path.Combine(fixture.Root, useFolder ? "MCP_RC_PLC.aml" : "station.aml");
+        var arguments = new JsonObject { ["devicePath"] = new JsonArray("MCP_RC_PLC"),
+            [useFolder ? "exportDirectory" : "exportFile"] = useFolder ? fixture.Root : filePath };
+        var result = (await fixture.Call("ExportDeviceAml", arguments)).StructuredContent!;
+        Assert.Equal(1, worker.Exports);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)result["error"]?["code"]);
+        Assert.Equal("unknown", (string?)result["meta"]?["outcome"]);
+        Assert.Equal(filePath, (string?)result["data"]?["filePath"]);
+        Assert.Equal(filePath, (string?)result["error"]?["details"]?["evidence"]?["filePath"]);
+        Assert.True((bool?)result["error"]?["details"]?["evidence"]?["mayHaveWrittenFiles"]);
+        Assert.Contains("remove any partial file before retrying", (string?)result["error"]?["message"]);
+        Assert.Equal("<CAEXFile", File.ReadAllText(filePath));
     }
 
     [Theory]

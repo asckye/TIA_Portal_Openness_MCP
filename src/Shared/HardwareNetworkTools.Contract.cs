@@ -142,6 +142,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool knownPartial = nestedCompleted && Flag(evidence, "mayHaveChanged") == false
                 || evidence["file"] is JsonObject && Flag(evidence, "mayHaveWrittenFiles") == true && Flag(evidence, "mayHaveChanged") == false;
             string status = evidence["failureCode"]?.ToString() ?? evidence["status"]?.ToString() ?? "";
+            bool fileExport = tool == "ManageHardwareUtilities" && (string?)evidence["action"] is "exportOpcUa" or "exportCardReaderPsc";
             Outcome outcome; Execution execution; Error? error = null;
             if (!issued && status == "CONNECTION_UNAVAILABLE" && Flag(evidence, "connectionUnavailable") == true)
             {
@@ -153,10 +154,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 ?? HostBehavior
                     .KnownRefusal(evidence, success, HardwareContract.ReleaseKey, tool, field => McpServer.MissingTargetDetails(tool, field))) is Error refusal)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = refusal; }
-            else if (HostBehavior.UnchangedNativeFailure(evidence, success, allowWrittenFiles: tool == "ManageHardwareUtilities"
-                && (string?)evidence["action"] is "exportOpcUa" or "exportCardReaderPsc"))
+            else if (HostBehavior.UnchangedNativeFailure(evidence, success, allowWrittenFiles: fileExport))
             { outcome = readOnly ? Outcome.ReadFailed : Outcome.Failed; execution = readOnly ? Execution.ReadOnly : Execution.Completed; error =
-                HostBehavior.UnchangedNativeError(evidence); }
+                HostBehavior.UnchangedNativeError(evidence, fileExport: fileExport); }
             else if (tool == "ConnectDeviceNodesToProfinetSubnet" && status == "PROJECT_NOT_BOUND" && !issued)
             { outcome = Outcome.RejectedBeforeOperation; execution = Execution.NotStarted; error = new Error("No project is bound.",
                 new ProjectNotBoundDetails()); }
@@ -206,6 +206,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else
             { outcome = Outcome.Unknown; execution = Execution.Unknown; error = UnknownFailure(HostBehavior.WorkerReplyEvidence(evidence)); }
+
+            if (fileExport && error != null && Flag(evidence, "mayHaveWrittenFiles") == true)
+                error = new Error(HostBehavior.PartialExportHint + " " + error.Message, error.Details, error.Innererror);
 
             if (response is ResponseStringList list) data["items"] =
                 new JsonArray((list.Items ?? Enumerable.Empty<string>()).Select(s => (JsonNode)JsonValue.Create(s)!).ToArray());

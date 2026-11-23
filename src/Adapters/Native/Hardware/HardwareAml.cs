@@ -56,23 +56,32 @@ namespace TiaMcp.Adapters
                 ex.Data["phase"] = "export-admission";
                 throw;
             }
+            try
+            {
 #if PLC_CAX_TRANSFER_RESULT
-            var result = cax.Export(device, target);
-            var lines = FlattenHardwareAmlMessages(result?.Messages);
-            var state = result?.State.ToString() ?? "Unknown";
-            var ok = result != null && NativeResultStates.Succeeded(result.State);
-            return new HardwareAmlExportReply {
-                DeviceName = device.Name ?? devicePath, FilePath = filePath, Success = ok, State = state,
-                ErrorCount = result?.ErrorCount ?? 0, WarningCount = result?.WarningCount ?? 0, Messages = lines
-            };
+                var result = cax.Export(device, target);
+                var lines = FlattenHardwareAmlMessages(result?.Messages);
+                var state = result?.State.ToString() ?? "Unknown";
+                var ok = result != null && NativeResultStates.Succeeded(result.State);
+                return new HardwareAmlExportReply {
+                    DeviceName = device.Name ?? devicePath, FilePath = filePath, Success = ok, State = state,
+                    ErrorCount = result?.ErrorCount ?? 0, WarningCount = result?.WarningCount ?? 0, Messages = lines
+                };
 #else
-            // V14 SP1-V18 expose the bool overload with a native log file.
-            // Keep its bool evidence distinct from the later TransferResult enum.
-            bool ok = cax.Export(device, target, log);
-            return new HardwareAmlExportReply { DeviceName = device.Name ?? devicePath, FilePath = filePath,
-                Success = ok, State = ok.ToString(), NativeBooleanResult = ok,
-                Messages = new List<string> { "CAx Export returned bool; native log: " + log.FullName } };
+                // V14 SP1-V18 expose the bool overload with a native log file.
+                // Keep its bool evidence distinct from the later TransferResult enum.
+                bool ok = cax.Export(device, target, log);
+                return new HardwareAmlExportReply { DeviceName = device.Name ?? devicePath, FilePath = filePath,
+                    Success = ok, State = ok.ToString(), NativeBooleanResult = ok,
+                    Messages = new List<string> { "CAx Export returned bool; native log: " + log.FullName } };
 #endif
+            }
+            catch (Exception ex)
+            {
+                ex.Data["exportPhase"] = "native-export";
+                ex.Data["outputFile"] = target.FullName;
+                throw;
+            }
         }
 
 #if PLC_CAX_TRANSFER_RESULT

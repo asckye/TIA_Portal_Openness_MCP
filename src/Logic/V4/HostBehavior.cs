@@ -373,6 +373,12 @@ namespace TiaMcp.Logic.V4
                 if (tool == "SetUnifiedGlobalScript")
                     return ScriptImportEvidence((reply["Value"] as JsonObject)?["Meta"] as JsonObject ?? reply["Meta"] as JsonObject ?? reply);
                 var retained = new JsonObject();
+                if (tool == "ExportDeviceAml" && reply["exportPhase"]?.ToString() == "native-export"
+                    && reply["outputFile"] is JsonValue output && output.TryGetValue<string>(out var filePath))
+                {
+                    retained["filePath"] = filePath;
+                    retained["mayHaveWrittenFiles"] = true;
+                }
                 void Collect(JsonObject? source)
                 {
                     if (source == null) return;
@@ -536,11 +542,18 @@ namespace TiaMcp.Logic.V4
                 new PreconditionFailedDetails(condition, null, parameter));
         }
 
-        internal static Error UnchangedNativeError(JsonObject evidence, string? fallback = null)
+        internal const string PartialExportHint = "Check data.filePath and remove any partial file before retrying.";
+
+        internal static Error UnchangedNativeError(JsonObject evidence, string? fallback = null, bool fileExport = false)
         {
             string? message = SafeDiagnostic(evidence["nativeMessage"]?.ToString() ?? fallback);
-            return new Error(message ?? "The native operation failed without changing the target.",
-                new NativeOperationFailedDetails(null, message, new Dictionary<string, JsonElement>()));
+            var facts = new Dictionary<string, JsonElement>();
+            if (fileExport && evidence["filePath"] is JsonValue path)
+            {
+                facts["filePath"] = JsonSerializer.SerializeToElement(path);
+                facts["mayHaveWrittenFiles"] = JsonSerializer.SerializeToElement((bool?)evidence["mayHaveWrittenFiles"] == true);
+            }
+            return new Error(message ?? "The native operation failed without changing the target.", new NativeOperationFailedDetails(null, message, facts));
         }
 
         internal static Error? KnownRefusal(JsonObject evidence, bool? success, string release, string tool,

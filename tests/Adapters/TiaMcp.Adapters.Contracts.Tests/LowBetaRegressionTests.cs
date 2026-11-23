@@ -18,9 +18,8 @@ public sealed class LowBetaRegressionTests
     [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void OpcUa_compile_refusal_preserves_the_native_failure_and_file_evidence(string release)
     {
-        var fixture = HardwareWriteFailureTests.NativeFixture(release);
+        var fixture = ExportFixture(release);
         var cpu = fixture.Cpu;
-        cpu.Name = fixture.Project.Devices.Single().Name = "MCP_RC_PLC";
         int exports = 0;
         const string message = "Error when calling method 'Export' of type 'Siemens.Engineering.HW.Utilities.OpcUaExportProvider'.";
         const string detail = "MCP_RC_PLC must be successfully compiled.";
@@ -44,6 +43,13 @@ public sealed class LowBetaRegressionTests
         Assert.Equal(true, result.Meta["mayHaveWrittenFiles"]);
         Assert.False(result.OutcomeUnknown);
         Assert.False(result.MayHaveChanged);
+    }
+
+    public static (PlcFoundationEngine Engine, Siemens.Engineering.Project Project, Siemens.Engineering.HW.DeviceItem Cpu) ExportFixture(string release)
+    {
+        var fixture = HardwareWriteFailureTests.NativeFixture(release);
+        fixture.Cpu.Name = fixture.Project.Devices.Single().Name = "MCP_RC_PLC";
+        return (fixture.Engine, fixture.Project, fixture.Cpu);
     }
 
     [Theory]

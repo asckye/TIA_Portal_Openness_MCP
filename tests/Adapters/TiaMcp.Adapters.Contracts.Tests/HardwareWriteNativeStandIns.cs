@@ -272,7 +272,8 @@ namespace Siemens.Engineering.Cax
         public Action<System.IO.FileInfo>? WriteLog { get; set; }
         public bool Import(System.IO.FileInfo source, System.IO.FileInfo log, CaxImportOptions option)
         { ImportCalls++; WriteLog?.Invoke(log); return false; }
-        public bool Export(HW.Device device, System.IO.FileInfo destination, System.IO.FileInfo log) => false;
+        public Func<System.IO.FileInfo, bool> OnExport { get; set; } = _ => false;
+        public bool Export(HW.Device device, System.IO.FileInfo destination, System.IO.FileInfo log) => OnExport(destination);
     }
 }
 namespace TiaMcp.Adapters

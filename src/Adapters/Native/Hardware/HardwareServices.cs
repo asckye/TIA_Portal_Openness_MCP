@@ -545,9 +545,12 @@ namespace TiaMcp.Adapters
                     }
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = true; return "ModuleInformationProvider." + action + " answered; no modification.";
                 }
-                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath)); if (file.Exists)
+                var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(filePath));
+                meta["filePath"] = file.FullName;
+                meta["mayHaveWrittenFiles"] = false;
+                if (file.Exists)
                     throw new IOException("Export refuses to overwrite an existing file: " + file.FullName);
-                var owner = ExactHardware(devicePathJson, itemPathJson); meta["ownerPath"] = HardwareOwnerPath(owner); meta["filePath"] = file.FullName;
+                var owner = ExactHardware(devicePathJson, itemPathJson); meta["ownerPath"] = HardwareOwnerPath(owner);
                 var item = owner as DeviceItem;
                 var device = owner as Device;
                 if (action == "exportOpcUa" && item == null)
