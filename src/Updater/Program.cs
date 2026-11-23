@@ -23,14 +23,18 @@ namespace TiaMcp.Updater
             try
             {
                 options.InstallRoot = Path.GetFullPath(root);
-                if (UpdaterEngine.HasPendingSwitch(options.InstallRoot)) UpdaterEngine.RequireInstallLocation(options.InstallRoot);
-                else UpdaterEngine.RequireDelivery(options.InstallRoot);
+                UpdaterEngine.RequireDelivery(options.InstallRoot);
+                var data = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+                string logs = Path.Combine(string.IsNullOrWhiteSpace(data) ? Path.Combine(options.InstallRoot, "data") : Path.GetFullPath(data),
+                    "logs", "updater");
+                Directory.CreateDirectory(logs);
+                logPath = Path.Combine(logs, "updater-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N") + ".log");
+                Say("Updater log: " + logPath);
             }
             catch (Exception error) { return Fail(error); }
 
             // The worker runs from TEMP, so neither its image nor a loaded updater assembly is replaced in place.
-            if (!IsStaged(args) && (!options.Check || UpdaterEngine.HasPendingSwitch(options.InstallRoot))
-                && (IsWithin(executable, options.InstallRoot) || IsWithin(executable, UpdaterEngine.SwitchDirectory(options.InstallRoot))))
+            if (!IsStaged(args) && !options.Check && IsWithin(executable, options.InstallRoot))
             {
                 try
                 {
@@ -42,22 +46,12 @@ namespace TiaMcp.Updater
                 }
             }
 
-            try { return UpdaterEngine.Run(options, Say, null, () => OpenLog(options.InstallRoot)); }
+            try { return UpdaterEngine.Run(options, Say); }
             catch (Exception error)
             {
-                if (!UpdaterEngine.HasPendingSwitch(options.InstallRoot)) Relaunch(options);
+                Relaunch(options);
                 return Fail(error);
             }
-        }
-
-        private static void OpenLog(string root)
-        {
-            var data = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
-            string logs = Path.Combine(string.IsNullOrWhiteSpace(data) ? Path.Combine(root, "data") : Path.GetFullPath(data),
-                "logs", "updater");
-            Directory.CreateDirectory(logs);
-            logPath = Path.Combine(logs, "updater-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N") + ".log");
-            Say("Updater log: " + logPath);
         }
 
         private static UpdaterOptions Parse(string[] args)
@@ -107,16 +101,10 @@ namespace TiaMcp.Updater
 
         private static string FindInstallRoot(string executable)
         {
-            string delivery = null;
-            for (var directory = new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(executable))); directory != null; directory = directory.Parent)
-            {
-                string path = directory.FullName;
-                if (UpdaterEngine.HasPendingSwitch(path)) return path;
-                if (path.EndsWith(UpdaterEngine.SwitchSuffix, StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(path, "plan.json")))
-                    return path.Substring(0, path.Length - UpdaterEngine.SwitchSuffix.Length);
-                if (delivery == null && File.Exists(Path.Combine(path, "manifest", "delivery.json"))) delivery = path;
-            }
-            return delivery ?? AppDomain.CurrentDomain.BaseDirectory;
+            for (DirectoryInfo directory = new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(executable))); directory != null; directory = directory
+                    .Parent)
+                if (File.Exists(Path.Combine(directory.FullName, "manifest", "delivery.json"))) return directory.FullName;
+            return AppDomain.CurrentDomain.BaseDirectory;
         }
 
         private static int StartStaged(string[] args)
@@ -184,9 +172,7 @@ namespace TiaMcp.Updater
         {
             var line = "[" + DateTime.UtcNow.ToString("O") + "] " + message;
             Console.WriteLine(line);
-            if (logPath == null) return;
-            try { File.AppendAllText(logPath, line + Environment.NewLine, new UTF8Encoding(false)); }
-            catch (Exception io) when (io is IOException || io is UnauthorizedAccessException) { Console.Error.WriteLine(io.Message); }
+            if (logPath != null) File.AppendAllText(logPath, line + Environment.NewLine, new UTF8Encoding(false));
         }
 
         private static int Fail(Exception error, string label = null)

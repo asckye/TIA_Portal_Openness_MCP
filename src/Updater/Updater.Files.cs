@@ -1,3 +1,4 @@
+#nullable enable annotations
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,7 +26,7 @@ namespace TiaMcp.Updater
             string record = Combine(root, "manifest/release-file-hashes.json");
             if (ExistsFile(record))
             {
-                InventoryFileList hashes = ReadJson<InventoryFileList>(record);
+                var hashes = ReadJson<InventoryFileList>(record);
                 if (hashes != null && hashes.Files != null) foreach (KeyValuePair<string, string> item in hashes.Files) inventory[item.Key] = item.Value;
                 inventory["manifest/release-file-hashes.json"] = HashFile(record);
                 return inventory;
@@ -34,7 +35,7 @@ namespace TiaMcp.Updater
             {
                 string path = Combine(root, "manifest/" + name);
                 if (!ExistsFile(path)) continue;
-                InventoryRecord manifest = ReadJson<InventoryRecord>(path);
+                var manifest = ReadJson<InventoryRecord>(path) ?? throw new InvalidDataException("Missing build inventory in " + path);
                 foreach (InventoryRecord row in (manifest.RuntimeFiles ?? new List<InventoryRecord>()).Concat(manifest.Files ?? new List<InventoryRecord>()))
                     if (row != null && !string.IsNullOrEmpty(row.Path) && !string.IsNullOrEmpty(row.Sha256)) inventory[row.Path] = row.Sha256;
                 // The record itself is owned too. A retired build record must be
@@ -44,20 +45,19 @@ namespace TiaMcp.Updater
             return inventory;
         }
 
-        private static Dictionary<string, string> HashInventory(string root)
+        private static void RemoveLegacyFiles(string root, DeliveryRules rules, Dictionary<string, string> inventory, Dictionary<string, string> newFiles,
+                Action<string> say)
         {
-            var result = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (string file in GetFilesRecursive(root)) result[RelativeTo(root, file)] = HashFile(file);
-            return result;
+            foreach (KeyValuePair<string, string> item in inventory.ToArray())
+                if (Matches(item.Key, rules.LegacyCleanup) && !newFiles.ContainsKey(item.Key)) RemoveOwnedFile(root, item.Key, item.Value, say);
         }
 
-        private static T RetryLocked<T>(Func<T> operation, bool retryAccessDenied = false)
+        private static T RetryLocked<T>(Func<T> operation)
         {
             for (int attempt = 1; ; attempt++)
             {
                 try { return operation(); }
-                catch (Exception ex) when (attempt < 5 && (ex is IOException && ((ex.HResult & 0xffff) == 32 || (ex.HResult & 0xffff) == 33)
-                      || retryAccessDenied && (ex is IOException || ex is UnauthorizedAccessException) && (ex.HResult & 0xffff) == 5))
+                catch (IOException ex) when (attempt < 5 && ((ex.HResult & 0xffff) == 32 || (ex.HResult & 0xffff) == 33))
                 { Thread.Sleep(200); }
             }
         }
@@ -67,35 +67,51 @@ namespace TiaMcp.Updater
             RetryLocked(() => { operation(); return true; });
         }
 
+        private static void RemoveOwnedFile(string root, string relative, string expected, Action<string> say)
+        {
+            string path = OwnedPath(root, relative);
+            if (!ExistsFile(path)) return;
+            if (!string.Equals(HashFile(path), expected, StringComparison.OrdinalIgnoreCase)) {
+                say(UpdaterText.Bilingual("PreserveModified", "preserving modified file") + ": " + relative); return; }
+            RetryLocked(() => File.Delete(Prefix(path)));
+            var parent = Path.GetDirectoryName(path);
+            while (parent != null && IsWithin(parent, NormalizeForCompare(root)) && !string
+                    .Equals(NormalizeForCompare(parent), NormalizeForCompare(root), StringComparison.OrdinalIgnoreCase))
+            {
+                if (GetEntries(parent).Length != 0) break;
+                RetryLocked(() => Directory.Delete(Prefix(parent), false));
+                parent = Path.GetDirectoryName(parent);
+            }
+        }
+
+        private static void RemoveAddedFiles(string root, string backup, Dictionary<string, string> receipt, Action<string> say)
+        {
+            foreach (KeyValuePair<string, string> file in receipt)
+                if (!ExistsFile(OwnedPath(backup, file.Key))) RemoveOwnedFile(root, file.Key, file.Value, say);
+        }
+
         private static int Rollback(string root, DeliveryManifest installed, string previousRoot, UpdaterOptions options, Action<string> say, Func<string,
-                IList<string>> runningProcesses)
+                IList<string>>? runningProcesses)
         {
             if (!DirectoryExists(previousRoot)) throw new InvalidOperationException("Nothing to roll back to (.previous is missing).");
             string[] backups = GetDirectories(previousRoot).OrderByDescending(Directory.GetLastWriteTimeUtc).ToArray();
             if (backups.Length == 0) throw new InvalidOperationException("Nothing to roll back to (.previous is empty).");
             string backup = backups[0];
-            DeliveryManifest prior = ReadJson<DeliveryManifest>(DeliveryFilePath(backup));
+            var prior = ReadJson<DeliveryManifest>(DeliveryFilePath(backup));
             if (prior == null) throw new InvalidOperationException("Backup has no manifest/delivery.json: " + backup);
             RequireStopped(root, runningProcesses);
             say(UpdaterText.Bilingual("RollingBack", "rolling back") + ": " + installed.Release + " -> " + prior.Release + " from " + backup);
             Dictionary<string, string> receipt = ReadReceipt(backup + ".update-receipt.json");
             if (receipt.Count == 0) receipt = InstalledInventory(root);
-            string stage = Path.Combine(Directory.GetParent(root).FullName, "tia-mcp-rollback-" + Guid.NewGuid().ToString("N"));
-            try
-            {
-                var expected = HashInventory(backup);
-                CopyTree(backup, stage, true, null);
-                VerifyStaged(stage, expected, options.BeforeDeployFile);
-                Publish(root, stage, expected, receipt.Where(file => !expected.ContainsKey(file.Key)), say);
-            }
-            finally { if (DirectoryExists(stage)) RemoveTree(stage); }
-            DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));
+            RemoveAddedFiles(root, backup, receipt, say);
+            CopyTree(backup, root, true, null);
+            var now = ReadJson<DeliveryManifest>(DeliveryFilePath(root)) ?? throw new InvalidDataException("Missing restored delivery manifest.");
             say(UpdaterText.Bilingual("RollbackDone", "DONE") + ": installed version is now " + now.Release + ".");
             Relaunch(root, options, say);
             return 0;
         }
 
-        private static void CopyTree(string source, string destination, bool excludeUserData, Action<string> beforeFile)
+        private static void CopyTree(string source, string destination, bool excludeUserData, Action<string>? beforeFile)
         {
             CreateDirectory(destination);
             string sourceRoot = NormalizeForCompare(source);
@@ -115,10 +131,23 @@ namespace TiaMcp.Updater
                 beforeFile?.Invoke(relative);
                 string target = Combine(destination, relative);
                 CreateDirectory(Path.GetDirectoryName(target));
+                RetryLocked(() => File.Copy(Prefix(file), Prefix(target), true));
+                RetryLocked(() => File.SetLastWriteTimeUtc(Prefix(target), File.GetLastWriteTimeUtc(Prefix(file))));
+            }
+        }
+
+        private static void CopyPackage(string package, string root, IEnumerable<string> verified, Action<string>? beforeFile)
+        {
+            foreach (string relative in verified)
+            {
+                string file = Combine(package, relative);
+                if (IsProtectedRoot(relative)) continue;
+                string target = OwnedPath(root, relative);
+                CreateDirectory(Path.GetDirectoryName(target));
                 RetryLocked(() =>
                 {
+                    beforeFile?.Invoke(relative);
                     File.Copy(Prefix(file), Prefix(target), true);
-                    File.SetLastWriteTimeUtc(Prefix(target), File.GetLastWriteTimeUtc(Prefix(file)));
                 });
             }
         }

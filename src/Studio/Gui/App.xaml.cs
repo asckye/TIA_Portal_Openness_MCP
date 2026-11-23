@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TiaOpenness.Core.Environment;
 using System.Windows;
@@ -146,16 +148,16 @@ public partial class App : Application
 
     private static void OnDomainException(object sender, UnhandledExceptionEventArgs e)
     {
-        // The runtime may terminate as soon as this handler returns. Do not enqueue the log or dialog.
+        // The runtime may terminate when this handler returns.
         var message = CrashReport(e.ExceptionObject as Exception ?? new InvalidOperationException(e.ExceptionObject?.ToString()));
-        MessageBox.Show(message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+        PresentUiError(message, fatal: true);
     }
 
     private void OnTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         var message = CrashReport(e.Exception);
         e.SetObserved();
-        Dispatcher.BeginInvoke(new Action(() => PresentUiError(message)));
+        PresentUiError(message);
     }
 
     internal static void ReportUiException(Exception error) => PresentUiError(CrashReport(error));
@@ -181,10 +183,39 @@ public partial class App : Application
         return string.Join(Environment.NewLine, redactor.Redact(error.Message).Text, Loc.Current.T("Dialog.DiagnosticId", id), details);
     }
 
-    internal static void PresentUiError(string message)
+    private static int presentingCrash;
+    internal static void PresentUiError(string message, bool fatal = false, Action<Window, string>? showDialog = null)
     {
-        if (Current?.MainWindow is MainWindow window && !window.ToastHostClosed)
-            window.ShowToast(ViewModels.ToastKind.Error, LocalizedText.Literal(message), "dispatcher");
-        else MessageBox.Show(message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+        var app = Current;
+        if (app == null || app.Dispatcher.HasShutdownStarted || Interlocked.CompareExchange(ref presentingCrash, 1, 0) != 0) return;
+        void Present()
+        {
+            try
+            {
+                if (!fatal && app.MainWindow is MainWindow workbench && !workbench.ToastHostClosed)
+                {
+                    workbench.ShowToast(ViewModels.ToastKind.Error, LocalizedText.Literal(message), "dispatcher");
+                    return;
+                }
+                var owner = app.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive) ?? app.MainWindow;
+                Window? temporaryOwner = null;
+                try
+                {
+                    owner ??= temporaryOwner = new Window { ShowInTaskbar = false };
+                    new System.Windows.Interop.WindowInteropHelper(owner).EnsureHandle();
+                    if (showDialog != null) showDialog(owner, message);
+                    else MessageBox.Show(owner, message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally { temporaryOwner?.Close(); }
+            }
+            finally { Interlocked.Exchange(ref presentingCrash, 0); }
+        }
+
+        if (app.Dispatcher.CheckAccess()) Present();
+        else
+        {
+            var pending = app.Dispatcher.InvokeAsync(Present, DispatcherPriority.Send);
+            if (fatal) pending.Task.GetAwaiter().GetResult();
+        }
     }
 }

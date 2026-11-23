@@ -69,6 +69,33 @@ public sealed class DiagnosticRedactorTests
         Assert.DoesNotContain(name, output, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData(@"\\dept\Profiles$\Al\Desktop\report.txt", @"%USERPROFILE%\Desktop\report.txt")]
+    [InlineData(@"\\dept\Users\Other Operator\Documents", @"%USERPROFILE%\Documents")]
+    [InlineData(@"\\dept\C$\Users\Al\Desktop\notes", @"%USERPROFILE%\Desktop\notes")]
+    [InlineData(@"\\dept\Al$\Downloads", @"%USERPROFILE%\Downloads")]
+    [InlineData(@"//dept/Home/al/Documents", @"%USERPROFILE%/Documents")]
+    [InlineData(@"ORG\Al signed in as Al@corp.example.com", "[USER] signed in as [USER]")]
+    [InlineData(@"user=Al started a process for the Al team", "user=[USER] started a process for the Al team")]
+    public void Network_profiles_and_principals_preserve_unrelated_short_words(string input, string expected)
+    {
+        var redactor = new DiagnosticRedactor(@"C:\Users\Al", "Al");
+        Assert.Equal(expected, redactor.Redact(input).Text);
+    }
+
+    [Fact]
+    public void Redirected_profile_and_account_fields_are_masked_while_short_object_names_stay_readable()
+    {
+        var redactor = new DiagnosticRedactor(@"\\files\staff$\R&D\May", "May");
+        string json = System.Text.Json.JsonSerializer.Serialize(new { path = @"\\files\staff$\R&D\May\docs", account = "May",
+            tag = new { name = "May", description = "May run" } });
+        var result = JsonNode.Parse(redactor.Redact(json, "json").Text)!;
+        Assert.Equal(@"%USERPROFILE%\docs", (string?)result["path"]);
+        Assert.Equal("[USER]", (string?)result["account"]);
+        Assert.Equal("May", (string?)result["tag"]!["name"]);
+        Assert.Equal("May run", (string?)result["tag"]!["description"]);
+    }
+
     [Fact]
     public void Known_config_values_are_removed_from_unlabelled_logs_and_invalid_configs_are_hidden()
     {

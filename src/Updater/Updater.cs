@@ -1,3 +1,4 @@
+#nullable enable annotations
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,62 +32,23 @@ namespace TiaMcp.Updater
         private const string UpdaterPath = "runtime/tools/TiaMcp.Updater.exe";
         private const string UpdaterConfigPath = UpdaterPath + ".config";
 
-        public static int Run(UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses = null)
-            => Run(options, say, runningProcesses, () => { });
-
-        internal static int Run(UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses, Action openLog)
+        public static int Run(UpdaterOptions options, Action<string>? say, Func<string, IList<string>>? runningProcesses = null)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (say == null) say = _ => { };
-            string fullRoot = Path.GetFullPath(options.InstallRoot ?? AppDomain.CurrentDomain.BaseDirectory);
-            RequireInstallLocation(fullRoot);
-            string root = fullRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string root = Path.GetFullPath(options.InstallRoot ?? AppDomain.CurrentDomain.BaseDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             options.InstallRoot = root;
-            // Serialize backup selection, download and publication for this install.
-            string name;
-            using (var hash = SHA256.Create())
-                name = "TiaMcp.Update." + BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(root.ToUpperInvariant()))).Replace("-", "");
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) name = @"Global\" + name;
-            using (var mutex = new Mutex(false, name))
-            {
-                try
-                {
-                    if (!mutex.WaitOne(TimeSpan.FromSeconds(1))) throw new InvalidOperationException("Another update is running for " + root);
-                }
-                catch (AbandonedMutexException)
-                {
-                    /* swallow(cleanup): the caller owns the abandoned mutex and resumes the recorded install switch */
-                    say(UpdaterText.Bilingual("InterruptedUpdate", "resuming after the previous updater exited"));
-                }
-                try
-                {
-                    bool recovering = HasPendingSwitch(root);
-                    if (recovering) RecoverSwitch(root, say);
-                    RequireDelivery(root);
-                    openLog();
-                    if (recovering) say(UpdaterText.Bilingual("InstallRestored", "previous install restored") + ": " + root);
-                    ValidateOptions(options);
-                    return RunInstalled(root, options, say, runningProcesses);
-                }
-                finally { mutex.ReleaseMutex(); }
-            }
-        }
-
-        private static void ValidateOptions(UpdaterOptions options)
-        {
             if (options.TimeoutSeconds < 1 || options.TimeoutSeconds > 3600) throw new InvalidOperationException("TimeoutSeconds must be between 1 and 3600.");
             if (!IsValidRepository(options.Repository)) throw new InvalidOperationException("Repository must be owner/name.");
             if (options.Version != null && options.Version.Length > 0 && !IsVersion(options.Version))
                 throw new InvalidOperationException("-Version must be vX.Y.Z, or vX.Y.Z-beta.N / vX.Y.Z-rc.N for a pre-release.");
-        }
-
-        private static int RunInstalled(string root, UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses)
-        {
-            string deliveryFile = Combine(root, "manifest/delivery.json");
-            DeliveryManifest installed = ReadJson<DeliveryManifest>(deliveryFile);
+            RequireDelivery(root);
+            string deliveryFile = DeliveryFilePath(root);
+            var installed = ReadJson<DeliveryManifest>(deliveryFile);
             if (installed == null || string.IsNullOrWhiteSpace(installed.Release) || string.IsNullOrWhiteSpace(installed.Package))
                 throw new InvalidOperationException("manifest/delivery.json has no release/package fields.");
-            if (!IsSafeRelativePath(installed.Package) || !Regex.IsMatch(installed.Package, @"^[A-Za-z0-9_.-]+$"))
+            if (!Regex.IsMatch(installed.Package, @"^[A-Za-z0-9_.-]+$"))
                 throw new InvalidOperationException("manifest/delivery.json has an unsafe package name.");
             say(UpdaterText.Bilingual("InstallRoot", "install root") + ": " + root + "; " + UpdaterText.Bilingual("InstalledVersion", "installed") + ": "
                     + installed.Release + " (" + installed.Package + ")");
@@ -127,17 +89,10 @@ namespace TiaMcp.Updater
             return 0;
         }
 
-        internal static void RequireInstallLocation(string root)
+        internal static void RequireDelivery(string root)
         {
             if (IsSourceCheckout(root))
                 throw new InvalidOperationException("This folder is a source checkout or worktree. The updater only changes an installed delivery.");
-            if (Directory.GetParent(root) == null)
-                throw new InvalidOperationException("The install must be in a directory with a writable parent on the same volume.");
-        }
-
-        internal static void RequireDelivery(string root)
-        {
-            RequireInstallLocation(root);
             if (!ExistsFile(DeliveryFilePath(root)))
                 throw new InvalidOperationException("Not a TIA MCP delivery: manifest/delivery.json is missing.");
         }
@@ -175,7 +130,7 @@ namespace TiaMcp.Updater
             say(UpdaterText.Bilingual("WorkbenchExited", "Workbench process exited") + ": PID " + options.WaitForPid);
         }
 
-        private static void RequireStopped(string root, Func<string, IList<string>> processProbe)
+        private static void RequireStopped(string root, Func<string, IList<string>>? processProbe)
         {
             IList<string> running = processProbe == null ? FindRunningProcesses(root) : processProbe(root);
             if (running != null && running.Count > 0)
@@ -206,7 +161,7 @@ namespace TiaMcp.Updater
         {
             string path = Combine(root, "scripts/operations/delivery-files.json");
             if (!ExistsFile(path)) return new[] { "TiaOpenness", "TiaMcpServer", "TiaMcpConfigurator" };
-            var rules = ReadJson<DeliveryRules>(path);
+            var rules = ReadJson<DeliveryRules>(path) ?? throw new InvalidDataException("Missing delivery rules in " + path);
             var files = (rules.RequiredFiles ?? new List<string>()).Concat(rules.Include.Files ?? new List<string>())
                 .Concat(rules.LegacyCleanup.Files ?? new List<string>());
             string runtime = Combine(root, "runtime");
@@ -217,20 +172,18 @@ namespace TiaMcp.Updater
 
         private static void ApplyRelease(string root, DeliveryManifest installed, ReleaseInfo release, UpdaterOptions options, Action<string> say)
         {
-            string work = Combine(root, ".update");
-            string temporaryRoot = options.TemporaryDirectoryForTest ?? Directory.GetParent(root).FullName;
+            string temporaryRoot = options.TemporaryDirectoryForTest ?? Path.GetTempPath();
             string extraction = Path.Combine(temporaryRoot, "tia-mcp-update-" + Guid.NewGuid().ToString("N"));
-            string backup = Combine(Combine(root, ".previous"), installed.Package + "-" + Guid.NewGuid().ToString("N"));
-            EnsurePathSupported(work);
+            string backup = Combine(Combine(root, ".previous"), installed.Package);
             EnsurePathSupported(extraction);
             EnsurePathSupported(backup);
-            bool changed = false;
+            bool backupReady = false;
             try
             {
-                if (DirectoryExists(work)) RemoveTree(work);
-                CreateDirectory(work);
+                CreateDirectory(extraction);
                 ReleaseAsset zipAsset = SelectAsset(release, true), hashAsset = SelectAsset(release, false);
-                string zipFile = Combine(work, zipAsset.Name), hashFile = Combine(work, Path.GetFileNameWithoutExtension(zipAsset.Name) + ".sha256");
+                string zipFile = Combine(extraction, zipAsset.Name);
+                string hashFile = Combine(extraction, Path.GetFileNameWithoutExtension(zipAsset.Name) + ".sha256");
                 say(UpdaterText.Bilingual("Downloading", "downloading") + ": " + zipAsset.Url);
                 Download(zipAsset.Url, zipFile, options.TimeoutSeconds * 10, options);
                 Download(hashAsset.Url, hashFile, options.TimeoutSeconds, options);
@@ -242,36 +195,58 @@ namespace TiaMcp.Updater
                 say(UpdaterText.Bilingual("ChecksumVerified", "SHA-256 verified") + ": " + actual);
 
                 string package = ExtractPackage(zipFile, Combine(extraction, "new"), say, out var newFiles);
-                DeliveryRules rules = ReadJson<DeliveryRules>(Combine(package, "scripts/operations/delivery-files.json"));
+                var rules = ReadJson<DeliveryRules>(Combine(package, "scripts/operations/delivery-files.json"));
                 if (rules == null || rules.SchemaVersion != 1 || rules.Include == null || rules.Exclude == null || rules.LegacyCleanup == null)
                     throw new InvalidOperationException("The package has invalid delivery-files.json rules.");
-                DeliveryManifest next = ReadJson<DeliveryManifest>(Combine(package, "manifest/delivery.json"));
+                var next = ReadJson<DeliveryManifest>(Combine(package, "manifest/delivery.json"));
                 if (next == null || NormalizeVersion(next.Release) != NormalizeVersion(release.Tag))
                     throw new InvalidOperationException("The ZIP delivery manifest does not match the selected release.");
-                ValidatePackage(package, rules);
-                VerifyStaged(package, newFiles, options.BeforeDeployFile);
-                ValidateInstallPaths(package, root, backup);
+                var verified = VerifyPackage(package, rules, newFiles);
+                ValidateInstallPaths(verified, root, backup);
                 Dictionary<string, string> oldFiles = InstalledInventory(root);
 
                 CreateDirectory(Combine(root, ".previous"));
-                string snapshot = Combine(extraction, "previous");
+                if (DirectoryExists(backup)) RemoveTree(backup);
+                CreateDirectory(backup);
                 say(UpdaterText.Bilingual("Backup", "backing up install") + ": " + backup);
-                CopyTree(root, snapshot, true, null);
-                WriteJson(snapshot + ".update-receipt.json", newFiles);
-                var retired = oldFiles.Where(file => !newFiles.ContainsKey(file.Key)
-                    && (file.Key.StartsWith("runtime/", StringComparison.Ordinal) || file.Key.StartsWith("manifest/", StringComparison.Ordinal)
-                        || Matches(file.Key, rules.LegacyCleanup)));
-                Publish(root, package, newFiles, retired, say, snapshot, Path.GetFileName(backup));
-                changed = true;
+                CopyTree(root, backup, true, null);
+                WriteJson(backup + ".update-receipt.json", newFiles);
+                RetryLocked(() => Directory.SetLastWriteTimeUtc(Prefix(backup), DateTime.UtcNow));
+                backupReady = true;
                 PruneBackups(Combine(root, ".previous"), backup);
-                DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));
+
+                say(UpdaterText.Bilingual("Overlay", "removing owned retired files and overlaying the delivery"));
+                RemoveLegacyFiles(root, rules, oldFiles, newFiles, say);
+                foreach (KeyValuePair<string, string> file in oldFiles)
+                    if ((file.Key.StartsWith("runtime/", StringComparison.Ordinal) || file.Key.StartsWith("manifest/", StringComparison.Ordinal)) && !newFiles
+                            .ContainsKey(file.Key))
+                        RemoveOwnedFile(root, file.Key, file.Value, say);
+                CopyPackage(package, root, verified, options.BeforeDeployFile);
+                var now = ReadJson<DeliveryManifest>(DeliveryFilePath(root)) ?? throw new InvalidDataException("Missing installed delivery manifest.");
                 say(UpdaterText.Bilingual("UpdateDone", "DONE") + ": " + installed.Release + " -> " + now.Release + "; -Rollback restores " + installed.Package
                         + ".");
+            }
+            catch
+            {
+                if (backupReady)
+                {
+                    try
+                    {
+                        Dictionary<string, string> receipt = ReadReceipt(backup + ".update-receipt.json");
+                        RemoveAddedFiles(root, backup, receipt, say);
+                        CopyTree(backup, root, true, null);
+                        say(UpdaterText.Bilingual("InterruptedRollback", "interrupted replacement rolled back from") + " " + backup);
+                    }
+                    catch (Exception rollbackError) {
+                        throw new InvalidOperationException("Update failed and rollback also failed: " + rollbackError.GetBaseException().Message,
+                                rollbackError);
+                    }
+                }
+                throw;
             }
             finally
             {
                 if (DirectoryExists(extraction)) RemoveTree(extraction);
-                if (changed && DirectoryExists(work)) RemoveTree(work);
             }
         }
 
@@ -298,7 +273,7 @@ namespace TiaMcp.Updater
                     if (entry.FullName.EndsWith("/", StringComparison.Ordinal)) { CreateDirectory(target); continue; }
                     CreateDirectory(Path.GetDirectoryName(target));
                     using (Stream input = entry.Open())
-                    using (var output = new FileStream(Prefix(target), FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    using (var output = RetryLocked(() => new FileStream(Prefix(target), FileMode.CreateNew, FileAccess.Write, FileShare.None)))
                     using (var hash = SHA256.Create())
                     using (var writer = new CryptoStream(output, hash, CryptoStreamMode.Write))
                     {
@@ -315,31 +290,46 @@ namespace TiaMcp.Updater
                     throw new InvalidOperationException("The ZIP does not contain a delivery root with manifest/delivery.json.");
                 package = children[0];
             }
+            string packageRoot = NormalizeForCompare(package);
+            if (extracted.Keys.Any(path => !IsWithin(path, packageRoot))) throw new InvalidDataException("File outside the delivery root.");
             hashes = extracted.ToDictionary(file => RelativeTo(package, file.Key), file => file.Value, StringComparer.Ordinal);
             say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + package);
             return package;
         }
 
-        private static void ValidatePackage(string package, DeliveryRules rules)
+        private static string[] VerifyPackage(string package, DeliveryRules rules, Dictionary<string, string> expected)
         {
             if (rules.RequiredFiles == null || rules.RequiredFiles.Count == 0)
                 throw new InvalidOperationException("The package has no required delivery files.");
             foreach (string must in rules.RequiredFiles)
                 if (!IsSafeRelativePath(must) || !InDelivery(must, rules) || !ExistsFile(Combine(package, must)))
                     throw new InvalidOperationException("Package is incomplete: missing " + must);
-            foreach (string file in GetFilesRecursive(package))
+            var paths = GetFilesRecursive(package).Select(file => RelativeTo(package, file)).ToArray();
+            foreach (string relative in paths)
             {
-                string relative = RelativeTo(package, file);
-                if (!IsSafeRelativePath(relative) || !InDelivery(relative, rules))
+                if (!expected.TryGetValue(relative, out var digest) || !InDelivery(relative, rules))
                     throw new InvalidOperationException("File outside delivery set: " + relative);
+                if (HashFile(OwnedPath(package, relative)) != digest)
+                    throw new InvalidDataException("Staged file verification failed: " + relative);
             }
+            if (paths.Length != expected.Count) throw new InvalidDataException("The staged package is missing files from the ZIP.");
+
+            string record = Combine(package, "manifest/release-file-hashes.json");
+            if (ExistsFile(record))
+            {
+                var manifest = ReadJson<InventoryFileList>(record);
+                if (manifest?.Files == null) throw new InvalidDataException("The package has no delivery hash inventory in " + record);
+                foreach (var file in manifest.Files)
+                    if (!expected.TryGetValue(file.Key, out var digest) || !string.Equals(digest, file.Value, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("Delivery inventory mismatch: " + file.Key);
+            }
+            return paths;
         }
 
-        private static void ValidateInstallPaths(string package, string root, string backup)
+        private static void ValidateInstallPaths(IEnumerable<string> verified, string root, string backup)
         {
-            foreach (string file in GetFilesRecursive(package))
+            foreach (string relative in verified)
             {
-                string relative = RelativeTo(package, file);
                 EnsurePathSupported(Combine(root, relative));
                 EnsurePathSupported(Combine(backup, relative));
             }
@@ -358,7 +348,7 @@ namespace TiaMcp.Updater
             if (extendedLength >= maximum) throw PathLimitError(path);
         }
 
-        private static InvalidOperationException PathLimitError(string path, Exception inner = null)
+        private static InvalidOperationException PathLimitError(string path, Exception? inner = null)
         {
             return new InvalidOperationException(UpdaterText
                     .Bilingual("PathTooLong", "Windows extended path limit exceeded (32,767 characters); shorten TEMP or the install path and retry") + ": "
@@ -385,16 +375,15 @@ namespace TiaMcp.Updater
             Process.Start(new ProcessStartInfo(executable) { WorkingDirectory = root, UseShellExecute = true });
         }
 
-        private static T ReadJson<T>(string path) where T : class
+        private static T? ReadJson<T>(string path) where T : class
         {
-            using (Stream stream = new FileStream(Prefix(path), FileMode.Open, FileAccess.Read, FileShare.Read)) return (T)JsonSerializer(typeof(T))
-                .ReadObject(stream);
+            using (Stream stream = RetryLocked(() => File.OpenRead(Prefix(path))))
+                return (T?)JsonSerializer(typeof(T)).ReadObject(stream);
         }
 
         private static void WriteJson<T>(string path, T value)
         {
-            using (Stream stream = new FileStream(Prefix(path), FileMode.Create, FileAccess.Write, FileShare.None)) JsonSerializer(typeof(T))
-                .WriteObject(stream, value);
+            using (Stream stream = RetryLocked(() => File.Create(Prefix(path)))) JsonSerializer(typeof(T)).WriteObject(stream, value);
         }
 
         private static DataContractJsonSerializer JsonSerializer(Type type)
@@ -410,12 +399,11 @@ namespace TiaMcp.Updater
 
         private static string HashFile(string path)
         {
-            using (SHA256 hash = SHA256.Create())
-            using (Stream input = RetryLocked(() => File.OpenRead(Prefix(path))))
+            using (SHA256 hash = SHA256.Create()) using (Stream input = new FileStream(Prefix(path), FileMode.Open, FileAccess.Read, FileShare.Read))
                 return BitConverter.ToString(hash.ComputeHash(input)).Replace("-", "").ToLowerInvariant();
         }
 
-        private static string ReadAllText(string path) { using (var reader = new StreamReader(Prefix(path), Encoding.UTF8, true)) return reader.ReadToEnd(); }
+        private static string ReadAllText(string path) => RetryLocked(() => File.ReadAllText(Prefix(path), Encoding.UTF8));
 
         private static string DeliveryFilePath(string root) { return Combine(root, "manifest/delivery.json"); }
         private static bool InDelivery(string path, DeliveryRules rules) { return Matches(path, rules.Include) && !Matches(path, rules.Exclude); }
@@ -463,7 +451,7 @@ namespace TiaMcp.Updater
         private static bool ExistsFile(string path) { return File.Exists(Prefix(path)); }
         private static bool DirectoryExists(string path) { return Directory.Exists(Prefix(path)); }
         private static bool ExistsAny(string path) { return ExistsFile(path) || DirectoryExists(path); }
-        private static void CreateDirectory(string path) { if (!string.IsNullOrEmpty(path)) Directory.CreateDirectory(Prefix(path)); }
+        private static void CreateDirectory(string? path) { if (!string.IsNullOrEmpty(path)) Directory.CreateDirectory(Prefix(path)); }
         private static string[] GetFiles(string path) {
             return Directory.Exists(Prefix(path)) ? Directory.GetFiles(Prefix(path), "*", SearchOption.TopDirectoryOnly) : new string[0]; }
         private static string[] GetDirectories(string path) {

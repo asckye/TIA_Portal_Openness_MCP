@@ -32,6 +32,17 @@ public sealed class UiSettingsTests : IDisposable
     }
 
     [Fact]
+    public void A_preexisting_global_event_cannot_claim_the_local_instance()
+    {
+        var scope = "Workbench.Gui.Tests." + Guid.NewGuid().ToString("N");
+        var sid = TiaOpenness.Shared.ApprovalPipe.CurrentSid;
+        using var global = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, @"Global\" + scope + "." + sid + ".Activate");
+        using var local = new WorkbenchInstance(scope, () => { });
+        Assert.True(local.IsFirst);
+        Assert.False(global.WaitOne(0));
+    }
+
+    [Fact]
     public void Second_instance_signals_the_original_and_does_not_take_ownership()
     {
         using var activated = new System.Threading.ManualResetEventSlim();
@@ -39,6 +50,10 @@ public sealed class UiSettingsTests : IDisposable
         using (var first = new WorkbenchInstance(scope, activated.Set))
         using (var second = new WorkbenchInstance(scope, () => throw new InvalidOperationException()))
         {
+            string suffix = scope + "." + TiaOpenness.Shared.ApprovalPipe.CurrentSid + ".Activate";
+            using var local = System.Threading.EventWaitHandle.OpenExisting(@"Local\" + suffix);
+            Assert.False(System.Threading.EventWaitHandle.TryOpenExisting(@"Global\" + suffix, out var global));
+            global?.Dispose();
             Assert.True(first.IsFirst);
             Assert.False(second.IsFirst);
             Assert.True(activated.Wait(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));

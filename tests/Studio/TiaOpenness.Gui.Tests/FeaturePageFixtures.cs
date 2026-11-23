@@ -16,7 +16,7 @@ internal static class FeaturePageFixtures
         [new(Text("Delete block", "删除块"), "FC_Legacy_Speed", "DeletePlcBlock"), new(Text("Import block", "导入块"), "FB_AutoSpeedCtrl", "ImportBlock")],
         [Text("Irreversible", "不可撤销"), Text("Overwrite", "覆盖已有对象"), Text("Changes project", "会修改工程")],
         "abece9", 120, Now.AddSeconds(118), ApprovalState.Pending,
-        "{\"requestId\":\"" + id + "\",\"project\":\"Conveyor_Line_04\",\"plc\":\"PLC_1\",\"operations\":[{\"tool\":\"DeletePlcBlock\",\"target\":\"FC_Legacy_Speed\"},{\"tool\":\"ImportBlock\",\"target\":\"FB_AutoSpeedCtrl\"}],\"password\":\"••••\"}");
+        "{\"requestId\":\"" + id + "\",\"project\":\"Conveyor_Line_04\",\"plc\":\"PLC_1\",\"operations\":[{\"tool\":\"DeletePlcBlock\",\"target\":\"FC_Legacy_Speed\"},{\"tool\":\"ImportBlock\",\"target\":\"FB_AutoSpeedCtrl\"}],\"secret\":\"fixture-private-key\"}");
 
     internal static ApprovalServiceStub Approvals(bool populated = true)
     {

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using TiaOpenness.Client;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Core.Rpc;
@@ -13,7 +13,7 @@ namespace TiaOpenness.Gui.Services;
 internal sealed class ReadOnlyVciBridge(IMcpSessionClient session) : IVersionControlClient
 {
     private TiaClient? client;
-    private string? attached;
+    private Binding? attached;
     private readonly SemaphoreSlim gate = new(1, 1);
     private readonly object sync = new();
     private CancellationTokenSource? active;
@@ -27,9 +27,25 @@ internal sealed class ReadOnlyVciBridge(IMcpSessionClient session) : IVersionCon
             return true;
         }
     }
-    public bool CanRead => session.SessionKey != null && (string?)session.State?["releaseKey"] is "16" or "17" or "18" or "19";
+    private readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+    internal sealed record Binding(string? Key, string? Release, string Generation, string Lease, bool Busy, int Pid, string Project)
+    {
+        internal bool Readable => Key != null && Release is "16" or "17" or "18" or "19";
+    }
+
+    private Binding Capture()
+    {
+        dispatcher.VerifyAccess();
+        var state = session.State;
+        var lease = state?["binding"];
+        return new(session.SessionKey, (string?)state?["releaseKey"], state?["worker"]?["generation"]?.ToString() ?? "",
+            lease?.ToJsonString() ?? "", state?["lane"] != null, (int?)lease?["processId"] ?? 0, (string?)lease?["projectFile"] ?? "");
+    }
+
+    internal Task<Binding> Snapshot(CancellationToken token) =>
+        dispatcher.InvokeAsync(Capture, DispatcherPriority.Normal, token).Task;
+    public bool CanRead => dispatcher.Invoke(Capture).Readable;
     public bool CanWrite => false;
-    private string Identity => session.SessionKey + ":" + session.State?["worker"]?["generation"] + ":" + session.State?["binding"];
     private async Task<T> Read<T>(Func<TiaClient, CancellationToken, Task<T>> operation)
     {
         await gate.WaitAsync().ConfigureAwait(false);
@@ -56,13 +72,12 @@ internal sealed class ReadOnlyVciBridge(IMcpSessionClient session) : IVersionCon
     }
     private async Task<T> ReadBound<T>(Func<TiaClient, CancellationToken, Task<T>> operation, CancellationToken token)
     {
-        var state = session.State;
-        if (!CanRead || state?["lane"] != null)
+        var identity = await Snapshot(token).ConfigureAwait(false);
+        if (!identity.Readable || identity.Busy)
             throw new InvalidOperationException("The shared session must be attached and idle for VCI reads.");
-        int pid = (int?)state?["binding"]?["processId"] ?? 0;
-        string file = (string?)state?["binding"]?["projectFile"] ?? "";
+        int pid = identity.Pid;
+        string file = identity.Project;
         if (pid <= 0 || file.Length == 0) throw new InvalidOperationException("No shared project/process lease binding.");
-        string identity = Identity;
         long ticks;
         using (var process = Process.GetProcessById(pid)) ticks = process.StartTime.ToUniversalTime().Ticks;
         VciReadOnlyBinding.Require(pid, ticks);
@@ -72,15 +87,20 @@ internal sealed class ReadOnlyVciBridge(IMcpSessionClient session) : IVersionCon
             client = new TiaClient();
             try
             {
-                await client.Bridge.StartAsync(opennessVersion: (string)state!["releaseKey"]!, cancellation: token).ConfigureAwait(false);
-                if (Identity != identity) throw new InvalidOperationException("The shared session binding changed during the bridge handshake.");
+                await client.Bridge.StartAsync(opennessVersion: identity.Release!, cancellation: token).ConfigureAwait(false);
+                if (await Snapshot(token).ConfigureAwait(false) != identity)
+                    throw new InvalidOperationException("The shared session binding changed during the bridge handshake.");
                 await client.AttachVciReadOnlyAsync(pid, ticks, file, token).ConfigureAwait(false);
                 attached = identity;
             }
             catch { Reset(); throw; }
         }
         var result = await operation(client!, token).ConfigureAwait(false);
-        if (Identity != identity) { Reset(); throw new InvalidOperationException("The shared session binding changed during the VCI read."); }
+        if (await Snapshot(token).ConfigureAwait(false) != identity)
+        {
+            Reset();
+            throw new InvalidOperationException("The shared session binding changed during the VCI read.");
+        }
         VciReadOnlyBinding.Require(pid, ticks);
         return result;
     }

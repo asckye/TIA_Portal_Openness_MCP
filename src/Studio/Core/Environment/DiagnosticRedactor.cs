@@ -21,8 +21,10 @@ namespace TiaOpenness.Core.Environment
         public const string Mask = "[REDACTED]";
         private readonly HashSet<string> knownSecrets = new HashSet<string>(StringComparer.Ordinal);
         private const string SecretName = @"[\w.-]*(?:key|token|password|passwd|pwd|passphrase|secret|credential|authorization|cookie)[\w.-]*";
-        private readonly string profileDirectory = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
-        private readonly string accountName = System.Environment.UserName;
+        private readonly string profileDirectory;
+        private readonly string accountName;
+        public DiagnosticRedactor() : this(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), System.Environment.UserName) { }
+        internal DiagnosticRedactor(string profile, string account) { profileDirectory = profile; accountName = account; }
         private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(2);
 
         public static bool SecretField(string name)
@@ -58,7 +60,13 @@ namespace TiaOpenness.Core.Environment
                             if (pair.Value != null) RememberNode(pair.Value);
                             obj[pair.Key] = Mask; Count("secret-field");
                         }
-                        else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var content)) obj[pair.Key] = Plain(content);
+                        else if (pair.Value is JsonValue scalar && scalar.TryGetValue<string>(out var content))
+                        {
+                            string field = pair.Key.ToLowerInvariant();
+                            bool accountField = field is "user" or "username" or "account" || field == "name" && obj["path"] != null;
+                            obj[pair.Key] = accountField && string.Equals(content, accountName, StringComparison.OrdinalIgnoreCase)
+                                && accountName.Length != 0 ? MaskAccount() : Plain(content);
+                        }
                         else if (pair.Value != null) Scrub(pair.Value);
                         string safeKey = Profile(pair.Key);
                         if (safeKey != pair.Key)
@@ -75,14 +83,31 @@ namespace TiaOpenness.Core.Environment
                         if (array[i] is JsonValue value && value.TryGetValue<string>(out var content)) array[i] = Plain(content);
                         else if (array[i] != null) Scrub(array[i]);
             }
+            string MaskAccount() { Count("user-name"); return "[USER]"; }
             string Profile(string value)
             {
                 if (!string.IsNullOrWhiteSpace(profileDirectory))
                     value = Replace(value, Regex.Escape(profileDirectory).Replace(@"\\", @"[\\/]+") + @"(?=[\\/\s""']|$)",
                         "user-profile", _ => "%USERPROFILE%");
                 value = Replace(value, @"[a-z]:[\\/]+Users[\\/]+[^\\/:""'<>\r\n]+", "user-profile", _ => "%USERPROFILE%");
+                value = Replace(value, @"[\\/]{2}[^\\/\s]+[\\/]+(?:[a-z]\$[\\/]+)?(?:Users|Profiles|Homes?)\$?[\\/]+[^\\/:""'<>\r\n]+",
+                    "user-profile", _ => "%USERPROFILE%");
                 if (accountName.Length > 0)
-                    value = Replace(value, @"(?<![\w])" + Regex.Escape(accountName) + @"(?![\w])", "user-name", _ => "[USER]");
+                {
+                    string name = Regex.Escape(accountName);
+                    value = Replace(value, @"[\\/]{2}[^\\/\s]+[\\/]+" + name + @"\$(?=[\\/\s""']|$)",
+                        "user-profile", _ => "%USERPROFILE%");
+                    value = Replace(value, @"(?<![\w.\\/])(?:[\w.-]+\\+" + name + @"(?![\w.-])|" + name + @"@[\w-]+(?:\.[\w-]+)*)",
+                        "user-name", _ => "[USER]");
+                    if (accountName.Length > 5)
+                        value = Replace(value, @"(?<![\w])" + name + @"(?![\w])", "user-name", _ => "[USER]");
+                    else
+                    {
+                        value = Replace(value, @"(?<![\w])" + name + @"(?=\s+%USERPROFILE%)", "user-name", _ => "[USER]");
+                        value = Replace(value, @"(?<prefix>\b(?:user(?:name)?|account)\s*[:=]\s*[""']?|[\\/]+)" + name + @"(?=[\\/\s""']|$)",
+                            "user-name", m => m.Groups["prefix"].Value + "[USER]");
+                    }
+                }
                 return value;
             }
             string Plain(string value)

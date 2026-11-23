@@ -109,7 +109,6 @@
     <Compile Include="../../../src/Updater/UpdaterModels.cs" />
     <Compile Include="../../../src/Updater/Updater.Release.cs" />
     <Compile Include="../../../src/Updater/Updater.Files.cs" />
-    <Compile Include="../../../src/Updater/Updater.Switch.cs" />
     <EmbeddedResource Include="../../FoundationHost/TiaMcp.Engine.Tests/ArgumentRulesCharacterization.json" LogicalName="ArgumentRulesCharacterization.json" />
     <EmbeddedResource Include="../../FoundationHost/TiaMcp.Engine.Harness/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
     <EmbeddedResource Include="../../FoundationHost/TiaMcp.Engine.Harness/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />

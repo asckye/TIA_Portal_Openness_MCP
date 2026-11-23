@@ -18,7 +18,7 @@ public partial class ApprovalsDrawer : UserControl
     private Window? _owner;
     internal ControlChannel.ControlInputGuard DecisionGuard { get; set; } = new();
     private long decisionVersion;
-    private long? mouseVersion, spaceVersion;
+    private long? mouseVersion, releaseVersion, spaceVersion;
 
     public ApprovalsDrawer()
     {
@@ -31,10 +31,13 @@ public partial class ApprovalsDrawer : UserControl
         foreach (var button in new[] { ApproveRequest, DenyRequest, ConfirmDestructive })
         {
             button.PreviewMouseLeftButtonDown += (_, _) => mouseVersion = PressVersion;
+            button.PreviewMouseLeftButtonUp += (_, _) => releaseVersion = mouseVersion;
+            // Button releases capture before raising Click on a normal mouse-up.
+            button.LostMouseCapture += (_, _) => mouseVersion = null;
             button.PreviewKeyDown += (_, e) => { if (e.Key == Key.Space && !e.IsRepeat) spaceVersion = PressVersion; };
             // The Button class handler raises Click before these release handlers clear the matching press.
             button.AddHandler(Mouse.MouseUpEvent, new MouseButtonEventHandler((_, e) =>
-            { if (e.ChangedButton == MouseButton.Left) mouseVersion = null; }), true);
+            { if (e.ChangedButton == MouseButton.Left) releaseVersion = mouseVersion = null; }), true);
             button.AddHandler(Keyboard.KeyUpEvent, new KeyEventHandler((_, e) =>
             { if (e.Key == Key.Space) spaceVersion = null; }), true);
             button.LostKeyboardFocus += (_, _) => spaceVersion = null;
@@ -66,7 +69,8 @@ public partial class ApprovalsDrawer : UserControl
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
     private void DecisionChanged() { decisionVersion++; DecisionGuard.UiChanged(); }
     private long PressVersion => GuardedByTime ? -1 : decisionVersion;
-    private bool Guarded => GuardedByTime || (mouseVersion ?? decisionVersion) != decisionVersion || (spaceVersion ?? decisionVersion) != decisionVersion;
+    private bool Guarded => GuardedByTime || (releaseVersion ?? mouseVersion ?? decisionVersion) != decisionVersion
+        || (spaceVersion ?? decisionVersion) != decisionVersion;
     private bool GuardedByTime => DecisionGuard.ClickGuardActive || (Window.GetWindow(this) as MainWindow)?.ControlGuard.ClickGuardActive == true;
     private void OnApprove(object sender, RoutedEventArgs e)
     {

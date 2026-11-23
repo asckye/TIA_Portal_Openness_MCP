@@ -40,8 +40,5 @@
   <data name="Relaunching" xml:space="preserve"><value>重新打开工作台</value></data>
   <data name="RelaunchFailed" xml:space="preserve"><value>无法重新打开工作台</value></data>
   <data name="UsageCheck" xml:space="preserve"><value>从包根运行时传入 -InstallRoot .；使用 -Check 检查发布，或使用 -Rollback 恢复最近一次备份。</value></data>
-  <data name="InstallRestored" xml:space="preserve"><value>已恢复更新前的安装</value></data>
-  <data name="CleanupPending" xml:space="preserve"><value>待清理的更新目录</value></data>
-  <data name="InterruptedUpdate" xml:space="preserve"><value>上次更新进程已退出，正在继续</value></data>
   <data name="PressEnter" xml:space="preserve"><value>按 Enter 关闭。</value></data>
 </root>

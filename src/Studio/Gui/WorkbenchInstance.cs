@@ -11,7 +11,7 @@ internal sealed class WorkbenchInstance : IDisposable
 
     internal WorkbenchInstance(string scope, Action activate)
     {
-        var name = @"Global\" + scope + "." + TiaOpenness.Shared.ApprovalPipe.CurrentSid + ".Activate";
+        var name = @"Local\" + scope + "." + TiaOpenness.Shared.ApprovalPipe.CurrentSid + ".Activate";
         signal = new EventWaitHandle(false, EventResetMode.AutoReset, name, out var first);
         IsFirst = first;
         if (first) activation = ThreadPool.RegisterWaitForSingleObject(signal, (_, _) => activate(), null, Timeout.Infinite, false);

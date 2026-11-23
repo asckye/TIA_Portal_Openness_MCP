@@ -63,6 +63,73 @@ public sealed class ApprovalPageTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData("password")] [InlineData("moduleAccessPassword")] [InlineData("secret")]
+    public void Drawer_masks_unfiltered_credentials_and_preserves_operation_data(string credential)
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new Fixture();
+            var args = new System.Text.Json.Nodes.JsonObject { [credential] = "unfiltered-value", ["Door_Key"] = "Loading bay", ["TokenCount"] = 18 };
+            var fields = new System.Text.Json.Nodes.JsonObject {
+                ["arguments"] = new System.Text.Json.Nodes.JsonArray(args), ["path"] = @"D:\TokenCount\Door_Key",
+                ["before"] = "Door_Key := 1;", ["after"] = "Door_Key := 2;" };
+            fixture.Service.Receive(FeaturePageFixtures.Request("older-host") with { ParametersJson = fields.ToJsonString() });
+            WpfContext.Drain(); fixture.View.FocusRequest("older-host"); WpfContext.Drain();
+            var row = fixture.Model.SelectedRequest!;
+            Assert.Equal("older-host", row.Request.Id);
+            Assert.DoesNotContain("unfiltered-value", row.Parameters);
+            args[credential] = "••••";
+            Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(fields, System.Text.Json.Nodes.JsonNode.Parse(row.Parameters)));
+            Assert.Contains(row.SourceChanges, line => line.Text == "Door_Key := 2;");
+        });
+    }
+
+    [Theory]
+    [InlineData("{\"password\":\"raw-password\"")]
+    [InlineData("{\"password\":\"raw-password\",\"password\":\"another-password\"}")]
+    public void Unparseable_approval_parameters_never_fall_back_to_pipe_text(string payload)
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new Fixture();
+            var request = FeaturePageFixtures.Request("malformed") with { ParametersJson = payload };
+            fixture.Service.Receive(request); WpfContext.Drain(); fixture.View.FocusRequest(request.Id);
+            var row = fixture.Model.SelectedRequest!;
+            Assert.Equal(request.Id, row.Request.Id);
+            Assert.Equal("••••", row.Parameters);
+            Assert.Empty(row.SourceChanges);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public void Capture_loss_releases_keyboard_but_a_normal_mouse_release_keeps_the_press_guard(bool duringRelease)
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new Fixture();
+            fixture.Service.Receive(FeaturePageFixtures.Request("second")); WpfContext.Drain();
+            fixture.Now += TimeSpan.FromSeconds(1);
+            var button = fixture.Button("DenyRequest");
+            button.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent });
+            Assert.True(fixture.Service.Deny("first")); WpfContext.Drain();
+            fixture.Now += TimeSpan.FromSeconds(1);
+            if (duringRelease) button.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                { RoutedEvent = UIElement.PreviewMouseLeftButtonUpEvent });
+            button.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, 0) { RoutedEvent = Mouse.LostMouseCaptureEvent });
+            if (duringRelease)
+            {
+                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(ApprovalState.Pending, fixture.Service.Requests[1].State);
+                button.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left) { RoutedEvent = Mouse.MouseUpEvent });
+            }
+            button.Focus(); WpfContext.PressSpace(button);
+            Assert.Equal(ApprovalState.Rejected, fixture.Service.Requests[1].State);
+        });
+    }
+
     [Fact]
     public void Arrival_queue_advance_and_page_show_restart_the_decision_guard()
     {

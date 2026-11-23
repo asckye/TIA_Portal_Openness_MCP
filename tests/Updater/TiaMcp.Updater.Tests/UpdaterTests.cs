@@ -34,7 +34,7 @@ namespace TiaMcp.Updater.Tests
         }
 
         [Fact]
-        public void Uncommitted_renames_are_invisible_and_a_held_data_file_stays_open()
+        public void Staging_keeps_the_current_install_visible_and_a_held_data_file_stays_open()
         {
             using var fixture = new Fixture();
             using var data = File.Open(Path.Combine(fixture.Root, "data/config/user.json"), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
@@ -45,8 +45,10 @@ namespace TiaMcp.Updater.Tests
                 return reader.ReadToEnd();
             }
             int visits = 0;
-            Assert.Equal(0, fixture.Run(beforeDeployFile: _ =>
+            var options = fixture.Options();
+            Assert.Equal(0, UpdaterEngine.Run(options, message =>
             {
+                if (!message.Contains("SHA-256") && !message.Contains("extracted package to")) return;
                 visits++;
                 Assert.Equal("old-launcher", Observe("TiaOpenness.exe"));
                 using var manifest = JsonDocument.Parse(Observe("manifest/delivery.json"));

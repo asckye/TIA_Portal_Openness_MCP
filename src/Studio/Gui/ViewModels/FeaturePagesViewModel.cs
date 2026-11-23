@@ -820,12 +820,9 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         : Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAction" : "Approval.ConfirmAction"];
     public string ConfirmationAccessible => Loc.Current[PhysicalDownload ? "Approval.ConfirmDownloadAccessible"
         : Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAccessible" : "Approval.ConfirmAccessible"];
-    private System.Text.Json.Nodes.JsonObject? TargetParameters => ParseParameters() as System.Text.Json.Nodes.JsonObject;
-    private System.Text.Json.Nodes.JsonNode? ParseParameters()
-    {
-        try { return System.Text.Json.Nodes.JsonNode.Parse(Request.ParametersJson); }
-        catch (System.Text.Json.JsonException) /* swallow(ui): an incomplete payload has no structured fields. */ { return null; }
-    }
+    private System.Text.Json.Nodes.JsonNode? _displayParameters;
+    private System.Text.Json.Nodes.JsonNode? DisplayParameters => _displayParameters ??= FeatureJson.ApprovalParameters(Request.ParametersJson);
+    private System.Text.Json.Nodes.JsonObject? TargetParameters => DisplayParameters as System.Text.Json.Nodes.JsonObject;
     private static string Field(System.Text.Json.Nodes.JsonObject? obj, string key) =>
         obj?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
     public string ConfirmationConsequence
@@ -888,8 +885,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         get => _jsonOpen;
         set { if (Set(ref _jsonOpen, value)) Raise(nameof(ShowOperationDetails)); }
     }
-    // The host has already masked declared credentials. Formatting the card must preserve the remaining values.
-    public string Parameters => _parameters ??= ParseParameters()?.ToJsonString(ParameterFormat) ?? Request.ParametersJson;
+    public string Parameters => _parameters ??= DisplayParameters?.ToJsonString(ParameterFormat) ?? "••••";
     public bool IsGenerationPlan => Request.GenerationPlan != null;
     public bool IsToolRequest => !IsGenerationPlan;
     public bool PlanOpen { get => _planOpen; set => Set(ref _planOpen, value); }
@@ -946,7 +942,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         if (Request == request) return;
         bool changed = Request.ParametersJson != request.ParametersJson;
         Request = request;
-        if (changed) { _sourceChanges = null; _parameters = null; Raise(nameof(Parameters)); }
+        if (changed) { _displayParameters = null; _sourceChanges = null; _parameters = null; Raise(nameof(Parameters)); }
         Raise(nameof(Request)); RefreshLanguage(); RefreshCountdown();
     }
     internal void RefreshLanguage()

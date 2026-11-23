@@ -19,6 +19,28 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class VciPanelTests(WpfContext wpf)
 {
     [Fact]
+    public void Background_VCI_reads_take_immutable_snapshots_on_the_owning_dispatcher()
+    {
+        wpf.Run(() =>
+        {
+            var session = new ProjectPageInteractionTests.DocumentSession((_, _) => throw new NotSupportedException()) { Release = "17" };
+            using var bridge = new ReadOnlyVciBridge(session);
+            var first = Task.Run(() => bridge.Snapshot(default));
+            WpfContext.Complete(first);
+            session.Release = "21"; session.Epoch++;
+            var second = Task.Run(() => bridge.Snapshot(default));
+            WpfContext.Complete(second);
+            Assert.True(first.Result.Readable); Assert.Equal("17", first.Result.Release);
+            Assert.False(second.Result.Readable); Assert.NotEqual(first.Result.Lease, second.Result.Lease);
+            // Wait for the pool caller to return its task while this UI thread still owns the session.
+            var issued = Task.Factory.StartNew(bridge.VcSupportedAsync, default, TaskCreationOptions.None, TaskScheduler.Default);
+            var read = issued.WaitAsync(TestDeadlines.Hang).GetAwaiter().GetResult();
+            Assert.False(read.IsCompleted);
+            Assert.Contains("attached and idle", Assert.Throws<InvalidOperationException>(() => WpfContext.Complete(read)).Message);
+        });
+    }
+
+    [Fact]
     public void Sync_default_previews_both_directions_and_run_keeps_overwrite_confirmation()
     {
         wpf.Run(() =>

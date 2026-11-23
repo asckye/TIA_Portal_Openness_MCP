@@ -19,6 +19,35 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WorkbenchToastTests(WpfContext wpf)
 {
+    [Fact]
+    public void Crash_dialog_uses_the_ui_owner_and_coalesces_concurrent_and_nested_errors()
+    {
+        wpf.Run(() =>
+        {
+            var previous = Application.Current.MainWindow;
+            var owner = new Window();
+            try
+            {
+                WpfContext.ShowWindow(owner); Application.Current.MainWindow = owner;
+                var messages = new List<string>();
+                void Show(Window window, string message)
+                {
+                    Assert.Same(owner, window);
+                    Assert.True(owner.Dispatcher.CheckAccess());
+                    messages.Add(message);
+                    void Unwanted(Window _, string extra) => throw new InvalidOperationException("Unexpected dialog for " + extra);
+                    App.PresentUiError("nested", true, Unwanted);
+                    var concurrent = Task.Run(() => App.PresentUiError("concurrent", true, Unwanted));
+                    WpfContext.Complete(concurrent.WaitAsync(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+                }
+                WpfContext.Complete(Task.Run(() => App.PresentUiError("first", true, Show)));
+                App.PresentUiError("next", true, Show);
+                Assert.Equal(new[] { "first", "next" }, messages);
+            }
+            finally { Application.Current.MainWindow = previous; owner.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData(ToastKind.Success, 4)]
     [InlineData(ToastKind.Info, 4)]
