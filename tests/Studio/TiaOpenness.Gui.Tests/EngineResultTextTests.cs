@@ -13,12 +13,13 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class EngineResultTextTests(WpfContext wpf)
 {
-    public static IEnumerable<object[]> Errors() => V4Fixtures.Supplemental().Skip(1)
+    public static IEnumerable<object[]> Errors() => V4Fixtures.SupplementalData().Skip(1)
         .Select(e => new object[] { e.GetRawText() });
 
     [Theory, MemberData(nameof(Errors))]
     public void EveryV4CodeIsLocalizedInBothLanguagesAndInTheCallRow(string json)
     {
+        V4Fixtures.RegenerateIfRequested();
         var result = EngineToolResult.Read(json);
         string english = "", chinese = "";
         foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })

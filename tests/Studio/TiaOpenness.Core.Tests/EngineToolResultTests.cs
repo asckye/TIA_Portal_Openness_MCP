@@ -13,11 +13,12 @@ namespace TiaOpenness.Core.Tests;
 
 public sealed class EngineToolResultTests
 {
-    public static IEnumerable<object[]> Supplemental() => V4Fixtures.Supplemental().Select(e => new object[] { e.GetRawText() });
+    public static IEnumerable<object[]> Supplemental() => V4Fixtures.SupplementalData().Select(e => new object[] { e.GetRawText() });
 
     [Theory, MemberData(nameof(Supplemental))]
     public void EveryErrorCodeAndOutcomeRetainsItsDetails(string json)
     {
+        V4Fixtures.RegenerateIfRequested();
         var original = JsonNode.Parse(json)!;
         var result = EngineToolResult.Read(json);
         Assert.Equal(original["ok"]!.GetValue<bool>(), result.Envelope.Ok);

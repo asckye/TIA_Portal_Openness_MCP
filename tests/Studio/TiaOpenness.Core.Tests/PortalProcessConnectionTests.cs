@@ -154,11 +154,13 @@ public sealed class PortalProcessConnectionTests
         if (golden.ContainsKey(nameof(PortalProcessInfo)))
         {
             Assert.Equal(wire, BridgeJson.Serialize(BridgeJson.Deserialize<PortalProcessInfo>(golden[nameof(PortalProcessInfo)].ToJsonString())));
-            return;
+            Assert.Fail("Golden regeneration was requested. PortalProcessInfo already matches the bridge golden. "
+                + "Unset TIA_MCP_UPDATE_GOLDEN and rerun to verify.");
         }
         int end = source.LastIndexOf('}');
         var updated = source[..end].TrimEnd() + ",\n  \"PortalProcessInfo\": " + wire + "\n}\n";
         File.WriteAllText(path, updated.Replace("\r\n", "\n"), new UTF8Encoding(false));
+        Assert.Fail("Bridge goldens were regenerated. Unset TIA_MCP_UPDATE_GOLDEN and rerun to verify.");
     }
 
     private static RpcRequest Request(string json) => new() { Id = "connect", Method = RpcMethods.SessionConnect,

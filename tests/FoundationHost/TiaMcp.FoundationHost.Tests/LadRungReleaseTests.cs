@@ -82,7 +82,8 @@ public sealed class LadRungReleaseTests(ITestOutputHelper output)
         Assert.All(sections.DescendantsAndSelf(), e => Assert.Equal(format.Declaration.InterfaceNamespace, e.Name.Namespace));
         Assert.Equal(release != "14sp1", format.ArrayIndex);
         string golden = Path.Combine(Root, "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/LadRung", release, element + ".xml");
-        if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1")
+        bool regenerate = Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1";
+        if (regenerate)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(golden)!);
             File.WriteAllText(golden, xml, new UTF8Encoding(false));
@@ -98,6 +99,7 @@ public sealed class LadRungReleaseTests(ITestOutputHelper output)
         Assert.Contains("<svg", PlcLadderDrawing.NetworkSvg(parsed.Model!.Blocks.Single().CompileUnits.Single().Network!, _ => null, unknown));
         Assert.Empty(unknown);
         ValidateSchemas(release, format, flg, sections);
+        if (regenerate) Assert.Fail($"LAD goldens were regenerated: {golden}. Unset TIA_MCP_UPDATE_GOLDEN and rerun to verify.");
     }
 
     private void ValidateSchemas(string release, FlgNetFormat format, XElement flg, XElement sections)

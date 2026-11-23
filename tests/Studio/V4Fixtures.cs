@@ -14,19 +14,31 @@ internal static class V4Fixtures
 {
     internal static IEnumerable<JsonElement> Supplemental()
     {
+        RegenerateIfRequested();
+        return SupplementalData();
+    }
+
+    // xUnit enumerates MemberData during discovery, even for tests outside the requested filter.
+    internal static IEnumerable<JsonElement> SupplementalData()
+    {
         var assembly = typeof(V4Fixtures).Assembly;
         using var stream = assembly.GetManifestResourceStream(assembly.GetManifestResourceNames().Single(n => n.EndsWith("V4Supplemental.json")))!;
         using var document = JsonDocument.Parse(stream);
-        var envelopes = document.RootElement.EnumerateArray().Select(e => JsonNode.Parse(e.GetRawText())!.AsObject()).ToList();
-        if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1"
-            && !envelopes.Any(envelope => (string?)envelope["meta"]?["outcome"] == "in-progress"))
+        foreach (var envelope in document.RootElement.EnumerateArray())
+            yield return JsonSerializer.SerializeToElement(JsonNode.Parse(envelope.GetRawText())!.AsObject());
+    }
+
+    internal static void RegenerateIfRequested()
+    {
+        if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") != "1") return;
+        var envelopes = SupplementalData().Select(e => JsonNode.Parse(e.GetRawText())!.AsObject()).ToList();
+        if (!envelopes.Any(envelope => (string?)envelope["meta"]?["outcome"] == "in-progress"))
             envelopes.Add(JsonNode.Parse(V4Json.Serialize(Envelope.Create(new { activeRequestId = "running-call" },
                 new Error("The call is still running. Read GetCallResult(requestId).", new OperationInProgressDetails("running-call")),
                 new Meta(DateTimeOffset.Parse("2026-11-12T00:00:00Z", System.Globalization.CultureInfo.InvariantCulture), "21",
                     "SaveProject", "running-call", Outcome.InProgress, Execution.Unknown, BehaviorPolicy.NotApplicable,
                     Completeness.Unknown, null, Array.Empty<Warning>()))))!.AsObject());
-        if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1") Regenerate(envelopes);
-        foreach (var envelope in envelopes) yield return JsonSerializer.SerializeToElement(envelope);
+        Regenerate(envelopes);
     }
 
     private static void Regenerate(List<JsonObject> envelopes, [CallerFilePath] string sourceFile = "")
@@ -66,6 +78,7 @@ internal static class V4Fixtures
         }
         rows.Add("}");
         File.WriteAllText(realPath, string.Join("\n", rows) + "\n", new System.Text.UTF8Encoding(false));
+        Xunit.Assert.Fail("V4 supplemental and real envelope goldens were regenerated. Unset TIA_MCP_UPDATE_GOLDEN and rerun to verify.");
     }
 
     private static void RegenerateArguments(JsonNode node)

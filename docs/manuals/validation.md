@@ -210,7 +210,7 @@ dotnet run --project build-tools/release -- generate-tool-usage
 dotnet run --project build-tools/release -- generate-tool-counts
 ```
 
-各生成器的 `-Check` 逐字节检查。迁移表使用 `generate-release-migration`。工具定义有意改变时，用正式捕获命令生成新契约并逐项审查差异；不手改哈希。规划 golden 需要更新时先运行上述两个生成器，设置 `TIA_MCP_UPDATE_GOLDEN=1`，直接运行 `dotnet test tests/Generation/TiaMcp.Generation.Planning.Tests -c Debug --filter FullyQualifiedName~Golden`。审查 [Golden 目录](../../tests/Generation/TiaMcp.Generation.Planning.Tests/Golden)的字节差异，清除变量，再运行 `test-suites -Suite generation-planning` 验证。设置该变量期间，`test-suites`、`merge-check` 和 `prepare` 均会拒绝启动。
+各生成器的 `-Check` 逐字节检查。迁移表使用 `generate-release-migration`。工具定义有意改变时，用正式捕获命令生成新契约并逐项审查差异；不手改哈希。规划 golden 需要更新时先运行上述两个生成器，设置 `TIA_MCP_UPDATE_GOLDEN=1`，直接运行 `dotnet test tests/Generation/TiaMcp.Generation.Planning.Tests -c Debug --filter FullyQualifiedName~Golden`。每个重生成用例写完计划和 SCL 后都会报错，提示 golden 已重生成。审查 [Golden 目录](../../tests/Generation/TiaMcp.Generation.Planning.Tests/Golden)的字节差异，清除变量，再运行 `test-suites -Suite generation-planning` 验证。设置该变量期间，`test-suites`、`merge-check` 和 `prepare` 均会拒绝启动。
 
 ### 工具契约兼容检查
 

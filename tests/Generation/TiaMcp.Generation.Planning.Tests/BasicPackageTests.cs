@@ -28,13 +28,13 @@ namespace TiaMcp.Generation.Planning.Tests
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture); CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
                 var first = BasicPackageFixture.Build(release); var second = BasicPackageFixture.Build(release);
-                GoldenFiles.Verify(Path.Combine("Basic", "plan." + release + ".json"), first.CanonicalPlan);
                 Assert.Equal(first.CanonicalPlan, second.CanonicalPlan);
                 Assert.Equal(first.Plan.PlanHash, GenerationDocuments.PlanHash(first.CanonicalPlan));
                 Assert.Equal(0, first.Plan.SelfCheck.Errors); Assert.Empty(first.Plan.Conflicts);
                 var call = first.Artifacts.Single(a => a.Content.StartsWith("FUNCTION \"FC_U01_Calls\"", StringComparison.Ordinal));
-                GoldenFiles.Verify(Path.Combine("Basic", "FC_U01_Calls.scl"), call.Content);
                 Assert.All(first.Artifacts, a => Assert.Equal(a.Sha256, CanonicalJson.HashBytes(Encoding.UTF8.GetBytes(a.Content))));
+                GoldenFiles.Verify([(Path.Combine("Basic", "plan." + release + ".json"), first.CanonicalPlan),
+                    (Path.Combine("Basic", "FC_U01_Calls.scl"), call.Content)]);
             }
             finally { CultureInfo.CurrentCulture = previous; CultureInfo.CurrentUICulture = previousUi; }
         }

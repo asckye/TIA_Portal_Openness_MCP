@@ -122,7 +122,8 @@ public sealed class LadRungBuilderTests
         xml = historical ?? xml;
         var flg = XDocument.Parse(xml).Descendants(Ns + "FlgNet").Single();
         string golden = Path.Combine(Root, "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/LadRung/21", element + ".xml");
-        if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1")
+        bool regenerate = Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1";
+        if (regenerate)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(golden)!);
             File.WriteAllText(golden, xml, new UTF8Encoding(false));
@@ -139,6 +140,7 @@ public sealed class LadRungBuilderTests
         string svg = PlcLadderDrawing.NetworkSvg(network, _ => null, unknown);
         Assert.Empty(unknown);
         Assert.Contains("<svg", svg);
+        if (regenerate) Assert.Fail($"LAD goldens were regenerated: {golden}. Unset TIA_MCP_UPDATE_GOLDEN and rerun to verify.");
     }
 
     [Theory]

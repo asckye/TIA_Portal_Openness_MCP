@@ -65,7 +65,7 @@ internal sealed class ResponseGoldenTests
                 Directory.CreateDirectory(directory);
                 File.WriteAllBytes(path, actual);
                 Console.WriteLine("RECORDED " + tests.records.Count + " exact UTF-8 responses: " + path);
-                return;
+                throw new InvalidOperationException("Response goldens were regenerated. Rerun in response-golden-only mode to verify.");
             }
             var expectedBytes = File.ReadAllBytes(path);
             var expected = File.ReadAllLines(path, new UTF8Encoding(false, true));

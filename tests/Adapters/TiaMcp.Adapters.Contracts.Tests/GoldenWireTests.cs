@@ -63,9 +63,11 @@ public sealed class GoldenWireTests
                 actual = extended.ToJsonString(McpJsonUtilities.DefaultOptions);
             }
         }
-        if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1") UpdateGolden(name, codec, actual);
+        bool regenerate = Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1";
+        if (regenerate) UpdateGolden(name, codec, actual);
         using var golden = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "GoldenWire.json")));
         Assert.Equal(golden.RootElement.GetProperty(name).GetProperty(codec).GetString(), actual);
+        if (regenerate) Assert.Fail($"Wire goldens were regenerated for {name}/{codec}. Unset TIA_MCP_UPDATE_GOLDEN and rerun to verify.");
     }
 
     private static void UpdateGolden(string name, string codec, string actual)

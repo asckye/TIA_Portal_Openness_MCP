@@ -103,10 +103,12 @@ public sealed class LadCompositeRegressionTests
                 (string?)pin.Attribute("UId") == (string?)Part("RCoil").Attribute("UId"));
         }
         string golden = Path.Combine(Root, "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/LadRung/21", "beta6-composite-" + stage + ".xml");
-        if (Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1") File.WriteAllText(golden, xml, new UTF8Encoding(false));
+        bool regenerate = Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1";
+        if (regenerate) File.WriteAllText(golden, xml, new UTF8Encoding(false));
         Assert.Equal(File.ReadAllBytes(golden), Encoding.UTF8.GetBytes(xml));
         var issues = V21SchemaIssues(flg);
         Assert.Empty(issues);
+        if (regenerate) Assert.Fail($"LAD goldens were regenerated: {golden}. Unset TIA_MCP_UPDATE_GOLDEN and rerun to verify.");
     }
 
     private static List<string> V21SchemaIssues(XElement flg)

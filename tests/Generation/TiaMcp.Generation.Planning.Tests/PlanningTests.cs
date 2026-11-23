@@ -29,6 +29,30 @@ namespace TiaMcp.Generation.Planning.Tests
 
         public static IEnumerable<object[]> IdentityReleases => PlanningFixture.Releases.Select(r => new object[] { r });
 
+        [Fact]
+        public void RegenerationWritesBothFilesBeforeFailing()
+        {
+            var plan = new PlanningFixture("21").Build();
+            var scl = plan.Artifacts.Single(a => a.Content.StartsWith("FUNCTION \"FC_U01_Calls\"", StringComparison.Ordinal)).Content;
+            var scratch = Directory.CreateTempSubdirectory();
+            var previous = Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN");
+            try
+            {
+                var golden = scratch.CreateSubdirectory("Golden");
+                Environment.SetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN", "1");
+                var failure = Assert.Throws<Xunit.Sdk.FailException>(() => GoldenFiles.Verify(
+                    [("plan.21.json", plan.CanonicalPlan), ("FC_U01_Calls.scl", scl)], Path.Combine(scratch.FullName, "PlanningTests.cs")));
+                Assert.Contains("goldens were regenerated", failure.Message);
+                Assert.Equal(Encoding.UTF8.GetBytes(plan.CanonicalPlan), File.ReadAllBytes(Path.Combine(golden.FullName, "plan.21.json")));
+                Assert.Equal(Encoding.UTF8.GetBytes(scl), File.ReadAllBytes(Path.Combine(golden.FullName, "FC_U01_Calls.scl")));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN", previous);
+                scratch.Delete(true);
+            }
+        }
+
         [Theory, MemberData(nameof(IdentityReleases))]
         public void Existing_project_identity_matches_with_forward_slashes_and_case(string release)
         {
@@ -53,12 +77,11 @@ namespace TiaMcp.Generation.Planning.Tests
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture); CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
                 var first = new PlanningFixture(release).Build(); var second = new PlanningFixture(release).Build();
-                GoldenFiles.Verify("plan." + release + ".json", first.CanonicalPlan);
                 Assert.Equal(first.CanonicalPlan, second.CanonicalPlan); Assert.Equal(first.Plan.PlanHash, GenerationDocuments.PlanHash(first.CanonicalPlan));
                 Assert.Equal(0, first.Plan.SelfCheck.Errors); Assert.Empty(first.Plan.Conflicts); Assert.Empty(first.Plan.Unavailable);
                 foreach (var artifact in first.Artifacts) Assert.Equal(artifact.Sha256, CanonicalJson.HashBytes(Encoding.UTF8.GetBytes(artifact.Content)));
                 var call = first.Artifacts.Single(a => a.Content.StartsWith("FUNCTION \"FC_U01_Calls\"", StringComparison.Ordinal));
-                GoldenFiles.Verify("FC_U01_Calls.scl", call.Content);
+                GoldenFiles.Verify([("plan." + release + ".json", first.CanonicalPlan), ("FC_U01_Calls.scl", call.Content)]);
             }
             finally { CultureInfo.CurrentCulture = previous; CultureInfo.CurrentUICulture = previousUi; }
         }

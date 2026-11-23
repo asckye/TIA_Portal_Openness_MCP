@@ -9,12 +9,14 @@ Regenerate from the repository root after running `generate-catalogs` and
 
 ```powershell
 $env:TIA_MCP_UPDATE_GOLDEN = '1'
-dotnet run --project build-tools/release -- test-suites -Suite generation-planning
+dotnet test tests/Generation/TiaMcp.Generation.Planning.Tests -c Debug --filter "FullyQualifiedName~Golden"
 Remove-Item Env:TIA_MCP_UPDATE_GOLDEN
 git diff -- tests/Generation/TiaMcp.Generation.Planning.Tests/Golden
 dotnet run --project build-tools/release -- test-suites -Suite generation-planning
 ```
 
+Each regeneration case writes both the plan and the SCL file, then fails with
+“Plan and SCL goldens were regenerated.” Clear the variable before verification.
 Only the exact value `1` enables writing. `CallerFilePath` locates this source
 Golden folder; the tests never update the copied build output. The same fixtures
 also regenerate both `FC_U01_Calls.scl` files. Review every changed plan and source
