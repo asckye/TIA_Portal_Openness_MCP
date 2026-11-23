@@ -430,6 +430,8 @@ public sealed class PublishPreparedTests
     [InlineData("failure", "offline-checks failure.", true)]
     [InlineData("in_progress", "offline-checks in_progress.", true)]
     [InlineData("missing", "no workflow run.", true)]
+    [InlineData("local-only", "candidate commit is not on the remote yet.", true)]
+    [InlineData("commit-unreadable", "status unavailable", true)]
     [InlineData("other-commit", "no matching workflow run.", true)]
     [InlineData("forbidden", "status unavailable", true)]
     [InlineData("malformed", "status unavailable", true)]
@@ -447,8 +449,40 @@ public sealed class PublishPreparedTests
         Assert.Equal(new[] { "head", "status" }, f.EventsAtCi);
         Assert.Empty(f.Delays);
         Assert.Single(f.CiRequests);
+        Assert.Equal(ci is "missing" or "other-commit" or "local-only" or "commit-unreadable" ? 1 : 0, f.CommitLookups);
+        if (ci == "success") Assert.DoesNotContain("WARNING GitHub CI", output.ToString());
+        if (ci == "missing") Assert.Contains("offline-checks.yml, validate.yml, vulnerability-scan.yml", output.ToString());
+        if (ci == "commit-unreadable") Assert.DoesNotContain("not on the remote", output.ToString());
         if (ci == "slow") Assert.True(f.CiRequests[0].IsCancellationRequested);
     }
+
+    [Fact]
+    public async Task ReportsTheLatestAttemptOfEachWorkflowAndNamesMissingPushWorkflows()
+    {
+        using var f = new Fixture();
+        var first = Enumerable.Range(1, 99).Select(number => WorkflowRun("offline-checks", "offline-checks", "failure", number))
+            .Append(WorkflowRun("offline-checks", "offline-checks", "success", 99, 2)).ToArray();
+        f.CiPages = [first, [WorkflowRun("validate", "validate-bundle", "failure", 10), WorkflowRun("validate", "validate-bundle", "success", 9),
+            WorkflowRun("validate", "validate-bundle", "success", 20, sha: new string('b', 40)), WorkflowRun("extra", "Additional checks", "success")]];
+        var saved = Console.Out;
+        using var output = new StringWriter();
+        try { Console.SetOut(output); Assert.Equal(0, await f.Publish()); }
+        finally { Console.SetOut(saved); }
+        var lines = output.ToString().Split(Environment.NewLine);
+        string label = $"GitHub CI for {Fixture.Commit}: ";
+        Assert.Contains(label + "offline-checks success.", lines);
+        Assert.Contains("WARNING " + label + "validate-bundle failure.", lines);
+        Assert.Contains("WARNING " + label + "vulnerability-scan.yml has no workflow run.", lines);
+        Assert.Contains(label + "Additional checks success.", lines);
+        Assert.Equal(4, lines.Count(line => line.Contains(label, StringComparison.Ordinal)));
+        Assert.Equal(2, f.CiRequests.Count);
+        Assert.Equal(0, f.CommitLookups);
+        Assert.True(f.Public);
+    }
+
+    private static object WorkflowRun(string file, string name, string status, int number = 1, int attempt = 1, string sha = Fixture.Commit) =>
+        new { name, path = ".github/workflows/" + file + ".yml", head_sha = sha, run_number = number, run_attempt = attempt,
+            status = status == "in_progress" ? status : "completed", conclusion = status == "in_progress" ? null : status };
 
     private sealed class Fixture : HttpMessageHandler
     {
@@ -473,6 +507,8 @@ public sealed class PublishPreparedTests
         internal JsonObject? DraftBody { get; private set; }
         internal string Fault { get; set; } = "";
         internal string CiResult { get; set; } = "success";
+        internal object[][]? CiPages { get; set; }
+        internal int CommitLookups { get; private set; }
         internal List<CancellationToken> CiRequests { get; } = [];
         internal string[] EventsAtCi { get; private set; } = [];
         internal string ExpireAt { get; set; } = "";
@@ -557,16 +593,29 @@ public sealed class PublishPreparedTests
             {
                 Assert.Equal(HttpMethod.Get, request.Method);
                 Assert.Equal("fixture.invalid", request.RequestUri.Host);
-                Assert.Equal("?head_sha=" + Commit + "&per_page=1", request.RequestUri.Query);
+                int page = CiPages == null ? 1 : CiRequests.Count + 1;
+                Assert.Equal("?head_sha=" + Commit + "&per_page=100&page=" + page, request.RequestUri.Query);
                 EventsAtCi = Events.ToArray();
                 CiRequests.Add(token);
                 if (CiResult == "slow") await Task.Delay(Timeout.InfiniteTimeSpan, token);
                 if (CiResult == "forbidden") return Reply(new { }, HttpStatusCode.Forbidden);
                 if (CiResult == "malformed") return Reply(new { workflow_runs = "unexpected" });
-                var run = new { name = "offline-checks", head_sha = CiResult == "other-commit" ? new string('a', 40) : Commit,
-                    status = CiResult == "in_progress" ? CiResult : "completed",
-                    conclusion = CiResult == "in_progress" ? null : CiResult };
-                return Reply(new { workflow_runs = CiResult == "missing" ? Array.Empty<object>() : [run] });
+                if (CiPages != null) return Reply(new { workflow_runs = CiPages[page - 1] });
+                string sha = CiResult == "other-commit" ? new string('a', 40) : Commit;
+                object[] runs = CiResult is "missing" or "local-only" or "commit-unreadable" ? [] :
+                    [WorkflowRun("offline-checks", "offline-checks", CiResult, sha: sha), WorkflowRun("validate", "validate-bundle", "success", sha: sha),
+                    WorkflowRun("vulnerability-scan", "vulnerability-scan", "success", sha: sha)];
+                return Reply(new { workflow_runs = runs });
+            }
+            if (path == "/repos/acme/project/git/commits/" + Commit)
+            {
+                Assert.Equal(HttpMethod.Get, request.Method);
+                Assert.Equal("fixture.invalid", request.RequestUri.Host);
+                CommitLookups++;
+                return Reply(new { sha = Commit }, CiResult switch
+                {
+                    "local-only" => HttpStatusCode.NotFound, "commit-unreadable" => HttpStatusCode.Forbidden, _ => HttpStatusCode.OK
+                });
             }
             if (path.StartsWith("/download/untagged-", StringComparison.Ordinal)) { Record("dead-draft-url"); return Reply(new { }, HttpStatusCode.NotFound); }
             if (path == "/download/published-" + ZipName) {

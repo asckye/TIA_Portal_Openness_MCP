@@ -109,7 +109,7 @@ internal static class ReleasePublisher
     internal static async Task<PreparedRelease> ReadPreparedReleaseAsync(GitHubApi api, PreparedCandidate package, CancellationToken cancellationToken)
     {
         var path = "repos/" + api.Repository + "/releases/" + package.ReleaseId.ToString(CultureInfo.InvariantCulture);
-        using var release = await api.GetReleaseByTagOrNullAsync(path, cancellationToken);
+        using var release = await api.GetOrNullAsync(path, cancellationToken);
         if (release is null || JsonString(release.RootElement, "tag_name") != package.Version.Tag)
             throw new ReleaseException("no draft or public release for prepared version");
         var assets = release.RootElement.GetProperty("assets");
@@ -129,7 +129,7 @@ internal static class ReleasePublisher
 
     internal static async Task<bool> PreparedTagExistsAsync(GitHubApi api, PreparedCandidate package, CancellationToken cancellationToken)
     {
-        using var reference = await api.GetReleaseByTagOrNullAsync("repos/" + api.Repository + "/git/ref/tags/" + Uri.EscapeDataString(package.Version.Tag), cancellationToken);
+        using var reference = await api.GetOrNullAsync("repos/" + api.Repository + "/git/ref/tags/" + Uri.EscapeDataString(package.Version.Tag), cancellationToken);
         if (reference is null) return false;
         var target = reference.RootElement.GetProperty("object");
         if (JsonString(target, "type") == "tag")
@@ -306,7 +306,7 @@ internal static class ReleasePublisher
         internal async Task<JsonDocument> GetRequiredAsync(string path, CancellationToken cancellationToken) =>
             await SendJsonRequiredAsync(HttpMethod.Get, path, null, cancellationToken);
 
-        internal async Task<JsonDocument?> GetReleaseByTagOrNullAsync(string path, CancellationToken cancellationToken)
+        internal async Task<JsonDocument?> GetOrNullAsync(string path, CancellationToken cancellationToken)
         {
             var response = await SendAsync(HttpMethod.Get, path, null, null, cancellationToken);
             if (response.Status == HttpStatusCode.NotFound) return null;

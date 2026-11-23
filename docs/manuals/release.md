@@ -6,9 +6,9 @@
 
 每个发布候选前，先在主机手动运行 `dotnet run --project build-tools/release -- merge-check -All`，完成全部 38 个注册套件和源码检查；数量门槛保持不变。发布分为两个阶段：`prepare` 完成所有耗时工作；`publish-prepared` 使用已上传的候选，在 300 秒内核对、推送提交、打标签并公开。发布阶段不构建、不测试、不打包。
 
-在待发布的干净提交上运行完整门禁。主检出的 `bin-build/scorecard/merge-check-runs.jsonl` 记录提交、Git 树和完成时间。`prepare` 在清理或构建前核对该提交和树最近一次完整运行的结果，写候选时再次核对 HEAD。缺少记录、旧记录没有树哈希或完整运行失败时，在该提交上重新运行 `merge-check -All`。若设置了 `TIA_MCP_UPDATE_GOLDEN`，先清除该环境变量，再运行 `merge-check`、`test-suites` 或 `prepare`。
+在待发布的干净提交上运行完整门禁。主检出的 `bin-build/scorecard/merge-check-runs.jsonl` 记录提交、Git 树和完成时间。生成候选时，`prepare` 在清理或构建前核对该提交和树最近一次完整运行的结果，写候选时再次核对 HEAD。缺少记录、旧记录没有树哈希或完整运行失败时，在该提交上重新运行 `merge-check -All`。若设置了 `TIA_MCP_UPDATE_GOLDEN`，先清除该环境变量，再运行 `merge-check`、`test-suites` 或 `prepare`。
 
-[开发规范](../standards/development.md) 第 5.9 节原文：“不把开发缓存、`-Quick` 报告或合并门的结果当作发布证据”。按 [ADR 0031 的修订](../standards/decisions/0031-release-path.md)，与候选提交及树匹配的完整门禁记录证明注册套件与源码检查已经通过。交付 ZIP 的证据来自本次 `prepare` 的包检查与摘要。
+[开发规范](../standards/development.md) 第 5.9 节原文：“注册套件与源码检查的发布证据是与候选提交和 Git 树完全匹配的 `merge-check -All` 通过记录。”交付 ZIP 的证据来自本次 `prepare` 的包检查与摘要（见 [ADR 0031](../standards/decisions/0031-release-path.md)）。
 
 实施状态：master 已含 NEW-REL-A 的构建打包、NEW-REL-B 的完整检查与候选、NEW-REL-C 的上传和公开命令。`prepare -BuildOnly` 只得到 ZIP，不能视为可发布候选，也不能手工补候选记录。
 
@@ -45,8 +45,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1
 | 选项 | 用途与边界 |
 |---|---|
 | `-TimeoutMinutes <正整数>` | 从提取 ZIP 到交付检查结束的总时限。每静默 10 分钟显示一次作业心跳。到达总时限时列出运行中的作业及耗时，并行终止本次检查的子进程树，最多再等 5 秒，报告仍在清理的 PID 并返回失败。构建阶段的 MSBuild 属性查询另有 5 分钟的单次限时。 |
-| `-BuildOnly` | 跳过漏洞扫描，只构建、暂存校验和打包，不运行交付包检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
-| `-BuildOnly -SkipMergeCheck` | 可在没有该提交完整门禁记录时构建 ZIP；仅限构建模式 |
+| `-BuildOnly` | 跳过漏洞扫描，只构建、暂存校验和打包，不运行交付包检查，不生成可发布候选，不上传草稿；可在任意干净分支检查构建和交付布局，无需完整门禁记录 |
 | `-NoDraftUpload` | 仍须通过漏洞扫描；完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |
 | `-Python`、`-CompanionPython` | 分别指定解码器和 PLC Tools 的解释器绝对路径 |
@@ -78,7 +77,7 @@ dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0
 dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0-rc.1
 ```
 
-命令先核对候选、HEAD、干净工作树、ZIP 与 sidecar、草稿资产的大小与摘要以及已有标签的目标。核对通过后推送候选提交到 `origin/master`，按需创建 `v<版本>` 标签，公开草稿，再确认公开资产可下载。正式版设置 `prerelease=false`、`make_latest=true`，成为 GitHub **Latest**。beta 和 rc 设置 `prerelease=true`、`make_latest=false`。核对草稿与标签期间，工具同时向 GitHub Actions 查询候选提交的最近一次工作流运行，显示名称及结论或当前状态。失败、缺少运行或未能及时读到状态时打印警告，继续公开。
+命令先核对候选、HEAD、干净工作树、ZIP 与 sidecar、草稿资产的大小与摘要以及已有标签的目标。核对通过后推送候选提交到 `origin/master`，按需创建 `v<版本>` 标签，公开草稿，再确认公开资产可下载。正式版设置 `prerelease=false`、`make_latest=true`，成为 GitHub **Latest**。beta 和 rc 设置 `prerelease=true`、`make_latest=false`。核对草稿与标签期间，工具向 GitHub Actions 查询候选提交，逐个显示工作流最近一次运行的最新尝试及其结论或当前状态。推送 master 应触发 offline-checks、validate-bundle 和 vulnerability-scan，任一失败或缺失都会报警。若没有匹配的运行，工具另查远端是否已有该提交；提交尚未推送时会明确提示。CI 状态不可用或查询超时也只报警，继续公开。
 
 300 秒是从发布工具进程启动起的硬性要求。超过 150 秒不再开始标签步骤；标签步骤后仍先尝试公开草稿，其余请求和重试受剩余预算约束。所有结果均打印总秒数。超时或网络故障不会变成成功；已创建标签或已公开的状态必须由重跑核实。
 

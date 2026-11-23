@@ -49,7 +49,7 @@ public sealed class ReleaseGateTests
             "failed-rerun" => run with { Exit = 1 },
             _ => run
         });
-        if (problem == "invalid-json") File.AppendAllText(path, "{");
+        if (problem == "invalid-json") File.WriteAllText(path, "{");
         if (problem == "missing-exit") File.WriteAllText(path, File.ReadAllText(path).Replace("\"exit\":0,", "", StringComparison.Ordinal));
         var error = Assert.Throws<ReleaseException>(() => MergeCheckRuns.RequirePassing(checkout.Root,
             Options.Parse(["-NoDraftUpload"], Program.BooleanOptions), args => Git(checkout.Root, args, problem == "dirty")));
@@ -81,9 +81,54 @@ public sealed class ReleaseGateTests
         using var checkout = new StaticTree();
         MergeCheckRun? Require(params string[] flags) => MergeCheckRuns.RequirePassing(checkout.Root,
             Options.Parse(flags, Program.BooleanOptions), args => Git(checkout.Root, args));
-        Assert.Throws<ReleaseException>(() => Require("-BuildOnly"));
+        Assert.Null(Require("-BuildOnly"));
+        Assert.Throws<ReleaseException>(() => Require());
+        Assert.Throws<ReleaseException>(() => Require("-BuildOnly=false"));
         Assert.Contains("-BuildOnly", Assert.Throws<ReleaseException>(() => Require("-SkipMergeCheck", "-NoDraftUpload")).Message);
         Assert.Null(Require("-BuildOnly", "-SkipMergeCheck"));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void DamagedLinesPreserveTheLatestIntactFullRun(int exit)
+    {
+        using var checkout = new StaticTree();
+        var path = Path.Combine(checkout.Root, MergeCheckRuns.RelativePath);
+        var run = new MergeCheckRun(DateTime.UnixEpoch, Commit, "master", true, true, false, 2.5,
+            0, [], new() { ["suite-stage"] = 2 }, checkout.Root, Tree);
+        MergeCheckRuns.Append(path, run);
+        File.AppendAllText(path, "{\"commit\":\"unfinished"); // Simulate a writer interrupted before its newline.
+        var latest = run with { Utc = run.Utc.AddMinutes(1), Exit = exit, Failed = exit == 0 ? [] : ["suite-stage"] };
+        MergeCheckRuns.Append(path, latest);
+        File.AppendAllText(path, "{not-json}\n{\"exit\":0}\n{");
+
+        var rows = MergeCheckRuns.Read(path);
+        Assert.Equal(new[] { run.Utc, latest.Utc }, rows.Select(row => row.Utc));
+        var options = Options.Parse([], Program.BooleanOptions);
+        MergeCheckRun? Require() => MergeCheckRuns.RequirePassing(checkout.Root, options, args => Git(checkout.Root, args));
+        if (exit == 0) Assert.Equal(latest.Utc, Require()!.Utc);
+        else Assert.Contains("merge-check -All", Assert.Throws<ReleaseException>(() => Require()).Message);
+    }
+
+    [Fact]
+    public void AnAppendRetriesTheExclusiveLockWithoutLosingOrDuplicatingRecords()
+    {
+        using var checkout = new StaticTree();
+        var path = Path.Combine(checkout.Root, "runs.jsonl");
+        var run = new MergeCheckRun(DateTime.UnixEpoch, Commit, "first", true, true, false, 1,
+            0, [], new() { [new string('j', 8192)] = 1 }, checkout.Root, Tree);
+        using var held = new FileStream(path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
+        int retries = 0;
+        MergeCheckRuns.Append(path, run with { Branch = "second" }, () =>
+        {
+            retries++;
+            held.Dispose();
+            MergeCheckRuns.Append(path, run);
+        });
+        Assert.Equal(1, retries);
+        Assert.Equal(new[] { "first", "second" }, MergeCheckRuns.Read(path).Select(row => row.Branch));
+        Assert.Equal(2, File.ReadAllLines(path).Length);
     }
 
     private static CommandResult Git(string root, string[] args, bool dirty = false, string commit = Commit) => new(0, args switch

@@ -12,6 +12,9 @@ internal static class PublishPrepared
 {
     private static readonly long ProcessStart = Stopwatch.GetTimestamp() -
         (long)((DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime()).TotalSeconds * Stopwatch.Frequency);
+    // These workflows run on pushes to master. release.yml is triggered by publication.
+    private static readonly string[] CommitWorkflows =
+        [".github/workflows/offline-checks.yml", ".github/workflows/validate.yml", ".github/workflows/vulnerability-scan.yml"];
 
     internal static async Task<int> RunAsync(string root, PublishOptions options, HttpClient? client = null,
         Func<string[], int, CommandResult>? git = null, Func<TimeSpan>? elapsed = null,
@@ -82,17 +85,39 @@ internal static class PublishPrepared
         var label = $"GitHub CI for {commit}";
         try
         {
-            using var response = await api.GetRequiredAsync($"repos/{api.Repository}/actions/runs?head_sha={commit}&per_page=1", token);
-            var runs = response.RootElement.GetProperty("workflow_runs");
-            if (runs.GetArrayLength() == 0) return $"WARNING {label}: no workflow run.";
-            var latest = runs[0];
-            if (latest.GetProperty("head_sha").GetString() != commit) return $"WARNING {label}: no matching workflow run.";
-            var name = latest.GetProperty("name").GetString();
-            var status = latest.GetProperty("conclusion").GetString() ?? latest.GetProperty("status").GetString();
-            return (status == "success" ? "" : "WARNING ") + $"{label}: {name} {status}.";
+            var latest = new Dictionary<string, (long Number, int Attempt, string Description)>(StringComparer.Ordinal);
+            bool sawRuns = false;
+            for (int page = 1; ; page++)
+            {
+                string path = $"repos/{api.Repository}/actions/runs?head_sha={commit}&per_page=100&page={page.ToString(CultureInfo.InvariantCulture)}";
+                using var response = await api.GetRequiredAsync(path, token);
+                var runs = response.RootElement.GetProperty("workflow_runs");
+                foreach (var run in runs.EnumerateArray())
+                {
+                    sawRuns = true;
+                    if (run.GetProperty("head_sha").GetString() != commit) continue;
+                    var workflow = run.GetProperty("path").GetString() ?? throw new JsonException("Missing workflow path");
+                    long number = run.GetProperty("run_number").GetInt64();
+                    int attempt = run.GetProperty("run_attempt").GetInt32();
+                    if (latest.TryGetValue(workflow, out var previous) && (number, attempt).CompareTo((previous.Number, previous.Attempt)) <= 0) continue;
+                    var status = run.GetProperty("conclusion").GetString() ?? run.GetProperty("status").GetString();
+                    var name = run.GetProperty("name").GetString();
+                    latest[workflow] = (number, attempt, (status == "success" ? "" : "WARNING ") + $"{label}: {name} {status}.");
+                }
+                if (runs.GetArrayLength() < 100) break;
+            }
+            if (latest.Count == 0)
+            {
+                using var remote = await api.GetOrNullAsync($"repos/{api.Repository}/git/commits/{commit}", token);
+                if (remote == null) return $"WARNING {label}: candidate commit is not on the remote yet.";
+                string reason = sawRuns ? "no matching workflow run." : "no workflow run.";
+                return $"WARNING {label}: {reason} Missing: {string.Join(", ", CommitWorkflows.Select(Path.GetFileName))}.";
+            }
+            var missing = CommitWorkflows.Except(latest.Keys).Select(path => $"WARNING {label}: {Path.GetFileName(path)} has no workflow run.");
+            return string.Join(Environment.NewLine, latest.Values.Select(run => run.Description).Concat(missing));
         }
         catch (Exception error) when (error is ReleaseException or HttpRequestException or OperationCanceledException
-            or JsonException or InvalidOperationException or KeyNotFoundException)
+            or JsonException or FormatException or InvalidOperationException or KeyNotFoundException)
         {
             return $"WARNING {label}: status unavailable ({error.GetType().Name}).";
         }

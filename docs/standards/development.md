@@ -278,7 +278,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 | 基线 | 正式写入方 |
 |---|---|
 | 契约基线 | `Snapshot-ToolContracts.py capture`，再用 `compare` 审查差异 |
-| 规划 golden | 设置 `TIA_MCP_UPDATE_GOLDEN=1` 运行 `generation-planning` 套件，移除开关后再正常运行一次（[golden 说明](../../tests/Generation/TiaMcp.Generation.Planning.Tests/Golden/README.md)） |
+| 规划 golden | 设置 `TIA_MCP_UPDATE_GOLDEN=1`，直接运行 `dotnet test tests/Generation/TiaMcp.Generation.Planning.Tests -c Debug --filter FullyQualifiedName~Golden`。每个重生成用例写完计划和 SCL 后按设计报错。审查文件差异，清除变量，再运行 `test-suites -Suite generation-planning` 验证（[golden 说明](../../tests/Generation/TiaMcp.Generation.Planning.Tests/Golden/README.md)） |
 | TIA 功能检查 | `check-tia-features -Capture` |
 | 嵌入目录、工具用法、工具数量块、迁移表 | `generate-catalogs`、`generate-tool-usage`、`generate-tool-counts`、`generate-release-migration`，按此顺序运行 |
 | 分析器警告基线 | `check-analyzer-warnings -UpdateBaseline -Complete` 只能删除；经维护者批准首次启用新规则时用 `-InitializeRules <csv> -ReviewData <file> -Base <ref>` 审查初始化 |
@@ -323,7 +323,7 @@ MCP 客户端看到的错误语义（错误码、`details`、`OUTCOME_UNKNOWN`�
 测试中不做的事：
 
 - 不运行 live 测试分支，不解禁原生交叉引用。
-- 不把开发缓存、`-Quick` 报告或合并门的结果当作发布证据（[开发流程](../manuals/workflow.md) 第 4 节）。
+- 注册套件与源码检查的发布证据是与候选提交和 Git 树完全匹配的 `merge-check -All` 通过记录。交付 ZIP 另由本次 `prepare` 的包检查和摘要验证。开发缓存、`-Quick` 报告和增量合并门均不能替代这两项证据（见[发布流程](../manuals/release.md)）。
 - 不在夹具中放真实项目、凭据、机器地址或未脱敏的现场日志。
 - 不按进程名或模糊匹配结束进程；只结束自己在本 worktree 中启动、并核对过可执行文件路径的进程。
 
