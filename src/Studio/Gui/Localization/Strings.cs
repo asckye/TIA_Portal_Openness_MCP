@@ -40,8 +40,10 @@ internal static partial class Strings
         ("Session.OfflineDemo", "Offline demo: calls, audit, environment and log pages only. Session operations are unavailable.",
                 "离线演示：仅提供调用、审计、环境与日志页，会话操作不可用。"),
         ("Blocks.Overwrite", "Overwrite existing blocks", "覆盖已有程序块"),
-        ("Vc.ReadOnlyBridge", "This page is read-only. The reader supports V16–V19. Make changes with the MCP version-control tools.",
-            "此页为只读。读取功能支持 V16–V19。请使用 MCP 版本控制工具进行更改。"),
+        ("Vc.Unavailable", "Version control is not available on TIA Portal {0}.", "TIA Portal {0} 不支持版本控制。"),
+        ("Vc.ReadOnlyBridge", "This page is read-only. The reader supports V16–V19. To make changes, use the MCP version-control tools "
+            + "from an AI client connected to this Workbench.",
+            "此页为只读。读取功能支持 V16–V19。要进行更改，请在已连接到此工作台的 AI 客户端中使用 MCP 版本控制工具。"),
         ("Vc.ReaderUnavailable", "The reader supports V16–V19 and cannot read this release. Use the MCP version-control tools to make changes.",
             "读取功能仅支持 V16–V19，无法读取当前版本。请使用 MCP 版本控制工具进行更改。"),
         ("Vc.ReadOnlySession", "This page is read-only in this session. Make changes with the MCP version-control tools.",
@@ -60,7 +62,6 @@ internal static partial class Strings
         ("Session.Working", "Updating MCP session", "更新 MCP 会话"),
         ("Session.DialogReported", "TIA reported at {0}, may still be open · {1} · {2}", "TIA 于 {0} 报告，可能仍打开 · {1} · {2}"),
         ("Session.Unsettled", "Calls with an unknown outcome: {0}", "结果未确认的调用：{0}"),
-        ("Session.ProcessId", "TIA process ID", "TIA 进程 ID"),
         ("Session.Result", "V4 tool result", "V4 工具结果"),
         ("Session.DisconnectWarning",
                 "This disconnects the TIA attachment of {0}. Reconnect with ConnectPortal and AttachOpenProject in the same MCP session. " +
@@ -362,7 +363,6 @@ internal static partial class Strings
         ("Primer.LocalDiff", "Local git diff", "本地 Git 差异"),
         ("Primer.WorkingTree", "Working tree", "工作树"),
         ("Primer.DiffScope", "Staged, unstaged and untracked changes. No branches, commits or remote sync here.", "包含已暂存、未暂存与未跟踪的变更。此处不涉及分支、提交或远端同步。"),
-        ("Primer.NamingPattern", "Naming rule (regular expression)", "命名规则（正则表达式）"),
         ("Primer.Mapped", "mapped", "已映射"),
         ("Primer.Unsupported", "unsupported", "不支持"),
 
@@ -479,7 +479,7 @@ internal static partial class Strings
         ("Toolbar.Connect.Tip",        "Start TIA Portal, or attach to one that is already running",
                                        "启动 TIA Portal,或附加到已在运行的实例"),
         ("Toolbar.Compile",            "Compile", "编译"),
-        ("Toolbar.Inspect",            "Open rules…", "打开规则…"),
+        ("Toolbar.Inspect",            "Inspect", "审查"),
         ("Toolbar.Import",             "Import…", "导入…"),
 
 

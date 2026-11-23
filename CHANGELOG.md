@@ -23,7 +23,8 @@
 
 - Workbench Logs gives Copy, Clear and Export diagnostics distinct access keys. The project menu names the rules it opens, and advanced connection options run checks on the Environment page.
 - Version control explains session read access and supported releases. Audit shows how to verify the chain before the first check.
-- Saving an empty online-target list offers two choices: block every target, or remove the list and turn off address restrictions.
+- Saving an empty online-target list can block every target or remove address restrictions. When replacing a damaged list,
+  the confirmation offers only Deny all targets and Cancel.
 - Workbench reading columns now stay centred as the window, navigation panes and scrollbars change width.
 - Environment checks show actionable failures and one worker-file summary across all eight releases. First-connection help stays available on the Environment page and no longer raises an attention badge. Diagnostic exports on the Logs page retain the first-connection and per-release findings.
 - Maximized Workbench windows keep their caption controls and status bar inside the screen. The status bar hides the participant separator when there is no participant text.

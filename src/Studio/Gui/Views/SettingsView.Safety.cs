@@ -117,12 +117,13 @@ public partial class SettingsView
         if (SafetyConfirmationForTests != null) return SafetyConfirmationForTests("Settings.ApplySafety");
         string entries = string.Join(", ", proposed);
         bool empty = entries.Length == 0;
-        var dialog = new FeatureConfirmation(Loc.Current["Settings.ApplySafety"],
-            empty ? Loc.Current["Settings.EmptyTargetsChoice"] : Loc.Current["Settings.ApplySafetyHelp"],
+        bool offerRemoval = empty && safety.TargetsProblem == null;
+        string help = !empty ? "Settings.ApplySafetyHelp" : offerRemoval ? "Settings.EmptyTargetsChoice" : "Settings.EmptyReplacement";
+        var dialog = new FeatureConfirmation(Loc.Current["Settings.ApplySafety"], Loc.Current[help],
             empty ? Loc.Current["Settings.DenyTargets"] : Loc.Current["Settings.ApplyAndSave"],
-            new(Loc.Current["Settings.OnlineTargets"], empty ? "0" : entries),
+            new(Loc.Current["Settings.OnlineTargets"], empty ? Loc.Current["Settings.NoEntries"] : entries),
             new(Loc.Current["Settings.Timeout"], _approvals == null ? "—" : Loc.Current.T("Common.Seconds", _approvals.TimeoutSeconds)));
-        if (empty) dialog.OfferAlternative(Loc.Current["Settings.UnconfigureTargets"]);
+        if (offerRemoval) dialog.OfferAlternative(Loc.Current["Settings.UnconfigureTargets"]);
         bool confirmed = dialog.Confirm(this);
         removeList = dialog.AlternativeSelected;
         return confirmed;

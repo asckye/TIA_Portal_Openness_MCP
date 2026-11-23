@@ -44,11 +44,7 @@
               </Border>
       <ScrollViewer x:Name="VciScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel x:Name="VciColumn" Style="{StaticResource Primer.VciColumn}" Margin="24">
-          <TextBlock Text="{Binding VersionControl.AccessNotice}" TextWrapping="Wrap" Margin="0,0,0,8">
-            <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
-              <Style.Triggers><Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger></Style.Triggers>
-            </Style></TextBlock.Style>
-          </TextBlock>
+          <TextBlock Text="{Binding VersionControl.AccessNotice}" Style="{StaticResource Project.SourceNotice}" TextWrapping="Wrap" Margin="0,0,0,8"/>
           <Border Style="{StaticResource Primer.ProjectResultCard}" Padding="20"
             Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource NotBoolToVisibility}}">
             <StackPanel>

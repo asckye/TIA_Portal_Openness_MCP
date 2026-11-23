@@ -12,7 +12,7 @@
           <DockPanel>
             <Button DockPanel.Dock="Right" x:Name="CompileButton" Content="{l:Tr Pages.CompileSoftware}" AutomationProperties.Name="{l:Tr Pages.CompileSoftware}"
               AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Command="{Binding Engineering.Compile}"
-              Style="{StaticResource Primer.IdeToolButton}" IsDefault="True"/>
+              Style="{StaticResource Primer.IdeToolButton}" ContentTemplate="{StaticResource Primer.CommandText}" IsDefault="True"/>
             <TextBlock Text="{Binding Engineering.CompileSummary}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold" TextWrapping="Wrap"/>
           </DockPanel>
           <ItemsControl ItemsSource="{Binding Engineering.CompilerMessages}">

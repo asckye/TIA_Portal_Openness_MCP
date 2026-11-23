@@ -12,21 +12,22 @@ public sealed class DecorativeGlyph : TextBlock
 
 public partial class EnvironmentView : UserControl
 {
-    private bool _checked;
+    internal bool HasChecked { get; private set; }
     public EnvironmentView()
     {
         InitializeComponent(); DataContext = null;
         IsVisibleChanged += (_, _) =>
         {
-            if (!IsVisible || _checked || DataContext is not FeaturePagesViewModel) return;
+            if (!IsVisible || HasChecked) return;
             Recheck();
         };
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
     internal void Recheck()
     {
-        _checked = true;
-        Model.Run(Model.Environment.Recheck);
+        if (DataContext is not FeaturePagesViewModel model) return;
+        HasChecked = true;
+        model.Run(model.Environment.Recheck);
     }
     private void OnRecheck(object sender, RoutedEventArgs e) => Recheck();
     private async void OnFix(object sender, RoutedEventArgs e)

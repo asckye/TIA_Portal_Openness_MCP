@@ -26,16 +26,16 @@
         <ScrollViewer Padding="20" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
           <StackPanel x:Name="ProjectOptions">
             <Label x:Name="AccessibleLabel1" Content="{l:Tr Access.FieldConfigVersion}" Target="{Binding ElementName=ReleasePicker}"
-              AutomationProperties.Name="{l:Tr Config.Version}" Style="{StaticResource Primer.FormLabel}"/>
-            <ComboBox x:Name="ReleasePicker" AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Config.Version}"
+              AutomationProperties.Name="{l:Tr Access.FieldConfigVersion}" Style="{StaticResource Primer.FormLabel}"/>
+            <ComboBox x:Name="ReleasePicker" AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Access.FieldConfigVersion}"
               ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key" SelectedValue="{Binding SelectedReleaseKey}"
               IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Primer.ProjectSelect}"/>
             <Label x:Name="AccessibleLabel2" Content="{l:Tr Access.FieldSessionProcessId}" Target="{Binding ElementName=AccessibleField2}" Margin="0,12,0,0"
-              AutomationProperties.Name="{l:Tr Session.ProcessId}" Style="{StaticResource Primer.FormLabel}"/>
+              AutomationProperties.Name="{l:Tr Access.FieldSessionProcessId}" Style="{StaticResource Primer.FormLabel}"/>
             <DockPanel>
               <Button DockPanel.Dock="Right" Content="{l:Tr Project.OpenPicker}" AutomationProperties.Name="{l:Tr Project.OpenPicker}"
                 Click="OnPickProcess" IsEnabled="{Binding Session.ProcessScanAvailable}" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0"/>
-              <TextBox x:Name="AccessibleField2" AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}" AutomationProperties.Name="{l:Tr Session.ProcessId}"
+              <TextBox x:Name="AccessibleField2" AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}" AutomationProperties.Name="{l:Tr Access.FieldSessionProcessId}"
                 Text="{Binding Session.ProcessId,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.ProjectInput}"/>
             </DockPanel>
             <Label x:Name="AccessibleLabel3" Content="{l:Tr Project.Label}" Target="{Binding ElementName=ControlProjectPath}" Margin="0,12,0,0"
@@ -133,7 +133,7 @@
           </StackPanel>
           <StackPanel x:Name="InspectOptions">
             <StackPanel><Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=ControlNamePattern}" x:Name="AccessibleLabel6" Content="{l:Tr Access.FieldPrimerNamingPattern}" Target="{Binding ElementName=ControlNamePattern}" Style="{StaticResource Primer.FormLabel}"/>
-<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel6}" AutomationProperties.Name="{l:Tr Primer.NamingPattern}" x:Name="ControlNamePattern" Text="{Binding Engineering.NamePattern,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.ProjectInput}"/></StackPanel>
+<TextBox AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel6}" AutomationProperties.Name="{l:Tr Access.FieldPrimerNamingPattern}" x:Name="ControlNamePattern" Text="{Binding Engineering.NamePattern,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Primer.ProjectInput}"/></StackPanel>
             <TextBlock Text="{Binding Engineering.RulePatternStatus}" Style="{StaticResource Project.Caption}" TextWrapping="Wrap" Margin="0,4,0,0"/>
             <ux:PrefillMarker x:Name="PatternMarker" Target="{Binding ElementName=ControlNamePattern}" Tag="InspectionRules" ClearRequested="OnClearPrefill"/>
             <TextBlock Text="{l:Tr Project.InspectRules}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,16,0,6"/>

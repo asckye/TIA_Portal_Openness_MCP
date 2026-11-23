@@ -45,7 +45,7 @@
       <TreeView.ContextMenu>
         <ContextMenu Opened="OnContextOpening">
           <MenuItem Header="{l:Tr Primer.SelectAll}" Click="OnAll" InputGestureText="Ctrl+A"/>
-          <MenuItem Header="{l:Tr Pages.ClearSelection}" Click="OnClear"/>
+          <MenuItem Header="{l:Tr Pages.ClearSelection}" HeaderTemplate="{StaticResource Primer.CommandText}" Click="OnClear"/>
           <Separator/>
           <MenuItem x:Name="SelectGroup" Header="{l:Tr Project.SelectGroup}" Click="OnGroup"/>
           <MenuItem x:Name="ClearGroup" Header="{l:Tr Project.ClearGroup}" Click="OnGroup"/>

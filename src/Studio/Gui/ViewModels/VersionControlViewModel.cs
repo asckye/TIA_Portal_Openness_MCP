@@ -2,6 +2,8 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Versioning;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Gui.Common;
 using TiaOpenness.Gui.Localization;
@@ -67,9 +69,17 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     internal void RefreshCommands() => RaiseVcCommands();
     public bool IsReadOnly => _client.CanRead && !_client.CanWrite;
-    public string AccessNotice => _client is McpVersionControlClient { UsesFallback: true }
-        ? (_client.CanRead ? Loc.Current["Vc.ReadOnlyBridge"] : Loc.Current["Vc.ReaderUnavailable"])
-        : IsReadOnly ? Loc.Current["Vc.ReadOnlySession"] : "";
+    public string AccessNotice
+    {
+        get
+        {
+            if (_client is not McpVersionControlClient { UsesFallback: true } session)
+                return IsReadOnly ? Loc.Current["Vc.ReadOnlySession"] : "";
+            if (session.BoundReleaseKey is { } release && !OpennessApi.VersionControl.Includes(release))
+                return Loc.Current.T("Vc.Unavailable", TiaVersionCatalog.Get(release).DisplayName);
+            return _client.CanRead ? Loc.Current["Vc.ReadOnlyBridge"] : Loc.Current["Vc.ReaderUnavailable"];
+        }
+    }
 
     private void RaiseVcCommands()
     {

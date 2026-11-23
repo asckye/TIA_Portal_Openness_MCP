@@ -347,6 +347,52 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData(AppLanguage.English, "No entries")]
+    [InlineData(AppLanguage.Chinese, "无条目")]
+    public void Damaged_target_list_offers_only_deny_all_and_cancel(AppLanguage language, string emptyEntries)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            using var fixture = new SafetySettingsServiceTests.Fixture();
+            const string damaged = "invalid original entries";
+            File.WriteAllText(fixture.TargetsPath, damaged);
+            var view = new SettingsView();
+            view.SetSafetyService(fixture.Service);
+            var window = new Window { Content = view };
+            try
+            {
+                WpfContext.ShowWindow(window);
+                WpfContext.Complete(view.LoadSafetyAsync());
+                view.SafetyConfirmationForTests = _ => true;
+                Assert.True(view.ConfirmTargetFileReplacement());
+                view.SafetyConfirmationForTests = null;
+                Assert.Throws<InvalidOperationException>(fixture.Service.RemoveTargetList);
+                string[] actions = [];
+                string? entries = null, body = null;
+                bool cancelDefault = false;
+                window.Dispatcher.InvokeAsync(() =>
+                {
+                    var dialog = window.OwnedWindows.OfType<FeatureConfirmation>().Single();
+                    actions = DesktopCapture.Descendants<Button>(dialog).Where(button => button.IsVisible)
+                        .Select(button => (string)button.Content).ToArray();
+                    entries = dialog.Fields.Items.Cast<KeyValuePair<string, string>>().First().Value;
+                    body = dialog.Body.Text;
+                    cancelDefault = dialog.CancelAction.IsDefault;
+                    UnifiedDesktopTests.ClickControl(dialog.CancelAction);
+                }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                UnifiedDesktopTests.ClickControl(view.SaveTargetChanges);
+                Assert.Equal(new[] { Loc.Current["Dialog.Cancel"], Loc.Current["Settings.DenyTargets"] }, actions);
+                Assert.True(cancelDefault);
+                Assert.Equal(emptyEntries, entries);
+                Assert.Equal(Loc.Current["Settings.EmptyReplacement"], body);
+                Assert.Equal(damaged, File.ReadAllText(fixture.TargetsPath));
+                Assert.Empty(fixture.Audit.Read());
+            }
+            finally { window.Close(); view.Dispose(); }
+        });
+    }
+
     [Fact]
     public void A_saved_empty_list_displays_the_deny_all_policy_on_open()
     {

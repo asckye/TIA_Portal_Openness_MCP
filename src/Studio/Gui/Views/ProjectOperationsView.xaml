@@ -63,16 +63,16 @@
             </StackPanel>
             <Button.ContextMenu><ContextMenu Placement="Bottom">
               <MenuItem Header="{l:Tr Primer.Transfer}" Click="OnTransfer" ToolTip="{l:Tr Pages.NoSelection}"/>
-              <MenuItem Header="{l:Tr Pages.Import}" Click="OnImportDrawer"/>
-              <MenuItem x:Name="GenerateAtlasItem" Header="{l:Tr Pages.GenerateAtlas}"/>
+              <MenuItem Header="{l:Tr Pages.Import}" HeaderTemplate="{StaticResource Primer.CommandText}" Click="OnImportDrawer"/>
+              <MenuItem x:Name="GenerateAtlasItem" Header="{l:Tr Pages.GenerateAtlas}" HeaderTemplate="{StaticResource Primer.CommandText}"/>
               <Separator/>
               <MenuItem Header="{l:Tr Project.OpenConnect}" Command="{x:Static ux:WorkbenchCommands.Open}"
                 CommandTarget="{Binding PlacementTarget,RelativeSource={RelativeSource AncestorType=ContextMenu}}" InputGestureText="Ctrl+O"/>
               <MenuItem Header="{l:Tr Common.Reload}" Click="OnRefresh"/>
               <MenuItem Header="{l:Tr Pages.ViewLadder}" Click="OnRender" IsEnabled="{Binding Engineering.FocusedBlock.HasLadderOrFbd,FallbackValue=False}"/>
-              <MenuItem Header="{l:Tr Toolbar.Inspect}" Click="OnOpenRules"/>
+              <MenuItem Header="{l:Tr Pages.OpenRules}" Click="OnOpenRules"/>
               <MenuItem Header="{l:Tr Pages.Options}" Click="OnProjectOptions"/>
-              <MenuItem x:Name="RunEnvironmentItem" Header="{l:Tr Pages.ViewEnvironment}" ToolTip="{Binding EnvironmentAttention}"
+              <MenuItem x:Name="RunEnvironmentItem" Header="{l:Tr Pages.ViewEnvironment}" HeaderTemplate="{StaticResource Primer.CommandText}" ToolTip="{Binding EnvironmentAttention}"
                 Visibility="{Binding EnvironmentNeedsAction,Converter={StaticResource BoolToVisibility}}" Click="OnEnvironment"/>
               <MenuItem x:Name="SessionItem" Header="{l:Tr Session.Title}" Click="OnSessions"/>
               <MenuItem Header="{l:Tr Pages.Disconnect}" Command="{Binding Session.Disconnect}"/>

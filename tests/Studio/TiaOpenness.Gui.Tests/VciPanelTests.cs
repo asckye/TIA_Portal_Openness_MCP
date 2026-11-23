@@ -19,7 +19,11 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class VciPanelTests(WpfContext wpf)
 {
     [Theory]
+    [InlineData("14sp1", "Vc.Unavailable")]
+    [InlineData("15.1", "Vc.Unavailable")]
     [InlineData("16", "Vc.ReadOnlyBridge")]
+    [InlineData("17", "Vc.ReadOnlyBridge")]
+    [InlineData("18", "Vc.ReadOnlyBridge")]
     [InlineData("19", "Vc.ReadOnlyBridge")]
     [InlineData("20", "Vc.ReaderUnavailable")]
     [InlineData("21", "Vc.ReaderUnavailable")]
@@ -31,7 +35,13 @@ public sealed class VciPanelTests(WpfContext wpf)
                 { Release = release, AdvertiseTools = false };
             using var project = new McpProjectClient(session);
             using var model = new VersionControlViewModel(new McpVersionControlClient(project), new FakeDialogService(), new WorkbenchActivity(), () => null);
-            Assert.Equal(Loc.Current[expected], model.AccessNotice);
+            string displayName = TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName;
+            if (expected == "Vc.Unavailable")
+            {
+                Assert.Contains(displayName, model.AccessNotice);
+                Assert.Equal(Loc.Current.T(expected, displayName), model.AccessNotice);
+            }
+            else Assert.Equal(Loc.Current[expected], model.AccessNotice);
             Assert.Empty(session.Calls);
         });
     }

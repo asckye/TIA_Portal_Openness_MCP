@@ -301,6 +301,34 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData(AppLanguage.English, "Inspect", "Open rules…")]
+    [InlineData(AppLanguage.Chinese, "审查", "打开规则…")]
+    public void Rules_menu_opens_the_drawer_with_a_separate_inspect_command(AppLanguage language, string inspect, string openRules)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var model = ProjectPageTestSupport.Model();
+            var window = new MainWindow(model, false);
+            try
+            {
+                WpfContext.ShowWindow(window);
+                var page = window.OperationsContent;
+                UnifiedDesktopTests.ClickControl(page.ExportMenuButton);
+                var menu = page.ExportMenuButton.ContextMenu;
+                var item = Assert.Single(menu.Items.OfType<MenuItem>(), entry => Equals(entry.Header, openRules));
+                item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                menu.IsOpen = false;
+                WpfContext.Drain();
+                Assert.Equal("Inspect", page.Options.CurrentSection);
+                var run = Assert.Single(DesktopCapture.Descendants<Button>(page.Options), b => b.IsVisible && b.Command == model.Engineering.Inspect);
+                Assert.Equal(inspect, run.Content);
+                Assert.Equal(inspect, System.Windows.Automation.AutomationProperties.GetName(run));
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
     public void Project_toolbar_save_is_the_only_accent_fill_and_runs_the_existing_confirmation()
     {
@@ -326,7 +354,7 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
                 UnifiedDesktopTests.ClickControl(window.OperationsContent.ExportMenuButton);
                 var menu = window.OperationsContent.ExportMenuButton.ContextMenu;
                 Assert.True(menu.IsOpen);
-                foreach (string key in new[] { "Project.OpenConnect", "Common.Reload", "Pages.Import", "Toolbar.Inspect", "Primer.Transfer" })
+                foreach (string key in new[] { "Project.OpenConnect", "Common.Reload", "Pages.Import", "Pages.OpenRules", "Primer.Transfer" })
                     Assert.Contains(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, Loc.Current[key]));
                 menu.IsOpen = false;
                 var save = Assert.Single(buttons, button => Equals(button.Background, host.FindResource("Primer.primaryBg")));

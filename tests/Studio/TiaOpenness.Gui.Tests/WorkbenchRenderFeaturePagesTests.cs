@@ -104,6 +104,33 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Environment_check_waits_for_a_visible_page_with_a_feature_model()
+    {
+        wpf.Run(() =>
+        {
+            var environment = new FeaturePageFixtures.Environment();
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(false), new FeaturePageFixtures.Diagnostics());
+            try
+            {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), environment);
+                window.OpenEnvironmentCheck();
+                Assert.False(window.EnvironmentContent.IsVisible);
+                Assert.Equal(0, environment.RecheckCount);
+                var model = window.EnvironmentContent.DataContext;
+                window.EnvironmentContent.DataContext = null;
+                WpfContext.ShowWindow(window);
+                window.EnvironmentContent.Recheck();
+                Assert.False(window.EnvironmentContent.HasChecked);
+                window.EnvironmentContent.DataContext = model;
+                window.OpenEnvironmentCheck();
+                Assert.True(window.EnvironmentContent.IsVisible);
+                Assert.Equal(1, environment.RecheckCount);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Advanced_project_options_open_environment_and_run_one_check_per_click()
     {
         wpf.Run(() =>

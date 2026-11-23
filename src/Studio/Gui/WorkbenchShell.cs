@@ -388,8 +388,10 @@ public partial class MainWindow
 
     internal void OpenEnvironmentCheck()
     {
-        EnvironmentContent.Recheck();
+        // Showing the page for the first time already starts a check.
+        bool needsRecheck = EnvironmentContent.HasChecked || EnvironmentContent.IsVisible;
         NavigateGuarded("Environment");
+        if (_page == "Environment" && EnvironmentContent.IsVisible && needsRecheck) EnvironmentContent.Recheck();
     }
 
     internal void OpenSettings() => Navigate("Settings");

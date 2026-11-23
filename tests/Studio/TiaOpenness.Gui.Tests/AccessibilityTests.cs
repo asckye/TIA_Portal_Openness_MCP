@@ -57,24 +57,40 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 WpfContext.ShowWindow(window);
                 string[] pages = ["Engineering", "VersionControl", "Mcp", "Clients", "Calls", "Approvals", "Audit", "Environment", "Log", "Settings"];
                 var names = new List<string>();
+                int total = 0;
                 foreach (string page in pages)
                 {
                     window.Navigate(page);
+                    if (page == "Engineering")
+                        ((ViewModels.MainViewModel)window.DataContext).Engineering.Document = ViewModels.ProjectDocument.Compile;
+                    if (page == "Environment")
+                    {
+                        window.UpdateLayout();
+                        DesktopCapture.Descendants<Expander>(window.EnvironmentContent)
+                            .Single(e => Equals(e.Header, Loc.Current["Env.FirstConnection"])).IsExpanded = true;
+                    }
+                    if (page == "Settings")
+                    {
+                        window.SettingsContent.ShowSection("Service");
+                        window.SettingsContent.RetentionDetails.IsExpanded = true;
+                    }
                     WpfContext.Drain();
                     window.UpdateLayout();
                     Assert.Equal(page, window.CurrentPage);
-                    var keys = new Dictionary<char, string>();
-                    foreach (var label in DesktopCapture.Descendants<AccessText>(window).Where(label => label.IsVisible && label.AccessKey != '\0'))
+                    var keys = RenderedAccessKeys(window, page, language);
+                    total += keys.Count;
+                    string[] expected = page switch
                     {
-                        DependencyObject owner = label;
-                        while (owner is not Control) owner = VisualTreeHelper.GetParent(owner);
-                        var control = (Control)owner;
-                        var key = char.ToUpperInvariant(label.AccessKey);
-                        string name = UIElementAutomationPeer.CreatePeerForElement(control)!.GetName();
-                        string visible = DisplayedLabel(label);
-                        Assert.Equal(visible, name);
-                        Assert.True(keys.TryAdd(key, visible), $"{page} ({language}), Alt+{key}: {keys[key]} / {visible}");
-                    }
+                        "Engineering" => ["Pages.CompileSoftware", "Pages.Rules", "Pages.Inspect"],
+                        "VersionControl" => ["Pages.PreviewSync", "Pages.RunSync"],
+                        "Mcp" => ["Pages.SaveBoth"],
+                        "Audit" => ["Audit.Verify"],
+                        "Environment" => ["Env.Recheck", "Env.DiagnosticsLink"],
+                        "Log" => ["Pages.CopyLog", "Pages.ClearLog", "Env.Generate"],
+                        "Settings" => ["Audit.OpenFolder"],
+                        _ => [],
+                    };
+                    AssertRenderedCaptions(keys, expected);
                     foreach (var button in DesktopCapture.Descendants<ButtonBase>(window).Where(button => button.IsVisible))
                     {
                         if (button.Content is not string caption || !caption.Any(char.IsLetter)) continue;
@@ -108,10 +124,83 @@ public sealed class AccessibilityTests(WpfContext wpf)
                         }
                     }
                 }
+                Assert.True(total >= 13, $"Rendered {total} access keys across pages ({language}).");
                 Assert.Empty(names);
+                window.Navigate("Engineering");
+                var project = window.OperationsContent;
+                UnifiedDesktopTests.ClickControl(project.ExportMenuButton);
+                var transfer = project.ExportMenuButton.ContextMenu;
+                try { CheckSurface(transfer, "Transfer menu", "Pages.Import", "Pages.GenerateAtlas"); }
+                finally { transfer.IsOpen = false; }
+                var tree = window.ProjectExplorer.Nodes;
+                var menu = tree.ContextMenu;
+                menu.PlacementTarget = tree;
+                menu.IsOpen = true;
+                try { CheckSurface(menu, "Project tree menu", "Pages.ClearSelection"); }
+                finally { menu.IsOpen = false; }
+                foreach (string section in new[] { "Project", "Inspect" })
+                {
+                    project.Options.Show(section);
+                    string[] fields = section == "Project" ? ["Access.FieldConfigVersion", "Access.FieldSessionProcessId"]
+                        : ["Access.FieldPrimerNamingPattern"];
+                    CheckSurface(project.Options, section + " options", fields);
+                }
+                project.Options.Hide();
+
+                void CheckSurface(FrameworkElement surface, string name, params string[] captions)
+                {
+                    WpfContext.Drain();
+                    surface.UpdateLayout();
+                    AssertRenderedCaptions(RenderedAccessKeys(surface, name, language), captions);
+                }
             }
             finally { window.Close(); }
         });
+    }
+
+    private static Dictionary<char, string> RenderedAccessKeys(FrameworkElement surface, string page, AppLanguage language)
+    {
+        var keys = new Dictionary<char, string>();
+        var owners = new HashSet<Control>();
+        foreach (var label in DesktopCapture.Descendants<AccessText>(surface).Where(label => label.IsVisible && label.AccessKey != '\0'))
+        {
+            DependencyObject owner = label;
+            while (owner is not Control) owner = VisualTreeHelper.GetParent(owner);
+            var control = (Control)owner;
+            owners.Add(control);
+            var key = char.ToUpperInvariant(label.AccessKey);
+            string name = UIElementAutomationPeer.CreatePeerForElement(control)!.GetName();
+            string visible = DisplayedLabel(label);
+            Assert.Equal(visible, name);
+            Assert.True(keys.TryAdd(key, visible), $"{page} ({language}), Alt+{key}: {keys[key]} / {visible}");
+        }
+        // A localized caption can declare a mnemonic even if its template renders only plain text.
+        foreach (var control in DesktopCapture.Descendants<Control>(surface).Where(control => control.IsVisible))
+        {
+            var property = control switch
+            {
+                MenuItem => HeaderedItemsControl.HeaderProperty,
+                Label or ButtonBase => ContentControl.ContentProperty,
+                _ => null,
+            };
+            if (property == null || control.GetBindingExpression(property)?.ParentBinding.Source != Loc.Current) continue;
+            if (control.GetValue(property) is string caption && caption.Contains('_'))
+                Assert.True(owners.Contains(control), $"{page} ({language}) did not render the access key in {caption}.");
+        }
+        return keys;
+    }
+
+    private static void AssertRenderedCaptions(Dictionary<char, string> keys, params string[] expected)
+    {
+        foreach (string resource in expected)
+        {
+            string caption = Loc.Current[resource];
+            int marker = caption.IndexOf('_');
+            Assert.True(marker >= 0, resource);
+            Assert.True(keys.TryGetValue(char.ToUpperInvariant(caption[marker + 1]), out string? visible),
+                $"Missing {resource} ({caption}). Rendered: {string.Join(", ", keys.Values)}");
+            Assert.Equal(caption.Remove(marker, 1), visible);
+        }
     }
 
     private static string DisplayedLabel(AccessText label)

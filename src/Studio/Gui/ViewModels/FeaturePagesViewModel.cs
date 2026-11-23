@@ -115,7 +115,6 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     public int CallStatFailed => _callStats.Failed;
     public string CallStatAverage => _callStats.AverageMs is { } ms ? ms.ToString("N0") : "—";
     public CallRow? SelectedCall => _selectedCall != null && _callCache.TryGetValue(_selectedCall, out var row) ? row : null;
-    public string Address => string.IsNullOrEmpty(Journal.Connection.Address) ? Loc.Current["Feature.NotConnected"] : Journal.Connection.Address;
     public string Transport => string.IsNullOrEmpty(Journal.Connection.Transport) ? "—" : Journal.Connection.Transport;
     public string ConnectionJson => _connectionJson;
     public FeatureTone ApprovalPolicyTone => Approvals.Enabled ? FeatureTone.Success : FeatureTone.Warning;
@@ -620,7 +619,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
     {
         if (_connectionSource != Journal.Connection.ConfigurationJson)
         { _connectionSource = Journal.Connection.ConfigurationJson; _connectionJson = FeatureJson.Redact(_connectionSource); }
-        Notify(nameof(Address), nameof(Transport), nameof(ConnectionJson));
+        Notify(nameof(Transport), nameof(ConnectionJson));
     }
     private static void Sync<T>(ObservableCollection<T> rows, IReadOnlyList<T> next) where T : class
     {

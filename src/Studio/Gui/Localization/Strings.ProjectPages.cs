@@ -45,6 +45,7 @@ internal static partial class Strings
         ("Pages.ConnectHint", "Tip: For AI-client automation, configure MCP service and AI clients directly.",
             "提示：如仅由 AI 客户端自动操作，也可直接前往「MCP 服务」与「AI 客户端」完成配置。"),
         ("Pages.Options", "Options…", "选项…"),
+        ("Pages.OpenRules", "Open rules…", "打开规则…"),
         ("Pages.Rules", "Rules… (_R)", "规则…（_R）"),
         ("Pages.Save", "Save project", "保存项目"),
         ("Pages.Disconnecting", "Disconnecting from TIA Portal", "正在断开 TIA Portal"),

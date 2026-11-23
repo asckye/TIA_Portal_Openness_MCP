@@ -56,6 +56,7 @@ internal sealed class SafetySettingsService
         {
             var current = OnlineTargetSettings.ReadSnapshot(targetsPath);
             if (current.Revision != expected) throw new OnlineTargetSettingsChangedException();
+            if (current.Problem != null) throw new InvalidOperationException("Cannot remove an invalid or unreadable target list.");
             if (current.List == null) return;
             File.Delete(targetsPath);
         }
