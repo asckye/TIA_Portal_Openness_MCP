@@ -520,6 +520,7 @@ public sealed partial class WorkbenchShellDesignTests(WpfContext wpf)
                 Assert.Equal(Visibility.Visible, window.Toast.Visibility);
                 Capture("toast");
                 UnifiedDesktopTests.ClickControl(window.ToastClose);
+                WpfContext.WaitForDecisionGuard(window.ApprovalsContent);
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.ApproveRequest);
                 Assert.Equal(Visibility.Visible, window.ApprovalsContent.ConfirmationSheet.Visibility);
                 Capture("danger-sheet");

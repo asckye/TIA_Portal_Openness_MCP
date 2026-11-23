@@ -787,6 +787,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
                 {
                     var now = TestNow.AddMilliseconds(500);
                     window.ControlGuard = new(() => now);
+                    WpfContext.WaitForDecisionGuard(window.ApprovalsContent);
                     UnifiedDesktopTests.ClickControl(Descendants<Button>(window).First(item => item.Name == "ApproveRequest"));
                     WpfContext.Drain();
                     Assert.Equal(Visibility.Visible, ((Grid)((Views.ApprovalsDrawer)window.FindName("ApprovalsContent")).FindName("ConfirmationSheet")).Visibility);

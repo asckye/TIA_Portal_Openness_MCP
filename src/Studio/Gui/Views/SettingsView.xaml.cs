@@ -224,7 +224,12 @@ public partial class SettingsView : UserControl
     private void OnControlEnabledClick(object sender, RoutedEventArgs e)
     {
         App.Settings.WorkbenchControlEnabled = ControlEnabled.IsChecked == true;
-        App.Settings.Save();
+        if (App.Settings.Save() is { } error)
+        {
+            App.Settings.WorkbenchControlEnabled = false;
+            ControlEnabled.IsChecked = false;
+            NotifySettings(ToastKind.Error, LocalizedText.Literal(error));
+        }
         ControlEnabledChanged?.Invoke(this, EventArgs.Empty);
     }
 

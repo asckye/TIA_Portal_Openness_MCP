@@ -32,12 +32,7 @@ namespace TiaMcpConfigurator
                 RegisterName(control.Name, control);
 
             var choices = Clients.ClientChoices;
-            var cards = preview?.Clients ?? ClientProfiles.All();
-            choices.ItemsSource = cards;
-            int firstDetected = cards.FindIndex(profile => profile.Detected);
-            choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
-            Append(Loc.Current.T("Config.ClientDetection",
-                string.Join(Loc.Current["Config.ClientListSeparator"], cards.Select(profile => profile.DisplayName + (profile.Detected ? " ✓" : " –")))));
+            if (preview != null) ShowClientCards(preview.Clients);
 
             Clients.PreviewTarget.ItemsSource = choices.SelectedItems;
             Clients.PreviewTarget.SelectionChanged += (_, _) => UpdateJsonPreview();
@@ -53,13 +48,28 @@ namespace TiaMcpConfigurator
                 guidance.KeyDown += OnClientGuidanceKey;
                 guidance.MouseLeftButtonUp += (_, _) => ShowClientGuidance();
             }
-            Clients.SelectDetected.Click += (_, _) => Guard(SelectDetectedClients);
+            Clients.SelectDetected.Click += (_, _) => Guard(() =>
+            {
+                if (scan != null) scan.Cancel();
+                else if (choices.Items.Count == 0) _ = RefreshDetectionsAsync(false);
+                else SelectDetectedClients();
+            });
             Clients.ClearClients.Click += (_, _) => choices.UnselectAll();
             Clients.SaveClient.Click += (_, _) => Guard(() => SaveClients(Remote));
             Clients.CopyJson.Click += (_, _) => Guard(() => {
                 CopyClientText(Clients.JsonText.Text);
                 Notify(ToastKind.Success, LocalizedText.Key("Config.FormatCopied", PreviewFormatName), "copy");
             });
+        }
+
+        private void ShowClientCards(List<ClientProfile> cards)
+        {
+            var choices = Clients.ClientChoices;
+            choices.ItemsSource = cards;
+            int firstDetected = cards.FindIndex(profile => profile.Detected);
+            choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
+            Append(Loc.Current.T("Config.ClientDetection",
+                string.Join(Loc.Current["Config.ClientListSeparator"], cards.Select(profile => profile.DisplayName + (profile.Detected ? " ✓" : " –")))));
         }
 
         private void SelectDetectedClients()
@@ -214,6 +224,12 @@ namespace TiaMcpConfigurator
             Clients.SaveClient.Tag = selected.Count == 0 ? Loc.Current["Config.SelectForWrite"] : Loc.Current.T("Config.WriteCount", selected.Count);
             Clients.SelectDetected.Content = Loc.Current.T("Config.SelectDetected", detected);
             Clients.SelectDetected.IsEnabled = detected > 0;
+            if (preview == null && Clients.ClientChoices.Items.Count == 0)
+            {
+                Clients.SelectDetected.Content = Loc.Current[scan != null ? "Dialog.Cancel" : "Config.Detect"];
+                Clients.SelectDetected.IsEnabled = true;
+                if (scan != null) Clients.DetectedCount.Text = Loc.Current["Config.Detecting"];
+            }
             if (Clients.PreviewTarget.SelectedIndex < 0 && selected.Count > 0) Clients.PreviewTarget.SelectedIndex = 0;
             Clients.WriteTargets.Text = selected.Count == 0 ? Loc.Current["Config.EmptySelection"] : Loc.Current.T("Config.SelectionBackup", selected.Count);
             Clients.WriteTargets.ToolTip = Loc.Current["Mcp.WillWrite"] + "\n" + string.Join("\n", selected.Select(x => x.DisplayName + " → " + x.Path));

@@ -21,6 +21,8 @@ namespace TiaOpenness.Core.Environment
         public const string Mask = "[REDACTED]";
         private readonly HashSet<string> knownSecrets = new HashSet<string>(StringComparer.Ordinal);
         private const string SecretName = @"[\w.-]*(?:key|token|password|passwd|pwd|passphrase|secret|credential|authorization|cookie)[\w.-]*";
+        private readonly string profileDirectory = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+        private readonly string accountName = System.Environment.UserName;
         private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(2);
 
         public static bool SecretField(string name)
@@ -58,11 +60,30 @@ namespace TiaOpenness.Core.Environment
                         }
                         else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var content)) obj[pair.Key] = Plain(content);
                         else if (pair.Value != null) Scrub(pair.Value);
+                        string safeKey = Profile(pair.Key);
+                        if (safeKey != pair.Key)
+                        {
+                            var child = obj[pair.Key];
+                            obj.Remove(pair.Key);
+                            string unique = safeKey;
+                            for (int i = 2; obj.ContainsKey(unique); i++) unique = safeKey + "-" + i;
+                            obj[unique] = child;
+                        }
                     }
                 else if (node is JsonArray array)
                     for (int i = 0; i < array.Count; i++)
                         if (array[i] is JsonValue value && value.TryGetValue<string>(out var content)) array[i] = Plain(content);
                         else if (array[i] != null) Scrub(array[i]);
+            }
+            string Profile(string value)
+            {
+                if (!string.IsNullOrWhiteSpace(profileDirectory))
+                    value = Replace(value, Regex.Escape(profileDirectory).Replace(@"\\", @"[\\/]+") + @"(?=[\\/\s""']|$)",
+                        "user-profile", _ => "%USERPROFILE%");
+                value = Replace(value, @"[a-z]:[\\/]+Users[\\/]+[^\\/:""'<>\r\n]+", "user-profile", _ => "%USERPROFILE%");
+                if (accountName.Length > 0)
+                    value = Replace(value, @"(?<![\w])" + Regex.Escape(accountName) + @"(?![\w])", "user-name", _ => "[USER]");
+                return value;
             }
             string Plain(string value)
             {
@@ -79,14 +100,15 @@ namespace TiaOpenness.Core.Environment
                     "text-secret", m => m.Groups["prefix"].Value + "\"" + Mask + "\"");
                 foreach (string secret in knownSecrets.OrderByDescending(s => s.Length))
                     if (value.Contains(secret)) { value = value.Replace(secret, Mask); Count("known-secret"); }
-                return value;
+                return Profile(value);
             }
             try
             {
                 if (format == "json")
                 {
                     var node = JsonNode.Parse(text);
-                    if (node != null) Scrub(node);
+                    if (node is JsonValue scalar && scalar.TryGetValue<string>(out var content)) node = JsonValue.Create(Plain(content));
+                    else if (node != null) Scrub(node);
                     return new DiagnosticRedaction(node?.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) ?? "null", rules);
                 }
                 if (format == "xml")

@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
+using TiaOpenness.Core.Environment;
 using System.Windows;
 using System.Windows.Threading;
 using TiaOpenness.Gui.Localization;
@@ -42,9 +44,17 @@ public partial class App : Application
             Shutdown(RunNetworkConfiguration(args));
             return;
         }
-        // A background failure that reaches the dispatcher would otherwise kill the app
-        // silently while a TIA session is still open.
         DispatcherUnhandledException += OnUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += OnDomainException;
+        TaskScheduler.UnobservedTaskException += OnTaskException;
+        var instance = new WorkbenchInstance("TiaOpenness.Workbench", () =>
+            Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
+            {
+                if (MainWindow is not { } window) return;
+                if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
+                window.Activate();
+            })));
+        if (!instance.IsFirst) { instance.Dispose(); Shutdown(); return; }
 
         Settings = UiSettings.Load();
         ApplyCommandLineOverrides(args, Settings);
@@ -60,7 +70,17 @@ public partial class App : Application
             Settings.Theme = ThemeManager.Current.Theme;
             Settings.Accent = ThemeManager.Current.Accent;
             Settings.LowEffects = ThemeManager.Current.LowEffects;
-            Settings.Save();
+            try
+            {
+                if (Settings.Save() is { } error)
+                    MessageBox.Show(error, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                AppDomain.CurrentDomain.UnhandledException -= OnDomainException;
+                TaskScheduler.UnobservedTaskException -= OnTaskException;
+                instance.Dispose();
+            }
         };
 
         StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
@@ -124,22 +144,41 @@ public partial class App : Application
         e.Handled = true;
     }
 
-    internal static void ReportUiException(Exception error)
+    private static void OnDomainException(object sender, UnhandledExceptionEventArgs e)
     {
+        // The runtime may terminate as soon as this handler returns. Do not enqueue the log or dialog.
+        var message = CrashReport(e.ExceptionObject as Exception ?? new InvalidOperationException(e.ExceptionObject?.ToString()));
+        MessageBox.Show(message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+
+    private void OnTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        var message = CrashReport(e.Exception);
+        e.SetObserved();
+        Dispatcher.BeginInvoke(new Action(() => PresentUiError(message)));
+    }
+
+    internal static void ReportUiException(Exception error) => PresentUiError(CrashReport(error));
+
+    private static readonly object CrashLogLock = new();
+    internal static string CrashReport(Exception error, string? path = null)
+    {
+        string id = Guid.NewGuid().ToString("N");
+        var redactor = new DiagnosticRedactor();
         string details;
         try
         {
-            File.AppendAllText(CrashLogPath,
-                $"{DateTimeOffset.Now:O}{System.Environment.NewLine}{error}{System.Environment.NewLine}{System.Environment.NewLine}");
-            details = Loc.Current.T("Dialog.Error.Details", CrashLogPath);
+            path ??= CrashLogPath;
+            var entry = $"{DateTime.UtcNow:O} {id}{Environment.NewLine}{redactor.Redact(error.ToString()).Text}{Environment.NewLine}";
+            lock (CrashLogLock) File.AppendAllText(path, entry);
+            details = Loc.Current.T("Dialog.Error.Details", path);
         }
         catch (Exception logError)
         {
-            details = Localization.Loc.Current.T("Common.IoFailed", logError.Message);
+            details = Loc.Current.T("Common.IoFailed", logError.Message);
             TiaOpenness.Shared.DataLocations.ReportLogFailure("TiaOpenness.crash", logError);
         }
-
-        PresentUiError(error.Message + System.Environment.NewLine + System.Environment.NewLine + details);
+        return string.Join(Environment.NewLine, redactor.Redact(error.Message).Text, Loc.Current.T("Dialog.DiagnosticId", id), details);
     }
 
     internal static void PresentUiError(string message)

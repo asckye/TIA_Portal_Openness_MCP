@@ -60,11 +60,16 @@ public sealed class McpSessionPanel : ObservableObject, IDisposable
     public AsyncCommand Create { get; }
     public AsyncCommand Detach { get; }
     public System.Windows.Input.ICommand Cancel { get; }
-    public McpSessionPanel(IMcpSessionClient client, Func<string> release, WorkbenchActivity activity, Func<JsonObject?, Task> apply)
+    public McpSessionPanel(IMcpSessionClient client, Func<string> release, WorkbenchActivity activity, Func<JsonObject?, Task> apply,
+        Func<bool>? cancelBridgeRead = null)
     {
         this.client = client; this.release = release; this.activity = activity; this.apply = apply;
         state = client.State;
-        Cancel = new AsyncCommand(() => { client.CancelPending(); return Task.CompletedTask; });
+        Cancel = new AsyncCommand(() =>
+        {
+            if (cancelBridgeRead?.Invoke() != true) client.CancelPending();
+            return Task.CompletedTask;
+        });
         Refresh = new(() => Guard(async () =>
         {
             string target = release();

@@ -56,6 +56,41 @@ public sealed partial class RemoteConfigurationTests(WpfContext wpf) : IDisposab
         return window;
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Installation_scan_runs_off_dispatcher_and_cancels_between_probes(bool cancel)
+    {
+        wpf.Run(() =>
+        {
+            using var stop = new System.Threading.CancellationTokenSource();
+            var dispatcher = Dispatcher.CurrentDispatcher;
+            var cards = ClientProfiles.Catalogue();
+            int clients = 0, releases = 0;
+            var task = ConfigurationView.ScanInstallations(cards, (_, _) =>
+            {
+                Assert.False(dispatcher.CheckAccess()); clients++;
+                if (cancel) stop.Cancel();
+            }, key =>
+            {
+                Assert.False(dispatcher.CheckAccess()); releases++;
+                return new(key, "fixture");
+            }, stop.Token);
+            if (cancel)
+            {
+                Assert.ThrowsAny<OperationCanceledException>(() => WpfContext.Complete(task));
+                Assert.Equal(1, clients); Assert.Equal(0, releases);
+            }
+            else
+            {
+                WpfContext.Complete(task);
+                Assert.Equal(cards.Count, clients);
+                Assert.Equal(8, releases);
+                Assert.Equal("21", task.Result["21"].Key);
+            }
+        });
+    }
+
     private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent, button));
 
     private static void Navigate(Button button)

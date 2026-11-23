@@ -569,7 +569,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             var first = group.First();
             foreach (var row in group) row.SetGroupHeader(ReferenceEquals(row, first), group.Count());
         }
+        bool arrived = next.Any(row => row.Pending && !previous.ContainsKey(row.Request.Id));
         Sync(_requests, next); FilterRequests();
+        if (arrived) Raise(nameof(Requests));
     }
     private void FilterRequests()
     {

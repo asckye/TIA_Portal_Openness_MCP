@@ -65,7 +65,14 @@ namespace TiaOpenness.Client
         /// <param name="bridgeExePath">Path to TiaOpenness.Bridge.exe. Null uses <see cref="LocateBridge"/>.</param>
         /// <param name="forceMock">Pass --mock so the bridge never touches Siemens.Engineering.</param>
         public void Start(string bridgeExePath = null, bool forceMock = false, string opennessVersion = null)
+            => Start(bridgeExePath, forceMock, opennessVersion, CancellationToken.None);
+
+        public Task StartAsync(string bridgeExePath = null, bool forceMock = false, string opennessVersion = null, CancellationToken cancellation = default)
+            => Task.Run(() => Start(bridgeExePath, forceMock, opennessVersion, cancellation), cancellation);
+
+        private void Start(string bridgeExePath, bool forceMock, string opennessVersion, CancellationToken cancellation)
         {
+            cancellation.ThrowIfCancellationRequested();
             if (_disposed) throw new ObjectDisposedException(nameof(BridgeClient));
             if (_faulted) throw new InvalidOperationException("The native bridge session failed. Restart Studio before making another native call.");
             if (IsRunning)
@@ -133,6 +140,7 @@ namespace TiaOpenness.Client
 
             try
             {
+                cancellation.ThrowIfCancellationRequested();
                 _process.Start();
                 _attachAttempted = false;
                 _process.BeginErrorReadLine();
@@ -142,7 +150,7 @@ namespace TiaOpenness.Client
                     {
                         Progress = BridgeJson.DeserializeClient<ProgressPayload>(BridgeJson.Deserialize<JsonElement>(payload)),
                     }));
-                _channel.ConnectAsync(DefaultTimeout).GetAwaiter().GetResult();
+                _channel.ConnectAsync(DefaultTimeout, cancellation).GetAwaiter().GetResult();
             }
             catch
             {

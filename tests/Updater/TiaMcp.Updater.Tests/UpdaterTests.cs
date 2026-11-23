@@ -16,6 +16,48 @@ namespace TiaMcp.Updater.Tests
     public sealed class UpdaterTests
     {
         [Fact]
+        public void A_transient_sharing_violation_retries_publication()
+        {
+            using var fixture = new Fixture();
+            string scannerPath = Path.Combine(fixture.Root, "data", "scan-in-progress");
+            using var locked = File.Open(scannerPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
+            int attempts = 0;
+            Assert.Equal(0, fixture.Run(beforeDeployFile: path =>
+            {
+                if (path != "TiaOpenness.exe") return;
+                if (++attempts == 2) locked.Dispose();
+                // Surface a genuine Win32 sharing violation during publication.
+                using var probe = File.OpenRead(scannerPath);
+            }));
+            Assert.Equal(2, attempts);
+            Assert.Equal("new-launcher", fixture.Text("TiaOpenness.exe"));
+        }
+
+        [Fact]
+        public void Uncommitted_renames_are_invisible_and_a_held_data_file_stays_open()
+        {
+            using var fixture = new Fixture();
+            using var data = File.Open(Path.Combine(fixture.Root, "data/config/user.json"), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            string Observe(string relative)
+            {
+                using var file = new FileStream(Path.Combine(fixture.Root, relative), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                using var reader = new StreamReader(file);
+                return reader.ReadToEnd();
+            }
+            int visits = 0;
+            Assert.Equal(0, fixture.Run(beforeDeployFile: _ =>
+            {
+                visits++;
+                Assert.Equal("old-launcher", Observe("TiaOpenness.exe"));
+                using var manifest = JsonDocument.Parse(Observe("manifest/delivery.json"));
+                Assert.Equal("3.3.0", manifest.RootElement.GetProperty("release").GetString());
+            }));
+            Assert.True(visits > 1);
+            Assert.Equal("new-launcher", fixture.Text("TiaOpenness.exe"));
+            Assert.True(data.CanWrite);
+        }
+
+        [Fact]
         public void Decoder_runtime_bytes_are_installed_and_removed_on_rollback()
         {
             using var fixture = new Fixture();
@@ -223,11 +265,25 @@ namespace TiaMcp.Updater.Tests
                 Fixture.WaitForInstall(f.Root, "4.0.0", "new-launcher", nextBytes);
                 Assert.Equal("kept", f.Text("data/config/user.json"));
                 Assert.Equal("unknown", f.Text("notes.txt"));
+                string[] logs = Directory.GetFiles(Path.Combine(f.Root, "data", "logs", "updater"), "*.log");
+                Assert.Contains(logs, log => File.ReadAllText(log).Contains("SHA-256"));
                 Assert.False(f.Exists("scripts/operations/Update-Engine.ps1"));
 
                 Fixture.RunBuiltUpdater(Path.Combine(f.Root, "runtime/tools/TiaMcp.Updater.exe"), f.Root, source, "-Rollback");
                 Fixture.WaitForInstall(f.Root, "3.3.0", "old-launcher", oldBytes);
                 Assert.Equal("kept", f.Text("data/config/user.json"));
+
+                var invalid = new ProcessStartInfo(oldUpdater)
+                {
+                    UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardError = true, RedirectStandardOutput = true
+                };
+                foreach (string arg in new[] { "-InstallRoot", f.Root, "-Version", "broken" }) invalid.ArgumentList.Add(arg);
+                using var failed = Process.Start(invalid);
+                Assert.True(failed.WaitForExit(TestDeadlines.HangMilliseconds));
+                Assert.Equal(1, failed.ExitCode);
+                Assert.Contains("-Version", failed.StandardError.ReadToEnd());
+                Assert.Contains(Directory.GetFiles(Path.Combine(f.Root, "data", "logs", "updater")), path =>
+                    File.ReadAllText(path).Contains("-Version must be"));
             }
         }
         [Fact] public void Checksum_mismatch_leaves_install_untouched() { using (var f = new Fixture()) { f.Source.BadChecksum = true; Assert.Throws<InvalidOperationException>(() => f.Run()); Assert.Equal("old-launcher", f.Text("TiaOpenness.exe")); } }
@@ -453,7 +509,9 @@ namespace TiaMcp.Updater.Tests
                 catch (Exception error) { lastError = error; }
                 System.Threading.Thread.Sleep(200);
             }
-            throw new TimeoutException("Built updater did not finish installing " + release + ".", lastError);
+            var logs = Directory.GetFiles(Path.Combine(root, "data", "logs", "updater"), "*.log")
+                .SelectMany(log => File.ReadLines(log).TakeLast(4));
+            throw new TimeoutException("Built updater did not finish installing " + release + ". " + string.Join(Environment.NewLine, logs), lastError);
         }
     }
 

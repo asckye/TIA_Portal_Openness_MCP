@@ -27,6 +27,7 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
     private readonly Func<IReadOnlyList<EnvironmentFinding>> _checks;
     private readonly Func<EnvironmentCheckContext, IReadOnlyList<DiagnosticInput>> _inputs;
     private readonly Action<string> _open;
+    private readonly Func<string, bool> _confirm;
     private int _running;
     public Task Completion { get; private set; } = Task.CompletedTask;
     public DiagnosticProgress Progress { get; private set; } = new(DiagnosticState.Idle, LocalizedText.Empty);
@@ -35,7 +36,14 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
         folder => Process.Start(new ProcessStartInfo("explorer.exe", folder) { UseShellExecute = true })) { }
     public DiagnosticBundleService(Func<EnvironmentCheckContext> context, Func<IReadOnlyList<EnvironmentFinding>> checks,
         Func<EnvironmentCheckContext, IReadOnlyList<DiagnosticInput>> inputs, Action<string> open)
-    { _context = context; _checks = checks; _inputs = inputs; _open = open; }
+        : this(context, checks, inputs, open, ConfirmExport) { }
+
+    internal DiagnosticBundleService(Func<EnvironmentCheckContext> context, Func<IReadOnlyList<EnvironmentFinding>> checks,
+        Func<EnvironmentCheckContext, IReadOnlyList<DiagnosticInput>> inputs, Action<string> open, Func<string, bool> confirm)
+    { _context = context; _checks = checks; _inputs = inputs; _open = open; _confirm = confirm; }
+
+    private static bool ConfirmExport(string listing) => System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        new WpfDialogService().ShowMessage(listing, Loc.Current["Env.BundlePreview"], DialogButtons.OKCancel, DialogIcon.Question) == DialogResult.OK);
 
     internal static string OutputDirectory(string dataRoot) => Path.Combine(dataRoot, "reports");
 
@@ -68,12 +76,61 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
                         { manifest.Add(Item(input, "skipped-oversized-config", true, new Dictionary<string, int>())); continue; }
                         // Collect configuration secrets without retaining their raw bytes in the archive.
                         if (!input.Tail) redactor.Redact(content.Text, Format(input));
-                        payloads.Add((input, content.Text, content.Truncated));
+                        payloads.Add((input, input.Category is "call-journal" or "audit-journal"
+                            ? JournalMetadata(content.Text) : content.Text, content.Truncated));
                     }
                     catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
                     { manifest.Add(Item(input, "unreadable", false, new Dictionary<string, int>())); }
                 }
                 Update(new(DiagnosticState.Running, LocalizedText.Key("Env.BundleRedact"), 40));
+                var entries = new List<(string Name, string Content)>();
+                var checkDocument = JsonSerializer.Serialize(new
+                {
+                    capturedAtUtc = DateTimeOffset.UtcNow,
+                    userFallback = context.UserFallback, dataRoot = context.DataRoot,
+                    configDirectory = context.ConfigDirectory, logsDirectory = context.LogsDirectory,
+                    checks = findings.Select(f => new
+                    {
+                        id = f.Id, status = f.Status.ToString(), evidence = f.Evidence,
+                        en = Text(f, false), zh = Text(f, true),
+                    }),
+                }, JsonOptions);
+                var checks = redactor.Redact(checkDocument, "json");
+                entries.Add(("environment/checks.json", checks.Text));
+                manifest.Add(new("environment", "environment/checks.json", "local doctor", "included", false, checks.Rules));
+                for (int index = 0; index < payloads.Count; index++)
+                {
+                    var payload = payloads[index];
+                    payloads[index] = default;
+                    var redacted = redactor.Redact(payload.Text, Format(payload.Input));
+                    entries.Add((redactor.Redact(payload.Input.Entry).Text, redacted.Text));
+                    manifest.Add(Item(payload.Input, "included", payload.Truncated, redacted.Rules));
+                    Update(new(DiagnosticState.Running, LocalizedText.Key("Env.BundleRedact"), 50 + 40 * (index + 1) / Math.Max(1, payloads.Count)));
+                }
+                var manifestText = JsonSerializer.Serialize(new
+                {
+                    format = "tia-workbench-diagnostics-v1", createdAtUtc = DateTimeOffset.UtcNow,
+                    limits = new { logTailBytes = 262144, logTailLines = 200, configBytes = 2097152 },
+                    redaction = new[] {
+                        "secret-field", "xml-secret", "auth-scheme", "url-userinfo", "query-secret", "text-secret", "private-key", "known-secret",
+                            "unparseable-hidden", "user-name", "user-profile"
+                    },
+                    items = manifest.Select(item => item with
+                    {
+                        Source = redactor.Redact(item.Source).Text,
+                        Entry = redactor.Redact(item.Entry).Text,
+                    }),
+                }, JsonOptions);
+                entries.Add(("manifest.json", manifestText));
+                string listing = string.Join(Environment.NewLine, entries.Select(entry =>
+                    Loc.Current.T("Env.BundleFileSize", entry.Name, Encoding.UTF8.GetByteCount(entry.Content))));
+                Update(new(DiagnosticState.Running, LocalizedText.Key("Env.BundlePreview"), 90));
+                if (!_confirm(listing))
+                {
+                    Update(new(DiagnosticState.Idle, LocalizedText.Empty));
+                    return;
+                }
+                Update(new(DiagnosticState.Running, LocalizedText.Key("Env.BundleWrite"), 95));
                 var reports = OutputDirectory(context.DataRoot);
                 Directory.CreateDirectory(reports);
                 string final = Path
@@ -82,43 +139,7 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
                 using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
                 using (var zip = new ZipArchive(stream, ZipArchiveMode.Create))
                 {
-                    var checkDocument = JsonSerializer.Serialize(new
-                    {
-                        capturedAtUtc = DateTimeOffset.UtcNow,
-                        userFallback = context.UserFallback, dataRoot = context.DataRoot,
-                        configDirectory = context.ConfigDirectory, logsDirectory = context.LogsDirectory,
-                        checks = findings.Select(f => new
-                        {
-                            id = f.Id, status = f.Status.ToString(), evidence = f.Evidence,
-                            en = Text(f, false), zh = Text(f, true),
-                        }),
-                    }, JsonOptions);
-                    var checks = redactor.Redact(checkDocument, "json");
-                    Add(zip, "environment/checks.json", checks.Text);
-                    manifest.Add(new("environment", "environment/checks.json", "local doctor", "included", false, checks.Rules));
-                    for (int index = 0; index < payloads.Count; index++)
-                    {
-                        var payload = payloads[index];
-                        var redacted = redactor.Redact(payload.Text, Format(payload.Input));
-                        Add(zip, payload.Input.Entry, redacted.Text);
-                        manifest.Add(Item(payload.Input, "included", payload.Truncated, redacted.Rules));
-                        Update(new(DiagnosticState.Running, LocalizedText.Key("Env.BundleWrite"), 50 + 40 * (index + 1) / Math.Max(1, payloads.Count)));
-                    }
-                    var manifestText = JsonSerializer.Serialize(new
-                    {
-                        format = "tia-workbench-diagnostics-v1", createdAtUtc = DateTimeOffset.UtcNow,
-                        limits = new { logTailBytes = 262144, logTailLines = 200, configBytes = 2097152 },
-                        redaction = new[] {
-                            "secret-field", "xml-secret", "auth-scheme", "url-userinfo", "query-secret", "text-secret", "private-key", "known-secret",
-                                "unparseable-hidden"
-                        },
-                        items = manifest.Select(item => item with
-                        {
-                            Source = redactor.Redact(item.Source).Text,
-                            Entry = redactor.Redact(item.Entry).Text,
-                        }),
-                    }, JsonOptions);
-                    Add(zip, "manifest.json", manifestText);
+                    foreach (var entry in entries) Add(zip, entry.Name, entry.Content);
                 }
                 File.Move(temporary, final); temporary = null;
                 Update(new(DiagnosticState.Done, LocalizedText.Key("Env.BundleDone"), 100, final));
@@ -161,6 +182,29 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
     {
         using var writer = new StreamWriter(zip.CreateEntry(entry, CompressionLevel.Optimal).Open(), new UTF8Encoding(false));
         writer.Write(text);
+    }
+
+    private static string JournalMetadata(string text)
+    {
+        var output = new StringBuilder();
+        foreach (var line in text.Split('\n'))
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            try
+            {
+                using var row = JsonDocument.Parse(line);
+                if (row.RootElement.ValueKind != JsonValueKind.Object) continue;
+                var fields = new Dictionary<string, JsonElement>();
+                foreach (var field in row.RootElement.EnumerateObject())
+                    if (field.Name is "tool" or "phase" or "event" or "utc" or "startedUtc" or "durationMs" or "errorCode" or "outcome"
+                        or "execution" or "completeness" or "release" or "releaseKey" or "index"
+                        && field.Value.ValueKind is JsonValueKind.String or JsonValueKind.Number)
+                        fields[field.Name] = field.Value;
+                output.AppendLine(JsonSerializer.Serialize(fields));
+            }
+            catch (JsonException) /* swallow(privacy): incomplete journal rows contain no exportable metadata */ { }
+        }
+        return output.ToString();
     }
 
     internal static (string Text, bool Truncated) Read(DiagnosticInput input)
@@ -213,7 +257,7 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
         var journals = Directory.Exists(diagnostics) ? Directory.GetFiles(diagnostics, "calls-*.jsonl*")
             .OrderByDescending(File.GetLastWriteTimeUtc).Take(64).ToArray() : [];
         foreach (string journal in journals)
-            inputs.Add(new("host-log", journal, "logs/hosts/journal/" + Path.GetFileName(journal), true));
+            inputs.Add(new("call-journal", journal, "logs/hosts/journal/" + Path.GetFileName(journal), true));
         if (journals.Length == 0) inputs.Add(new("host-log", Path.Combine(diagnostics, "calls-*.jsonl"), "logs/hosts/journal", true));
         foreach (var release in TiaVersionCatalog.Runnable)
         {
@@ -233,7 +277,7 @@ public class DiagnosticBundleService : ObservableObject, IDiagnosticBundleServic
         for (int index = 0; index < auditRoots.Length; index++)
             foreach (var file in Directory.Exists(auditRoots[index]) ? Directory.GetFiles(auditRoots[index], "audit-*.jsonl")
                     .OrderByDescending(File.GetLastWriteTimeUtc).Take(64) : [])
-                inputs.Add(new("host-log", file, "logs/audit/chain-" + (index + 1) + "/" + Path.GetFileName(file), true));
+                inputs.Add(new("audit-journal", file, "logs/audit/chain-" + (index + 1) + "/" + Path.GetFileName(file), true));
         return inputs;
     }
 

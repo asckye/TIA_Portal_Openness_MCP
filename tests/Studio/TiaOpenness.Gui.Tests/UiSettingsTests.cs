@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Settings;
 using TiaOpenness.Gui.Themes;
@@ -28,6 +29,61 @@ public sealed class UiSettingsTests : IDisposable
     {
         Assert.DoesNotContain(typeof(UiSettings).GetProperties(), property => property.Name.Contains("CrossReference", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(typeof(UiSettings).GetMethods(), method => method.Name.Contains("CrossReference", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Second_instance_signals_the_original_and_does_not_take_ownership()
+    {
+        using var activated = new System.Threading.ManualResetEventSlim();
+        var scope = "Workbench.Gui.Tests." + Guid.NewGuid().ToString("N");
+        using (var first = new WorkbenchInstance(scope, activated.Set))
+        using (var second = new WorkbenchInstance(scope, () => throw new InvalidOperationException()))
+        {
+            Assert.True(first.IsFirst);
+            Assert.False(second.IsFirst);
+            Assert.True(activated.Wait(TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang));
+        }
+        using var reopened = new WorkbenchInstance(scope, activated.Set);
+        Assert.True(reopened.IsFirst);
+    }
+
+    [Fact]
+    public void Locked_destination_preserves_previous_preferences_and_reports_failure()
+    {
+        var settings = new UiSettings { WorkbenchControlEnabled = false };
+        Assert.Null(settings.Save(_path));
+        var before = File.ReadAllBytes(_path);
+        settings.WorkbenchControlEnabled = true;
+        using (File.Open(_path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            Assert.NotNull(settings.Save(_path));
+        Assert.Equal(before, File.ReadAllBytes(_path));
+        Assert.Single(Directory.GetFiles(Path.GetDirectoryName(_path)!));
+        using (File.Open(_path, FileMode.Open, FileAccess.Read, FileShare.None))
+            Assert.False(UiSettings.Load(_path).WorkbenchControlEnabled);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("workbenchControlEnabled=tr")]
+    [InlineData("broken\nworkbenchControlEnabled=True")]
+    [InlineData("workbenchControlEnabled=True\nworkbenchControlEnabled=True")]
+    public void Damaged_preferences_disable_control(string content)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+        File.WriteAllText(_path, content);
+        Assert.False(UiSettings.Load(_path).WorkbenchControlEnabled);
+    }
+
+    [Fact]
+    public void Crash_report_displays_the_same_id_as_the_utc_redacted_log()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+        var message = App.CrashReport(new IOException("password=private-fixture"), _path);
+        var first = File.ReadLines(_path).First().Split(' ');
+        Assert.EndsWith("Z", first[0]);
+        Assert.True(Guid.TryParseExact(first[1], "N", out _));
+        Assert.Contains(first[1], message);
+        Assert.DoesNotContain("private-fixture", File.ReadAllText(_path));
     }
 
     private readonly string _path = Path.Combine(

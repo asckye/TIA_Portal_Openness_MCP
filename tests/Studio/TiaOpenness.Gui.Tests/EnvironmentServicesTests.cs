@@ -249,7 +249,9 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
             new DiagnosticInput("host-log", Path.Combine(fixture.Root, "absent.log"), "logs/hosts/20/host.log", true),
         };
         string? opened = null;
-        var service = new DiagnosticBundleService(() => fixture.Context, () => [new("data", EnvironmentFindingStatus.Pass, "Fallback", "password=private-evidence")], _ => input, folder => opened = folder);
+        var service = new DiagnosticBundleService(() => fixture.Context,
+            () => [new("data", EnvironmentFindingStatus.Pass, "Fallback", "password=private-evidence")],
+            _ => input, folder => opened = folder, _ => true);
         var progress = new System.Collections.Generic.List<DiagnosticState>();
         service.PropertyChanged += (_, _) => progress.Add(service.Progress.State);
         service.Export(); var completion = service.Completion; service.Export(); Assert.Same(completion, service.Completion);
@@ -292,7 +294,7 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
             finally { window.Close(); }
         });
         Assert.NotNull(activity);
-        var service = new DiagnosticBundleService(() => fixture.Context, () => [], _ => [activity!], _ => { });
+        var service = new DiagnosticBundleService(() => fixture.Context, () => [], _ => [activity!], _ => { }, _ => true);
         service.Export(); await service.Completion;
         Assert.Equal(DiagnosticState.Done, service.Progress.State);
         using var archive = ZipFile.OpenRead(service.Progress.Path);
@@ -314,7 +316,7 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         var locations = DataLocations.Resolve(studio, null, Path.Combine(fixture.Root, "user"), Path.Combine(fixture.Root, "temp"));
         Assert.Null(locations.Root);
         fixture.Context.UserFallback = true; fixture.Context.DataRoot = locations.WorkbenchDataDirectory;
-        var service = new DiagnosticBundleService(() => fixture.Context, () => [], _ => [], _ => { });
+        var service = new DiagnosticBundleService(() => fixture.Context, () => [], _ => [], _ => { }, _ => true);
         service.Export(); await service.Completion;
         Assert.Equal(DiagnosticState.Done, service.Progress.State);
         Assert.StartsWith(fixture.Context.DataRoot, service.Progress.Path);
@@ -329,7 +331,7 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         string bad = Path.Combine(fixture.Root, "bad.json"), huge = Path.Combine(fixture.Root, "huge.json");
         File.WriteAllText(bad, "{malformed private-one"); File.WriteAllText(huge, new string('x', 2097153));
         var service = new DiagnosticBundleService(() => fixture.Context, () => [], _ =>
-        [new("config", bad, "config/bad.json"), new("config", huge, "config/huge.json")], _ => { });
+        [new("config", bad, "config/bad.json"), new("config", huge, "config/huge.json")], _ => { }, _ => true);
         service.Export(); await service.Completion;
         using (var archive = ZipFile.OpenRead(service.Progress.Path))
         {
@@ -342,6 +344,44 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         Assert.Equal(DiagnosticState.Idle, service.Progress.State); Assert.Equal("", service.Progress.Path);
         wpf.Run(() => Assert.Contains("failed", service.Progress.Step.Resolve(), StringComparison.OrdinalIgnoreCase));
         Assert.Empty(Directory.GetFiles(fixture.Root, "*.partial", SearchOption.AllDirectories));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Journal_preview_lists_the_redacted_files_before_writing(bool accept)
+    {
+        using var fixture = new Fixture();
+        string? preview = null;
+        var journal = """{"tool":"GetPlcBlockInfo","durationMs":7,"errorCode":"IO_FAILED","arguments":{"name":"PrivatePlant"}}""";
+        var service = new DiagnosticBundleService(() => fixture.Context, () => [], _ =>
+            [new("call-journal", "fixture", "logs/calls.jsonl", true, journal + "\nPrivatePlant"),
+             new("audit-journal", "fixture", "logs/audit.jsonl", true, journal)], _ => { }, listing =>
+            {
+                Assert.Empty(Directory.GetFiles(fixture.Root, "*.partial", SearchOption.AllDirectories));
+                Assert.Empty(Directory.GetFiles(fixture.Root, "*.zip", SearchOption.AllDirectories));
+                preview = listing;
+                return accept;
+            });
+        service.Export(); await service.Completion;
+        Assert.Contains("manifest.json", preview);
+        Assert.Contains("environment/checks.json", preview);
+        if (!accept)
+        {
+            Assert.Equal(DiagnosticState.Idle, service.Progress.State);
+            Assert.Empty(Directory.GetFiles(fixture.Root, "*.zip", SearchOption.AllDirectories));
+            return;
+        }
+        using var zip = ZipFile.OpenRead(service.Progress.Path);
+        foreach (var name in new[] { "logs/calls.jsonl", "logs/audit.jsonl" })
+        {
+            Assert.Contains(name, preview);
+            var exported = Read(zip, name);
+            Assert.Contains("GetPlcBlockInfo", exported); Assert.Contains("IO_FAILED", exported);
+            Assert.Equal(7, (int)JsonNode.Parse(exported)!["durationMs"]!);
+            Assert.DoesNotContain("PrivatePlant", exported);
+            Assert.Contains(zip.GetEntry(name)!.Length.ToString("N0"), preview);
+        }
     }
 
     private static string Read(ZipArchive archive, string entry)

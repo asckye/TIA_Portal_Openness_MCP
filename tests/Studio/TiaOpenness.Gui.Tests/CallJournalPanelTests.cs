@@ -82,6 +82,7 @@ public sealed class CallJournalPanelTests(WpfContext wpf)
             {
                 WpfContext.ShowWindow(window);
                 WpfContext.Drain();
+                WpfContext.WaitForDecisionGuard(view);
                 UnifiedDesktopTests.ClickControl(view.ApproveRequest);
                 Assert.Equal(Visibility.Visible, view.ConfirmationSheet.Visibility);
                 Escape(view.CancelDestructive);

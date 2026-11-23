@@ -35,6 +35,7 @@ namespace TiaMcpConfigurator
                     .InstallFolder);
             Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765";
             if (!loadExisting || !File.Exists(StatePath)) { DetectTiaPath(false); return; }
+            requestedPath = null;
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
             ConfigCore.Prefix(settings.Address, settings.Port);
             if (settings.EffectiveReleaseKey != SelectedVersion) throw new InvalidDataException(Loc.Current["Config.SavedReleaseMismatch"]);

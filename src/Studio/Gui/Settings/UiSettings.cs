@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Text;
 using System.IO;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Themes;
@@ -8,8 +8,7 @@ namespace TiaOpenness.Gui.Settings;
 
 /// <summary>
 /// Preferences remembered between runs: language, theme, brand accent and rendering effects.
-/// Operators can inspect or remove the key=value file with a text editor. Missing
-/// or unreadable preferences fall back to defaults without a schema migration.
+/// The editable key=value file preserves appearance preferences. Invalid files disable AI control.
 /// </summary>
 public sealed class UiSettings
 {
@@ -38,17 +37,18 @@ public sealed class UiSettings
 
         try
         {
-            if (!File.Exists(path)) return settings;
+            bool valid = true;
+            bool? control = null;
 
-            foreach (var line in File.ReadAllLines(path))
+            foreach (var line in File.ReadAllLines(path, new UTF8Encoding(false, true)))
             {
                 var split = line.IndexOf('=');
-                if (split <= 0) continue;
+                if (split <= 0) { if (!string.IsNullOrWhiteSpace(line)) valid = false; continue; }
 
                 var key = line[..split].Trim();
                 var value = line[(split + 1)..].Trim();
 
-                if (key == LanguageKey && Enum.TryParse<AppLanguage>(value, ignoreCase: true, out var language))
+                if (key == LanguageKey && Enum.TryParse<AppLanguage>(value, ignoreCase: true, out var language) && Enum.IsDefined(language))
                 {
                     settings.Language = language;
                 }
@@ -56,9 +56,10 @@ public sealed class UiSettings
                 {
                     settings.LowEffects = effects;
                 }
-                else if (key == "workbenchControlEnabled" && bool.TryParse(value, out var controlEnabled))
+                else if (key == "workbenchControlEnabled")
                 {
-                    settings.WorkbenchControlEnabled = controlEnabled;
+                    if (control.HasValue || !bool.TryParse(value, out var enabled)) valid = false;
+                    else control = enabled;
                 }
                 else if (key == "leftPaneOpen" && bool.TryParse(value, out var leftPaneOpen))
                 {
@@ -68,43 +69,60 @@ public sealed class UiSettings
                 {
                     if (string.Equals(value, "Auto", StringComparison.OrdinalIgnoreCase)) settings.Theme = AppTheme.Light;
                     else if (Enum.TryParse<AppTheme>(value, ignoreCase: true, out var theme) && Enum.IsDefined(theme)) settings.Theme = theme;
+                    else valid = false;
                 }
                 else if (key == AccentKey && Enum.TryParse<AppAccent>(value, ignoreCase: true, out var accent) && Enum.IsDefined(accent))
                 {
                     settings.Accent = accent;
                 }
+                else if (key is LanguageKey or ThemeKey or AccentKey or "lowEffects" or "leftPaneOpen") valid = false;
             }
+            settings.WorkbenchControlEnabled = valid && control == true;
         }
-        catch (Exception) /* swallow(ui): unreadable preferences leave defaults or already parsed values available so the workbench can start */
+        catch (Exception error) when (error is FileNotFoundException or DirectoryNotFoundException)
+        { return settings; }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or DecoderFallbackException)
         {
-            // A preference file that cannot be read is not a reason to refuse to start.
+            settings.WorkbenchControlEnabled = false;
         }
 
         return settings;
     }
 
-    public void Save() => Save(FilePath);
+    public string? Save() => Save(FilePath);
 
-    public void Save(string path)
+    public string? Save(string path)
     {
+        string temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
             var directory = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
 
-            File.WriteAllLines(path, new List<string>
+            using (var file = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var writer = new StreamWriter(file, new UTF8Encoding(false)))
             {
-                $"{LanguageKey}={Language}",
-                $"{ThemeKey}={Theme}",
-                $"{AccentKey}={Accent}",
-                $"leftPaneOpen={LeftPaneOpen}",
-                $"lowEffects={LowEffects}",
-                $"workbenchControlEnabled={WorkbenchControlEnabled}",
-            });
+                writer.WriteLine($"{LanguageKey}={Language}");
+                writer.WriteLine($"{ThemeKey}={Theme}");
+                writer.WriteLine($"{AccentKey}={Accent}");
+                writer.WriteLine($"leftPaneOpen={LeftPaneOpen}");
+                writer.WriteLine($"lowEffects={LowEffects}");
+                writer.WriteLine($"workbenchControlEnabled={WorkbenchControlEnabled}");
+                writer.Flush();
+                file.Flush(true);
+            }
+            File.Move(temp, path, overwrite: true);
+            return null;
         }
-        catch (Exception) /* swallow(ui): failure to persist language and theme preferences must not prevent the window from closing */
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
-            // Losing a preference is a smaller failure than refusing to close the window.
+            return Loc.Current.T("Common.IoFailed", error.Message);
+        }
+        finally
+        {
+            try { File.Delete(temp); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            { System.Diagnostics.Trace.TraceWarning("Preference temp cleanup failed: {0}", error.Message); }
         }
     }
 }

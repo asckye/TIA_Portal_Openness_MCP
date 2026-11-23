@@ -16,6 +16,10 @@ public partial class ApprovalsDrawer : UserControl
     private ApprovalRow? _row, _confirming;
     private ModalPane? _confirmationFocus;
     private Window? _owner;
+    internal ControlChannel.ControlInputGuard DecisionGuard { get; set; } = new();
+    private long decisionVersion;
+    private long? mouseVersion, spaceVersion;
+
     public ApprovalsDrawer()
     {
         InitializeComponent(); DataContext = null;
@@ -23,7 +27,18 @@ public partial class ApprovalsDrawer : UserControl
         DataContextChanged += OnModelChanged;
         Unloaded += OnUnloaded;
         Loaded += OnLoaded;
-        IsVisibleChanged += (_, e) => { if (!(bool)e.NewValue) CloseConfirmation(); };
+        IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) DecisionChanged(); else CloseConfirmation(); };
+        foreach (var button in new[] { ApproveRequest, DenyRequest, ConfirmDestructive })
+        {
+            button.PreviewMouseLeftButtonDown += (_, _) => mouseVersion = PressVersion;
+            button.PreviewKeyDown += (_, e) => { if (e.Key == Key.Space && !e.IsRepeat) spaceVersion = PressVersion; };
+            // The Button class handler raises Click before these release handlers clear the matching press.
+            button.AddHandler(Mouse.MouseUpEvent, new MouseButtonEventHandler((_, e) =>
+            { if (e.ChangedButton == MouseButton.Left) mouseVersion = null; }), true);
+            button.AddHandler(Keyboard.KeyUpEvent, new KeyEventHandler((_, e) =>
+            { if (e.Key == Key.Space) spaceVersion = null; }), true);
+            button.LostKeyboardFocus += (_, _) => spaceVersion = null;
+        }
     }
     private readonly RoutedCommand _openHistory = new();
     private void OnPendingTab(object sender, RoutedEventArgs e) => Model.HandledRequests = false;
@@ -49,7 +64,10 @@ public partial class ApprovalsDrawer : UserControl
         window.AuditContent.AuditList.ScrollIntoView(found);
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
-    private bool Guarded => (Window.GetWindow(this) as MainWindow)?.ControlGuard.ClickGuardActive == true;
+    private void DecisionChanged() { decisionVersion++; DecisionGuard.UiChanged(); }
+    private long PressVersion => GuardedByTime ? -1 : decisionVersion;
+    private bool Guarded => GuardedByTime || (mouseVersion ?? decisionVersion) != decisionVersion || (spaceVersion ?? decisionVersion) != decisionVersion;
+    private bool GuardedByTime => DecisionGuard.ClickGuardActive || (Window.GetWindow(this) as MainWindow)?.ControlGuard.ClickGuardActive == true;
     private void OnApprove(object sender, RoutedEventArgs e)
     {
         if (Guarded || _row is not { CanDecide: true } row) return;
@@ -90,6 +108,7 @@ public partial class ApprovalsDrawer : UserControl
     }
     private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(FeaturePagesViewModel.Requests) && IsVisible) DecisionChanged();
         if (e.PropertyName == nameof(FeaturePagesViewModel.SelectedRequest)) SelectRow();
         if (e.PropertyName == nameof(FeaturePagesViewModel.HandledRequests))
             EmptyRequests.ActionCommand = Model.HandledRequests ? null : _openHistory;
@@ -114,6 +133,7 @@ public partial class ApprovalsDrawer : UserControl
     {
         var next = (DataContext as FeaturePagesViewModel)?.SelectedRequest;
         if (ReferenceEquals(next, _row)) return;
+        DecisionChanged();
         CloseConfirmation();
         if (_row != null) { _row.CountdownThreshold -= OnCountdownThreshold; _row.PropertyChanged -= OnRowChanged; }
         _row = next;

@@ -41,7 +41,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
         if (client is McpProjectClient project)
         {
             _mcp = project.Session;
-            Panel = new McpSessionPanel(_mcp, () => SelectedReleaseKey, Activity, Session.ApplySharedStateAsync);
+            Panel = new McpSessionPanel(_mcp, () => SelectedReleaseKey, Activity, Session.ApplySharedStateAsync, VersionControl.CancelBridgeRead);
             project.ResultChanged += OnMcpResult;
         }
         Session.PropertyChanged += OnSessionChanged;

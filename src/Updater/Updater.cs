@@ -42,15 +42,36 @@ namespace TiaMcp.Updater
             if (!IsValidRepository(options.Repository)) throw new InvalidOperationException("Repository must be owner/name.");
             if (options.Version != null && options.Version.Length > 0 && !IsVersion(options.Version))
                 throw new InvalidOperationException("-Version must be vX.Y.Z, or vX.Y.Z-beta.N / vX.Y.Z-rc.N for a pre-release.");
-            if (IsSourceCheckout(root))
-                throw new InvalidOperationException("This folder is a source checkout or worktree. The updater only changes an installed delivery.");
+            RequireDelivery(root);
 
+            if (options.Check) return RunInstalled(root, options, say, runningProcesses);
+            // Serialize backup selection, download and publication for this install.
+            string name;
+            using (var hash = SHA256.Create())
+                name = "TiaMcp.Update." + BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(root.ToUpperInvariant()))).Replace("-", "");
+            using (var mutex = new Mutex(false, name))
+            {
+                try
+                {
+                    if (!mutex.WaitOne(TimeSpan.FromSeconds(1))) throw new InvalidOperationException("Another update is running for " + root);
+                }
+                catch (AbandonedMutexException)
+                {
+                    /* swallow(cleanup): the caller owns the abandoned mutex and NTFS aborted any uncommitted renames */
+                    say(UpdaterText.Bilingual("InterruptedUpdate", "resuming after the previous updater exited"));
+                }
+                try { return RunInstalled(root, options, say, runningProcesses); }
+                finally { mutex.ReleaseMutex(); }
+            }
+        }
+
+        private static int RunInstalled(string root, UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses)
+        {
             string deliveryFile = Combine(root, "manifest/delivery.json");
-            if (!ExistsFile(deliveryFile)) throw new InvalidOperationException("Not a TIA MCP delivery: manifest/delivery.json is missing.");
             DeliveryManifest installed = ReadJson<DeliveryManifest>(deliveryFile);
             if (installed == null || string.IsNullOrWhiteSpace(installed.Release) || string.IsNullOrWhiteSpace(installed.Package))
                 throw new InvalidOperationException("manifest/delivery.json has no release/package fields.");
-            if (!Regex.IsMatch(installed.Package, @"^[A-Za-z0-9_.-]+$"))
+            if (!IsSafeRelativePath(installed.Package) || !Regex.IsMatch(installed.Package, @"^[A-Za-z0-9_.-]+$"))
                 throw new InvalidOperationException("manifest/delivery.json has an unsafe package name.");
             say(UpdaterText.Bilingual("InstallRoot", "install root") + ": " + root + "; " + UpdaterText.Bilingual("InstalledVersion", "installed") + ": "
                     + installed.Release + " (" + installed.Package + ")");
@@ -89,6 +110,14 @@ namespace TiaMcp.Updater
             ApplyRelease(root, installed, release, options, say);
             Relaunch(root, options, say);
             return 0;
+        }
+
+        internal static void RequireDelivery(string root)
+        {
+            if (IsSourceCheckout(root))
+                throw new InvalidOperationException("This folder is a source checkout or worktree. The updater only changes an installed delivery.");
+            if (!ExistsFile(DeliveryFilePath(root)))
+                throw new InvalidOperationException("Not a TIA MCP delivery: manifest/delivery.json is missing.");
         }
 
         public static bool IsSourceCheckout(string root)
@@ -167,13 +196,12 @@ namespace TiaMcp.Updater
         private static void ApplyRelease(string root, DeliveryManifest installed, ReleaseInfo release, UpdaterOptions options, Action<string> say)
         {
             string work = Combine(root, ".update");
-            string temporaryRoot = options.TemporaryDirectoryForTest ?? Path.GetTempPath();
+            string temporaryRoot = options.TemporaryDirectoryForTest ?? Directory.GetParent(root).FullName;
             string extraction = Path.Combine(temporaryRoot, "tia-mcp-update-" + Guid.NewGuid().ToString("N"));
-            string backup = Combine(Combine(root, ".previous"), installed.Package);
+            string backup = Combine(Combine(root, ".previous"), installed.Package + "-" + Guid.NewGuid().ToString("N"));
             EnsurePathSupported(work);
             EnsurePathSupported(extraction);
             EnsurePathSupported(backup);
-            bool backupReady = false;
             bool changed = false;
             try
             {
@@ -191,7 +219,7 @@ namespace TiaMcp.Updater
                         + expected + " vs file " + actual);
                 say(UpdaterText.Bilingual("ChecksumVerified", "SHA-256 verified") + ": " + actual);
 
-                string package = ExtractPackage(zipFile, extraction, say);
+                string package = ExtractPackage(zipFile, Combine(extraction, "new"), say, out var newFiles);
                 DeliveryRules rules = ReadJson<DeliveryRules>(Combine(package, "scripts/operations/delivery-files.json"));
                 if (rules == null || rules.SchemaVersion != 1 || rules.Include == null || rules.Exclude == null || rules.LegacyCleanup == null)
                     throw new InvalidOperationException("The package has invalid delivery-files.json rules.");
@@ -199,61 +227,40 @@ namespace TiaMcp.Updater
                 if (next == null || NormalizeVersion(next.Release) != NormalizeVersion(release.Tag))
                     throw new InvalidOperationException("The ZIP delivery manifest does not match the selected release.");
                 ValidatePackage(package, rules);
-                Dictionary<string, string> newFiles = HashInventory(package);
+                VerifyStaged(package, newFiles);
                 ValidateInstallPaths(package, root, backup);
                 Dictionary<string, string> oldFiles = InstalledInventory(root);
 
                 CreateDirectory(Combine(root, ".previous"));
-                if (DirectoryExists(backup)) RemoveTree(backup);
-                CreateDirectory(backup);
+                string snapshot = Combine(extraction, "previous");
                 say(UpdaterText.Bilingual("Backup", "backing up install") + ": " + backup);
-                CopyTree(root, backup, true, null);
-                WriteJson(backup + ".update-receipt.json", newFiles);
-                Directory.SetLastWriteTimeUtc(Prefix(backup), DateTime.UtcNow);
-                backupReady = true;
-                PruneBackups(Combine(root, ".previous"), backup);
-
-                say(UpdaterText.Bilingual("Overlay", "removing owned retired files and overlaying the delivery"));
-                RemoveLegacyFiles(root, rules, oldFiles, newFiles, say);
-                foreach (KeyValuePair<string, string> file in oldFiles)
-                    if ((file.Key.StartsWith("runtime/", StringComparison.Ordinal) || file.Key.StartsWith("manifest/", StringComparison.Ordinal)) && !newFiles
-                            .ContainsKey(file.Key))
-                        RemoveOwnedFile(root, file.Key, file.Value, say);
-                CopyPackage(package, root, options.BeforeDeployFile);
+                CopyTree(root, snapshot, true, null);
+                WriteJson(snapshot + ".update-receipt.json", newFiles);
+                var retired = oldFiles.Where(file => !newFiles.ContainsKey(file.Key)
+                    && (file.Key.StartsWith("runtime/", StringComparison.Ordinal) || file.Key.StartsWith("manifest/", StringComparison.Ordinal)
+                        || Matches(file.Key, rules.LegacyCleanup)));
+                Publish(root, package, newFiles.Keys, retired, options.BeforeDeployFile, say, transaction =>
+                {
+                    transaction.Move(snapshot, backup);
+                    transaction.Move(snapshot + ".update-receipt.json", backup + ".update-receipt.json");
+                });
                 changed = true;
+                PruneBackups(Combine(root, ".previous"), backup);
                 DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));
                 say(UpdaterText.Bilingual("UpdateDone", "DONE") + ": " + installed.Release + " -> " + now.Release + "; -Rollback restores " + installed.Package
                         + ".");
             }
-            catch
-            {
-                if (backupReady)
-                {
-                    try
-                    {
-                        Dictionary<string, string> receipt = ReadReceipt(backup + ".update-receipt.json");
-                        RemoveAddedFiles(root, backup, receipt, say);
-                        CopyTree(backup, root, true, null);
-                        say(UpdaterText.Bilingual("InterruptedRollback", "interrupted replacement rolled back from") + " " + backup);
-                    }
-                    catch (Exception rollbackError) {
-                        throw new InvalidOperationException("Update failed and rollback also failed: " + rollbackError.GetBaseException().Message,
-                                rollbackError);
-                    }
-                }
-                throw;
-            }
             finally
             {
                 if (DirectoryExists(extraction)) RemoveTree(extraction);
-                if (!changed && DirectoryExists(work)) { /* keep failed downloads for diagnosis, matching the script behavior */ }
                 if (changed && DirectoryExists(work)) RemoveTree(work);
             }
         }
 
-        private static string ExtractPackage(string zipFile, string extraction, Action<string> say)
+        private static string ExtractPackage(string zipFile, string extraction, Action<string> say, out Dictionary<string, string> hashes)
         {
-            using (ZipArchive archive = ZipFile.OpenRead(Prefix(zipFile)))
+            var extracted = new Dictionary<string, string>(StringComparer.Ordinal);
+            using (ZipArchive archive = RetryLocked(() => ZipFile.OpenRead(Prefix(zipFile))))
             {
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
@@ -273,15 +280,33 @@ namespace TiaMcp.Updater
                     if (entry.FullName.EndsWith("/", StringComparison.Ordinal)) { CreateDirectory(target); continue; }
                     CreateDirectory(Path.GetDirectoryName(target));
                     using (Stream input = entry.Open())
-                    using (var output = new FileStream(Prefix(target), FileMode.CreateNew, FileAccess.Write, FileShare.None)) input.CopyTo(output);
+                    using (var output = new FileStream(Prefix(target), FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    using (var hash = SHA256.Create())
+                    using (var writer = new CryptoStream(output, hash, CryptoStreamMode.Write))
+                    {
+                        input.CopyTo(writer); writer.FlushFinalBlock(); output.Flush(true);
+                        extracted[target] = BitConverter.ToString(hash.Hash).Replace("-", "").ToLowerInvariant();
+                    }
                 }
             }
-            string direct = DeliveryFilePath(extraction);
-            if (ExistsFile(direct)) { say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + extraction); return extraction; }
-            string[] children = GetDirectories(extraction);
-            if (children.Length == 1 && ExistsFile(DeliveryFilePath(children[0]))) {
-                say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + extraction); return children[0]; }
-            throw new InvalidOperationException("The ZIP does not contain a delivery root with manifest/delivery.json.");
+            string package = extraction;
+            if (!ExistsFile(DeliveryFilePath(package)))
+            {
+                string[] children = GetDirectories(extraction);
+                if (children.Length != 1 || !ExistsFile(DeliveryFilePath(children[0])))
+                    throw new InvalidOperationException("The ZIP does not contain a delivery root with manifest/delivery.json.");
+                package = children[0];
+            }
+            hashes = extracted.ToDictionary(file => RelativeTo(package, file.Key), file => file.Value, StringComparer.Ordinal);
+            say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + package);
+            return package;
+        }
+
+        private static void VerifyStaged(string directory, Dictionary<string, string> expected)
+        {
+            foreach (var file in expected)
+                if (HashFile(OwnedPath(directory, file.Key)) != file.Value)
+                    throw new InvalidDataException("Staged file verification failed: " + file.Key);
         }
 
         private static void ValidatePackage(string package, DeliveryRules rules)
@@ -335,7 +360,7 @@ namespace TiaMcp.Updater
                     .Where(d => !string.Equals(NormalizeForCompare(d), NormalizeForCompare(keep), StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(Directory.GetLastWriteTimeUtc).Skip(1))
             {
-                File.Delete(Prefix(directory + ".update-receipt.json"));
+                RetryLocked(() => File.Delete(Prefix(directory + ".update-receipt.json")));
                 RemoveTree(directory);
             }
         }
@@ -374,7 +399,8 @@ namespace TiaMcp.Updater
 
         private static string HashFile(string path)
         {
-            using (SHA256 hash = SHA256.Create()) using (Stream input = new FileStream(Prefix(path), FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (SHA256 hash = SHA256.Create())
+            using (Stream input = RetryLocked(() => File.OpenRead(Prefix(path))))
                 return BitConverter.ToString(hash.ComputeHash(input)).Replace("-", "").ToLowerInvariant();
         }
 
@@ -436,12 +462,12 @@ namespace TiaMcp.Updater
 
         private static void RemoveTree(string path)
         {
-            if (!DirectoryExists(path)) { if (ExistsFile(path)) File.Delete(Prefix(path)); return; }
-            foreach (string file in GetFilesRecursive(path)) if ((File.GetAttributes(Prefix(file)) & FileAttributes.ReparsePoint) == 0) File
-                .Delete(Prefix(file));
+            if (!DirectoryExists(path)) { if (ExistsFile(path)) RetryLocked(() => File.Delete(Prefix(path))); return; }
+            foreach (string file in GetFilesRecursive(path))
+                if ((File.GetAttributes(Prefix(file)) & FileAttributes.ReparsePoint) == 0) RetryLocked(() => File.Delete(Prefix(file)));
             foreach (string dir in GetDirectoriesRecursive(path).OrderByDescending(p => p.Length))
-                if ((File.GetAttributes(Prefix(dir)) & FileAttributes.ReparsePoint) == 0) Directory.Delete(Prefix(dir), false);
-            Directory.Delete(Prefix(path), false);
+                if ((File.GetAttributes(Prefix(dir)) & FileAttributes.ReparsePoint) == 0) RetryLocked(() => Directory.Delete(Prefix(dir), false));
+            RetryLocked(() => Directory.Delete(Prefix(path), false));
         }
 
         private static IEnumerable<string> GetDirectoriesRecursive(string root)

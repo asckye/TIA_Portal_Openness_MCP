@@ -55,6 +55,21 @@ public sealed class DiagnosticRedactorTests
     }
 
     [Fact]
+    public void Windows_accounts_and_profile_roots_are_masked_in_text_and_json()
+    {
+        var redactor = new DiagnosticRedactor();
+        var name = System.Environment.UserName;
+        string path = @"D:\Users\Other Operator\logs";
+        var plain = redactor.Redact(name + " " + path).Text;
+        Assert.DoesNotContain(name, plain, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(@"%USERPROFILE%\logs", plain);
+        string json = System.Text.Json.JsonSerializer.Serialize(new { path, name });
+        var output = redactor.Redact(json, "json").Text;
+        Assert.DoesNotContain("Other Operator", output);
+        Assert.DoesNotContain(name, output, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Known_config_values_are_removed_from_unlabelled_logs_and_invalid_configs_are_hidden()
     {
         var redactor = new DiagnosticRedactor();

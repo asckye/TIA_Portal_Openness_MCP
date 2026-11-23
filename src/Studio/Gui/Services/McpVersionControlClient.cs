@@ -168,5 +168,6 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
         }
         return result;
     }
+    internal bool CancelRead() => bridge is ReadOnlyVciBridge fallback && fallback.CancelPending();
     public void Dispose() => bridge.Dispose();
 }

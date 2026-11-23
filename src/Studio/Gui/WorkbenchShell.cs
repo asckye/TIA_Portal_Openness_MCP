@@ -87,7 +87,8 @@ public partial class MainWindow
 
     private void OnApprovalChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.PendingCount))) return;
+        if (e.PropertyName is not (nameof(IApprovalService.Enabled) or nameof(IApprovalService.PendingCount)
+            or nameof(Services.ApprovalService.ChannelAvailable))) return;
         if (_shellQueued) return;
         _shellQueued = true;
         Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => { _shellQueued = false; UpdateShell(); }));
@@ -226,14 +227,17 @@ public partial class MainWindow
             if (Approvals.PendingCount > 0) Controls.AccessibleStatus.Announce(PendingBadge);
         }
         UpdateMcpStatus();
-        string mode = Loc.Current[Approvals.Enabled ? "Shell.ApprovalOnStatus" : "Shell.ApprovalOffStatus"];
+        bool available = Approvals is not Services.ApprovalService { ChannelAvailable: false };
+        ApprovalsContent.DecisionArea.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
+        SettingsContent.AiPanel.IsEnabled = available;
+        string mode = Loc.Current[!available ? "Shell.ApprovalUnavailable" : Approvals.Enabled ? "Shell.ApprovalOnStatus" : "Shell.ApprovalOffStatus"];
         if (ApprovalStatusText.Text != mode)
         {
             ApprovalStatusText.Text = mode;
             Controls.AccessibleStatus.Announce(ApprovalStatusText);
         }
         UpdateSessionGlyph();
-        ApprovalStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, Approvals.Enabled ? "Primer.ok" : "Primer.warn");
+        ApprovalStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, available && Approvals.Enabled ? "Primer.ok" : "Primer.warn");
         foreach (var item in RailItems)
         {
             var reason = PageUnavailable(ResolvePage((string)item.Tag));

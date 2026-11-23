@@ -31,6 +31,8 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     private NamedPipeServerStream? listener;
     private ApprovalSettings settings;
     private bool disposed;
+    private volatile bool channelAvailable;
+    internal bool ChannelAvailable => channelAvailable;
 
     public ApprovalService() : this(ApprovalSettings.SettingsPath, ApprovalPipe.CurrentName) { }
     internal ApprovalService(string settingsPath, string pipeName, AuditLog? audit = null, Func<DateTimeOffset>? now = null)
@@ -39,7 +41,7 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
         this.now = now ?? (() => DateTimeOffset.UtcNow);
         sid = ApprovalPipe.CurrentSid; settings = ApprovalSettings.Load(settingsPath);
         expiry = new Timer(_ => Refresh(), null, Timeout.Infinite, Timeout.Infinite);
-        try { listener = ApprovalPipe.CreateServer(pipeName, sid, true); _ = Listen(); }
+        try { listener = ApprovalPipe.CreateServer(pipeName, sid, true); channelAvailable = true; _ = Listen(); }
         catch (Exception ex) { Trace.TraceWarning("Approval listener unavailable: " + ex.GetType().Name); }
     }
     public bool Enabled
@@ -59,6 +61,7 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     }
     private void Save(bool? enabled, int? seconds, int? lifetime = null)
     {
+        if (!ChannelAvailable) throw new InvalidOperationException(Loc.Current["Shell.ApprovalUnavailable"]);
         lock (saveSync)
         {
             ApprovalSettings next;
@@ -77,7 +80,7 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
     public IReadOnlyList<ApprovalRequest> Requests { get { lock (sync) return published; } }
     public event EventHandler<ApprovalRequest>? NewRequest;
     public bool CanDecide(string id) {
-        lock (sync) return pending.TryGetValue(id, out var item) && !item.Decision.Task.IsCompleted && item.Request.Deadline > now()
+        lock (sync) return ChannelAvailable && pending.TryGetValue(id, out var item) && !item.Decision.Task.IsCompleted && item.Request.Deadline > now()
         && !requests.Any(r => r.State is ApprovalState.Approved or ApprovalState.Executing)
         && requests.FirstOrDefault(r => r.State == ApprovalState.Pending)?.Id == id; }
     public bool Approve(string id) => Decide(id, true);
@@ -107,7 +110,13 @@ public sealed class ApprovalService : ObservableObject, IApprovalService, IDispo
                 _ = Handle(accepted);
             }
         }
-        catch (Exception ex) { if (!stop.IsCancellationRequested) Trace.TraceWarning("Approval listener stopped: " + ex.GetType().Name); }
+        catch (Exception ex) when (!stop.IsCancellationRequested)
+        {
+            channelAvailable = false;
+            Trace.TraceWarning("Approval listener stopped: " + ex.GetType().Name);
+            Raise(nameof(ChannelAvailable));
+        }
+        catch (Exception) when (stop.IsCancellationRequested) /* swallow(teardown): disposal interrupts the outstanding pipe wait */ { }
     }
     private async Task Handle(NamedPipeServerStream pipe)
     {

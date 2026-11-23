@@ -138,6 +138,7 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
                 ((ApprovalServiceStub)window.Approvals).Receive(FeaturePageFixtures.Request(CallId) with { Risk = ApprovalRisk.Destructive,
                     Deadline = DateTimeOffset.UtcNow.AddMinutes(2) });
                 WpfContext.Drain();
+                WpfContext.WaitForDecisionGuard(window.ApprovalsContent);
                 UnifiedDesktopTests.ClickControl(DesktopCapture.Descendants<Button>(window.ApprovalsContent).First(b => b.Name == "ApproveRequest"));
                 Assert.True(window.ApprovalsContent.ConfirmationSheet.IsVisible);
                 Assert.Equal("confirmation-sheet", window.ApplyControl(Request(WorkbenchControlOperation.ReadState)).Data!.Workbench!.BlockedBy);

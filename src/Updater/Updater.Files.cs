@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
@@ -44,13 +45,6 @@ namespace TiaMcp.Updater
             return inventory;
         }
 
-        private static void RemoveLegacyFiles(string root, DeliveryRules rules, Dictionary<string, string> inventory, Dictionary<string, string> newFiles,
-                Action<string> say)
-        {
-            foreach (KeyValuePair<string, string> item in inventory.ToArray())
-                if (Matches(item.Key, rules.LegacyCleanup) && !newFiles.ContainsKey(item.Key)) RemoveOwnedFile(root, item.Key, item.Value, say);
-        }
-
         private static Dictionary<string, string> HashInventory(string root)
         {
             var result = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -58,27 +52,96 @@ namespace TiaMcp.Updater
             return result;
         }
 
-        private static void RemoveOwnedFile(string root, string relative, string expected, Action<string> say)
+        private static T RetryLocked<T>(Func<T> operation)
         {
-            string path = OwnedPath(root, relative);
-            if (!ExistsFile(path)) return;
-            if (!string.Equals(HashFile(path), expected, StringComparison.OrdinalIgnoreCase)) {
-                say(UpdaterText.Bilingual("PreserveModified", "preserving modified file") + ": " + relative); return; }
-            File.Delete(Prefix(path));
-            string parent = Path.GetDirectoryName(path);
-            while (IsWithin(parent, NormalizeForCompare(root)) && !string
-                    .Equals(NormalizeForCompare(parent), NormalizeForCompare(root), StringComparison.OrdinalIgnoreCase))
+            for (int attempt = 1; ; attempt++)
             {
-                if (GetEntries(parent).Length != 0) break;
-                Directory.Delete(Prefix(parent), false);
-                parent = Path.GetDirectoryName(parent);
+                try { return operation(); }
+                catch (IOException ex) when (attempt < 5 && ((ex.HResult & 0xffff) == 32 || (ex.HResult & 0xffff) == 33))
+                { Thread.Sleep(200); }
             }
         }
 
-        private static void RemoveAddedFiles(string root, string backup, Dictionary<string, string> receipt, Action<string> say)
+        internal static void RetryLocked(Action operation)
         {
-            foreach (KeyValuePair<string, string> file in receipt)
-                if (!ExistsFile(OwnedPath(backup, file.Key))) RemoveOwnedFile(root, file.Key, file.Value, say);
+            RetryLocked(() => { operation(); return true; });
+        }
+
+        private static void Publish(string root, string stage, IEnumerable<string> files, IEnumerable<KeyValuePair<string, string>> retired,
+            Action<string> beforeDeploy, Action<string> say, Action<InstallTransaction> publishBackup = null)
+        {
+            // TxF makes all owned-file renames visible in one commit. A killed updater closes its transaction
+            // handle and NTFS aborts it. User directories and unknown files keep their original filesystem identity.
+            RetryLocked(() =>
+            {
+                using (var transaction = new InstallTransaction())
+                {
+                    foreach (var file in retired)
+                    {
+                        var path = OwnedPath(root, file.Key);
+                        if (!ExistsFile(path)) continue;
+                        if (string.Equals(HashFile(path), file.Value, StringComparison.OrdinalIgnoreCase)) transaction.Delete(path);
+                        else say(UpdaterText.Bilingual("PreserveModified", "preserving modified file") + ": " + file.Key);
+                    }
+                    foreach (var relative in files)
+                    {
+                        beforeDeploy?.Invoke(relative);
+                        var target = OwnedPath(root, relative);
+                        transaction.EnsureDirectory(Path.GetDirectoryName(target));
+                        transaction.Move(OwnedPath(stage, relative), target);
+                    }
+                    publishBackup?.Invoke(transaction);
+                    transaction.Commit();
+                }
+                return true;
+            });
+        }
+
+        private sealed class InstallTransaction : IDisposable
+        {
+            private readonly SafeFileHandle handle;
+            private readonly HashSet<string> directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            internal InstallTransaction()
+            {
+                handle = CreateTransaction(IntPtr.Zero, IntPtr.Zero, 0, 0, 0, 0, "Workbench update");
+                Check(!handle.IsInvalid, "start install transaction");
+            }
+            internal void Move(string from, string to) =>
+                Check(MoveFileTransacted(Prefix(from), Prefix(to), IntPtr.Zero, IntPtr.Zero, 1, handle), to);
+            internal void Delete(string path) => Check(DeleteFileTransacted(Prefix(path), handle), path);
+            internal void EnsureDirectory(string path)
+            {
+                if (!directories.Add(path) || DirectoryExists(path)) return;
+                EnsureDirectory(Path.GetDirectoryName(path));
+                Check(CreateDirectoryTransacted(null, Prefix(path), IntPtr.Zero, handle), path);
+            }
+            internal void Commit() => Check(CommitTransaction(handle), "commit install transaction");
+            public void Dispose() => handle.Dispose();
+
+            private static void Check(bool success, string path)
+            {
+                if (success) return;
+                int code = Marshal.GetLastWin32Error();
+                throw new IOException(path + ": " + new System.ComponentModel.Win32Exception(code).Message, unchecked((int)0x80070000) | code);
+            }
+            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+            [DllImport("ktmw32.dll", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true)]
+            private static extern SafeFileHandle CreateTransaction(IntPtr attributes, IntPtr id,
+                int options, int isolation, int flags, int timeout, string description);
+            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+            [DllImport("ktmw32.dll", SetLastError = true)]
+            private static extern bool CommitTransaction(SafeFileHandle transaction);
+            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            private static extern bool MoveFileTransacted(string from, string to, IntPtr progress, IntPtr data, uint flags,
+                SafeFileHandle transaction);
+            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            private static extern bool DeleteFileTransacted(string path, SafeFileHandle transaction);
+            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            private static extern bool CreateDirectoryTransacted(string template, string path, IntPtr attributes,
+                SafeFileHandle transaction);
         }
 
         private static int Rollback(string root, DeliveryManifest installed, string previousRoot, UpdaterOptions options, Action<string> say, Func<string,
@@ -94,8 +157,15 @@ namespace TiaMcp.Updater
             say(UpdaterText.Bilingual("RollingBack", "rolling back") + ": " + installed.Release + " -> " + prior.Release + " from " + backup);
             Dictionary<string, string> receipt = ReadReceipt(backup + ".update-receipt.json");
             if (receipt.Count == 0) receipt = InstalledInventory(root);
-            RemoveAddedFiles(root, backup, receipt, say);
-            CopyTree(backup, root, true, null);
+            string stage = Path.Combine(Directory.GetParent(root).FullName, "tia-mcp-rollback-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                var expected = HashInventory(backup);
+                CopyTree(backup, stage, true, null);
+                VerifyStaged(stage, expected);
+                Publish(root, stage, expected.Keys, receipt.Where(file => !expected.ContainsKey(file.Key)), options.BeforeDeployFile, say);
+            }
+            finally { if (DirectoryExists(stage)) RemoveTree(stage); }
             DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));
             say(UpdaterText.Bilingual("RollbackDone", "DONE") + ": installed version is now " + now.Release + ".");
             Relaunch(root, options, say);
@@ -122,21 +192,11 @@ namespace TiaMcp.Updater
                 beforeFile?.Invoke(relative);
                 string target = Combine(destination, relative);
                 CreateDirectory(Path.GetDirectoryName(target));
-                File.Copy(Prefix(file), Prefix(target), true);
-                File.SetLastWriteTimeUtc(Prefix(target), File.GetLastWriteTimeUtc(Prefix(file)));
-            }
-        }
-
-        private static void CopyPackage(string package, string root, Action<string> beforeFile)
-        {
-            foreach (string file in GetFilesRecursive(package))
-            {
-                string relative = RelativeTo(package, file);
-                if (IsProtectedRoot(relative)) continue;
-                beforeFile?.Invoke(relative);
-                string target = Combine(root, relative);
-                CreateDirectory(Path.GetDirectoryName(target));
-                File.Copy(Prefix(file), Prefix(target), true);
+                RetryLocked(() =>
+                {
+                    File.Copy(Prefix(file), Prefix(target), true);
+                    File.SetLastWriteTimeUtc(Prefix(target), File.GetLastWriteTimeUtc(Prefix(file)));
+                });
             }
         }
 
@@ -176,9 +236,9 @@ namespace TiaMcp.Updater
         {
             Directory.CreateDirectory(directory);
             string target = Path.Combine(directory, Path.GetFileName(source));
-            File.Copy(source, target, true);
+            UpdaterEngine.RetryLocked(() => File.Copy(source, target, true));
             string config = source + ".config";
-            if (File.Exists(config)) File.Copy(config, target + ".config", true);
+            if (File.Exists(config)) UpdaterEngine.RetryLocked(() => File.Copy(config, target + ".config", true));
             return target;
         }
     }

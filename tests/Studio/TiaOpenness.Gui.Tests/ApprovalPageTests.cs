@@ -43,6 +43,54 @@ public sealed class ApprovalPageTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Arrival_queue_advance_and_page_show_restart_the_decision_guard()
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new Fixture();
+            void Click() => UnifiedDesktopTests.ClickControl(fixture.Button("DenyRequest"));
+            fixture.Service.Receive(FeaturePageFixtures.Request("second")); WpfContext.Drain();
+            fixture.Now += TimeSpan.FromMilliseconds(499);
+            Click();
+            Assert.All(fixture.Service.Requests, row => Assert.Equal(ApprovalState.Pending, row.State));
+            fixture.Now += TimeSpan.FromMilliseconds(1);
+            Click(); WpfContext.Drain();
+            Assert.Equal("second", fixture.Model.SelectedRequest!.Request.Id);
+            Click();
+            Assert.Equal(ApprovalState.Pending, fixture.Service.Requests[1].State);
+            fixture.Now += TimeSpan.FromSeconds(1);
+            fixture.View.Visibility = Visibility.Hidden;
+            fixture.View.Visibility = Visibility.Visible;
+            Click();
+            Assert.Equal(ApprovalState.Pending, fixture.Service.Requests[1].State);
+            fixture.Now += TimeSpan.FromMilliseconds(500);
+            Click();
+            Assert.Equal(ApprovalState.Rejected, fixture.Service.Requests[1].State);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Press_started_on_first_request_cannot_decide_second_after_guard_expires(bool mouse)
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new Fixture();
+            fixture.Service.Receive(FeaturePageFixtures.Request("second")); WpfContext.Drain();
+            fixture.Now += TimeSpan.FromSeconds(1);
+            var button = fixture.Button("ApproveRequest");
+            if (mouse) button.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent });
+            else RaiseKey(button, Keyboard.PreviewKeyDownEvent, Key.Space);
+            Assert.True(fixture.Service.Deny("first")); WpfContext.Drain();
+            fixture.Now += TimeSpan.FromSeconds(1);
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(ApprovalState.Pending, fixture.Service.Requests[1].State);
+        });
+    }
+
+    [Fact]
     public void Focused_Reject_keeps_its_normal_Enter_activation_for_write_requests()
     {
         wpf.Run(() =>
@@ -230,6 +278,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             Assert.Same(fixture.View.FindName("RequestTitle"), Keyboard.FocusedElement);
             Assert.DoesNotContain("fixture-private-key", fixture.Model.SelectedRequest!.Parameters);
             fixture.Service.Receive(FeaturePageFixtures.Request("second")); WpfContext.Drain();
+            fixture.Now += TimeSpan.FromMilliseconds(500);
             UnifiedDesktopTests.ClickControl(fixture.Button("DenyRequest")); WpfContext.Drain();
             Assert.Equal(ApprovalState.Rejected, fixture.Service.Requests[0].State);
             Assert.Equal(ApprovalState.Pending, fixture.Service.Requests[1].State);
@@ -361,6 +410,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                     WorkbenchRenderTests.SaveRender(host, Path.Combine(output, suffix + ".png"), width, height);
                     if (risk == ApprovalRisk.Destructive)
                     {
+                        WpfContext.WaitForDecisionGuard(view);
                         UnifiedDesktopTests.ClickControl(approve); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
                         WorkbenchRenderTests.SaveRender(host, Path.Combine(output, "sheet-" + suffix + ".png"), width, height);
                     }
@@ -420,9 +470,10 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             Service.Receive(request);
             Model = new FeaturePagesViewModel(Service, new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(),
                 new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics(), () => Now);
-            View = new ApprovalsDrawer { DataContext = Model };
+            View = new ApprovalsDrawer { DecisionGuard = new(() => Now), DataContext = Model };
             window = new Window { Content = View, Width = 1100, Height = 900 };
             WpfContext.ShowWindow(window); WpfContext.Drain(); window.UpdateLayout();
+            Now += TimeSpan.FromMilliseconds(500);
         }
         internal Button Button(string name) => (Button)View.FindName(name);
         public void Dispose() { window.Close(); Model.Dispose(); }

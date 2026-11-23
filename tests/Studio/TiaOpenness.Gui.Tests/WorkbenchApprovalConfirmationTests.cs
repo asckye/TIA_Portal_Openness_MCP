@@ -11,6 +11,29 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class WorkbenchApprovalConfirmationTests(WpfContext wpf)
 {
+    [Fact]
+    public void Occupied_channel_has_read_only_controls_and_status_chip()
+    {
+        wpf.Run(() =>
+        {
+            string name = "Approval.Gui.Tests." + System.Guid.NewGuid().ToString("N");
+            string settings = System.IO.Path.Combine(System.IO.Path.GetTempPath(), name + ".settings");
+            using var owner = new Services.ApprovalService(settings, name);
+            using var other = new Services.ApprovalService(settings, name);
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals: other);
+            try
+            {
+                window.Navigate("Approvals");
+                Assert.True(owner.ChannelAvailable);
+                Assert.False(other.ChannelAvailable);
+                Assert.Equal(Visibility.Collapsed, window.ApprovalsContent.DecisionArea.Visibility);
+                Assert.False(window.SettingsContent.AiPanel.IsEnabled);
+                Assert.Equal(Loc.Current["Shell.ApprovalUnavailable"], window.ApprovalStatusText.Text);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData(AppLanguage.English)]
     [InlineData(AppLanguage.Chinese)]

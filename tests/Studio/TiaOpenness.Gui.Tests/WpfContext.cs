@@ -236,6 +236,14 @@ public sealed class WpfContext : IDisposable
         }
     }
 
+    internal static void WaitForDecisionGuard(Views.ApprovalsDrawer view)
+    {
+        var elapsed = System.Diagnostics.Stopwatch.StartNew();
+        while (view.DecisionGuard.ClickGuardActive && elapsed.Elapsed < TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang)
+            WaitForInput(TimeSpan.FromMilliseconds(20));
+        Assert.False(view.DecisionGuard.ClickGuardActive);
+    }
+
     internal static void WaitForInput(TimeSpan duration)
     {
         var frame = new DispatcherFrame();

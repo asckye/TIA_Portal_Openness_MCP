@@ -9,21 +9,32 @@ namespace TiaMcp.Updater
 {
     internal static class Program
     {
+        private static string logPath;
         private static int Main(string[] args)
         {
             UpdaterOptions options;
             try { options = Parse(args); }
-            catch (Exception error) { Console.Error.WriteLine(UpdaterText.Bilingual("InvalidArguments", "invalid arguments") + ": " + error.Message); return 1;
-            }
+            catch (Exception error) { return Fail(error, UpdaterText.Bilingual("InvalidArguments", "invalid arguments")); }
 
             if (options.SelfTest) return SelfTest();
             string executable = Assembly.GetExecutingAssembly().Location;
             string root = options.InstallRoot;
             if (string.IsNullOrWhiteSpace(root)) root = FindInstallRoot(executable);
-            options.InstallRoot = Path.GetFullPath(root);
+            try
+            {
+                options.InstallRoot = Path.GetFullPath(root);
+                UpdaterEngine.RequireDelivery(options.InstallRoot);
+                var data = Environment.GetEnvironmentVariable("TIA_MCP_DATA_DIRECTORY");
+                string logs = Path.Combine(string.IsNullOrWhiteSpace(data) ? Path.Combine(options.InstallRoot, "data") : Path.GetFullPath(data),
+                    "logs", "updater");
+                Directory.CreateDirectory(logs);
+                logPath = Path.Combine(logs, "updater-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N") + ".log");
+                Say("Updater log: " + logPath);
+            }
+            catch (Exception error) { return Fail(error); }
 
             // The worker runs from TEMP, so neither its image nor a loaded updater assembly is replaced in place.
-            if (!IsStaged(args) && !options.Check && (options.Rollback || !options.Check) && IsWithin(executable, options.InstallRoot))
+            if (!IsStaged(args) && !options.Check && IsWithin(executable, options.InstallRoot))
             {
                 try
                 {
@@ -31,17 +42,15 @@ namespace TiaMcp.Updater
                     return StartStaged(stagedArgs);
                 }
                 catch (Exception error) {
-                    Console.Error.WriteLine(UpdaterText.Bilingual("StageFailed", "could not stage updater") + ": " + error.GetBaseException().Message);
-                    return 1;
+                    return Fail(error);
                 }
             }
 
             try { return UpdaterEngine.Run(options, Say); }
             catch (Exception error)
             {
-                Console.Error.WriteLine(UpdaterText.Bilingual("Failure", "FAIL") + ": " + error.GetBaseException().Message);
                 Relaunch(options);
-                return 1;
+                return Fail(error);
             }
         }
 
@@ -159,7 +168,29 @@ namespace TiaMcp.Updater
             catch (Exception error) { Console.Error.WriteLine(UpdaterText.Bilingual("SelfTestFailed", "self-test failed") + ": " + error.Message); return 1; }
         }
 
-        private static void Say(string message) { Console.WriteLine("[" + DateTime.Now.ToString("HH:mm:ss") + "] " + message); }
+        private static void Say(string message)
+        {
+            var line = "[" + DateTime.UtcNow.ToString("O") + "] " + message;
+            Console.WriteLine(line);
+            if (logPath != null) File.AppendAllText(logPath, line + Environment.NewLine, new UTF8Encoding(false));
+        }
+
+        private static int Fail(Exception error, string label = null)
+        {
+            string message = (label ?? UpdaterText.Bilingual("Failure", "FAIL")) + ": " + error.Message;
+            Console.Error.WriteLine(message);
+            if (logPath != null)
+            {
+                try { File.AppendAllText(logPath, DateTime.UtcNow.ToString("O") + " " + error + Environment.NewLine, new UTF8Encoding(false)); }
+                catch (Exception io) when (io is IOException || io is UnauthorizedAccessException) { Console.Error.WriteLine(io.Message); }
+            }
+            if (Environment.UserInteractive && !Console.IsInputRedirected && !Console.IsOutputRedirected)
+            {
+                Console.Error.WriteLine(UpdaterText.Bilingual("PressEnter", "Press Enter to close."));
+                Console.ReadLine();
+            }
+            return 1;
+        }
         private static void PrintUsage()
         {
             Console

@@ -15,21 +15,46 @@ internal sealed class ReadOnlyVciBridge(IMcpSessionClient session) : IVersionCon
     private TiaClient? client;
     private string? attached;
     private readonly SemaphoreSlim gate = new(1, 1);
+    private readonly object sync = new();
+    private CancellationTokenSource? active;
     private bool disposed;
+    internal bool CancelPending()
+    {
+        lock (sync)
+        {
+            if (active == null) return false;
+            active.Cancel();
+            return true;
+        }
+    }
     public bool CanRead => session.SessionKey != null && (string?)session.State?["releaseKey"] is "16" or "17" or "18" or "19";
     public bool CanWrite => false;
     private string Identity => session.SessionKey + ":" + session.State?["worker"]?["generation"] + ":" + session.State?["binding"];
-    private async Task<T> Read<T>(Func<TiaClient, Task<T>> operation)
+    private async Task<T> Read<T>(Func<TiaClient, CancellationToken, Task<T>> operation)
     {
-        await gate.WaitAsync();
+        await gate.WaitAsync().ConfigureAwait(false);
+        using var read = new CancellationTokenSource();
         try
         {
-            if (disposed) throw new ObjectDisposedException(nameof(ReadOnlyVciBridge));
-            return await ReadBound(operation);
+            lock (sync)
+            {
+                if (disposed) throw new ObjectDisposedException(nameof(ReadOnlyVciBridge));
+                active = read;
+            }
+            try { return await ReadBound(operation, read.Token).ConfigureAwait(false); }
+            catch (Exception) when (read.IsCancellationRequested)
+            {
+                Reset();
+                throw new OperationCanceledException(read.Token);
+            }
         }
-        finally { gate.Release(); }
+        finally
+        {
+            lock (sync) { active = null; if (disposed) Reset(); }
+            gate.Release();
+        }
     }
-    private async Task<T> ReadBound<T>(Func<TiaClient, Task<T>> operation)
+    private async Task<T> ReadBound<T>(Func<TiaClient, CancellationToken, Task<T>> operation, CancellationToken token)
     {
         var state = session.State;
         if (!CanRead || state?["lane"] != null)
@@ -45,23 +70,36 @@ internal sealed class ReadOnlyVciBridge(IMcpSessionClient session) : IVersionCon
         {
             Reset();
             client = new TiaClient();
-            client.Start(opennessVersion: (string)state!["releaseKey"]!);
-            try { await client.AttachVciReadOnlyAsync(pid, ticks, file); attached = identity; }
+            try
+            {
+                await client.Bridge.StartAsync(opennessVersion: (string)state!["releaseKey"]!, cancellation: token).ConfigureAwait(false);
+                if (Identity != identity) throw new InvalidOperationException("The shared session binding changed during the bridge handshake.");
+                await client.AttachVciReadOnlyAsync(pid, ticks, file, token).ConfigureAwait(false);
+                attached = identity;
+            }
             catch { Reset(); throw; }
         }
-        var result = await operation(client!);
+        var result = await operation(client!, token).ConfigureAwait(false);
         if (Identity != identity) { Reset(); throw new InvalidOperationException("The shared session binding changed during the VCI read."); }
         VciReadOnlyBinding.Require(pid, ticks);
         return result;
     }
-    public Task<bool> VcSupportedAsync() => Read(c => c.VcSupportedAsync());
-    public Task<List<WorkspaceInfo>> VcListWorkspacesAsync() => Read(c => c.VcListWorkspacesAsync());
-    public Task<WorkspaceStatusReport> VcStatusAsync(string? name, bool changedOnly) => Read(c => c.VcStatusAsync(name, changedOnly));
-    public Task<WorkspaceDiff> VcDiffAsync(string? name, string? file) => Read(c => c.VcDiffAsync(name, file));
+    public Task<bool> VcSupportedAsync() => Read((c, token) => c.VcSupportedAsync(token));
+    public Task<List<WorkspaceInfo>> VcListWorkspacesAsync() => Read((c, token) => c.VcListWorkspacesAsync(token));
+    public Task<WorkspaceStatusReport> VcStatusAsync(string? name, bool changedOnly) => Read((c, token) => c.VcStatusAsync(name, changedOnly, token));
+    public Task<WorkspaceDiff> VcDiffAsync(string? name, string? file) => Read((c, token) => c.VcDiffAsync(name, file, token));
     private static InvalidOperationException WritesRefused() => new("The VCI bridge permits reads only. F33 MCP tools are required for writes.");
     public Task<WorkspaceInfo> VcCreateWorkspaceAsync(string name, string folderPath) => throw WritesRefused();
     public Task<MappingResult> VcMapProjectAsync(string? name, string? deviceId, bool dryRun) => throw WritesRefused();
     public Task<SyncResult> VcSyncAsync(string? name, SyncDirection direction, bool dryRun) => throw WritesRefused();
     private void Reset() { var previous = client; client = null; attached = null; previous?.Dispose(); }
-    public void Dispose() { disposed = true; Reset(); }
+    public void Dispose()
+    {
+        lock (sync)
+        {
+            disposed = true;
+            if (active != null) active.Cancel();
+            else Reset();
+        }
+    }
 }

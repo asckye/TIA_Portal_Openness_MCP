@@ -322,6 +322,8 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                         },
                     }),
                 } : call).ToArray());
+                var clock = FeaturePageFixtures.Now;
+                window.ApprovalsContent.DecisionGuard = new(() => clock);
                 var environment = new FeaturePageFixtures.Environment();
                 window.ConfigureFeaturePages(journal, audit, environment, new FeaturePageFixtures.Notification(), () => FeaturePageFixtures.Now);
                 var host = WorkbenchRenderTests.CreateHost(window, width, height);
@@ -411,6 +413,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Assert.Equal(Loc.Current["Approval.OnlineHint"], destructive.DecisionHint);
                 Assert.Equal(Loc.Current["Approval.Operations"], destructive.ComparisonTitle);
                 Assert.Equal(4, destructive.DestructiveFields.Count);
+                clock = clock.AddMilliseconds(500);
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.ApproveRequest);
                 Capture("danger-sheet");
                 var sheet = Descendants<Border>(window.ApprovalsContent.ConfirmationSheet).Single(b => b.Width == 420);

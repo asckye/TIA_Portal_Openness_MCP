@@ -66,6 +66,7 @@ internal static partial class Strings
         ("Shell.Clients", "AI Clients", "AI 客户端配置"),
         ("Shell.CallsPill", "AI calls", "AI 调用记录"),
         ("Shell.ApprovalsPill", "Approvals", "协作与审批"),
+        ("Shell.ApprovalUnavailable", "Approvals unavailable · read-only", "审批通道不可用 · 只读"),
         ("Shell.ApprovalOnStatus", "Manual", "人工审批"),
         ("Shell.ApprovalOffStatus", "Auto-write", "自动放行"),
         ("Settings.Sections", "Settings", "偏好与安全"),

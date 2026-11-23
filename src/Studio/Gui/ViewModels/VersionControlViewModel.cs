@@ -63,6 +63,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     public AsyncCommand VcPush { get; }
     public AsyncCommand VcPull { get; }
 
+    internal bool CancelBridgeRead() => _client is McpVersionControlClient mcp && mcp.CancelRead();
+
     internal void RefreshCommands() => RaiseVcCommands();
     public bool IsReadOnly => _client.CanRead && !_client.CanWrite;
 
