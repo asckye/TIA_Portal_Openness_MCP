@@ -119,7 +119,7 @@ public partial class MainWindow : Window
         }
         MaximizeGlyph.SetResourceReference(System.Windows.Shapes.Path.DataProperty, maximized ? "Icon.Restore" : "Icon.Maximize");
         MaximizeWindowButton.SetBinding(System.Windows.Automation.AutomationProperties.NameProperty,
-            Localization.TrExtension.CreateBinding(maximized ? "Access.Restore" : "Access.Maximize"));
+            maximized ? Localization.TrExtension.CreateBinding("Access.Restore") : Localization.TrExtension.CreateBinding("Access.Maximize"));
     }
 
     [DllImport("user32.dll", ExactSpelling = true)]

@@ -41,18 +41,7 @@
                 </DockPanel>
               </Border>
       <ScrollViewer x:Name="VciScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel x:Name="VciColumn" Margin="24">
-          <StackPanel.Style>
-            <Style TargetType="StackPanel" BasedOn="{StaticResource Primer.PageColumn}">
-              <Setter Property="MaxWidth" Value="920"/>
-              <Style.Triggers>
-                <DataTrigger Binding="{Binding VersionControl.HasWorkspace}" Value="False"><Setter Property="MaxWidth" Value="640"/></DataTrigger>
-                <DataTrigger Binding="{Binding VersionControl.ShowSyncResult}" Value="True"><Setter Property="MaxWidth" Value="780"/></DataTrigger>
-                <DataTrigger Binding="{Binding VersionControl.SyncResult.DryRun}" Value="True"><Setter Property="MaxWidth" Value="900"/></DataTrigger>
-                <DataTrigger Binding="{Binding VersionControl.Synchronizing}" Value="True"><Setter Property="MaxWidth" Value="740"/></DataTrigger>
-              </Style.Triggers>
-            </Style>
-          </StackPanel.Style>
+        <StackPanel x:Name="VciColumn" Style="{StaticResource Primer.VciColumn}" Margin="24">
           <Border Style="{StaticResource Primer.ProjectResultCard}" Padding="20"
             Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource NotBoolToVisibility}}">
             <StackPanel>
