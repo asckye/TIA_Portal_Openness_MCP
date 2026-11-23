@@ -7,7 +7,7 @@ internal static class Program
 {
     internal static readonly HashSet<string> BooleanOptions = new(StringComparer.OrdinalIgnoreCase)
     {
-        "RecordApprovals", "TranslationsOnly",
+        "RecordApprovals", "TranslationsOnly", "SkipMergeCheck",
         "NoDraftUpload", "DryRun", "SelfTest", "NoBinaries", "UseReferenceAssemblyPackage", "NoRestore", "NoBuild", "UpdateBaseline", "AllowGrowth", "Fix", "Check", "BuildOnly", "Initialize", "Complete", "ConfirmPublication", "Reuse", "All", "Offline"
     };
 
@@ -34,6 +34,7 @@ internal static class Program
 
         try
         {
+            RequireGoldenVerification(command.ToLowerInvariant(), Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN"));
             var options = Options.Parse(args[1..], BooleanOptions);
             if ((command.Equals("build-solutions", StringComparison.OrdinalIgnoreCase) || command.Equals("prepare", StringComparison.OrdinalIgnoreCase) ||
                  command.Equals("merge-check", StringComparison.OrdinalIgnoreCase) || command.Equals("test-suites", StringComparison.OrdinalIgnoreCase)) &&
@@ -74,6 +75,12 @@ internal static class Program
             Console.Error.WriteLine(ex.Message);
             return 1;
         }
+    }
+
+    internal static void RequireGoldenVerification(string command, string? updateGolden)
+    {
+        if (updateGolden != null && command is "merge-check" or "test-suites" or "prepare")
+            throw new ReleaseException($"Unset TIA_MCP_UPDATE_GOLDEN before running {command}.");
     }
 
     private static void PrintUsage()

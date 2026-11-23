@@ -9,13 +9,16 @@ on:
     branches: [master]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   offline-tests:
     # 已迁移的 xunit 套件逐项生成 trx；最低数量门禁拒绝零测试、失败和超限跳过。
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           dotnet-version: '10.0.x'
       - name: Static checker self-tests
@@ -24,7 +27,7 @@ jobs:
         run: dotnet run --project build-tools/release -- test-suites -SelfTest
       - name: Offline regression, generation basic package and MCP SDK version policy
         run: dotnet run --project build-tools/release -- test-suites -Shards 4 -MaxParallelism 4 -Suite kept-code -Suite version-policy -Suite generation-model -Suite generation-planning -Suite workbench-control-protocol
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
           name: offline-test-results
@@ -42,11 +45,11 @@ jobs:
     # Keep the inventory in docs/manuals/validation.md in sync with these steps.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           dotnet-version: '10.0.x'
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.12'
       - name: Official example catalog must match pinned sources
@@ -78,7 +81,7 @@ jobs:
         run: |
           python3 scripts/checks/Snapshot-ToolContracts.py self-test
           python3 scripts/checks/Snapshot-ToolContracts.py verify
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
           name: source-contract-test-results
@@ -94,8 +97,8 @@ jobs:
   studio-tests:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           dotnet-version: '10.0.x'
       - name: Build Studio
@@ -104,7 +107,7 @@ jobs:
         run: dotnet run --project build-tools/release -- test-suites -Suite studio-core -Shards 1 -ResultsDirectory bin-build/ci-test-results
       - name: Studio WPF functional tests
         run: dotnet run --project build-tools/release -- test-suites -Suite studio-gui -Shards 1 -ResultsDirectory bin-build/ci-test-results
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
           name: studio-test-results
@@ -118,11 +121,11 @@ jobs:
   foundation-suites:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           dotnet-version: '10.0.x'
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         id: decoder-python
         with:
           python-version: '3.12.10'
@@ -138,7 +141,7 @@ jobs:
         run: dotnet build src/FoundationHost/TiaMcp.FoundationHost.csproj -c Release
       - name: Foundation contracts and functional tests
         run: dotnet run --project build-tools/release -- test-suites -Shards 8 -MaxParallelism 2 -ResultsDirectory bin-build/runner-results -Suite foundation -Suite tool-pipeline -Suite shared-lifecycle-plc -Suite worker-progress-foundation -Suite prompt-registration -Suite software-read -Suite special-export-shape -Suite device-add -Suite hardware-catalog -Suite diagnostic-membership -Suite adapter-contracts -Suite worker-channel -Suite workbench-control-protocol
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
           name: foundation-test-results

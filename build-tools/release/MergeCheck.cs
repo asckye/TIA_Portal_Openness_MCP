@@ -130,6 +130,7 @@ internal static partial class MergeCheck
         var dotnet = ReleaseCommands.Dotnet;
         process ??= DotnetSuites.RunProcess;
         git ??= args => process("git", args, root, null);
+        var started = options.Has("All") && !options.Has("DryRun") ? MergeCheckRuns.CleanRevision(git) : null;
         var changes = ChangeSet(options.Get("Base", "master"), git);
         Console.WriteLine($"Selecting from {changes.Length} changed paths.");
         bool docsOnly = !options.Has("All") && changes.All(Documentation);
@@ -360,7 +361,7 @@ internal static partial class MergeCheck
         File.WriteAllText(Path.Combine(output, "timeline.tsv"), Timeline(timings));
         Timed("test-trends", () => MergeTrends(root, output, git, timings));
         Console.Write(Summary(timings, total.Elapsed.TotalSeconds));
-        MergeCheckRuns.Append(root, options, plan, timings, total.Elapsed.TotalSeconds, output, git);
+        MergeCheckRuns.Append(root, options, plan, timings, total.Elapsed.TotalSeconds, output, git, started);
         return timings.Any(row => row.Result.ExitCode != 0) ? 1 : 0;
     }
 

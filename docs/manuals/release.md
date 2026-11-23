@@ -1,10 +1,14 @@
 # 准备和发布版本
 
-状态：现行 · 最后核对：2026-11-21
+状态：现行 · 最后核对：2026-11-22
 
 本文说明维护者如何提前构建、检查和上传候选，再在维护者确认后公开。4.0 正式版须满足任务合并、检查通过、无未决 blocker、已生成 rc 和维护者确认等放行条件。见 [ADR 0023](../standards/decisions/0023-release-4-0-final-criteria.md) 和 [ADR 0031](../standards/decisions/0031-release-path.md)。
 
 每个发布候选前，先在主机手动运行 `dotnet run --project build-tools/release -- merge-check -All`，完成全部 38 个注册套件和源码检查；数量门槛保持不变。发布分为两个阶段：`prepare` 完成所有耗时工作；`publish-prepared` 使用已上传的候选，在 300 秒内核对、推送提交、打标签并公开。发布阶段不构建、不测试、不打包。
+
+在待发布的干净提交上运行完整门禁。主检出的 `bin-build/scorecard/merge-check-runs.jsonl` 记录提交、Git 树和完成时间。`prepare` 在清理或构建前核对该提交和树最近一次完整运行的结果，写候选时再次核对 HEAD。缺少记录、旧记录没有树哈希或完整运行失败时，在该提交上重新运行 `merge-check -All`。若设置了 `TIA_MCP_UPDATE_GOLDEN`，先清除该环境变量，再运行 `merge-check`、`test-suites` 或 `prepare`。
+
+[开发规范](../standards/development.md) 第 5.9 节原文：“不把开发缓存、`-Quick` 报告或合并门的结果当作发布证据”。按 [ADR 0031 的修订](../standards/decisions/0031-release-path.md)，与候选提交及树匹配的完整门禁记录证明注册套件与源码检查已经通过。交付 ZIP 的证据来自本次 `prepare` 的包检查与摘要。
 
 实施状态：master 已含 NEW-REL-A 的构建打包、NEW-REL-B 的完整检查与候选、NEW-REL-C 的上传和公开命令。`prepare -BuildOnly` 只得到 ZIP，不能视为可发布候选，也不能手工补候选记录。
 
@@ -34,7 +38,7 @@
 dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1
 ```
 
-完整准备首先运行依赖漏洞扫描，再按顺序完成构建、暂存校验、ZIP 和摘要生成，再对提取的 ZIP 运行交付检查，然后写候选记录并上传私有草稿，2026-11-04 实测约 6 分钟（未计入漏洞扫描）。注册套件、传输、配置页、原生安全、工具用法与活动输入检查由 `merge-check` 执行，范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 在 `merge-check` 中随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
+完整准备核对完整门禁记录后运行依赖漏洞扫描，再按顺序完成构建、暂存校验、ZIP 和摘要生成，再对提取的 ZIP 运行交付检查，然后写候选记录并上传私有草稿，2026-11-04 实测约 6 分钟（未计入漏洞扫描）。注册套件、传输、配置页、原生安全、工具用法与活动输入检查由 `merge-check` 执行，范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 在 `merge-check` 中随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
 
 扫描先于任何清理或构建，报告保存在 `bin-build/prepared/<版本>/logs/vulnerable-packages.json`。未批准的 High/Critical 阻止准备；网络或恢复失败、空源、无效报告显示 `not run`，停止并提示恢复网络后重跑，通常约 20 秒内失败，超时上限为 300 秒。离线 `-NuGetConfig` 只用于后续构建；扫描显式使用 nuget.org。`-NoDraftUpload` 也需要完成扫描；`-BuildOnly` 不生成候选，因而跳过扫描。`merge-check`、`upload-draft`、`publish-prepared` 不扫描，公开阶段的 300 秒预算保持不变；不要求 GitHub CI 扫描收据。
 
@@ -42,6 +46,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1
 |---|---|
 | `-TimeoutMinutes <正整数>` | 从提取 ZIP 到交付检查结束的总时限。每静默 10 分钟显示一次作业心跳。到达总时限时列出运行中的作业及耗时，并行终止本次检查的子进程树，最多再等 5 秒，报告仍在清理的 PID 并返回失败。构建阶段的 MSBuild 属性查询另有 5 分钟的单次限时。 |
 | `-BuildOnly` | 跳过漏洞扫描，只构建、暂存校验和打包，不运行交付包检查，不生成可发布候选，不上传草稿；可在任意分支检查构建和交付布局 |
+| `-BuildOnly -SkipMergeCheck` | 可在没有该提交完整门禁记录时构建 ZIP；仅限构建模式 |
 | `-NoDraftUpload` | 仍须通过漏洞扫描；完整检查通过后保留本地候选，但不上传草稿；之后使用 `upload-draft` |
 | `-PublicApiRoot`、`-NuGetConfig` | 指定本机 SDK 父目录及离线 NuGet 配置文件 |
 | `-Python`、`-CompanionPython` | 分别指定解码器和 PLC Tools 的解释器绝对路径 |
@@ -50,7 +55,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.1
 成功产物位于 `bin-build/prepared/<版本>/`：
 
 - 4.0 起的正式版生成 `TIA_MCP_v<版本>_<YYYYMMDD>.zip`，预发布沿用 `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip`。两者均附同名 `.sha256` 文件，检查和上传使用同一份 ZIP。
-- `candidate.json`：版本、提交、ZIP 路径、SHA-256、大小、文件数、检查名称和完成时间；上传成功后还含草稿与资产 ID。
+- `candidate.json`：版本、提交、完整门禁的完成时间（`mergeCheck.utc`）与树哈希（`mergeCheck.tree`）、ZIP 路径、SHA-256、大小、文件数、检查名称和完成时间；上传成功后还含草稿与资产 ID。
 - 暂存包及 `logs/`。候选记录和日志留在本机，不提交 Git。
 
 交付文件按 `scripts/operations/delivery-files.json` 过滤，包括八版宿主、worker 和适配器、工作台、工具、用户文档、模板、插件及许可证。暂存阶段生成 `manifest/package-manifest.json`、`delivery.json`、`tools-list.json` 和文件清单 `multi-version-build.json`。旧构建收据不进入新包；`runtime/verification/`、源码、SDK 和私人数据不交付。
@@ -73,7 +78,7 @@ dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0
 dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0-rc.1
 ```
 
-命令先核对候选、HEAD、干净工作树、ZIP 与 sidecar、草稿资产的大小与摘要以及已有标签的目标。核对通过后推送候选提交到 `origin/master`，按需创建 `v<版本>` 标签，公开草稿，再确认公开资产可下载。正式版设置 `prerelease=false`、`make_latest=true`，成为 GitHub **Latest**。beta 和 rc 设置 `prerelease=true`、`make_latest=false`。它不等待 GitHub CI。
+命令先核对候选、HEAD、干净工作树、ZIP 与 sidecar、草稿资产的大小与摘要以及已有标签的目标。核对通过后推送候选提交到 `origin/master`，按需创建 `v<版本>` 标签，公开草稿，再确认公开资产可下载。正式版设置 `prerelease=false`、`make_latest=true`，成为 GitHub **Latest**。beta 和 rc 设置 `prerelease=true`、`make_latest=false`。核对草稿与标签期间，工具同时向 GitHub Actions 查询候选提交的最近一次工作流运行，显示名称及结论或当前状态。失败、缺少运行或未能及时读到状态时打印警告，继续公开。
 
 300 秒是从发布工具进程启动起的硬性要求。超过 150 秒不再开始标签步骤；标签步骤后仍先尝试公开草稿，其余请求和重试受剩余预算约束。所有结果均打印总秒数。超时或网络故障不会变成成功；已创建标签或已公开的状态必须由重跑核实。
 

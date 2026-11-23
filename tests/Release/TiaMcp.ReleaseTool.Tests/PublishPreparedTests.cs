@@ -425,6 +425,31 @@ public sealed class PublishPreparedTests
         Assert.Contains("Total seconds:", output.ToString(), StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("success", "offline-checks success.", false)]
+    [InlineData("failure", "offline-checks failure.", true)]
+    [InlineData("in_progress", "offline-checks in_progress.", true)]
+    [InlineData("missing", "no workflow run.", true)]
+    [InlineData("other-commit", "no matching workflow run.", true)]
+    [InlineData("forbidden", "status unavailable", true)]
+    [InlineData("malformed", "status unavailable", true)]
+    [InlineData("slow", "status unavailable", true)]
+    public async Task ReportsLatestCiWithoutBlockingPublication(string ci, string expected, bool warning)
+    {
+        using var f = new Fixture { CiResult = ci };
+        var saved = Console.Out;
+        using var output = new StringWriter();
+        try { Console.SetOut(output); Assert.Equal(0, await f.Publish()); }
+        finally { Console.SetOut(saved); }
+        string prefix = (warning ? "WARNING " : "") + "GitHub CI for " + Fixture.Commit;
+        Assert.Contains(prefix + ": " + expected, output.ToString());
+        Assert.True(f.Public);
+        Assert.Equal(new[] { "head", "status" }, f.EventsAtCi);
+        Assert.Empty(f.Delays);
+        Assert.Single(f.CiRequests);
+        if (ci == "slow") Assert.True(f.CiRequests[0].IsCancellationRequested);
+    }
+
     private sealed class Fixture : HttpMessageHandler
     {
         internal const string Commit = "0123456789abcdef0123456789abcdef01234567";
@@ -447,6 +472,9 @@ public sealed class PublishPreparedTests
         internal JsonObject? Patch { get; private set; }
         internal JsonObject? DraftBody { get; private set; }
         internal string Fault { get; set; } = "";
+        internal string CiResult { get; set; } = "success";
+        internal List<CancellationToken> CiRequests { get; } = [];
+        internal string[] EventsAtCi { get; private set; } = [];
         internal string ExpireAt { get; set; } = "";
         internal string? TagCommit { get; set; }
         internal bool Annotated { get; set; }
@@ -525,6 +553,21 @@ public sealed class PublishPreparedTests
         {
             Requests++;
             var path = request.RequestUri!.AbsolutePath; var method = request.Method.Method;
+            if (path == "/repos/acme/project/actions/runs")
+            {
+                Assert.Equal(HttpMethod.Get, request.Method);
+                Assert.Equal("fixture.invalid", request.RequestUri.Host);
+                Assert.Equal("?head_sha=" + Commit + "&per_page=1", request.RequestUri.Query);
+                EventsAtCi = Events.ToArray();
+                CiRequests.Add(token);
+                if (CiResult == "slow") await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                if (CiResult == "forbidden") return Reply(new { }, HttpStatusCode.Forbidden);
+                if (CiResult == "malformed") return Reply(new { workflow_runs = "unexpected" });
+                var run = new { name = "offline-checks", head_sha = CiResult == "other-commit" ? new string('a', 40) : Commit,
+                    status = CiResult == "in_progress" ? CiResult : "completed",
+                    conclusion = CiResult == "in_progress" ? null : CiResult };
+                return Reply(new { workflow_runs = CiResult == "missing" ? Array.Empty<object>() : [run] });
+            }
             if (path.StartsWith("/download/untagged-", StringComparison.Ordinal)) { Record("dead-draft-url"); return Reply(new { }, HttpStatusCode.NotFound); }
             if (path == "/download/published-" + ZipName) {
                 Record("reachable"); Assert.True(token.CanBeCanceled);

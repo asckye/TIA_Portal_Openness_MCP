@@ -60,7 +60,7 @@ public sealed class PrepareChecksTests
     public async Task CandidateRoundTripsAndUploadFailureKeepsIt()
     {
         using var tree = new StaticTree();
-        var context = Context(tree.Root);
+        var context = GatedContext(tree.Root);
         var package = Package(context);
         var clean = false;
         var uploaded = false;
@@ -73,6 +73,8 @@ public sealed class PrepareChecksTests
         Assert.Equal(package.Sha256, read.Digest);
         Assert.Equal(package.Size, read.Size);
         Assert.Equal(package.FileCount, (int)read.Candidate["fileCount"]!);
+        Assert.Equal(context.FullGate!.Tree, (string?)read.Candidate["mergeCheck"]!["tree"]);
+        Assert.Equal(context.FullGate.Utc, (DateTime)read.Candidate["mergeCheck"]!["utc"]!);
         Assert.False(read.Candidate.ContainsKey("suites"));
         Assert.Equal("product-smoke", (string?)read.Candidate["checks"]![0]);
         Assert.True(DateTimeOffset.TryParse((string?)read.Candidate["finishedUtc"], out _));
@@ -85,7 +87,7 @@ public sealed class PrepareChecksTests
     public void BuildOnlyAndNoDraftUploadRespectTheirBoundaries(bool buildOnly)
     {
         using var tree = new StaticTree();
-        var context = Context(tree.Root);
+        var context = buildOnly ? Context(tree.Root) : GatedContext(tree.Root);
         var package = Package(context);
         var checks = 0;
         var clean = 0;
@@ -436,7 +438,7 @@ public sealed class PrepareChecksTests
     public void PackageChecksDoNotReadOrStartSuitesAndLocalOnlyNamesUploadCommand()
     {
         using var tree = new StaticTree();
-        var context = Context(tree.Root);
+        var context = GatedContext(tree.Root);
         var package = Package(context);
         var saved = Console.Out;
         using var output = new StringWriter();
@@ -453,6 +455,26 @@ public sealed class PrepareChecksTests
     }
 
     private static IEnumerable<PrepareCheckJob> All(PrepareCheckPlan plan) => plan.Jobs;
+    private static PrepareContext GatedContext(string root)
+    {
+        var git = ProcessRunner.Run("git", ["rev-parse", "HEAD", "HEAD^{tree}"], root);
+        ProcessRunner.RequireSuccess(git, "Read fixture revision");
+        var hashes = git.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+        return Context(root) with { FullGate = new(DateTime.UnixEpoch, hashes[0], "master", true, true, false,
+            10, 0, [], new() { ["suite-stage"] = 8 }, root, hashes[1]) };
+    }
+
+    [Fact]
+    public void CandidateRefusesACommitChangedAfterFullGateVerification()
+    {
+        using var tree = new StaticTree();
+        var context = GatedContext(tree.Root);
+        var error = Assert.Throws<ReleaseException>(() =>
+            PrepareChecks.WriteCandidate(context, Package(context), new([]), new string('f', 40)));
+        Assert.Contains("merge-check -All", error.Message);
+        Assert.False(File.Exists(Path.Combine(context.OutputDirectory, "candidate.json")));
+    }
+
     private static PrepareContext Context(string root) => new(root, "4.0.0-beta.6", Path.Combine(root, "sdk"), null,
         "python", "companion-python", Path.Combine(root, "prepared"), new(2026, 11, 3), 1);
     private static Dictionary<string, string?> Environment(string root) => new() { ["TEMP"] = Path.Combine(root, "temp") };

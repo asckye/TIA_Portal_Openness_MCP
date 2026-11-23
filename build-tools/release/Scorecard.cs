@@ -109,7 +109,7 @@ internal sealed class Scorecard(string root, string primary, string api)
             try { context.Report.Commit = Git(root, "rev-parse", "--short", "HEAD"); }
             catch (Exception ex) { context.Report.Commit = "unknown"; context.Report.Notes.Add("Git identity not measured: " + ex.Message); }
             if (options.Get("Output") == null) output = output.Replace("-unknown", "-" + context.Report.Commit, StringComparison.Ordinal);
-            string timingPath = Path.Combine(primary, "bin-build/scorecard/merge-check-runs.jsonl");
+            string timingPath = Path.Combine(primary, MergeCheckRuns.RelativePath);
             context.Report.Capture("Verification efficiency", "", timingPath, () =>
             {
                 context.Timings = MergeCheckRuns.Read(timingPath);

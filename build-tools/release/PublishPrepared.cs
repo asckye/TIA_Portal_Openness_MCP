@@ -37,9 +37,22 @@ internal static class PublishPrepared
             using var ownedClient = client is null ? new HttpClient { Timeout = TimeSpan.FromSeconds(30) } : null;
             var http = client ?? ownedClient!;
             var api = ReleasePublisher.PreparedApi(root, options, http, budget.RemainingMilliseconds());
-            var release = await ReleasePublisher.ReadPreparedReleaseAsync(api, package, deadline.Token);
-            if (release.Public) budget.State = PublicationBudget.PublicState;
-            var tagExists = await ReleasePublisher.PreparedTagExistsAsync(api, package, deadline.Token);
+            using var ciWindow = CancellationTokenSource.CreateLinkedTokenSource(deadline.Token);
+            var ci = LatestCiAsync(api, package.Commit, ciWindow.Token);
+            ReleasePublisher.PreparedRelease release;
+            bool tagExists;
+            try
+            {
+                release = await ReleasePublisher.ReadPreparedReleaseAsync(api, package, deadline.Token);
+                if (release.Public) budget.State = PublicationBudget.PublicState;
+                tagExists = await ReleasePublisher.PreparedTagExistsAsync(api, package, deadline.Token);
+            }
+            finally
+            {
+                // CI has the duration of the mandatory API reads and never holds up the tag or public flip.
+                ciWindow.Cancel();
+                Console.WriteLine(ci.IsCompleted ? await ci : $"WARNING GitHub CI for {package.Commit}: status unavailable before publication.");
+            }
             if (release.Public)
             {
                 if (!tagExists) throw new ReleaseException("public release tag is missing");
@@ -62,6 +75,27 @@ internal static class PublishPrepared
             throw new ReleaseException(budget.State + ": " + error.Message);
         }
         finally { Console.WriteLine("Total seconds: " + budget.Elapsed.TotalSeconds.ToString("F1", CultureInfo.InvariantCulture)); }
+    }
+
+    private static async Task<string> LatestCiAsync(ReleasePublisher.GitHubApi api, string commit, CancellationToken token)
+    {
+        var label = $"GitHub CI for {commit}";
+        try
+        {
+            using var response = await api.GetRequiredAsync($"repos/{api.Repository}/actions/runs?head_sha={commit}&per_page=1", token);
+            var runs = response.RootElement.GetProperty("workflow_runs");
+            if (runs.GetArrayLength() == 0) return $"WARNING {label}: no workflow run.";
+            var latest = runs[0];
+            if (latest.GetProperty("head_sha").GetString() != commit) return $"WARNING {label}: no matching workflow run.";
+            var name = latest.GetProperty("name").GetString();
+            var status = latest.GetProperty("conclusion").GetString() ?? latest.GetProperty("status").GetString();
+            return (status == "success" ? "" : "WARNING ") + $"{label}: {name} {status}.";
+        }
+        catch (Exception error) when (error is ReleaseException or HttpRequestException or OperationCanceledException
+            or JsonException or InvalidOperationException or KeyNotFoundException)
+        {
+            return $"WARNING {label}: status unavailable ({error.GetType().Name}).";
+        }
     }
 
     private static async Task EnsureTagAsync(ReleasePublisher.GitHubApi api, PreparedCandidate package, PublicationBudget budget)

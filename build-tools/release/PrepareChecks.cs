@@ -114,9 +114,13 @@ internal static class PrepareChecks
             ProcessRunner.RequireSuccess(git, "Read prepared commit");
             commit = git.StandardOutput.Trim();
         }
+        var gate = context.FullGate;
+        if (gate == null || commit != gate.Commit)
+            throw new ReleaseException("Candidate commit differs from the verified full gate. Run merge-check -All and prepare again.");
         var candidate = new JsonObject
         {
             ["version"] = context.Version, ["commit"] = commit, ["zip"] = Path.GetFileName(package.ZipPath),
+            ["mergeCheck"] = new JsonObject { ["utc"] = gate.Utc, ["tree"] = gate.Tree },
             ["zipSha256"] = digest, ["zipSize"] = package.Size, ["fileCount"] = package.FileCount,
             ["checks"] = JsonSerializer.SerializeToNode(results.Checks),
             ["finishedUtc"] = DateTimeOffset.UtcNow.ToString("o")

@@ -19,6 +19,7 @@ internal sealed record PrepareContext(string Root, string Version, string Public
     internal string PackageName => DeliveryPackage.Name(ProductReleaseVersion.Parse(Version), ReleaseDate.ToDateTime(TimeOnly.MinValue));
     internal string StageDirectory => Path.Combine(OutputDirectory, PackageName);
     internal string Logs => Path.Combine(OutputDirectory, "logs");
+    internal MergeCheckRun? FullGate { get; init; }
 }
 
 internal sealed record PreparedPackage(string ZipPath, string Sha256, int FileCount, long Size, string StageDirectory);
@@ -90,7 +91,9 @@ internal static class Prepare
 
     internal static int Run(string root, Options options) => RunWithTimings(() =>
     {
-        var context = Timed("prerequisites", () => CreateContext(root, options));
+        var gate = Timed("merge-check record", () =>
+            MergeCheckRuns.RequirePassing(root, options, args => ProcessRunner.Run("git", args, root)));
+        var context = Timed("prerequisites", () => CreateContext(root, options)) with { FullGate = gate };
         var tracked = Repository.GitFiles(root);
         var before = tracked.ToDictionary(path => path, path => FileHash.Sha256(Path.Combine(root, path)), StringComparer.Ordinal);
         return WithRunEnvironment(context, () => RequireUnchanged(root, before, options.Has("BuildOnly")), environment =>

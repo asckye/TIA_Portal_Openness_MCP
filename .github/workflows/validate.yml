@@ -15,22 +15,25 @@ on:
     branches: [master]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   validate-bundle:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # The release tool uses local version tags to recognize frozen, published notes.
           fetch-depth: 0
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         id: decoder-python
         with:
           python-version: '3.12.10'
           architecture: 'x64'
       - name: Export the pinned decoder interpreter
         run: '"TIA_MCP_DECODER_PYTHON=${{ steps.decoder-python.outputs.python-path }}" >> $env:GITHUB_ENV'
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
           dotnet-version: '10.0.x'
       - name: Documentation links and repository entrypoints
@@ -59,7 +62,7 @@ jobs:
         run: dotnet run --project build-tools/release -- test-suites -ResultsDirectory bin-build/ci-covered-results -Suite source-contracts
       - name: Build launcher and test .NET 10 configuration page
         run: dotnet run --project tests/Studio/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release -- bin-build/configuration-tests
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
           name: validate-bundle-test-results
