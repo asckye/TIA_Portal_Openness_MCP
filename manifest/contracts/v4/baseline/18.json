@@ -21452,7 +21452,7 @@
           },
           "filePath": {
             "default": "",
-            "description": "filePath: for createFromFile - fully qualified path (drive or UNC) of the .scl / .awl / .db / .udt file on the TIA machine.",
+            "description": "filePath: for createFromFile - fully qualified path (local or mapped drive) of the .scl / .awl / .db / .udt file on the TIA machine.",
             "examples": [
               "C:\\Temp\\FC_Add.scl"
             ],
