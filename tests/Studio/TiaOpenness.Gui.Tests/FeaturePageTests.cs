@@ -237,6 +237,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 var drawer = (Views.ApprovalsDrawer)window.FindName("ApprovalsContent");
                 var parameters = Descendants<Expander>(drawer).Single(b => Equals(b.Header, Loc.Current["Approval.Parameters"]));
                 parameters.IsExpanded = true; Layout(host); Assert.True(window.Features.Requests[0].JsonOpen);
+                WpfContext.WaitForDecisionGuard(drawer);
                 UnifiedDesktopTests.ClickControl(Descendants<Button>(drawer).First(b => Equals(b.Content, Loc.Current["Approval.Deny"]))); Layout(host);
                 Assert.Equal(0, approvals.PendingCount); Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
             }

@@ -6,7 +6,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
@@ -52,12 +51,13 @@ namespace TiaMcp.Updater
             return result;
         }
 
-        private static T RetryLocked<T>(Func<T> operation)
+        private static T RetryLocked<T>(Func<T> operation, bool retryAccessDenied = false)
         {
             for (int attempt = 1; ; attempt++)
             {
                 try { return operation(); }
-                catch (IOException ex) when (attempt < 5 && ((ex.HResult & 0xffff) == 32 || (ex.HResult & 0xffff) == 33))
+                catch (Exception ex) when (attempt < 5 && (ex is IOException && ((ex.HResult & 0xffff) == 32 || (ex.HResult & 0xffff) == 33)
+                      || retryAccessDenied && (ex is IOException || ex is UnauthorizedAccessException) && (ex.HResult & 0xffff) == 5))
                 { Thread.Sleep(200); }
             }
         }
@@ -65,83 +65,6 @@ namespace TiaMcp.Updater
         internal static void RetryLocked(Action operation)
         {
             RetryLocked(() => { operation(); return true; });
-        }
-
-        private static void Publish(string root, string stage, IEnumerable<string> files, IEnumerable<KeyValuePair<string, string>> retired,
-            Action<string> beforeDeploy, Action<string> say, Action<InstallTransaction> publishBackup = null)
-        {
-            // TxF makes all owned-file renames visible in one commit. A killed updater closes its transaction
-            // handle and NTFS aborts it. User directories and unknown files keep their original filesystem identity.
-            RetryLocked(() =>
-            {
-                using (var transaction = new InstallTransaction())
-                {
-                    foreach (var file in retired)
-                    {
-                        var path = OwnedPath(root, file.Key);
-                        if (!ExistsFile(path)) continue;
-                        if (string.Equals(HashFile(path), file.Value, StringComparison.OrdinalIgnoreCase)) transaction.Delete(path);
-                        else say(UpdaterText.Bilingual("PreserveModified", "preserving modified file") + ": " + file.Key);
-                    }
-                    foreach (var relative in files)
-                    {
-                        beforeDeploy?.Invoke(relative);
-                        var target = OwnedPath(root, relative);
-                        transaction.EnsureDirectory(Path.GetDirectoryName(target));
-                        transaction.Move(OwnedPath(stage, relative), target);
-                    }
-                    publishBackup?.Invoke(transaction);
-                    transaction.Commit();
-                }
-                return true;
-            });
-        }
-
-        private sealed class InstallTransaction : IDisposable
-        {
-            private readonly SafeFileHandle handle;
-            private readonly HashSet<string> directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            internal InstallTransaction()
-            {
-                handle = CreateTransaction(IntPtr.Zero, IntPtr.Zero, 0, 0, 0, 0, "Workbench update");
-                Check(!handle.IsInvalid, "start install transaction");
-            }
-            internal void Move(string from, string to) =>
-                Check(MoveFileTransacted(Prefix(from), Prefix(to), IntPtr.Zero, IntPtr.Zero, 1, handle), to);
-            internal void Delete(string path) => Check(DeleteFileTransacted(Prefix(path), handle), path);
-            internal void EnsureDirectory(string path)
-            {
-                if (!directories.Add(path) || DirectoryExists(path)) return;
-                EnsureDirectory(Path.GetDirectoryName(path));
-                Check(CreateDirectoryTransacted(null, Prefix(path), IntPtr.Zero, handle), path);
-            }
-            internal void Commit() => Check(CommitTransaction(handle), "commit install transaction");
-            public void Dispose() => handle.Dispose();
-
-            private static void Check(bool success, string path)
-            {
-                if (success) return;
-                int code = Marshal.GetLastWin32Error();
-                throw new IOException(path + ": " + new System.ComponentModel.Win32Exception(code).Message, unchecked((int)0x80070000) | code);
-            }
-            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-            [DllImport("ktmw32.dll", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true)]
-            private static extern SafeFileHandle CreateTransaction(IntPtr attributes, IntPtr id,
-                int options, int isolation, int flags, int timeout, string description);
-            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-            [DllImport("ktmw32.dll", SetLastError = true)]
-            private static extern bool CommitTransaction(SafeFileHandle transaction);
-            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-            private static extern bool MoveFileTransacted(string from, string to, IntPtr progress, IntPtr data, uint flags,
-                SafeFileHandle transaction);
-            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-            private static extern bool DeleteFileTransacted(string path, SafeFileHandle transaction);
-            [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-            private static extern bool CreateDirectoryTransacted(string template, string path, IntPtr attributes,
-                SafeFileHandle transaction);
         }
 
         private static int Rollback(string root, DeliveryManifest installed, string previousRoot, UpdaterOptions options, Action<string> say, Func<string,
@@ -162,8 +85,8 @@ namespace TiaMcp.Updater
             {
                 var expected = HashInventory(backup);
                 CopyTree(backup, stage, true, null);
-                VerifyStaged(stage, expected);
-                Publish(root, stage, expected.Keys, receipt.Where(file => !expected.ContainsKey(file.Key)), options.BeforeDeployFile, say);
+                VerifyStaged(stage, expected, options.BeforeDeployFile);
+                Publish(root, stage, expected, receipt.Where(file => !expected.ContainsKey(file.Key)), say);
             }
             finally { if (DirectoryExists(stage)) RemoveTree(stage); }
             DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));

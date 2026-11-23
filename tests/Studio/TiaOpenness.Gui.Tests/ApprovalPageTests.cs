@@ -43,6 +43,27 @@ public sealed class ApprovalPageTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Approval_drawer_displays_user_tags_and_the_hosts_declared_password_mask_verbatim()
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new Fixture();
+            string payload = System.Text.Json.JsonSerializer.Serialize(new { tags = new { Door_Key = "西门", TokenCount = 17 }, password = "••••" });
+            fixture.Service.Receive(FeaturePageFixtures.Request("host-card") with { ParametersJson = payload });
+            WpfContext.Drain();
+            fixture.View.FocusRequest("host-card");
+            fixture.Model.SelectedRequest!.JsonOpen = true;
+            WpfContext.Drain();
+            string shown = fixture.Model.SelectedRequest.Parameters;
+            Assert.Contains(WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(fixture.View), block => block.Text == shown);
+            Assert.Contains("西门", shown);
+            Assert.Contains("••••", shown);
+            var expected = System.Text.Json.Nodes.JsonNode.Parse(payload);
+            Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(expected, System.Text.Json.Nodes.JsonNode.Parse(shown)));
+        });
+    }
+
+    [Fact]
     public void Arrival_queue_advance_and_page_show_restart_the_decision_guard()
     {
         wpf.Run(() =>

@@ -865,7 +865,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
         string path = Scratch("ui") + ".settings";
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         Assert.True(UiSettings.Load(path).WorkbenchControlEnabled);
-        File.WriteAllText(path, "workbenchControlEnabled=broken\n"); Assert.True(UiSettings.Load(path).WorkbenchControlEnabled);
+        File.WriteAllText(path, "workbenchControlEnabled=broken\n"); Assert.False(UiSettings.Load(path).WorkbenchControlEnabled);
         new UiSettings { WorkbenchControlEnabled = false }.Save(path);
         Assert.False(UiSettings.Load(path).WorkbenchControlEnabled);
     }

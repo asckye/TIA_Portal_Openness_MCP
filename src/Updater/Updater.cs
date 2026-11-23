@@ -32,23 +32,21 @@ namespace TiaMcp.Updater
         private const string UpdaterConfigPath = UpdaterPath + ".config";
 
         public static int Run(UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses = null)
+            => Run(options, say, runningProcesses, () => { });
+
+        internal static int Run(UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses, Action openLog)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (say == null) say = _ => { };
-            string root = Path.GetFullPath(options.InstallRoot ?? AppDomain.CurrentDomain.BaseDirectory)
-                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string fullRoot = Path.GetFullPath(options.InstallRoot ?? AppDomain.CurrentDomain.BaseDirectory);
+            RequireInstallLocation(fullRoot);
+            string root = fullRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             options.InstallRoot = root;
-            if (options.TimeoutSeconds < 1 || options.TimeoutSeconds > 3600) throw new InvalidOperationException("TimeoutSeconds must be between 1 and 3600.");
-            if (!IsValidRepository(options.Repository)) throw new InvalidOperationException("Repository must be owner/name.");
-            if (options.Version != null && options.Version.Length > 0 && !IsVersion(options.Version))
-                throw new InvalidOperationException("-Version must be vX.Y.Z, or vX.Y.Z-beta.N / vX.Y.Z-rc.N for a pre-release.");
-            RequireDelivery(root);
-
-            if (options.Check) return RunInstalled(root, options, say, runningProcesses);
             // Serialize backup selection, download and publication for this install.
             string name;
             using (var hash = SHA256.Create())
                 name = "TiaMcp.Update." + BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(root.ToUpperInvariant()))).Replace("-", "");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) name = @"Global\" + name;
             using (var mutex = new Mutex(false, name))
             {
                 try
@@ -57,12 +55,29 @@ namespace TiaMcp.Updater
                 }
                 catch (AbandonedMutexException)
                 {
-                    /* swallow(cleanup): the caller owns the abandoned mutex and NTFS aborted any uncommitted renames */
+                    /* swallow(cleanup): the caller owns the abandoned mutex and resumes the recorded install switch */
                     say(UpdaterText.Bilingual("InterruptedUpdate", "resuming after the previous updater exited"));
                 }
-                try { return RunInstalled(root, options, say, runningProcesses); }
+                try
+                {
+                    bool recovering = HasPendingSwitch(root);
+                    if (recovering) RecoverSwitch(root, say);
+                    RequireDelivery(root);
+                    openLog();
+                    if (recovering) say(UpdaterText.Bilingual("InstallRestored", "previous install restored") + ": " + root);
+                    ValidateOptions(options);
+                    return RunInstalled(root, options, say, runningProcesses);
+                }
                 finally { mutex.ReleaseMutex(); }
             }
+        }
+
+        private static void ValidateOptions(UpdaterOptions options)
+        {
+            if (options.TimeoutSeconds < 1 || options.TimeoutSeconds > 3600) throw new InvalidOperationException("TimeoutSeconds must be between 1 and 3600.");
+            if (!IsValidRepository(options.Repository)) throw new InvalidOperationException("Repository must be owner/name.");
+            if (options.Version != null && options.Version.Length > 0 && !IsVersion(options.Version))
+                throw new InvalidOperationException("-Version must be vX.Y.Z, or vX.Y.Z-beta.N / vX.Y.Z-rc.N for a pre-release.");
         }
 
         private static int RunInstalled(string root, UpdaterOptions options, Action<string> say, Func<string, IList<string>> runningProcesses)
@@ -112,10 +127,17 @@ namespace TiaMcp.Updater
             return 0;
         }
 
-        internal static void RequireDelivery(string root)
+        internal static void RequireInstallLocation(string root)
         {
             if (IsSourceCheckout(root))
                 throw new InvalidOperationException("This folder is a source checkout or worktree. The updater only changes an installed delivery.");
+            if (Directory.GetParent(root) == null)
+                throw new InvalidOperationException("The install must be in a directory with a writable parent on the same volume.");
+        }
+
+        internal static void RequireDelivery(string root)
+        {
+            RequireInstallLocation(root);
             if (!ExistsFile(DeliveryFilePath(root)))
                 throw new InvalidOperationException("Not a TIA MCP delivery: manifest/delivery.json is missing.");
         }
@@ -227,7 +249,7 @@ namespace TiaMcp.Updater
                 if (next == null || NormalizeVersion(next.Release) != NormalizeVersion(release.Tag))
                     throw new InvalidOperationException("The ZIP delivery manifest does not match the selected release.");
                 ValidatePackage(package, rules);
-                VerifyStaged(package, newFiles);
+                VerifyStaged(package, newFiles, options.BeforeDeployFile);
                 ValidateInstallPaths(package, root, backup);
                 Dictionary<string, string> oldFiles = InstalledInventory(root);
 
@@ -239,11 +261,7 @@ namespace TiaMcp.Updater
                 var retired = oldFiles.Where(file => !newFiles.ContainsKey(file.Key)
                     && (file.Key.StartsWith("runtime/", StringComparison.Ordinal) || file.Key.StartsWith("manifest/", StringComparison.Ordinal)
                         || Matches(file.Key, rules.LegacyCleanup)));
-                Publish(root, package, newFiles.Keys, retired, options.BeforeDeployFile, say, transaction =>
-                {
-                    transaction.Move(snapshot, backup);
-                    transaction.Move(snapshot + ".update-receipt.json", backup + ".update-receipt.json");
-                });
+                Publish(root, package, newFiles, retired, say, snapshot, Path.GetFileName(backup));
                 changed = true;
                 PruneBackups(Combine(root, ".previous"), backup);
                 DeliveryManifest now = ReadJson<DeliveryManifest>(DeliveryFilePath(root));
@@ -300,13 +318,6 @@ namespace TiaMcp.Updater
             hashes = extracted.ToDictionary(file => RelativeTo(package, file.Key), file => file.Value, StringComparer.Ordinal);
             say(UpdaterText.Bilingual("Extracted", "extracted package to") + ": " + package);
             return package;
-        }
-
-        private static void VerifyStaged(string directory, Dictionary<string, string> expected)
-        {
-            foreach (var file in expected)
-                if (HashFile(OwnedPath(directory, file.Key)) != file.Value)
-                    throw new InvalidDataException("Staged file verification failed: " + file.Key);
         }
 
         private static void ValidatePackage(string package, DeliveryRules rules)

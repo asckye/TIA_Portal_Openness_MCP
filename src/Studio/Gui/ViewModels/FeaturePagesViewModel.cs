@@ -725,6 +725,11 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
     private bool _jsonOpen;
     private bool _planOpen;
     private string? _parameters;
+    private static readonly System.Text.Json.JsonSerializerOptions ParameterFormat = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
     private int _lastRemaining = owner.Remaining(request);
     private bool _announced30, _announced10;
     public ApprovalRequest Request { get; private set; } = request;
@@ -815,13 +820,11 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         : Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAction" : "Approval.ConfirmAction"];
     public string ConfirmationAccessible => Loc.Current[PhysicalDownload ? "Approval.ConfirmDownloadAccessible"
         : Request.RiskAction == "delete" ? "Approval.ConfirmDeleteAccessible" : "Approval.ConfirmAccessible"];
-    private System.Text.Json.Nodes.JsonObject? TargetParameters
+    private System.Text.Json.Nodes.JsonObject? TargetParameters => ParseParameters() as System.Text.Json.Nodes.JsonObject;
+    private System.Text.Json.Nodes.JsonNode? ParseParameters()
     {
-        get
-        {
-            try { return System.Text.Json.Nodes.JsonNode.Parse(Parameters) as System.Text.Json.Nodes.JsonObject; }
-            catch (System.Text.Json.JsonException) /* swallow(ui): a truncated or redacted payload has no structured fields. */ { return null; }
-        }
+        try { return System.Text.Json.Nodes.JsonNode.Parse(Request.ParametersJson); }
+        catch (System.Text.Json.JsonException) /* swallow(ui): an incomplete payload has no structured fields. */ { return null; }
     }
     private static string Field(System.Text.Json.Nodes.JsonObject? obj, string key) =>
         obj?[key] is System.Text.Json.Nodes.JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
@@ -854,7 +857,7 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
             }
         }
     }
-    // Only compare explicit text supplied with this request, after the normal display redaction.
+    // Only compare explicit text supplied with this request, as prepared by the approval host.
     private IReadOnlyList<ApprovalDiffLine>? _sourceChanges;
     public IReadOnlyList<ApprovalDiffLine> SourceChanges => _sourceChanges ??= CompareSource();
     public bool ShowOperationDetails => !HasSourceComparison || JsonOpen;
@@ -885,7 +888,8 @@ public sealed class ApprovalRow(ApprovalRequest request, FeaturePagesViewModel o
         get => _jsonOpen;
         set { if (Set(ref _jsonOpen, value)) Raise(nameof(ShowOperationDetails)); }
     }
-    public string Parameters => _parameters ??= FeatureJson.Redact(Request.ParametersJson);
+    // The host has already masked declared credentials. Formatting the card must preserve the remaining values.
+    public string Parameters => _parameters ??= ParseParameters()?.ToJsonString(ParameterFormat) ?? Request.ParametersJson;
     public bool IsGenerationPlan => Request.GenerationPlan != null;
     public bool IsToolRequest => !IsGenerationPlan;
     public bool PlanOpen { get => _planOpen; set => Set(ref _planOpen, value); }

@@ -14,6 +14,7 @@
     <Compile Include="../../../src/Updater/UpdaterModels.cs" Link="Updater/UpdaterModels.cs" />
     <Compile Include="../../../src/Updater/Updater.Release.cs" Link="Updater/Updater.Release.cs" />
     <Compile Include="../../../src/Updater/Updater.Files.cs" Link="Updater/Updater.Files.cs" />
+    <Compile Include="../../../src/Updater/Updater.Switch.cs" Link="Updater/Updater.Switch.cs" />
     <Compile Include="../../../src/Shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
     <Compile Include="../../../src/Shared/ProductReleaseVersion.cs" Link="Shared/ProductReleaseVersion.cs" />
     <Compile Include="../../../src/Shared/DeliveryPackage.cs" Link="Shared/DeliveryPackage.cs" />
