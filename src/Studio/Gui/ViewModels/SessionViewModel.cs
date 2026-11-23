@@ -67,7 +67,6 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         _dialogs = dialogs;
         _activity = activity;
         _loadProject = loadProject;
-        RunDoctor = new AsyncCommand(DoctorAsync);
         Connect = new AsyncCommand(ConnectAsync, () => !_activity.Busy);
         PickProcess = new AsyncCommand(PickProcessAsync, () => !_activity.Busy && _client is McpProjectClient { IsRunning: true });
         Disconnect = new AsyncCommand(DisconnectAsync, () => IsConnected && !_activity.Busy);
@@ -97,7 +96,6 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         set { if (CanSelectRelease && Set(ref _selectedReleaseKey, value)) { ProcessId = 0; ClearProcessList(); Raise(nameof(ProjectFilePlaceholder)); } }
     }
 
-    public AsyncCommand RunDoctor { get; }
     public AsyncCommand Connect { get; }
     public AsyncCommand PickProcess { get; }
     public AsyncCommand Disconnect { get; }
@@ -250,26 +248,6 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task DoctorAsync() => await _activity.Guarded("Status.CheckingEnvironment", async () =>
-    {
-        var report = await Task.Run(TiaOpenness.Core.Environment.OpennessDoctor.Run);
-
-        _activity.AppendLocalized("Log.EnvironmentHeader");
-        _activity.Append($"{report.MachineName} / {report.UserName} / {(report.Is64BitProcess ? "x64" : "x86")}");
-        foreach (var check in report.Checks)
-        {
-            _activity.Append($"[{check.Status}] {check.Title}: {check.Detail}");
-            if (!string.IsNullOrWhiteSpace(check.Remedy)) _activity.Append($"        -> {check.Remedy}");
-        }
-        foreach (var install in report.Installations)
-        {
-            _activity.AppendLocalized("Log.Installed", install.Version, install.EngineeringDllPath);
-        }
-
-        if (report.CanRunOpenness) _activity.SetStatus("Status.EnvOk", ToastKind.Success);
-        else _activity.SetStatus("Status.EnvNotReady", ToastKind.Warning);
-    });
-
     private async Task ConnectAsync() => await _activity.Guarded("Status.Connecting", async () =>
     {
         await ConnectCoreAsync(adoptOpenProject: true);
@@ -404,7 +382,7 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
     {
         if (_started && _client.IsRunning)
         {
-            if (UseMock != _client.IsMock) throw new InvalidOperationException("Restart Studio to change backend mode.");
+            if (UseMock != _client.IsMock) throw new InvalidOperationException(Loc.Current["Session.RestartMode"]);
             return;
         }
 

@@ -232,7 +232,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         {
             true => Loc.Current.T("Audit.Pass", _verification.Count.ToString("N0")),
             false => Loc.Current.T("Audit.Break", _verification.BreakIndex),
-            _ => Loc.Current["Feature.NotConnected"],
+            _ => Loc.Current["Audit.NotVerified"],
         };
     public long? BreakIndex => _verification?.BreakIndex;
     private AuditEvent? BrokenRecord => Audit.Events.TakeLast(AuditLogService.PageSize).FirstOrDefault(entry => entry.Index == BreakIndex

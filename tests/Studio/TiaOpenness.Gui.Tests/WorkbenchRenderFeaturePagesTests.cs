@@ -103,6 +103,38 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
         });
     }
 
+    [Fact]
+    public void Advanced_project_options_open_environment_and_run_one_check_per_click()
+    {
+        wpf.Run(() =>
+        {
+            var environment = new FeaturePageFixtures.Environment();
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(false), new FeaturePageFixtures.Diagnostics());
+            try
+            {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), environment);
+                WpfContext.ShowWindow(window);
+                for (int visit = 1; visit <= 2; visit++)
+                {
+                    window.Navigate("Engineering");
+                    window.OperationsContent.ShowProjectOptions();
+                    var options = window.OperationsContent.Options;
+                    options.AdvancedProjectTools.IsExpanded = true;
+                    WpfContext.Drain();
+                    var check = Assert.Single(Descendants<Button>(options.AdvancedProjectTools),
+                        button => Equals(button.Content, Loc.Current["Toolbar.Doctor"]));
+                    UnifiedDesktopTests.ClickControl(check);
+                    WpfContext.Drain();
+                    Assert.Equal("Environment", window.CurrentPage);
+                    Assert.False(options.IsOpen);
+                    Assert.Equal(visit, environment.RecheckCount);
+                }
+                Assert.Null(System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(window.EnvironmentContent.SummaryGlyph));
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [WorkbenchRenderFact]
     public void Render_feature_pages_and_drawers_without_services()
     {

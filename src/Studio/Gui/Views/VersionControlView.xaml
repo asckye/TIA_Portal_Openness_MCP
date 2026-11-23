@@ -10,8 +10,10 @@
           <Button AutomationProperties.Name="{l:Tr Pages.PreviewSync}" Content="{l:Tr Pages.PreviewSync}" IsDefault="True" Click="OnPreview"
             Margin="0,0,8,0" Style="{StaticResource Primer.SyncPreview}" DockPanel.Dock="Right" MinHeight="28" Padding="8,0"/>
           <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <Button Content="{Binding Engineering.SelectedDevice.Name}" AutomationProperties.Name="{l:Tr Rail.Project}"
-              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Blocks" Style="{StaticResource Primer.IdeToolButton}"/>
+            <Button AutomationProperties.Name="{Binding Engineering.SelectedDevice.Name}" AutomationProperties.HelpText="{l:Tr Rail.Project}"
+              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Blocks" Style="{StaticResource Primer.IdeToolButton}" ContentTemplate="{x:Null}">
+              <TextBlock Text="{Binding Engineering.SelectedDevice.Name}"/>
+            </Button>
             <TextBlock Text="/" Margin="8,0" Style="{StaticResource Primer.Muted}"/>
             <TextBlock Text="Git / VCI" ToolTip="{l:Tr Vc.Subtitle}" Style="{StaticResource Primer.ContainerTitle}" Margin="0"
               AutomationProperties.HeadingLevel="Level2" VerticalAlignment="Center"/>
@@ -42,6 +44,11 @@
               </Border>
       <ScrollViewer x:Name="VciScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel x:Name="VciColumn" Style="{StaticResource Primer.VciColumn}" Margin="24">
+          <TextBlock Text="{Binding VersionControl.AccessNotice}" TextWrapping="Wrap" Margin="0,0,0,8">
+            <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+              <Style.Triggers><Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger></Style.Triggers>
+            </Style></TextBlock.Style>
+          </TextBlock>
           <Border Style="{StaticResource Primer.ProjectResultCard}" Padding="20"
             Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource NotBoolToVisibility}}">
             <StackPanel>
@@ -134,12 +141,8 @@
                     Visibility="{Binding VersionControl.HasVcItems,Converter={StaticResource NotBoolToVisibility}}"/>
                 </Grid>
               </Border>
-              <DockPanel Margin="0,8,0,0">
-                <TextBlock x:Name="MappedMeta" Visibility="{Binding VersionControl.HasStatus,Converter={StaticResource BoolToVisibility}}"
+              <TextBlock Margin="0,8,0,0" x:Name="MappedMeta" Visibility="{Binding VersionControl.HasStatus,Converter={StaticResource BoolToVisibility}}"
                   Text="{Binding Tag.MappedMeta,ElementName=PageRoot}" Style="{StaticResource Project.Caption}"/>
-                <TextBlock Text="{l:Tr Vc.ReadOnlyBridge}" Style="{StaticResource Primer.Muted}" TextAlignment="Right"
-                  Visibility="{Binding VersionControl.IsReadOnly,Converter={StaticResource BoolToVisibility}}"/>
-              </DockPanel>
             </StackPanel>
           </Border>
 
@@ -189,9 +192,11 @@
                 <ItemsControl ItemsSource="{Binding ElementName=PageRoot,Path=Tag.OtherMappedFiles}" Margin="0,0,0,8">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <Button AutomationProperties.Name="{Binding FilePath}" Content="{Binding FilePath}" Tag="{Binding}" Click="OnMappedFile"
+                      <Button AutomationProperties.Name="{Binding FilePath}" ContentTemplate="{x:Null}" Tag="{Binding}" Click="OnMappedFile"
                         ToolTip="{l:Tr Primer.InspectFile}" Style="{StaticResource Primer.Quiet}" HorizontalContentAlignment="Left"
-                        MinHeight="24"/>
+                        MinHeight="24">
+                        <TextBlock Text="{Binding FilePath}" TextWrapping="Wrap"/>
+                      </Button>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>

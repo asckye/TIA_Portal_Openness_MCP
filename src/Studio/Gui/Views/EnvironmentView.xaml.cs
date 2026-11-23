@@ -5,6 +5,11 @@ using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui.Views;
 
+public sealed class DecorativeGlyph : TextBlock
+{
+    protected override System.Windows.Automation.Peers.AutomationPeer? OnCreateAutomationPeer() => null;
+}
+
 public partial class EnvironmentView : UserControl
 {
     private bool _checked;
@@ -14,11 +19,16 @@ public partial class EnvironmentView : UserControl
         IsVisibleChanged += (_, _) =>
         {
             if (!IsVisible || _checked || DataContext is not FeaturePagesViewModel) return;
-            _checked = true; Model.Run(Model.Environment.Recheck);
+            Recheck();
         };
     }
     private FeaturePagesViewModel Model => (FeaturePagesViewModel)DataContext;
-    private void OnRecheck(object sender, RoutedEventArgs e) => Model.Run(Model.Environment.Recheck);
+    internal void Recheck()
+    {
+        _checked = true;
+        Model.Run(Model.Environment.Recheck);
+    }
+    private void OnRecheck(object sender, RoutedEventArgs e) => Recheck();
     private async void OnFix(object sender, RoutedEventArgs e)
     {
         e.Handled = true;

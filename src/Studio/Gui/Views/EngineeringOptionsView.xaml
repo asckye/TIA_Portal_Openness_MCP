@@ -47,10 +47,6 @@
                 Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Placeholder}" Style="{StaticResource Primer.ProjectInput}"/>
             </DockPanel>
             <ux:PrefillMarker x:Name="ProjectMarker" Target="{Binding ElementName=ControlProjectPath}" Tag="ConnectProject" ClearRequested="OnClearPrefill"/>
-            <WrapPanel Margin="0,12" Visibility="{Binding LegacyDemoAvailable,Converter={StaticResource BoolToVisibility}}">
-              <CheckBox AutomationProperties.Name="{l:Tr Toolbar.Mock}" Content="{l:Tr Toolbar.Mock}" ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding Session.UseMock}" Style="{StaticResource Primer.Checkbox}" Margin="0,0,20,0"/>
-              <CheckBox AutomationProperties.Name="{l:Tr Toolbar.Headless}" Content="{l:Tr Toolbar.Headless}" ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Session.Headless}" Style="{StaticResource Primer.Checkbox}"/>
-            </WrapPanel>
             <WrapPanel Margin="0,12">
               <Button Content="{l:Tr Project.OpenConnectFile}" AutomationProperties.Name="{l:Tr Project.OpenConnectFile}"
                 Click="OnOpenConnection" IsEnabled="{Binding Session.CanOpenConnection}" Style="{StaticResource Primer.Run}"/>
@@ -61,7 +57,7 @@
               <StackPanel>
             <WrapPanel>
               <Button AutomationProperties.Name="{l:Tr Common.Reload}" Content="{l:Tr Common.Reload}" Command="{Binding Engineering.Refresh}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-              <Button AutomationProperties.Name="{l:Tr Toolbar.Doctor}" Content="{l:Tr Toolbar.Doctor}" ToolTip="{l:Tr Toolbar.Doctor.Tip}" Command="{Binding Session.RunDoctor}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
+              <Button AutomationProperties.Name="{l:Tr Toolbar.Doctor}" Content="{l:Tr Toolbar.Doctor}" ToolTip="{l:Tr Toolbar.Doctor.Tip}" Click="OnCheckEnvironment" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
               <Button AutomationProperties.Name="{l:Tr Toolbar.Connect}" Content="{l:Tr Toolbar.Connect}" ToolTip="{l:Tr Toolbar.Connect.Tip}" Command="{Binding Session.Connect}" Style="{StaticResource Primer.Run}" Margin="0,0,8,0"/>
               <Button AutomationProperties.Name="{l:Tr Common.Open}" Content="{l:Tr Common.Open}" Command="{Binding Session.OpenProject}" Style="{StaticResource Primer.Run}"/>
             </WrapPanel>

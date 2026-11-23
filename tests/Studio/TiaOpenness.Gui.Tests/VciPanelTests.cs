@@ -18,6 +18,24 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class VciPanelTests(WpfContext wpf)
 {
+    [Theory]
+    [InlineData("16", "Vc.ReadOnlyBridge")]
+    [InlineData("19", "Vc.ReadOnlyBridge")]
+    [InlineData("20", "Vc.ReaderUnavailable")]
+    [InlineData("21", "Vc.ReaderUnavailable")]
+    public void Fallback_notice_follows_the_bound_release_without_reading_the_project(string release, string expected)
+    {
+        wpf.Run(() =>
+        {
+            var session = new ProjectPageInteractionTests.DocumentSession((_, _) => throw new NotSupportedException())
+                { Release = release, AdvertiseTools = false };
+            using var project = new McpProjectClient(session);
+            using var model = new VersionControlViewModel(new McpVersionControlClient(project), new FakeDialogService(), new WorkbenchActivity(), () => null);
+            Assert.Equal(Loc.Current[expected], model.AccessNotice);
+            Assert.Empty(session.Calls);
+        });
+    }
+
     [Fact]
     public void Background_VCI_reads_take_immutable_snapshots_on_the_owning_dispatcher()
     {

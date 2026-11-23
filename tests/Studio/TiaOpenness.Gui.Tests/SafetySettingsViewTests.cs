@@ -280,6 +280,73 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData("configured", "deny")]
+    [InlineData("configured", "remove")]
+    [InlineData("configured", "cancel")]
+    [InlineData("unconfigured", "deny")]
+    [InlineData("empty", "remove")]
+    public void Empty_target_confirmation_persists_the_selected_policy_after_reopening(string initial, string choice)
+    {
+        wpf.Run(() =>
+        {
+            using var fixture = new SafetySettingsServiceTests.Fixture();
+            if (initial == "configured") fixture.Service.SaveTargets(["192.0.2.5"]);
+            if (initial == "empty") fixture.Service.SaveTargets([]);
+            var view = new SettingsView();
+            view.SetSafetyService(fixture.Service);
+            var window = new Window { Content = view };
+            try
+            {
+                WpfContext.ShowWindow(window);
+                WpfContext.Complete(view.LoadSafetyAsync());
+                view.UpdateLayout();
+                if (initial == "configured")
+                {
+                    var remove = Assert.Single(WorkbenchRenderFeaturePagesTests.Descendants<Button>(view.OnlineTargets));
+                    UnifiedDesktopTests.ClickControl(remove);
+                }
+                Assert.Equal(Visibility.Visible, view.SaveTargetChanges.Visibility);
+                string? body = null;
+                bool offered = false;
+                window.Dispatcher.InvokeAsync(() =>
+                {
+                    var dialog = window.OwnedWindows.OfType<FeatureConfirmation>().Single();
+                    body = dialog.Body.Text;
+                    offered = dialog.AlternativeAction.IsVisible && dialog.CancelAction.IsDefault
+                        && Equals(dialog.AlternativeAction.Content, Loc.Current["Settings.UnconfigureTargets"])
+                        && Equals(dialog.ApplyAction.Content, Loc.Current["Settings.DenyTargets"]);
+                    UnifiedDesktopTests.ClickControl(choice switch
+                    {
+                        "deny" => dialog.ApplyAction, "remove" => dialog.AlternativeAction, _ => dialog.CancelAction,
+                    });
+                }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                var saved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                view.SafetyEditors.IsEnabledChanged += (_, _) => { if (view.SafetyEditors.IsEnabled) saved.TrySetResult(); };
+                UnifiedDesktopTests.ClickControl(view.SaveTargetChanges);
+                Assert.True(offered);
+                Assert.Equal(Loc.Current["Settings.EmptyTargetsChoice"], body);
+                if (choice != "cancel") WpfContext.Complete(saved.Task.WaitAsync(TestDeadlines.Hang));
+                Assert.Equal(choice != "remove", File.Exists(fixture.TargetsPath));
+                if (choice == "deny") Assert.Empty(File.ReadAllBytes(fixture.TargetsPath));
+                var reopened = new SettingsView();
+                try
+                {
+                    reopened.SetSafetyService(new SafetySettingsService(fixture.TargetsPath, fixture.Audit));
+                    WpfContext.Complete(reopened.LoadSafetyAsync());
+                    Assert.Equal(Loc.Current[choice switch
+                    {
+                        "deny" => "Settings.TargetsEmpty", "remove" => "Settings.TargetsUnconfigured", _ => "Settings.TargetsConfigured",
+                    }], reopened.SafetyStatus.Text);
+                    Assert.Equal(choice == "cancel" ? 1 : 0, reopened.OnlineTargets.Items.Count);
+                    Assert.Equal(initial == "unconfigured" || choice == "cancel" ? 1 : 2, fixture.Audit.Read().Count);
+                }
+                finally { reopened.Dispose(); }
+            }
+            finally { window.Close(); view.Dispose(); }
+        });
+    }
+
     [Fact]
     public void A_saved_empty_list_displays_the_deny_all_policy_on_open()
     {

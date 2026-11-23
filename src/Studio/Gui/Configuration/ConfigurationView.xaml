@@ -40,7 +40,7 @@
           </ContentControl>
         </Grid>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-          <Button x:Name="SaveBoth" Content="{l:Tr Pages.SaveBoth}" AutomationProperties.Name="{l:Tr Pages.SaveBoth}"
+          <Button x:Name="SaveBoth" Content="{l:Tr Pages.SaveBoth}" ContentTemplate="{StaticResource Primer.CommandText}" AutomationProperties.Name="{l:Tr Pages.SaveBoth}"
                   Style="{StaticResource Primer.IdeToolButton}" Margin="0,0,6,0" IsDefault="True"/>
           <Button x:Name="DetectTia" Style="{StaticResource Primer.IdeToolButton}" Margin="0,0,6,0" Content="{l:Tr Config.Detect}"
                   AutomationProperties.Name="{l:Tr Config.Detect}" ToolTip="{l:Tr Config.AutoDetect}"/>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 using TiaOpenness.Shared;
@@ -41,12 +42,33 @@ internal sealed class SafetySettingsService
         return entry;
     }
 
+    private string EditableRevision()
+    {
+        if (revision == null) LoadTargets();
+        if (TargetsReadOnly) throw new InvalidOperationException("Confirm replacement of the invalid or unreadable file before editing.");
+        return revision!;
+    }
+
+    internal void RemoveTargetList()
+    {
+        string expected = EditableRevision();
+        using (JournalFileLock.Acquire(targetsPath + ".lock"))
+        {
+            var current = OnlineTargetSettings.ReadSnapshot(targetsPath);
+            if (current.Revision != expected) throw new OnlineTargetSettingsChangedException();
+            if (current.List == null) return;
+            File.Delete(targetsPath);
+        }
+        (audit ?? AuditLog.Current).Append("online-targets-change", "", "workbench", "", "", actor: ActorScope.Workbench);
+        revision = "missing";
+        TargetsProblem = null;
+        replacementConfirmed = false;
+    }
+
     internal void SaveTargets(IEnumerable<string> entries)
     {
         var list = OnlineTargetPolicy.Parse(string.Join("\n", entries.Select(entry => "target=" + ValidateTarget(entry))));
-        if (revision == null) LoadTargets();
-        if (TargetsReadOnly) throw new InvalidOperationException("Confirm replacement of the invalid or unreadable file before editing.");
-        revision = OnlineTargetSettings.SaveChecked(targetsPath, list, revision!, audit);
+        revision = OnlineTargetSettings.SaveChecked(targetsPath, list, EditableRevision(), audit);
         TargetsProblem = null;
         replacementConfirmed = false;
     }

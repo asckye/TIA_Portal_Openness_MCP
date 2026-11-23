@@ -40,7 +40,7 @@ public sealed partial class McpProjectClient : IProjectClient
     }
     public void Start(bool forceMock, string opennessVersion)
     {
-        if (forceMock) throw new InvalidOperationException("Use an offline operator fixture for demonstrations.");
+        if (forceMock) throw new InvalidOperationException(Loc.Current["Session.StartDemo"]);
         if (!IsRunning) throw new InvalidOperationException("Select and attach an MCP session first.");
     }
     internal async Task<JsonObject> Read(string tool, Dictionary<string, object?>? arguments = null, CancellationToken token = default)

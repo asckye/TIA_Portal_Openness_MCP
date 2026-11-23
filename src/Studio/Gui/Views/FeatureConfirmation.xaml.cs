@@ -17,6 +17,19 @@ internal partial class FeatureConfirmation : Window
         Loaded += (_, _) => CancelAction.Focus();
     }
 
+    internal bool AlternativeSelected { get; private set; }
+    internal void OfferAlternative(string label)
+    {
+        AlternativeAction.Content = label;
+        AlternativeAction.Visibility = Visibility.Visible;
+    }
+
+    private void OnAlternative(object sender, RoutedEventArgs e)
+    {
+        AlternativeSelected = true;
+        DialogResult = true;
+    }
+
     internal bool Confirm(FrameworkElement source)
     {
         Owner = GetWindow(source);

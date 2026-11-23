@@ -44,6 +44,84 @@ public sealed class AccessibilityTests(WpfContext wpf)
         Assert.Empty(failures);
     }
 
+    [Theory]
+    [InlineData(AppLanguage.English)]
+    [InlineData(AppLanguage.Chinese)]
+    public void Visible_page_access_keys_are_unique_and_match_the_accessible_labels(AppLanguage language)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var window = Window();
+            try
+            {
+                WpfContext.ShowWindow(window);
+                string[] pages = ["Engineering", "VersionControl", "Mcp", "Clients", "Calls", "Approvals", "Audit", "Environment", "Log", "Settings"];
+                var names = new List<string>();
+                foreach (string page in pages)
+                {
+                    window.Navigate(page);
+                    WpfContext.Drain();
+                    window.UpdateLayout();
+                    Assert.Equal(page, window.CurrentPage);
+                    var keys = new Dictionary<char, string>();
+                    foreach (var label in DesktopCapture.Descendants<AccessText>(window).Where(label => label.IsVisible && label.AccessKey != '\0'))
+                    {
+                        DependencyObject owner = label;
+                        while (owner is not Control) owner = VisualTreeHelper.GetParent(owner);
+                        var control = (Control)owner;
+                        var key = char.ToUpperInvariant(label.AccessKey);
+                        string name = UIElementAutomationPeer.CreatePeerForElement(control)!.GetName();
+                        string visible = DisplayedLabel(label);
+                        Assert.Equal(visible, name);
+                        Assert.True(keys.TryAdd(key, visible), $"{page} ({language}), Alt+{key}: {keys[key]} / {visible}");
+                    }
+                    foreach (var button in DesktopCapture.Descendants<ButtonBase>(window).Where(button => button.IsVisible))
+                    {
+                        if (button.Content is not string caption || !caption.Any(char.IsLetter)) continue;
+                        // A template can render just an icon. Compare the caption only when it is also visible.
+                        var texts = DesktopCapture.Descendants<TextBlock>(button);
+                        if (!texts.Any(text => text.IsVisible && text.Text == caption)) continue;
+                        string name = UIElementAutomationPeer.CreatePeerForElement(button)!.GetName();
+                        string words = caption.TrimEnd('…', '.', ' ', '→');
+                        if (!name.Contains(words, StringComparison.OrdinalIgnoreCase))
+                            names.Add($"{page}: {caption} / {name}");
+                    }
+                    if (page == "VersionControl")
+                    {
+                        var files = DesktopCapture.Descendants<Button>(window.VersionControlContent)
+                            .Where(button => button.IsVisible && button.Tag is Contracts.Models.MappedObjectInfo).ToArray();
+                        Assert.Contains(files, button => ((Contracts.Models.MappedObjectInfo)button.Tag).FilePath.Contains('_'));
+                        foreach (var button in files)
+                        {
+                            var path = ((Contracts.Models.MappedObjectInfo)button.Tag).FilePath;
+                            Assert.Equal(path, Assert.Single(DesktopCapture.Descendants<TextBlock>(button)).Text);
+                            Assert.Equal(path, UIElementAutomationPeer.CreatePeerForElement(button)!.GetName());
+                        }
+                    }
+                    if (page == "Log")
+                    {
+                        foreach (var button in new[] { window.LogContent.CopyLogButton, window.LogContent.ClearLogButton, window.LogContent.GenerateButton })
+                        {
+                            var label = Assert.Single(DesktopCapture.Descendants<AccessText>(button));
+                            Assert.Contains(char.ToUpperInvariant(label.AccessKey), keys.Keys);
+                            Assert.Equal(DisplayedLabel(label), AutomationProperties.GetName(button));
+                        }
+                    }
+                }
+                Assert.Empty(names);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    private static string DisplayedLabel(AccessText label)
+    {
+        string caption = label.Text;
+        int marker = caption.IndexOf("_" + label.AccessKey, StringComparison.Ordinal);
+        Assert.True(marker >= 0, caption);
+        return caption.Remove(marker, 1).Replace("__", "_");
+    }
+
     [Fact]
     public void Every_text_size_uses_a_design_ramp_resource()
     {

@@ -95,8 +95,21 @@ public sealed class SafetySettingsServiceTests
         if (change == "content") File.SetLastWriteTimeUtc(fixture.TargetsPath, loadedTime);
         string expected = File.ReadAllText(fixture.TargetsPath);
         Assert.Throws<OnlineTargetSettingsChangedException>(() => fixture.Service.SaveTargets(new[] { "203.0.113.10" }));
+        Assert.Throws<OnlineTargetSettingsChangedException>(fixture.Service.RemoveTargetList);
         Assert.Equal(expected, File.ReadAllText(fixture.TargetsPath));
         Assert.Empty(fixture.Audit.Read());
+    }
+
+    [Fact]
+    public void Removing_the_list_respects_concurrent_changes_and_keeps_their_audit()
+    {
+        using var fixture = new Fixture();
+        fixture.Service.SaveTargets([]);
+        var other = new SafetySettingsService(fixture.TargetsPath, fixture.Audit);
+        other.SaveTargets(["192.0.2.5"]);
+        Assert.Throws<OnlineTargetSettingsChangedException>(fixture.Service.RemoveTargetList);
+        Assert.Equal("192.0.2.5", Assert.Single(other.LoadTargets()!.Entries));
+        Assert.Equal(2, fixture.Audit.Read().Count);
     }
 
     internal sealed class Fixture : IDisposable

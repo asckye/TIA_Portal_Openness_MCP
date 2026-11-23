@@ -1,4 +1,5 @@
-<UserControl xmlns:vm="clr-namespace:TiaOpenness.Gui.ViewModels" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.EnvironmentView" Margin="-16,-12">
+<UserControl xmlns:views="clr-namespace:TiaOpenness.Gui.Views"
+  xmlns:vm="clr-namespace:TiaOpenness.Gui.ViewModels" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" x:Class="TiaOpenness.Gui.Views.EnvironmentView" Margin="-16,-12">
   <UserControl.Resources>
 
     <DataTemplate DataType="{x:Type vm:EnvironmentRow}">
@@ -8,7 +9,7 @@
           <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
           <Border Style="{StaticResource Primer.DoctorFailureIcon}" Width="28" Height="28" VerticalAlignment="Top" Margin="0,0,12,0"
             Visibility="{Binding Warning, Converter={StaticResource BoolToVisibility}}">
-            <TextBlock Text="×" Foreground="{DynamicResource Primer.onDanger}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <views:DecorativeGlyph Text="×" Foreground="{DynamicResource Primer.onDanger}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <StackPanel Grid.Column="1" Margin="0,0,12,0">
             <Grid HorizontalAlignment="Left">
@@ -25,7 +26,7 @@
           <Grid Grid.Column="2">
             <Border x:Name="PassedTag" Style="{StaticResource Primer.Tag}" Visibility="{Binding Passed, Converter={StaticResource BoolToVisibility}}">
               <StackPanel Orientation="Horizontal">
-                <TextBlock Style="{StaticResource Primer.DoctorTagGlyph}" Tag="Success"/>
+                <views:DecorativeGlyph Style="{StaticResource Primer.DoctorTagGlyph}" Tag="Success"/>
                 <TextBlock Text="{Binding Status}" VerticalAlignment="Center"/>
               </StackPanel>
             </Border>
@@ -43,7 +44,7 @@
           <TextBlock Text="{l:Tr Env.Doctor}" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center" Margin="0,0,12,0"/>
           <Border x:Name="SummaryChip" Style="{StaticResource Primer.Tag}" ToolTip="{l:Tr Env.AttentionGroup}">
             <StackPanel Orientation="Horizontal">
-              <TextBlock x:Name="SummaryGlyph" Style="{StaticResource Primer.DoctorTagGlyph}" Tag="{Binding EnvironmentTone}"/>
+              <views:DecorativeGlyph x:Name="SummaryGlyph" Style="{StaticResource Primer.DoctorTagGlyph}" Tag="{Binding EnvironmentTone}"/>
               <TextBlock Text="{Binding EnvironmentSummary}" VerticalAlignment="Center"/>
             </StackPanel>
           </Border>

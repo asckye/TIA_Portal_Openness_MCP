@@ -52,7 +52,6 @@ public partial class MainWindow
         SettingsContent.Initialize(Approvals, _model.Panel);
         ((Grid)SettingsContent.Content).ColumnDefinitions[0].Width = GridLength.Auto;
         if (_model.Panel != null) _model.Panel.PropertyChanged += OnShellSessionChanged;
-        EngineeringSideContent.EnvironmentRequested += OnEnvironmentRequested;
         EngineeringSideContent.InspectionRulesRequested += OnInspectionRulesRequested;
         BlocksContent.TransferOptionsRequested += OnTransferOptionsRequested;
         Approvals.PropertyChanged += OnApprovalChanged;
@@ -74,7 +73,6 @@ public partial class MainWindow
         CallsContent.DataContextChanged -= OnFeatureContextChanged;
         SettingsContent.Dispose();
         if (_model.Panel != null) _model.Panel.PropertyChanged -= OnShellSessionChanged;
-        EngineeringSideContent.EnvironmentRequested -= OnEnvironmentRequested;
         EngineeringSideContent.InspectionRulesRequested -= OnInspectionRulesRequested;
         BlocksContent.TransferOptionsRequested -= OnTransferOptionsRequested;
         Root.SizeChanged -= OnShellSizeChanged;
@@ -93,7 +91,6 @@ public partial class MainWindow
         _shellQueued = true;
         Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => { _shellQueued = false; UpdateShell(); }));
     }
-    private void OnEnvironmentRequested(object? sender, EventArgs e) => NavigateGuarded("Environment");
     private void OnInspectionRulesRequested(object? sender, EventArgs e) => OperationsContent.ShowControlInspectionRules();
     private void OnTransferOptionsRequested(object? sender, EventArgs e) => OperationsContent.ShowTransferOptions();
 
@@ -387,6 +384,12 @@ public partial class MainWindow
         try { Navigate(page); }
         catch (Exception ex) {
             ShowToast(ToastKind.Error, LocalizedText.Literal(ex.Message), "navigation"); }
+    }
+
+    internal void OpenEnvironmentCheck()
+    {
+        EnvironmentContent.Recheck();
+        NavigateGuarded("Environment");
     }
 
     internal void OpenSettings() => Navigate("Settings");

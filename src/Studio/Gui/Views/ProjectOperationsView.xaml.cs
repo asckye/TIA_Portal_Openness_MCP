@@ -68,7 +68,7 @@ public partial class ProjectOperationsView : UserControl
         Sessions.Visibility = Visibility.Visible;
         Sessions.IsExpanded = true;
     }
-    private void OnInspect(object sender, RoutedEventArgs e) => ShowControlInspectionRules();
+    private void OnOpenRules(object sender, RoutedEventArgs e) => ShowControlInspectionRules();
     private async void OnRender(object sender, RoutedEventArgs e)
     {
         Model.Engineering.Document = ProjectDocument.Render;

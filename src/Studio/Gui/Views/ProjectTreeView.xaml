@@ -6,12 +6,11 @@
   <DockPanel>
     <Border Style="{StaticResource Primer.ProjectHeaderLine}" DockPanel.Dock="Top" Padding="12,10">
       <StackPanel>
-        <DockPanel Margin="0,0,0,8">
+        <DockPanel LastChildFill="False" Margin="0,0,0,8">
           <TextBlock DockPanel.Dock="Left" Text="{l:Tr Project.Tree}" Style="{StaticResource Primer.Muted}"
             FontSize="{DynamicResource Ui.FontSize.11}" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level2"/>
           <Button DockPanel.Dock="Right" Content="{l:Tr Pages.Options}" AutomationProperties.Name="{l:Tr Project.Options}"
             Click="OnProjectOptions" Style="{StaticResource Primer.IdeToolButton}"/>
-          <TextBlock Visibility="Collapsed" x:Name="ProjectFile" TextAlignment="Right" Style="{StaticResource Project.Caption}" AutomationProperties.Name="{l:Tr Primer.Bound}"/>
         </DockPanel>
         <Grid>
           <Label x:Name="FilterLabel" Content="{l:Tr Project.Filter}" Target="{Binding ElementName=ControlFilter}" Visibility="Collapsed"/>

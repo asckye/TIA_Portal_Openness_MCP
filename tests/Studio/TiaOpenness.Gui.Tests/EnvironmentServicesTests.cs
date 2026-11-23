@@ -56,6 +56,23 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData(AppLanguage.English)]
+    [InlineData(AppLanguage.Chinese)]
+    public void Doctor_start_failure_and_action_names_use_standalone_text(AppLanguage language)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            using var fixture = new Fixture();
+            string host = Path.Combine(fixture.Root, "absent-doctor.exe");
+            var error = Assert.Throws<InvalidOperationException>(() => EnvironmentCheckService.RunDoctorFix(host, "19"));
+            Assert.Equal(Loc.Current["Env.DoctorStartFailed"], error.Message);
+            var action = LocalizedText.Literal("Review →");
+            var issue = new EnvironmentIssue("membership", null, LocalizedText.Empty, LocalizedText.Empty, action);
+            Assert.Equal("Review", issue.ActionName);
+        });
+    }
+
     public static TheoryData<string, bool, string?, string, string?> FixOutcomes() => new()
     {
         // outcome, group ok, result code, membership result after the fix, reason key of a failed fix

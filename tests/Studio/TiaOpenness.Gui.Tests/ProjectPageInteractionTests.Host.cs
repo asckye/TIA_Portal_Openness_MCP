@@ -112,6 +112,7 @@ public sealed partial class ProjectPageInteractionTests
         internal const string Project = @"D:\Fixture\Review.ap21";
         internal readonly List<(string Tool, IReadOnlyDictionary<string, object?> Args)> Calls = [];
         internal string Release = "21";
+        internal bool AdvertiseTools { get; init; } = true;
         internal string? FailureCode;
         internal int Epoch = 1;
         public string SessionKey => "fixture";
@@ -119,6 +120,7 @@ public sealed partial class ProjectPageInteractionTests
             ["binding"] = new JsonObject { ["projectFile"] = Project, ["bindingEpoch"] = Epoch, ["processId"] = 4204 } };
         public JsonObject? ToolSchema(string tool)
         {
+            if (!AdvertiseTools) return null;
             string[] parameters = tool switch {
                 "DownloadPlc" => ["softwarePath", "expectedPlanHash", "expectedProjectFile", "confirmPhysicalTarget"],
                 "ListPlcSoftwareUnits" => ["includeContents"], "RenderPlcBlockDocument" => ["blockPath"], "GetUnifiedAlarmCommon" => ["category"],

@@ -46,7 +46,6 @@ public partial class ProjectTreeView : UserControl
         {
             if (e.OldValue is MainViewModel old)
             {
-                old.Session.PropertyChanged -= OnSessionChanged;
                 old.PropertyChanged -= OnPageChanged;
                 old.VersionControl.PropertyChanged -= OnVcChanged;
                 old.Engineering.PropertyChanged -= OnEngineeringChanged;
@@ -54,9 +53,6 @@ public partial class ProjectTreeView : UserControl
             }
             if (e.NewValue is MainViewModel model)
             {
-                model.Session.PropertyChanged += OnSessionChanged;
-                ProjectFile.Text = System.IO.Path.GetFileName(model.Session.OpenProjectFile);
-                ProjectFile.ToolTip = model.Session.OpenProjectFile;
                 model.PropertyChanged += OnPageChanged;
                 model.VersionControl.PropertyChanged += OnVcChanged;
                 model.Engineering.PropertyChanged += OnEngineeringChanged;
@@ -75,12 +71,6 @@ public partial class ProjectTreeView : UserControl
     private void OnPageChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MainViewModel.IsVcTab)) QueueModifiedIndicators();
-    }
-    private void OnSessionChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (DataContext is not MainViewModel model) return;
-        ProjectFile.Text = System.IO.Path.GetFileName(model.Session.OpenProjectFile);
-        ProjectFile.ToolTip = model.Session.OpenProjectFile;
     }
     private void OnVcChanged(object? sender, PropertyChangedEventArgs e)
     {

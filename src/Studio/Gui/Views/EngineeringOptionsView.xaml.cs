@@ -57,6 +57,11 @@ public partial class EngineeringOptionsView : UserControl
 
     private async void OnPickProcess(object sender, RoutedEventArgs e) => await Model.Session.ChooseProcessAsync(false);
 
+    private void OnCheckEnvironment(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow window) window.OpenEnvironmentCheck();
+    }
+
     private void OnOpenConnection(object sender, RoutedEventArgs e)
     {
         var command = string.IsNullOrWhiteSpace(Model.Session.ProjectPath) ? Model.Session.Connect : Model.Session.OpenProject;

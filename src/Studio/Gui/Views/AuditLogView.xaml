@@ -121,7 +121,8 @@
           <WrapPanel VerticalAlignment="Center">
             <RadioButton AutomationProperties.Name="{l:Tr Audit.Latest}" Content="{l:Tr Audit.Latest}" Style="{StaticResource Primer.IdePill}" Click="OnLatest" Margin="0,0,4,0" IsChecked="{Binding LatestAuditPage, Mode=OneWay}"/>
             <RadioButton AutomationProperties.Name="{l:Tr Audit.Older}" Content="{l:Tr Audit.Older}" Style="{StaticResource Primer.IdePill}" Click="OnOlder" Margin="0,0,8,0" IsChecked="{Binding OlderAuditPage, Mode=OneWay}" IsEnabled="{Binding CanPageOlder}"/>
-            <ToggleButton x:Name="ChainToggle" AutomationProperties.Name="{l:Tr Audit.About}" Content="{Binding AuditHead}" ToolTip="{l:Tr Audit.About}" Style="{StaticResource Primer.IdeChipButton}"/>
+            <ToggleButton x:Name="ChainToggle" AutomationProperties.Name="{Binding AuditHead}" Content="{Binding AuditHead}"
+              AutomationProperties.HelpText="{l:Tr Audit.About}" ToolTip="{l:Tr Audit.About}" Style="{StaticResource Primer.IdeChipButton}"/>
             <TextBlock Text="{Binding AuditCount}" Style="{StaticResource Primer.Muted}" Margin="8,0"/>
           </WrapPanel>
           <WrapPanel VerticalAlignment="Center">

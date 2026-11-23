@@ -184,6 +184,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
         {
             var audit = new FeaturePageFixtures.Audit();
             using var model = Model(audit: audit);
+            Assert.Equal(Loc.Current["Audit.NotVerified"], model.VerificationText);
             WpfContext.Complete(model.VerifyAsync()); Assert.False(model.VerificationBroken); Assert.Equal(FeatureTone.Success, model.VerificationTone);
             audit.Broken = true; WpfContext.Complete(model.VerifyAsync()); Assert.True(model.VerificationBroken);
             Assert.Equal(532, model.JumpToBreak()!.Record.Index); Assert.Single(model.AuditRows, r => r.Selected);

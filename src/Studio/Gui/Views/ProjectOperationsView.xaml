@@ -70,7 +70,7 @@
                 CommandTarget="{Binding PlacementTarget,RelativeSource={RelativeSource AncestorType=ContextMenu}}" InputGestureText="Ctrl+O"/>
               <MenuItem Header="{l:Tr Common.Reload}" Click="OnRefresh"/>
               <MenuItem Header="{l:Tr Pages.ViewLadder}" Click="OnRender" IsEnabled="{Binding Engineering.FocusedBlock.HasLadderOrFbd,FallbackValue=False}"/>
-              <MenuItem Header="{l:Tr Toolbar.Inspect}" Click="OnInspect"/>
+              <MenuItem Header="{l:Tr Toolbar.Inspect}" Click="OnOpenRules"/>
               <MenuItem Header="{l:Tr Pages.Options}" Click="OnProjectOptions"/>
               <MenuItem x:Name="RunEnvironmentItem" Header="{l:Tr Pages.ViewEnvironment}" ToolTip="{Binding EnvironmentAttention}"
                 Visibility="{Binding EnvironmentNeedsAction,Converter={StaticResource BoolToVisibility}}" Click="OnEnvironment"/>
@@ -80,7 +80,7 @@
           </Button>
           <Button Content="{l:Tr Project.Atlas}" AutomationProperties.Name="{l:Tr Project.Atlas}" Click="OnAtlas"
             IsEnabled="{Binding IsEnabled,ElementName=GenerateAtlasItem}" Style="{StaticResource Primer.IdeToolButton}"/>
-          <Button Content="{l:Tr Project.Rules}" AutomationProperties.Name="{l:Tr Project.Rules}" Click="OnInspect" Style="{StaticResource Primer.IdeToolButton}"/>
+          <Button Content="{l:Tr Project.Rules}" AutomationProperties.Name="{l:Tr Project.Rules}" Click="OnOpenRules" Style="{StaticResource Primer.IdeToolButton}"/>
           <Border Style="{StaticResource Primer.ProjectDivider}" Width="1" Margin="6,4"/>
           <Button x:Name="ToolbarCompile" ContentTemplate="{x:Null}" AutomationProperties.Name="{l:Tr Toolbar.Compile}" Command="{Binding Engineering.Compile}"
             AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Style="{StaticResource Primer.Button.Secondary.Small}">

@@ -108,7 +108,7 @@ internal sealed class ReadOnlyVciBridge(IMcpSessionClient session) : IVersionCon
     public Task<List<WorkspaceInfo>> VcListWorkspacesAsync() => Read((c, token) => c.VcListWorkspacesAsync(token));
     public Task<WorkspaceStatusReport> VcStatusAsync(string? name, bool changedOnly) => Read((c, token) => c.VcStatusAsync(name, changedOnly, token));
     public Task<WorkspaceDiff> VcDiffAsync(string? name, string? file) => Read((c, token) => c.VcDiffAsync(name, file, token));
-    private static InvalidOperationException WritesRefused() => new("The VCI bridge permits reads only. F33 MCP tools are required for writes.");
+    private static InvalidOperationException WritesRefused() => new(Localization.Loc.Current["Vc.ReadOnlyBridge"]);
     public Task<WorkspaceInfo> VcCreateWorkspaceAsync(string name, string folderPath) => throw WritesRefused();
     public Task<MappingResult> VcMapProjectAsync(string? name, string? deviceId, bool dryRun) => throw WritesRefused();
     public Task<SyncResult> VcSyncAsync(string? name, SyncDirection direction, bool dryRun) => throw WritesRefused();

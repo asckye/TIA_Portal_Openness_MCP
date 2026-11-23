@@ -23,6 +23,7 @@ internal static partial class Strings
         ("Env.PendingCount", "Awaiting checks ({0})", "待检查 ({0})"),
         ("Env.AllPassedCount", "{0}/{0} checks passed", "{0}/{0} 项全部通过"),
         ("Env.ManualSteps", "View manual troubleshooting and repair steps", "查看手动排查与修复步骤"),
+        ("Audit.NotVerified", "Chain not yet verified. Select Verify integrity to check it.", "尚未校验审计链。选择“校验完整性”即可检查。"),
         ("Audit.Verifying", "Recomputing the SHA-256 hash chain…", "正在重算 SHA-256 哈希链…"),
         ("Audit.EmptyHelp", "Write operations and approval decisions are recorded here with their SHA-256 hashes.", "写入操作和审批决定会记录在此，并附带 SHA-256 哈希。"),
         ("Log.Empty", "No runtime logs to display", "当前没有运行日志"),
@@ -128,7 +129,6 @@ internal static partial class Strings
         ("Approval.Phase", "Phase", "阶段"),
         ("Approval.CompletePlan", "View complete plan", "查看完整计划"),
         ("Feature.Count", "{0} events", "{0} 条"),
-        ("Feature.Copy", "Copy (_C)", "复制（_C）"),
         ("Feature.OpenFolder", "Open folder (_O)", "打开文件夹（_O）"),
         ("Calls.Count", "{0} calls · {1} pending", "{0} 条 · {1} 待批"),
         ("Calls.ReleaseOnly", "{0} only", "仅 {0}"),
@@ -370,6 +370,7 @@ internal static partial class Strings
                 "此版本没有可用的随包宿主。使用 lusrmgr.msc 手动添加用户，再注销重登。"),
         ("Env.FixStarted", "The doctor fix is running; answer its Windows UAC prompt if shown, then check whether a new logon is needed.",
                 "doctor 修复正在运行；如弹出 Windows UAC 请确认，然后核对是否需要重新登录。"),
+        ("Env.DoctorStartFailed", "Could not start the environment repair.", "无法启动环境修复。"),
         ("Env.FixFailed", "The repair did not complete. Use the manual steps below.", "修复未完成。请按下方步骤手动处理。"),
         ("Env.FixDeclined",
                 "Administrator approval was declined, so the user was not added. Select Fix again and approve the Windows prompt, or add the user with " +

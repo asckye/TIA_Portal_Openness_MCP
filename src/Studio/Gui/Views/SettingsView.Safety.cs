@@ -41,7 +41,7 @@ public partial class SettingsView
             {
                 targets.Clear();
                 if (list != null) foreach (string entry in list.Entries) targets.Add(entry);
-                SaveTargetChanges.Visibility = list == null ? Visibility.Visible : Visibility.Collapsed;
+                SaveTargetChanges.Visibility = targets.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
                 SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(list == null ? "Settings.TargetsUnconfigured"
                     : list.Entries.Count == 0 ? "Settings.TargetsEmpty" : "Settings.TargetsConfigured"));
             }
@@ -89,7 +89,7 @@ public partial class SettingsView
         {
             string entry = SafetySettingsService.ValidateTarget(OnlineTargetInput.Text.Trim());
             bool add = !targets.Contains(entry);
-            if (!ConfirmTargets(add ? targets.Append(entry) : targets)) return;
+            if (!ConfirmTargets(add ? targets.Append(entry) : targets, out _)) return;
             if (add) targets.Add(entry);
             SaveTargetChanges.Visibility = Visibility.Visible;
             if (await SaveTargetsAsync())
@@ -111,32 +111,43 @@ public partial class SettingsView
         SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding("Settings.TargetsUnsaved"));
     }
 
-    private bool ConfirmTargets(IEnumerable<string> proposed)
+    private bool ConfirmTargets(IEnumerable<string> proposed, out bool removeList)
     {
+        removeList = false;
         if (SafetyConfirmationForTests != null) return SafetyConfirmationForTests("Settings.ApplySafety");
         string entries = string.Join(", ", proposed);
-        var dialog = new FeatureConfirmation(Loc.Current["Settings.ApplySafety"], Loc.Current["Settings.ApplySafetyHelp"], Loc.Current["Settings.ApplyAndSave"],
-            new(Loc.Current["Settings.OnlineTargets"], entries.Length == 0 ? Loc.Current["Settings.TargetsEmpty"] : entries),
+        bool empty = entries.Length == 0;
+        var dialog = new FeatureConfirmation(Loc.Current["Settings.ApplySafety"],
+            empty ? Loc.Current["Settings.EmptyTargetsChoice"] : Loc.Current["Settings.ApplySafetyHelp"],
+            empty ? Loc.Current["Settings.DenyTargets"] : Loc.Current["Settings.ApplyAndSave"],
+            new(Loc.Current["Settings.OnlineTargets"], empty ? "0" : entries),
             new(Loc.Current["Settings.Timeout"], _approvals == null ? "—" : Loc.Current.T("Common.Seconds", _approvals.TimeoutSeconds)));
-        return dialog.Confirm(this);
+        if (empty) dialog.OfferAlternative(Loc.Current["Settings.UnconfigureTargets"]);
+        bool confirmed = dialog.Confirm(this);
+        removeList = dialog.AlternativeSelected;
+        return confirmed;
     }
 
     private async void OnSaveTargets(object sender, RoutedEventArgs e)
     {
-        if (ConfirmTargets(targets)) await SaveTargetsAsync();
+        if (ConfirmTargets(targets, out bool removeList)) await SaveTargetsAsync(removeList);
     }
 
-    internal async Task<bool> SaveTargetsAsync()
+    internal async Task<bool> SaveTargetsAsync(bool removeList = false)
     {
         if (safetyBusy || safety.TargetsReadOnly) return false;
         string[] entries = targets.ToArray();
         SetSafetyBusy(true);
         try
         {
-            await Task.Run(() => safety.SaveTargets(entries));
-            SaveTargetChanges.Visibility = Visibility.Collapsed;
-            SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(entries.Length == 0
-                ? "Settings.TargetsEmpty" : "Settings.TargetsConfigured"));
+            await Task.Run(() =>
+            {
+                if (removeList) safety.RemoveTargetList();
+                else safety.SaveTargets(entries);
+            });
+            SaveTargetChanges.Visibility = entries.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+            SafetyStatus.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(removeList ? "Settings.TargetsUnconfigured"
+                : entries.Length == 0 ? "Settings.TargetsEmpty" : "Settings.TargetsConfigured"));
             NotifySettings(ToastKind.Success, LocalizedText.Key("Toast.Saved"));
             return true;
         }

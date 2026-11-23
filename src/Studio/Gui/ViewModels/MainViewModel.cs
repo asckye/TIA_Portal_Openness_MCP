@@ -55,7 +55,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
     internal static bool OfflineDemoRequested(string[] args) => args
         .Any(a => a.Equals("--mock", StringComparison.OrdinalIgnoreCase) || a.Equals("--demo", StringComparison.OrdinalIgnoreCase));
     public bool HasMcpPanel => Panel != null && !OfflineDemo;
-    public bool LegacyDemoAvailable => !HasMcpPanel && !OfflineDemo;
     public IEnumerable<McpProjectClient.Receipt> Receipts => (_client as McpProjectClient)?.Receipts ?? [];
     private McpProjectClient.Receipt? _selectedReceipt;
     public McpProjectClient.Receipt? SelectedReceipt

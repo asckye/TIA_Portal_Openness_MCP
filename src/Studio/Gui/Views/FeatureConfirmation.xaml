@@ -22,12 +22,15 @@
           <ItemsControl x:Name="Fields" ItemTemplate="{StaticResource Approval.FieldRow}"/>
         </ScrollViewer>
       </Border>
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+      <WrapPanel HorizontalAlignment="Right">
         <Button x:Name="CancelAction" Content="{l:Tr Dialog.Cancel}" AutomationProperties.Name="{l:Tr Dialog.Cancel}"
           Style="{StaticResource Primer.Button.Secondary.Medium}" IsDefault="True" IsCancel="True" Click="OnCancel"/>
+        <Button x:Name="AlternativeAction" Visibility="Collapsed" Click="OnAlternative"
+          AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"
+          Style="{StaticResource Primer.Button.Secondary.Medium}" Margin="8,0,0,0"/>
         <Button x:Name="ApplyAction" AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"
           Style="{StaticResource Primer.Button.Primary.Medium}" Margin="8,0,0,0" Click="OnApply"/>
-      </StackPanel>
+      </WrapPanel>
     </StackPanel>
   </Border>
 </Window>

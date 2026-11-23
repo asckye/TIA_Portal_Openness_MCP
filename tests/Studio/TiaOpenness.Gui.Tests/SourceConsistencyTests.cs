@@ -158,8 +158,8 @@ public class SourceConsistencyTests(WpfContext wpf)
         // Built by LocalizedText.Working rather than named at any call site.
         used.Add("Status.Working");
 
-        // Empty-page keys and the diagnostic result are selected by the shell service/page name.
-        used.UnionWith(new[] { "Shell.Calls", "Shell.Audit", "Shell.Environment", "Shell.CallsEmpty", "Shell.AuditEmpty", "Shell.EnvironmentEmpty", "Shell.DiagnosticsNotConnected" });
+        // Empty-page keys are selected by the shell service/page name.
+        used.UnionWith(new[] { "Shell.Calls", "Shell.Audit", "Shell.Environment", "Shell.CallsEmpty", "Shell.AuditEmpty", "Shell.EnvironmentEmpty" });
 
         var unused = Strings.Catalogue
             .Select(e => e.Key)

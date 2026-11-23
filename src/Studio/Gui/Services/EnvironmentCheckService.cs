@@ -134,10 +134,17 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
 
     // UAC can occur only after Fix is clicked. The prompt comes from the worker's own elevated net.exe, so the hidden doctor
     // runs without a shell and its output is captured.
-    private static DoctorRun RunDoctorFix(string host, string releaseKey)
+    internal static DoctorRun RunDoctorFix(string host, string releaseKey)
     {
-        using var process = Process.Start(DoctorStartInfo(host, releaseKey));
-        if (process == null) throw new InvalidOperationException(Loc.Current["Env.FixFailed"]);
+        using var process = new Process { StartInfo = DoctorStartInfo(host, releaseKey) };
+        try
+        {
+            if (!process.Start()) throw new InvalidOperationException(Loc.Current["Env.DoctorStartFailed"]);
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            throw new InvalidOperationException(Loc.Current["Env.DoctorStartFailed"], ex);
+        }
         var output = process.StandardOutput.ReadToEndAsync();
         var errors = process.StandardError.ReadToEndAsync();
         process.WaitForExit();

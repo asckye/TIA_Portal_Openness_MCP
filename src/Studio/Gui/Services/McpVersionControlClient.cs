@@ -16,6 +16,7 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
     private readonly IVersionControlClient bridge = readBridge ?? new ReadOnlyVciBridge(project.Session);
     private bool McpReads => new[] { "ListVersionControlWorkspaces", "GetVersionControlStatus" }
         .All(tool => project.Session.ToolSchema(tool) != null);
+    internal bool UsesFallback => !McpReads && project.Session.SessionKey != null && (int?)project.Session.State?["binding"]?["processId"] > 0;
     public bool CanRead => project.Session.SessionKey != null && (McpReads || bridge.CanRead)
         && (int?)project.Session.State?["binding"]?["processId"] > 0;
     public bool CanWrite => CanRead && McpReads && new[] { "CreateVersionControlWorkspace", "ConnectProjectToWorkspace", "SynchronizeVersionControlWorkspace" }

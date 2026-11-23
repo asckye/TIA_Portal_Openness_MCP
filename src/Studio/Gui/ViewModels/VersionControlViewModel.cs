@@ -67,10 +67,13 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     internal void RefreshCommands() => RaiseVcCommands();
     public bool IsReadOnly => _client.CanRead && !_client.CanWrite;
+    public string AccessNotice => _client is McpVersionControlClient { UsesFallback: true }
+        ? (_client.CanRead ? Loc.Current["Vc.ReadOnlyBridge"] : Loc.Current["Vc.ReaderUnavailable"])
+        : IsReadOnly ? Loc.Current["Vc.ReadOnlySession"] : "";
 
     private void RaiseVcCommands()
     {
-        Raise(nameof(IsReadOnly));
+        Raise(nameof(IsReadOnly)); Raise(nameof(AccessNotice));
         foreach (var command in new[] { VcRefresh, VcCreate, VcMap, VcStatus, VcPush, VcPull })
         {
             command.RaiseCanExecuteChanged();
@@ -385,7 +388,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
-        Raise(nameof(WorkspaceRootDisplay)); Raise(nameof(ModifiedLabel)); RefreshSyncState();
+        Raise(nameof(AccessNotice)); Raise(nameof(WorkspaceRootDisplay)); Raise(nameof(ModifiedLabel)); RefreshSyncState();
     }
 
     public void Dispose() { Loc.Current.LanguageChanged -= OnLanguageChanged; _client.Dispose(); }

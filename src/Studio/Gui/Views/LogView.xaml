@@ -34,7 +34,7 @@
             Style="{StaticResource Primer.IdeSearch}" Tag="{l:Tr Pages.LogSearch}" Width="180" Height="28" TextChanged="OnSearch" Margin="0,0,8,0"/>
           <ToggleButton x:Name="FollowLatest" Content="{l:Tr Calls.Follow}" AutomationProperties.Name="{l:Tr Calls.Follow}"
             IsChecked="True" Style="{StaticResource Primer.IdeToolToggle}" Click="OnFollow"/>
-          <Button x:Name="CopyLogButton" Content="{l:Tr Feature.Copy}" AutomationProperties.Name="{l:Tr Pages.CopyLog}" Click="OnCopyLog"
+          <Button x:Name="CopyLogButton" Content="{l:Tr Pages.CopyLog}" ContentTemplate="{StaticResource Primer.CommandText}" AutomationProperties.Name="{l:Tr Pages.CopyLog}" Click="OnCopyLog"
             Style="{StaticResource Primer.IdeToolButton}" Margin="4,0"/>
           <Button x:Name="GenerateButton" Content="{l:Tr Env.Generate}" AutomationProperties.Name="{l:Tr Env.Generate}" Click="OnGenerate"
             Style="{StaticResource Primer.Button.Primary.Small}" ContentTemplate="{StaticResource Primer.CommandText}"/>
