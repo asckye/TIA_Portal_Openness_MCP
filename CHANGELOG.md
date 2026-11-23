@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [4.0.0-rc.3] - 2026-11-24
+
 ### Changed
 
 - **Breaking change for callers.** To apply a `ManageTechnologyObject` deletion after preview, pass `action="delete"`, `dryRun=false`,
