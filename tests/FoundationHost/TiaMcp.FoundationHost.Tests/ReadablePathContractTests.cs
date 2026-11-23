@@ -50,7 +50,8 @@ public sealed class ReadablePathContractTests
         TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath(saved, readable, true);
         Assert.True(TiaOpenness.Shared.NativeExportPolicy.ResolvedIdentityMatches(saved, readable));
         Assert.True(ExternalSourcePlanContract.SameSoftware(readable, saved));
-        Assert.Throws<AdapterPreconditionException>(() => TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath("PLC", readable, true));
+        var alias = Assert.Throws<AdapterPreconditionException>(() => TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath("PLC", readable, true));
+        Assert.Contains(readable, alias.Message);
         Assert.Throws<AdapterPreconditionException>(() => TiaOpenness.Shared.NativeExportPolicy.RequireSoftwarePath("devices/Other/PLC", readable, true));
     }
 

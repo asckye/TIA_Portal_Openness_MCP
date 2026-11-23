@@ -66,6 +66,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
     [Theory]
     [InlineData("password")] [InlineData("moduleAccessPassword")] [InlineData("secret")]
     [InlineData("plcPassword")] [InlineData("authToken")] [InlineData("dbPassword")] [InlineData("apiKey")]
+    [InlineData("clientApiKey")] [InlineData("cloudAccessKey")] [InlineData("signingPrivateKey")] [InlineData("webhookSecret")]
     public void Drawer_masks_unfiltered_credentials_and_preserves_operation_data(string credential)
     {
         wpf.Run(() =>
@@ -73,6 +74,9 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             using var fixture = new Fixture();
             var args = new System.Text.Json.Nodes.JsonObject { [credential] = "unfiltered-value", ["Door_Key"] = "Loading bay", ["TokenCount"] = 18 };
             args["door_Key"] = "dock";
+            args["doorKey"] = "dock";
+            args["sortKey"] = "position";
+            args["tagKey"] = "temperature";
             args["tokenCount"] = 19;
             args["monkey"] = "animal";
             args["door-Token"] = "tag";

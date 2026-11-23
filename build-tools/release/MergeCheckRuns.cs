@@ -28,7 +28,6 @@ internal static class MergeCheckRuns
     internal static MergeCheckRun? RequirePassing(string root, Options options, Func<string[], CommandResult> git)
     {
         if (options.Has("BuildOnly")) return null;
-        if (options.Has("SkipMergeCheck")) throw new ReleaseException("-SkipMergeCheck requires -BuildOnly.");
 
         var head = CleanRevision(git);
         var path = Path.Combine(Scorecard.PrimaryCheckout(root, git), RelativePath);
@@ -37,9 +36,13 @@ internal static class MergeCheckRuns
         {
             if (head != null && File.Exists(path))
             {
-                var run = ParseLines(ReadLines(path).Reverse()).FirstOrDefault(row =>
-                    row.All && row.Commit == head.Commit && row.Tree == head.Tree);
-                if (run is { Wide: true, DocsOnly: false, Exit: 0, Failed.Length: 0, Jobs.Count: > 0 }) return run;
+                foreach (var run in ParseLines(ReadLines(path).Reverse()))
+                {
+                    if (run == null) throw new ReleaseException($"Unreadable merge-check record in {path}. {remedy}");
+                    if (!run.All || run.Commit != head.Commit || run.Tree != head.Tree) continue;
+                    if (run is { Wide: true, DocsOnly: false, Exit: 0, Failed.Length: 0, Jobs.Count: > 0 }) return run;
+                    break;
+                }
             }
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
@@ -49,24 +52,25 @@ internal static class MergeCheckRuns
         throw new ReleaseException($"No passing full gate for {head?.Commit ?? "the current checkout"} in {path}. {remedy}");
     }
 
-    internal static List<MergeCheckRun> Read(string path) => ParseLines(ReadLines(path)).ToList();
+    internal static List<MergeCheckRun> Read(string path) => ParseLines(ReadLines(path)).OfType<MergeCheckRun>().ToList();
 
     private static string[] ReadLines(string path)
     {
         using var stream = OpenWithRetry(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         using var reader = new StreamReader(stream);
-        return reader.ReadToEnd().Split('\n');
+        var lines = new List<string>();
+        while (reader.ReadLine() is { } line) lines.Add(line);
+        return lines.ToArray();
     }
 
-    private static IEnumerable<MergeCheckRun> ParseLines(IEnumerable<string> lines)
+    private static IEnumerable<MergeCheckRun?> ParseLines(IEnumerable<string> lines)
     {
         foreach (string line in lines)
         {
-            if (string.IsNullOrWhiteSpace(line)) continue;
             MergeCheckRun? run;
             try { run = JsonSerializer.Deserialize<MergeCheckRun>(line, RecordJson); }
-            catch (JsonException) { continue; } // A damaged JSONL row cannot supply evidence for any commit.
-            if (run != null) yield return run;
+            catch (JsonException) { run = null; } // An unreadable newer run invalidates older release evidence.
+            yield return run;
         }
     }
 

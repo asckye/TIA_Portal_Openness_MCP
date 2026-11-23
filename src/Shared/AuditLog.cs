@@ -27,6 +27,7 @@ namespace TiaOpenness.Shared
         internal bool? ApprovalEnabled { get; set; }
         internal int ProcessId { get; set; }
         internal string PreviousHash { get; set; } = "";
+        internal string? RemoteAddress { get; set; }
         internal string? Actor { get; set; }
         internal string? PlanId { get; set; }
         internal string? StepId { get; set; }
@@ -102,6 +103,7 @@ namespace TiaOpenness.Shared
                     Utc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture), Event = kind,
                     RequestId = requestId, Host = host, Release = release, Tool = tool, Outcome = outcome,
                     PlanHash = planHash, ApprovalEnabled = approvalEnabled, ProcessId = Process.GetCurrentProcess().Id,
+                    RemoteAddress = ActorScope.RemoteAddress,
                     PreviousHash = previousHash, Actor = actor, PlanId = planId, StepId = stepId, RunId = runId, ParentRequestId = parentRequestId };
                 byte[] bytes = Encoding.UTF8.GetBytes(Canonical(row) + "\n");
                 if (path == null || new FileInfo(path).Length + bytes.Length > maxBytes)
@@ -234,6 +236,7 @@ namespace TiaOpenness.Shared
                     writer.WriteString("outcome", row.Outcome); writer.WriteString("planHash", row.PlanHash); writer
                         .WriteString("previousHash", row.PreviousHash);
                     writer.WriteNumber("processId", row.ProcessId); writer.WriteString("release", row.Release); writer.WriteString("requestId", row.RequestId);
+                    if (row.RemoteAddress != null) writer.WriteString("remoteAddress", row.RemoteAddress);
                     writer.WriteString("tool", row.Tool); writer.WriteString("utc", row.Utc);
                     writer.WriteEndObject(); writer.Flush();
                 }
@@ -248,15 +251,15 @@ namespace TiaOpenness.Shared
                 if (root.ValueKind != JsonValueKind.Object) throw new InvalidDataException("Invalid audit record fields.");
                 int count = root.EnumerateObject().Count();
                 bool generation = root.TryGetProperty("planId", out _);
-                if (generation) count -= 4;
-                if ((count != 12 && count != 13) || root.EnumerateObject().Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != count
-                        + (generation ? 4 : 0)
-                    || (count == 13 && !root.TryGetProperty("actor", out _)))
+                bool hasActor = root.TryGetProperty("actor", out _);
+                bool hasPeer = root.TryGetProperty("remoteAddress", out _);
+                if (count != 12 + (generation ? 4 : 0) + (hasActor ? 1 : 0) + (hasPeer ? 1 : 0)
+                    || root.EnumerateObject().Select(p => p.Name).Distinct(StringComparer.Ordinal).Count() != count)
                     throw new InvalidDataException("Invalid audit record fields.");
                 string Required(string key) => root.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String
                     ? value.GetString()! : throw new InvalidDataException("Invalid audit string.");
                 string? Optional(string key) => root.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.Null ? null : Required(key);
-                string? actor = root.TryGetProperty("actor", out _) ? Required("actor") : null;
+                string? actor = hasActor ? Required("actor") : null;
                 if (actor != null && !ActorScope.IsValid(actor)) throw new InvalidDataException("Invalid audit actor.");
                 if (!root.TryGetProperty("index", out var index) || index.ValueKind != JsonValueKind.Number || !index.TryGetInt64(out long number)
                         || number < 1 ||
@@ -272,7 +275,7 @@ namespace TiaOpenness.Shared
                 return new AuditRecord { Index = number, Utc = utc, Event = kind, RequestId = Required("requestId"), Host = Required("host"),
                     Release = Required("release"), Tool = Required("tool"), Outcome = Optional("outcome"), PlanHash = Optional("planHash"),
                     ApprovalEnabled = enabled.ValueKind == JsonValueKind.Null ? (bool?)null : enabled.GetBoolean(), ProcessId = pid, PreviousHash = hash,
-                        Actor = actor,
+                    Actor = actor, RemoteAddress = hasPeer ? Required("remoteAddress") : null,
                     PlanId = generation ? Required("planId") : null, StepId = generation ? Required("stepId") : null,
                     RunId = generation ? Required("runId") : null, ParentRequestId = generation ? Required("parentRequestId") : null };
             }

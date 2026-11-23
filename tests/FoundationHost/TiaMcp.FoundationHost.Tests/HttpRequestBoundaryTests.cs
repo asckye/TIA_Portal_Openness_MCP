@@ -5,6 +5,7 @@ using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using TiaOpenness.Shared;
 using Xunit;
 using Xunit.Abstractions;
 using Boundary = foundationhost::TiaMcp.FoundationHost.HttpRequestBoundary;
@@ -53,6 +54,39 @@ public sealed class HttpRequestBoundaryTests(ITestOutputHelper output)
             using var validResponse = await client.GetAsync(app.Urls.Single() + route); Assert.Equal(HttpStatusCode.OK, validResponse.StatusCode);
         }
         Assert.Equal(3, audit.Count(value => value == "FORBIDDEN_HOST")); Assert.Equal(3, audit.Count(value => value == "FORBIDDEN_ORIGIN"));
+    }
+
+    [Fact]
+    public async Task Http_and_stdio_calls_share_a_verifiable_chain_with_only_the_http_peer_addressed()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "http-audit-" + Guid.NewGuid().ToString("N"));
+        var log = new AuditLog(directory);
+        try
+        {
+            void Call(string transport)
+            {
+                using var actor = ActorScope.EnterCall("fixture");
+                using var audit = AuditInvocation.Begin(true, transport, "21", "SaveProject", log: log)!;
+                audit.Start();
+                audit.End("succeeded");
+            }
+            Call("stdio");
+            var context = new DefaultHttpContext();
+            context.Request.Host = new HostString("localhost", 8765);
+            context.Connection.RemoteIpAddress = IPAddress.IPv6Loopback;
+            context.Request.Headers["X-Forwarded-For"] = "192.0.2.1";
+            await new Boundary(Options()).Invoke(context, async _ => { await Task.Yield(); Call("http"); });
+            Call("stdio");
+            var rows = log.Read();
+            Assert.Equal(9, rows.Count);
+            Assert.Equal(3, rows.Count(row => row.RemoteAddress == "::1" && row.Host == "http"));
+            Assert.All(rows.Where(row => row.Host == "stdio"), row => Assert.DoesNotContain("remoteAddress", AuditLog.Canonical(row)));
+            Assert.True(log.Verify().Passed);
+            string file = Assert.Single(Directory.GetFiles(directory, "audit-*.jsonl"));
+            File.WriteAllText(file, File.ReadAllText(file).Replace("::1", "::2", StringComparison.Ordinal));
+            Assert.Equal("previous-hash", log.Verify().Reason);
+        }
+        finally { Directory.Delete(directory, true); }
     }
 
     [Fact]

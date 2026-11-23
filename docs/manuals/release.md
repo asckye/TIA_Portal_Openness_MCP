@@ -6,7 +6,7 @@
 
 每个发布候选前，先在主机手动运行 `dotnet run --project build-tools/release -- merge-check -All`，完成全部 38 个注册套件和源码检查；数量门槛保持不变。发布分为两个阶段：`prepare` 完成所有耗时工作；`publish-prepared` 使用已上传的候选，在 300 秒内核对、推送提交、打标签并公开。发布阶段不构建、不测试、不打包。
 
-在待发布的干净提交上运行完整门禁。主检出的 `bin-build/scorecard/merge-check-runs.jsonl` 记录提交、Git 树和完成时间。生成候选时，`prepare` 在清理或构建前核对该提交和树最近一次完整运行的结果，写候选时再次核对 HEAD。缺少记录、旧记录没有树哈希或完整运行失败时，在该提交上重新运行 `merge-check -All`。若设置了 `TIA_MCP_UPDATE_GOLDEN`，先清除该环境变量，再运行 `merge-check`、`test-suites` 或 `prepare`。
+在待发布的干净提交上运行完整门禁。主检出的 `bin-build/scorecard/merge-check-runs.jsonl` 记录提交、Git 树和完成时间。生成候选时，`prepare` 在清理或构建前核对该提交和树最近一次完整运行的结果，写候选时再次核对 HEAD。缺少记录、旧记录没有树哈希、完整运行失败，或匹配记录之后有无法解析的记录时，在该提交上重新运行 `merge-check -All`。若设置了 `TIA_MCP_UPDATE_GOLDEN`，先清除该环境变量，再运行 `merge-check`、`test-suites` 或 `prepare`。
 
 [开发规范](../standards/development.md) 第 5.9 节原文：“注册套件与源码检查的发布证据是与候选提交和 Git 树完全匹配的 `merge-check -All` 通过记录。”交付 ZIP 的证据来自本次 `prepare` 的包检查与摘要（见 [ADR 0031](../standards/decisions/0031-release-path.md)）。
 

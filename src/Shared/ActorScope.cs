@@ -17,23 +17,28 @@ namespace TiaOpenness.Shared
         private sealed class SessionIdentity { internal readonly string Id = Guid.NewGuid().ToString("N"); }
         private readonly ActorScope? previous;
         private readonly string actor;
-        private readonly string? session, operatorCallId;
+        private readonly string? session, operatorCallId, remoteAddress;
         private bool disposed;
         internal static string Actor => Current.Value?.actor ?? Mcp;
         internal static string? McpSession => Current.Value?.session;
+        internal static string? RemoteAddress => Current.Value?.remoteAddress;
         internal static string? OperatorCallId => Current.Value?.operatorCallId;
         internal static bool IsValid(string? value) => value == Mcp || value == Workbench;
 
-        private ActorScope(string actor, string? session, string? operatorCallId)
+        private ActorScope(string actor, string? session, string? operatorCallId, string? remoteAddress = null)
         {
             previous = Current.Value;
+            this.remoteAddress = remoteAddress;
             this.actor = actor; this.session = session; this.operatorCallId = operatorCallId;
             Current.Value = this;
         }
+        internal static IDisposable EnterHttp(System.Net.IPAddress? peer) => new ActorScope(Mcp, null, null, peer?.ToString());
+
         // Nested bridge/batch calls retain the initiating transport and attached session.
         internal static IDisposable EnterCall(string? mcpSessionId, object? transportSession = null)
             => new ActorScope(Actor, Current.Value?.session ?? HashSession(mcpSessionId
-                ?? (transportSession == null ? AnonymousSession : Sessions.GetValue(transportSession, _ => new SessionIdentity()).Id)), OperatorCallId);
+                ?? (transportSession == null ? AnonymousSession : Sessions.GetValue(transportSession, _ => new SessionIdentity()).Id)),
+                OperatorCallId, RemoteAddress);
         internal static IDisposable EnterWorkbench(string mcpSessionId, string? operatorCallId = null)
         {
             if (string.IsNullOrWhiteSpace(mcpSessionId)) throw new ArgumentException("A host session id is required.", nameof(mcpSessionId));

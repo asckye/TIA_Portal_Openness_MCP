@@ -37,18 +37,17 @@ public static class FeatureJson
         }
     }
 
+    private static readonly string[] CredentialSuffixes = { "Password", "Secret", "Token", "ApiKey", "AccessKey", "PrivateKey" };
+
     private static bool IsCredential(string name)
     {
         if (DeclaredCredential(name.Replace("_", "").Replace("-", "").ToLowerInvariant())) return true;
         if (name.Length == 0 || !char.IsAsciiLetterLower(name[0]) || !name.All(char.IsAsciiLetterOrDigit)) return false;
-        // Only the final camelCase word can be a credential suffix.
-        for (int i = name.Length - 1; i > 0; i--)
-            if (char.IsAsciiLetterUpper(name[i])) return DeclaredCredential(name[i..].ToLowerInvariant());
-        return false;
+        return CredentialSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.Ordinal));
     }
 
     private static bool DeclaredCredential(string name) => name is
-        "key" or "keys" or "privatekey" or "protectedkey" or "apikey" or "xapikey" or "token" or "accesstoken" or "refreshtoken"
+        "key" or "keys" or "accesskey" or "privatekey" or "protectedkey" or "apikey" or "xapikey" or "token" or "accesstoken" or "refreshtoken"
         or "password" or "passwd" or "pwd" or "passphrase" or "secret" or "clientsecret"
         or "credential" or "credentials" or "authorization" or "proxyauthorization" or "cookie"
         or "moduleaccesspassword" or "blockbindingpassword" or "mastersecretpassword" or "umacpassword"

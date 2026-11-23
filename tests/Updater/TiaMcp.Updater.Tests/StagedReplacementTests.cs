@@ -282,6 +282,7 @@ public sealed class StagedReplacementTests
         }));
         Assert.Equal("replacement interrupted", error.Message);
         Assert.NotNull(retained);
+        Assert.Empty(Directory.GetDirectories(retained));
         Assert.Equal(options.ReadBytesForTest("/bundle", 1), File.ReadAllBytes(Assert.Single(Directory.GetFiles(retained, "*.zip"))));
         Assert.Equal(options.ReadBytesForTest("/hash", 1), File.ReadAllBytes(Assert.Single(Directory.GetFiles(retained, "*.sha256"))));
         Assert.Equal("occupied", f.Text(".update"));

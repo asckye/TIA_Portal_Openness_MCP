@@ -48,6 +48,29 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
         });
     }
 
+    [Fact]
+    public void Fatal_dialog_can_open_while_a_nonfatal_dialog_is_displayed()
+    {
+        wpf.Run(() =>
+        {
+            var previous = Application.Current.MainWindow;
+            var owner = new Window();
+            try
+            {
+                WpfContext.ShowWindow(owner); Application.Current.MainWindow = owner;
+                var messages = new List<string>();
+                App.PresentUiError("nonfatal", showDialog: (_, message) =>
+                {
+                    messages.Add(message);
+                    App.PresentUiError("fatal", true, (_, fatal) => messages.Add(fatal));
+                    App.PresentUiError("duplicate", showDialog: (_, duplicate) => messages.Add(duplicate));
+                });
+                Assert.Equal(new[] { "nonfatal", "fatal" }, messages);
+            }
+            finally { Application.Current.MainWindow = previous; owner.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void Fatal_worker_logs_first_and_returns_when_dispatch_or_dialog_is_blocked(bool dialogStarted)

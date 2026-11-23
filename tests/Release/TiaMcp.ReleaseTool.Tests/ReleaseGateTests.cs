@@ -31,6 +31,9 @@ public sealed class ReleaseGateTests
     [InlineData("docs-only")]
     [InlineData("failed-job")]
     [InlineData("failed-rerun")]
+    [InlineData("torn-rerun")]
+    [InlineData("blank-rerun")]
+    [InlineData("null-rerun")]
     public void PrepareRequiresPassingFullRunOnCandidateRevision(string problem)
     {
         using var checkout = new StaticTree();
@@ -49,6 +52,9 @@ public sealed class ReleaseGateTests
             "failed-rerun" => run with { Exit = 1 },
             _ => run
         });
+        if (problem == "torn-rerun") File.AppendAllText(path, "{\"commit\":\"unfinished");
+        if (problem == "blank-rerun") File.AppendAllText(path, "\n");
+        if (problem == "null-rerun") File.AppendAllText(path, "null\n");
         if (problem == "invalid-json") File.WriteAllText(path, "{");
         if (problem == "missing-exit") File.WriteAllText(path, File.ReadAllText(path).Replace("\"exit\":0,", "", StringComparison.Ordinal));
         var error = Assert.Throws<ReleaseException>(() => MergeCheckRuns.RequirePassing(checkout.Root,
@@ -88,6 +94,17 @@ public sealed class ReleaseGateTests
         Assert.Null(Require("-BuildOnly", "-SkipMergeCheck"));
     }
 
+    [Fact]
+    public void Removed_merge_check_switch_cannot_bypass_release_evidence()
+    {
+        using var checkout = new StaticTree();
+        MergeCheckRun? Require(params string[] flags) => MergeCheckRuns.RequirePassing(checkout.Root,
+            Options.Parse(flags, Program.BooleanOptions), args => Git(checkout.Root, args));
+        Assert.Equal(64, Assert.Throws<ReleaseException>(() => Require("-SkipMergeCheck", "-NoDraftUpload")).ExitCode);
+        Assert.Equal(64, Assert.Throws<ReleaseException>(() => Require("-BuildOnly", "-SkipMergeCheck")).ExitCode);
+        Assert.Contains("merge-check -All", Assert.Throws<ReleaseException>(() => Require("-SkipMergeCheck=true")).Message);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -101,14 +118,17 @@ public sealed class ReleaseGateTests
         File.AppendAllText(path, "{\"commit\":\"unfinished"); // Simulate a writer interrupted before its newline.
         var latest = run with { Utc = run.Utc.AddMinutes(1), Exit = exit, Failed = exit == 0 ? [] : ["suite-stage"] };
         MergeCheckRuns.Append(path, latest);
-        File.AppendAllText(path, "{not-json}\n{\"exit\":0}\n{");
-
-        var rows = MergeCheckRuns.Read(path);
-        Assert.Equal(new[] { run.Utc, latest.Utc }, rows.Select(row => row.Utc));
         var options = Options.Parse([], Program.BooleanOptions);
         MergeCheckRun? Require() => MergeCheckRuns.RequirePassing(checkout.Root, options, args => Git(checkout.Root, args));
         if (exit == 0) Assert.Equal(latest.Utc, Require()!.Utc);
         else Assert.Contains("merge-check -All", Assert.Throws<ReleaseException>(() => Require()).Message);
+        File.AppendAllText(path, "{not-json}\n{\"exit\":0}\n{");
+
+        var rows = MergeCheckRuns.Read(path);
+        Assert.Equal(new[] { run.Utc, latest.Utc }, rows.Select(row => row.Utc));
+        var damaged = Assert.Throws<ReleaseException>(() => Require());
+        Assert.Contains("Unreadable merge-check record", damaged.Message);
+        Assert.Contains("merge-check -All", damaged.Message);
     }
 
     [Fact]

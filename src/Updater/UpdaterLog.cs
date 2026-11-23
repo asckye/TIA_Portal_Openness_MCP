@@ -25,13 +25,12 @@ namespace TiaMcp.Updater
                 {
                     foreach (var old in directory.GetFiles("updater-*.log").Where(file => file.FullName != path)
                         .OrderByDescending(file => file.LastWriteTimeUtc).ThenByDescending(file => file.Name, StringComparer.Ordinal).Skip(9))
-                        old.Delete();
+                    {
+                        try { old.Delete(); }
+                        catch (Exception ex) when (IsLogError(ex)) { Report(ex); }
+                    }
                 }
-                catch (Exception ex) when (IsLogError(ex))
-                {
-                    File.Delete(path);
-                    throw;
-                }
+                catch (Exception ex) when (IsLogError(ex)) { Report(ex); }
                 return new UpdaterLog(path);
             }
             catch (Exception ex) when (IsLogError(ex)) { Report(ex); return null; }

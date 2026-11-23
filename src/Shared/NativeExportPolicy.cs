@@ -178,7 +178,7 @@ namespace TiaOpenness.Shared
             if (batch && !string
                     .Equals(ObjectPathEncoding.NormalizePath(requested,"softwarePath"), ObjectPathEncoding.NormalizePath(resolved,"softwarePath"),
                         StringComparison.Ordinal))
-                throw new AdapterPreconditionException("Batch operation requires the exact software path, not an alias.", "softwarePath");
+                throw new AdapterPreconditionException("Batch operation requires the exact software path, not an alias. Expected: " + resolved, "softwarePath");
         }
 
         internal static bool ResolvedIdentityMatches(string requested, string resolved)

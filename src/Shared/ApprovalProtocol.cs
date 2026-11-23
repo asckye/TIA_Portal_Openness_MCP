@@ -112,9 +112,21 @@ namespace TiaOpenness.Shared
             || Flag(arguments, "confirmDelete") || Flag(arguments, "deleteAtTarget");
         internal static bool Flag(JsonObject arguments, string name) => arguments.Any(p => p.Key.Equals(name, StringComparison.OrdinalIgnoreCase)
             && p.Value is JsonValue flag && flag.TryGetValue<bool>(out var enabled) && enabled);
+        internal static bool HasCompilePassword(string tool, JsonObject args)
+            => tool is "CompilePlcSoftware" or "CompilePlcDiagnostics" && args["password"] is JsonValue password
+                && password.TryGetValue<string>(out var text) && !string.IsNullOrEmpty(text);
+
+        internal static JsonObject DigestArguments(string tool, JsonObject original)
+        {
+            if (HasCompilePassword(tool, original) && original["dryRun"] is JsonValue dry
+                && dry.TryGetValue<bool>(out var preview) && !preview)
+                return ApprovalDisplayPayload.ProtectPlanArguments(original)!.AsObject();
+            return ApprovalDisplayPayload.RedactArguments(original)!.AsObject();
+        }
+
         internal static JsonObject ReviewArguments(string tool, JsonObject original)
         {
-            var args = ApprovalDisplayPayload.RedactArguments(original)!.AsObject();
+            var args = DigestArguments(tool, original);
             foreach (var output in ApprovalOutputTargets.Normalize(tool, original)) args[output.Key] = output.Value;
             return args;
         }
@@ -374,10 +386,10 @@ namespace TiaOpenness.Shared
         {
             var previous = Current.Value;
             if (previous == null) return null;
-            string Digest(JsonObject value) => PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(value)));
-            if (previous.Used || previous.Tool != source || previous.Digest != Digest(arguments))
+            string Digest(string tool, JsonObject value) => PendingApproval.Hash(PendingApproval.Canonical(PendingApproval.DigestArguments(tool, value)));
+            if (previous.Used || previous.Tool != source || previous.Digest != Digest(source, arguments))
                 throw new InvalidOperationException("Compatibility arguments differ from the approved step.");
-            var forwarded = new Grant { Release = previous.Release, Tool = target, Digest = Digest(forwardedArguments),
+            var forwarded = new Grant { Release = previous.Release, Tool = target, Digest = Digest(target, forwardedArguments),
                 Approval = previous.Approval, SessionKey = previous.SessionKey, RunId = previous.RunId };
             Current.Value = forwarded;
             return new Scope(() => { previous.Used |= forwarded.Used; Current.Value = previous; });
@@ -392,12 +404,12 @@ namespace TiaOpenness.Shared
             if (arguments.ContainsKey("confirm")) expected["confirm"] = true;
             if (arguments.ContainsKey("expectedProjectFile")) expected["expectedProjectFile"] = plan["expectedProjectFile"]!.DeepClone();
             if (arguments.ContainsKey("expectedPlanHash")) expected["expectedPlanHash"] = item["canonicalPlanHash"]!.DeepClone();
-            if (PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(expected)) != PendingApproval
-                    .Canonical(ApprovalDisplayPayload.RedactArguments(arguments)))
+            if (PendingApproval.Canonical(PendingApproval.DigestArguments(tool, expected)) != PendingApproval
+                    .Canonical(PendingApproval.DigestArguments(tool, arguments)))
                 throw new InvalidOperationException("Canonical arguments differ from the approved batch item.");
             var previous = Current.Value;
             Current.Value = new Grant { Release = approval.Request.ReleaseKey, Tool = tool,
-                Digest = PendingApproval.Hash(PendingApproval.Canonical(ApprovalDisplayPayload.RedactArguments(arguments))), Approval = approval };
+                Digest = PendingApproval.Hash(PendingApproval.Canonical(PendingApproval.DigestArguments(tool, arguments))), Approval = approval };
             return new Scope(() => Current.Value = previous);
         }
 #if TIA_GENERATION_PLANNER

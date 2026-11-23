@@ -49,6 +49,27 @@ namespace TiaMcp.Updater.Tests
         }
 
         [Fact]
+        public void A_locked_old_log_leaves_the_new_run_writable()
+        {
+            using var fixture = new Fixture();
+            string data = Path.Combine(fixture.Root, "data");
+            string directory = Directory.CreateDirectory(Path.Combine(data, "logs", "updater")).FullName;
+            string locked = Path.Combine(directory, "updater-locked.log");
+            string oldest = Path.Combine(directory, "updater-old.log");
+            File.WriteAllText(locked, "busy log");
+            File.SetLastWriteTimeUtc(locked, DateTime.UnixEpoch.AddDays(1));
+            File.WriteAllText(oldest, "prior run");
+            File.SetLastWriteTimeUtc(oldest, DateTime.UnixEpoch);
+            using var held = File.OpenRead(locked);
+            for (int i = 0; i < 9; i++) File.WriteAllText(Path.Combine(directory, $"updater-{i}.log"), "recent");
+            var log = UpdaterLog.Open(data);
+            Assert.NotNull(log);
+            log.Write("current run");
+            Assert.Contains("current run", File.ReadAllText(log.FilePath));
+            Assert.False(File.Exists(oldest));
+        }
+
+        [Fact]
         public void A_transient_sharing_violation_retries_publication()
         {
             using var fixture = new Fixture();

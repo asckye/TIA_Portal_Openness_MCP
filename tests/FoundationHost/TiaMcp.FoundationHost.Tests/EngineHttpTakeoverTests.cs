@@ -64,6 +64,8 @@ public sealed partial class EngineHttpSessionTestsPlc
         var audit = Directory.EnumerateFiles(host.DataDirectory, "audit-*.jsonl", SearchOption.AllDirectories)
             .SelectMany(File.ReadAllLines).Select(line => JsonNode.Parse(line)!).ToArray();
         Assert.Single(audit, row => (string?)row["tool"] == "ConnectPortal" && (string?)row["outcome"] == "taken-over");
+        Assert.All(audit.Where(row => (string?)row["tool"] == "ConnectPortal"),
+            row => Assert.Equal("127.0.0.1", (string?)row["remoteAddress"]));
         string[] methods = File.ReadAllLines(Path.Combine(host.DataDirectory, "leases", "trace-" + holderPid + ".jsonl"))
             .Select(line => (string)JsonNode.Parse(line)!["method"]!).ToArray();
         Assert.Single(methods, method => method == "adapter.Disconnect");

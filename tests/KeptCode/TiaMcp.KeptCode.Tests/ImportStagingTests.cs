@@ -427,6 +427,22 @@ namespace TiaMcp.Engine.Tests
             Assert.Contains("Group/Ready: export-or-validation-refused (IOException)", error.Message);
         }
 
+        [Theory]
+        [InlineData("busy")] [InlineData("disposed")] [InlineData("nonrecoverable")]
+        public void An_unexpected_native_export_failure_refuses_overwrite(string kind)
+        {
+            Exception failure = kind switch {
+                "busy" => new System.Runtime.InteropServices.COMException("Call rejected.", unchecked((int)0x80010001)),
+                "disposed" => new ObjectDisposedException("block"),
+                _ => new InvalidOperationException("Unexpected native failure.")
+            };
+            var recovery = NativeExportPolicy.SingleImportRecovery(new[] { new NativeExportPolicy.RecoveryTarget {
+                Object = "Group/Block", Export = _ => throw failure } }, () => bundle, bundle);
+            var refusal = Assert.Throws<TiaMcp.Adapters.Contracts.AdapterPreconditionException>(recovery.RequireExportableBackups);
+            Assert.Equal("backup-unavailable", refusal.Condition);
+            Assert.Contains(failure.GetType().Name, refusal.Message);
+        }
+
         [Fact]
         public void Single_import_recovery_is_best_effort_and_identifies_skipped_objects()
         {

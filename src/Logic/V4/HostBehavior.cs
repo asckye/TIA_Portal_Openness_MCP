@@ -133,6 +133,7 @@ namespace TiaMcp.Logic.V4
             if (tool == "ManageTestSuiteCase" && args["action"] is JsonValue editorAction
                 && editorAction.TryGetValue<string>(out var editorOperation) && editorOperation == "showInEditor") return false;
             if (hasDryRun && IsPreview(args, defaultPreview)) return false;
+            if (PendingApproval.HasCompilePassword(tool, args)) return true;
             if (tool == "CloseProject" && args["secondaryProjectFile"] is JsonValue secondary
                 && secondary.TryGetValue<string>(out var secondaryFile) && !string.IsNullOrWhiteSpace(secondaryFile)) return false;
             if (tool is "ExchangeSystemDiagnosticsSettings" or "ExchangeUnifiedTags" or "ExchangeUnifiedScriptModules")

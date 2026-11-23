@@ -288,6 +288,9 @@ namespace TiaMcp.Updater
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 say(UpdaterText.Bilingual("FailedDownloadsRetained", "Failed downloads retained in") + " " + temporary + ": " + ex.Message);
+                try { RemoveTree(Combine(temporary, "new")); }
+                catch (Exception cleanup) when (cleanup is IOException || cleanup is UnauthorizedAccessException)
+                { say(UpdaterText.Bilingual("FailedDownloadsCleanup", "Could not clean up failed downloads") + ": " + cleanup.Message); }
                 return false;
             }
         }

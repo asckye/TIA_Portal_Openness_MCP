@@ -188,15 +188,26 @@ public partial class App : Application
         return string.Join(Environment.NewLine, redactor.Redact(error.Message).Text, Loc.Current.T("Dialog.DiagnosticId", id), details);
     }
 
-    private static int presentingCrash;
+    private static int presentingCrash, presentingFatalCrash;
     internal static void PresentUiError(string message, bool fatal = false, Action<Window, string>? showDialog = null)
     {
         var app = Current;
-        if (app == null || app.Dispatcher.HasShutdownStarted || Interlocked.CompareExchange(ref presentingCrash, 1, 0) != 0) return;
+        if (app == null || app.Dispatcher.HasShutdownStarted) return;
+        if (fatal)
+        {
+            if (Interlocked.CompareExchange(ref presentingFatalCrash, 1, 0) != 0) return;
+        }
+        else if (Volatile.Read(ref presentingFatalCrash) != 0 || Interlocked.CompareExchange(ref presentingCrash, 1, 0) != 0) return;
+        void Release()
+        {
+            if (fatal) Interlocked.Exchange(ref presentingFatalCrash, 0);
+            else Interlocked.Exchange(ref presentingCrash, 0);
+        }
         void Present()
         {
             try
             {
+                if (!fatal && Volatile.Read(ref presentingFatalCrash) != 0) return;
                 if (!fatal && app.MainWindow is MainWindow workbench && !workbench.ToastHostClosed)
                 {
                     workbench.ShowToast(ViewModels.ToastKind.Error, LocalizedText.Literal(message), "dispatcher");
@@ -213,7 +224,7 @@ public partial class App : Application
                 }
                 finally { temporaryOwner?.Close(); }
             }
-            finally { Interlocked.Exchange(ref presentingCrash, 0); }
+            finally { Release(); }
         }
 
         if (app.Dispatcher.CheckAccess()) Present();
@@ -223,8 +234,7 @@ public partial class App : Application
             if (!fatal) return;
             // Returning from the domain handler lets the runtime terminate even if the UI never dismisses the dialog.
             var finished = ((IAsyncResult)pending.Task).AsyncWaitHandle;
-            if (!finished.WaitOne(TimeSpan.FromSeconds(5)) && pending.Abort())
-                Interlocked.Exchange(ref presentingCrash, 0);
+            if (!finished.WaitOne(TimeSpan.FromSeconds(5)) && pending.Abort()) Release();
         }
     }
 }

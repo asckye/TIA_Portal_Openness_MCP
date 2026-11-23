@@ -8,6 +8,7 @@ using TiaMcp.Adapters;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.PlcWorker;
+using TiaOpenness.Shared;
 using Xunit;
 
 public sealed class ScopedCompileContractTests
@@ -35,6 +36,99 @@ public sealed class ScopedCompileContractTests
         double oldMedian = original.OrderBy(t => t).ElementAt(3), newMedian = scoped.OrderBy(t => t).ElementAt(3);
         output.WriteLine($"Foundation argument binding, software preview, median of 7 x 10000: before={oldMedian:F3} us; after={newMedian:F3} us.");
         Assert.Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("CompilePlcSoftware")] [InlineData("CompilePlcDiagnostics")]
+    public async Task Compile_approval_binds_the_password_only_for_execution(string name)
+    {
+        foreach (bool enabled in new[] { false, true })
+            foreach (string? password in new[] { null, "", "safety-fixture" })
+                foreach (bool preview in new[] { false, true })
+                {
+                    using var worker = new Worker();
+                    var args = new JsonObject { ["softwarePath"] = "devices/D/CPU", ["dryRun"] = preview,
+                        ["confirm"] = !preview, ["expectedProjectFile"] = Project };
+                    if (password != null) args["password"] = password;
+                    int decisions = 0;
+                    var tool = new FoundationV4Tool(Tool(name, worker), "21", () => new ApprovalSettings(enabled, 2),
+                        (pending, settings, _) =>
+                        {
+                            if (!settings.Enabled) return Task.FromResult(new ApprovalOutcome(pending, true, null));
+                            decisions++;
+                            Assert.Equal("••••", (string?)JsonNode.Parse(pending.ParametersJson)!["password"]);
+                            var changed = args.DeepClone().AsObject();
+                            changed["password"] = "another-fixture";
+                            var other = PendingApproval.Create(pending.Host, pending.ReleaseKey, name, changed.ToJsonString(), null, 2);
+                            var same = PendingApproval.Create(pending.Host, pending.ReleaseKey, name, args.ToJsonString(), null, 2);
+                            Assert.Equal(same.ArgumentDigest, pending.ArgumentDigest);
+                            Assert.NotEqual(other.ArgumentDigest, pending.ArgumentDigest);
+                            return Task.FromResult(new ApprovalOutcome(pending, false, "denied"));
+                        });
+                    var body = (await tool.InvokeAsync(Request(name, args))).StructuredContent!;
+                    bool denied = enabled && !preview && !string.IsNullOrEmpty(password);
+                    Assert.Equal(denied ? 1 : 0, decisions);
+                    Assert.Equal(!denied, (bool?)body["ok"]);
+                    if (denied) Assert.Equal("CONFIRMATION_REQUIRED", (string?)body["error"]?["code"]);
+                    Assert.Equal(1, worker.Calls);
+                    Assert.Equal(preview || denied, (bool?)worker.Arguments!["dryRun"]);
+                    Assert.Equal(password ?? "", (string?)worker.Arguments["password"]);
+                }
+    }
+
+    [Fact]
+    public async Task Changing_the_password_while_approval_is_pending_refuses_execution()
+    {
+        const string name = "CompilePlcSoftware";
+        using var worker = new Worker();
+        var request = Request(name, new JsonObject { ["softwarePath"] = "CPU", ["password"] = "first",
+            ["dryRun"] = false, ["confirm"] = true, ["expectedProjectFile"] = Project });
+        var arguments = Assert.IsType<Dictionary<string, JsonElement>>(request.Params!.Arguments);
+        var tool = new FoundationV4Tool(Tool(name, worker), "21", () => new ApprovalSettings(true, 2), (pending, _, _) =>
+        {
+            arguments["password"] = JsonSerializer.SerializeToElement("second");
+            return Task.FromResult(new ApprovalOutcome(pending, false, null));
+        });
+        var result = (await tool.InvokeAsync(request)).StructuredContent!;
+        Assert.Equal("CONFIRMATION_REQUIRED", (string?)result["error"]?["code"]);
+        Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+        Assert.Equal(1, worker.Calls);
+        Assert.True((bool?)worker.Arguments!["dryRun"]);
+    }
+
+    [Theory]
+    [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")] [InlineData("17")]
+    [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]
+    public async Task Granted_compile_uses_the_reviewed_password_on_supported_releases(string release)
+    {
+        foreach (string name in new[] { "CompilePlcSoftware", "CompilePlcDiagnostics" })
+        {
+            using var worker = new Worker();
+            var definition = FoundationTools.ForRelease(FoundationTools.Definitions.Single(d => d.Name == name), release);
+            var args = new JsonObject { ["softwarePath"] = "CPU", ["dryRun"] = false, ["confirm"] = true,
+                ["expectedProjectFile"] = Project, ["password"] = "fixture" };
+            var native = new FoundationTool(definition, worker);
+            Assert.True(TiaMcp.Logic.V4.HostBehavior.ApprovalWrite(name, args, native.IsWrite, hasDryRun: true, defaultPreview: true));
+            if (release is "14sp1" or "15.1" or "16")
+            {
+                Assert.Throws<NotSupportedException>(() => PlcCompilePolicy.RequirePasswordCapability(release, "fixture"));
+                continue;
+            }
+            int grants = 0;
+            var tool = new FoundationV4Tool(native, release, () => new ApprovalSettings(true, 2), (pending, settings, _) =>
+            {
+                Assert.True(settings.Enabled);
+                Assert.True((bool?)worker.Arguments!["dryRun"]);
+                grants++;
+                return Task.FromResult(new ApprovalOutcome(pending, false, null));
+            });
+            var body = (await tool.InvokeAsync(Request(name, args))).StructuredContent!;
+            Assert.True((bool?)body["ok"], body.ToJsonString());
+            Assert.Equal(1, grants);
+            Assert.Equal(2, worker.Calls);
+            Assert.False((bool?)worker.Arguments!["dryRun"]);
+            Assert.Equal("fixture", (string?)worker.Arguments["password"]);
+        }
     }
 
     [Fact]

@@ -43,6 +43,7 @@ internal sealed class HttpRequestBoundary
 
     internal async Task Invoke(HttpContext context, RequestDelegate next)
     {
+        using var peer = ActorScope.EnterHttp(context.Connection.RemoteIpAddress);
         if (Rejection(context.Request) is { } rejected)
         {
             audit(rejected);
