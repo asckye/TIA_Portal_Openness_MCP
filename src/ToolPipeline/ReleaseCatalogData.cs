@@ -70,6 +70,18 @@ internal sealed record ReleaseCatalogData(string Instructions, bool HasLite, boo
     internal static IReadOnlyDictionary<string, ReleaseCatalogData> Releases { get; } =
         Rosters.Keys.ToDictionary(key => key, _ => Presentation, StringComparer.Ordinal);
 
+    internal static IReadOnlyList<string> KnownIssueLinks(int majorVersion)
+    {
+        const string V21Hotfix = "https://docs.tia.siemens.cloud/r/en-us/v21.0/tia-portal-hotfixes-readme/improvements-in-update-2-hotfix-1/";
+        return majorVersion switch
+        {
+            20 => ["https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/improvements-in-step-7/improvements-in-update-4"],
+            21 => [V21Hotfix + "program-stability-when-using-eigen-engineering-agent",
+                V21Hotfix + "deletion-of-invalid-networks-during-compilation"],
+            _ => []
+        };
+    }
+
     internal string ExampleProfile(string name) => ExampleProfiles.GetValueOrDefault(name, DefaultExampleProfile);
 
     internal IEnumerable<MethodInfo> Declarations(string release)

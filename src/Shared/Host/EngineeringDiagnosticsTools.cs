@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
@@ -64,28 +65,20 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (Exception ex) { row["metadataError"] = ex.GetType().Name; }
                 assemblies.Add(row);
             }
-            const string V21Hotfix = "https://docs.tia.siemens.cloud/r/en-us/v21.0/tia-portal-hotfixes-readme/improvements-in-update-2-hotfix-1/";
+            var release = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey);
             // envelope: legacy-multiple-dynamic-fields
             return new ResponseMessage
             {
                 Message = "Local API metadata read. Actual installed patch and device option support need installation/project evidence.",
                 Meta = new JsonObject
                 {
-                    ["success"] = true, ["engineMajor"] = TiaMcp.Versioning.TiaVersionCatalog.Get(McpServer.ReleaseKey).MajorVersion,
+                    ["success"] = true, ["engineMajor"] = release.MajorVersion,
                     ["installedPatch"] = null, ["assemblies"] = assemblies,
-                    ["nativeCrossReferencesEnabled"] = PortedFamilies.Available(McpServer.ReleaseKey, "GetPlcCrossReferences"),
+                    ["nativeCrossReferencesEnabled"] = PortedFamilies.Available(release.Key, "GetPlcCrossReferences"),
                     ["reflectionCrossReferencesAllowed"] = false,
                     ["faceplateTypeInternalAuthoring"] =
                         "No verified public API in the supplied V20/V21 SDK for creating a type from zero or editing its internal controls/scripts.",
-                    ["knownIssues"] = McpServer.ReleaseKey switch
-                    {
-                        "20" => new JsonArray(
-                            "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/improvements-in-step-7/improvements-in-update-4"),
-                        "21" => new JsonArray(
-                            V21Hotfix + "program-stability-when-using-eigen-engineering-agent",
-                            V21Hotfix + "deletion-of-invalid-networks-during-compilation"),
-                        _ => new JsonArray()
-                    }
+                    ["knownIssues"] = JsonSerializer.SerializeToNode(TiaMcp.FoundationHost.ReleaseCatalogData.KnownIssueLinks(release.MajorVersion))
                 }
             };
         }
