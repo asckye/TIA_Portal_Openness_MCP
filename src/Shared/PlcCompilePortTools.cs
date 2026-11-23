@@ -12,9 +12,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public PlcCompilePortTools(PlcOrganisationPortService service) => _service = service;
         [McpServerTool(Name="CompileDevice"),
                 Description("[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > " +
-                "Hardware (rebuild all)' does and what DownloadPlc runs first; CompilePlcSoftware / CompilePlcDiagnostics only compile the program. Returns " +
+                "Hardware (rebuild all)' does[[DownloadPlc| and what DownloadPlc runs first]]; CompilePlcSoftware / CompilePlcDiagnostics only compile " +
+                "the program. Returns " +
                 "the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an " +
-                "S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. Native behaviorPolicy=current; V4 native acceptance is pending. " +
+                "S7-1500 FW >= 2.9 CPU[[ManagePlcProtection| that ManagePlcProtection fixes]]. No save / download. Native behaviorPolicy=current; V4 " +
+                "native acceptance is pending. " +
                 "Default dryRun=true returns a planHash for the normalized arguments and target identity; execution requires dryRun=false, expectedPlanHash " +
                 "from this preview, and the exact bound expectedProjectFile.")]
         public CallToolResult CompileDevice(

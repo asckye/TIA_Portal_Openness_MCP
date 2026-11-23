@@ -22,9 +22,8 @@ namespace TiaMcp.Adapters
         internal static void RequirePasswordCapability(string release,string password)
         {
             TiaVersionCatalog.Get(release);
-            if(password.Length!=0 && (release=="14sp1" || release=="15.1" || release=="16"))
-                throw new NotSupportedException("The supplied native PublicAPI for "+release
-                        +" has no SafetyAdministration login API; password-based compilation is unavailable in this adapter. No password is ignored.");
+            if (PlcCompileScope.PasswordRefusal(release, password) is string reason)
+                throw new NotSupportedException(reason) { Data = { ["foundationKnownNoMutation"] = true } };
         }
         internal static bool ScopeMismatch(string[] roots, string device, string item, Func<string> readSoftwareName)
         {

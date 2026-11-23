@@ -8173,7 +8173,7 @@
       "entry": "ExportTechnologyObjectsToDirectory",
       "family": "F13",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
@@ -10748,7 +10748,7 @@
       "entry": "ExportTechnologyObjectsToDirectory",
       "family": "F13",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
@@ -13640,7 +13640,7 @@
       "entry": "ExportTechnologyObjectsToDirectory",
       "family": "F13",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
@@ -16800,7 +16800,7 @@
       "entry": "ExportTechnologyObjectsToDirectory",
       "family": "F13",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
@@ -20322,7 +20322,7 @@
       "entry": "ExportTechnologyObjectsToDirectory",
       "family": "F13",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
@@ -25026,7 +25026,7 @@
       "entry": "ExportTechnologyObjectsToDirectory",
       "family": "F13",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
@@ -29883,7 +29883,7 @@
       "entry": "ExportTechnologyObjectsToDirectory",
       "family": "F13",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
@@ -34982,7 +34982,7 @@
       "entry": "ExportTechnologyObjectsToDirectory",
       "family": "F13",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "devices/PLC_1/PLC_1",
         "exportDirectory": "C:\\Examples\\exports",
         "dryRun": true,
         "confirm": false
@@ -42929,7 +42929,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
@@ -52577,7 +52577,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
@@ -60996,7 +60996,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
@@ -66565,7 +66565,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
@@ -72741,7 +72741,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
@@ -79478,7 +79478,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
@@ -86576,7 +86576,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
@@ -94681,7 +94681,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDirectory": "C:\\Examples\\exports",
           "dryRun": true,
           "confirm": false
@@ -103310,7 +103310,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
@@ -110628,7 +110628,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "devices/PLC_1/PLC_1",
           "exportDir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4

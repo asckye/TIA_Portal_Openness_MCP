@@ -238,20 +238,12 @@ namespace TiaMcpServer.ModelContextProtocol
             release ??= HardwareContract.ReleaseKey;
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
-            if (name == "CompareSoftwareToOnline" && TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("ConnectOnlinePlc", release))
-                description += " Use ConnectOnlinePlc to establish the online connection.";
-            if (name == "DeletePlcBlock" && TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("ExportPlcBlockDocuments", release))
-                description += " Use ExportPlcBlockDocuments to back up the block before deletion.";
-            if (name == "SearchInstalledGsdDevices")
-            {
-                if (!TiaMcp.Adapters.Contracts.OpennessApi.HardwareCatalog.Includes(release))
-                    description = "[L2][Hardware][READ] Search only installed GSDML files for PROFINET device access points by vendor, order or DAP keyword. "
-                        + "Results are file metadata. The limit bounds the number of candidates returned.";
-                else if (TiaOpenness.Shared.ToolUsageCatalog.IsRegistered("SearchHardwareCatalog", release))
-                    description += " Use SearchHardwareCatalog for exact Siemens catalog rows.";
-            }
+            if (name == "SearchInstalledGsdDevices" && !TiaMcp.Adapters.Contracts.OpennessApi.HardwareCatalog.Includes(release))
+                description = "[L2][Hardware][READ] Search only installed GSDML files for PROFINET device access points by vendor, order or DAP keyword. "
+                    + "Results are file metadata. The limit bounds the number of candidates returned.";
+            description = TiaOpenness.Shared.ToolUsageCatalog.ReleaseDescription(description, release);
             var decorated = TiaOpenness.Shared.ToolUsageCatalog.WithHint(name, ToolExamples.Decorate(name, description, release));
-            var tool = ReferenceEquals(decorated, description) || decorated == description
+            var tool = decorated == attribute?.Description
                 ? CreateToolCore(method, null, target)
                 : CreateToolCore(method, new McpServerToolCreateOptions { Name = name, Description = decorated }, target);
             // Enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).

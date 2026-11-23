@@ -213,8 +213,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name="RunToolTransaction"),
                 Description("[L2][Project][WRITE] Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). " +
-                "calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, " +
-                "ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, SetUnifiedObjectProperties, SetUnifiedMultilingualProperty. Rejects all other " +
+                "calls is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup" +
+                "[[ManageUnifiedHmiGroup|, ManageUnifiedHmiGroup]][[DeleteEmptyUnifiedHmiScreenGroup|, " +
+                "DeleteEmptyUnifiedHmiScreenGroup]][[SetUnifiedObjectProperties|, SetUnifiedObjectProperties]][[SetUnifiedMultilingualProperty|, " +
+                "SetUnifiedMultilingualProperty]]. Rejects all other " +
                 "tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call " +
                 "before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true " +
                 "validates arguments only, not native semantics. Real execution needs confirmChange. No save.")]

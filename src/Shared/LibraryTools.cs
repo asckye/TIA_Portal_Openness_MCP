@@ -271,7 +271,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ManageLibraryTypeVersion"),
                 Description("[L2][Library][WRITE] Exact library type/version " +
                 "read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances/instantiate. instantiate places a released code-block " +
-                "or Classic screen version in exact targetSoftwarePath/targetGroupPath (empty group=root); PLC types/documents use ManagePlcDocuments. " +
+                "or Classic screen version in exact targetSoftwarePath/targetGroupPath (empty group=root)[[ManagePlcDocuments|; PLC types/documents use " +
+                "ManagePlcDocuments]]. " +
                 "updatePathsMode applies to code blocks on V20+ only. Mutations require the preview's expectedPlanHash and expectedProjectFile. " +
                 "Empty libraryName selects project library; otherwise " +
                 "unique already-open global library. typePath relative to TypeFolder. edit/discard require the project library; STEP 7 edit also requires " +

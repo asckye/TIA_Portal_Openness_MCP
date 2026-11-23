@@ -44,13 +44,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; " +
                 "optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. " +
                 "communicationInterface=TCPIP on register / powerOn puts the instance on the 'Siemens PLCSIM Virtual Ethernet Adapter' (API default IP " +
-                "192.168.0.1), so a TIA project whose PLC has that IP can DownloadPlc / ConnectOnlinePlc to it through that PG/PC interface - the safe " +
+                "192.168.0.1), so a TIA project whose PLC has that IP can [[DownloadPlc,ConnectOnlinePlc|DownloadPlc / ConnectOnlinePlc to it|connect " +
+                "to it]] through that PG/PC interface - the safe " +
                 "target for the whole online family; Softbus selects the local PLCSIM access instead. On PLCSIM Advanced 6+ the per-instance property is " +
                 "read-only and the choice is the global SimulationRuntimeManager.NetworkMode (also accepted literally: TCPIPMultipleAdapter / " +
                 "TCPIPSingleAdapter / Softbus), which the API refuses while any instance is running - data.communicationInterfaceRoute shows the route and " +
                 "the mode before / after. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false " +
-                "AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via " +
-                "DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No " +
+                "AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there " +
+                "[[DownloadPlcToFolder|via " +
+                "DownloadPlcToFolder|manually]] or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state " +
+                "before/after. No " +
                 "physical PLC and no TIA project is touched. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult ManagePlcSimAdvancedInstanceV4(
             [Description("instanceName: PLCSIM Advanced instance name, e.g. 'PLC_1'.")] string instanceName,
@@ -63,7 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
             [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "",
             [Description("communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC " +
-                "interface at the instance IP, API default 192.168.0.1 - what DownloadPlc / ConnectOnlinePlc need), Softbus, or an ENetworkMode name " +
+                "interface at the instance IP, API default 192.168.0.1), Softbus, or an ENetworkMode name " +
                 "(TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the " +
                 "current setting.")] string communicationInterface =
                 "")

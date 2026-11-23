@@ -170,8 +170,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "BuildFlgNetCall"),
                 Description("[L2][PLC-Builders][OFFLINE] Build one V21 FlgNet/v5 FC-call fragment from " +
-                    "{callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}. For contacts, compares, OR, " +
-                    "fan-out, coils, MOVE, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use BuildPlcLadFcBlock rung networks on V21. " +
+                    "{callName,parameters:[{name,section,dataType,sourceKind?,symbolPath?|constantValue?}]}.[[BuildPlcLadFcBlock| For contacts, " +
+                    "compares, OR, " +
+                    "fan-out, coils, MOVE, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use BuildPlcLadFcBlock rung networks on V21.]] " +
                     "For unsupported timers, counters and math or library/system instructions, and all " +
                     "general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. " +
                     "A bare fragment cannot be imported. Returns candidate XML in " +

@@ -3008,7 +3008,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5cd9cebac3d80ab606e998db1149746eac6be432583c3ef761b402646354d356",
+      "descriptionSha256": "0687d91cb81b4c447033cead121180fc23242b9516bbed944d7758bfeb170b69",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6068,7 +6068,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "ff1a74fbc3cd9b613dcc145c3913c0c0fa4154485154aeb8535657b2803f5bda",
+      "descriptionSha256": "b569b73d0df8b329aaaad70375436f0e39a8bd5347f08e09169ae2059b28d6fd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -11079,7 +11079,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "948aaf5051e8980393e7ea5f1f9d615c3d12bd18bcdbaaa64d7c5b23d4e70ed4",
+      "descriptionSha256": "17745c250b930086d1de76f740224e0253cd3cba12337e599f4d8c9974d5c0cd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -12032,7 +12032,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "2306644a38a2287b3642dd8ce70d36ee8831dd1c3d14d7fec175753068c2a2bb",
+      "descriptionSha256": "035360f87c6ea9066d5f33dfe649e7f7bc3eed09dc233f707465fc302905d2e7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -16776,7 +16776,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "c0aa75115a101bb8687469a4486697c757f77fbf4ce0f78bcf67b3aa7e31ee9e",
+      "descriptionSha256": "1627ef175ad6e5695b2d76c0ae0563d58f8b581070feabca6a5e22c67f008665",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19720,7 +19720,7 @@
           },
           "typeIdentifier": {
             "default": "",
-            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).",
+            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (use normalizeTypeIdentifier).",
             "type": "string"
           }
         },
@@ -20116,7 +20116,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "14a7f2b494d1f4c5d7529af3a399bfd77b68e95e7a8458d5a7d3229b36a1b9e9",
+      "descriptionSha256": "4cc48bda4507d27bea8cfcfb9d4dfa5a37934c88fe6531637d6b68292d99943d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21800,7 +21800,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3aae6a81d7348d22f7a3210fa29c4d2ad6d09cd7d3209fbefa74493b4c73253c",
+      "descriptionSha256": "9645b31291e8ffdd61a89a5066bf8926bac78ebe87012d45c533c4949c3d902f",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -21827,7 +21827,7 @@
           },
           "communicationInterface": {
             "default": "",
-            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadPlc / ConnectOnlinePlc need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
+            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
             "examples": [
               "Softbus"
             ],
@@ -24154,7 +24154,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "5235b136a665278c5b39c7f66bfbb391fca845a123fc7659dbe445b00174d544",
+      "descriptionSha256": "23fadf095813b47c6702dba8b5b602e75b9a1849017cdb0aaba69fd1e8e3a9c0",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -24203,10 +24203,20 @@
             ],
             "type": "string"
           },
+          "confirm": {
+            "default": false,
+            "description": "Confirm the reviewed deletion when dryRun=false.",
+            "type": "boolean"
+          },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact bound project file for deletion when dryRun=false.",
+            "type": "string"
           },
           "objectPath": {
             "description": "objectPath: path of the object inside the software ('Group/Name').",
@@ -27037,7 +27047,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "01d5187d6a9eb112dcac409b36b51111e958f71aa3441bd42369c065efcb7c94",
+      "descriptionSha256": "83596cc5a6b74cf89590dd37d67360de6604704b877090d6772bcfd73d553633",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -28701,7 +28711,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "e8609645e2005f1b0cfee2f377f6a770ee0d3147562798500d337cf6fc20f78c",
+      "descriptionSha256": "672e799de3cbe7a7d49150c84cb11222aef6ca50c31b69404a44dcf049eb9704",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

@@ -41,7 +41,7 @@ internal sealed class OfflineLadderTool : McpServerTool
                     "coil/set/reset, MOVE with ENO chaining, TON/TOF/TP, CTU/CTD/CTUD and user FC/FB CALL with named pins. " +
                     "Global instances only; Time PT; Output/InOut pins require symbols. Known instruction names and the MC_ prefix are reserved; no block resolution. Registered on V21 only. For unsupported timers, counters and math or library/system instructions and other " +
                     "unsupported LAD, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. "
-                    : "Builds only one FC-call fragment; use BuildPlcLadFcBlock for rung networks on V21. For TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use its rung outputs. For unsupported timers, counters and math or library/system instructions, " +
+                    : "Builds only one FC-call fragment[[BuildPlcLadFcBlock|; use BuildPlcLadFcBlock for rung networks on V21. For TON/TOF/TP, CTU/CTD/CTUD and user FC/FB calls use its rung outputs]]. For unsupported timers, counters and math or library/system instructions, " +
                         "and all general LAD on V20, author S7DCL text and import with ImportPlcBlocksDocuments, or start from an exported donor block. " +
                         "A bare fragment cannot be imported. ") +
                 "No symbol/type resolution; compile is the authority. " + OfflineCompositionBuilders.Warning + " No file reads/writes, connection or worker calls.",

@@ -258,7 +258,8 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         [McpServerTool(Name="GetDccObject"),
                 Description("[L2][Hardware][READ] Exact offline DCC chart/block/pin/library property path (objectPath [{property,name}] from the " +
-                "DriveControlChartContainer) with bounded scalar pagination; the typed views are ListDccCharts / ManageDccBlock / ManageDccPin. Complex " +
+                "DriveControlChartContainer) with bounded scalar pagination; the typed views are ListDccCharts[[ManageDccBlock,ManageDccPin| / " +
+                "ManageDccBlock / ManageDccPin]]. Complex " +
                 "properties excluded explicitly; no complete internal binding guarantee.")]
         public CallToolResult ReadDccObject(string[] devicePath, string[] itemPath, PropertyStep[] objectPath = null!, int offset=0, int limit=100,
                 int driveObjectIndex=-1, ushort driveObjectNumber=0)

@@ -117,7 +117,7 @@ namespace TiaMcp.Logic.V4
                     if (technologyDirectory && !matched)
                         throw new AdapterPreconditionException("No technology object XML files match the selection.", input.Parameter);
                     return entries;
-                });
+                }, input.Directory);
                 inputs.Add(new JsonObject { ["parameter"] = input.Parameter, ["files"] = files });
             }
             return inputs;

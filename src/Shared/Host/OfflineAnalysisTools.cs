@@ -51,7 +51,8 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("ComparePlcBlockDocuments", meta =>
             {
                 OfflineAnalysisLogic.ValidatePage(offset, limit);
-                if (contextLines < 0 || contextLines > 20) throw new ArgumentException("contextLines must be between 0 and 20.");
+                if (contextLines < 0 || contextLines > 20) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(
+                    "contextLines must be between 0 and 20.", nameof(contextLines));
                 string? leftTemp = null, rightTemp = null;
                 try
                 {

@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -41,7 +43,12 @@ namespace TiaMcp.Logic.ModelContextProtocol
             }
         }
 
-        public static bool Attach(JsonNode? body, Func<string, string, string, JsonObject?> example, Func<string, bool>? registered = null)
+        public static string? ForwardedTool(IReadOnlyDictionary<string, JsonElement>? arguments)
+            => arguments != null && arguments.TryGetValue("name", out var name) && name.ValueKind == JsonValueKind.String
+                && arguments.All(p => p.Key == "name" || p.Key == "arguments" && p.Value.ValueKind == JsonValueKind.Object) ? name.GetString() : null;
+
+        public static bool Attach(JsonNode? body, Func<string, string, string, JsonObject?> example, Func<string, bool>? registered = null,
+            string? forwardedTool = null)
         {
             if (body is not JsonObject || body["ok"]?.GetValue<bool>() != false
                 || body["meta"] is not JsonObject meta || meta["warnings"] is not JsonArray warnings) return false;
@@ -49,6 +56,7 @@ namespace TiaMcp.Logic.ModelContextProtocol
             if (code is not ("INVALID_ARGUMENT" or "PRECONDITION_FAILED" or "CONFIRMATION_REQUIRED")) return false;
             foreach (var warning in warnings) if ((string?)warning?["code"] == "RECOVERY_GUIDANCE") return false;
             string tool = (string?)meta["tool"] ?? "";
+            if (tool == "CallTool" && forwardedTool != null && registered?.Invoke(forwardedTool) == true) tool = forwardedTool;
             string release = (string?)meta["releaseKey"] ?? "";
             if (registered != null && (!registered("GetToolUsage") || !registered(tool))) return false;
             var query = new JsonObject { ["toolName"] = tool };

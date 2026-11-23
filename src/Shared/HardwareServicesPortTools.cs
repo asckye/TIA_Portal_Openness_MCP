@@ -117,9 +117,9 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name="GetHardwareFeatures"),
-                Description("[L2][Hardware][READ] Probe every Siemens.Engineering.HW.Features.* service from the V21 API catalog on one exact hardware " +
-                "object (devicePath/itemPath): reports advertised services, present/absent per feature and public scalar values (credential-related features " +
-                "report presence only). offset/limit pagination. Read-only.")]
+                Description("[L2][Hardware][READ] Check catalogued Siemens.Engineering.HW.Features.* services against this release's API on one exact " +
+                "hardware object (devicePath/itemPath): reports advertised services, present/absent per feature and public scalar values " +
+                "(credential-related features report presence only). offset/limit pagination. Read-only.")]
         public CallToolResult GetHardwareFeatures(string[] devicePath,string[] itemPath = null!,int offset=0,int limit=100)
             => HardwareToolContract.Invoke("GetHardwareFeatures", true, false, () =>
             {
@@ -174,8 +174,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("action: the operation to perform - list | findModuleTypes | findContainerTypes | normalizeTypeIdentifier | exportOpcUa | " +
                 "exportCardReaderPsc.")] string action=
                 "list",
-            [Description("typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / " +
-                "ManageHardwareUtilities normalizeTypeIdentifier).")] string typeIdentifier=
+            [Description("typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (use " +
+                "normalizeTypeIdentifier).")] string typeIdentifier=
                 "",
             string[] devicePath = null!,
             string[] itemPath = null!,

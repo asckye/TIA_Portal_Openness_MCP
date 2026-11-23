@@ -77,7 +77,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["nativeCrossReferencesEnabled"] = PortedFamilies.Available(release.Key, "GetPlcCrossReferences"),
                     ["reflectionCrossReferencesAllowed"] = false,
                     ["faceplateTypeInternalAuthoring"] =
-                        "No verified public API in the supplied V20/V21 SDK for creating a type from zero or editing its internal controls/scripts.",
+                        OpennessApi.UnifiedHmi.Includes(release.Key)
+                            ? "No verified public API for creating a faceplate type or editing its internal controls or scripts."
+                            : "Unified HMI is unavailable on this release.",
                     ["knownIssues"] = JsonSerializer.SerializeToNode(TiaMcp.FoundationHost.ReleaseCatalogData.KnownIssueLinks(release.MajorVersion))
                 }
             };

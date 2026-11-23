@@ -21,7 +21,7 @@ namespace TiaMcp.Logic.V4
 
         public static string Describe(string release, string entry, string? description)
         {
-            var text = description ?? "";
+            var text = TiaOpenness.Shared.ToolUsageCatalog.ReleaseDescription(description ?? "", release);
             if (EntryPolicy(typeof(BehaviorCapabilities).Assembly, release, entry, BehaviorPolicy.NotApplicable) != BehaviorPolicy.Current) return text;
             return text.Replace(" " + CurrentDisclosure, "").Replace(CurrentDisclosure, "").TrimEnd() + " " + CurrentDisclosure;
         }

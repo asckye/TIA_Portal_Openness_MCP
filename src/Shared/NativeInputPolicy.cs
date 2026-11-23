@@ -24,9 +24,11 @@ namespace TiaOpenness.Shared
                 throw new AdapterPreconditionException("Network and device input paths are refused. Use a local or mapped drive path.", parameter);
         }
 
-        internal static T Read<T>(string parameter, Func<T> read)
+        internal static T Read<T>(string parameter, Func<T> read, bool directory = false)
         {
             try { return read(); }
+            catch (DirectoryNotFoundException error) when (directory)
+            { throw new AdapterPreconditionException("The input directory does not exist.", parameter, true, error); }
             catch (Exception error) when (error is FileNotFoundException || error is DirectoryNotFoundException || error is UnauthorizedAccessException
                 || error is PathTooLongException || error is NotSupportedException || error is ArgumentException && error is not AdapterPreconditionException)
             { throw new AdapterPreconditionException("The input file cannot be read. Verify its path and read permissions.", parameter, true, error); }
@@ -66,13 +68,11 @@ namespace TiaOpenness.Shared
                 RequireLocal(path, parameter);
                 if (directory)
                 {
-                    try { using (var entries = Directory.EnumerateFileSystemEntries(FullPath(path)).GetEnumerator()) entries.MoveNext(); }
-                    catch (DirectoryNotFoundException error)
-                    { throw new AdapterPreconditionException("The input directory does not exist.", parameter, true, error); }
+                    using (var entries = Directory.EnumerateFileSystemEntries(FullPath(path)).GetEnumerator()) entries.MoveNext();
                 }
                 else using (var stream = OpenRead(path, parameter)) { }
                 return true;
-            });
+            }, directory);
         }
     }
 }

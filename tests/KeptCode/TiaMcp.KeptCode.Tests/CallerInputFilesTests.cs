@@ -14,6 +14,23 @@ namespace TiaMcp.Engine.Tests
         public void Dispose() => Directory.Delete(root, true);
 
         [Theory]
+        [InlineData("ImportHmiScreensFromDirectory", "dir")]
+        [InlineData("ImportHmiTagTablesFromDirectory", "dir")]
+        [InlineData("ImportTechnologyObjectsFromDirectory", "dir")]
+        [InlineData("ScanPlcSourceAnnotations", "directory")]
+        public void Missing_directory_is_named_during_validation_and_snapshot(string tool, string parameter)
+        {
+            var args = new JsonObject { [parameter] = Path.Combine(root, "missing") };
+            foreach (Action call in new Action[] { () => TiaMcp.Logic.V4.CallerInputFiles.Validate(tool, args),
+                () => TiaMcp.Logic.V4.CallerInputFiles.Snapshot(tool, args) })
+            {
+                var error = Assert.Throws<AdapterPreconditionException>(call);
+                Assert.Equal(parameter, error.ParamName);
+                Assert.Contains("input directory does not exist", error.Message);
+            }
+        }
+
+        [Theory]
         [InlineData("OpenProject", "path")]
         [InlineData("ConnectProject", "projectPath")]
         [InlineData("OpenLocalSession", "localSessionPath")]

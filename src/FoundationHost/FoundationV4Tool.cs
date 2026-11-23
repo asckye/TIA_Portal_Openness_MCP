@@ -202,15 +202,17 @@ internal sealed class FoundationV4Tool : McpServerTool
         var body = result.StructuredContent ?? JsonNode.Parse((result.Content.FirstOrDefault() as TextContentBlock)?.Text ?? "null");
         if (TiaMcp.Logic.ModelContextProtocol.RecoveryHints.Attach(body, (name, key, operation) =>
         {
-            if (name != tool.Name || key != release) return null;
-            var schema = RecoverySchema(name, tool.InputSchema);
-            var usage = TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation", tool.Description ?? "", schema);
+            var target = name == tool.Name ? tool : EngineHostConfiguration.CurrentOrNull?.Catalog?.Find(name)?.Tool;
+            if (target == null || key != release) return null;
+            var schema = RecoverySchema(name, target.InputSchema);
+            var usage = TiaOpenness.Shared.ToolUsageCatalog.Describe(name, key, "plc-foundation", target.Description ?? "", schema);
             if (operation.Length == 0) return usage["example"] as JsonObject;
             if (!usage["operations"]!.AsArray().Any(row => (string?)row!["operation"] == operation)) return null;
             return TiaOpenness.Shared.ToolUsageCatalog
-                .Describe(name, key, "plc-foundation", tool.Description ?? "", schema, operation: operation)["example"] as JsonObject;
+                .Describe(name, key, "plc-foundation", target.Description ?? "", schema, operation: operation)["example"] as JsonObject;
         }, name => sharedSession ? EngineHostConfiguration.CurrentOrNull?.Catalog?.All.ContainsKey(name) == true
-            : TiaOpenness.Shared.ToolUsageCatalog.IsRegistered(name, release)))
+            : TiaOpenness.Shared.ToolUsageCatalog.IsRegistered(name, release),
+            tool.Name == "CallTool" ? TiaMcp.Logic.ModelContextProtocol.RecoveryHints.ForwardedTool(inputArguments) : null))
             result = new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
         if (body != null && (approval != null || write && !settings.Enabled))
@@ -296,6 +298,7 @@ internal sealed class FoundationV4Tool : McpServerTool
         {
             var argumentsInput = JsonSerializer.SerializeToElement(args);
             if ((HostBehavior.RemovedVaultReference(tool.Name, argumentsInput)
+                ?? HostBehavior.CompilePasswordRefusal(release, tool.Name, argumentsInput)
                 ?? HostBehavior.MissingRuntimeWriteConfirmation(tool.Name, argumentsInput)) is { } admissionError)
                 return await Recorded(FoundationV4Result.Reject(release, tool.Name, id, admissionError));
             CallerInputFiles.RequireLocalInputs(tool.Name, JsonSerializer.SerializeToNode(args)!.AsObject());

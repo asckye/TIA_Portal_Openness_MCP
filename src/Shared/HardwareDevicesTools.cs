@@ -304,7 +304,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "CreateDevice"),
-                Description("[L2][Hardware][WRITE] Compatibility forwarder to CreateHardwareDevice on V18–V21. orderNumber maps to preferredMlfb" +
+                Description("[L2][Hardware][WRITE] [[CreateHardwareDevice|Compatibility forwarder to CreateHardwareDevice on V18–V21.|Create the specified device.]] orderNumber maps to preferredMlfb" +
                 " and version to preferredVersion; both are passed unchanged. Default dryRun=true. Uses the same exact catalog " +
                 "selection, inventory, plan hash, confirm and expectedProjectFile, one create, readback, result and diagnostics. V14" +
                 " SP1–V17 retain the exact native device creation route with the same preview/hash/project contract. Native " +
@@ -418,7 +418,8 @@ namespace TiaMcpServer.ModelContextProtocol
             Description("[L2][Hardware]Search the installed hardware catalog and local GSDML files for third-party PROFINET/GSD device access points. " +
                 "Use a precise vendor, order or DAP keyword, such as AFM60A, ATV320 or DL100. File-only GSDML rows are metadata. " +
                 "The limit bounds returned candidates. Truncated results include the total match count. File traversal and the synchronous native Find " +
-                "run to completion. The catalog API has no cancellation or paging overload.")]
+                "run to completion. The catalog API has no cancellation or paging overload.[[SearchHardwareCatalog| Use SearchHardwareCatalog for exact " +
+                "Siemens catalog rows.]]")]
         public CallToolResult SearchInstalledGsdDevicesV4(
             [Description("keyword: device/vendor/order/DAP keyword, e.g. 'AFM60A', 'ATV320', 'DL100', 'SICK AFM60A'")] string keyword,
             [Description("limit: positive maximum number of candidates to return")] int limit = 50)

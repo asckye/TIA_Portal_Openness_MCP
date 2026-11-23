@@ -66,7 +66,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     var messages = fields.Select(field => field.Message).ToList();
                     if (fieldErrors.Count > 0) messages.Add(schema.FieldReport(displayJson));
-                    error = new Error(string.Join(" ", messages), error.Details);
+                    var original = (InvalidArgumentDetails)error.Details;
+                    var pointers = fields.SelectMany(field => ((InvalidArgumentDetails)field.Details).Parameters)
+                        .Concat(original.Parameters).Distinct(StringComparer.Ordinal).ToArray();
+                    error = new Error(string.Join(" ", messages),
+                        new InvalidArgumentDetails(pointers[0], original.AllowedValues, pointers, original.Expected));
                 }
                 meta["validationError"] = JsonNode.Parse(V4Json.Serialize(error));
                 fields.AddRange(fieldErrors.GroupBy(field => V4Json.Serialize(field)).Select(group => group.First()));

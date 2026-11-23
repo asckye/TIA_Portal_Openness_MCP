@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Contracts.Candidates;
+using TiaMcp.Logic.V4;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens.Services
@@ -21,7 +23,29 @@ namespace TiaMcpServer.Siemens.Services
         internal string BoundProject => projectIdentity();
         internal bool HasProject => hasProject();
 
-        private JsonObject Invoke(PlcSoftwareRequest request, Action? beforeDispatch = null)
+        internal Error? DeleteAdmission(bool dryRun, bool confirm, string expectedProjectFile)
+        {
+            if (dryRun) return null;
+            if (!confirm) return new Error("Deletion requires confirm=true after the preview.", new ConfirmationRequiredDetails(null));
+            if (string.IsNullOrWhiteSpace(expectedProjectFile) || !System.IO.Path.IsPathRooted(expectedProjectFile)
+                || expectedProjectFile.Length >= 2 && expectedProjectFile[1] == ':'
+                    && (expectedProjectFile.Length < 3 || expectedProjectFile[2] is not ('/' or '\\')))
+                return McpServer.InvalidInput("expectedProjectFile");
+            string expected;
+            try { expected = CandidatePrimitives.CanonicalProject(expectedProjectFile); }
+            catch (ArgumentException) /* swallow(parse-fallback): malformed paths are returned as typed input refusals. */
+            { return McpServer.InvalidInput("expectedProjectFile"); }
+            catch (NotSupportedException) /* swallow(parse-fallback): unsupported path syntax is returned as a typed input refusal. */
+            { return McpServer.InvalidInput("expectedProjectFile"); }
+            var bound = HasProject ? BoundProject : null;
+            if (string.IsNullOrWhiteSpace(bound))
+                return new Error("No project is bound.", new ProjectNotBoundDetails());
+            if (CandidatePrimitives.CanonicalProject(bound!) != expected)
+                return new Error("The project binding differs from expectedProjectFile.", new IdentityMismatchDetails("project-binding", null, null));
+            return null;
+        }
+
+        private JsonObject Invoke(PlcSoftwareRequest request, Action? beforeDispatch = null, string? expectedProjectFile = null)
         {
             string? unsupported = PlcSoftwareCapabilities
                 .Unsupported(HardwareContract.ReleaseKey, request.Operation, request.Action, request.Family, request.UnitName, request.UnitKind, request
@@ -29,7 +53,7 @@ namespace TiaMcpServer.Siemens.Services
             unsupported ??= PlcB4Capabilities.Unsupported(HardwareContract.ReleaseKey, request);
             if (unsupported != null) throw new NotSupportedException(unsupported);
             var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
-            if (!request.DryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = projectIdentity(); }
+            if (!request.DryRun) { arguments["confirm"] = true; arguments["expectedProjectFile"] = expectedProjectFile ?? projectIdentity(); }
             beforeDispatch?.Invoke();
             var reply = call(PortedFamilies.ForTool(request.Operation).OperationPrefix + ".ExecutePlcOrganisation", arguments) as JsonObject
                 ?? throw new InvalidOperationException("Missing PLC organisation worker reply.");
@@ -70,8 +94,8 @@ namespace TiaMcpServer.Siemens.Services
         private static ResponseMessage Step(JsonObject reply) => new ResponseMessage {
             Message = (string?)reply["Message"] ?? "", Meta = (JsonObject)reply["Meta"]!.DeepClone()
         };
-        private ResponseMessage OrganisationStep(PlcSoftwareRequest request)
-            => !hasProject() ? NoProject(request.Operation) : Step(Invoke(request));
+        private ResponseMessage OrganisationStep(PlcSoftwareRequest request, string? expectedProjectFile = null)
+            => !hasProject() ? NoProject(request.Operation) : Step(Invoke(request, expectedProjectFile: expectedProjectFile));
         private static ResponseMessage NoProject(string tool) => new ResponseMessage {
             Message = "Project is null", Meta = ResponseMeta
                 .Step(tool, ("error", JsonValue.Create("Project is null")), ("status", JsonValue.Create("InvalidState")),

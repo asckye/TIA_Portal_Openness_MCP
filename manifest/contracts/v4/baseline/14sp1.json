@@ -2838,7 +2838,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "5cd9cebac3d80ab606e998db1149746eac6be432583c3ef761b402646354d356",
+      "descriptionSha256": "0687d91cb81b4c447033cead121180fc23242b9516bbed944d7758bfeb170b69",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -5282,7 +5282,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "09714ce45531328c792d8bcd5fbbe927d0992e1a53b81842cbdc73b030ca4801",
+      "descriptionSha256": "b09dcf6377344f390a3a3e71d15ed6741f167ee4428a72b8e822f8708d436182",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -5809,7 +5809,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "088a24fd98af04a862b2c35c287acd01466ef237878ec862126d036d31920f77",
+      "descriptionSha256": "36380656a3a5a184b3f32d22a38a02131bf8021f0585b565bfc44d89fc61a0cd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6293,7 +6293,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "d1289c621790871e94c17ac28f08a3a19f92579e3f4c0290541442d866402f90",
+      "descriptionSha256": "b7793dff1342c8d06bbc482c6d2bff353397299082bcdb240b375a3f72319e28",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -8657,7 +8657,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "948aaf5051e8980393e7ea5f1f9d615c3d12bd18bcdbaaa64d7c5b23d4e70ed4",
+      "descriptionSha256": "17745c250b930086d1de76f740224e0253cd3cba12337e599f4d8c9974d5c0cd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -9003,7 +9003,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "b197fc9debe033c5fc09025369f8283426778a9b4686a3c00f623e23f3043f4c",
+      "descriptionSha256": "1bbd2d98159032e2e4ef42ec3c132225194f829a40228b07360f5d6737667fa2",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -9170,7 +9170,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "f6930a7a06c9c3f2ccf4396b083dcbfc474e383460eae5927f59f7ab72f42826",
+      "descriptionSha256": "6abc66de7e3ef1ff006cc3fd13644cec8376976050c5dc1d4693d11d94983a8c",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -9406,7 +9406,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "2306644a38a2287b3642dd8ce70d36ee8831dd1c3d14d7fec175753068c2a2bb",
+      "descriptionSha256": "035360f87c6ea9066d5f33dfe649e7f7bc3eed09dc233f707465fc302905d2e7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -9745,7 +9745,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "fc1d40e5e82848824bd090d182f582dac0f01112e6396464599ff4392f4cde92",
+      "descriptionSha256": "23954092c0a82ac5a647ae0bef2f98072ba45475fdb5a487193481b4a0a11fbd",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13003,7 +13003,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "c0aa75115a101bb8687469a4486697c757f77fbf4ce0f78bcf67b3aa7e31ee9e",
+      "descriptionSha256": "1627ef175ad6e5695b2d76c0ae0563d58f8b581070feabca6a5e22c67f008665",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -13565,7 +13565,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "0da8bf78cb55195f47c3b8deb758166af41f02ca8e283e2ce169ac0415c7ec59",
+      "descriptionSha256": "1f352524b1884423c964cfb08c19048865c5a03296309addaf6030e8054e1574",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -14614,7 +14614,7 @@
           },
           "typeIdentifier": {
             "default": "",
-            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).",
+            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (use normalizeTypeIdentifier).",
             "type": "string"
           }
         },
@@ -15010,7 +15010,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "14a7f2b494d1f4c5d7529af3a399bfd77b68e95e7a8458d5a7d3229b36a1b9e9",
+      "descriptionSha256": "4cc48bda4507d27bea8cfcfb9d4dfa5a37934c88fe6531637d6b68292d99943d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15737,7 +15737,7 @@
         "openWorldHint": true,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3aae6a81d7348d22f7a3210fa29c4d2ad6d09cd7d3209fbefa74493b4c73253c",
+      "descriptionSha256": "24e9a8950a1f5305bedcd7f658edb1f14ba68805e37d0083a2e6c40cef46c871",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -15764,7 +15764,7 @@
           },
           "communicationInterface": {
             "default": "",
-            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadPlc / ConnectOnlinePlc need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
+            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
             "examples": [
               "Softbus"
             ],
@@ -16623,7 +16623,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "5235b136a665278c5b39c7f66bfbb391fca845a123fc7659dbe445b00174d544",
+      "descriptionSha256": "23fadf095813b47c6702dba8b5b602e75b9a1849017cdb0aaba69fd1e8e3a9c0",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -16672,10 +16672,20 @@
             ],
             "type": "string"
           },
+          "confirm": {
+            "default": false,
+            "description": "Confirm the reviewed deletion when dryRun=false.",
+            "type": "boolean"
+          },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact bound project file for deletion when dryRun=false.",
+            "type": "string"
           },
           "objectPath": {
             "description": "objectPath: path of the object inside the software ('Group/Name').",
@@ -18637,7 +18647,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "01d5187d6a9eb112dcac409b36b51111e958f71aa3441bd42369c065efcb7c94",
+      "descriptionSha256": "83596cc5a6b74cf89590dd37d67360de6604704b877090d6772bcfd73d553633",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

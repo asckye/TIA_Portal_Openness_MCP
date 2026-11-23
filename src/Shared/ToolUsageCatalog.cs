@@ -35,6 +35,15 @@ namespace TiaOpenness.Shared
         public static bool IsRegistered(string name, string release)
             => (Profiles.Value["releases"]?[release] as JsonArray)?.Any(row => (string?)row!["currentName"] == name) == true;
 
+        // Optional prose is authored as [[ToolName|available text|fallback text]].
+        // A comma-separated list requires every named tool. An omitted fallback drops the clause.
+        public static string ReleaseDescription(string description, string release)
+        {
+            if (!description.Contains("[[")) return description;
+            return System.Text.RegularExpressions.Regex.Replace(description, @"\[\[([A-Za-z0-9,]+)\|([^|\]]*)(?:\|([^\]]*))?\]\]", match =>
+                match.Groups[1].Value.Split(',').All(name => IsRegistered(name, release)) ? match.Groups[2].Value : match.Groups[3].Value);
+        }
+
         public static string LibraryExtension(string release) => ".al" + (string)Data.Value["calls"]!["releaseExtensions"]![release]!;
 
         public static string ExampleSource(string name, string release)

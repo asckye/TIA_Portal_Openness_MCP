@@ -198,6 +198,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "in TIA V21 threw NonRecoverableException and TIA Portal exited, while TO_PositioningAxis / TO_SpeedAxis 5.0 and PID_Compact 2.3 were " +
                 "created normally on the same CPU - a version the CPU does not offer is not refused cleanly, so use the lowest version of the official table " +
                 "(S7-1500 motion 5.0, PID_Compact 2.3) and save the project before a create. setParameter takes exact parameter name and scalar value. " +
+                "Applied deletion requires confirm=true and the exact bound expectedProjectFile. " +
                 "dryRun=true default; writes require Offline. No save/compile/download; dependencies not analyzed. Current native policy; V4 safety behavior " +
                 "is not yet accepted.")]
         public CallToolResult ManageTechnologyObjectV4(
@@ -210,11 +211,16 @@ namespace TiaMcpServer.ModelContextProtocol
             string version="",
             [Description("parameter: exact parameter name.")] string parameter="",
             [Description("value: scalar parameter value (number, string, boolean or null); arrays and objects are refused.")] NativeValue value = default,
-            bool dryRun=true)
-            => EngineeringToolContract
-                .Run("ManageTechnologyObject", !dryRun && action != "read" && action != "list", () =>
+            bool dryRun=true,
+            [Description("Confirm the reviewed deletion when dryRun=false.")] bool confirm=false,
+            [Description("Exact bound project file for deletion when dryRun=false.")] string expectedProjectFile="")
+        {
+            if (action == "delete" && _technology.DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error)
+                return McpServer.V4Reject("ManageTechnologyObject", error);
+            return EngineeringToolContract.Run("ManageTechnologyObject", !dryRun && action != "read" && action != "list", () =>
                     ManageTechnologyObject(softwarePath, objectPath, action, typeIdentifier, version, parameter, EngineeringToolContract.Value(value, action),
-                        dryRun));
+                        dryRun, action == "delete" ? expectedProjectFile : null));
+        }
 
         public ResponseMessage ManageTechnologyObject(
             string softwarePath,
@@ -224,7 +230,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string version="",
             string parameter="",
             string valueJson="null",
-            bool dryRun=true)
-            => _technology.ManageTechnologyObject(softwarePath,objectPath,action,typeIdentifier,version,parameter,valueJson,dryRun);
+            bool dryRun=true, string? expectedProjectFile=null)
+            => _technology.ManageTechnologyObject(softwarePath,objectPath,action,typeIdentifier,version,parameter,valueJson,dryRun,expectedProjectFile);
     }
 }

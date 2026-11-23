@@ -31,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static string RecoveryCode(string code)
             => RecoveryHints.RecoveryCode(code, name => TiaOpenness.Shared.ToolUsageCatalog.IsRegistered(name, McpServer.ReleaseKey));
 
-        internal static CallToolResult WithRecovery(CallToolResult result)
+        internal static CallToolResult WithRecovery(CallToolResult result, string? forwardedTool = null)
         {
             var body = McpServer.ResultBody(result);
             if (!RecoveryHints.Attach(body, (tool, release, operation) =>
@@ -39,7 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (release != McpServer.ReleaseKey || !McpServer.AllToolDescriptors().ContainsKey(tool)) return null;
                 var usage = McpServer.ResultBody(new ToolUsageTools().GetToolUsage(toolName: tool, operation: operation));
                 return usage?["data"]?["example"] as JsonObject;
-            }, name => McpServer.AllToolDescriptors().ContainsKey(name))) return result;
+            }, name => McpServer.AllToolDescriptors().ContainsKey(name), forwardedTool)) return result;
             return new CallToolResult { IsError = result.IsError, StructuredContent = body,
                 Content = new[] { new TextContentBlock { Text = body!.ToJsonString() } } };
         }

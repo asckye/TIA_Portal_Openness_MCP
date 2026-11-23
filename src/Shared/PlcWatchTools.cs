@@ -36,8 +36,9 @@ namespace TiaMcpServer.ModelContextProtocol
             " Force tables configure which variables are continuously forced to specific values while the CPU is online." +
             " Force entries stay read-only. ImportPlcWatchTableOffline tableKind=force imports offline configuration only;" +
             " it never activates forcing, monitoring, save or download. ExportPlcWatchTablesToDirectory tableKind=force exports that configuration." +
-            " Use the TIA Portal UI to activate forcing. For a one-shot value written from a watch table instead," +
-            " use SetPlcWatchTableModifyValue (the variable reverts to PLC logic afterwards). Current native policy; V4 safety behavior is not yet accepted.")]
+            " Use the TIA Portal UI to activate forcing.[[SetPlcWatchTableModifyValue| For a one-shot value written from a watch table instead," +
+            " use SetPlcWatchTableModifyValue (the variable reverts to PLC logic afterwards).]] Current native policy; V4 safety behavior is not yet " +
+            "accepted.")]
         public CallToolResult GetPlcForceTablesV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath)
             => PlcToolContract.Run("ListPlcForceTables", false, true, () => GetPlcForceTables(softwarePath));
@@ -627,8 +628,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 "PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). " +
                 "Watch tables also accept createTable (empty table in an exact existing group, no implicit parents), " +
                 "createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, " +
-                "confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with " +
-                "SetPlcWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. " +
+                "confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; " +
+                "[[SetPlcWatchTableModifyValue|tag rows are added with " +
+                "SetPlcWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows)|the typed API only creates comment " +
+                "rows]]; force tables are read-only here on purpose. " +
                 "Configuration values only, never online data. Default dryRun=true; no save/compile/download. Current native policy; V4 safety behavior is " +
                 "not yet accepted. All mutating actions require expectedPlanHash and expectedProjectFile from this tool's native dry-run preview.")]
         public CallToolResult ManagePlcTableEntriesV4(

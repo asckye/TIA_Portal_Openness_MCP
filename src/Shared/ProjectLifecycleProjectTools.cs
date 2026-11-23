@@ -19,7 +19,25 @@ internal sealed class ProjectLifecycleProjectTools
     private readonly ProjectLifecyclePortService _service;
     public ProjectLifecycleProjectTools(ProjectLifecyclePortService service) => _service = service;
         [McpServerTool(Name = "BuildProjectScaffold"),
-                Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Each device is created exactly as specified with one DeviceComposition.CreateWithItem call: no family default device, firmware-version stepping, alternative model or renaming; a TIA refusal is reported with the hardware-catalog candidates (V18+). Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500, label only); plcMlfb(required: exact article number with its spaces, or the full TypeIdentifier from SearchHardwareCatalog); plcVersion?(exact catalog version; empty with a full TypeIdentifier); hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC, label only); hmiMlfb/hmiVersion(required with hmiName, same rules); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (device type keys, PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
+                Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds " +
+                "PLC[[EnsureUnifiedHmiConnection| (and optional Unified HMI)]] hardware, builds UDTs/global DBs/PLC tag tables, imports SCL " +
+                "external sources[[ImportPlcBlockDocuments| and LAD S7DCL documents]], compiles[[EnsureUnifiedHmiConnection|, sets up the HMI " +
+                "connection/screens/tags]], and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step " +
+                "failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Each device is created " +
+                "exactly as specified with one DeviceComposition.CreateWithItem call: no family default device, firmware-version stepping, " +
+                "alternative model or renaming; a TIA refusal is reported[[SearchHardwareCatalog| with the hardware-catalog candidates " +
+                "(V18+)]]. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500, label " +
+                "only); plcMlfb(required: exact article number with its spaces, or the full TypeIdentifier[[SearchHardwareCatalog| from " +
+                "SearchHardwareCatalog]]); plcVersion?(exact catalog version; empty with a full TypeIdentifier);[[EnsureUnifiedHmiConnection| " +
+                "hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC, label only); hmiMlfb/hmiVersion(required with hmiName, same " +
+                "rules); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1);]] udt?/globalDb?/tagTable? = arrays of the same json " +
+                "objects BuildAndImportPlcArtifact accepts; sclSourceFiles? = array of .scl file paths;[[ImportPlcBlockDocuments| ladDocs? = " +
+                "array of {importPath,name};]][[EnsureUnifiedHmiScreen| hmiScreens? = array of " +
+                "{screenName,width,height,designJson(object)};]][[EnsureUnifiedHmiTag| hmiTags? = array of " +
+                "{tagTableName?,tagName,hmiDataType?,plcTag?,address?};]] compile?(true); save?(true). Returns a per-step report with compile " +
+                "error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (device type keys, " +
+                "PLC block JSON shapes, SCL[[ImportPlcBlockDocuments|/LAD]] file paths[[EnsureUnifiedHmiScreen|, designJson]]) WITHOUT connecting to TIA " +
+                "or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
         public CallToolResult BuildProjectScaffoldV4(
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
             [Description("dryRun: DEFAULT true — validates the spec offline (no TIA connection, nothing created). Pass dryRun=false explicitly to actually create the project (after a clean dry run).")] bool dryRun =

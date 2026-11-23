@@ -131,6 +131,41 @@ public sealed class ScopedCompileContractTests
         }
     }
 
+    [Theory]
+    [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")]
+    public void Unsupported_compile_password_is_classified_as_a_capability_refusal(string release)
+    {
+        var cause = Assert.Throws<NotSupportedException>(() => PlcCompilePolicy.RequirePasswordCapability(release, "fixture"));
+        var failure = WorkerFailurePolicy.Classify(cause, true, false);
+        Assert.Equal(TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative, failure.Outcome);
+        var reported = WorkerOperationException.FromChannelFailure(new TiaMcp.WorkerChannel.ChannelFailureException(
+            cause.Message, failure.Code, failure.Outcome, WorkerJson.Evidence(cause)));
+        Assert.True(reported.CapabilityRefused);
+    }
+
+    [Theory]
+    [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")]
+    public async Task Unsupported_compile_password_is_refused_before_approval_or_dispatch(string release)
+    {
+        foreach (string name in new[] { "CompilePlcSoftware", "CompilePlcDiagnostics" })
+        foreach (bool preview in new[] { true, false })
+        {
+            using var worker = new Worker();
+            var native = new FoundationTool(FoundationTools.ForRelease(FoundationTools.Definitions.Single(d => d.Name == name), release), worker);
+            var tool = new FoundationV4Tool(native, release, () => new ApprovalSettings(true, 2),
+                (_, _, _) => throw new InvalidOperationException("Unexpected approval request."));
+            var args = new JsonObject { ["softwarePath"] = "CPU", ["dryRun"] = preview, ["confirm"] = true,
+                ["expectedProjectFile"] = Project, ["password"] = "fixture" };
+            var body = (await tool.InvokeAsync(Request(name, args))).StructuredContent!;
+            Assert.Equal("UNSUPPORTED_CAPABILITY", (string?)body["error"]?["code"]);
+            Assert.Contains(release, (string?)body["error"]?["message"]);
+            Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            Assert.Empty(native.Unsettled.Snapshot());
+            Assert.Equal(0, worker.Calls);
+        }
+    }
+
     [Fact]
     public void Block_scope_keeps_errors_from_other_blocks()
     {

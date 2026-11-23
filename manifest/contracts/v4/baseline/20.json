@@ -6877,7 +6877,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "bd907110579bcf9aff938dbd76ff678ec3df34aed52969e696c5d151cde1e1c3",
+      "descriptionSha256": "dda09ff82d2a3ccdaf3e3337d958b1520524df6fdd9cb7ad70b88be1bfcddd7d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -19334,7 +19334,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "descriptionSha256": "2306644a38a2287b3642dd8ce70d36ee8831dd1c3d14d7fec175753068c2a2bb",
+      "descriptionSha256": "035360f87c6ea9066d5f33dfe649e7f7bc3eed09dc233f707465fc302905d2e7",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -28803,7 +28803,7 @@
           },
           "typeIdentifier": {
             "default": "",
-            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).",
+            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (use normalizeTypeIdentifier).",
             "type": "string"
           }
         },
@@ -31128,7 +31128,7 @@
           },
           "communicationInterface": {
             "default": "",
-            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadPlc / ConnectOnlinePlc need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
+            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
             "examples": [
               "Softbus"
             ],
@@ -33573,7 +33573,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "5235b136a665278c5b39c7f66bfbb391fca845a123fc7659dbe445b00174d544",
+      "descriptionSha256": "23fadf095813b47c6702dba8b5b602e75b9a1849017cdb0aaba69fd1e8e3a9c0",
       "inputSchema": {
         "$defs": {
           "recursive0": {
@@ -33622,10 +33622,20 @@
             ],
             "type": "string"
           },
+          "confirm": {
+            "default": false,
+            "description": "Confirm the reviewed deletion when dryRun=false.",
+            "type": "boolean"
+          },
           "dryRun": {
             "default": true,
             "description": "dryRun: true (default) previews and changes nothing; false executes (a tool with a confirm* flag also needs that flag).",
             "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact bound project file for deletion when dryRun=false.",
+            "type": "string"
           },
           "objectPath": {
             "description": "objectPath: path of the object inside the software ('Group/Name').",
@@ -35288,7 +35298,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "183f3f8f8f658de12c92a13da540cdb4e347d0e6d165ae709f771dfbd17806d4",
+      "descriptionSha256": "0f235603295601691fc961fc231d66d44f16e1c57325e71109fc89dc443be3ac",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

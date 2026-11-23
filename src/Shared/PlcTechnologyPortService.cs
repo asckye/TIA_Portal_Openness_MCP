@@ -54,14 +54,14 @@ namespace TiaMcpServer.Siemens.Services
                         IncludeMotionView = includeMotionView, MaxDepth = maxDepth
                 });
         public ResponseMessage ManageTechnologyObject(string softwarePath, string objectPath, string action, string typeIdentifier = "", string version = "",
-                string parameter = "", string valueJson = "null", bool dryRun = true)
+                string parameter = "", string valueJson = "null", bool dryRun = true, string? expectedProjectFile = null)
         {
             var request = new PlcSoftwareRequest {
                 Operation = "ManageTechnologyObject", SoftwarePath = softwarePath, Path = objectPath, Action = action, TypeIdentifier = typeIdentifier,
                     Version = version, Parameter = parameter, DryRun = dryRun
             };
             try { request.Value = TechnologyScalar(JsonNode.Parse(valueJson)); } catch (Exception error) { request.ValidationError = error.Message; }
-            return OrganisationStep(request);
+            return OrganisationStep(request, expectedProjectFile);
         }
         public ResponseMessage ReadMotionAxisConfiguration(string softwarePath, string objectPath, bool includeParameters = false, int offset = 0, int limit =
                 100)

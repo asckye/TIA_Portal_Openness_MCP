@@ -46,6 +46,12 @@ namespace TiaMcp.Logic.V4
             return new Error(restricted.Message, new InvalidArgumentDetails(machineParameter, Array.Empty<string>()));
         }
 
+        internal static Error? CompilePasswordRefusal(string release, string tool, JsonElement arguments)
+            => tool is "CompilePlcSoftware" or "CompilePlcDiagnostics" && arguments.ValueKind == JsonValueKind.Object
+                && arguments.TryGetProperty("password", out var password) && password.ValueKind == JsonValueKind.String
+                && TiaMcp.Adapters.Contracts.PlcCompileScope.PasswordRefusal(release, password.GetString()!) is string reason
+                ? UnsupportedCapabilityDetails.ErrorFor(release, tool, null, reason) : null;
+
         internal static Error? MissingRuntimeWriteConfirmation(string tool, JsonElement arguments)
             => tool == "WritePlcWebVars" && arguments.ValueKind == JsonValueKind.Object
                 && arguments.TryGetProperty("dryRun", out var dryRun) && dryRun.ValueKind == JsonValueKind.False

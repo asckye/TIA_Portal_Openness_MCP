@@ -97,7 +97,12 @@ namespace TiaMcp.Logic.V4.Inputs
                     new InputBudget().Check(property.Value);
                     if (declared.ValueKind == JsonValueKind.Object && declared.TryGetProperty(property.Name, out var member))
                         Check(member, property.Value, Json, "/" + InvalidArgumentDetails.Segment(property.Name));
-                    else if (Json.TryGetProperty("additionalProperties", out var additional)) Check(additional, property.Value, Json);
+                    else if (Json.TryGetProperty("additionalProperties", out var additional))
+                    {
+                        if (additional.ValueKind == JsonValueKind.False && declared.ValueKind == JsonValueKind.Object)
+                            errors.Add(InputGuard.Invalid("", declared.EnumerateObject().Select(p => p.Name).ToArray(), "declared parameter name"));
+                        else Check(additional, property.Value, Json);
+                    }
                 }
                 catch (InputRejectionException rejection) { errors.Add(rejection.ToError(rejection.IsLimit ? property.Name : "")); }
             }
@@ -225,6 +230,8 @@ namespace TiaMcp.Logic.V4.Inputs
                     }
                     safe += "/" + InvalidArgumentDetails.Segment(name);
                 }
+                if (safe.Length == 0 && details.Expected == "declared parameter name" && Member(schema, "properties", null, Json, out var properties))
+                    foreach (var property in properties.EnumerateObject()) declaredValues.Add(property.Name);
                 if (Member(schema, "enum", null, Json, out var choices))
                     foreach (var choice in choices.EnumerateArray())
                         if (choice.ValueKind == JsonValueKind.String) declaredValues.Add(choice.GetString()!);
@@ -511,7 +518,12 @@ namespace TiaMcp.Logic.V4.Inputs
                             Check(member, property.Value, root,
                                 disclose ? pointer + "/" + InvalidArgumentDetails.Segment(property.Name) : pointer, disclose);
                         else if (schema.TryGetProperty("additionalProperties", out var additional))
+                        {
+                            if (pointer.Length == 0 && disclose && additional.ValueKind == JsonValueKind.False && declared.ValueKind == JsonValueKind.Object)
+                                throw new InputRejectionException(declared.EnumerateObject().Select(p => p.Name).ToArray())
+                                    .At(pointer, "declared parameter name");
                             Check(additional, property.Value, root, pointer, disclose: false);
+                        }
                     }
                     catch (InputRejectionException rejection) when (!rejection.IsLimit || failures.Count > 0) { failures.Add(rejection); }
                 }

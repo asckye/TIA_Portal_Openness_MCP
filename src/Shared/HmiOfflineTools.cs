@@ -106,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     ["libraryPath"] = libraryPath,
                     ["intent"] = intent,
-                    ["offlineAnalysisOk"] = exists,
+                    ["offlineAnalysisOk"] = hasCoreFiles,
                     ["hasCoreGlobalLibraryFiles"] = hasCoreFiles,
                     ["strategy"] = "template-learn-and-native-rebuild",
                     ["directMasterCopyImportRequired"] = false,

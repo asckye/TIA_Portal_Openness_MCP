@@ -16,6 +16,8 @@ public sealed partial class OpennessApi
     public static readonly OpennessApi IgnoreUnitAttributes = new(16);
     // VersionControl.VersionControlInterface
     public static readonly OpennessApi VersionControl = new(16);
+    // Safety.SafetyAdministration login for password-based compilation.
+    public static readonly OpennessApi SafetyPasswordCompile = new(17);
     // Typed watch and force table entry access, including deletion.
     public static readonly OpennessApi WatchForceEntries = new(17);
     // UMC server consistency checks and synchronization.

@@ -51,8 +51,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "(objectKind=type, path under TypeGroup), optionally inside a unit (unitName + unitKind), via native FingerprintProvider.GetFingerprints: " +
                 "every Fingerprint Id " +
                 "(Code/Interface/Properties/Comments/LibraryType/Texts/Alarms/Supervisions/TechnologyObject/Events/TextualInterface/ProgramCode) with its " +
-                "value; fingerprints consider user input only. An inconsistent object is refused natively (compile first). Online CPU fingerprints are " +
-                "GetPlcBlockFingerprints. No modification. Current native policy; V4 safety behavior is not yet accepted.")]
+                "value; fingerprints consider user input only. An inconsistent object is refused natively (compile first).[[GetPlcBlockFingerprints| " +
+                "Online CPU fingerprints are " +
+                "GetPlcBlockFingerprints.]] No modification. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ReadPlcObjectFingerprintsV4(
             string softwarePath,
             [Description("objectKind: block | type.")] string objectKind,

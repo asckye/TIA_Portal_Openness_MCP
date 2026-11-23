@@ -31,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L1][Category:PLC-Online][PreCondition:ConnectPortal+OpenProject]" +
             " Read the current online connection state of a PLC (Offline/Connecting/Online/Incompatible/NotReachable/Protected/Disconnecting)." +
             " Does NOT change state — purely a read operation." +
-            " Use before ConnectOnlinePlc to check current state, or after DownloadPlc to verify the CPU is reachable." +
+            "[[ConnectOnlinePlc,DownloadPlc| Use before ConnectOnlinePlc to check current state, or after DownloadPlc to verify the CPU is reachable.]]" +
             " State=Online means the PC is communicating with the physical CPU." +
             " State=Incompatible means online but firmware/config mismatch — download required." +
             " State=NotReachable means network or IP configuration issue." +
@@ -219,7 +219,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "the folder own-state differences) are reported; ObjectsIdentical, FolderContentsIdentical and CompareIrrelevant are not."
                 +
             " Requires an online PLC connection; otherwise refuses with PRECONDITION_FAILED, condition plc-online. Native behaviorPolicy=current; V4 native " +
-                "acceptance is pending.")]
+                "acceptance is pending.[[ConnectOnlinePlc| Use ConnectOnlinePlc to establish the online connection.]]")]
         public CallToolResult CompareSoftwareToOnlineV4(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("maxDepth: maximum tree depth to walk (default 4). Lower = faster but less detail.")] int maxDepth = 4,
@@ -451,7 +451,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][PLC-Online][READ] The PG/PC route tree of the exact PLC's DownloadProvider.Configuration: Modes (ConfigurationMode.Name) " +
                 "-> PcInterfaces (Name, Number, Addresses, Subnets with Addresses and Gateways, TargetInterfaces with Addresses), plus availability of " +
                 "RHDownloadProvider / RHOnlineProvider (R/H systems, with PrimaryState/BackupState), OnlineProvider (State) and CompileProvider. Nothing is " +
-                "applied or changed; use it to pick pgPcInterface/targetIpAddress for DownloadPlc / ConnectOnlinePlc. Native behaviorPolicy=current; V4 " +
+                "applied or changed; use it to pick pgPcInterface/targetIpAddress[[DownloadPlc,ConnectOnlinePlc| for DownloadPlc / ConnectOnlinePlc]]. " +
+                "Native behaviorPolicy=current; V4 " +
                 "native acceptance is pending.")]
         public CallToolResult ReadTransferRoutesV4(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
@@ -488,7 +489,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="UploadStationFromPlc"),
                 Description("[L2][PLC-Online][ONLINE-WRITE] Upload a station from a live PLC into the project as a NEW device " +
                 "(StationUploadProvider.StationUpload). targetIpAddress must exactly match an IP address in the route tree of the selected PG/PC interface " +
-                "(target interfaces, subnets or gateways) or, on V19+, one seen by ScanAccessibleDevices on that interface; V15.1-V18 have no " +
+                "(target interfaces, subnets or gateways) or, on V19+, [[ScanAccessibleDevices|one seen by ScanAccessibleDevices|one discovered by a " +
+                "scan]] on that interface; V15.1-V18 have no " +
                 "accessible-device scan, so only addresses already in the route tree work. ConfigurationAddressComposition.Create accepts IP addresses only " +
                 "- a device listed by MAC alone, such as a PLCSIM Advanced instance before its first download, cannot be uploaded from. The default preview " +
                 "only reads the route tree (no network traffic, no change); for an address not in it, execution after approval runs a DCP network scan " +

@@ -11005,7 +11005,7 @@
       "path": "src/Shared/PlcTechnologyTools.cs",
       "owner": "PlcTechnologyTools",
       "domain": "PLC-Software",
-      "signature": "public CallToolResult ManageTechnologyObjectV4(\n            string softwarePath,\n            string objectPath,\n            [Description(\"action: the operation to perform - read | create | delete | setParameter.\")] string action,\n            [Description(\"typeIdentifier: technology-object type identifier, e.g. 'TO_PositioningAxis', 'TO_SpeedAxis' or 'PID_Compact'; required for create together with an officially supported version.\")] string typeIdentifier=\"\",\n            string version=\"\",\n            [Description(\"parameter: exact parameter name.\")] string parameter=\"\",\n            [Description(\"value: scalar parameter value (number, string, boolean or null); arrays and objects are refused.\")] NativeValue value = default,\n            bool dryRun=true)",
+      "signature": "public CallToolResult ManageTechnologyObjectV4(\n            string softwarePath,\n            string objectPath,\n            [Description(\"action: the operation to perform - read | create | delete | setParameter.\")] string action,\n            [Description(\"typeIdentifier: technology-object type identifier, e.g. 'TO_PositioningAxis', 'TO_SpeedAxis' or 'PID_Compact'; required for create together with an officially supported version.\")] string typeIdentifier=\"\",\n            string version=\"\",\n            [Description(\"parameter: exact parameter name.\")] string parameter=\"\",\n            [Description(\"value: scalar parameter value (number, string, boolean or null); arrays and objects are refused.\")] NativeValue value = default,\n            bool dryRun=true,\n            [Description(\"Confirm the reviewed deletion when dryRun=false.\")] bool confirm=false,\n            [Description(\"Exact bound project file for deletion when dryRun=false.\")] string expectedProjectFile=\"\")",
       "parameters": {
         "softwarePath": {
           "type": "string",
@@ -11047,6 +11047,18 @@
           "type": "bool",
           "default": "true",
           "value": true
+        },
+        "confirm": {
+          "type": "bool",
+          "default": "false",
+          "description": "Confirm the reviewed deletion when dryRun=false.",
+          "value": false
+        },
+        "expectedProjectFile": {
+          "type": "string",
+          "default": "\"\"",
+          "description": "Exact bound project file for deletion when dryRun=false.",
+          "value": ""
         }
       }
     },

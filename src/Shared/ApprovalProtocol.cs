@@ -109,6 +109,7 @@ namespace TiaOpenness.Shared
                 ? "destructive" : "write";
         }
         internal static bool Deletes(string tool, JsonObject arguments) => tool.StartsWith("Delete", StringComparison.OrdinalIgnoreCase)
+            || tool == "ManageTechnologyObject" && arguments["action"] is JsonValue action && action.TryGetValue<string>(out var name) && name == "delete"
             || Flag(arguments, "confirmDelete") || Flag(arguments, "deleteAtTarget");
         internal static bool Flag(JsonObject arguments, string name) => arguments.Any(p => p.Key.Equals(name, StringComparison.OrdinalIgnoreCase)
             && p.Value is JsonValue flag && flag.TryGetValue<bool>(out var enabled) && enabled);

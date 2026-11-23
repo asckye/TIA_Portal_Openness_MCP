@@ -26,6 +26,11 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         private static readonly AsyncLocal<RequestContext<CallToolRequestParams>?> ProgressRequest = new AsyncLocal<RequestContext<CallToolRequestParams>?>();
+        static partial void ReadForwardedRecoveryTool(ref string? name)
+        {
+            var request = ProgressRequest.Value?.Params;
+            if (request?.Name == "CallTool") name = TiaMcp.Logic.ModelContextProtocol.RecoveryHints.ForwardedTool(request.Arguments);
+        }
         internal static IDisposable UseProgressRequest(RequestContext<CallToolRequestParams> request, CancellationToken token)
         {
             var previous = ProgressRequest.Value;
@@ -161,6 +166,7 @@ namespace TiaMcpServer.ModelContextProtocol
             using var stagingSession = ImportStagingTools.UseSession(request);
             if (string.Equals(ProtocolTool.Name, "CallTool", StringComparison.OrdinalIgnoreCase))
             {
+                using var progressRequest = McpServer.UseProgressRequest(request, cancellationToken);
                 bool callToolDisabled = McpServer.ApprovalDisabled(ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
                 using var bridgeNativeCalls = InvocationJournal.BeginNativeCallScope();

@@ -119,6 +119,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var input = JsonSerializer.Deserialize<JsonElement>(arguments);
             if ((HostBehavior.RemovedVaultReference(name, input)
+                ?? HostBehavior.CompilePasswordRefusal(ReleaseKey, name, input)
                 ?? HostBehavior.MissingRuntimeWriteConfirmation(name, input)) is { } admissionError) return V4Reject(name, admissionError);
             if (ApprovalPreviewDepth.Value > 0) return null;
             var args = JsonObject.Create(input)!;
@@ -297,10 +298,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         internal static CallToolResult FinishApproval(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string? completion = null)
             => FinishApprovalAsync(result, approval, disabled, completion).GetAwaiter().GetResult();
+        static partial void ReadForwardedRecoveryTool(ref string? name);
         internal static async Task<CallToolResult> FinishApprovalAsync(CallToolResult result, ApprovalOutcome? approval, bool disabled = false, string
                 ? completion = null)
         {
-            result = McpHints.WithRecovery(result);
+            string? forwardedTool = null;
+            ReadForwardedRecoveryTool(ref forwardedTool);
+            result = McpHints.WithRecovery(result, forwardedTool);
             if (approval == null && !disabled) return result;
             var body = ResultBody(result);
             if (body == null)

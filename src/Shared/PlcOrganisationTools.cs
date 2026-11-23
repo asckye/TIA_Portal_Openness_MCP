@@ -6,7 +6,6 @@ using System.Text.Json.Nodes;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using TiaMcp.Adapters.Contracts.Candidates;
 using TiaMcp.Logic.V4;
 using TiaMcpServer.Siemens;
 using TiaMcpServer.Siemens.Services;
@@ -18,27 +17,6 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly PlcOrganisationPortService _blocks;
         public PlcOrganisationTools(PlcOrganisationPortService blocks) => _blocks = blocks;
-
-        private Error? DeleteAdmission(bool dryRun, bool confirm, string expectedProjectFile)
-        {
-            if (dryRun) return null;
-            if (!confirm) return new Error("Deletion requires confirm=true after the preview.", new ConfirmationRequiredDetails(null));
-            if (string.IsNullOrWhiteSpace(expectedProjectFile) || !System.IO.Path.IsPathRooted(expectedProjectFile)
-                || expectedProjectFile.Length >= 2 && expectedProjectFile[1] == ':'
-                    && (expectedProjectFile.Length < 3 || expectedProjectFile[2] is not ('/' or '\\')))
-                return McpServer.InvalidInput("expectedProjectFile");
-            string expected;
-            try { expected = CandidatePrimitives.CanonicalProject(expectedProjectFile); }
-            catch (ArgumentException) /* swallow(parse-fallback): malformed paths are returned as typed input refusals. */
-            { return McpServer.InvalidInput("expectedProjectFile"); }
-            catch (NotSupportedException) /* swallow(parse-fallback): unsupported path syntax is returned as a typed input refusal. */
-            { return McpServer.InvalidInput("expectedProjectFile"); }
-            if (!_blocks.HasProject || string.IsNullOrWhiteSpace(_blocks.BoundProject))
-                return new Error("No project is bound.", new ProjectNotBoundDetails());
-            if (CandidatePrimitives.CanonicalProject(_blocks.BoundProject) != expected)
-                return new Error("The project binding differs from expectedProjectFile.", new IdentityMismatchDetails("project-binding", null, null));
-            return null;
-        }
 
         [McpServerTool(Name = "ManagePlcBlockProtection"),
                 Description("[L2][PLC-Software][WRITE] Read/protect/unprotect know-how protection of one exact block path via native " +
@@ -79,7 +57,8 @@ namespace TiaMcpServer.ModelContextProtocol
             + "CompilePlcSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag "
             + "table use DeletePlcTagTable, a UDT use DeletePlcType. "
             + "Real deletion requires dryRun=false, confirm=true and the exact bound expectedProjectFile. "
-            + "Current native policy; V4 safety behavior is not yet accepted.")]
+            + "Current native policy; V4 safety behavior is not yet accepted.[[ExportPlcBlockDocuments| Use ExportPlcBlockDocuments to back up the " +
+            "block before deletion.]]")]
         public CallToolResult DeletePlcBlockV4(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.")] string blockPath,
@@ -90,7 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.")] bool confirm = false,
             [Description("expectedProjectFile: exact bound project file; required with dryRun=false.")] string expectedProjectFile = "")
         {
-            if (DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcBlock", error);
+            if (_blocks.DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcBlock", error);
             return PlcToolContract.Run("DeletePlcBlock", !dryRun, true, () => DeletePlcBlock(softwarePath, blockPath, dryRun, crossReferences));
         }
 
@@ -183,7 +162,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.")] bool confirm = false,
             [Description("expectedProjectFile: exact bound project file; required with dryRun=false.")] string expectedProjectFile = "")
         {
-            if (DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcTagTable", error);
+            if (_blocks.DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcTagTable", error);
             return PlcToolContract.Run("DeletePlcTagTable", !dryRun, true, () => DeletePlcTagTable(softwarePath, tagTableName, dryRun, crossReferences));
         }
 
@@ -253,7 +232,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("confirm: true confirms the deletion reviewed in the preview; required with dryRun=false.")] bool confirm = false,
             [Description("expectedProjectFile: exact bound project file; required with dryRun=false.")] string expectedProjectFile = "")
         {
-            if (DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcType", error);
+            if (_blocks.DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error) return McpServer.V4Reject("DeletePlcType", error);
             return PlcToolContract.Run("DeletePlcType", !dryRun, true, () => DeletePlcType(softwarePath, typePath, dryRun, crossReferences));
         }
 

@@ -7,6 +7,8 @@
 ### Fixed
 
 - Verified DB import compares compiled UDT members with their declarations and reports readback differences. Offline symbol manifests keep the UDT reference.
+- Corrected the rc.2 export guidance. A missing output parent is refused before dispatch. Exporting outside the output root requires
+  approval when write approval is on and proceeds when it is off.
 
 ## [4.0.0-rc.2] - 2026-11-23
 
@@ -53,8 +55,8 @@
 - `UploadStationFromPlc` returns `NOT_FOUND` when the address precheck fails and reports known targets from the selected transfer route.
   On V19 and later, a target listed only by the download provider still requires an exact match from the network scan before upload.
 - `AnalyzePlcReferences` in `callers` mode returns `TARGET_AMBIGUOUS` with candidate export paths when a block name matches multiple files.
-- `ExportDeviceAml` with an export path outside the output root is refused before the worker call. The call no longer reports `OUTCOME_UNKNOWN` or stays
-  unsettled.
+- `ExportDeviceAml` refuses a missing output parent before the worker call. An export outside the output root requires approval when write approval is on
+  and proceeds when it is off.
 - `ManageHardwareUtilities` `exportOpcUa` reports a definite native failure, such as an uncompiled PLC, with the native cause and file evidence instead of
   `OUTCOME_UNKNOWN`.
 - On V14 SP1, `ImportPlcBlockVerified` verifies a compiled DB against the referenced UDT declaration from the bound PLC's type groups.

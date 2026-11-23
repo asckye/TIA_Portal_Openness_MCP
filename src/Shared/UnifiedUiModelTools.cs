@@ -104,7 +104,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 Description("[L2][HMI-Unified][WRITE] Exact Unified screen: read scalars incl. background colors and size, update public scalar/Color " +
                 "properties, resize (native ResizeScreen to device display), rename, create (path to a Screens composition plus name) or delete " +
                 "(confirmDelete=true; removes all items). No screen copy/duplicate exists in the public V21/V20 API; layout-field export/import is the " +
-                "SiVArc option's LayoutData screen service (ManageSivarcScreenLayout, V21). Default preview; readback verified; no save/compile/download. " +
+                "SiVArc option's LayoutData screen service[[ManageSivarcScreenLayout| (ManageSivarcScreenLayout, V21)]]. Default preview; readback " +
+                "verified; no save/compile/download. " +
                 "Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ManageUnifiedScreenLayoutV4(
             string softwarePath,

@@ -60,8 +60,9 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ManageUnifiedEngineeringObject"),
                 Description("[L2][HMI-Unified][WRITE] Native create/update/delete for " +
                 "alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists when supported by installed API; connections/tagTables " +
-                "support delete only. name is exact, or /Group/Sub/Table for tagTables (preview includes tag count). Lists have no Create; use " +
-                "ImportUnifiedEngineeringList. properties contains writable scalars; TriggerBitAddress/TriggerAddress are read-only. Alarm create/update " +
+                "support delete only. name is exact, or /Group/Sub/Table for tagTables (preview includes tag count). Lists have no " +
+                "Create[[ImportUnifiedEngineeringList|; use " +
+                "ImportUnifiedEngineeringList]]. properties contains writable scalars; TriggerBitAddress/TriggerAddress are read-only. Alarm create/update " +
                 "accepts texts as {EventText|EventText1..9|InfoText:{culture:text}}; AlarmClass must exist and cultures must be active project languages. " +
                 "Default dryRun=true; every execution requires expectedPlanHash and expectedProjectFile from the same preview. Preview checks API shape " +
                 "and bindings, not all TIA semantics. Failed creates delete the new object; updates restore journaled values, with cleanupRequired on " +

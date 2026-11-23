@@ -48,8 +48,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 "number, array index / length, value (BICO sinks report {bicoSource, parameterText}), min / max, unit, parameter text, optional enum value " +
                 "list and bit parameters (Bits); bit names such as r722.0 resolve through the parent's Bits. includeValue=false reads the metadata without " +
                 "touching Value - do that first for BICO sinks and status words on a freshly added drive: on a G120C, TIA Portal V21 itself went down while " +
-                "reading the Value of r2139 and of the unwired p840[0] (2.7.39 real project). Read-only, offline; GetOnlineDriveParameters reads the " +
-                "connected drive.")]
+                "reading the Value of r2139 and of the unwired p840[0] (2.7.39 real project). Read-only, offline[[GetOnlineDriveParameters|; " +
+                "GetOnlineDriveParameters reads the " +
+                "connected drive]].")]
         public CallToolResult ReadDriveParameters(
             string[] devicePath,
             string[] itemPath,

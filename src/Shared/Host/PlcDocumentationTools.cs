@@ -85,7 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "GeneratePlcDocumentation"),
-                Description("[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportPlcBlocksDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded.")]
+                Description("[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensions default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures.[[ExportPlcBlocksDocuments| Typical input: the folder written by ExportPlcBlocksDocuments.]] No TIA Portal connection; nothing is saved, compiled or downloaded.")]
         public CallToolResult GeneratePlcDocumentationV4(
             [Description("directory: See the operation description and its bounds.")] string directory,
             [Description("outputPath: See the operation description and its bounds.")] string outputPath,
@@ -130,7 +130,8 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "AnalyzePlcSclSource"),
-                Description("[L2][Validation][OFFLINE] Heuristic pre-check of SCL source BEFORE ImportPlcBlocksDocuments / WritePlcSclSourceFile: block " +
+                Description("[L2][Validation][OFFLINE] Heuristic pre-check of SCL source BEFORE [[ImportPlcBlocksDocuments|ImportPlcBlocksDocuments / " +
+                    "]]WritePlcSclSourceFile: block " +
                 "keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, " +
                 "VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE " +
                 "TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText " +

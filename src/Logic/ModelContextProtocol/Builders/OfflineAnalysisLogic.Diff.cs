@@ -282,8 +282,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static void ValidatePage(int offset, int limit)
         {
-            if (offset < 0) throw new ArgumentException("offset must be >= 0.");
-            if (limit < 1 || limit > MaxLimit) throw new ArgumentException("limit must be between 1 and " + MaxLimit + ".");
+            if (offset < 0) throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("offset must be >= 0.", nameof(offset));
+            if (limit < 1 || limit > MaxLimit)
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("limit must be between 1 and " + MaxLimit + ".", nameof(limit));
         }
     }
 }
