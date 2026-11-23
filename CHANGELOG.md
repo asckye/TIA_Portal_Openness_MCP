@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [4.0.0-rc.2] - 2026-11-23
+
 ### Changed
 
 - Workbench AI settings list which operations run without confirmation when write approval is off and which still require approval.
