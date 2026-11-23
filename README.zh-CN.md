@@ -1,4 +1,4 @@
-# 自动化工程工作台
+# 自动化工程工作台（适用于 TIA Portal）
 
 [English](README.md) · [新手使用指南](docs/getting-started/beginners.zh-CN.md) · [文档目录](docs/README.md) · [下载交付包](https://github.com/asckye/automation-engineering-workbench/releases)
 

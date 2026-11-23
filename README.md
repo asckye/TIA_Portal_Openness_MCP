@@ -1,4 +1,4 @@
-# Automation Engineering Workbench
+# Automation Engineering Workbench for TIA Portal
 
 [中文](README.zh-CN.md) · [Beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/automation-engineering-workbench/releases)
 
