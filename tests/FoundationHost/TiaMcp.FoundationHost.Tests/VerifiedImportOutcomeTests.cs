@@ -3,6 +3,7 @@ extern alias foundationhost;
 extern alias toolpipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
@@ -33,6 +34,51 @@ public sealed class VerifiedImportOutcomeTests
 
     public static IEnumerable<object[]> Releases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(key => new object[] { key });
+
+    [Theory]
+    [InlineData("Array[0..3] of \"MCP_RC_UDT\"", "None", true)]
+    [InlineData("Int", "None", false)]
+    [InlineData("Struct", "None", false)]
+    [InlineData("Array[0..3] of Int", "None", false)]
+    [InlineData("\"MCP_RC_UDT\"", "Input", false)]
+    [InlineData("\"MCP_RC_UDT\"", "empty", false)]
+    [InlineData("\"MCP_RC_UDT\"", "twoSections", false)]
+    [InlineData("\"MCP_RC_UDT\"", "twoContainers", false)]
+    [InlineData("\"MCP_RC_UDT\"", "nestedScalar", false)]
+    public void Manifest_checks_the_type_and_section_of_each_expanded_member(string datatype, string shape, bool accepted)
+    {
+        string repo = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        var db = XDocument.Load(Path.Combine(repo, "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/V14Sp1/compiled-udt-db.xml"));
+        var motor = db.Descendants().Single(e => (string?)e.Attribute("Name") == "Motor");
+        motor.SetAttributeValue("Datatype", datatype);
+        XNamespace ns = motor.Name.Namespace;
+        var sections = motor.Element(ns + "Sections")!;
+        var section = sections.Element(ns + "Section")!;
+        switch (shape)
+        {
+            case "empty": section.Remove(); break;
+            case "twoSections": section.AddAfterSelf(new XElement(section)); break;
+            case "twoContainers": sections.AddAfterSelf(new XElement(sections)); break;
+            case "nestedScalar": section.Elements(ns + "Member").First().Add(new XElement(ns + "Sections",
+                new XElement(ns + "Section", new XAttribute("Name", "None")))); break;
+            default: section.SetAttributeValue("Name", shape); break;
+        }
+        string folder = Path.Combine(repo, "bin-build", "manifest-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            db.Save(Path.Combine(folder, "db.xml"));
+            var manifest = OfflineSymbolManifest.Build(folder, new[] { "db.xml" }, OfflineSymbolManifest.ExpectedOrigin);
+            Assert.Equal(accepted, (bool?)manifest["ok"]);
+            if (accepted)
+            {
+                Assert.Equal(2, (int?)manifest["symbolCount"]);
+                Assert.Equal(datatype, (string?)Assert.Single(manifest["unresolvedReferences"]!.AsArray())!["dataType"]);
+            }
+            else Assert.Equal("unsupported-nested-member-shape", (string?)Assert.Single(manifest["errors"]!.AsArray())!["code"]);
+        }
+        finally { Directory.Delete(folder, true); }
+    }
 
     [Fact]
     public void Only_discard_close_plans_depend_on_the_owning_process()

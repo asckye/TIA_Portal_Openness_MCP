@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -241,21 +242,24 @@ internal static class OfflineSymbolManifest
                 void Member(XElement member, string? prefix)
                 {
                     consumedDeclarations.Add(member);
+                    string datatype = (string?)member.Attribute("Datatype") ?? "";
                     string? path = null;
                     if (prefix != null)
                     {
                         Require(member.Elements().All(x => x.Name == ns + "Member" || x.Name == ns + "Sections" || x.Name == ns + "AttributeList"
                             || x.Name == ns + "StartValue" || x.Name == ns + "Comment"), "unsupported-nested-member-shape");
                         path = prefix + "." + Symbol(member.Attribute("Name")?.Value ?? "");
-                        Add(path, member.Attribute("Datatype")?.Value ?? "", "GlobalDBMember");
+                        Add(path, datatype, "GlobalDBMember");
                     }
                     foreach (var child in member.Elements(ns + "Member")) Member(child, path);
                     // An expanded type is one symbol. Account for its declarations without adding instance fields to the manifest.
-                    foreach (var expanded in member.Elements(ns + "Sections").Elements(ns + "Section"))
-                    {
-                        consumedDeclarations.Add(expanded);
-                        foreach (var child in expanded.Elements(ns + "Member")) Member(child, null);
-                    }
+                    var expansions = member.Elements(ns + "Sections").ToArray();
+                    if (expansions.Length == 0) return;
+                    var contents = expansions[0].Elements().ToArray();
+                    Require(expansions.Length == 1 && contents.Length == 1 && contents[0].Name == ns + "Section"
+                        && (string?)contents[0].Attribute("Name") == "None" && IsUdtOrArrayOfUdt(datatype), "unsupported-nested-member-shape");
+                    consumedDeclarations.Add(contents[0]);
+                    foreach (var child in contents[0].Elements(ns + "Member")) Member(child, null);
                 }
                 foreach (var member in section.Elements(ns + "Member")) Member(member, dbName);
             }
@@ -269,6 +273,9 @@ internal static class OfflineSymbolManifest
                 "unsupported-hidden-declaration");
         return (output, references, warnings, version, observedNamespace);
     }
+    private static bool IsUdtOrArrayOfUdt(string datatype) => Regex.IsMatch(datatype,
+        """\A(?:Array\s*\[[^\[\]\r\n]+\]\s+of\s+)?"[^"\r\n]+"\z""", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
     private static XElement Single(XElement parent, XName name)
     { var elements = parent.Elements(name).ToArray(); Require(elements.Length == 1, "missing-ambiguous-or-unsupported-structure"); return elements[0]; }
     private static string Field(string value) { Require(value.Length <= 1024, "field-text-limit"); return value; }

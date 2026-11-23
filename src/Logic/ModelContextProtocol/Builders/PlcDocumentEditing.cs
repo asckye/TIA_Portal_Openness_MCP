@@ -195,12 +195,35 @@ namespace TiaMcpServer.ModelContextProtocol
                 var section = DeclarationSection(expansion);
                 if (section?.Name != expected.Name) continue;
                 var actual = DeclarationShape(section);
+                RemoveReadbackOnlyTypeExpansions(expected, actual);
                 if (XNode.DeepEquals(expected, actual)) { expansion.Remove(); removed = true; }
                 else difference ??= DescribeDifference(expected, actual, path);
             }
             // IDs on a derived member can shift the canonical IDs of later block objects.
             return removed ? Canonical(new XDocument(new XElement("Document", block))) : readback;
         }
+
+        private static void RemoveReadbackOnlyTypeExpansions(XElement declaration, XElement readback)
+        {
+            XNamespace ns = declaration.Name.Namespace;
+            var pending = new Stack<(XElement Declared, XElement Compiled)>();
+            pending.Push((declaration, readback));
+            while (pending.Count > 0)
+            {
+                var (declared, compiled) = pending.Pop();
+                if (declared.Name != compiled.Name) continue;
+                if (declared.Name == ns + "Member" && compiled.Element(ns + "Sections") is XElement expansion
+                    && declared.Element(ns + "Sections") == null
+                    && (ReferencedType(declared) != null || !string.IsNullOrWhiteSpace((string?)declared.Attribute("Version")))
+                    && (string?)declared.Attribute("Name") == (string?)compiled.Attribute("Name")
+                    && (string?)declared.Attribute("Datatype") == (string?)compiled.Attribute("Datatype"))
+                    expansion.Remove();
+                // Pair children in declaration order. DeepEquals still checks every remaining node and attribute.
+                foreach (var pair in declared.Elements().Zip(compiled.Elements(), (left, right) => (left, right))) pending.Push(pair);
+            }
+        }
+
+        public static string DeclarationFingerprint(XElement section) => HashText(DeclarationShape(section).ToString(SaveOptions.DisableFormatting));
 
         private static XElement DeclarationShape(XElement section)
         {
@@ -210,6 +233,7 @@ namespace TiaMcpServer.ModelContextProtocol
             shape.Descendants(ns + "AttributeList").Remove();
             shape.Descendants(ns + "Comment").Remove();
             shape.DescendantNodes().OfType<XComment>().Remove();
+            shape.DescendantsAndSelf().Attributes().Where(a => a.IsNamespaceDeclaration || a.Name == "ID" || a.Name == "Informative").Remove();
             foreach (var member in shape.Descendants(ns + "Member"))
             {
                 member.ReplaceAttributes(member.Attribute("Name"), member.Attribute("Datatype"), member.Attribute("Version"), member.Attribute("Remanence"));
@@ -219,7 +243,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 starts.Remove();
                 member.AddFirst(starts);
             }
-            shape.DescendantsAndSelf().Attributes().Where(a => a.IsNamespaceDeclaration || a.Name == "ID" || a.Name == "Informative").Remove();
             return shape;
         }
 
@@ -247,7 +270,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             while (true)
             {
-                if (expected.Name != actual.Name) return At(expected, "element");
+                if (expected.Name != actual.Name) return At(expected, "structure");
                 if (expected.Name.LocalName == "Member")
                 {
                     string? name = (string?)expected.Attribute("Name");
@@ -258,18 +281,18 @@ namespace TiaMcpServer.ModelContextProtocol
                         var actualSiblings = actual.Parent!.Elements(actual.Name);
                         bool found = actualSiblings.Any(e => (string?)e.Attribute("Name") == name);
                         bool known = plannedSiblings.Any(e => (string?)e.Attribute("Name") == observed);
-                        if (found && known) return At(expected, "order");
-                        if (found) return At(actual, "extra member");
-                        return At(expected, known ? "missing member" : "name");
+                        if (found && known) return At(expected, "structure");
+                        if (found) return At(actual, "extraMember");
+                        return At(expected, known ? "missingMember" : "name");
                     }
                     if ((string?)expected.Attribute("Datatype") != (string?)actual.Attribute("Datatype")) return At(expected, "type");
                     if ((string?)expected.Attribute("Remanence") != (string?)actual.Attribute("Remanence")) return At(expected, "remanence");
                 }
                 if (expected.Name.LocalName == "StartValue") return At(expected, "startValue");
                 if (expected.Parent?.Name == "AttributeList" && expected.Parent.Parent?.Parent == null && expected.Name != "Interface")
-                    return At(expected, "block attribute");
+                    return At(expected, "blockAttribute");
                 if (expected.Attributes().Any(a => (string?)actual.Attribute(a.Name) != a.Value)
-                    || expected.Attributes().Count() != actual.Attributes().Count()) return At(expected, "attribute");
+                    || expected.Attributes().Count() != actual.Attributes().Count()) return At(expected, "structure");
                 var left = expected.Elements().ToArray();
                 var right = actual.Elements().ToArray();
                 int index = 0;
@@ -278,13 +301,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     expected = left[index]; actual = right[index]; continue;
                 }
-                if (index == left.Length && index == right.Length) return At(expected, "content");
+                if (index == left.Length && index == right.Length) return At(expected, "structure");
                 bool missing = index == right.Length || index < left.Length && !right.Skip(index).Any(e => e.Name == left[index].Name);
                 var changed = missing ? left[index] : right[index];
-                if (changed.Name.LocalName == "Member") return At(changed, missing ? "missing member" : "extra member");
+                if (changed.Name.LocalName == "Member") return At(changed, missing ? "missingMember" : "extraMember");
                 if (changed.Name.LocalName == "StartValue") return At(changed, "startValue");
-                if (expected.Name == "AttributeList" && expected.Parent?.Parent == null) return At(changed, "block attribute");
-                return At(changed, changed.Name.LocalName);
+                if (expected.Name == "AttributeList" && expected.Parent?.Parent == null) return At(changed, "blockAttribute");
+                return At(changed, "structure");
             }
         }
 

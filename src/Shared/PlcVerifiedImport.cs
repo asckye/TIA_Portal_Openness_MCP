@@ -80,7 +80,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     string path = Path.Combine(folder, $"type-{typeHashes.Count}.xml");
                     var section = exportType(name, path) ? PlcDocumentEditing.TypeDeclaration(PlcDocumentEditing.Read(path), name) : null;
                     if (section != null) declarations.Add(name, section);
-                    typeHashes[name] = section == null ? null : PlcDocumentEditing.HashText(section.ToString(SaveOptions.DisableFormatting));
+                    typeHashes[name] = section == null ? null : PlcDocumentEditing.DeclarationFingerprint(section);
                 }
                 if (typeHashes.Count > 0) tokenData["typeDeclarations"] = typeHashes;
             }

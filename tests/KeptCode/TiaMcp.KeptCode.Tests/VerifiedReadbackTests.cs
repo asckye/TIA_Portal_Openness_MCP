@@ -230,17 +230,28 @@ namespace TiaMcp.Engine.Tests
         [InlineData("exportIds", null)]
         [InlineData("struct", null)]
         [InlineData("nested", null)]
+        [InlineData("nestedBothExpanded", null)]
+        [InlineData("nestedTimer", null)]
         [InlineData("nestedType", "Static/Motor/Drive/Config/Speed: type")]
+        [InlineData("nestedRename", "Static/Motor/Drive/Config: name")]
+        [InlineData("nestedRetype", "Static/Motor/Drive/Config: type")]
+        [InlineData("nestedVersion", "Static/Motor/Drive/Config: structure")]
+        [InlineData("nestedRetain", "Static/Motor/Drive/Config: remanence")]
+        [InlineData("nestedStart", "Static/Motor/Drive/Config: startValue")]
+        [InlineData("nestedPlainStruct", "Static/Motor/Drive/Config: structure")]
+        [InlineData("annotatedDefault", null)]
+        [InlineData("annotatedNondefault", "Static/Motor/Run: startValue")]
         [InlineData("rename", "Static/Motor/Run: name")]
-        [InlineData("reorder", "Static/Motor/Run: order")]
-        [InlineData("extra", "Static/Motor/Extra: extra member")]
-        [InlineData("missing", "Static/Motor/Run: missing member")]
+        [InlineData("reorder", "Static/Motor/Run: structure")]
+        [InlineData("extra", "Static/Motor/Extra: extraMember")]
+        [InlineData("missing", "Static/Motor/Run: missingMember")]
         [InlineData("type", "Static/Motor/Speed: type")]
         [InlineData("value", "Static/Motor/Speed: startValue")]
         [InlineData("topValue", "Static/Count: startValue")]
         [InlineData("topType", "Static/Count: type")]
         [InlineData("retain", "Static/Motor: remanence")]
-        [InlineData("block", "MemoryLayout: block attribute")]
+        [InlineData("block", "MemoryLayout: blockAttribute")]
+        [InlineData("unexpectedChild", "Static/Count: structure")]
         public void Verified_import_compares_compiled_members_with_export_metadata(string change, string? difference)
         {
             string folder = Path.Combine(Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
@@ -260,16 +271,27 @@ namespace TiaMcp.Engine.Tests
             var declaration = XDocument.Load(Path.Combine(folder, "compiled-udt-declaration.xml"));
             var declared = declaration.Descendants(ns + "Member").ToArray();
             if (change == "oldWitness") declared.Elements(ns + "AttributeList").Remove();
-            if (change is "nested" or "nestedType")
+            if (change.StartsWith("nested", StringComparison.Ordinal))
             {
-                XElement Drive() => new XElement(ns + "Member", new XAttribute("Name", "Drive"), new XAttribute("Datatype", "Struct"),
-                    new XElement(ns + "Member", new XAttribute("Name", "Config"), new XAttribute("Datatype", "\"ConfigType\""),
-                        new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None")))));
                 foreach (var speed in new[] { members[1], declared[1] })
                 {
-                    var drive = Drive();
-                    speed.ReplaceWith(drive);
-                    drive.Descendants(ns + "Section").Single().Add(speed);
+                    string type = change switch { "nestedTimer" or "nestedVersion" => "IEC_TIMER", "nestedPlainStruct" => "Struct", _ => "\"ConfigType\"" };
+                    var config = new XElement(ns + "Member", new XAttribute("Name", "Config"), new XAttribute("Datatype", type));
+                    if (type == "IEC_TIMER") config.SetAttributeValue("Version", "1.0");
+                    speed.ReplaceWith(new XElement(ns + "Member", new XAttribute("Name", "Drive"), new XAttribute("Datatype", "Struct"), config));
+                    if (speed == members[1] || change is "nestedBothExpanded" or "nestedType")
+                        config.Add(new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None"), speed)));
+                    if (speed == members[1])
+                    {
+                        switch (change)
+                        {
+                            case "nestedRename": config.SetAttributeValue("Name", "Settings"); break;
+                            case "nestedRetype": config.SetAttributeValue("Datatype", "\"OtherType\""); break;
+                            case "nestedVersion": config.SetAttributeValue("Version", "2.0"); break;
+                            case "nestedRetain": config.SetAttributeValue("Remanence", "Retain"); break;
+                            case "nestedStart": config.Add(new XElement(ns + "StartValue", "(1)")); break;
+                        }
+                    }
                 }
             }
             if (change == "struct")
@@ -293,10 +315,15 @@ namespace TiaMcp.Engine.Tests
                 case "missing": members[0].Remove(); break;
                 case "type": case "nestedType": members[1].SetAttributeValue("Datatype", "DInt"); break;
                 case "value": members[1].Add(new XElement(ns + "StartValue", "4")); break;
+                case "annotatedDefault": case "annotatedNondefault":
+                    members[0].Add(new XElement(ns + "StartValue", new XAttribute("Informative", "true"), new XAttribute("ID", "7"),
+                        new XAttribute(XNamespace.Xmlns + "i", ns.NamespaceName), change == "annotatedDefault" ? "FALSE" : "TRUE"));
+                    break;
                 case "topValue": count.Element(ns + "StartValue")!.Value = "4"; break;
                 case "topType": count.SetAttributeValue("Datatype", "DInt"); break;
                 case "retain": motor.SetAttributeValue("Remanence", "Retain"); break;
                 case "block": document.Descendants("MemoryLayout").Single().Value = "Optimized"; break;
+                case "unexpectedChild": count.Add(new XElement(ns + "UnexpectedReadbackField")); break;
             }
             fixture.After = document.ToString();
             var preview = fixture.Run(true);
@@ -399,6 +426,28 @@ namespace TiaMcp.Engine.Tests
                 Assert.Null(applied["cleanupRequired"]);
                 Assert.Single(XDocument.Load((string)applied["afterPath"]!).Descendants(ns + "Section"), s => (string?)s.Attribute("Name") == "None");
             }
+        }
+
+        [Fact]
+        public void Preview_token_tracks_declared_member_names_and_ignores_recompiled_offsets()
+        {
+            string folder = Path.Combine(Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+                "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/V14Sp1");
+            var candidate = PlcGlobalDbXmlBuilder.BuildDocument("Motors", 1, new[] { new PlcDbMemberDefinition("Motor", "\"MCP_RC_UDT\"") }, "14sp1");
+            var declaration = XDocument.Load(Path.Combine(folder, "compiled-udt-declaration.xml"));
+            var speed = declaration.Descendants().Single(e => (string?)e.Attribute("Name") == "Speed");
+            var offset = speed.Descendants().Single(e => (string?)e.Attribute("Name") == "Offset");
+            using var fixture = new Fixture(candidate.ToString());
+            fixture.ExportType = (name, path) => { Assert.Equal("MCP_RC_UDT", name); declaration.Save(path); return true; };
+            string token = (string)fixture.Run(true)["token"]!;
+            offset.Value = "4";
+            Assert.Equal(token, (string?)fixture.Run(true)["token"]);
+            speed.SetAttributeValue("Name", "Velocity");
+            Assert.NotEqual(token, (string?)fixture.Run(true)["token"]);
+            Assert.Equal("preview-stale", Assert.Throws<AdapterPreconditionException>(() => fixture.Run(false, token)).Condition);
+            Assert.Equal(0, fixture.Imports);
+            speed.SetAttributeValue("Name", "Speed");
+            Assert.Equal("DocumentReadbackMatched", (string?)fixture.Run(false, token)["status"]);
         }
 
         [Fact]
