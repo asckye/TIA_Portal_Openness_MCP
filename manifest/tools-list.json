@@ -1,21 +1,21 @@
 {
   "package": "TIA_MCP_Delivery_v4.0.0-rc.2_20261123",
   "profile": "plc-foundation",
-  "generatedAt": "2026-11-23T13:58:31.2812911+00:00",
+  "generatedAt": "2026-11-23T14:29:38.9212489+00:00",
   "source": "FoundationHost V21 full product catalog and declared V20-only registrations; shared Foundation implementations and engine-only tools; no worker or TIA started",
   "fileVersion": "4.0.0.0",
   "exeSha256": "03b71f22ea69b706d5d0a9da232143340825835b8a4950da7577cf44637bd1fc",
-  "workerSha256": "6c353b079b70b19f9ae17c870012b5336c97beaef20d49a07a0ba9a4b972cc8b",
+  "workerSha256": "7285f7c16255fe30b66f8b443bf7773057afa7c28965d21d6c9551f86712f9e2",
   "toolCount": 523,
   "note": "Full product roster. Lite advertises the unified proposal, shared Foundation tools, F00, discovery bridge and host-only tools intersected with this release. Withdrawn lifecycle tools are absent. Runtime tools/list is authoritative.",
   "callDiscipline": {
-    "parameters": 2920,
+    "parameters": 2922,
     "parametersUndocumented": 841,
     "parametersFromVocabulary": 685,
     "toolsWithUndocumentedParameters": 214,
     "toolsWithEnumHints": 172,
     "enumHints": 270,
-    "defaultHints": 1682,
+    "defaultHints": 1684,
     "examplesCurated": 523,
     "recipes": 54
   },
@@ -4524,10 +4524,12 @@
         "version",
         "parameter",
         "dryRun",
+        "confirm",
+        "expectedProjectFile",
         "value"
       ],
-      "description": "[L2][PLC-Software][WRITE] Native technology object read/create/delete/setParameter. Exact objectPath relative to TechnologicalObjectGroup, including user folders. create requires official typeIdentifier and version (official 'Overview of technology objects and versions': S7-1500 TO_PositioningAxis / TO_SpeedAxis / ... >= V5.0 with FW >= 2.8, PID_Compact >= V2.3; version as 'major.minor'). WARNING (real project, crash 9 in the handoff): Create(\"MCP_Axis\", \"TO_PositioningAxis\", 6.0) on a CPU 1515F-2 PN V2.9 in TIA V21 threw NonRecoverableException and TIA Portal exited, while TO_PositioningAxis / TO_SpeedAxis 5.0 and PID_Compact 2.3 were created normally on the same CPU - a version the CPU does not offer is not refused cleanly, so use the lowest version of the official table (S7-1500 motion 5.0, PID_Compact 2.3) and save the project before a create. setParameter takes exact parameter name and scalar value. dryRun=true default; writes require Offline. No save/compile/download; dependencies not analyzed. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageTechnologyObject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"objectPath\":\"Axis_1\",\"action\":\"read\",\"dryRun\":true}"
+      "description": "[L2][PLC-Software][WRITE] Native technology object read/create/delete/setParameter. Exact objectPath relative to TechnologicalObjectGroup, including user folders. create requires official typeIdentifier and version (official 'Overview of technology objects and versions': S7-1500 TO_PositioningAxis / TO_SpeedAxis / ... >= V5.0 with FW >= 2.8, PID_Compact >= V2.3; version as 'major.minor'). WARNING (real project, crash 9 in the handoff): Create(\"MCP_Axis\", \"TO_PositioningAxis\", 6.0) on a CPU 1515F-2 PN V2.9 in TIA V21 threw NonRecoverableException and TIA Portal exited, while TO_PositioningAxis / TO_SpeedAxis 5.0 and PID_Compact 2.3 were created normally on the same CPU - a version the CPU does not offer is not refused cleanly, so use the lowest version of the official table (S7-1500 motion 5.0, PID_Compact 2.3) and save the project before a create. setParameter takes exact parameter name and scalar value. Applied deletion requires confirm=true and the exact bound expectedProjectFile. dryRun=true default; writes require Offline. No save/compile/download; dependencies not analyzed. Current native policy; V4 safety behavior is not yet accepted. Examples: GetToolUsage(toolName: \"ManageTechnologyObject\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "example": "{\"softwarePath\":\"PLC_1\",\"objectPath\":\"Axis_1\",\"action\":\"read\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ManageTechnologyExtensions",
@@ -9343,7 +9345,7 @@
         "exportDirectory"
       ],
       "description": "[L2][PLC-Software][FILE] Preview the complete exact technology-object inventory and each item export plan. One batch plan hash and approval; execute in inventory order, stop on first failure. Each selected item previews ExportTechnologyObject with its exact output file. Grouped exports require V19 or later. Default dryRun=true. Examples: GetToolUsage(toolName: \"ExportTechnologyObjectsToDirectory\"), optionally operation or language. Ordered batch: preview lists the selected items and their export/import plan under one batch plan hash. One batch approval executes those exact items; stop at the first failure and report completed/not-started items. Default dryRun=true. No best effort, retry or rollback. exportDir and exportDirectory are mutually exclusive parameter alternatives. Native behaviorPolicy=current; V4 native acceptance is pending.",
-      "example": "{\"softwarePath\":\"PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
+      "example": "{\"softwarePath\":\"devices/PLC_1/PLC_1\",\"exportDirectory\":\"C:\\\\Examples\\\\exports\",\"dryRun\":true,\"confirm\":false}"
     },
     {
       "name": "ExportTechnologyObject",
@@ -10054,7 +10056,7 @@
         "offset",
         "limit"
       ],
-      "description": "[L2][Hardware][READ] Probe every Siemens.Engineering.HW.Features.* service from the V21 API catalog on one exact hardware object (devicePath/itemPath): reports advertised services, present/absent per feature and public scalar values (credential-related features report presence only). offset/limit pagination. Read-only. Examples: GetToolUsage(toolName: \"GetHardwareFeatures\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
+      "description": "[L2][Hardware][READ] Check catalogued Siemens.Engineering.HW.Features.* services against this release's API on one exact hardware object (devicePath/itemPath): reports advertised services, present/absent per feature and public scalar values (credential-related features report presence only). offset/limit pagination. Read-only. Examples: GetToolUsage(toolName: \"GetHardwareFeatures\"), optionally operation or language. Native behaviorPolicy=current; V4 native acceptance is pending.",
       "example": "{\"devicePath\":[\"\\u003Cexact device name from GetProjectTree\\u003E\"]}"
     },
     {
