@@ -67,6 +67,10 @@ public sealed class ApprovalPageTests(WpfContext wpf)
     [InlineData("password")] [InlineData("moduleAccessPassword")] [InlineData("secret")]
     [InlineData("plcPassword")] [InlineData("authToken")] [InlineData("dbPassword")] [InlineData("apiKey")]
     [InlineData("clientApiKey")] [InlineData("cloudAccessKey")] [InlineData("signingPrivateKey")] [InlineData("webhookSecret")]
+    [InlineData("userCredential")] [InlineData("userCredentials")] [InlineData("sessionCookie")]
+    [InlineData("plcPwd")] [InlineData("plcPasswd")] [InlineData("adminPassphrase")] [InlineData("httpAuthorization")]
+    [InlineData("apiKeys")] [InlineData("clientApiKeys")] [InlineData("cloudAccessKeys")] [InlineData("signingPrivateKeys")]
+    [InlineData("key")] [InlineData("keys")]
     public void Drawer_masks_unfiltered_credentials_and_preserves_operation_data(string credential)
     {
         wpf.Run(() =>
@@ -77,6 +81,9 @@ public sealed class ApprovalPageTests(WpfContext wpf)
             args["doorKey"] = "dock";
             args["sortKey"] = "position";
             args["tagKey"] = "temperature";
+            args["doorKeys"] = "loading bays";
+            args["sortKeys"] = "positions";
+            args["tagKeys"] = "temperatures";
             args["tokenCount"] = 19;
             args["monkey"] = "animal";
             args["door-Token"] = "tag";
