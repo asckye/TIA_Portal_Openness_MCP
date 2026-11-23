@@ -14,6 +14,21 @@
 - The update check follows release API redirects only to GitHub HTTPS hosts and checks certificate revocation.
 - Tool descriptions name only the tools available on the selected release. Paged catalog and guidance results keep the source completeness of the whole result.
 - `GetToolUsage` keeps the `BuildAndImportPlcArtifact` example on the first page and serves its full input contract across later usage pages.
+- **Breaking:** The host refuses an `--http-prefix` with a wildcard address such as `0.0.0.0` or a public address at startup. Loopback, private,
+  link-local and carrier-grade NAT (CGNAT) addresses remain allowed.
+- **Breaking:** AI calls refuse UNC and device paths (`\\server\share`, `\\?\`, `\\.\`) for input files before the server opens them. Use a local path or a
+  mapped drive letter. Project, output and repository paths are unaffected.
+- An overwrite import is refused before the native import, with condition `backup-unavailable`, when a possible backup fails or the target's state can't
+  be read. Inconsistent, know-how-protected and V14 SP1 interface-only SCL targets still overwrite with a reasoned `BACKUP_SKIPPED` warning.
+- A write is refused before dispatch when its audit start record can't be written; reads keep working. Turning approval off is refused when its audit
+  record can't be written, and turning it on still works.
+- A compile call that carries a safety (F-) program password needs Workbench approval like a write, with the password redacted on the card. A plain
+  compile still runs without approval.
+- Audit records of HTTP calls include the client's remote address.
+- The Workbench detects a second instance, writes its settings atomically and turns AI control off when the settings file is damaged.
+- The Workbench approval click guard re-arms whenever the request under the buttons changes, so a click that started earlier can't act on a new request.
+- The diagnostic bundle masks Windows user names and user profile paths, leaves out project content by default and shows a preview before it is written.
+- The updater verifies the staged package before it replaces files, retries briefly when a file is locked and writes an update log.
 
 ### Removed
 
@@ -57,12 +72,25 @@
 - Unified Runtime tools report a missing local pipe as `PRECONDITION_FAILED` before dispatch. A busy or failing Open Pipe again shows a readable message.
 - `DeletePlcBlock` previews recommend a backup tool that is registered on the selected release. Library probes, reuse plans and machine templates follow the
   session's release.
-
-### Fixed
-
-- `ImportHmiScreensFromDirectory` and `ImportHmiTagTablesFromDirectory` report each file's pre-import refusal. A single invalid screen XML returns `INVALID_ARGUMENT` and leaves the request settled. Confirmed imports followed by refusals return a partial result.
-- `ImportPlcBlocksFromDirectory`, `ImportPlcProgramFromDirectory` and `ImportTechnologyObjectsFromDirectory` distinguish preparation failures from unconfirmed native imports. Their partial results count confirmed files.
-- A dispatched import without confirmation returns `OUTCOME_UNKNOWN`. Classic HMI directory imports and `ImportPlcTagTablesFromDirectory` stop at that file and report the remaining matching files as not attempted.
+- An exception after a write may have been dispatched, for example from an inner tool of `ApplyGenerationPlan`, returns `OUTCOME_UNKNOWN` instead of a
+  not-started or read-only result.
+- Approval cards show control and bidirectional characters in project-derived text escaped. Project data and written values are unchanged.
+- User-supplied XML files are read with DTDs prohibited.
+- Background Workbench crashes are logged with a diagnostic ID. The call drawer masks fields declared as credentials.
+- `GetEnvironmentDiagnostics` uses the release display names, such as V15.1 instead of V15. `GetOpennessCompatibility` reports the known-issue
+  links and native cross-reference availability of the selected release.
+- `ValidateAutomationContext` returns `NOT_FOUND` naming the parameter when the expected PLC or HMI software isn't found.
+- `ManageTechnologyObject` `setParameter` refuses a read-only parameter at preview when the API exposes writability. `ConfigureMotionHardwareConnection`
+  connect previews list the requested bit addresses.
+- `GetExportContent` reports partial completeness while another page is available.
+- OPC UA, PSC and AML export failures report the target file in `data.filePath` and whether a partial file may have been written. Remove a partial file
+  before retrying.
+- `ImportHmiScreensFromDirectory` and `ImportHmiTagTablesFromDirectory` report each file's pre-import refusal. A single invalid screen XML returns
+  `INVALID_ARGUMENT` and leaves the request settled. Confirmed imports followed by refusals return a partial result.
+- `ImportPlcBlocksFromDirectory`, `ImportPlcProgramFromDirectory` and `ImportTechnologyObjectsFromDirectory` distinguish preparation failures from
+  unconfirmed native imports. Their partial results count confirmed files.
+- A dispatched import without confirmation returns `OUTCOME_UNKNOWN`. Classic HMI directory imports and `ImportPlcTagTablesFromDirectory` stop at that
+  file and report the remaining matching files as not attempted.
 
 ## [4.0.0-rc.1] - 2026-11-22
 

@@ -1,6 +1,6 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-23，master `1908c9a99`；v4.0.0-rc.1 已发布，rc.2 准备中
+状态：现行 · 最后核对：2026-11-23，master `b9f2f597e`；v4.0.0-rc.1 已发布，rc.2 的任务除 REV-AUTH（主机门禁中）外均已合并
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
@@ -11,18 +11,14 @@
 - **2026-11-22，GitHub 仓库改名为 `asckye/automation-engineering-workbench`。** 旧网址经 GitHub 重定向，旧名永不再用，
   因为 3.3 和 beta 更新器经重定向读取发布（[ADR 0039](../standards/decisions/0039-repository-rename-never-reuse-old-name.md)）。
 - **rc.2 准备中，目标 2026-11-24 至 11-26**，只在 rc.1 反馈的修复合并后发布；LOW 审查发现在同一个 rc 中修复。任务与状态见[开发计划](plan.md#400-rc2)。
-  - rc.1 之后已合并：LOW-A（`ManageCfcChartProtection` 八版不再注册，[ADR 0041](../standards/decisions/0041-unregister-cfc-chart-protection.md)）、
-    CHECK-FP、GATE-HANG、RC2-LOW（会启动 worker 的工具在无 TIA 时审批前拒绝，[ADR 0040](../standards/decisions/0040-readiness-before-approval.md)）、
-    LOW-TOOLS、VMFIX-20B（含更新检查限流改报 `RESOURCE_UNAVAILABLE`）、RENAME-GH、LOW-RC2C、VMFIX-20A
-    （`ExportDeviceAml` 输出根外与 OPC UA 导出给出确定结果、V14 SP1 读回对照 UDT 声明、审批宿主读取计划）。
-  - 进行中：LOW-RC2D、VMFIX-21，以及 2026-11-22 全面审查的修复 REV-SEC（含 S8 网络路径拒绝、宿主拒绝通配与公网绑定地址）、REV-DESK、REV-REL。
-  - 移到 4.1：Engine harness 完整形状模式、批处理短 PLC 名别名（B099）、通用大用法分页规则。
+  - rc.1 之后已合并：LOW-A（`ManageCfcChartProtection` 八版不再注册，[ADR 0041](../standards/decisions/0041-unregister-cfc-chart-protection.md)）、CHECK-FP、GATE-HANG、RC2-LOW（会启动 worker 的工具在无 TIA 时审批前拒绝，[ADR 0040](../standards/decisions/0040-readiness-before-approval.md)）、LOW-TOOLS、VMFIX-20B（含更新检查限流改报 `RESOURCE_UNAVAILABLE`）、RENAME-GH、LOW-RC2C、VMFIX-20A（`ExportDeviceAml` 输出根外与 OPC UA 导出给出确定结果、V14 SP1 读回对照 UDT 声明、审批宿主读取计划）、LOW-RC2D、文档与 ADR 更新（`16f764d6c`）、VMFIX-21（V15.1 目录导入批次汇总）、REV-REL、REV-DESK、REV-SEC、VMFIX-22（V15.1 批次 C、D 的 LOW）。
+  - 2026-11-22 全面审查的修复：REV-SEC 宿主拒绝通配与公网绑定地址、AI 调用拒绝网络与设备输入路径（S8）、可备份目标备份失败或读不到状态时拒绝覆盖导入、审计开始记录写不进时拒绝写入、审批卡转义控制与双向字符、派发后异常报未知、用户 XML 禁用 DTD；REV-DESK 审批防误点、第二实例检测、设置原子写入且损坏时 AI 控制关闭、崩溃日志与诊断编号、诊断包隐私、更新器替换前核对暂存包；REV-REL `prepare` 须有同一提交的 `merge-check -All` 通过记录、golden 重新生成不能通过门禁、工作流动作固定、公开时报告 CI 状态。
+  - 主机门禁中：REV-AUTH（带安全密码的编译须审批、HTTP 审计记录客户端远程地址、审查小修），计入 rc.2。
+  - 移到 4.1：更新器整目录切换、配置页后台检测、审批摘要绑定真实参数值并在卡片上显示未遮蔽的值、只读监视计划接受变量表全局变量、批处理短 PLC 名别名（B099）、通用大用法分页规则、Engine harness 完整形状模式。
 - **2026-11-23 维护者按建议批准全面审查的决定**：MCP 连接继续不设密码或访问密钥（[ADR 0038](../standards/decisions/0038-keyless-http-transport.md)）；
   工具参数中的密码与更新包不签名是 4.0 接受的风险（[ADR 0042](../standards/decisions/0042-accepted-risks-for-4-0.md)）；审批开关范围不变；
   带安全密码的编译须审批。详见[开发计划](plan.md#待维护者决定)。
-- **4.0 正式版之前还剩**：rc.2 的进行中任务；V16、V18、V19、V20 的 rc 复验与 V15.1 批次 B–D；崩溃探查（V21 OPC UA 报警类型 nodeId、
-  V16–V20 探测、V21 交叉引用带界面检查，需维护者带界面操作）；计划中标为待核对的 4.0 前项（T2、T3、U3、U4、C2、S4、S9、COV-V21）和 11 条 ADR 补写；
-  最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
+- **4.0 正式版之前还剩**：REV-AUTH 合并与 rc.2 发布；V16、V18、V19、V20 在 rc.2 上复验，rc.2 对 V14 SP1、V15.1 的修复也待真机复验；崩溃探查（V21 OPC UA 报警类型 nodeId、V16–V20 探测、V21 交叉引用带界面检查，需维护者带界面操作）；11 条 ADR 补写；计划中标为待核对的 4.0 前项（T2、T3、U3、U4、C2、S4、S9、COV-V21）；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
 - **RC 代码已全部合并（2026-11-19 至 11-21）。**
   - UNIFY-1 全部完成：A–D1（beta.6）以及 B2、C2、D2、E。八版共用一个工具包装、一条就绪规则、一个版本目录和一张官方 API 能力表，
     新出现的按版本号分支由 `ReleaseKeyedSitesTests` 拦下。U3 线程模型（MTA-1）、U6 实机保护、U7 V21 builder 输出按 2026-11-04 决定保留。
@@ -37,7 +33,7 @@
   - CI-FIX：GitHub validate-bundle 恢复（PLC 模式输入 LF、SDK 用例只在主机跑）。REL-GA（正式版包名与 latest 规则，3.3 更新器不匹配 4.0 正式包；
     README/NOTICE 写明不携带 Siemens 程序集）已合并（`a5045cecb`），随 rc.1 发布。
 - **八版 RC 候选全量真机回归已完成（2026-11-19 至 11-21）**，逐版结果见下方“真机结果”，逐工具状态见[真机工具状态表](../reference/real-machine-status.md)。
-  VMFIX-14 至 19 修的是这些回归的发现；修复后的复验在 V17（rc2）和 V21（rc3）做过，rc.1 已复验 V14 SP1 和 V15.1 批次 A，V16、V18–V20 尚未复验。
+  VMFIX-14 至 19 修的是这些回归的发现；修复后的复验在 V17（rc2）和 V21（rc3）做过，rc.1 已全量复验 V14 SP1 和 V15.1，V16、V18–V20 尚未复验。
 
 - 2026-11-17 的 beta.5 V21 补测覆盖 142 个工具，确认 79 个 beta.4 问题已修复。余下 5 个高级和 7 个中级问题归入 VMFIX-12。
 
@@ -82,7 +78,7 @@
 完整决定见[计划中的实施决定](plan.md#2026-11-042026-11-05-实施决定)。
 
 - S3 更新签名未完成，维护者接受同一发布摘要无法抵御 GitHub 账户被控制的风险（2026-11-23 记入 [ADR 0042](../standards/decisions/0042-accepted-risks-for-4-0.md)）。S5 未实现加密，维护者接受 LAN 明文 HTTP 暴露工程数据与 PLC 密码的风险，仅在可信网络使用；访问密钥已于 2026-11-19 移除，MCP 连接不设密钥（[ADR 0038](../standards/decisions/0038-keyless-http-transport.md)）。两项移出 4.0 前实施清单，见[安全标准](../standards/security.md)。
-- S8 D1 A、D2 已定，AI 调用将拒绝网络路径，含 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。由 REV-SEC 实现（2026-11-23 进行中），目标 rc.2。T3 D1 保留并解释 `rollbackCompleted`，D2 迁移 bridge 路由测试，顺序为 U4/C2 → T2 → T3，S9/U3/S8 可独立进行。
+- S8 D1 A、D2 已定，AI 调用将拒绝网络路径，含 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。由 REV-SEC 实现，已合并（`31c3b9f69`），随 rc.2。T3 D1 保留并解释 `rollbackCompleted`，D2 迁移 bridge 路由测试，顺序为 U4/C2 → T2 → T3，S9/U3/S8 可独立进行。
 - VMFIX-6 D1–D5 已批准，纯 ASCII SCL 无 BOM，非 ASCII 保留 BOM 与导入限制说明，词过滤从变量名移到 options，停止迁入旧审批关闭设置，参数细节交 DES-4 Part 2，CreateDevice 确定拒绝的 not-started 分类保留。6a 排队，6b 跟随 Part 2。
 - DES-4 D1–D6 已批准，别名保留至 5.0，规范导出参数和数组 devicePath，项目名与文件身份分开，默认会话目录，空串改动限于改名参数。Part 1 已集成。参数 JSON pointer 与原生 `innererror` 分属 Parts 2、3，2026-11-05 移到 beta.5。
 - UNIFY-1 仍是 4.0 条件，替代 Q6a/Q6b/P8-04n2 并吸收 C9。U1 解除无 API 依据的工艺导出限制，U2 统一无 TIA 与能力准入，U4 保留需实测的 s7res 配对并移除无依据的 None-only 限制，U5 开放旧版 seed HMI，U8 按能力选择生成指纹并兼容历史记录。U3 线程模型留待实机，U6 实机保护保留，U7 V21 builder 保持到 4.1。A–D1 已集成，其余排 RC。
@@ -106,7 +102,7 @@
 | RC 候选 `d89d0152`，V20 VM，2026-11-20 | 504 个工具：通过 328、只有按设计拒绝 84、HIGH 10、MEDIUM 10、LOW 69、未运行 4；TIA 崩溃与会话中断 0 | `ImportDeviceAml` 独占访问、SiVArc 容器、重名导入误报未知由 VMFIX-17A/B 处理，待 rc.1 复验 |
 | RC3 候选 `aa9c749b`，V21 VM，2026-11-21 | 519 个工具：通过 348、按设计拒绝 69、失败 91（HIGH 3，其余 LOW）、未运行 11；TIA 崩溃 2 次；beta.6 的 V21 HIGH/MEDIUM 除 `ConnectProjectToWorkspace`（未复验）外均已修复 | 标签导入误报未知、PLC syslog 崩溃由 VMFIX-19 处理；OPC UA 报警类型 nodeId 更新崩溃待探查 |
 | rc.1（`149ab2e4c`），V14 SP1 VM，2026-11-22 | 287 个工具：通过 177、只有按设计拒绝 64、HIGH 2、MEDIUM 0、LOW 42、未运行 2；TIA 重启与会话中断 0。RC 候选的 14 个 HIGH 修好 13 个（`ImportPlcBlockVerified` 行为改变但仍是 HIGH），5 个 MEDIUM 全部修好。批次 B、C 的变慢经调查为测试时主机负载，不是代码退化 | 2 个 HIGH（`ExportDeviceAml` 输出根外报未知、`ImportPlcBlockVerified` 读回误报不一致）由 VMFIX-20A 修复，待 rc.2 复验；LOW 由 VMFIX-20B 等处理 |
-| rc.1（`149ab2e4c`），V15.1 VM，批次 A，2026-11-22 | 82 个工具；RC 候选的 7 个 HIGH、4 个 MEDIUM 全部修好。新 HIGH 2 个：`ManageHardwareUtilities` `exportOpcUa` 确定失败报未知；`ImportHmiScreensFromDirectory` 批次汇总 | `exportOpcUa` 由 VMFIX-20A 修复；`ImportHmiScreensFromDirectory` 由 VMFIX-21 处理（进行中）；批次 B–D 运行中 |
+| rc.1（`149ab2e4c`），V15.1 VM，四批，2026-11-22 至 11-23 | 328 个工具：通过 224、只有按设计拒绝 55、HIGH 3、MEDIUM 0、LOW 42、未运行 4；TIA 重启与会话中断 0。RC 候选的 14 个 HIGH、4 个 MEDIUM 全部修好或不再出现。新 HIGH 3 个：`ManageHardwareUtilities` `exportOpcUa` 确定失败报未知；`ImportHmiScreensFromDirectory` 批次汇总报未知；`ImportPlcBlockVerified` 读回误报不一致（与 V14 SP1 相同）。批次 A 前半段开着审批，写入被拦下，关审批后补跑，表中以补跑为准；测试期间主机负载高，原生调用变慢不算缺陷 | `exportOpcUa`、`ImportPlcBlockVerified` 由 VMFIX-20A 修复，`ImportHmiScreensFromDirectory` 由 VMFIX-21 修复，LOW 由 VMFIX-20A/20B 与 VMFIX-22 处理；均待 rc.2 复验 |
 
 原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，每批一份汇总。V16、V18、V19、V20 尚未在 rc.1 上复验。
 RC 回归中在线写入、下载和仿真执行只预览（VM 无 PLC，PLCSIM 无实例）。beta.4 回归的缺陷原因尚未逐条验证。未测的正常流程：`OpenProject`、`CloseProject`（自有工程）、`CreateProject`、`RetrieveProjectArchive`、`ConnectIsolatedPortal`、`PublishGenerationRecord`；在线、下载、上传、强制和仿真只读取或预览。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。

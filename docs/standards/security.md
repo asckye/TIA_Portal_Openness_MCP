@@ -1,6 +1,6 @@
 # 安全标准与威胁模型
 
-状态：现行 · 最后核对：2026-11-23，master `1908c9a99`（SEC-05、SEC-11、SEC-16 与第 6 节）
+状态：现行 · 最后核对：2026-11-23，master `b9f2f597e`（SEC-01、SEC-04–SEC-06、SEC-11、SEC-18、SEC-19 与第 6 节；带安全密码的编译审批和审计远程地址按 REV-AUTH 写入，该任务在主机门禁中）
 
 [文档目录](../README.md) · [设计规范](design.md) · [开发规范](development.md) · [漏洞报告方式](../../.github/SECURITY.md)
 
@@ -54,7 +54,8 @@
 | 篡改（Tampering） | 模型或注入文本让写调用绕过审批，或改写 `approval.settings` | SEC-01、SEC-03 |
 | 篡改 | 审计记录被修改、删除或插入 | SEC-04 |
 | 篡改 | 恶意标准包、导入文件或 MCP 输出写到预期目录之外 | SEC-01、SEC-08、SEC-09 |
-| 信息泄露 | MCP 输出经 UNC 写到远程主机 | SEC-01；路径查询的剩余风险见第 6 节 |
+| 信息泄露 | MCP 输出经 UNC 写到远程主机，或输入路径查询远程主机而泄露 Windows 凭据 | SEC-01、SEC-18 |
+| 篡改 | 覆盖导入失败后无法恢复原对象 | SEC-19 |
 | 篡改 | 被替换的交付包经更新器安装 | SEC-11 |
 | 否认（Repudiation） | 无法证明某次写调用由谁批准、何时执行 | SEC-04 |
 | 信息泄露（Information disclosure） | 密码、令牌出现在审批摘要、计划哈希、审计、调用日志或响应中 | SEC-06 |
@@ -74,7 +75,8 @@
 
 - 分类为 `WRITE`、`ONLINE-WRITE` 的实际执行，以及 `SaveProject`、`SaveProjectCopy`、`CloseProject`、`StageImportFiles`、`CleanupStagedImportFiles`，在派发前等待工作台审批。预览（`dryRun: true`、`mode: preview`）不审批（[设计规范](design.md) 第 4.10 节）。
 - MCP 向调用方指定的输出根之外写文件也须审批，包含 UNC 目标；根内路径若含重解析点仍按根外处理。输出根为 `<包根>/exports`（checkout 为 `bin-build/exports`）、显式数据目录下的 `exports`，或 `%LOCALAPPDATA%/TiaMcp/exports`；无法创建时所有目标均按根外处理。预览、产品自行选择的输出位置、工作台操作端和已批准的生成计划步骤沿用原行为；空参数由其他调用方输入派生位置时仍检查实际目录。MCP 的 Git stage/commit 无论目录是否在根内均须审批。通过 `GetSessionState data.outputRoot` 查询实际目录。审批卡片对每个文件系统路径分别展示并绑定 `Path.GetFullPath` 规范化后的完整路径，路径不做凭据片段脱敏；其他参数继续脱敏。所有这些路径（包括根内目标、WRITE 和 SESSION 工具路径）带首尾空白时，在发卡前返回 `INVALID_ARGUMENT`。长路径在审批卡片中换行展示。须审批的规范化目标超过 4096 个字符时，在发卡前返回 `INVALID_ARGUMENT`。`BuildReleaseHandoffArtifacts` 省略 `exportDirectory` 时使用会话输出目录，兼容 `outputDirectory` 别名，显式根外目标仍须审批。
-- 审批默认开启；`approval.settings` 缺失或格式无效时按开启处理。开关变化写入审计。工具不能写 `approval.settings`，包括经短文件名、链接或文件 ID 的写法。
+- 携带安全（F）程序密码的编译调用与写入一样须工作台审批，卡片上的密码脱敏；不带安全密码的普通编译不须审批（维护者 2026-11-23 决定，REV-AUTH）。
+- 审批默认开启；`approval.settings` 缺失或格式无效时按开启处理。开关变化写入审计；审计记录写不进时，关闭审批被拒绝，打开审批照常并记录警告。工具不能写 `approval.settings`，包括经短文件名、链接或文件 ID 的写法。
 - 即使审批开关关闭，所有非预览 `ONLINE-WRITE` 仍须 Workbench 人工审批；仅 `ManagePlcSimAdvancedInstance`、`WritePlcSimAdvancedTags`、`RunPlcSimAdvancedTestScenario` 和已核实模拟器目标的 `DownloadPlc` 例外。`DownloadPlc` 归为模拟器须同时满足：PG/PC 接口显式指定 PLCSIM 虚拟网卡或 PLCSIM/Softbus（空接口始终按真实 PLC，即使运行中实例具有相同 IP；自动选路可经真实网卡和网关到达真实 PLC）；目标不落入任何运行状态（含 Up、Down、Dormant、Unknown、Testing）的非 PLCSIM 网卡 IPv4 子网；且目标匹配现有实例列表中 Run 且无 stateError 的 controllerIP 数组任一地址，或落入 Up 的 PLCSIM 虚拟网卡独占子网（掩码须连续且为 /8 或更窄）。实例地址或接口名称单独不能证明目标类型；实例行格式错误不提供证据，网卡清单不完整按真实 PLC。宿主和 worker 使用同一判定。完整工具集以 `ToolTaxonomy.OperationOf` 的 `ONLINE-WRITE` 分类为准，包括 DownloadPlc、ManageOnlineDriveFunctions、ManagePlcDataBlockSnapshot、RunPlcCompanionTool、RunTestSuiteCase、SetPlcWatchTableModifyValue、SetPlcWebOperatingMode、UploadDeviceParameters、UploadStationFromPlc、WritePlcWebVars、InvokeUnifiedOpenPipe 和 WriteUnifiedRuntimeTags。拒绝、超时或工作台不可用均在实际写入派发前返回 `CONFIRMATION_REQUIRED`；强制审批结果不标为审批关闭。`GetSessionState` 仍报告原始开关值。
 - `DownloadPlc` 的真实目标执行还须 `confirmPhysicalTarget=true`，缺少确认在审批与 worker 前拒绝；worker 在原生派发前独立核实目标并再次检查确认，不能通过绕过宿主准入取消此要求。预览报告 `targetKind` 和 `requiresPhysicalConfirmation`。审批卡的 `onlineTarget` 显示种类、目标地址、接口或 automatic、R/H 目标；真实目标的中英文后果提示明确指出地址及人员风险。
 - 下载在离线检查后读取 `Project.IsModified` 与块/类型一致性：未保存以 `project-saved` 拒绝，已知不一致以 `plc-compiled` 拒绝，未知一致性记录 `meta.consistency=unknown`。先 CompilePlcSoftware（或 CompileDevice），再显式 SaveProject，然后预览与执行；不自动保存或编译。
@@ -100,13 +102,15 @@
 ### SEC-04 审计哈希链
 
 - 审批和写调用记录在 `<数据根>/logs/audit/audit-<序号>.jsonl`，按 10 MiB 轮转，不自动删除。每条记录带上一条规范化记录的 SHA-256；`tia audit` 校验序号连续和哈希一致。
+- 写入不绕过审计：写调用的审计开始记录无法写入时，写入在派发前被拒绝，读取照常（失败即关闭）。审批开关的审计规则见 SEC-01。
+- HTTP 调用的审计记录包含客户端的远程地址；stdio 调用没有该字段（REV-AUTH）。
 - 限制：有效的链只能发现保留记录的篡改、缺失和插入，不能证明日志完整。
-- 实现：`src/Shared/AuditLog.cs`、`src/Shared/AuditCli.cs`。
-- 测试：`tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/AuditLogTests.cs`、`tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionAuditHostTests.cs`。
+- 实现：`src/Shared/AuditLog.cs`、`src/Shared/AuditCli.cs`、`src/Shared/AuditInvocation.cs`、`src/Shared/ApprovalSettings.cs`；远程地址的实现文件待核对（REV-AUTH 合并后补）。
+- 测试：`tests/FoundationHost/TiaMcp.Engine.Diagnostics.Tests/AuditLogTests.cs`、`tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionAuditHostTests.cs`、`tests/KeptCode/TiaMcp.KeptCode.Tests/ApprovalTests.cs`。
 
 ### SEC-05 HTTP 传输
 
-- HTTP 默认关闭，默认传输是 stdio；启用后默认前缀是 `http://127.0.0.1:8735/`。HTTP 传输要求前缀是明确的 IP 字面量。rc.1 及更早只有工作台配置器拒绝 `0.0.0.0` 和广播地址，宿主本身接受任何 IP 字面量；从 rc.2 起，宿主拒绝通配地址（`0.0.0.0`、IPv6 任意地址）和公网绑定地址（REV-SEC）。
+- HTTP 默认关闭，默认传输是 stdio；启用后默认前缀是 `http://127.0.0.1:8735/`。HTTP 传输要求前缀是明确的 IP 字面量。宿主在启动时拒绝通配地址（如 `0.0.0.0`）和公网地址，只接受回环、私网、链路本地和运营商级 NAT（CGNAT）地址；工作台配置器另外拒绝 `0.0.0.0` 和广播地址。
 - MCP 连接不设密码或访问密钥，回环与局域网相同（[ADR 0038](decisions/0038-keyless-http-transport.md)）。可达端点的设备都能调用工具，链路是明文；只在可信局域网或虚拟机仅主机网络中启用。
 - 所有请求（包括健康检查）校验 Host 和可选 Origin。允许配置端点、同端口回环源与 `--http-allowed-origins` 明确列出的源；其他值返回 403 并记录不含原始头值的审计事件，防止 DNS rebinding。
 - `/mcp/health` 返回版本、发布键和档位；`/mcp/ready` 返回宿主就绪状态。
@@ -120,9 +124,11 @@
 - 键名含 password、passwd、secret、token、credential、authorization，或以 key、keys 结尾（`releaseKey` 除外），或等于 `pwd`、`sk` 的参数值被替换为占位符；同级 `name`/`key` 为敏感名时，`value` 也被替换。自由文本中的 Bearer/Basic 令牌、`name=value` 形式的密钥、URL 用户信息和 PEM 私钥被清除。
 - 审批摘要和审计记录使用上述去敏规则。写入预览的计划哈希沿用同一敏感值识别规则，但将敏感值替换为 HMAC-SHA-256，密钥随机生成并仅保存在宿主进程内存中；应用须使用预览时相同的密码，宿主重启后须重新预览。计划还绑定输入文件的 SHA-256，以及输入目录中按相对名称排序的全部文件摘要；内容变化后须重新预览。
 - V4 信封的 `details` 和 `data` 不含堆栈与凭据：`Clean()` 删除键名含 `stack` 或等于 `password` 的字段，把多行堆栈文本替换为固定占位；`HostBehavior.SafeDiagnostic` 把盘符和 UNC 路径替换为 `<path>`。
-- 限制：替换按参数名匹配。UMAC、PLC 保护和 Web 服务器凭据只有在参数名符合上述规则时才被替换，没有单独的名单。
-- 实现：`src/Shared/CallJournalPayload.cs`、`src/Shared/ApprovalProtocol.cs`、`src/Shared/PlcToolContract.cs`、`src/Logic/V4/HostBehavior.cs`。
-- 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionAuditHostTests.cs`。
+- 审批卡上来自工程的文本中的控制字符和双向控制字符转义显示；工程数据和写入 TIA 的值不变。
+- 工作台诊断包遮蔽 Windows 用户名和用户目录路径，默认不包含调用日志中的工程内容（保留工具名、错误码和耗时），写入 ZIP 之前列出文件供用户确认或取消。工作台调用抽屉遮蔽声明为凭据的字段。
+- 限制：替换按参数名匹配。UMAC、PLC 保护和 Web 服务器凭据只有在参数名符合上述规则时才被替换，没有单独的名单。同一规则也遮蔽名称像凭据的用户数据（例如变量 `Door_Key`），见第 6 节。
+- 实现：`src/Shared/CallJournalPayload.cs`、`src/Shared/ApprovalProtocol.cs`、`src/Shared/PlcToolContract.cs`、`src/Logic/V4/HostBehavior.cs`、`src/Studio/Gui/Services/DiagnosticBundleService.cs`、`src/Studio/Core/Environment/DiagnosticRedactor.cs`。
+- 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/SessionAuditHostTests.cs`、`tests/Studio/TiaOpenness.Core.Tests/DiagnosticRedactorTests.cs`。
 
 ### SEC-07 worker 身份核对
 
@@ -151,15 +157,16 @@
 
 ### SEC-11 更新器核对完整性
 
-- 更新器从本仓库的 GitHub Releases 获取交付 ZIP，与同一发布的 `.sha256` 比较；解压时核对每个条目都是安全的相对路径；包内交付清单的发布号必须等于标签。
+- 更新器从本仓库的 GitHub Releases 获取交付 ZIP，与同一发布的 `.sha256` 比较；解压时核对每个条目都是安全的相对路径；包内交付清单的发布号必须等于标签。替换安装文件之前先核对暂存的更新包；文件被锁定时短暂重试；写更新日志。文件逐个替换，不是整目录切换，见第 6 节。
 - 限制与接受的风险（维护者 2026-11-04 决定，S3；2026-11-23 记入 [ADR 0042](decisions/0042-accepted-risks-for-4-0.md)）。更新签名尚未完成，ZIP 与 `.sha256` 来自同一发布。控制 GitHub 账户或发布令牌的人可以同时替换包和摘要，发布恶意更新。此风险由维护者接受，发布账户保护另由 S4 处理。
-- 实现：`src/Updater/Updater.cs`。
-- 测试：`tests/Updater/TiaMcp.Updater.Tests/UpdaterTests.cs`。
+- 实现：`src/Updater/Updater.cs`、`src/Updater/Updater.Files.cs`、`src/Updater/UpdaterLog.cs`。
+- 测试：`tests/Updater/TiaMcp.Updater.Tests/UpdaterTests.cs`、`tests/Updater/TiaMcp.Updater.Tests/StagedReplacementTests.cs`。
 
 ### SEC-12 结果未知时不重放
 
 - 写入、传输或 worker 通道中断时返回 `OUTCOME_UNKNOWN`，会话按需要锁定，恢复前拒绝后续原生调用；宿主和客户端都不得自动重放写调用（[ADR 0008](decisions/0008-worker-timeouts-and-faults.md)，[设计规范](design.md) 第 4.11 节）。TIA 进程租约把一个 TIA 进程保留给一个 MCP 会话（[ADR 0011](decisions/0011-tia-process-lease-on-all-releases.md)）。
-- 实现：`src/Logic/V4/HostBehavior.cs`、`src/Logic/ModelContextProtocol/RecoveryHints.cs`、`src/PlcWorker/FoundationProcessLease.cs`。
+- 写入可能已派发之后发生的异常（包括非 Foundation 内部工具，例如 `ApplyGenerationPlan` 调用的工具）报告 `OUTCOME_UNKNOWN`；只有能证明未开始时才报未开始。
+- 实现：`src/Logic/V4/HostBehavior.cs`、`src/Logic/ModelContextProtocol/RecoveryHints.cs`、`src/PlcWorker/FoundationProcessLease.cs`、`src/FoundationHost/FoundationV4Tool.cs`。
 - 测试：`tests/FoundationHost/TiaMcp.FoundationHost.Tests/FoundationProcessLeaseTests.cs`；注册套件 `worker-robustness`。
 
 ### SEC-13 客户端侧的在线写入防护
@@ -197,14 +204,29 @@
 - 返回普通审批开关、等待时间和在线写入计划有效期，另明确返回不能通过普通开关关闭的物理在线写入审批规则。白名单只返回格式化条目。
 - 实现：`src/Shared/ApprovalStatusBoard.cs`、`src/Shared/Host/McpServer.Worker.cs`、`src/ToolPipeline/ModelContextProtocol/Tools/McpServer.Approval.cs`、`src/FoundationHost/FoundationV4Tool.cs`。设置编辑器：`src/Studio/Gui/Services/SafetySettingsService.cs`、`src/Studio/Gui/Views/SettingsView.Safety.cs`。测试：`ApprovalStatusTests`、`SafetySettingsServiceTests`、`SafetySettingsViewTests`。
 
+### SEC-18 AI 调用的输入文件只用本地路径
+
+- AI 调用中的输入文件参数不接受 UNC 路径（`\\server\share`、`\\?\UNC\`）和设备路径（`\\?\`、`\\.\`），包括指向 localhost 和 127.0.0.1 的网络路径；在打开、哈希或审批之前拒绝并指出参数。本地路径和映射的驱动器号照常可用。项目、输出和仓库路径不受此规则影响；根外输出由 SEC-01 审批。工作台人工操作不受此规则影响（S8，维护者 2026-11-04 决定）。
+- 用户提供的 XML 文件经共用的安全读取器读取：禁止 DTD，不使用解析器。
+- 实现：`src/Logic/V4/CallerInputFiles.cs`、`src/Shared/NativeInputPolicy.cs`、`src/Adapters.Contracts/SafeXml.cs`。
+- 测试：`tests/KeptCode/TiaMcp.KeptCode.Tests/CallerInputFilesTests.cs`、`tests/Adapters/TiaMcp.Adapters.Contracts.Tests/HmiAuditRegressionTests.cs`。
+
+### SEC-19 覆盖导入先备份
+
+- 覆盖导入在原生导入前导出被替换的对象作为恢复文件。应能备份的目标备份失败，或读不到目标状态时，覆盖在原生导入前拒绝（条件 `backup-unavailable`），消息列出每个对象和原因。
+- 只有已证明无法导出备份的目标仍然覆盖，并给出写明原因的 `BACKUP_SKIPPED` 警告：不一致的目标、有专有技术保护的目标，以及 V14 SP1 上只能导出接口的 SCL 目标。
+- 实现：`src/Shared/NativeExportPolicy.cs`、`src/Adapters/Native/Session/PlcFoundationEngine.Software.cs`。
+- 测试：`tests/KeptCode/TiaMcp.KeptCode.Tests/ImportStagingTests.cs`。
+
 ## 6 已知缺口与已决定未实现的事项
 
 | 项目 | 现状 | 处理 |
 |---|---|---|
 | PLC companion 的自由参数无法逐主机约束（TIA-SAFE-5 Round 2） | `RunPlcCompanionTool mode=run` 的 net、sim、trace 等命令可能通过参数、配置或脚本连接任意设备，无法保证只连接白名单主机 | 白名单文件存在时（含空、无效或不可读状态），在审批和启动 companion 前以 `online-target-not-allowed` 或 `online-target-list-invalid` 拒绝 mode=run，预览同样拒绝。catalog/help 不执行命令回调，继续允许；文件不存在时保留原有行为。不按自由参数猜测目标，也不提供 MCP 绕过开关 |
 | HTTP 请求的 Origin 与 Host 头 | RELAY-1 已实现每请求校验、403 与审计，含伪造头测试 | 已补齐；新增可信源须显式配置 |
-| 局域网免密钥 HTTP 传输 | MCP 连接不设密码或访问密钥，`--http-api-key` 已移除；维护者 2026-11-23 考虑并否决了局域网可选密钥 | 接受的风险，见 [ADR 0038](decisions/0038-keyless-http-transport.md)。HTTP 默认关闭；rc.2 起宿主拒绝通配和公网绑定地址；Host/Origin 校验、写入审批和物理在线写入的人工确认照常。仅在可信局域网或虚拟机的仅主机网络中使用 |
-| UNC 路径查询（S8 剩余部分） | 根外写入已由 SEC-01 审批，输入、预览和审批前的身份检查仍可能查询远程主机并暴露 Windows NTLM 凭据 | 维护者 2026-11-04 已决定在 AI 准入层拒绝网络路径，含指向 localhost 和 127.0.0.1 的网络路径，Workbench 人工操作不受此限制。由 REV-SEC 实现（进行中），目标 rc.2 |
+| 局域网免密钥 HTTP 传输 | MCP 连接不设密码或访问密钥，`--http-api-key` 已移除；维护者 2026-11-23 考虑并否决了局域网可选密钥 | 接受的风险，见 [ADR 0038](decisions/0038-keyless-http-transport.md)。HTTP 默认关闭；宿主拒绝通配和公网绑定地址（SEC-05）；Host/Origin 校验、写入审批和物理在线写入的人工确认照常。仅在可信局域网或虚拟机的仅主机网络中使用 |
+| 审批卡按名称遮蔽用户数据 | 名称像凭据的用户数据（例如变量 `Door_Key`、`TokenCount`）的写入值在审批卡上显示为圆点，真实值也未绑定到审批摘要 | 4.1：审批摘要以 HMAC 绑定真实参数值，卡片只遮蔽声明的凭据参数（2026-11-23 从 rc.2 撤回） |
+| 更新不是整目录切换 | 更新器核对暂存包后逐个替换文件，更新中断时安装可能只替换了一部分 | 4.1：同级目录暂存、核对后整体切换（2026-11-23 从 rc.2 撤回）；当前从发布页重新解压完整包恢复 |
 | `BuildDeviceAmlDocument` 分类 | 按文件目标审批，但仍为 OFFLINE / readOnlyHint=true | 单独重分类并重捕获八版基线，本任务不改契约 |
 | 更新包没有签名（S3） | 只有同一发布的 `.sha256`，GitHub 账户被控制后可发布恶意更新 | 4.0 接受的风险（维护者 2026-11-04 接受，2026-11-23 记入 [ADR 0042](decisions/0042-accepted-risks-for-4-0.md)），签名在 4.1 决定 |
 | 密码作为工具参数 | 保管库移除后，密码只能由 AI 客户端作为参数传入，会到达模型服务商和对话记录 | 4.0 的已知风险，写进发布说明（[ADR 0042](decisions/0042-accepted-risks-for-4-0.md)）；4.1 计划工作台专用密码输入 |
