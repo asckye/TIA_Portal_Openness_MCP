@@ -149,8 +149,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static bool Unexpanded(XElement member) => member.Element(member.Name.Namespace + "Sections") == null
             && member.Element(member.Name.Namespace + "Member") == null;
 
-        public static IEnumerable<string> UnexpandedTypes(string planned) => DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace)).Where(Unexpanded)
-            .Select(ReferencedType).OfType<string>().Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal);
+        public static IEnumerable<string> UnexpandedTypes(string planned) => DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace))
+            .Where(Unexpanded).Select(ReferencedType).OfType<string>().Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal);
 
         // Capture the declaration from the bound PLC before import. Only its interface participates in the preview token.
         public static XElement? TypeDeclaration(string xml, string name)
