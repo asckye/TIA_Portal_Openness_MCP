@@ -8024,6 +8024,18 @@
           "identifier": "TiaMcp.Engine.Tests.ImportStagingTests/Single_import_keeps_typed_target_refusals_and_never_creates_a_directory_for_all_blocked_targets( string parameter ):8aaad14eb209c7c1cd4e4f16e3cecbb01800d83d0670388c23e24a2fa31c43fb:1"
         }
       ]
+    },
+    {
+      "task": "UI-CENTER",
+      "maintainerDate": "2026-11-23",
+      "reason": "Maintainer approved on 2026-11-23: passed Environment rows show the passed tag and no fix action, as in the design",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/EnvironmentServicesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.EnvironmentServicesTests/Doctor_fix_outcome_is_ready_new_logon_or_a_failure_with_its_reason( string outcome , bool groupOk , string ? code , string expected , string ? reasonKey ):7262b2e9cf58c2522d9021ceee6ba2657dc17604535cbc69e1354310b82e61ce:1"
+        }
+      ]
     }
   ]
 }
