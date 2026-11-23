@@ -25,6 +25,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         internal bool IsProjectNull() => session.IsProjectNull();
         internal TiaPortal? CurrentPortal => session.CurrentPortal;
         internal SoftwareContainer? GetSoftwareContainer(string path) => session.GetSoftwareContainer(path);
+        internal Func<object?> GetHmiImportSoftwareReader(string path) => session.GetHmiImportSoftwareReader(path);
         internal IDisposable AcquireHmiEditAccess() => session.AcquireHmiEditAccess();
         internal object? GetBindingIdentity() => engine.HmiBindingIdentity != null ? engine.HmiBindingIdentity() : session.BindingIdentity();
         public object ResolveHmiSoftwareOrThrow(string path) => engine.ResolveEngineeringHmiSoftware != null ? engine.ResolveEngineeringHmiSoftware(path)

@@ -27,6 +27,7 @@ namespace TiaMcp.Adapters.Native.Plc
         public IEqualityComparer<object> ReferenceEqualityComparer { get; }
         public IDisposable AcquireHmiEditAccess();
         public SoftwareContainer? GetSoftwareContainer(string softwarePath);
+        public Func<object?> GetHmiImportSoftwareReader(string softwarePath);
         public SoftwareContainer? ResolveSoftwareContainerUncached(string softwarePath);
         public PlcSoftware? GetPlcSoftware(string path);
         public List<(string Path, bool? Consistent)> ReadPlcConsistency(string path);

@@ -20,6 +20,14 @@ public static class NativeFailureText
     public static bool IsStackBoundary(string line) => line.TrimStart().StartsWith("--- End of", StringComparison.Ordinal)
         || Regex.IsMatch(line, @"^\s*at\s+(?:[^\s(]+\.){2}[^\s(]+\(", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
+    public static string WithoutLocalPaths(string text)
+    {
+        const string uri = @"\b(?:(?<web>https?)://|file:/+)[^\s""<>]+";
+        const string windowsPath = @"(?:(?<![\w/])[a-z]:[\\/]|\\\\)(?:(?!\s+https?://)[^\r\n""<>|;])*";
+        return Regex.Replace(text, uri + "|" + windowsPath, match => match.Groups["web"].Success ? match.Value : "<path>",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+    }
+
     public static List<string> BoundedLines(IEnumerable<string> lines, Func<string, string> sanitize)
     {
         var result = new List<string>();

@@ -96,9 +96,9 @@ internal static class BatchImportContract
                 if(status=="imported") imported++;
             }
             else if(status=="failed") {
-                if(failed
+                if(failed || failure == "import-preparation-failed" && returned.Count != 0
                         || (attempted ? failure is not ("native-outcome-uncertain" or "native-import-or-verification-failed" or "native-import-refused-absent")
-                            : failure is not ("target-recheck-failed" or "backup-failed")))
+                            : failure is not ("target-recheck-failed" or "import-preparation-failed" or "backup-failed")))
                     throw new InvalidDataException("Invalid failure sequence.");failed=true;failures++;
             }
             else if(status=="not-attempted") {

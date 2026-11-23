@@ -48,7 +48,8 @@ public sealed class DirectoryImportRegressionTests
         string root = Directory.CreateTempSubdirectory().FullName;
         try
         {
-            for (int i = 0; i <= completed; i++) File.WriteAllText(Path.Combine(root, $"{i}.xml"),
+            int last = dispatched ? completed + 2 : completed;
+            for (int i = 0; i <= last; i++) File.WriteAllText(Path.Combine(root, $"{i}.xml"),
                 $"<Document><Engineering version='V15.1'/><SW.Tags.PlcTagTable ID='0'><AttributeList><Name>Tags{i}</Name></AttributeList></SW.Tags.PlcTagTable></Document>");
             int calls = 0;
             var service = new Organisation((_, args) => {
@@ -66,6 +67,10 @@ public sealed class DirectoryImportRegressionTests
             Assert.Equal(missingConfirmation ? "The worker did not confirm the imported tag table." : "No confirmed import.",
                 (string?)body["data"]?["failed"]?[0]?["error"]);
             Assert.Equal(completed, body["data"]!["imported"]!.AsArray().Count);
+            Assert.Single(body["data"]!["failed"]!.AsArray());
+            if (dispatched)
+                Assert.Equal(new[] { Path.Combine(root, $"{completed + 1}.xml"), Path.Combine(root, $"{completed + 2}.xml") },
+                    body["data"]!["evidence"]!["notAttempted"]!.AsArray().Select(path => (string)path!));
         }
         finally { Directory.Delete(root, true); }
     }
@@ -88,7 +93,7 @@ public sealed class DirectoryImportRegressionTests
             PlcBatchImportResult Run() => PlcBatchImportPolicy.Run(request, [], () => { }, (file, planned, dispatch) => {
                 if (visits++ < completed) { dispatch(); return [planned]; }
                 if (dispatched) dispatch();
-                throw new IOException("Collection unavailable.");
+                throw new IOException(@"Collection unavailable. C:\Private Folder\customer.xml");
             });
             var preview = Run();
             request.ExpectedHash = preview.PlanHash; request.Order = preview.Items.Select(item => item.RelativePath).ToArray();
@@ -96,7 +101,18 @@ public sealed class DirectoryImportRegressionTests
             var batch = Run();
             Assert.Equal(dispatched, batch.NativeOutcomeUnknown);
             Assert.Equal(dispatched, batch.Items.Last().Attempted);
-            BatchImportContract.Validate(JsonSerializer.SerializeToNode(batch)!.AsObject(), false);
+            if (!dispatched)
+            {
+                Assert.Equal("import-preparation-failed", batch.Items.Last().Failure);
+                Assert.Equal("Collection unavailable. <path>", batch.Items.Last().NativeMessage);
+            }
+            var wire = JsonSerializer.SerializeToNode(batch)!.AsObject();
+            BatchImportContract.Validate(wire, false);
+            if (!dispatched)
+            {
+                wire["Items"]![completed]!["Attempted"] = true;
+                Assert.Throws<InvalidDataException>(() => BatchImportContract.Validate(wire, false));
+            }
             var data = JsonSerializer.SerializeToNode(batch, new JsonSerializerOptions(JsonSerializerDefaults.Web))!.AsObject();
             var mapped = TiaMcp.Logic.V4.PlcBatchImportResultMapping.Result(data, "17",
                 program ? "ImportPlcProgramFromDirectory" : "ImportPlcBlocksFromDirectory", "batch", false);

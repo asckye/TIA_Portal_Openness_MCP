@@ -49,6 +49,12 @@
 - `DeletePlcBlock` previews recommend a backup tool that is registered on the selected release. Library probes, reuse plans and machine templates follow the
   session's release.
 
+### Fixed
+
+- `ImportHmiScreensFromDirectory` and `ImportHmiTagTablesFromDirectory` report each file's pre-import refusal. A single invalid screen XML returns `INVALID_ARGUMENT` and leaves the request settled. Confirmed imports followed by refusals return a partial result.
+- `ImportPlcBlocksFromDirectory`, `ImportPlcProgramFromDirectory` and `ImportTechnologyObjectsFromDirectory` distinguish preparation failures from unconfirmed native imports. Their partial results count confirmed files.
+- A dispatched import without confirmation returns `OUTCOME_UNKNOWN`. Classic HMI directory imports and `ImportPlcTagTablesFromDirectory` stop at that file and report the remaining matching files as not attempted.
+
 ## [4.0.0-rc.1] - 2026-11-22
 
 ### Changed

@@ -193,14 +193,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                     "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
                     "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
-            var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
+            var readSoftware = _session.GetHmiImportSoftwareReader(softwarePath);
+            if (readSoftware() == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
             LastImportNotes = null;
-            HmiExchangePolicy.RequireClassic(softwareContainer.Software);
+            HmiExchangePolicy.RequireClassic(readSoftware()!);
             try
             {
-                var sw = softwareContainer.Software;
+                var sw = readSoftware()!;
                 // The guard precedes this item's mutation. The session flag also accounts for earlier directory items.
                 GuardClassicScreenSize(sw, importPath);
 
@@ -371,13 +371,13 @@ namespace TiaMcp.Adapters.Native.Hmi
                     "No project is open. If a project is already open in the TIA Portal UI, call AttachOpenProject(projectName); otherwise call " +
                     "OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (ConnectPortal is attempted automatically.)");
 
-            var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
+            var readSoftware = _session.GetHmiImportSoftwareReader(softwarePath);
+            if (readSoftware() == null) throw new PlcSoftwareException("NotFound", $"HMI software not found: {softwarePath}");
 
-            HmiExchangePolicy.RequireClassic(softwareContainer.Software);
+            HmiExchangePolicy.RequireClassic(readSoftware()!);
             try
             {
-                var tables = TagTablesForImport(softwareContainer.Software, folderPath);
+                var tables = TagTablesForImport(readSoftware()!, folderPath);
                 HmiExchangePolicy.BeforeImport(tables, importPath, "Hmi.Tag.TagTable", overwrite);
 
                 if (_session.TryImportEngineeringObjectIntoCollection(tables, importPath, out _, out var err, overwrite))
@@ -472,6 +472,7 @@ namespace TiaMcp.Adapters.Native.Hmi
         {
             var batch = new HmiImportBatch();
             var items = new HmiArray();
+            var notAttempted = new List<string>();
             bool unknown = false;
 
             try
@@ -493,6 +494,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                     {
                         var name = Path.GetFileNameWithoutExtension(file);
                         if (regex != null && !regex.IsMatch(name)) continue;
+                        if (unknown)
+                        {
+                            notAttempted.Add(file);
+                            continue;
+                        }
                         int before = dispatchCount();
                         try { import(file); }
                         catch (Exception ex)
@@ -501,12 +507,12 @@ namespace TiaMcp.Adapters.Native.Hmi
                             unknown |= dispatched;
                             var item = ImportItem(file, false, ex, dispatched ? "ImportUnconfirmed" : "ImportNotStarted");
                             items.Add(item);
-                            string suffix = stopOnFailure ? " Batch stopped; later matching files were not attempted." : "";
+                            string suffix = stopOnFailure || dispatched ? " Batch stopped; later matching files were not attempted." : "";
                             batch.Failed.Add(new HmiImportFailure { Path = file, Error = ex + suffix });
-                            if (stopOnFailure)
+                            if (stopOnFailure || dispatched)
                             {
                                 ((HmiObject)item["evidence"]!)["batchStopped"] = true;
-                                break;
+                                if (!dispatched) break;
                             }
                             continue;
                         }
@@ -521,7 +527,11 @@ namespace TiaMcp.Adapters.Native.Hmi
                 items.Add(ImportItem(dir, false, ex, "ImportNotStarted"));
             }
             batch.Meta = HmiMeta.Basic(batch.Failed.Count == 0, ("items", items));
-            if (unknown) batch.Meta["writeOutcomeUnknown"] = true;
+            if (unknown)
+            {
+                batch.Meta["writeOutcomeUnknown"] = true;
+                batch.Meta["notAttempted"] = notAttempted;
+            }
             return batch;
         }
 

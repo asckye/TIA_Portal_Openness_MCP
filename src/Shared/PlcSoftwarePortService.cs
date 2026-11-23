@@ -168,8 +168,14 @@ namespace TiaMcpServer.Siemens.Services
                     .Where(file => regex == null || regex.IsMatch(Path.GetFileNameWithoutExtension(file)))
                         .OrderBy(file => file, StringComparer.OrdinalIgnoreCase).ToArray();
                 RequireImportWindow(files, "dir");
+                var notAttempted = new List<string>();
                 foreach (var file in files)
                 {
+                    if (unknown)
+                    {
+                        notAttempted.Add(file);
+                        continue;
+                    }
                     var name = Path.GetFileNameWithoutExtension(file);
                     bool sent = false;
                     try {
@@ -197,12 +203,13 @@ namespace TiaMcpServer.Siemens.Services
                         if (imported.Count + failed.Count == 0 && error is AdapterPreconditionException or NotSupportedException) throw;
                         unknown |= TiaOpenness.Shared.HostFailurePolicy.Classify(error, sent, dryRun) == TiaOpenness.Shared.HostFailureKind.Unknown;
                         failed.Add(new ImportFailure { Path = file, Error = error.Message });
-                        if (error is not (PortalException or AdapterPreconditionException)) break;
+                        if (!unknown && error is not (PortalException or AdapterPreconditionException)) break;
                     }
                 }
 
                 var result = Result();
                 var meta = result.Meta!;
+                if (unknown) meta["notAttempted"] = JsonSerializer.SerializeToNode(notAttempted);
                 meta["dryRun"] = dryRun; meta["unitName"] = unitName;
                 meta["swImportOptions"] = JsonSerializer.SerializeToNode(swImportOptions ?? Array.Empty<string>());
                 meta["importOptions"] = JsonSerializer.SerializeToNode(importOptions ?? Array.Empty<string>());

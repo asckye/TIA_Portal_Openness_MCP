@@ -277,6 +277,12 @@ namespace TiaMcp.Adapters
             public IDisposable AcquireHmiEditAccess() => engine.HardwareEditAccess();
             public SoftwareContainer? GetSoftwareContainer(string path) => engine.ResolveEngineeringSoftwareContainer != null
                 ? engine.ResolveEngineeringSoftwareContainer(path) as SoftwareContainer : ReadContainer(path);
+            public Func<object?> GetHmiImportSoftwareReader(string path)
+            {
+                // Resolve the container once. Admission and import read its current Software on the owning thread.
+                var container = GetSoftwareContainer(path);
+                return () => container?.Software;
+            }
             public SoftwareContainer? ResolveSoftwareContainerUncached(string path) => ReadContainer(path);
             internal SoftwareContainer ReadContainer(string path)
             {

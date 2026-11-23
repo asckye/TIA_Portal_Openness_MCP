@@ -409,11 +409,11 @@ namespace TiaMcp.Adapters
                         {
                             bool absent = item.Attempted && !returned && !request.Overwrite && error.Data["verifiedAbsent"] is true;
                             item.NativeMessage = item.Attempted ? error.Data["nativeMessage"] as string
-                                : NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
+                                : NativeFailureText.WithoutLocalPaths(NativeFailureText.Compose(error.Message, null, Array.Empty<string>()));
                             bool unknown=item.Attempted && !absent && (!request.Overwrite || !returned && !(error is PlcBatchImportKnownFailureException));
                             item.Status="failed";item.Failure=absent ? "native-import-refused-absent" : unknown ? "native-outcome-uncertain"
                                 : item.Attempted ? "native-import-or-verification-failed"
-                                : "target-recheck-failed";
+                                : targetChecked ? "import-preparation-failed" : "target-recheck-failed";
                             result.NativeOutcomeUnknown=unknown;
                             stopped=true;
                             if(request.Overwrite && replacements.Length>0)
