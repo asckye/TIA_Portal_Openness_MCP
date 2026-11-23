@@ -120,7 +120,7 @@ namespace TiaOpenness.Shared
         {
             if (HasCompilePassword(tool, original) && original["dryRun"] is JsonValue dry
                 && dry.TryGetValue<bool>(out var preview) && !preview)
-                return ApprovalDisplayPayload.ProtectPlanArguments(original)!.AsObject();
+                return ApprovalDisplayPayload.ProtectApprovalArguments(original);
             return ApprovalDisplayPayload.RedactArguments(original)!.AsObject();
         }
 

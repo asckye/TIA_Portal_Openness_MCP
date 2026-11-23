@@ -48,7 +48,8 @@ namespace TiaOpenness.Shared
             using (var random = RandomNumberGenerator.Create()) random.GetBytes(key);
             return key;
         }
-        public static JsonNode? ProtectPlanArguments(JsonNode? node) => TransformArguments(node, SecretDigest);
+        internal static JsonNode? ProtectPlanArguments(JsonNode? node) => TransformArguments(node, SecretDigest);
+        public static JsonObject ProtectApprovalArguments(JsonObject arguments) => ProtectPlanArguments(arguments)!.AsObject();
         internal static string PlanHostLifetime => SecretDigest(JsonValue.Create("host-lifetime")).GetValue<string>();
         private static JsonNode SecretDigest(JsonNode? node)
         {
