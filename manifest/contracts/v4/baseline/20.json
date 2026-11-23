@@ -28803,7 +28803,7 @@
           },
           "typeIdentifier": {
             "default": "",
-            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (use normalizeTypeIdentifier).",
+            "description": "typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (use SearchHardwareCatalog or normalizeTypeIdentifier).",
             "type": "string"
           }
         },
@@ -31128,7 +31128,7 @@
           },
           "communicationInterface": {
             "default": "",
-            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
+            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadPlc / ConnectOnlinePlc need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
             "examples": [
               "Softbus"
             ],
@@ -31144,7 +31144,7 @@
           },
           "cpuType": {
             "default": "",
-            "description": "cpuType: only for register; ECPUType name such as CPU1500_Unspecified, CPU1511, CPU1516, CPU1518F; empty = API default.",
+            "description": "cpuType: only for register; ECPUType name such as CPU1500_Unspecified, CPU1511, CPU1516, CPU1518F; empty = API default. Use SearchHardwareCatalog for the corresponding project PLC order number.",
             "examples": [
               "<CPU type supported by the installed PLCSIM API>"
             ],
@@ -33624,7 +33624,7 @@
           },
           "confirm": {
             "default": false,
-            "description": "Confirm the reviewed deletion when dryRun=false.",
+            "description": "Applies only to action=delete. Set true to confirm the reviewed deletion when dryRun=false.",
             "type": "boolean"
           },
           "dryRun": {
@@ -33634,7 +33634,7 @@
           },
           "expectedProjectFile": {
             "default": "",
-            "description": "Exact bound project file for deletion when dryRun=false.",
+            "description": "Applies only to action=delete. Supply the exact bound project file when dryRun=false.",
             "type": "string"
           },
           "objectPath": {

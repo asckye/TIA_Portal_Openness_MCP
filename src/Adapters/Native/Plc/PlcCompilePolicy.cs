@@ -21,8 +21,8 @@ namespace TiaMcp.Adapters
 
         internal static void RequirePasswordCapability(string release,string password)
         {
-            TiaVersionCatalog.Get(release);
-            if (PlcCompileScope.PasswordRefusal(release, password) is string reason)
+            var version = TiaVersionCatalog.Get(release);
+            if (PlcCompileScope.PasswordRefusal(release, password, version.DisplayName) is string reason)
                 throw new NotSupportedException(reason) { Data = { ["foundationKnownNoMutation"] = true } };
         }
         internal static bool ScopeMismatch(string[] roots, string device, string item, Func<string> readSoftwareName)

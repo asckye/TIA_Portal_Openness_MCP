@@ -6,9 +6,10 @@ namespace TiaMcp.Adapters.Contracts
     public static class PlcCompileScope
     {
         public const string UnavailableCondition = "compile-scope-unavailable";
-        public static string? PasswordRefusal(string release, string password) =>
+        public static string? PasswordRefusal(string release, string password, string releaseDisplayName) =>
             password.Length == 0 || OpennessApi.SafetyPasswordCompile.Includes(release) ? null
-                : $"Password-based compilation requires the V17 or later SafetyAdministration login API. Release {release} does not provide it.";
+                : $"Password-based compilation requires the SafetyAdministration login API in V{OpennessApi.SafetyPasswordCompile.FirstMajor} or later. "
+                    + $"The selected release is {releaseDisplayName} (release key {release}).";
 
         public static string[] Validate(string scope, string scopePath, string unitName)
         {

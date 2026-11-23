@@ -4,9 +4,19 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking change for callers.** To apply a `ManageTechnologyObject` deletion after preview, pass `action="delete"`, `dryRun=false`,
+  `confirm=true` and the exact bound project file in `expectedProjectFile`.
+
 ### Fixed
 
 - Verified DB import compares compiled UDT members with their declarations and reports readback differences. Offline symbol manifests keep the UDT reference.
+- On V14 SP1, V15.1 and V16, `CompilePlcSoftware` and `CompilePlcDiagnostics` refuse a supplied safety password with `UNSUPPORTED_CAPABILITY`
+  before approval or worker dispatch, in both preview and apply.
+- Tool and parameter descriptions refer to tools registered on the selected release.
+- Input errors identify missing directories by parameter and report the allowed ranges for invalid comparison arguments. When an unknown key precedes
+  an invalid declared field, the error identifies that field. Unknown-key diagnostics list accepted parameter names and keep the supplied key private.
 - Corrected the rc.2 export guidance. A missing output parent is refused before dispatch. Exporting outside the output root requires
   approval when write approval is on and proceeds when it is off.
 

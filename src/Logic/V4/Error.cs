@@ -369,7 +369,7 @@ namespace TiaMcp.Logic.V4
                     .Select(p => p.Trim()).Where(p => p.Length > 0).Distinct(System.StringComparer.Ordinal).ToArray());
             Parameters = V4Validation.List((fields.Count > 0 ? fields : new[] { "" })
                 .Select(Pointer).Distinct(System.StringComparer.Ordinal).ToArray());
-            Parameter = Parameters[0];
+            Parameter = Parameters.FirstOrDefault(pointer => pointer.Length > 0) ?? "";
             AllowedValues = V4Validation.List(allowedValues);
             Expected = expected ?? (allowedValues.Count > 0 ? "one of the allowed values" : null);
             V4Validation.Details(this);

@@ -111,12 +111,29 @@ namespace TiaMcp.Engine.Tests
             yield return new object[] { new string('[', 17) + "0" + new string(']', 17), "LIMIT_EXCEEDED", 16, 17 };
         }
 
+        [Theory]
+        [InlineData("18", "catalog")]
+        [InlineData("17", "identifier")]
+        public void Schema_description_conditions_apply_to_nested_fields_and_preserve_example_values(string release, string expected)
+        {
+            const string description = "[[SearchHardwareCatalog|catalog|identifier]]";
+            var field = new JsonObject { ["type"] = "string", ["description"] = description };
+            var example = new JsonObject { ["description"] = description };
+            var schema = new JsonObject {
+                ["properties"] = new JsonObject { ["rows"] = new JsonObject { ["type"] = "array", ["items"] = field } },
+                ["examples"] = new JsonArray(example)
+            };
+            McpServer.NormalizeInputSchema(schema, release);
+            Assert.Equal(expected, (string?)field["description"]);
+            Assert.Equal(description, (string?)example["description"]);
+        }
+
         [Fact]
         public void V4NullDefaultCleanupVisitsSchemasAndPreservesExampleData()
         {
             const string json = "{\"properties\":{\"input\":{\"default\":null,\"anyOf\":[{\"type\":\"array\",\"items\":{\"type\":\"string\",\"default\":null}}],\"examples\":[{\"default\":null}]}},\"$defs\":{\"child\":{\"type\":\"string\",\"default\":null}}}";
             var schema = JsonNode.Parse(json)!.AsObject();
-            McpServer.RemoveV4NullDefaults(schema);
+            McpServer.NormalizeInputSchema(schema, "14sp1");
             Assert.False(schema["properties"]!["input"]!.AsObject().ContainsKey("default"));
             Assert.False(schema["properties"]!["input"]!["anyOf"]![0]!["items"]!.AsObject().ContainsKey("default"));
             Assert.False(schema["$defs"]!["child"]!.AsObject().ContainsKey("default"));

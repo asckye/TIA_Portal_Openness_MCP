@@ -212,8 +212,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("parameter: exact parameter name.")] string parameter="",
             [Description("value: scalar parameter value (number, string, boolean or null); arrays and objects are refused.")] NativeValue value = default,
             bool dryRun=true,
-            [Description("Confirm the reviewed deletion when dryRun=false.")] bool confirm=false,
-            [Description("Exact bound project file for deletion when dryRun=false.")] string expectedProjectFile="")
+            [Description("Applies only to action=delete. Set true to confirm the reviewed deletion when dryRun=false.")] bool confirm=false,
+            [Description("Applies only to action=delete. Supply the exact bound project file when dryRun=false.")] string expectedProjectFile="")
         {
             if (action == "delete" && _technology.DeleteAdmission(dryRun, confirm, expectedProjectFile) is Error error)
                 return McpServer.V4Reject("ManageTechnologyObject", error);

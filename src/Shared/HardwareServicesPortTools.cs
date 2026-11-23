@@ -175,7 +175,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "exportCardReaderPsc.")] string action=
                 "list",
             [Description("typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (use " +
-                "normalizeTypeIdentifier).")] string typeIdentifier=
+                "[[SearchHardwareCatalog|SearchHardwareCatalog or ]]normalizeTypeIdentifier).")] string typeIdentifier=
                 "",
             string[] devicePath = null!,
             string[] itemPath = null!,

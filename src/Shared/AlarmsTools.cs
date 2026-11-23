@@ -197,7 +197,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "safety behavior is not yet accepted.")]
         public CallToolResult ImportPlcAlarmInstanceTextsV4(
             string softwarePath,
-            [Description("filePath: existing absolute XLSX file written by ExportAlarmInstanceTexts.")] string filePath,
+            [Description("filePath: existing absolute XLSX file[[ExportAlarmInstanceTexts| written by ExportAlarmInstanceTexts| containing the exported " +
+                "alarm instance texts]].")] string filePath,
             [Description("cultures: Array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).")] string[] cultures,
             bool dryRun=true)
             => EngineeringToolContract

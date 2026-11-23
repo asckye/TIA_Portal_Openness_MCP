@@ -16674,7 +16674,7 @@
           },
           "confirm": {
             "default": false,
-            "description": "Confirm the reviewed deletion when dryRun=false.",
+            "description": "Applies only to action=delete. Set true to confirm the reviewed deletion when dryRun=false.",
             "type": "boolean"
           },
           "dryRun": {
@@ -16684,7 +16684,7 @@
           },
           "expectedProjectFile": {
             "default": "",
-            "description": "Exact bound project file for deletion when dryRun=false.",
+            "description": "Applies only to action=delete. Supply the exact bound project file when dryRun=false.",
             "type": "string"
           },
           "objectPath": {

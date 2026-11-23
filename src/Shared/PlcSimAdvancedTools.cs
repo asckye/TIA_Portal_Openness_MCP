@@ -59,14 +59,15 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("instanceName: PLCSIM Advanced instance name, e.g. 'PLC_1'.")] string instanceName,
             [Description("action: register | powerOn | run | stop | powerOff | memoryReset | unregister.")] string action,
             [Description("cpuType: only for register; ECPUType name such as CPU1500_Unspecified, CPU1511, CPU1516, CPU1518F; empty = API " +
-                "default.")] string cpuType =
+                "default.[[SearchHardwareCatalog| Use SearchHardwareCatalog for the corresponding project PLC order number.]]")] string cpuType =
                 "",
             [Description("timeoutMs: wait budget for powerOn/run/stop/powerOff/memoryReset (1000..600000).")] int timeoutMs = 60000,
             [Description("confirmInstanceChange: must be true together with dryRun=false to execute the action.")] bool confirmInstanceChange = false,
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
             [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "",
             [Description("communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC " +
-                "interface at the instance IP, API default 192.168.0.1), Softbus, or an ENetworkMode name " +
+                "interface at the instance IP, API default 192.168.0.1[[DownloadPlc,ConnectOnlinePlc| - what DownloadPlc / ConnectOnlinePlc need]]), " +
+                "Softbus, or an ENetworkMode name " +
                 "(TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the " +
                 "current setting.")] string communicationInterface =
                 "")

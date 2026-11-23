@@ -52,7 +52,8 @@ internal sealed class OnlineDataTools
                 "read-only. No project or PLC change. Current native policy; V4 safety behavior is not yet accepted.")]
         public CallToolResult ReadPlcBlockFingerprintsV4(
             string softwarePath,
-            [Description("targetIpAddress: IP address of the PLC as ScanAccessibleDevices lists it.")] string targetIpAddress,
+            [Description("targetIpAddress: IP address of the PLC as [[ScanAccessibleDevices|ScanAccessibleDevices|ListTransferRoutes]] lists " +
+                "it.")] string targetIpAddress,
             string pgPcInterface="",
             string password="",
             int offset=0,

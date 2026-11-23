@@ -136,6 +136,8 @@ public sealed class ScopedCompileContractTests
     public void Unsupported_compile_password_is_classified_as_a_capability_refusal(string release)
     {
         var cause = Assert.Throws<NotSupportedException>(() => PlcCompilePolicy.RequirePasswordCapability(release, "fixture"));
+        Assert.Contains(TiaMcp.Versioning.TiaVersionCatalog.Get(release).DisplayName, cause.Message);
+        Assert.Contains($"V{TiaMcp.Adapters.Contracts.OpennessApi.SafetyPasswordCompile.FirstMajor} or later", cause.Message);
         var failure = WorkerFailurePolicy.Classify(cause, true, false);
         Assert.Equal(TiaMcp.WorkerChannel.ChannelOutcome.RejectedBeforeNative, failure.Outcome);
         var reported = WorkerOperationException.FromChannelFailure(new TiaMcp.WorkerChannel.ChannelFailureException(

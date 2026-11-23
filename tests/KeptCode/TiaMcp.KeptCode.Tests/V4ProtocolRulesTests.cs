@@ -29,6 +29,9 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal("Unknown parameter(s): [undeclared]. Missing required: b. Invalid: a, c.", error.Message);
             Assert.DoesNotContain("private-key", V4Json.Serialize(schema.Restrict(error, arguments)), StringComparison.Ordinal);
             Assert.Equal(new[] { "", "/c", "/a", "/b" }, Assert.IsType<InvalidArgumentDetails>(error.Details).Parameters);
+            var details = Assert.IsType<InvalidArgumentDetails>(error.Details);
+            Assert.Equal("/c", details.Parameter);
+            Assert.Equal("integer", details.Expected);
             var missing = schema.Validate(JsonSerializer.Deserialize<JsonElement>("{}"), "arguments")!;
             Assert.Equal("Missing required: b.", missing.Message);
         }

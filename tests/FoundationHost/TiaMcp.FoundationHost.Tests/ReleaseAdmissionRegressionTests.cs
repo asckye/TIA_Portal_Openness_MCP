@@ -13,24 +13,47 @@ public sealed class ReleaseAdmissionRegressionTests
     [Fact]
     public void Every_description_names_only_tools_registered_on_its_release()
     {
-        var catalogs = new Dictionary<string, Dictionary<string, string?>>();
+        var catalogs = new Dictionary<string, Dictionary<string, ModelContextProtocol.Protocol.Tool>>();
         foreach (var version in B3HostPortsTests.Releases)
         {
             string release = (string)version[0];
             using var fixture = new DiscoveryFixture(release);
-            catalogs.Add(release, fixture.Tools.ToDictionary(t => t.ProtocolTool.Name, t => t.ProtocolTool.Description));
+            catalogs.Add(release, fixture.Tools.ToDictionary(t => t.ProtocolTool.Name, t => t.ProtocolTool));
         }
         var names = catalogs.Values.SelectMany(tools => tools.Keys).ToHashSet(StringComparer.Ordinal);
         var failures = new List<string>();
         foreach (var (release, tools) in catalogs)
-        foreach (var (tool, description) in tools)
+        foreach (var (name, tool) in tools)
+        foreach (var (location, description) in SchemaDescriptions(tool.InputSchema, name).Prepend((name, tool.Description)))
         {
             Assert.DoesNotMatch(@"\[\[[A-Za-z0-9,]+\|", description ?? "");
             var missing = Regex.Matches(description ?? "", @"\b[A-Za-z][A-Za-z0-9]*\b").Select(m => m.Value)
                 .Where(name => names.Contains(name) && !tools.ContainsKey(name)).Distinct();
-            failures.AddRange(missing.Select(reference => $"{release}/{tool} references {reference}"));
+            failures.AddRange(missing.Select(reference => $"{release}/{location} references {reference}"));
         }
         Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
+    }
+
+    private static IEnumerable<(string, string?)> SchemaDescriptions(JsonElement node, string path)
+    {
+        if (node.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var child in node.EnumerateArray())
+            foreach (var field in SchemaDescriptions(child, path)) yield return field;
+        }
+        if (node.ValueKind != JsonValueKind.Object) yield break;
+        foreach (var member in node.EnumerateObject())
+        {
+            if (member.Name == "description" && member.Value.ValueKind == JsonValueKind.String)
+                yield return (path, member.Value.GetString());
+            else if (member.Name is "properties" or "$defs" or "patternProperties" or "dependentSchemas")
+            {
+                foreach (var property in member.Value.EnumerateObject())
+                foreach (var field in SchemaDescriptions(property.Value, path + "/" + member.Name + "/" + property.Name)) yield return field;
+            }
+            else if (member.Name is not ("examples" or "default" or "enum" or "const"))
+                foreach (var field in SchemaDescriptions(member.Value, path + "/" + member.Name)) yield return field;
+        }
     }
 
     [Theory]
@@ -43,6 +66,12 @@ public sealed class ReleaseAdmissionRegressionTests
         using var fixture = new DiscoveryFixture(release);
         string description = fixture.Tools.Single(tool => tool.ProtocolTool.Name == "BuildProjectScaffold").ProtocolTool.Description!;
         Assert.Equal(catalog, description.Contains("V18+"));
+        string Parameter(string tool, string field) => fixture.Tools.Single(t => t.ProtocolTool.Name == tool).ProtocolTool.InputSchema
+            .GetProperty("properties").GetProperty(field).GetProperty("description").GetString()!;
+        Assert.Equal(catalog, Parameter("ManageHardwareUtilities", "typeIdentifier").Contains("SearchHardwareCatalog"));
+        Assert.Equal(catalog, Parameter("ManagePlcSimAdvancedInstance", "cpuType").Contains("SearchHardwareCatalog"));
+        Assert.Contains("only to action=delete", Parameter("ManageTechnologyObject", "confirm"));
+        Assert.Contains("only to action=delete", Parameter("ManageTechnologyObject", "expectedProjectFile"));
         Assert.Equal(unified, description.Contains("Unified HMI"));
         Assert.Equal(documents, description.Contains("LAD S7DCL"));
         using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
@@ -151,6 +180,24 @@ public sealed class ReleaseAdmissionRegressionTests
         Assert.Equal(declared, details["allowedValues"]!.AsArray().Select(value => (string)value!).Order());
         Assert.DoesNotContain("privateKey", body.ToJsonString());
         Assert.DoesNotContain("privateValue", body.ToJsonString());
+    }
+
+    [Theory]
+    [InlineData("PreviewToolCall")]
+    [InlineData("CallTool")]
+    [InlineData("FindTools")]
+    public async Task Unknown_key_before_invalid_limit_reports_the_declared_parameter(string entry)
+    {
+        using var fixture = new DiscoveryFixture("14sp1");
+        var arguments = new { privateKey = 1, limit = 0 };
+        var body = await fixture.Call(entry, entry == "FindTools" ? arguments : (object)new { name = "FindTools", arguments });
+        var error = entry == "PreviewToolCall" ? body["data"]?["validationError"] : body["error"];
+        Assert.Equal("/limit", (string?)error?["details"]?["parameter"]);
+        Assert.Equal("integer", (string?)error?["details"]?["expected"]);
+        var pointers = error!["details"]!["parameters"]!.AsArray().Select(value => (string?)value).ToArray();
+        Assert.Contains("/limit", pointers);
+        Assert.Contains("", pointers);
+        Assert.DoesNotContain("privateKey", body.ToJsonString());
     }
 
     [Fact]

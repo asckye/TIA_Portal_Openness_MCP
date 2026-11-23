@@ -105,8 +105,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("rhTarget: empty for standard CPUs; primary or backup goes online to that CPU of an R/H system through " +
                 "RHOnlineProvider.")] string rhTarget =
                 "",
-            [Description("pgPcInterface: optional PG/PC adapter name substring (as listed by ListTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM " +
-                "Virtual Ethernet Adapter'); with ipAddress the route is applied before going online " +
+            [Description("pgPcInterface: optional PG/PC adapter name substring (as listed by ListTransferRoutes[[ScanAccessibleDevices| / " +
+                "ScanAccessibleDevices]], e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online " +
                 "(ConnectionConfiguration.ApplyConfiguration).")] string pgPcInterface =
                 "",
             [Description("trustDeviceCertificate: false (default) leaves an untrusted certificate of FW >= 2.9 CPUs untrusted and TIA refuses the " +
@@ -498,8 +498,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 "confirmUpload=true, takes exclusive access, answers upload prompts (missing products: TryUpload; password prompts from password) and " +
                 "verifies the uploaded device exists. No save/compile/download. Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult UploadStationFromPlcV4(
-            [Description("targetIpAddress: IP address of the PLC exactly as ScanAccessibleDevices lists it on the same interface (IP only, no " +
-                "MAC).")] string targetIpAddress,
+            [Description("targetIpAddress: IP address of the PLC exactly as [[ScanAccessibleDevices|ScanAccessibleDevices|ListTransferRoutes]] lists it " +
+                "on the same interface (IP only, no MAC).")] string targetIpAddress,
             [Description("pgPcInterface: exact PG/PC interface name or number from ListTransferRoutes; required when several interfaces exist ('' only when " +
                 "there is "
                         +

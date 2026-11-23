@@ -36,9 +36,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!IsInfrastructureV4(name)) throw new InvalidOperationException("Registered tool has no generated V4 contract: " + name);
         }
 
-        private static void InfrastructureSchema(string name, JsonObject schema)
+        private static void InfrastructureSchema(string name, JsonObject schema, string? release = null)
         {
-            RemoveV4NullDefaults(schema);
+            NormalizeInputSchema(schema, release ?? ReleaseKey);
             schema["additionalProperties"] = false;
             var properties = schema["properties"]!.AsObject();
             if (name == "CallTool" || name == "PreviewToolCall")
@@ -61,11 +61,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        internal static void RemoveV4NullDefaults(JsonObject schema)
+        internal static void NormalizeInputSchema(JsonObject schema, string release)
         {
             void Visit(JsonNode? node)
             {
                 if (!(node is JsonObject value)) return;
+                if (value["description"] is JsonValue description && description.TryGetValue<string>(out var text) && text.Contains("[["))
+                    value["description"] = TiaOpenness.Shared.ToolUsageCatalog.ReleaseDescription(text, release);
                 if (value.TryGetPropertyValue("default", out var fallback) && fallback == null) value.Remove("default");
                 foreach (string key in new[] { "properties", "$defs", "patternProperties", "dependentSchemas" })
                     if (value[key] is JsonObject map) foreach (var child in map) Visit(child.Value);
@@ -152,7 +154,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var exampleArgs = example == null ? null : JsonNode.Parse(example.ArgumentsJson)!.AsObject();
             SchemaHintsLogic.Augment(schema, specs, exampleArgs, name);
             preserveTypedSchemas(schema, protocol.InputSchema);
-            InfrastructureSchema(name, schema);
+            InfrastructureSchema(name, schema, release);
             schema = InlineSchema(schema);
             using var doc = JsonDocument.Parse(schema.ToJsonString(DisciplineJson));
             var clone = new Tool

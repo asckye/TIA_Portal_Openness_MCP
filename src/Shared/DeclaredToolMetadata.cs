@@ -90,7 +90,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         internal static McpServerTool CreateToolCore(MethodInfo method, McpServerToolCreateOptions? options, Func<RequestContext<CallToolRequestParams>,
-                object> target)
+                object> target, string? release = null)
         {
             // Exclude custom input contracts from SDK inference before it serializes
             // optional null defaults. Their null-rejecting converters are unchanged.
@@ -139,7 +139,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!input.Parameter.HasDefaultValue) required.Add(name);
             }
             if (required.Count > 0) schema["required"] = required;
-            McpServer.RemoveV4NullDefaults(schema);
+            McpServer.NormalizeInputSchema(schema, release ?? HardwareContract.ReleaseKey);
             return new SchemaHintedTool(tool, V4(new Tool
             {
                 Name = protocol.Name, Title = protocol.Title, Description = protocol.Description,
@@ -214,6 +214,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     text += ". PlcChecksumProvider is also available on this release.";
                 if (release != null && tool == "ProbeGlobalLibrary" && p.Name == "libraryPath")
                     text = $"Full path to a {TiaOpenness.Shared.ToolUsageCatalog.LibraryExtension(release)} library file or its containing folder.";
+                if (text != null) text = TiaOpenness.Shared.ToolUsageCatalog.ReleaseDescription(text, release ?? HardwareContract.ReleaseKey);
                 specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, text ?? "", synthesized,
                     ToolMetadata.Parameter(tool, p.Name!)?.AllowedValues,
                     pattern: ToolMetadata.Parameter(tool, p.Name!)?.Pattern));
@@ -244,8 +245,8 @@ namespace TiaMcpServer.ModelContextProtocol
             description = TiaOpenness.Shared.ToolUsageCatalog.ReleaseDescription(description, release);
             var decorated = TiaOpenness.Shared.ToolUsageCatalog.WithHint(name, ToolExamples.Decorate(name, description, release));
             var tool = decorated == attribute?.Description
-                ? CreateToolCore(method, null, target)
-                : CreateToolCore(method, new McpServerToolCreateOptions { Name = name, Description = decorated }, target);
+                ? CreateToolCore(method, null, target, release)
+                : CreateToolCore(method, new McpServerToolCreateOptions { Name = name, Description = decorated }, target, release);
             // Enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
             var specs = SpecsOf(method, release);
             var hinted = McpServer.WithSchemaHints(tool, name, specs, release, (schema, original) => PreserveTypedSchemas(schema, original, method));

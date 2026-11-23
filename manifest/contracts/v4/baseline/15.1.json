@@ -6322,7 +6322,7 @@
           },
           "pgPcInterface": {
             "default": "",
-            "description": "pgPcInterface: optional PG/PC adapter name substring (as listed by ListTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).",
+            "description": "pgPcInterface: optional PG/PC adapter name substring (as listed by ListTransferRoutes, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).",
             "examples": [
               "<exact PG/PC interface name from ListTransferRoutes>"
             ],
@@ -17745,7 +17745,7 @@
           },
           "communicationInterface": {
             "default": "",
-            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
+            "description": "communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadPlc / ConnectOnlinePlc need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.",
             "examples": [
               "Softbus"
             ],
@@ -18866,7 +18866,7 @@
           },
           "confirm": {
             "default": false,
-            "description": "Confirm the reviewed deletion when dryRun=false.",
+            "description": "Applies only to action=delete. Set true to confirm the reviewed deletion when dryRun=false.",
             "type": "boolean"
           },
           "dryRun": {
@@ -18876,7 +18876,7 @@
           },
           "expectedProjectFile": {
             "default": "",
-            "description": "Exact bound project file for deletion when dryRun=false.",
+            "description": "Applies only to action=delete. Supply the exact bound project file when dryRun=false.",
             "type": "string"
           },
           "objectPath": {
@@ -22650,7 +22650,7 @@
             "type": "object"
           },
           "targetIpAddress": {
-            "description": "targetIpAddress: IP address of the PLC exactly as ScanAccessibleDevices lists it on the same interface (IP only, no MAC).",
+            "description": "targetIpAddress: IP address of the PLC exactly as ListTransferRoutes lists it on the same interface (IP only, no MAC).",
             "examples": [
               "192.0.2.10"
             ],

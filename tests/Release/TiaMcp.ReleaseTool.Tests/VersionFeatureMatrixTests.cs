@@ -33,6 +33,7 @@ public sealed class VersionFeatureMatrixTests
             [OpennessApi.PlcUnits] = Has("T:SW.Units.PlcUnitProvider"),
             [OpennessApi.IgnoreUnitAttributes] = Has("F:SW.SWImportOptions.IgnoreUnitAttributes"),
             [OpennessApi.VersionControl] = Has("T:VersionControl.VersionControlInterface"),
+            [OpennessApi.SafetyPasswordCompile] = Has("M:Safety.SafetyAdministration.LoginToSafetyOfflineProgram(System.Security.SecureString)"),
             [OpennessApi.WatchForceEntries] = Has("P:SW.WatchAndForceTables.PlcWatchTableEntry.Address")
                 && Has("P:SW.WatchAndForceTables.PlcForceTableEntry.Address"),
             [OpennessApi.UmcServerSynchronization] = Has("M:Umac.UmcServerConfigurator.CheckConsistency")

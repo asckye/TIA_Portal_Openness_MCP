@@ -558,8 +558,15 @@ namespace TiaMcpServer.ModelContextProtocol
             var schema = new InputSchema(target.Tool.InputSchema);
             var fields = schema.ValidateFields(arguments.Json);
             if (fields.Count == 0 || fields.Any(e => e.Details is not InvalidArgumentDetails)) return error;
-            var details = argument.Parameter == "" && fields.Count == 1 ? fields[0].Details : argument;
+            var details = argument.Parameter == "" ? PrimaryFieldDetails(fields, argument) : argument;
             return new Error(schema.FieldReport(arguments.Json), details);
+        }
+        private static InvalidArgumentDetails PrimaryFieldDetails(IEnumerable<Error> fields, InvalidArgumentDetails original)
+        {
+            var details = fields.Select(field => (InvalidArgumentDetails)field.Details).Append(original).ToArray();
+            var pointers = details.SelectMany(field => field.Parameters).Distinct(StringComparer.Ordinal).ToArray();
+            var primary = details.FirstOrDefault(field => !string.IsNullOrEmpty(field.Parameter)) ?? details[0];
+            return new InvalidArgumentDetails(primary.Parameter, primary.AllowedValues, pointers, primary.Expected);
         }
         internal static bool CurrentBehaviorTargets(string tool, JsonElement arguments)
         {

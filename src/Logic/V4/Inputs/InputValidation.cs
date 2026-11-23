@@ -178,7 +178,8 @@ namespace TiaMcp.Logic.V4.Inputs
         internal bool IsInvalidAt(string pointer) => !IsLimit && pointers?[0] == pointer;
         internal static InputRejectionException Combine(IReadOnlyList<InputRejectionException> errors)
         {
-            var first = errors[0];
+            // Keep the full pointer list in input order and describe the first identifiable field.
+            var first = errors.FirstOrDefault(error => !error.IsLimit && error.pointers?.Any(pointer => pointer.Length > 0) == true) ?? errors[0];
             first.pointers = errors.SelectMany(e => e.pointers ?? new[] { "" }).Distinct(StringComparer.Ordinal).ToArray();
             return first;
         }
