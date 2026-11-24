@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Linq;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Services;
@@ -29,10 +31,63 @@ public sealed class AuditLogServiceTests(WpfContext wpf)
             WpfContext.Complete(view.RefreshAsync());
             Assert.Equal(new[] { AuditEventType.Request, AuditEventType.Approve, AuditEventType.Reject, AuditEventType.Timeout, AuditEventType.Toggle },
                 view.Events.Select(row => row.Type));
+            using var cancellation = new System.Threading.CancellationTokenSource();
+            Assert.Throws<OperationCanceledException>(() => view.Verify(_ => cancellation.Cancel(), cancellation.Token));
             var report = view.Verify(); Assert.True(report.Passed); Assert.Single(report.Chains); Assert.Equal(5, report.Count);
             Assert.Equal(new long[] { 1, 2, 3, 4, 5 }, host.Read().Select(row => row.Index));
         });
     }
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Verification_reports_records_and_stops_between_them(int directoryCount)
+    {
+        string root = Path.GetFullPath(Path.Combine("bin-build", "audit-progress", Guid.NewGuid().ToString("N")));
+        string[] directories = Enumerable.Range(0, directoryCount).Select(i => Path.Combine(root, "chain-" + i)).ToArray();
+        try
+        {
+            const int count = 40;
+            foreach (string path in directories)
+            {
+                var chain = new AuditLog(path, 2700);
+                for (int i = 0; i < count; i++) chain.Append("request", "r" + i, "engine", "21", "WriteFixture");
+            }
+            var log = new AuditLog(directories[0]);
+            var fractions = new List<double>();
+            using var stop = new CancellationTokenSource();
+            Assert.Throws<OperationCanceledException>(() => log.Verify(fraction =>
+            {
+                fractions.Add(fraction);
+                if (fractions.Count == 11) stop.Cancel();
+            }, stop.Token));
+            Assert.Equal(11, fractions.Count);
+            Assert.True(fractions[0] > 0 && fractions[^1] < 1);
+            Assert.Equal(fractions.Order(), fractions);
+
+            using var service = new AuditLogService(directories[0], root, Path.Combine(root, "settings"), chains: directories);
+            using var stopService = new CancellationTokenSource();
+            int last = 0;
+            Assert.Throws<OperationCanceledException>(() => service.Verify(percent =>
+            {
+                last = percent;
+                if (percent >= 25) stopService.Cancel();
+            }, stopService.Token));
+            Assert.InRange(last, 25, 49);
+            var percentages = new List<int>();
+            var complete = service.Verify(percentages.Add);
+            Assert.True(complete.Passed);
+            Assert.Equal(directoryCount * count, complete.Count);
+            Assert.Equal(directories, complete.Chains.Select(chain => chain.Chain));
+            Assert.All(complete.Chains, chain => { Assert.True(chain.Passed); Assert.Equal(count, chain.Count); Assert.Null(chain.BreakIndex); });
+            Assert.Equal(0, percentages[0]); Assert.Equal(100, percentages[^1]);
+            Assert.Equal(percentages.Distinct().Order(), percentages);
+            Assert.Contains(percentages, percent => percent is > 0 and < 50);
+            Assert.Contains(percentages, percent => percent is > 50 and < 100);
+            Assert.Equal(service.Verify().Count, complete.Count);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Fact]
     public void Real_service_reads_verifies_persists_opens_and_notifies()
     {
@@ -75,6 +130,9 @@ public sealed class AuditLogServiceTests(WpfContext wpf)
             Assert.Equal(empty, service.Coverage.Resolve());
             var row = new AuditRow(new AuditEvent(1, DateTimeOffset.UtcNow, AuditEventType.End, "WriteFixture", "partial", "abc"), false);
             Assert.Equal(partial, row.Result);
+            var legacy = row with { PreviousHash = "visible-predecessor" };
+            Assert.Equal(legacy.PreviousHash, legacy.RecordedLink);
+            Assert.False(legacy.HasMismatchedLink);
             Directory.CreateDirectory(Path.Combine(root, "diagnostics"));
             File.WriteAllText(Path.Combine(root, "diagnostics", "calls-test.jsonl"), "{\"utc\":\"2026-10-05T08:00:00.0000000+00:00\"}\n{\"utc\":\"2026-10-05T16:00:00.0000000+00:00\"}\n");
             string active = Path.Combine(root, "diagnostics", "calls-test.jsonl");

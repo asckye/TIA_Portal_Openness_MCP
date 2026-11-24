@@ -402,7 +402,17 @@ public partial class MainWindow
     }
     private void OnNavigateExecuted(object sender, ExecutedRoutedEventArgs e)
     {
-        NavigateGuarded((string)e.Parameter);
+        string page = (string)e.Parameter;
+        if (e.OriginalSource is Views.AgentPagePill && page is "Approvals" or "ApprovalHistory")
+        {
+            NavigateGuarded("Approvals");
+            if (_page == "Approvals" && !ShellModalOpen)
+            {
+                Features.HandledRequests = page == "ApprovalHistory";
+                Features.HistoryDetailOpen = false;
+            }
+        }
+        else NavigateGuarded(page);
         if (!SettingsOpen && e.OriginalSource is RadioButton { GroupName: "Pages" } rail && Equals(rail.CommandParameter, e.Parameter)) rail.Focus();
     }
     // Disabled menu entries still have executable shortcuts, so the reason can be announced in a toast.
@@ -549,7 +559,7 @@ public partial class MainWindow
             ((Panel)DrawerPanel.Parent).Children.Remove(DrawerPanel);
             target.Children.Add(DrawerPanel);
         }
-        DrawerPanel.Width = dock ? 344 : 520;
+        DrawerPanel.Width = dock ? DockedInspector.Width : 520;
         DrawerPanel.Margin = dock ? new Thickness(0) : new Thickness(0, 8, 8, 8);
         Features.SetVisibility(_page == "Calls", _page == "Audit", _page == "Approvals", true);
         DrawerCallResult.Visibility = CallDetailContent.Visibility = Visibility.Visible;

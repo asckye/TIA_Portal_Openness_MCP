@@ -85,7 +85,7 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
                 WpfContext.Complete(window.ReadControlDetailAsync(CallId, () => new WorkbenchControlLog.Activity("ShowWorkbenchCall", "done")));
                 Assert.Contains("ShowWorkbenchCall", ((TextBlock)detail.FindName("ControlActivity")).Text);
                 var panel = (Border)window.FindName("DrawerPanel");
-                Assert.Equal(docked ? 344 : 520, panel.ActualWidth);
+                Assert.Equal(docked ? 348 : 520, panel.ActualWidth);
                 Assert.Same(window.FindName(docked ? "DockedInspector" : "DrawerOverlay"), panel.Parent);
                 var inspector = (Grid)window.FindName("DockedInspector");
                 Assert.Equal(Loc.Current["Calls.Detail"], System.Windows.Automation.AutomationProperties.GetName(inspector));

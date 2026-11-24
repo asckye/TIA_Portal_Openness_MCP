@@ -21,6 +21,54 @@ public sealed class CallJournalPanelTests(WpfContext wpf)
         => new(approvals ?? FeaturePageFixtures.Approvals(), journal ?? new FeaturePageFixtures.Journal(),
             new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment(), new FeaturePageFixtures.Diagnostics(), () => FeaturePageFixtures.Now);
 
+    [Theory]
+    [InlineData(AppLanguage.English)]
+    [InlineData(AppLanguage.Chinese)]
+    public void Actor_and_release_filter_popup_announces_active_filters_and_cycles_focus(AppLanguage language)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            try
+            {
+                window.Navigate("Calls");
+                var view = window.CallsContent;
+                void CheckLabel(int active)
+                {
+                    string expected = active == 0 ? Loc.Current["Calls.Filters"] : Loc.Current.T("Calls.ActiveFilters", active);
+                    Assert.Equal(expected, view.FilterToggle.Content);
+                    Assert.Equal(expected, System.Windows.Automation.AutomationProperties.GetName(view.FilterToggle));
+                }
+                CheckLabel(0);
+                UnifiedDesktopTests.ClickControl(view.FilterToggle);
+                WpfContext.Drain();
+                Assert.Same(view.HumanFilter, Keyboard.FocusedElement);
+                UnifiedDesktopTests.ClickControl(view.HumanFilter);
+                CheckLabel(1);
+                Assert.True(view.HumanFilter.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next)));
+                Assert.Same(view.AiFilter, Keyboard.FocusedElement);
+                UnifiedDesktopTests.ClickControl(view.AiFilter);
+                CheckLabel(1);
+                Assert.True(view.AiFilter.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next)));
+                Assert.Same(view.ReleaseFilter, Keyboard.FocusedElement);
+                view.ReleaseFilter.SelectedIndex = 1;
+                CheckLabel(2);
+                Assert.True(view.ReleaseFilter.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next)));
+                Assert.Same(view.HumanFilter, Keyboard.FocusedElement);
+                Assert.True(view.HumanFilter.MoveFocus(new TraversalRequest(FocusNavigationDirection.Previous)));
+                Assert.Same(view.ReleaseFilter, Keyboard.FocusedElement);
+                Assert.True(WorkbenchToastTests.PressEscape(view.ReleaseFilter).Handled);
+                WpfContext.Drain();
+                Assert.False(view.FilterPopup.IsOpen);
+                Assert.Same(view.FilterToggle, Keyboard.FocusedElement);
+                CheckLabel(2);
+                window.Features.ReleaseOnly = window.Features.AiOnly = false;
+                CheckLabel(0);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
     public void Real_service_uses_saved_endpoint_and_ClientProfiles_without_decrypting_keys()
     {

@@ -424,7 +424,9 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
             try
             {
                 window.Navigate("Calls");
+                UnifiedDesktopTests.ClickControl(window.CallsContent.FilterToggle);
                 var combo = window.CallsContent.ReleaseFilter;
+                Assert.True(combo.IsVisible);
                 window.UpdateLayout();
                 combo.Focus();
                 combo.IsDropDownOpen = true;
@@ -435,6 +437,11 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
                 Assert.False(combo.IsDropDownOpen);
                 Assert.Equal(Visibility.Visible, window.Toast.Visibility);
                 Assert.True(PressEscape(combo).Handled);
+                WpfContext.Drain();
+                Assert.False(window.CallsContent.FilterPopup.IsOpen);
+                Assert.Same(window.CallsContent.FilterToggle, Keyboard.FocusedElement);
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                Assert.True(PressEscape(window.CallsContent.FilterToggle).Handled);
                 Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
             }
             finally { window.Close(); }
@@ -989,7 +996,10 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
                     case "log-copy":
                         window.Navigate("Log"); window.UpdateLayout();
                         window.Features.CopyText = _ => { };
-                        UnifiedDesktopTests.ClickControl(window.LogContent.CopyLogButton);
+                        UnifiedDesktopTests.ClickControl(window.LogContent.MoreActions);
+                        Assert.True(window.LogContent.MoreActions.ContextMenu.IsOpen);
+                        window.LogContent.CopyLogButton.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                        window.LogContent.MoreActions.ContextMenu.IsOpen = false;
                         expected = Loc.Current["Toast.Copied"];
                         break;
                     case "clear-log":

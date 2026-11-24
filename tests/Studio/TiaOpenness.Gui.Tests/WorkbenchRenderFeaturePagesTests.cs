@@ -3,6 +3,8 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
@@ -215,7 +217,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                         var label = Descendants<TextBlock>(host).Single(t => t.Text == "TIA Portal V14 SP1");
                         Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Primer.text")).Color, ((SolidColorBrush)label.Foreground).Color);
                     }
-                    if (state.StartsWith("calls", StringComparison.Ordinal)) Assert.Equal(190, window.CallsContent.SearchBox.ActualWidth);
+                    if (state.StartsWith("calls", StringComparison.Ordinal)) Assert.Equal(196, window.CallsContent.SearchBox.ActualWidth);
                     var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
                     bitmap.Render(host);
                     var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
@@ -274,6 +276,11 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                     }
                     Assert.True(Pill(calls, "Calls").IsChecked);
                     CheckBar(calls, "Calls");
+                    UnifiedDesktopTests.ClickControl(Pill(calls, "ApprovalHistory"));
+                    Assert.Equal("Approvals", window.CurrentPage);
+                    Assert.True(window.Features.HistoryPageSelected);
+                    Assert.True(Pill(approvals, "ApprovalHistory").IsChecked);
+                    UnifiedDesktopTests.ClickControl(Pill(approvals, "Calls"));
                     UnifiedDesktopTests.ClickControl(Pill(calls, "Approvals"));
                     Assert.Equal("Approvals", window.CurrentPage);
                     Assert.True(Pill(approvals, "Approvals").IsChecked);
@@ -309,7 +316,18 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                     var toggle = (ToggleButton)audit.FindName("DetailsToggle");
                     UnifiedDesktopTests.ClickControl(toggle);
                     Assert.Equal(Visibility.Collapsed, inspector.Visibility);
-                    UnifiedDesktopTests.ClickControl(toggle);
+                    Assert.True(inspector.IsAncestorOf(toggle));
+                    list.SelectedIndex = 0;
+                    Assert.Equal(Visibility.Visible, inspector.Visibility);
+                    var peer = UIElementAutomationPeer.CreatePeerForElement(toggle);
+                    Assert.Equal(Loc.Current["Audit.CloseDetails"], peer.GetName());
+                    Assert.Equal(AutomationControlType.Button, peer.GetAutomationControlType());
+                    Assert.Null(peer.GetPattern(PatternInterface.Toggle));
+                    Assert.IsAssignableFrom<IInvokeProvider>(peer.GetPattern(PatternInterface.Invoke)).Invoke();
+                    WpfContext.Drain();
+                    Assert.Equal(Visibility.Collapsed, inspector.Visibility);
+                    list.SelectedIndex = 1;
+                    Assert.Equal(Visibility.Visible, inspector.Visibility);
                     var search = (TextBox)audit.FindName("AuditSearchBox");
                     search.Text = "#2";
                     Assert.Single(list.Items);
@@ -482,7 +500,9 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 string? directory = output == null ? null : Directory.CreateDirectory(Path.Combine(output, "b2")).FullName;
                 void Capture(string view)
                 {
-                    while (window.Toast.IsVisible) UnifiedDesktopTests.ClickControl(window.ToastClose);
+                    bool verificationResult = view is "audit-ok" or "audit-broken";
+                    if (!verificationResult)
+                        while (window.Toast.IsVisible) UnifiedDesktopTests.ClickControl(window.ToastClose);
                     WpfContext.Drain(); host.UpdateLayout();
                     if (directory != null) WorkbenchRenderTests.SaveRender(host, Path.Combine(directory, view + "-" + suffix + ".png"), width, height);
                 }
@@ -519,9 +539,17 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 arguments.IsExpanded = false;
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.HistoryTab);
                 Capture("agent-approvals-history");
-                AssertCenteredColumn(window.ApprovalsContent.HistoryColumn, window.ApprovalsContent.PageBody, 960);
+                Assert.Equal(window.ApprovalsContent.PageBody.ActualWidth, window.ApprovalsContent.HistoryColumn.ActualWidth);
+                Assert.Equal(0, window.ApprovalsContent.HistoryColumn.TranslatePoint(new Point(), window.ApprovalsContent.PageBody).X);
                 var history = window.ApprovalsContent.HistoryList.Items.Cast<ApprovalRow>().ToArray();
                 Assert.Equal(5, history.Length);
+                window.ApprovalsContent.HistorySearch.Text = "previous-IMPORT";
+                Assert.Equal("previous-import", Assert.Single(window.Features.VisibleRequests).Request.Id);
+                window.ApprovalsContent.HistorySearch.Text = "no-such-record";
+                Assert.True(window.Features.RequestsEmpty);
+                window.ApprovalsContent.HistorySearch.Clear();
+                WpfContext.Drain(); host.UpdateLayout();
+                Assert.Equal(5, window.Features.VisibleRequests.Count);
                 var handled = Assert.Single(history, row => row.Request.Id == "previous-import");
                 Assert.Contains(history, row => !row.HasAuditDecision);
                 Assert.Equal("previous-import", handled.AuditDecision?.RequestId);
@@ -537,15 +565,26 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                     .Single(button => button.DataContext == handled && Equals(button.Content, handled.HistoryTools));
                 UnifiedDesktopTests.ClickControl(review);
                 Assert.True(window.Features.HistoryDetailOpen);
-                host.UpdateLayout();
-                AssertCenteredColumn(window.ApprovalsContent.DetailColumn, window.ApprovalsContent.DetailViewport, 780);
+                Capture("agent-approvals-history-detail");
+                var historyList = window.ApprovalsContent.HistoryList;
+                var historyScroll = Descendants<ScrollViewer>(historyList).Single(scroll => scroll.TemplatedParent == historyList);
+                Assert.Equal(0, historyScroll.ScrollableWidth);
+                var columns = ((GridView)window.ApprovalsContent.HistoryList.View).Columns;
+                Assert.Equal(Loc.Current["Approval.HistoryNote"], columns[^1].Header);
+                Assert.True(columns.Sum(column => column.ActualWidth) <= historyScroll.ViewportWidth);
+                Assert.Equal(348, window.ApprovalsContent.DetailViewport.ActualWidth);
+                Assert.Equal(window.ApprovalsContent.HistoryColumn.ActualWidth,
+                    window.ApprovalsContent.DetailViewport.TranslatePoint(new Point(), window.ApprovalsContent.PageBody).X);
+                Assert.Equal(window.ApprovalsContent.DetailViewport.ActualWidth, window.ApprovalsContent.DetailColumn.ActualWidth);
+                Assert.Equal(0, window.ApprovalsContent.DetailColumn.TranslatePoint(new Point(), window.ApprovalsContent.DetailViewport).X);
                 Assert.False(window.ApprovalsContent.DecisionArea.IsVisible);
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.HistoryTab);
                 Assert.True(window.Features.ShowHistoryTable);
                 UnifiedDesktopTests.ClickControl(window.ApprovalsContent.PendingTab);
 
                 host.UpdateLayout();
-                AssertCenteredColumn(window.ApprovalsContent.DetailScroll, window.ApprovalsContent.DetailViewport, 780);
+                Assert.Equal(window.ApprovalsContent.DetailViewport.ActualWidth, window.ApprovalsContent.DetailScroll.ActualWidth);
+                Assert.Equal(0, window.ApprovalsContent.DetailScroll.TranslatePoint(new Point(), window.ApprovalsContent.DetailViewport).X);
                 Assert.Equal(Loc.Current["Approval.ApproveImport"], window.ApprovalsContent.ApproveRequest.Content);
                 void CheckButton(System.Windows.Controls.Primitives.ButtonBase button, int height)
                 {
@@ -556,7 +595,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 }
                 CheckButton(window.ApprovalsContent.ApproveRequest, 32);
                 CheckButton(window.ApprovalsContent.DenyRequest, 32);
-                if (width == 1366) Assert.Equal(260, window.ApprovalsContent.RequestListPane.ActualWidth);
+                if (width == 1366) Assert.Equal(268, window.ApprovalsContent.RequestListPane.ActualWidth);
                 Assert.True(approvals.Deny(import.Id));
                 WpfContext.Drain();
                 var destructive = window.Features.SelectedRequest!;
@@ -583,6 +622,11 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 window.Features.OpenCall(window.Features.Calls.Single(row => row.Tool == "ExportBlock"));
                 Capture("agent-calls");
                 CheckJournalSelection(window.CallsContent.CallList);
+                var failedChip = Descendants<Border>(window.CallsContent.CallList).Single(border =>
+                    border.DataContext is CallRow { Tool: "ExportBlock" } && Equals(border.Style, host.FindResource("Primer.CallResultChip")));
+                Assert.Same(host.FindResource("Ant.colorErrorBorder"), failedChip.BorderBrush);
+                Assert.Equal(TextWrapping.Wrap, window.CallDetailContent.ResultCode.TextWrapping);
+                Assert.Equal(width < 1260 ? 520 : 348, window.DrawerPanel.ActualWidth);
                 if (width < 1260)
                 {
                     Assert.True(window.DrawerOverlay.IsVisible);

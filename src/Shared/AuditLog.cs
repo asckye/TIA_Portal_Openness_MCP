@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -147,22 +148,30 @@ namespace TiaOpenness.Shared
         internal void ApprovalSwitch(string host, bool enabled) =>
             Append("approval-switch", "", host, "", "", approvalEnabled: enabled, actor: ActorScope.Workbench);
 
-        internal AuditVerificationReport Verify()
+        internal AuditVerificationReport Verify() => Verify(null, CancellationToken.None);
+
+        internal AuditVerificationReport Verify(Action<double>? recordProgress, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var report = new AuditVerificationReport { Chain = directory, Passed = true };
             try
             {
                 using (JournalFileLock.Acquire(Path.Combine(directory, ".audit.lock"), readOnly: true))
                 {
                     string previous = Genesis;
-                    foreach (string file in Files())
+                    var files = Files();
+                    long totalBytes = recordProgress == null ? 0 : files.Sum(file => new FileInfo(file).Length);
+                    long verifiedBytes = 0;
+                    foreach (string file in files)
                     {
                         bool any = false;
                         using (var reader = new StreamReader(file, new UTF8Encoding(false, true)))
                         {
-                            string? line;
-                            while ((line = reader.ReadLine()) != null)
+                            while (true)
                             {
+                                cancellationToken.ThrowIfCancellationRequested();
+                                string? line = reader.ReadLine();
+                                if (line == null) break;
                                 long index = (long)report.Count + 1;
                                 AuditRecord row;
                                 try { row = Parse(line); }
@@ -172,6 +181,12 @@ namespace TiaOpenness.Shared
                                 if (row.Index != index) return Broken(report, index, file, "index");
                                 if (row.PreviousHash != previous) return Broken(report, index, file, "previous-hash");
                                 previous = Hash(row); report.Count++; any = true;
+                                if (recordProgress != null && totalBytes > 0)
+                                {
+                                    // Canonical records are UTF-8 lines terminated by LF.
+                                    verifiedBytes += Encoding.UTF8.GetByteCount(line) + 1L;
+                                    recordProgress(Math.Min(1d, (double)verifiedBytes / totalBytes));
+                                }
                             }
                         }
                         if (!any) return Broken(report, (long)report.Count + 1, file, "empty-file");

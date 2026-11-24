@@ -93,14 +93,21 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
         if (copiesChanged) Raise(nameof(Copies));
     }
     public AuditVerification Verify() => Verify(null);
-    internal AuditVerification Verify(Action<int>? progress)
+    internal AuditVerification Verify(Action<int>? progress, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var directories = Directories;
-        var reports = directories.Select((path, index) =>
+        int lastPercent = -1;
+        void Report(int percent)
         {
-            progress?.Invoke(index * 100 / directories.Length);
-            return new AuditLog(path).Verify();
-        }).ToArray();
+            if (percent == lastPercent) return;
+            lastPercent = percent;
+            progress?.Invoke(percent);
+        }
+        Report(0);
+        var reports = directories.Select((path, index) => new AuditLog(path).Verify(progress == null ? null :
+            fraction => Report(Math.Min(99, (int)((index + fraction) * 100 / directories.Length))), cancellationToken)).ToArray();
+        cancellationToken.ThrowIfCancellationRequested();
         var broken = reports.FirstOrDefault(report => !report.Passed);
         lock (_sync)
         {
@@ -112,7 +119,7 @@ public sealed class AuditLogService : ObservableObject, IAuditLogService, IDispo
             }
             if (broken?.BreakIndex != null) _pageEnd = broken.BreakIndex + PageSize / 2;
         }
-        Refresh(); progress?.Invoke(100);
+        Refresh(); Report(100);
         return new AuditVerification(broken == null, broken?.Count ?? reports.Sum(report => report.Count), broken?.BreakIndex)
         {
             Chain = broken?.Chain, File = broken?.File, Chains = reports

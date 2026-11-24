@@ -361,7 +361,9 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             if (page == "Log")
                             {
                                 var log = (DependencyObject)window.FindName("LogContent");
-                                AssertWholeWords(Descendants<TextBlock>(log).Single(text => text.Text == Loc.Current["Pages.LogPurpose"]), context);
+                                foreach (string key in new[] { "Calls.Time", "Pages.LogLevel", "Pages.LogMessage" })
+                                    AssertWholeWords(Descendants<TextBlock>(((Views.LogView)log).LogHeader)
+                                        .Single(text => text.Text == Loc.Current[key]), context);
                             }
                             if (page == "Settings")
                             {
@@ -373,9 +375,10 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             if (page == "Calls")
                             {
                                 var calls = (UserControl)window.FindName("CallsContent");
-                                var statistics = (DependencyObject)calls.FindName("CallStatistics");
-                                foreach (string key in new[] { "Calls.StatTotal", "Calls.StatPending", "Calls.StatFailed", "Calls.StatAverage" })
-                                    AssertWholeWords(Descendants<TextBlock>(statistics).Single(text => text.Text == Loc.Current[key]), context);
+                                Assert.Null(calls.FindName("CallStatistics"));
+                                var toolbar = Assert.Single(Descendants<Controls.PageHeadPanel>(calls));
+                                foreach (string key in new[] { "Approval.PendingTab", "Shell.CallsPill", "Calls.WriteOnly", "Calls.FailOnly" })
+                                    AssertWholeWords(Descendants<TextBlock>(toolbar).Single(text => text.Text == Loc.Current[key]), context);
                                 foreach (var header in Descendants<TextBlock>(calls).Where(text =>
                                     ReferenceEquals(text.Style, Application.Current.FindResource("Primer.TableHeader"))))
                                     AssertWholeWords(header, context);
@@ -389,6 +392,10 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                         window.Features.OpenCall(window.Features.Calls.Single(call => call.Tool == "ExportBlock"));
                         Layout(host, width, height);
                         var detail = (DependencyObject)window.FindName("CallDetailContent");
+                        AssertSingleLine(Descendants<TextBlock>(detail).Single(text => text.Text == Loc.Current["Calls.Target"]), suffix);
+                        var fields = Assert.Single(Descendants<Expander>(detail));
+                        fields.IsExpanded = true;
+                        Layout(host, width, height);
                         AssertSingleLine(Descendants<TextBlock>(detail).Single(text => text.Text == Loc.Current["Calls.Host"]), suffix);
                         if (output != null) WorkbenchRenderTests.SaveRender(host,
                             Path.Combine(output, "CallDetail-" + suffix + ".png"), width, height);

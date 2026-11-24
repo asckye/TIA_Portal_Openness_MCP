@@ -57,7 +57,7 @@
     </DataTemplate></Setter.Value></Setter>
   </Style>
   <Style x:Key="Primer.ApprovalListPane" TargetType="Border">
-    <Setter Property="Width" Value="260"/>
+    <Setter Property="Width" Value="268"/>
     <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
     <Setter Property="BorderThickness" Value="0,0,1,0"/>
@@ -68,9 +68,9 @@
   </Style>
   <Style x:Key="Primer.ApprovalDecisionPane" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
-    <Setter Property="CornerRadius" Value="0,0,8,8"/>
+    <Setter Property="CornerRadius" Value="0"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
-    <Setter Property="BorderThickness" Value="1,0,1,1"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
   </Style>
   <Style x:Key="Primer.ApproveRequest" TargetType="Button" BasedOn="{StaticResource Primer.Answer}">
     <Style.Triggers>
@@ -96,6 +96,7 @@
   <Style x:Key="Primer.ApprovalTimerChip" TargetType="Border" BasedOn="{StaticResource Primer.Tag}">
     <Setter Property="Height" Value="Auto"/>
     <Setter Property="MinHeight" Value="22"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.warn}"/>
     <Setter Property="Background" Value="{DynamicResource Primer.input}"/>
     <Style.Triggers>
       <MultiDataTrigger>
@@ -104,6 +105,7 @@
           <Condition Binding="{Binding Destructive}" Value="True"/>
         </MultiDataTrigger.Conditions>
         <Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorErrorBorder}"/>
         <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.destructiveText}"/>
       </MultiDataTrigger>
       <MultiDataTrigger>
@@ -124,7 +126,7 @@
     </Grid>
   </DataTemplate>
   <Style x:Key="Primer.DangerSheet" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
-    <Setter Property="BorderBrush" Value="{DynamicResource Primer.inputBorder}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Ant.colorErrorBorder}"/>
     <Setter Property="CornerRadius" Value="14"/>
   </Style>
   <Style x:Key="Primer.DestructiveFields" TargetType="ItemsControl">
@@ -179,12 +181,27 @@
       <MultiDataTrigger><MultiDataTrigger.Conditions>
         <Condition Binding="{Binding ShowPendingFeed}" Value="True"/>
         <Condition Binding="{Binding Path=(ux:Ux.LeftPaneOpen), RelativeSource={RelativeSource Self}}" Value="True"/>
-      </MultiDataTrigger.Conditions><Setter Property="Margin" Value="260,0,0,0"/></MultiDataTrigger>
+      </MultiDataTrigger.Conditions><Setter Property="Margin" Value="268,0,0,0"/></MultiDataTrigger>
       <MultiDataTrigger><MultiDataTrigger.Conditions>
         <Condition Binding="{Binding ShowPendingFeed}" Value="True"/>
         <Condition Binding="{Binding Path=(ux:Ux.LeftPaneOpen), RelativeSource={RelativeSource Self}}" Value="True"/>
         <Condition Binding="{Binding Path=(ux:Ux.Narrow), RelativeSource={RelativeSource Self}}" Value="True"/>
       </MultiDataTrigger.Conditions><Setter Property="Margin" Value="214,0,0,0"/></MultiDataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ApprovalDetailLayout" TargetType="Grid">
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding HistoryDetailOpen}" Value="True">
+        <Setter Property="Grid.Column" Value="1"/><Setter Property="Width" Value="348"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ApprovalContextGrid" TargetType="UniformGrid">
+    <Setter Property="Columns" Value="4"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding DataContext.HistoryDetailOpen, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+        <Setter Property="Columns" Value="2"/>
+      </DataTrigger>
     </Style.Triggers>
   </Style>
 </ResourceDictionary>

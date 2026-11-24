@@ -476,7 +476,7 @@ public sealed class ApprovalPageTests(WpfContext wpf)
                         Assert.Equal(Visibility.Visible, view.RequestListPane.Visibility);
                         Assert.Equal(214, view.RequestListPane.ActualWidth);
                     }
-                    Assert.Equal(width == 1024 ? 214 : 260, view.RequestListPane.ActualWidth);
+                    Assert.Equal(width == 1024 ? 214 : 268, view.RequestListPane.ActualWidth);
                     var caption = (TextBlock)view.FindName("CountdownCaption");
                     var chip = (Border)view.FindName("TimerChip");
                     Assert.Equal(Loc.Current.T("Approval.Timer", "01:58"), caption.Text);

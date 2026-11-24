@@ -39,10 +39,16 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 var host = Detach(window); Layout(host);
                 UnifiedDesktopTests.ClickControl((Button)log.FindName("GenerateButton")); WpfContext.Drain();
                 Assert.True(features.DiagnosticRunning);
+                Assert.Equal(Visibility.Visible, window.DiagnosticProgressCard.Visibility);
+                Assert.Equal(35, Assert.Single(Descendants<ProgressBar>(window.DiagnosticProgressCard)).Value);
                 Assert.False(((Button)log.FindName("GenerateButton")).IsEnabled);
                 diagnostics.Complete(); WpfContext.Drain();
                 Assert.True(features.DiagnosticDone);
-                UnifiedDesktopTests.ClickControl(Descendants<Button>(log).Single(button => Equals(button.Content, Loc.Current["Feature.OpenFolder"])));
+                Assert.Equal(Visibility.Collapsed, window.DiagnosticProgressCard.Visibility);
+                Assert.Equal(Loc.Current["Toast.Details"], window.ToastAction.Content);
+                Assert.Equal(Visibility.Visible, window.ToastSecondAction.Visibility);
+                Assert.Equal(Loc.Current["Feature.OpenFolder"], window.ToastSecondAction.Content);
+                UnifiedDesktopTests.ClickControl(window.ToastSecondAction);
                 Assert.Equal(1, diagnostics.OpenCount);
                 Assert.Null(log.FindName("Size50"));
                 WpfContext.Complete(features.SetRetentionAsync(50, true)); WpfContext.Drain();

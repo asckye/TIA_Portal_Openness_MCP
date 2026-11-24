@@ -48,6 +48,43 @@ public sealed class LogPresentationTests(WpfContext wpf)
         });
     }
 
+    [Fact]
+    public void Multiline_entries_keep_one_count_and_copy_the_entire_timestamped_row()
+    {
+        wpf.Run(() =>
+        {
+            var model = ProjectPageTestSupport.Model();
+            var window = new MainWindow(model, false);
+            try
+            {
+                window.Navigate("Log");
+                model.Activity.ClearLog();
+                model.Activity.Append("Header\n  detail", Services.WorkbenchActivity.Severity.Warning);
+                var view = window.LogContent;
+                var host = WorkbenchRenderTests.CreateHost(window, 1024, 640);
+                WpfContext.Drain();
+                var row = Assert.Single(view.LogRows!.Cast<ResultPresentation.LogRow>());
+                Assert.Equal("1", view.WarningsOnlyCount.Text);
+                Assert.Equal("Header\n  detail", row.Message);
+                view.LogSearch.Text = row.Time;
+                Assert.Same(row, Assert.Single(view.LogRows!.Cast<ResultPresentation.LogRow>()));
+                Assert.Equal(Visibility.Visible, view.ClearSearch.Visibility);
+                UnifiedDesktopTests.ClickControl(view.ClearSearch);
+                Assert.Equal("", view.LogSearch.Text);
+                Assert.Equal(Visibility.Collapsed, view.ClearSearch.Visibility);
+                host.UpdateLayout();
+                string? copied = null;
+                window.Features.CopyText = value => copied = value;
+                var button = Assert.Single(WorkbenchRenderFeaturePagesTests.Descendants<Button>(view.LogList));
+                UnifiedDesktopTests.ClickControl(button);
+                Assert.Equal(row.Time + " WARN Header\n  detail", copied);
+                Assert.Equal(new Thickness(2.5, 0, 0, 0), WorkbenchRenderFeaturePagesTests.Descendants<Border>(view.LogList)
+                    .Single(border => Equals(border.Style, view.FindResource("Primer.LogEntryRow"))).BorderThickness);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData(53)]
     [InlineData(121)]
@@ -139,11 +176,21 @@ public sealed class LogPresentationTests(WpfContext wpf)
                     var messages = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>(view)
                         .Where(t => t.DataContext is ResultPresentation.LogRow row && t.Text == row.Message).ToArray();
                     Assert.Equal(5, messages.Length);
+                    double start = messages[0].TranslatePoint(new Point(), view.LogList).X;
+                    foreach (var message in messages)
+                    {
+                        Assert.Equal(start, message.TranslatePoint(new Point(), view.LogList).X);
+                        var item = (ListBoxItem)ItemsControl.ContainerFromElement(view.LogList, message);
+                        var divider = Assert.Single(WorkbenchRenderFeaturePagesTests.Descendants<Border>(item),
+                            border => Equals(border.Style, view.FindResource("Primer.LogRowDivider")));
+                        Assert.Equal(new Thickness(0, 0, 0, 1), divider.BorderThickness);
+                        Assert.Same(view.FindResource("Primer.divider"), divider.BorderBrush);
+                    }
                     string[] tokens = ["Primer.textMuted", "Primer.warn", "Primer.diffRed", "Primer.textMuted", "Primer.text"];
                     for (int i = 0; i < messages.Length; i++)
                     {
                         var level = WorkbenchRenderFeaturePagesTests.Descendants<TextBlock>((Grid)messages[i].Parent)
-                            .Single(text => Grid.GetColumn(text) == 1);
+                            .Single(text => text.Parent is Border tag && Grid.GetColumn(tag) == 1);
                         Assert.Equal(((SolidColorBrush)Application.Current.FindResource(tokens[i])).Color, ((SolidColorBrush)level.Foreground).Color);
                         Assert.Equal(((SolidColorBrush)Application.Current.FindResource("Primer.text")).Color, ((SolidColorBrush)messages[i].Foreground).Color);
                     }

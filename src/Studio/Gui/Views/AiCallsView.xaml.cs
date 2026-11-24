@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Windows.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using TiaOpenness.Gui.Controls;
 using TiaOpenness.Gui.ViewModels;
 
@@ -53,6 +54,17 @@ public partial class AiCallsView : UserControl
             if (DataContext is FeaturePagesViewModel model && model.FollowLatest && _atTop && model.Calls.Count > 0) CallList.ScrollIntoView(model.Calls[0]);
         }));
     }
+    private void OnFiltersOpened(object sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => { if (FilterPopup.IsOpen) HumanFilter.Focus(); }));
+
+    private void OnFiltersKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || ReleaseFilter.IsDropDownOpen) return;
+        e.Handled = true;
+        FilterToggle.SetCurrentValue(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty, false);
+        FilterToggle.Focus();
+    }
+
     private void OnFollow(object sender, RoutedEventArgs e) => Model.ToggleFollow();
     private void OnAllCalls(object sender, RoutedEventArgs e)
     {

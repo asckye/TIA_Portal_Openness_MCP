@@ -6,6 +6,13 @@
 
 ### Changed
 
+- Agent shows pending approvals, searchable decision history and AI calls in one toolbar.
+  The call filter menu shows how many source and release filters are active and supports keyboard navigation.
+  The wide call inspector shows the target and wrapped response envelope beside the table.
+- Audit verification reports progress after each record and can be cancelled within a single chain.
+  A broken chain links to its record from the toolbar and the persistent notification.
+- Runtime logs keep multiline entries together, show warning and error counts, and support copying individual entries or the filtered list.
+
 - Workbench notifications stack above the status bar. Environment findings and lost TIA sessions stay visible until dismissed.
   A disconnected session shows a read-only snapshot indicator and offers process rescanning and logs.
 - The status-bar approval button switches ordinary writes between manual approval and auto-approval. The local approval channel must be available.

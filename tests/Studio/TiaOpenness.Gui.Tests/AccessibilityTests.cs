@@ -90,7 +90,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                         "Mcp" => ["Pages.SaveBoth"],
                         "Audit" => ["Audit.Verify"],
                         "Environment" => ["Env.Recheck", "Env.DiagnosticsLink"],
-                        "Log" => ["Pages.CopyLog", "Pages.ClearLog", "Env.Generate"],
+                        "Log" => ["Log.StorageLink", "Pages.ClearLog", "Env.Generate"],
                         "Settings" => ["Audit.OpenFolder"],
                         _ => [],
                     };
@@ -120,7 +120,13 @@ public sealed class AccessibilityTests(WpfContext wpf)
                     }
                     if (page == "Log")
                     {
-                        foreach (var button in new[] { window.LogContent.CopyLogButton, window.LogContent.ClearLogButton, window.LogContent.GenerateButton })
+                        UnifiedDesktopTests.ClickControl(window.LogContent.MoreActions);
+                        Assert.True(window.LogContent.MoreActions.ContextMenu.IsOpen);
+                        Assert.Equal(Loc.Current["Pages.CopyLog"], window.LogContent.CopyLogButton.Header);
+                        CheckSurface(window.LogContent.MoreActions.ContextMenu, "Log actions", "Pages.CopyLog");
+                        window.LogContent.MoreActions.ContextMenu.IsOpen = false;
+                        foreach (var button in new[] { window.LogContent.StorageSettingsButton, window.LogContent.ClearLogButton,
+                            window.LogContent.GenerateButton })
                         {
                             var label = Assert.Single(DesktopCapture.Descendants<AccessText>(button));
                             Assert.Contains(char.ToUpperInvariant(label.AccessKey), keys.Keys);

@@ -85,10 +85,22 @@ public sealed partial class WorkbenchRenderFeaturePagesTests
         try
         {
             Assert.True(window.Features.Verifying);
-            Assert.False(window.AuditContent.VerifyButton.IsEnabled);
+            Assert.True(window.AuditContent.VerifyButton.IsEnabled);
+            Assert.Equal(Localization.Loc.Current["Audit.CancelVerify"], window.AuditContent.VerifyButton.Content);
+            Assert.Equal(2, window.AuditContent.VerifyProgress.Height);
             capture("audit-verifying");
+            UnifiedDesktopTests.ClickControl(window.AuditContent.VerifyButton);
+            Assert.True(window.Features.VerificationCancelling);
+            Assert.False(window.AuditContent.VerifyButton.IsEnabled);
+            Assert.Equal(Localization.Loc.Current["Audit.Cancelling"], window.Features.ChainLabel);
+            Assert.Equal(window.Features.ChainLabel, window.AuditContent.VerifyButton.Content);
         }
         finally { finish.Set(); WpfContext.Complete(verifying); service.BeforeVerify = null; }
+        Assert.True(window.Features.VerificationCancelled);
+        Assert.False(window.Features.Verifying);
+        Assert.False(window.Features.HasVerification);
+        Assert.Equal(Localization.Loc.Current["Audit.Cancelled"], window.ToastMessage.Text);
+        Assert.Equal(Localization.Loc.Current["Audit.Cancelled"], window.Features.ChainLabel);
         using var fixture = new SafetySettingsServiceTests.Fixture();
         fixture.Audit.Append("request", "verification-fixture", "engine", "21", "WriteFixture");
         fixture.Audit.Approval("verification-fixture", "engine", "21", "WriteFixture", "granted");
@@ -119,6 +131,12 @@ public sealed partial class WorkbenchRenderFeaturePagesTests
         UnifiedDesktopTests.ClickControl(window.AuditContent.JumpButton);
         Assert.Equal(window.Features.BreakIndex, window.Features.SelectedAudit?.Record.Index);
         Assert.True(window.Features.SelectedAudit!.HasMismatchedLink);
+        Assert.Equal(Localization.Loc.Current["Audit.CloseDetails"],
+            System.Windows.Automation.AutomationProperties.GetName(window.AuditContent.DetailsToggle));
+        Assert.Same(window.FindResource("Primer.accent"), window.AuditContent.HashText.Foreground);
+        Assert.Same(window.FindResource("Primer.diffGreen"), window.AuditContent.ExpectedHashText.Foreground);
+        Assert.Equal(Localization.Loc.Current["Audit.ExpectedHash"], window.AuditContent.ExpectedHashLabel.Text);
+        Assert.Equal(window.Features.SelectedAudit.Record.RecordedPreviousHash, window.AuditContent.PreviousHashText.Text);
         capture("audit-broken");
         service.Events = [];
         window.ConfigureFeaturePages(journal, service, environment, now: () => FeaturePageFixtures.Now);

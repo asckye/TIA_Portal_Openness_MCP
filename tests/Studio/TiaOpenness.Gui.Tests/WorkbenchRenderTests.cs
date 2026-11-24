@@ -92,7 +92,8 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     if (state.Local) mcp.LocalNav.IsChecked = true;
                     window.Navigate("Calls"); host.UpdateLayout();
                     var callsCount = DesktopCapture.Descendants<Border>(window.CallsContent).Single(b => b.Name == "CallsCountBadge");
-                    Assert.Equal(window.Features.Calls.Count == 0 ? Visibility.Collapsed : Visibility.Visible, callsCount.Visibility);
+                    Assert.Equal(Visibility.Visible, callsCount.Visibility);
+                    Assert.Equal(window.Features.CallStatTotal.ToString(), Assert.IsType<TextBlock>(callsCount.Child).Text);
                     Assert.Equal(window.Features.CallStatTotal, callsCount.Tag);
                     window.Navigate("Mcp"); host.UpdateLayout();
                     var clientPane = (FrameworkElement)window.Configuration.Clients.FindName("ClientPane");

@@ -44,11 +44,23 @@ public partial class ApprovalsDrawer : UserControl
         }
     }
     private readonly RoutedCommand _openHistory = new();
-    private void OnPendingTab(object sender, RoutedEventArgs e) => Model.HandledRequests = false;
+    internal RadioButton PendingTab => (RadioButton)AgentTabs.ContentTemplate.FindName(nameof(PendingTab), AgentTabs);
+    internal RadioButton HistoryTab => (RadioButton)AgentTabs.ContentTemplate.FindName(nameof(HistoryTab), AgentTabs);
     private void OnHistoryTab(object sender, RoutedEventArgs e)
     {
         Model.HandledRequests = true;
         Model.HistoryDetailOpen = false;
+    }
+    private void OnHistorySizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (HistoryList.View is not GridView grid || grid.Columns.Count != 6) return;
+        double flexible = Math.Max(0, e.NewSize.Width - 92 - 86 - 6 - SystemParameters.VerticalScrollBarWidth);
+        grid.Columns[0].Width = 92;
+        grid.Columns[1].Width = flexible * .32;
+        grid.Columns[2].Width = flexible * .22;
+        grid.Columns[3].Width = flexible * .22;
+        grid.Columns[4].Width = 86;
+        grid.Columns[5].Width = flexible * .24;
     }
     private void OnHistoryReview(object sender, RoutedEventArgs e)
     {
@@ -158,6 +170,7 @@ public partial class ApprovalsDrawer : UserControl
     {
         var request = System.Linq.Enumerable.FirstOrDefault(Model.Requests, r => r.Request.Id == id);
         if (request == null) return;
+        if (!request.Pending && !request.MatchesHistory(Model.HistorySearch.Trim())) Model.HistorySearch = "";
         Model.HandledRequests = !request.Pending;
         Model.SelectedRequest = request;
         Model.HistoryDetailOpen = !request.Pending;

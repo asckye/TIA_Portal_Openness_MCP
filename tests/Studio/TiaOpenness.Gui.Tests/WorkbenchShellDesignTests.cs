@@ -508,7 +508,7 @@ public sealed partial class WorkbenchShellDesignTests(WpfContext wpf)
                 window.Navigate("Approvals"); Capture("agent-approvals");
                 window.Features.HandledRequests = true; Capture("agent-approvals-history"); window.Features.HandledRequests = false;
                 Assert.True(window.LeftPaneToggle.IsEnabled);
-                Assert.Equal(width == 1024 ? 214 : 260, window.ApprovalsContent.RequestListPane.ActualWidth);
+                Assert.Equal(width == 1024 ? 214 : 268, window.ApprovalsContent.RequestListPane.ActualWidth);
                 window.Navigate("Calls"); Capture("agent-calls");
                 Assert.False(window.LeftPaneToggle.IsEnabled); Assert.Equal(0.3, window.LeftPaneToggle.Opacity);
                 foreach (var (page, name) in new[] { ("Mcp", "mcp"), ("Clients", "clients"), ("Environment", "doctor"),

@@ -65,7 +65,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     private readonly MainViewModel model;
     private int _resultLogStart;
     private readonly ObservableCollection<LogRow> _logRows = [];
-    private readonly Dictionary<WorkbenchActivity.Entry, List<LogRow>> _entryRows = new();
+    private readonly Dictionary<WorkbenchActivity.Entry, LogRow> _entryRows = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<string, object?> _resultValues = new();
     private static readonly System.Reflection.PropertyInfo[] ResultProperties = new[]
     {
@@ -106,7 +106,13 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public double WorkspaceOpacity => HasWorkspace ? 1 : .45;
     public string CompileBadge => HasCompile ? CompileState : Loc.Current["Pages.NotCompiled"];
     public string InspectionDisplay => HasInspection ? InspectionSummary : Loc.Current["Pages.NotInspected"];
-    public sealed record LogRow(string Time, string Message, LogLevel Level = LogLevel.Default);
+    public sealed record LogRow(string Time, string Message, LogLevel Level = LogLevel.Default)
+    {
+        public string DisplayText => Time + " " + (Level switch
+        {
+            LogLevel.Warning => "WARN ", LogLevel.Error => "ERROR ", LogLevel.Info => "INFO ", LogLevel.Debug => "DEBUG ", _ => ""
+        }) + Message;
+    }
     public IReadOnlyList<LogRow> LogRows => _logRows;
     public IReadOnlyList<LogRow> LogTail => LogRows.TakeLast(12).ToArray();
     public bool HasCompile => Errors != "—";
@@ -156,17 +162,16 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
 
     private void AddLog(WorkbenchActivity.Entry entry)
     {
-        var rows = entry.Message.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line))
-            .Select((line, index) => new LogRow(index == 0 ? entry.Time : "", line.TrimEnd('\r'), (LogLevel)entry.Level)).ToList();
-        _entryRows[entry] = rows;
-        foreach (var row in rows) _logRows.Add(row);
+        var row = new LogRow(entry.Time, entry.Message, (LogLevel)entry.Level);
+        _entryRows[entry] = row;
+        _logRows.Add(row);
     }
     private void LogChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Reset) { _logRows.Clear(); _entryRows.Clear(); _resultLogStart = 0; }
         if (e.OldItems != null) foreach (WorkbenchActivity.Entry entry in e.OldItems)
         {
-            if (_entryRows.Remove(entry, out var rows)) foreach (var row in rows) _logRows.Remove(row);
+            if (_entryRows.Remove(entry, out var row)) _logRows.Remove(row);
             _resultLogStart = Math.Max(0, _resultLogStart - 1);
         }
         if (e.NewItems != null) foreach (WorkbenchActivity.Entry entry in e.NewItems) AddLog(entry);

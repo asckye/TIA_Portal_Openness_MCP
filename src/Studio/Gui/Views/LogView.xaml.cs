@@ -1,8 +1,6 @@
 using System;
 using System.ComponentModel;
 using System.Collections.Specialized;
-using System.IO;
-using System.Threading.Tasks;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -29,27 +27,6 @@ public partial class LogView : UserControl
         CommandBindings.Add(new System.Windows.Input.CommandBinding(_storage, (_, _) => OpenStorageSettings()));
         Loaded += (_, _) => Loc.Current.LanguageChanged += OnLanguageChanged;
         Unloaded += (_, _) => Loc.Current.LanguageChanged -= OnLanguageChanged;
-        IsVisibleChanged += OnLogVisibility;
-    }
-    private async void OnLogVisibility(object sender, DependencyPropertyChangedEventArgs e)
-    {
-        if (!IsVisible) return;
-        string directory = TiaOpenness.Shared.DataLocations.Current.LogsDirectory;
-        StoragePath.Text = directory;
-        StoragePath.ToolTip = directory;
-        try
-        {
-            long bytes = await Task.Run(() => new DirectoryInfo(directory).EnumerateFiles("*", new EnumerationOptions
-            {
-                RecurseSubdirectories = true, IgnoreInaccessible = false, AttributesToSkip = FileAttributes.ReparsePoint
-            }).Sum(file => file.Length));
-            StorageSize.Text = $"{bytes / 1048576d:N2} MB";
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            System.Diagnostics.Trace.TraceWarning("Log directory size unavailable: {0}", ex.GetType().Name);
-            StorageSize.Text = "—";
-        }
     }
     private void OnLanguageChanged(object? sender, EventArgs e) => UpdateCounts();
     private MainViewModel Model => (MainViewModel)DataContext;
@@ -57,7 +34,6 @@ public partial class LogView : UserControl
     {
         if (_features != null) _features.PropertyChanged -= OnFeatureChanged;
         _features = features;
-        DiagnosticStrip.DataContext = features;
         if (features != null) features.PropertyChanged += OnFeatureChanged;
         UpdateGenerateState();
     }
@@ -104,8 +80,9 @@ public partial class LogView : UserControl
     private bool Matches(object item)
     {
         var row = (ResultPresentation.LogRow)item;
+        string query = LogSearch?.Text.Trim() ?? "";
         return (_level == 0 || _level == 1 && row.Level == LogLevel.Warning || _level == 2 && row.Level == LogLevel.Error)
-            && row.Message.Contains(LogSearch?.Text.Trim() ?? "", StringComparison.OrdinalIgnoreCase);
+            && (row.Message.Contains(query, StringComparison.OrdinalIgnoreCase) || row.Time.Contains(query, StringComparison.OrdinalIgnoreCase));
     }
     private void OnLevel(object sender, RoutedEventArgs e)
     {
@@ -113,6 +90,17 @@ public partial class LogView : UserControl
         LogRows?.Refresh();
     }
     private void OnSearch(object sender, TextChangedEventArgs e) => LogRows?.Refresh();
+    private void OnClearSearch(object sender, RoutedEventArgs e) { LogSearch.Clear(); LogSearch.Focus(); }
+    private void OnMoreActions(object sender, RoutedEventArgs e)
+    {
+        MoreActions.ContextMenu.PlacementTarget = MoreActions;
+        MoreActions.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        MoreActions.ContextMenu.IsOpen = true;
+    }
+    private void OnCopyRow(object sender, RoutedEventArgs e)
+    {
+        if (((Button)sender).DataContext is ResultPresentation.LogRow row) _features?.Copy(row.DisplayText);
+    }
     private void OnFollow(object sender, RoutedEventArgs e) { if (FollowLatest.IsChecked == true) QueueFollow(); }
     private void OnLogScrollChanged(object sender, ScrollChangedEventArgs e)
     {
@@ -139,7 +127,7 @@ public partial class LogView : UserControl
     private void OnCopyLog(object sender, RoutedEventArgs e)
     {
         _features?.Copy(string.Join("\n", LogRows?.Cast<ResultPresentation.LogRow>()
-            .Select(row => row.Time + " " + row.Message) ?? []));
+            .Select(row => row.DisplayText) ?? []));
     }
 
     internal Func<bool>? ConfirmClear { get; set; }
@@ -158,7 +146,6 @@ public partial class LogView : UserControl
         }
     }
     private void OnGenerate(object sender, RoutedEventArgs e) => _features?.Export();
-    private void OnOpenFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Diagnostics.OpenFolder); }
     private void OnOpenStorageSettings(object sender, RoutedEventArgs e) => OpenStorageSettings();
     internal event EventHandler? StorageSettingsRequested;
     private void OpenStorageSettings() => StorageSettingsRequested?.Invoke(this, EventArgs.Empty);

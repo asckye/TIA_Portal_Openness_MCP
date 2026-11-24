@@ -171,10 +171,13 @@
             <views:ApprovalsDrawer x:Name="ApprovalsContent" Margin="-16,-12" Visibility="Collapsed"/>
             <ContentControl x:Name="ConfigurationHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
             <ContentControl x:Name="ClientsHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
-            <Grid x:Name="CallsPage" Visibility="Collapsed">
-              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-              <views:AiCallsView x:Name="CallsContent" Visibility="Collapsed"/>
-              <Grid x:Name="DockedInspector" AutomationProperties.Name="{l:Tr Calls.Detail}" Grid.Column="1" Width="344" Margin="0,0,-16,0" Visibility="Collapsed"/>
+            <Grid x:Name="CallsPage" Margin="-16,-12,0,-12" Visibility="Collapsed">
+              <Grid Grid.IsSharedSizeScope="True" Margin="0,0,-16,0">
+                <Grid.RowDefinitions><RowDefinition Height="Auto" SharedSizeGroup="AgentToolbar"/><RowDefinition/></Grid.RowDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto" SharedSizeGroup="AgentInspector"/></Grid.ColumnDefinitions>
+                <views:AiCallsView x:Name="CallsContent" Grid.RowSpan="2" Grid.ColumnSpan="2" Visibility="Collapsed"/>
+                <Grid x:Name="DockedInspector" Grid.Row="1" Grid.Column="1" Width="348" AutomationProperties.Name="{l:Tr Calls.Detail}" Visibility="Collapsed"/>
+              </Grid>
             </Grid>
             <views:AuditLogView x:Name="AuditContent" Visibility="Collapsed"/>
             <views:EnvironmentView x:Name="EnvironmentContent" Visibility="Collapsed"/>
@@ -311,7 +314,8 @@
           </Grid.RowDefinitions>
           <Border Padding="24,0" Style="{StaticResource Primer.Divider}">
             <DockPanel x:Name="DrawerHeading" DataContext="{x:Null}">
-              <Button DockPanel.Dock="Right" Content="" AutomationProperties.Name="{l:Tr Access.CloseDrawer}" Style="{StaticResource Primer.CaptionButton}" Click="OnCloseDrawer"/>
+              <Button DockPanel.Dock="Right" Content="&#xE711;" AutomationProperties.Name="{l:Tr Access.CloseDrawer}"
+                Style="{StaticResource Primer.CaptionButton}" Click="OnCloseDrawer"/>
               <Grid VerticalAlignment="Center">
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock x:Name="DrawerTitle" Focusable="True" FocusVisualStyle="{StaticResource Primer.Focus}"
@@ -339,7 +343,20 @@
         <views:SettingsView x:Name="SettingsContent"/>
       </Border>
     </Grid>
-    <StackPanel x:Name="ToastStack" Width="336" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16,0,16,36"/>
+    <StackPanel x:Name="ToastStack" Width="336" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16,0,16,36">
+      <Border x:Name="DiagnosticProgressCard" DataContext="{Binding DataContext,ElementName=CallsContent}"
+        Style="{StaticResource Primer.Container}" Padding="14,10" Margin="0,0,0,6"
+        Visibility="{Binding DiagnosticRunning, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+        <StackPanel>
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Right" Text="{Binding DiagnosticPercent, StringFormat={}{0}%}" Style="{StaticResource Primer.Mono}"/>
+            <TextBlock Text="{Binding DiagnosticStep}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"
+              ux:AccessibleStatus.Text="{Binding DiagnosticStep}"/>
+          </DockPanel>
+          <ProgressBar Style="{StaticResource Primer.Progress}" Height="4" Value="{Binding DiagnosticPercent, Mode=OneWay}" Margin="0,6,0,0"/>
+        </StackPanel>
+      </Border>
+    </StackPanel>
     <Grid x:Name="OverlayHost" Visibility="Collapsed"/>
   </Grid>
     <ux:WorkbenchScrim x:Name="OwnedDialogScrim" Source="{Binding ElementName=Root}" Visibility="Collapsed" IsHitTestVisible="False"/>
