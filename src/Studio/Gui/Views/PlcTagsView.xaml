@@ -24,7 +24,6 @@
         </StackPanel>
       </DockPanel>
     </Border>
-    <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
     <Popup x:Name="TableMenu" PlacementTarget="{Binding ElementName=TableOptions}" Placement="Bottom" StaysOpen="False"
       Opened="OnTableOpened" Closed="OnTableClosed" AllowsTransparency="True">
       <Border Style="{StaticResource Primer.Container}" Padding="12" PreviewKeyDown="OnTableKey">

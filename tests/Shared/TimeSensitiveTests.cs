@@ -319,6 +319,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Default_width_docks_the_AI_call_detail_without_a_modal_blocker_or_focus_trap"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchToastTests"] = new[] {
+                "Each_persistent_condition_returns_when_another_card_closes",
                 "Toast_announces_full_text_and_dismisses_without_stealing_focus_or_blocking_control",
                 "Escape_closes_the_open_combo_before_dismissing_a_visible_toast",
                 "Shortcut_opens_full_text_or_invokes_the_visible_action_from_the_focused_control",
@@ -359,6 +360,13 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Malformed_first_frame_is_closed_without_impersonating_or_applying"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlTests"] = new[] {
+                "Control_cards_announce_independently_without_hiding_pending_approvals",
+                "Dismissal_preserves_field_ownership_and_the_field_accepts_or_restores_its_value",
+                "Field_actions_refuse_mouse_and_automation_invoke_until_the_guard_expires",
+                "Human_can_confirm_or_clear_prefill_and_release_form_ownership",
+                "Options_close_reshows_a_dismissed_pending_summary_until_the_form_is_cleared",
+                "Prefill_card_actions_observe_the_mouse_keyboard_and_shortcut_guard",
+                "Project_page_renders_control_notifications_at_design_sizes",
                 "Snapshot_is_frozen_paginated_and_reads_while_dispatcher_is_blocked",
                 "Queue_is_bounded_FIFO_and_per_origin_inflight_is_limited",
                 "Expired_and_closing_queued_requests_never_apply",
@@ -426,6 +434,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Modal_Cancel_returns_no_PID_and_restores_the_owners_keyboard_focus"
             },
             ["TiaOpenness.Gui.Tests.ProjectPageInteractionTests"] = new[] {
+                "Block_selection_prefill_from_tags_reveals_the_rows_and_can_be_cleared_in_the_tree",
                 "The_visual_network_atlas_button_opens_the_page_for_the_focused_block",
                 "A_slow_block_load_keeps_the_device_focused_and_only_disables_block_checkboxes",
                 "Hmi_and_software_unit_tree_entries_open_only_their_own_read_only_documents",
@@ -446,6 +455,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Status_chip_allows_local_click_and_space_and_refuses_the_control_guard"
             },
             ["TiaOpenness.Gui.Tests.WpfContextTests"] = new[] {
+                "Space_key_up_uses_window_input_when_capture_changes_the_native_button_state",
                 "Window_left_button_stays_released_when_the_native_button_state_changes_without_capture",
                 "Space_uses_window_input_even_when_the_native_queue_inherited_a_pressed_button",
                 "Space_waits_for_its_own_window_release_and_other_windows_keep_their_input_state",

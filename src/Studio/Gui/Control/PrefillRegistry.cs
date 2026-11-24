@@ -2,22 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using TiaOpenness.Gui.Localization;
 using TiaOpenness.Shared;
 
 namespace TiaOpenness.Gui.ControlChannel;
 
-internal sealed record PrefillTarget(WorkbenchPrefillForm Form, string[] Fields, string Executes);
+internal sealed record PrefillTarget(WorkbenchPrefillForm Form, string[] Fields, string Executes, LocalizedText Description);
 
 internal sealed class PrefillRegistry
 {
     internal static IReadOnlyList<PrefillTarget> Targets { get; } = Array.AsReadOnly(new[]
     {
-        new PrefillTarget(WorkbenchPrefillForm.InspectionRules, ["namePattern"], "none"),
-        new PrefillTarget(WorkbenchPrefillForm.BlockFilter, ["filter"], "none"),
-        new PrefillTarget(WorkbenchPrefillForm.BlockSelection, ["softwarePath", "blockPaths"], "none"),
-        new PrefillTarget(WorkbenchPrefillForm.ConnectProject, ["projectPath"], "mcp"),
-        new PrefillTarget(WorkbenchPrefillForm.ExportBlocks, ["outputDirectory", "format"], "mcp"),
-        new PrefillTarget(WorkbenchPrefillForm.ImportBlocks, ["paths", "overwrite"], "mcp"),
+        new PrefillTarget(WorkbenchPrefillForm.InspectionRules, ["namePattern"], "none",
+            LocalizedText.Key("Control.Form.InspectionRules")),
+        new PrefillTarget(WorkbenchPrefillForm.BlockFilter, ["filter"], "none",
+            LocalizedText.Key("Control.Form.BlockFilter")),
+        new PrefillTarget(WorkbenchPrefillForm.BlockSelection, ["softwarePath", "blockPaths"], "none",
+            LocalizedText.Key("Control.Form.BlockSelection")),
+        new PrefillTarget(WorkbenchPrefillForm.ConnectProject, ["projectPath"], "mcp",
+            LocalizedText.Key("Control.Form.ConnectProject")),
+        new PrefillTarget(WorkbenchPrefillForm.ExportBlocks, ["outputDirectory", "format"], "mcp",
+            LocalizedText.Key("Control.Form.ExportBlocks")),
+        new PrefillTarget(WorkbenchPrefillForm.ImportBlocks, ["paths", "overwrite"], "mcp",
+            LocalizedText.Key("Control.Form.ImportBlocks")),
     });
     private readonly Dictionary<WorkbenchPrefillForm, WorkbenchPrefillState> _pending = [];
     private readonly List<WorkbenchPrefillForm> _order = [];

@@ -133,8 +133,6 @@ public sealed class WpfContext : IDisposable
         {
             PressSpace(ReadMouse, () =>
             {
-                // ButtonBase also reads the thread's native mouse state while processing Space under capture.
-                SynchronizeMouse(ReadLeftButton(button));
                 clicked = false;
                 RaiseKey(Keyboard.KeyDownEvent);
                 var down = ReadMouse();
@@ -149,8 +147,12 @@ public sealed class WpfContext : IDisposable
             button.RemoveHandler(ButtonBase.ClickEvent, onClick);
         }
 
-        void RaiseKey(RoutedEvent routedEvent) => button.RaiseEvent(new KeyEventArgs(
-            Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Space) { RoutedEvent = routedEvent });
+        void RaiseKey(RoutedEvent routedEvent)
+        {
+            // Capture on Space down can refresh native input. ButtonBase reads it again on Space up.
+            SynchronizeMouse(ReadLeftButton(button));
+            button.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Space) { RoutedEvent = routedEvent });
+        }
         SpaceMouseState ReadMouse() => new(ReadLeftButton(button), Mouse.Captured);
         void ReleaseCapture()
         {

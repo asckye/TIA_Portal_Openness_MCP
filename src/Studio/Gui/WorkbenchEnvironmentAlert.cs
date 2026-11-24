@@ -12,7 +12,7 @@ public partial class MainWindow
     private readonly HashSet<(string Id, Uri? Endpoint)> _dismissedIssues = [];
     private (string Id, Uri? Endpoint)? _environmentIssue;
 
-    private void UpdateEnvironmentAlert()
+    private void UpdateEnvironmentAlert(bool findingsRefreshed = false)
     {
         var rows = Features.EnvironmentRows;
         var issues = rows.Select(row => row.Check.Issue).OfType<EnvironmentIssue>().ToArray();
@@ -20,7 +20,11 @@ public partial class MainWindow
             _dismissedIssues.RemoveWhere(key => !issues.Any(issue => (issue.Id, issue.Endpoint) == key));
         var issue = issues.FirstOrDefault(item => !_dismissedIssues.Contains((item.Id, item.Endpoint)));
         (string Id, Uri? Endpoint)? key = issue == null ? null : (issue.Id, issue.Endpoint);
-        if (key == _environmentIssue) return;
+        if (key == _environmentIssue)
+        {
+            if (findingsRefreshed && issue != null) _toasts.Refresh("env-alert");
+            return;
+        }
         _environmentIssue = key;
         if (issue == null) { _toasts.Remove("env-alert"); return; }
 

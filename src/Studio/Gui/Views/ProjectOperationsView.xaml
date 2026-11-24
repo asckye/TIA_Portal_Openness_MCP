@@ -106,7 +106,6 @@
         <TextBlock Text="{l:Tr Project.BlockWorkspace}" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
       </DockPanel>
     </Border>
-    <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
   <StackPanel x:Name="CrashDocument" DockPanel.Dock="Top" Visibility="{Binding Session.LostConnection,Converter={StaticResource BoolToVisibility}}">
     <Grid>
       <StackPanel x:Name="SnapshotColumn" Style="{StaticResource Primer.PageColumn}" Margin="24">
@@ -195,7 +194,8 @@
               Text="{Binding Session.ProjectPath,UpdateSourceTrigger=PropertyChanged}" Tag="{Binding Session.ProjectFilePlaceholder}"
               Style="{StaticResource Primer.ProjectInput}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
           </StackPanel>
-          <ux:PrefillMarker x:Name="ProjectPathMarker" Grid.Row="1" Grid.Column="1" Target="{Binding ElementName=ProjectPathInput}" ClearRequested="OnClearProjectPrefill"/>
+          <ux:PrefillMarker x:Name="ProjectPathMarker" Tag="ConnectProject" Grid.Row="1" Grid.Column="1"
+            Target="{Binding ElementName=ProjectPathInput}"/>
           <Button AutomationProperties.Name="{l:Tr Common.Browse}" Grid.Column="2" Content="{l:Tr Common.Browse}" Click="OnBrowseProject" Style="{StaticResource Primer.Secondary}" Margin="8,0,0,0" VerticalAlignment="Bottom"/>
           <Button AutomationProperties.Name="{l:Tr Toolbar.Connect}" x:Name="ConnectButton" Grid.Column="3" Content="{l:Tr Project.OpenConnectFile}" Click="OnConnect" Style="{StaticResource Primer.Run}" Margin="8,0,0,0" VerticalAlignment="Bottom" IsEnabled="{Binding Tag.CanConnect,ElementName=PageRoot}"/>
         </Grid>

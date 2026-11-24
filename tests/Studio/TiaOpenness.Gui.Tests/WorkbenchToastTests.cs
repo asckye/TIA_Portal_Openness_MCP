@@ -233,6 +233,79 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
         });
     }
 
+    [Theory]
+    [InlineData("session-lost")]
+    [InlineData("ai-prefill")]
+    [InlineData("ai-channel")]
+    [InlineData("env-alert")]
+    public void Each_persistent_condition_returns_when_another_card_closes(string first)
+    {
+        wpf.Run(() =>
+        {
+            var (window, model, client) = WorkbenchControlTests.Window();
+            var environment = new FeaturePageFixtures.Environment();
+            window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), environment);
+            var heard = new List<string>();
+            void Record(FrameworkElement source) => heard.Add(AutomationProperties.GetName(source));
+            AccessibleStatus.Announced += Record;
+            try
+            {
+                void Show(string source)
+                {
+                    switch (source)
+                    {
+                        case "ai-prefill":
+                            var rules = new WorkbenchPrefillArguments { Form = WorkbenchPrefillForm.InspectionRules,
+                                Fields = new WorkbenchInspectionRulesFields { NamePattern = "FB.*" } };
+                            var response = window.ApplyControl(WorkbenchControlTests.Request(WorkbenchControlOperation.PrefillForm, rules));
+                            Assert.Equal(WorkbenchControlStatus.Done, response.Status);
+                            window.OperationsContent.HideOptions();
+                            break;
+                        case "ai-channel": window.SetControlChannelAvailable(false); break;
+                        case "session-lost":
+                            client.Exit();
+                            Assert.True(model.Session.LostConnection);
+                            break;
+                        case "env-alert":
+                            var issue = EnvironmentCheckCatalogue.Row(new("membership", Core.Environment.EnvironmentFindingStatus.Fail, "Fail", "Fixture"));
+                            environment.Replace([new(LocalizedText.Key("Shell.Environment"), [issue])]);
+                            break;
+                    }
+                    WpfContext.Drain();
+                    Assert.True(window.FindToastCard(source)!.Surface.IsVisible);
+                }
+                Show(first);
+                var notice = window.FindToastCard(first)!.Notice!;
+                var others = new[] { "session-lost", "ai-prefill", "ai-channel", "env-alert" }.Where(source => source != first).ToArray();
+                foreach (var source in others) Show(source);
+                Assert.Null(window.FindToastCard(first));
+                Assert.All(others, source => Assert.True(window.FindToastCard(source)!.Surface.IsVisible));
+                UnifiedDesktopTests.ClickControl(window.FindToastCard(others[^1])!.Close);
+                Assert.Same(notice, window.FindToastCard(first)!.Notice);
+                Assert.True(window.FindToastCard(first)!.Surface.IsVisible);
+                Assert.Equal(AutomationLiveSetting.Polite, AutomationProperties.GetLiveSetting(window.DisplacedStickyAnnouncement));
+                Assert.Single(heard, text => text == Loc.Current.T("Toast.StickyDisplaced", notice.FullText));
+                Assert.Single(heard, text => text == notice.FullText);
+            }
+            finally { AccessibleStatus.Announced -= Record; window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Resolving_a_condition_while_its_sticky_card_is_displaced_cancels_its_return()
+    {
+        var queue = new ToastQueue(() => TimeSpan.Zero);
+        var notice = new ToastNotice("ai-channel", ToastKind.Warning, LocalizedText.Literal("unavailable"), default, null, "", Sticky: true);
+        queue.Show(notice);
+        foreach (string source in new[] { "env-alert", "session-lost", "ai-prefill" }) queue.Show(notice with { Source = source });
+        Assert.True(queue.Contains(notice));
+        Assert.DoesNotContain(notice, queue.Cards);
+        queue.Remove("ai-channel");
+        queue.Dismiss();
+        Assert.False(queue.Contains(notice));
+        Assert.Equal(new[] { "env-alert", "session-lost" }, queue.Cards.Select(card => card.Source));
+    }
+
     [Fact]
     public void Sticky_description_scrolls_and_keyboard_dismissal_restores_focus()
     {
@@ -290,7 +363,9 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var (window, _, _) = WorkbenchControlTests.Window();
+            var elapsed = TimeSpan.Zero;
+            var guard = new ControlChannel.ControlInputGuard(() => WorkbenchControlTests.TestNow + elapsed, () => false);
+            var (window, _, _) = WorkbenchControlTests.Window(input: guard, toastClock: () => elapsed);
             var announcements = new List<(string Text, AutomationLiveSetting Priority)>();
             void Heard(FrameworkElement source)
             {
@@ -323,10 +398,18 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
                 Assert.Same(focus, Keyboard.FocusedElement);
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(WorkbenchControlTests.Request(WorkbenchControlOperation.ReadState)).Status);
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(WorkbenchControlTests.Request()).Status);
-                UnifiedDesktopTests.ClickControl(window.ToastAction);
+                elapsed += TimeSpan.FromMilliseconds(500);
+                Assert.True(window.FindToastCard("ai-activity")!.Surface.IsVisible);
+                UnifiedDesktopTests.ClickControl(window.FindToastCard("fixture")!.Action);
                 Assert.Equal("Log", window.CurrentPage);
                 Assert.Equal(full, window.LogContent.MessageText.Text);
                 Assert.Equal(Visibility.Visible, window.LogContent.MessageDetails.Visibility);
+                elapsed = TimeSpan.FromMilliseconds(3999);
+                window.TickToast();
+                Assert.True(window.FindToastCard("ai-activity")!.Surface.IsVisible);
+                elapsed += TimeSpan.FromMilliseconds(1);
+                window.TickToast();
+                Assert.Null(window.FindToastCard("ai-activity"));
                 focus = Keyboard.FocusedElement;
                 window.ShowToast(ToastKind.Info, LocalizedText.Literal("info"), "fixture");
                 Assert.Equal(("info", AutomationLiveSetting.Polite), announcements.Last());

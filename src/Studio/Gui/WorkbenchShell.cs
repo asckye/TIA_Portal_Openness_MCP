@@ -170,7 +170,7 @@ public partial class MainWindow
 
     private void OnVerificationChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(Features.EnvironmentRows)) UpdateEnvironmentAlert();
+        if (e.PropertyName == nameof(Features.EnvironmentRows)) UpdateEnvironmentAlert(findingsRefreshed: true);
         if (e.PropertyName == nameof(Features.Verifying) && Features.Verifying)
         {
             _verificationStartHead = AuditIndex;
@@ -286,7 +286,6 @@ public partial class MainWindow
         CurrentPageTitle.Text = HasProject && _page is ("Engineering" or "VersionControl") ? crumb + " · " + ProjectFileName
             : _page == "Engineering" && !_model.Session.IsConnected ? crumb + " · " + Loc.Current["Shell.Disconnected"] : crumb;
         Title = CurrentPageTitle.Text + " – " + Loc.Current["App.Title"];
-        UpdateControlHint();
         UpdateEnvironmentAlert();
         if (_drawer != null || DetailDocked)
         {
@@ -359,6 +358,7 @@ public partial class MainWindow
         BlocksContent.HideOptions();
         VersionControlContent.HideOptions();
         _leftPaneFlyoutOpen = false;
+        if (_page != page) RestoreDismissedPrefill();
         _page = page;
         if (page is "Calls" or "Approvals") _lastAgentPage = page;
         Features.SetVisibility(page == "Calls", page == "Audit", page == "Approvals");

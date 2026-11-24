@@ -186,25 +186,34 @@ public sealed partial class ProjectPageInteractionTests
     }
 
     [Fact]
-    public void Project_documents_keep_the_single_safety_banner_below_their_toolbar()
+    public void Project_documents_keep_the_pending_prefill_in_the_shell_notification_stack()
     {
         wpf.Run(() =>
         {
-            var window = new MainWindow(ProjectPageTestSupport.Model(release: "21"), false);
+            var (window, _, _) = WorkbenchControlTests.Window();
             try
             {
-                WpfContext.ShowWindow(window);
+                var request = WorkbenchControlTests.Request(TiaOpenness.Shared.WorkbenchControlOperation.PrefillForm);
+                Assert.Equal(TiaOpenness.Shared.WorkbenchControlStatus.Done, window.ApplyControl(request).Status);
+                var notice = window.FindToastCard("ai-prefill")!.Notice;
+                void CheckCard()
+                {
+                    var card = window.FindToastCard("ai-prefill")!;
+                    Assert.Same(notice, card.Notice);
+                    Assert.Same(window.ToastStack, card.Host.Parent);
+                    Assert.True(card.Surface.IsVisible);
+                }
                 window.Navigate("Log");
-                var shell = window.SafetyBanner.Parent;
+                CheckCard();
                 window.Navigate("Engineering");
-                Assert.Same(window.OperationsContent.BannerSlot, window.SafetyBanner.Parent);
+                CheckCard();
                 ((MainViewModel)window.DataContext).Engineering.Document = ProjectDocument.Tags;
-                Assert.Same(((PlcTagsView)window.PlcTagsContent.Content).BannerSlot, window.SafetyBanner.Parent);
+                CheckCard();
                 window.Navigate("VersionControl");
                 Assert.Equal("VersionControl", window.CurrentPage);
-                Assert.Same(window.VersionControlContent.BannerSlot, window.SafetyBanner.Parent);
+                CheckCard();
                 window.Navigate("Log");
-                Assert.Same(shell, window.SafetyBanner.Parent);
+                CheckCard();
             }
             finally { window.Close(); }
         });

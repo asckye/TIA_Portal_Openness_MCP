@@ -18,10 +18,10 @@
             Text="{Binding Engineering.BlockFilter,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Filter}"
             AutomationProperties.Name="{l:Tr Project.Filter}" AutomationProperties.LabeledBy="{Binding ElementName=FilterLabel}"/>
         </Grid>
-        <ux:PrefillMarker x:Name="FilterMarker" Target="{Binding ElementName=ControlFilter}"/>
+        <ux:PrefillMarker x:Name="FilterMarker" Tag="BlockFilter" Target="{Binding ElementName=ControlFilter}"/>
       </StackPanel>
     </Border>
-    <ux:PrefillMarker x:Name="SelectionMarker" DockPanel.Dock="Top" Target="{Binding ElementName=Nodes}" Margin="8,0"/>
+    <ux:PrefillMarker x:Name="SelectionMarker" Tag="BlockSelection" DockPanel.Dock="Top" Target="{Binding ElementName=Nodes}" Margin="8,0"/>
     <TextBlock DockPanel.Dock="Top" Text="{l:Tr Sidebar.Empty}" Margin="12" TextWrapping="Wrap" Style="{StaticResource Project.EmptySidebar}"/>
     <StackPanel DockPanel.Dock="Top" Margin="16,28,16,8" Visibility="{Binding Engineering.EmptyDeviceList,Converter={StaticResource BoolToVisibility}}">
       <TextBlock Text="{l:Tr Project.NoDevices}" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center"/>

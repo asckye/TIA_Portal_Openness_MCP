@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Threading;
 using TiaOpenness.Contracts.Models;
@@ -23,7 +24,7 @@ using Xunit;
 namespace TiaOpenness.Gui.Tests;
 
 [Collection(WpfCollection.Name)]
-public sealed class WorkbenchControlTests(WpfContext wpf)
+public sealed partial class WorkbenchControlTests(WpfContext wpf)
 {
     internal const string Project = @"D:\Projects\Line.ap21";
     internal const string CallId = "11111111111111111111111111111111";
@@ -50,12 +51,12 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             Fields = new WorkbenchBlockFilterFields { Filter = "Main" } },
     };
     internal static (MainWindow Window, MainViewModel Model, FakeProjectClient Client) Window(bool connected = true,
-        ControlInputGuard? input = null)
+        ControlInputGuard? input = null, Func<TimeSpan>? toastClock = null)
     {
         var client = new FakeProjectClient { AttachedProject = new() { Name = "Line", Path = Project } };
         var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = "21" };
         if (connected) model.Session.Connect.Execute(null);
-        var window = new MainWindow(model, false, new ApprovalServiceStub(), new FeaturePageFixtures.Diagnostics());
+        var window = new MainWindow(model, false, new ApprovalServiceStub(), new FeaturePageFixtures.Diagnostics(), toastClock: toastClock);
         // Functional/queue tests use an idle source and fixed screen position, independent of desktop input.
         window.ControlGuard = input ?? new ControlInputGuard(() => TestNow, () => false, () => new Point(0, 0));
         var journal = new FeaturePageFixtures.Journal();
@@ -249,25 +250,34 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
     }
 
     [Fact]
-    public void Safety_banner_uses_one_priority_message_without_hiding_pending_approvals()
+    public void Control_cards_announce_independently_without_hiding_pending_approvals()
     {
         wpf.Run(() =>
         {
-            var (window, _, _) = Window();
             var now = TestNow;
+            var guard = new ControlInputGuard(() => now, () => false);
+            var (window, _, _) = Window(input: guard, toastClock: () => now - TestNow);
             window.ControlNow = () => now;
             var announcements = new System.Collections.Generic.List<FrameworkElement>();
-            void Announced(FrameworkElement element) => announcements.Add(element);
+            var spoken = new System.Collections.Generic.List<(string, AutomationLiveSetting)>();
+            void Announced(FrameworkElement element)
+            {
+                announcements.Add(element);
+                spoken.Add((AutomationProperties.GetName(element), AutomationProperties.GetLiveSetting(element)));
+            }
             Controls.AccessibleStatus.Announced += Announced;
             try
             {
-                var status = (TextBlock)window.FindName("ControlStatus");
-                var prefill = (FrameworkElement)window.FindName("ControlPrefillHint");
                 Assert.Null(window.FindName("ApprovalOffPill"));
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm)).Status);
-                Assert.Equal(Visibility.Visible, prefill.Visibility);
-                Assert.Equal(Visibility.Collapsed, status.Visibility);
-                Assert.Contains(window.FindName("ControlPrefillText"), announcements);
+                var prefill = window.FindToastCard("ai-prefill")!;
+                var activity = window.FindToastCard("ai-activity")!;
+                Assert.Equal(Visibility.Visible, prefill.Surface.Visibility);
+                Assert.Equal(Visibility.Visible, activity.Surface.Visibility);
+                Assert.Contains((prefill.Notice!.FullText, AutomationLiveSetting.Polite), spoken);
+                Assert.Contains((activity.Notice!.FullText, AutomationLiveSetting.Polite), spoken);
+                Assert.True(prefill.Notice!.Sticky);
+                Assert.False(activity.Notice!.Sticky);
                 ((ApprovalServiceStub)window.Approvals).Receive(FeaturePageFixtures.Request(CallId) with { Deadline = DateTimeOffset.UtcNow.AddSeconds(120) });
                 WpfContext.Drain();
                 var badge = (Button)window.FindName("PendingBadge");
@@ -275,29 +285,36 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
                 Assert.Equal(Loc.Current.T("Shell.Pending", 1), System.Windows.Automation.AutomationProperties.GetName(badge));
                 window.Approvals.Enabled = false; WpfContext.Drain();
                 Assert.Equal(Loc.Current["Shell.ApprovalOffStatus"], window.ApprovalStatusText.Text);
-                Assert.Equal(Visibility.Visible, prefill.Visibility);
-                Assert.Equal(Visibility.Collapsed, status.Visibility);
+                Assert.True(window.FindToastCard("ai-prefill")!.Surface.IsVisible);
+                Assert.True(window.FindToastCard("ai-activity")!.Surface.IsVisible);
                 Assert.Contains(window.ApprovalStatusText, announcements);
-                typeof(MainWindow).GetField("_controlUnavailable", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(window, true);
+                window.SetControlChannelAvailable(false);
                 window.Approvals.Enabled = true; WpfContext.Drain();
-                Assert.Equal(Visibility.Visible, status.Visibility);
-                Assert.Equal(Loc.Current["Control.Unavailable"], status.Text);
-                Assert.Equal(Visibility.Collapsed, prefill.Visibility);
-                typeof(MainWindow).GetField("_controlUnavailable", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(window, false);
-                Refresh();
-                Assert.Equal(Visibility.Visible, prefill.Visibility);
-                UnifiedDesktopTests.ClickControl(DesktopCapture.Descendants<Button>(prefill).Single(button => Equals(button.Content, Loc.Current["Control.Confirm"])));
-                Assert.Equal(Visibility.Collapsed, prefill.Visibility);
-                Assert.Equal(Visibility.Visible, status.Visibility);
+                var channel = window.FindToastCard("ai-channel")!;
+                Assert.True(channel.Surface.IsVisible);
+                Assert.Equal(Loc.Current["Control.Unavailable"], channel.Title.Text);
+                Assert.Equal(ToastKind.Warning, channel.Notice!.Kind);
+                Assert.True(channel.Notice.Sticky);
+                Assert.Equal(Visibility.Collapsed, channel.Action.Visibility);
+                Assert.Equal(Visibility.Collapsed, channel.SecondAction.Visibility);
+                Assert.Contains((channel.Notice.FullText, AutomationLiveSetting.Polite), spoken);
+                Assert.True(window.FindToastCard("ai-prefill")!.Surface.IsVisible);
+                window.SetControlChannelAvailable(true);
+                Assert.Null(window.FindToastCard("ai-channel"));
+                now += TimeSpan.FromSeconds(1);
+                UnifiedDesktopTests.ClickControl(window.FindToastCard("ai-prefill")!.Action);
+                Assert.Null(window.FindToastCard("ai-prefill"));
+                var status = window.FindToastCard("ai-activity")!.Message;
                 Assert.Contains("PrefillWorkbenchForm", status.Text);
                 Assert.Contains("fixture", status.Text);
-                now = now.AddSeconds(9); Refresh();
-                Assert.Equal(Visibility.Visible, status.Visibility);
-                now = now.AddSeconds(1); Refresh();
-                Assert.Equal(Visibility.Collapsed, status.Visibility);
-                Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("SafetyBanner")).Visibility);
+                now += TimeSpan.FromSeconds(2);
+                window.TickToast();
+                Assert.True(window.FindToastCard("ai-activity")!.Surface.IsVisible);
+                Assert.Equal(Loc.Current.T("Control.Activity", "PrefillWorkbenchForm", "fixture", 3), status.Text);
+                now += TimeSpan.FromSeconds(1);
+                window.TickToast();
+                Assert.Null(window.FindToastCard("ai-activity"));
                 Assert.Equal(Visibility.Visible, badge.Visibility);
-                void Refresh() => typeof(MainWindow).GetMethod("UpdateControlHint", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, null);
             }
             finally { Controls.AccessibleStatus.Announced -= Announced; window.Close(); }
         });
@@ -825,16 +842,18 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var (window, model, _) = Window();
+            var now = TestNow;
+            var (window, model, _) = Window(input: new(() => now, () => false));
             try
             {
                 window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm));
-                var hint = (StackPanel)window.FindName("ControlPrefillHint");
-                hint.Children.OfType<Button>().Last().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                now += TimeSpan.FromMilliseconds(500);
+                UnifiedDesktopTests.ClickControl(window.FindToastCard("ai-prefill")!.SecondAction);
                 Assert.Equal("", model.Engineering.BlockFilter);
-                Assert.Equal(Visibility.Collapsed, hint.Visibility);
+                Assert.Null(window.FindToastCard("ai-prefill"));
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm, session: "4444444444444444")).Status);
-                hint.Children.OfType<Button>().First().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                now += TimeSpan.FromMilliseconds(500);
+                UnifiedDesktopTests.ClickControl(window.FindToastCard("ai-prefill")!.Action);
                 WpfContext.Drain();
                 Assert.Equal("Main", model.Engineering.BlockFilter);
                 Assert.Null(window.ControlSurface.Snapshot.Read(new WorkbenchReadStateArguments()).Prefill);
@@ -880,8 +899,16 @@ public sealed class WorkbenchControlTests(WpfContext wpf)
             try
             {
                 window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm));
-                Assert.Contains("PrefillWorkbenchForm", ((TextBlock)window.FindName("ControlStatus")).Text);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ControlPrefillHint")).Visibility);
+                Assert.Contains("PrefillWorkbenchForm", window.FindToastCard("ai-activity")!.Message.Text);
+                var prefill = window.FindToastCard("ai-prefill")!;
+                Assert.True(prefill.Surface.IsVisible);
+                Assert.Equal(Loc.Current["Control.PrefillTitle"], prefill.Title.Text);
+                Assert.Equal(language == AppLanguage.Chinese ? "程序块筛选 · 筛选文本" : "Block filter · Search text", prefill.Message.Text);
+                Loc.Current.Language = language == AppLanguage.Chinese ? AppLanguage.English : AppLanguage.Chinese;
+                Assert.Equal(language == AppLanguage.Chinese ? "Block filter · Search text" : "程序块筛选 · 筛选文本", prefill.Message.Text);
+                Loc.Current.Language = language;
+                Assert.Equal(Loc.Current["Control.Confirm"], prefill.Action.Content);
+                Assert.Equal(Loc.Current["Control.Clear"], prefill.SecondAction.Content);
                 Assert.NotEqual("Control.Enabled", Loc.Current["Control.Enabled"]);
             }
             finally { window.Close(); }

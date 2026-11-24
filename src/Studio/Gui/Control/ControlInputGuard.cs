@@ -30,7 +30,7 @@ internal sealed class ControlInputGuard(Func<DateTimeOffset>? now = null, Func<b
         // Protect every action button. Navigation and editable fields remain available.
         while (source != null)
         {
-            if (source is ButtonBase and not ToggleButton) return true;
+            if (source is (ButtonBase and not ToggleButton) or Controls.PrefillMarker) return true;
             source = source is Visual or System.Windows.Media.Media3D.Visual3D
                 ? VisualTreeHelper.GetParent(source) : LogicalTreeHelper.GetParent(source);
         }

@@ -41,18 +41,6 @@ public partial class MainWindow
         else Dispatcher.BeginInvoke(UpdateProjectReview);
     }
 
-    private Panel? _shellBannerSlot;
-    private void PlaceSafetyBanner()
-    {
-        if (_shellBannerSlot == null || SafetyBanner.Parent is not Panel current) return;
-        Panel slot = EngineeringPage.Visibility != Visibility.Visible ? _shellBannerSlot
-            : VersionControlContent.Visibility == Visibility.Visible ? VersionControlContent.BannerSlot
-            : _model.Engineering.Document == ProjectDocument.Tags ? ((Views.PlcTagsView)PlcTagsContent.Content).BannerSlot : OperationsContent.BannerSlot;
-        if (current == slot) return;
-        current.Children.Remove(SafetyBanner);
-        slot.Children.Add(SafetyBanner);
-    }
-
     // Preserve automation lookups when a project command moves to another namescope.
     private void RegisterProjectControls()
     {
@@ -67,9 +55,6 @@ public partial class MainWindow
 
     private void OnProjectPageInitialized(object sender, EventArgs e)
     {
-        _shellBannerSlot = (Panel)SafetyBanner.Parent;
-        EngineeringPage.IsVisibleChanged += (_, _) => PlaceSafetyBanner();
-        VersionControlContent.IsVisibleChanged += (_, _) => PlaceSafetyBanner();
         OperationsContent.BlockReviewButton.Click += (_, _) =>
         {
             if (BlockReview() is not { } request) return;
@@ -95,8 +80,6 @@ public partial class MainWindow
         OperationsContent.ViewLadderAtlas.SetBinding(IsEnabledProperty, new Binding("Atlas.CanViewBlock") { Source = BlocksContent });
         BlocksContent.SelectionMarker.Target = ProjectExplorer.Nodes;
         ProjectExplorer.SelectionMarker.SetBinding(VisibilityProperty, new Binding(nameof(Visibility)) { Source = BlocksContent.SelectionMarker });
-        ProjectExplorer.SelectionMarker.ClearRequested += (source, _) => OnClearFieldPrefill(source, "BlockSelection");
-        ProjectExplorer.FilterClearRequested += (source, _) => OnClearFieldPrefill(source, "BlockFilter");
         BlocksContent.FilterPendingChanged += ProjectExplorer.SetFilterPending;
         OperationsContent.GenerateAtlasItem.Click += BlocksContent.GenerateAtlas;
         OperationsContent.GenerateAtlasItem.SetBinding(IsEnabledProperty, new Binding("Atlas.CanGenerate") { Source = BlocksContent });
@@ -123,7 +106,6 @@ public partial class MainWindow
 
     private void ShowDocument()
     {
-        PlaceSafetyBanner();
         UpdateProjectReview();
         var document = _model.Engineering.Document;
         bool tags = document == ProjectDocument.Tags;

@@ -103,7 +103,13 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 var response = window.ApplyControl(request); WpfContext.Drain();
                 Assert.Equal(WorkbenchControlStatus.Done, response.Status); Assert.True(response.Data?.AwaitingConfirmation);
                 Assert.Equal(Form(form).Form, window.ControlSurface.Snapshot.Read(new WorkbenchReadStateArguments()).Prefill?.Form);
-                Assert.Equal(Visibility.Visible, ((StackPanel)window.FindName("ControlPrefillHint")).Visibility);
+                Assert.True(window.OperationsContent.OptionsOpen);
+                var otherOwner = WorkbenchControlTests.Request(WorkbenchControlOperation.PrefillForm, Form(form), "3333333333333333");
+                Assert.Equal("prefill-pending", window.ApplyControl(otherOwner).Refusal?.Condition);
+                window.OperationsContent.HideOptions();
+                var card = window.FindToastCard("ai-prefill")!;
+                Assert.True(card.Surface.IsVisible);
+                Assert.Equal(Localization.Loc.Current["Control.Form." + Form(form).Form], card.Message.Text);
                 Assert.Equal("prefill-pending", window.ApplyControl(WorkbenchControlTests.Request(WorkbenchControlOperation.PrefillForm, Form(form), "3333333333333333")).Refusal?.Condition);
                 Assert.Empty(host.Calls); Assert.Equal(0, host.ExecutedWrites);
                 if (form == 3) Assert.Equal(@"D:\Projects\Other.als21", model.Session.ProjectPath);
@@ -111,7 +117,7 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 if (form == 5) { Assert.Equal(@"D:\Imports\Main.xml", model.Engineering.ImportPathsText); Assert.True(model.Engineering.ImportOverwrite); }
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(WorkbenchControlTests.Request(WorkbenchControlOperation.PrefillForm, Form(form, true))).Status);
                 WpfContext.Drain(); Assert.Null(window.ControlSurface.Snapshot.Read(new WorkbenchReadStateArguments()).Prefill);
-                Assert.Equal(Visibility.Collapsed, ((StackPanel)window.FindName("ControlPrefillHint")).Visibility);
+                Assert.Null(window.FindToastCard("ai-prefill"));
                 if (form == 3) Assert.Equal((string?)host.Snapshot()["binding"]?["projectFile"], model.Session.ProjectPath);
                 if (form == 5) { Assert.Equal("", model.Engineering.ImportPathsText); Assert.False(model.Engineering.ImportOverwrite); }
                 Assert.Empty(host.Calls);

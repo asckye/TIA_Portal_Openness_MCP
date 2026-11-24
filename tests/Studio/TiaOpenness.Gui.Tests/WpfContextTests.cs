@@ -79,6 +79,52 @@ public sealed class WpfContextTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Space_key_up_uses_window_input_when_capture_changes_the_native_button_state()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            window.ShowToast(ViewModels.ToastKind.Warning, Localization.LocalizedText.Literal("sticky"), "fixture", sticky: true);
+            window.UpdateLayout();
+            var button = window.ToastClose;
+            int clicks = 0;
+            bool captured = false;
+            button.Click += (_, _) => clicks++;
+            button.AddHandler(Keyboard.KeyDownEvent, new KeyEventHandler((_, _) =>
+            {
+                captured = button.IsMouseCaptured;
+                var keys = new byte[256];
+                keys[0x01] = 0x80;
+                Assert.True(SetKeyboardState(keys));
+                Assert.NotEqual(0, GetKeyState(0x01) & 0x8000);
+                Assert.Equal(MouseButtonState.Pressed, Mouse.LeftButton);
+                Assert.Equal(MouseButtonState.Released, WpfContext.ReadLeftButton(button));
+            }), true);
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(window).Handle;
+            try
+            {
+                // Activate the offscreen window's mouse provider without moving the desktop cursor.
+                Assert.Equal(IntPtr.Zero, GetCapture());
+                SetCapture(hwnd);
+                Assert.Equal(hwnd, GetCapture());
+                SendMessage(hwnd, 0x0200 /* WM_MOUSEMOVE */, IntPtr.Zero, 0x00010001);
+                Assert.True(button.Focus());
+                WpfContext.PressSpace(button);
+                Assert.True(captured);
+                Assert.Equal(1, clicks);
+                Assert.False(button.IsMouseCaptured);
+                Assert.Equal(0, GetKeyState(0x01) & 0x8000);
+            }
+            finally
+            {
+                if (GetCapture() == hwnd) ReleaseCapture();
+                Assert.True(SetKeyboardState(new byte[256]));
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
     public void Space_waits_for_its_own_window_release_and_other_windows_keep_their_input_state()
     {
         wpf.Run(() =>
@@ -318,6 +364,23 @@ public sealed class WpfContextTests(WpfContext wpf)
             finally { window.Close(); }
         });
     }
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern IntPtr GetCapture();
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern IntPtr SetCapture(IntPtr hwnd);
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ReleaseCapture();
+
+    [DllImport("user32.dll", EntryPoint = "SendMessageW", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern IntPtr SendMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
 
     [DllImport("user32.dll", ExactSpelling = true)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]

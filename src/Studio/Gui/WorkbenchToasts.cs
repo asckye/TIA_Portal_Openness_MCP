@@ -21,6 +21,7 @@ public partial class MainWindow
     private readonly HashSet<ToastNotice> _announced = new(ReferenceEqualityComparer.Instance);
     private IInputElement? _beforeToastFocus;
     private ToastCard[] _toastCards = [];
+    internal ToastCard? FindToastCard(string source) => _toastCards.FirstOrDefault(card => card.Notice?.Source == source);
     private ToastCard NewestCard => _toastCards[^1];
     internal Border Toast => NewestCard.Surface;
     internal Ellipse ToastDot => NewestCard.Dot;
@@ -48,6 +49,7 @@ public partial class MainWindow
         foreach (var part in new FrameworkElement[] { ToastDot, ToastTitle, ToastMessage, ToastClose, ToastAction }) RegisterName(part.Name, part);
         _toasts.Changed += RenderToast;
         _toasts.ErrorDropped += AnnounceDroppedError;
+        _toasts.StickyDisplaced += AnnounceDisplacedSticky;
         ToastStack.PreviewGotKeyboardFocus += RememberToastFocus;
         _toastTimer.Tick += OnToastTick;
         foreach (var sheet in ToastSheets()) OptionsVisibility.AddValueChanged(sheet, OnToastPresentationChanged);
@@ -65,6 +67,7 @@ public partial class MainWindow
         _toastTimer.Tick -= OnToastTick;
         _toasts.Changed -= RenderToast;
         _toasts.ErrorDropped -= AnnounceDroppedError;
+        _toasts.StickyDisplaced -= AnnounceDisplacedSticky;
         ToastStack.PreviewGotKeyboardFocus -= RememberToastFocus;
         foreach (var sheet in ToastSheets()) OptionsVisibility.RemoveValueChanged(sheet, OnToastPresentationChanged);
         IsEnabledChanged -= OnToastEnabledChanged;
@@ -105,6 +108,14 @@ public partial class MainWindow
         AccessibleStatus.Announce(DroppedErrorAnnouncement);
     }
 
+    private void AnnounceDisplacedSticky(ToastNotice notice)
+    {
+        var text = Loc.Current.T("Toast.StickyDisplaced", notice.FullText);
+        DisplacedStickyAnnouncement.Text = text;
+        AutomationProperties.SetName(DisplacedStickyAnnouncement, text);
+        AccessibleStatus.Announce(DisplacedStickyAnnouncement);
+    }
+
     private void RememberToastFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         if (e.OldFocus is DependencyObject previous && !ToastStack.IsAncestorOf(previous)) _beforeToastFocus = e.OldFocus;
@@ -127,7 +138,7 @@ public partial class MainWindow
         var cards = _toasts.Cards.ToArray();
         int offset = _toastCards.Length - cards.Length;
         for (int i = 0; i < _toastCards.Length; i++) _toastCards[i].Display(i < offset ? null : cards[i - offset], ToastStack.Width);
-        var crashLogs = _toastCards.FirstOrDefault(card => card.Notice?.Source == "session-lost")?.SecondAction;
+        var crashLogs = FindToastCard("session-lost")?.SecondAction;
         if (OperationsContent.FindName("CrashLogs") != crashLogs)
         {
             if (OperationsContent.FindName("CrashLogs") != null) OperationsContent.UnregisterName("CrashLogs");
@@ -137,7 +148,10 @@ public partial class MainWindow
         _announced.RemoveWhere(notice => !_toasts.Contains(notice));
         foreach (var card in _toastCards)
             if (card.Notice is { } notice && _announced.Add(notice)) AccessibleStatus.Announce(card.Message);
-        if (_toasts.Delay is { } delay)
+        var nextTick = _toasts.Delay;
+        var second = TimeSpan.FromSeconds(1);
+        if (FindToastCard("ai-activity") != null && (nextTick == null || nextTick > second)) nextTick = second;
+        if (nextTick is { } delay)
         {
             _toastTimer.Interval = delay > TimeSpan.Zero ? delay : TimeSpan.Zero;
             _toastTimer.Start();
@@ -155,7 +169,7 @@ public partial class MainWindow
 
     private void InvokeToastAction(ToastCard card, bool second = false)
     {
-        if (card.Notice is not { } notice) return;
+        if (card.Notice is not { } notice || ControlGuard.ShouldBlock(second ? card.SecondAction : card.Action)) return;
         bool details = !second && card.ShowDetails;
         // Environment actions keep the finding visible until a check resolves it or the user dismisses it.
         if (notice.OnDismiss == null) _toasts.Remove(notice.Source);

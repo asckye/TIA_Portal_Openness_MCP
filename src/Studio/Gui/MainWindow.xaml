@@ -156,18 +156,7 @@
           </Grid>
         </Border>
         <Grid Grid.Row="2" Grid.Column="1">
-          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
-          <Border x:Name="SafetyBanner" Style="{StaticResource Primer.Workbench.SafetyBanner}" Visibility="Collapsed">
-            <Grid>
-              <StackPanel x:Name="ControlPrefillHint" Orientation="Horizontal" Visibility="Collapsed">
-                <TextBlock x:Name="ControlPrefillText" Text="{l:Tr Control.Prefilled}" AutomationProperties.LiveSetting="Polite" VerticalAlignment="Center"/>
-                <Button AutomationProperties.Name="{l:Tr Control.Confirm}" Content="{l:Tr Control.Confirm}" Style="{StaticResource Primer.Quiet}" Click="OnConfirmControlPrefill" Margin="12,0,0,0"/>
-                <Button AutomationProperties.Name="{l:Tr Control.Clear}" Content="{l:Tr Control.Clear}" Style="{StaticResource Primer.Quiet}" Click="OnClearControlPrefill"/>
-              </StackPanel>
-              <TextBlock x:Name="ControlStatus" AutomationProperties.LiveSetting="Polite" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Visibility="Collapsed"/>
-            </Grid>
-          </Border>
-          <Grid Grid.Row="1" Margin="16,12">
+          <Grid Margin="16,12">
             <views:ApprovalsDrawer x:Name="ApprovalsContent" Margin="-16,-12" Visibility="Collapsed"/>
             <ContentControl x:Name="ConfigurationHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
             <ContentControl x:Name="ClientsHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
@@ -348,6 +337,7 @@
         </Grid>
       </Border>
     </Grid>
+    <TextBlock x:Name="DisplacedStickyAnnouncement" Width="0" Height="0" IsHitTestVisible="False" AutomationProperties.LiveSetting="Polite"/>
     <TextBlock x:Name="DroppedErrorAnnouncement" Width="0" Height="0" IsHitTestVisible="False" AutomationProperties.LiveSetting="Assertive"/>
     <Grid x:Name="SettingsOverlay" Visibility="Collapsed" AutomationProperties.Name="{l:Tr Settings.Sections}">
       <ux:WorkbenchScrim x:Name="SettingsScrim" Source="{Binding ElementName=ShellFrame}" BlurRadius="4" MouseLeftButtonUp="OnSettingsBackdrop"/>

@@ -44,7 +44,6 @@
           </Border>
         </DockPanel>
       </Border>
-      <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
       <ScrollViewer x:Name="VciScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel x:Name="VciColumn" Style="{StaticResource Primer.VciColumn}">
           <TextBlock Text="{Binding VersionControl.AccessNotice}" Style="{StaticResource Project.SourceNotice}" TextWrapping="Wrap" Margin="0,0,0,8"/>

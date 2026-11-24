@@ -10,7 +10,6 @@ public partial class EngineeringOptionsView : UserControl
     public EngineeringOptionsView() => InitializeComponent();
     private Controls.ModalPane? _focus;
     internal bool IsOpen => OptionsOverlay.Visibility == Visibility.Visible;
-    internal event EventHandler<string>? ClearPrefillRequested;
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void Show(string section)
     {
@@ -47,8 +46,6 @@ public partial class EngineeringOptionsView : UserControl
         OutputMarker.SetPending(export); FormatMarker.SetPending(export);
         ImportMarker.SetPending(import); OverwriteMarker.SetPending(import);
     }
-    private void OnClearPrefill(object? sender, EventArgs e)
-        => ClearPrefillRequested?.Invoke(this, (string)((FrameworkElement)sender!).Tag);
     private void OnCloseOptions(object sender, RoutedEventArgs e) => Hide();
     private void OnWorkspaceSelected(object sender, SelectionChangedEventArgs e)
     {

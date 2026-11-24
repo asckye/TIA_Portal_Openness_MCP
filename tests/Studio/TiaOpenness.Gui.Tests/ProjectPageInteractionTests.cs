@@ -278,7 +278,8 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var (window, model, client) = WorkbenchControlTests.Window();
+            var now = WorkbenchControlTests.TestNow;
+            var (window, model, client) = WorkbenchControlTests.Window(input: new(() => now, () => false));
             try
             {
                 model.Engineering.Document = ProjectDocument.Tags;
@@ -291,6 +292,9 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
                 Assert.True(model.Engineering.Blocks[0].Selected);
                 var marker = ((ProjectTreeView)window.ProjectTree.Content).SelectionMarker;
                 Assert.Equal(Visibility.Visible, marker.Visibility);
+                UnifiedDesktopTests.ClickControl(marker.Children.OfType<Button>().Single());
+                Assert.True(model.Engineering.Blocks[0].Selected);
+                now += TimeSpan.FromMilliseconds(500);
                 UnifiedDesktopTests.ClickControl(marker.Children.OfType<Button>().Single());
                 WpfContext.Drain();
                 Assert.Equal(Visibility.Collapsed, marker.Visibility);

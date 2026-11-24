@@ -18,6 +18,12 @@ public readonly struct LocalizedText
     private readonly string? _key;
     private readonly object?[]? _args;
     private readonly string? _literal;
+    private readonly LocalizedText[]? _lines;
+
+    private LocalizedText(LocalizedText[] lines) => _lines = lines;
+
+    /// <summary>Renders each catalogue entry in the current language when the list is displayed.</summary>
+    public static LocalizedText Lines(params LocalizedText[] lines) => new(lines);
 
     private LocalizedText(string? key, object?[]? args, string? literal)
     {
@@ -40,6 +46,7 @@ public readonly struct LocalizedText
 
     public string Resolve()
     {
+        if (_lines != null) return string.Join<LocalizedText>("\n", _lines);
         if (_key is null) return _literal ?? string.Empty;
         if (_args is null || _args.Length == 0) return Loc.Current[_key];
 

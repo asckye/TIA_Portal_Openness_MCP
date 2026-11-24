@@ -19,7 +19,6 @@ public sealed partial class BlocksView : UserControl, IDisposable
     {
         InitializeComponent();
         Options.LocalScrim.Source = BlockBackdrop;
-        Options.ClearPrefillRequested += (_, form) => ClearPrefillRequested?.Invoke(this, form);
         DataContextChanged += (_, change) =>
         {
             if (change.OldValue is MainViewModel old) old.Engineering.PropertyChanged -= OnDocumentChanged;
@@ -132,7 +131,6 @@ public sealed partial class BlocksView : UserControl, IDisposable
     internal void HideOptions() => Options.Hide();
     internal bool OptionsOpen => Options.IsOpen;
     internal event EventHandler? ControlSelectionChanged;
-    internal event EventHandler<string>? ClearPrefillRequested;
     internal BlockRow? ControlFocusedBlock => (DataContext as MainViewModel)?.Engineering.FocusedBlock;
     internal void LocateControlBlock(BlockRow row)
     {
@@ -148,8 +146,6 @@ public sealed partial class BlocksView : UserControl, IDisposable
         FilterPendingChanged?.Invoke(filter);
         SelectionMarker.SetPending(selection);
     }
-    private void OnClearPrefill(object? sender, EventArgs e)
-        => ClearPrefillRequested?.Invoke(this, (string)((FrameworkElement)sender!).Tag);
     internal event EventHandler? TransferOptionsRequested;
     internal void OpenTransferOptions() => TransferOptionsRequested?.Invoke(this, EventArgs.Empty);
     internal async void GenerateAtlas(object? sender, RoutedEventArgs e)

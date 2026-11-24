@@ -20,8 +20,8 @@
               </DockPanel>
             </DataTemplate></ListBox.ItemTemplate>
           </ListBox>
-          <ux:PrefillMarker x:Name="FilterMarker" Tag="BlockFilter" ClearRequested="OnClearPrefill"/>
-          <ux:PrefillMarker x:Name="SelectionMarker" Tag="BlockSelection" ClearRequested="OnClearPrefill"/>
+          <ux:PrefillMarker x:Name="FilterMarker" Margin="24,0" Tag="BlockFilter"/>
+          <ux:PrefillMarker x:Name="SelectionMarker" Margin="24,0" Tag="BlockSelection"/>
         </StackPanel>
         <Grid Grid.Row="2" x:Name="Editor">
           <Grid>

@@ -35,13 +35,11 @@ public partial class ProjectTreeView : UserControl
     private bool _updateQueued;
     private BlockNode? _contextGroup;
     private BlockRow? _anchor;
-    internal event EventHandler? FilterClearRequested;
     internal void SetFilterPending(bool pending) => FilterMarker.SetPending(pending);
     internal Func<string, bool, bool> OpenPage { private get; set; } = null!;
     public ProjectTreeView()
     {
         InitializeComponent();
-        FilterMarker.ClearRequested += (_, _) => FilterClearRequested?.Invoke(this, EventArgs.Empty);
         DataContextChanged += (_, e) =>
         {
             if (e.OldValue is MainViewModel old)

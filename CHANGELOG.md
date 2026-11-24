@@ -6,6 +6,10 @@
 
 ### Changed
 
+- Workbench AI activity now appears in a timed notification. A persistent card lists pending prefills and offers confirmation or clearing.
+  Dismissing it keeps the field markers available. The summary returns on page changes or when options close.
+  A separate warning reports when the AI control channel is unavailable. Persistent notifications return as space opens in the stack.
+
 - Agent shows pending approvals, searchable decision history and AI calls in one toolbar.
   The call filter menu shows how many source and release filters are active and supports keyboard navigation.
   The wide call inspector shows the target and wrapped response envelope beside the table.

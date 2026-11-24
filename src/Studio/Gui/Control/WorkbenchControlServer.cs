@@ -57,6 +57,7 @@ internal sealed class WorkbenchControlServer : IDisposable
         _log = new WorkbenchControlLog(logPath);
         Completion = _dispatch = Task.Run(Dispatch);
     }
+    internal event Action? ListenerFailed;
     internal void Start()
     {
         _listener = WorkbenchControlPipe.CreateServer(_name, _sid, true);
@@ -88,7 +89,7 @@ internal sealed class WorkbenchControlServer : IDisposable
         catch (Exception ex) when ((ex is OperationCanceledException or ObjectDisposedException) && _stop.IsCancellationRequested)
         { Trace.TraceInformation("Workbench control listener stopped."); }
         catch (Exception ex)
-        { Trace.TraceWarning("Workbench control listener failed: {0}", ex.GetType().Name); Dispose(); }
+        { Trace.TraceWarning("Workbench control listener failed: {0}", ex.GetType().Name); Dispose(); ListenerFailed?.Invoke(); }
         finally { await Task.WhenAll(handlers).ConfigureAwait(false); }
     }
     private async Task Handle(NamedPipeServerStream pipe)

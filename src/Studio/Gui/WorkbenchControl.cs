@@ -25,18 +25,14 @@ public partial class MainWindow
     private readonly PrefillRegistry _prefills = new();
     private readonly Dictionary<WorkbenchPrefillForm, Action> _prefillRestore = [];
     private readonly HashSet<BlockRow> _controlRows = [];
-    private readonly DispatcherTimer _controlHintTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private int _controlQueued;
     private volatile bool _controlClosing;
-    private bool _controlUnavailable;
     private string? _controlProjectPath;
-    private WorkbenchControlRequest? _lastControl;
-    private DateTimeOffset _lastControlUtc;
     internal Func<DateTimeOffset> ControlNow { get; set; } = () => DateTimeOffset.UtcNow;
     private INotifyPropertyChanged? _controlFeatures, _controlJournal;
     private string? _controlDetailRequestId;
     private Controls.ModalPane? _controlCallDrawer;
-    private bool _controlOpenedOptions;
+    private bool _controlOpenedOptions, _prefillCardDismissed;
     private static readonly DependencyPropertyDescriptor OptionsVisibility =
         DependencyPropertyDescriptor.FromProperty(UIElement.VisibilityProperty, typeof(Grid));
     private readonly DispatcherTimer _inputIdleTimer = new() { Interval = TimeSpan.FromMilliseconds(150) };
@@ -78,14 +74,13 @@ public partial class MainWindow
         BlocksContent.ControlSelectionChanged += OnControlSelectionChanged;
         ObserveControlRows();
         SettingsContent.ControlEnabledChanged += OnControlEnabledChanged;
-        OperationsContent.ClearPrefillRequested += OnClearFieldPrefill;
-        BlocksContent.ClearPrefillRequested += OnClearFieldPrefill;
+        AddHandler(Controls.PrefillMarker.ConfirmRequestedEvent, new RoutedEventHandler(OnFieldPrefillRequested));
+        AddHandler(Controls.PrefillMarker.ClearRequestedEvent, new RoutedEventHandler(OnFieldPrefillRequested));
         PreviewMouseDown += OnControlMouseButton;
         PreviewMouseUp += OnControlMouseButton;
         PreviewMouseMove += OnControlMouseMove;
         PreviewMouseWheel += OnControlMouseWheel;
         PreviewKeyDown += OnControlKeyDown;
-        _controlHintTimer.Tick += OnControlHintTick;
         _inputIdleTimer.Tick += OnInputIdleTick;
         IsEnabledChanged += OnControlWindowChanged;
         ApprovalsContent.ConfirmationSheet.IsVisibleChanged += OnControlWindowChanged;
@@ -98,14 +93,26 @@ public partial class MainWindow
             string root = BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory);
             _controlServer = new WorkbenchControlServer(ControlSurface, Dispatcher,
                 release => BundleLayout.WorkbenchEnginePath(root, release, AppContext.BaseDirectory));
+            _controlServer.ListenerFailed += OnControlListenerFailed;
             _controlServer.Start();
+            SetControlChannelAvailable(true);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
         {
-            _controlServer?.Dispose(); _controlUnavailable = true;
+            _controlServer?.Dispose();
             System.Diagnostics.Trace.TraceWarning("Workbench control unavailable: {0}", ex.GetType().Name);
-            UpdateControlHint();
+            SetControlChannelAvailable(false);
         }
+    }
+    private void OnControlListenerFailed() => Dispatcher.BeginInvoke(() =>
+    {
+        if (!_controlClosing) SetControlChannelAvailable(false);
+    });
+    internal void SetControlChannelAvailable(bool available)
+    {
+        if (available) _toasts.Remove("ai-channel");
+        else ShowToast(ToastKind.Warning, LocalizedText.Key("Control.ChannelImpact"), "ai-channel",
+            title: LocalizedText.Key("Control.Unavailable"), sticky: true);
     }
     private void HookControlFeatures()
     {
@@ -200,6 +207,7 @@ public partial class MainWindow
 
     private void OnControlOptionsChanged(object? sender, EventArgs e)
     {
+        if (sender is Grid { Visibility: not Visibility.Visible }) RestoreDismissedPrefill();
         // Prefill owns one opening of the operations panel. A later human opening gets the normal modal guard.
         if (sender == OperationsContent.Options.OptionsOverlay) _controlOpenedOptions = false;
         QueueControlSnapshot();
@@ -247,6 +255,7 @@ public partial class MainWindow
         if (request.Operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection)
             return ControlResponse.Done(request, ControlSurface.Snapshot.Read(request.Arguments));
         if (ControlBlocker() is { } blocker) return ControlResponse.Refuse(request, blocker.Condition);
+        bool prefillChanged = false;
         WorkbenchControlResponse response;
         switch (request.Arguments)
         {
@@ -303,6 +312,7 @@ public partial class MainWindow
                     Tool = matches[0].Tool, Result = matches[0].Result.ToString().ToLowerInvariant() });
                 break;
             case WorkbenchPrefillArguments prefill:
+                prefillChanged = prefill.Mode == WorkbenchPrefillMode.Set || _prefills.Contains(prefill.Form);
                 response = ApplyControlPrefill(request, prefill);
                 break;
             default: return ControlResponse.Refuse(request, "workbench-operation", WorkbenchControlError.InvalidArgument);
@@ -310,9 +320,10 @@ public partial class MainWindow
         if (response.Status == WorkbenchControlStatus.Done)
         {
             CloseSessionPopover(false);
-            ControlGuard.UiChanged(); _lastControl = request; _lastControlUtc = ControlNow();
-            _controlHintTimer.Start(); UpdateControlHint();
-            if (ControlStatus.Visibility == Visibility.Visible) Controls.AccessibleStatus.Announce(ControlStatus);
+            ControlGuard.UiChanged();
+            var age = new ControlActivityAge(ControlNow, ControlNow());
+            ShowToast(ToastKind.Info, LocalizedText.Key("Control.Activity", ControlTool(request.Operation), request.Origin.ClientName, age), "ai-activity");
+            if (prefillChanged) UpdateControlPrefill();
             if (DrawerOverlay.Visibility != Visibility.Visible && !OperationsContent.OptionsOpen) CurrentPageTitle.Focus();
             ControlSurface.Publish(CaptureControlSnapshot());
         }
@@ -433,16 +444,35 @@ public partial class MainWindow
             if (arguments.Form is WorkbenchPrefillForm.ExportBlocks or WorkbenchPrefillForm.ImportBlocks) OperationsContent.ShowTransferOptions();
             _controlOpenedOptions = OperationsContent.OptionsOpen;
         }
-        UpdateControlPrefill();
         return ControlResponse.Done(request, new() { Form = arguments.Form, Page = ControlPage,
             Applied = arguments.Mode == WorkbenchPrefillMode.Clear ? [] : PrefillRegistry.Targets.Single(target => target.Form == arguments.Form).Fields,
             AwaitingConfirmation = arguments.Mode == WorkbenchPrefillMode.Set });
     }
     private void UpdateControlPrefill()
     {
-        UpdateControlHint();
-        ControlPrefillHint.ToolTip = _prefills.Latest is { } pending
-            ? pending.Form + " · " + string.Join(", ", PrefillRegistry.Targets.Single(target => target.Form == pending.Form).Fields) : null;
+        _prefillCardDismissed = false;
+        if (_prefills.Latest == null) _toasts.Remove("ai-prefill");
+        else ShowPendingPrefill();
+        UpdateControlMarkers();
+    }
+    private void RestoreDismissedPrefill()
+    {
+        if (!_prefillCardDismissed || _prefills.Latest == null) return;
+        _prefillCardDismissed = false;
+        ShowPendingPrefill();
+    }
+
+    private void ShowPendingPrefill()
+    {
+        var forms = PrefillRegistry.Targets.Where(target => _prefills.Contains(target.Form))
+            .Select(target => target.Description).ToArray();
+        ShowToast(ToastKind.Info, LocalizedText.Lines(forms), "ai-prefill", ConfirmControlPrefill,
+            LocalizedText.Key("Control.PrefillTitle"), "Control.Confirm", sticky: true, secondAction: OnClearControlPrefill,
+            secondActionKey: LocalizedText.Key("Control.Clear"), onDismiss: () => _prefillCardDismissed = true);
+    }
+
+    private void UpdateControlMarkers()
+    {
         BlocksContent.SetControlPrefillMarker(_prefills.Contains(WorkbenchPrefillForm.BlockFilter), _prefills.Contains(WorkbenchPrefillForm.BlockSelection));
         OperationsContent.SetControlPrefillMarker(_prefills.Contains(WorkbenchPrefillForm.InspectionRules));
         OperationsContent.SetMcpPrefillMarkers(_prefills.Contains(WorkbenchPrefillForm.ConnectProject),
@@ -453,18 +483,19 @@ public partial class MainWindow
         var selected = _model.Engineering.Blocks.ToDictionary(row => row, row => row.Selected);
         return () => { foreach (var row in _model.Engineering.Blocks) row.Selected = selected.TryGetValue(row, out bool value) && value; };
     }
-    private void OnClearControlPrefill(object sender, RoutedEventArgs e)
+    private void OnClearControlPrefill()
     {
         foreach (var restore in _prefillRestore.Values) restore();
         ConfirmControlPrefill();
     }
-    private void OnClearFieldPrefill(object? sender, string formName)
+    private void OnFieldPrefillRequested(object sender, RoutedEventArgs e)
     {
-        if (!Enum.TryParse<WorkbenchPrefillForm>(formName, out var form)) return;
-        if (_prefillRestore.Remove(form, out var restore)) restore();
+        if (ControlGuard.ClickGuardActive) { e.Handled = true; return; }
+        if (e.OriginalSource is not Controls.PrefillMarker { Tag: string formName } || !Enum.TryParse<WorkbenchPrefillForm>(formName, out var form)) return;
+        if (!_prefillRestore.Remove(form, out var restore)) return;
+        if (e.RoutedEvent == Controls.PrefillMarker.ClearRequestedEvent) restore();
         _prefills.ClearByHuman(form); UpdateControlPrefill(); QueueControlSnapshot();
     }
-    private void OnConfirmControlPrefill(object sender, RoutedEventArgs e) => ConfirmControlPrefill();
     private void ConfirmControlPrefill() { _prefillRestore.Clear(); _prefills.ClearByHuman(); UpdateControlPrefill(); QueueControlSnapshot(); }
     private void OnControlEnabledChanged(object? sender, EventArgs e) => QueueControlSnapshot();
     private void OnControlWindowChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -508,27 +539,11 @@ public partial class MainWindow
         if (ControlGuard.ClickGuardActive && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.B) e.Handled = true;
         RecordHumanInput();
     }
-    private void OnControlHintTick(object? sender, EventArgs e) => UpdateControlHint();
-    private void OnControlLanguageChanged(object? sender, EventArgs e) { UpdateControlHint(); UpdateControlPrefill(); UpdateControlDetail(); }
-    private void UpdateControlHint()
+    private sealed record ControlActivityAge(Func<DateTimeOffset> Now, DateTimeOffset Started)
     {
-        bool unavailable = _controlUnavailable;
-        bool prefill = !unavailable && _prefills.Latest != null;
-        int age = Math.Max(0, (int)(ControlNow() - _lastControlUtc).TotalSeconds);
-        bool activity = !unavailable && !prefill && _lastControl != null && age < 10;
-        var prefillVisibility = prefill ? Visibility.Visible : Visibility.Collapsed;
-        bool announcePrefill = ControlPrefillHint.Visibility != prefillVisibility && prefill;
-        bool announceUnavailable = unavailable && (ControlStatus.Visibility != Visibility.Visible || ControlStatus.Text != Loc.Current["Control.Unavailable"]);
-        SafetyBanner.Tag = unavailable ? "Warning" : "Information";
-        SafetyBanner.Visibility = unavailable || prefill || activity ? Visibility.Visible : Visibility.Collapsed;
-        ControlPrefillHint.Visibility = prefillVisibility;
-        ControlStatus.Text = _controlUnavailable ? Loc.Current["Control.Unavailable"] : _lastControl != null && age < 10
-            ? Loc.Current.T("Control.Activity", ControlTool(_lastControl.Operation), _lastControl.Origin.ClientName, age) : "";
-        ControlStatus.Visibility = unavailable || activity ? Visibility.Visible : Visibility.Collapsed;
-        if (announcePrefill) Controls.AccessibleStatus.Announce(ControlPrefillText);
-        if (announceUnavailable) Controls.AccessibleStatus.Announce(ControlStatus);
-        if (_lastControl != null && age >= 10) _controlHintTimer.Stop();
+        public override string ToString() => Math.Max(0, (int)(Now() - Started).TotalSeconds).ToString(System.Globalization.CultureInfo.CurrentCulture);
     }
+    private void OnControlLanguageChanged(object? sender, EventArgs e) { UpdateControlMarkers(); UpdateControlDetail(); }
     private static string ControlTool(WorkbenchControlOperation operation) => operation switch
     {
         WorkbenchControlOperation.DisplayPage => "ShowWorkbenchPage", WorkbenchControlOperation.DisplayBlock => "ShowWorkbenchBlock",
@@ -537,7 +552,7 @@ public partial class MainWindow
     };
     private void DisposeControl()
     {
-        _controlClosing = true; _controlServer?.Dispose(); _controlHintTimer.Stop();
+        _controlClosing = true; _controlServer?.Dispose();
         _inputIdleTimer.Stop();
         _inputIdleTimer.Tick -= OnInputIdleTick;
         IsEnabledChanged -= OnControlWindowChanged;
@@ -546,7 +561,6 @@ public partial class MainWindow
             OptionsVisibility.RemoveValueChanged(panel, OnControlOptionsChanged);
         CloseSessionPopover(false);
         if (_paletteFocus != null) CloseCommandPalette();
-        _controlHintTimer.Tick -= OnControlHintTick;
         Loc.Current.LanguageChanged -= OnControlLanguageChanged;
         foreach (var source in new INotifyPropertyChanged[] { _model, _model.Session, _model.Engineering, _model.Activity })
             source.PropertyChanged -= OnControlChanged;
@@ -557,8 +571,8 @@ public partial class MainWindow
         _model.Engineering.Blocks.CollectionChanged -= OnControlBlocksChanged;
         BlocksContent.ControlSelectionChanged -= OnControlSelectionChanged;
         SettingsContent.ControlEnabledChanged -= OnControlEnabledChanged;
-        OperationsContent.ClearPrefillRequested -= OnClearFieldPrefill;
-        BlocksContent.ClearPrefillRequested -= OnClearFieldPrefill;
+        RemoveHandler(Controls.PrefillMarker.ConfirmRequestedEvent, new RoutedEventHandler(OnFieldPrefillRequested));
+        RemoveHandler(Controls.PrefillMarker.ClearRequestedEvent, new RoutedEventHandler(OnFieldPrefillRequested));
         PreviewMouseDown -= OnControlMouseButton; PreviewMouseUp -= OnControlMouseButton;
         PreviewMouseMove -= OnControlMouseMove; PreviewMouseWheel -= OnControlMouseWheel; PreviewKeyDown -= OnControlKeyDown;
     }
