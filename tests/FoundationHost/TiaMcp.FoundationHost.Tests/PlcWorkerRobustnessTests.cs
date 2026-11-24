@@ -268,6 +268,11 @@ public sealed class PlcFixtureWorkerRobustnessTests
         Assert.Equal("unknown", error.Outcome); Assert.False(scope.Worker.Faulted);
         Assert.False(scope.Process!.HasExited);
         var stderr = (Queue<string>)typeof(WorkerClient).GetField("diagnostics", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(scope.Worker)!;
+        // The stdout reply can reach the caller before the stderr callback enqueues the handler's line.
+        SpinWait.SpinUntil(() =>
+        {
+            lock (stderr) return stderr.Any(line => line.Contains("terminating=False", StringComparison.Ordinal));
+        }, TiaMcp.Engine.Tests.Shared.TestDeadlines.Hang);
         lock (stderr) Assert.Contains(stderr, line => line.Contains("terminating=False", StringComparison.Ordinal));
         using var independent = FoundationWorkerRequest.Use(Guid.NewGuid().ToString("N"), "GetSessionState");
         Assert.Equal(release, (string?)(await scope.Worker.Call("ReadState", new(), CancellationToken.None))?["ReleaseKey"]);
