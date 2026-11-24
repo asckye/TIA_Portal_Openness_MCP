@@ -136,6 +136,30 @@
     },
     "swImportOptions": {
       "meaning": "Default [] explicit names: IgnoreStructuralChanges / IgnoreMissingReferencedObjects V15.1–V21, IgnoreUnitAttributes V16–V21. Block/type SimaticML only; tag tables and documents refuse these flags."
+    },
+    "offset": {
+      "fallbackMeaning": "Zero-based start of the page. Use the next offset reported by this listing with the same filters."
+    },
+    "limit": {
+      "fallbackMeaning": "Maximum rows requested for this page. Use the bounds and default in this tool’s input schema."
+    },
+    "importOptions": {
+      "fallbackMeaning": "For PLC XML imports, omit culture options by default. V19–V21 admit SkipInactiveCultures or ActivateInactiveCultures. Choose at most one. The overwrite flag separately controls replacement. For other imports use the options in the selected tool schema."
+    },
+    "includeUnits": {
+      "meaning": "V16–V21: include the root and every standard software unit; unitName must be empty. Empty table selects all tables in this mode or with unitName."
+    },
+    "umacUserName": {
+      "meaning": "Supply the authorized UMAC account together with its password when opening a protected project or retrieving a protected archive."
+    },
+    "umacUserType": {
+      "meaning": "Project (default) or Global (UMAC server user); only together with umacUserName and umacPassword."
+    },
+    "umacPassword": {
+      "meaning": "Supply the protected project or archive account’s password together with umacUserName. Omit for unprotected inputs."
+    },
+    "confirm": {
+      "fallbackMeaning": "The execution form requires this flag for tools that ask for confirmation. Leave it false in previews and bind the reviewed project and preview hash where required."
     }
   },
   "resultReading": {

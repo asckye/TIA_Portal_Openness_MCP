@@ -14,6 +14,7 @@
     <!-- The worker fault fixtures are outside the solutions; keep this build's configuration so they reach the bin/Release paths the tests open. -->
     <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform></PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Shared/ServedToolOperations.cs" Link="ServedToolOperations.cs" />
     <ProjectReference Include="../../Fixtures/TiaMcp.UnifiedWorker.Fixture/TiaMcp.UnifiedWorker.Fixture.csproj" Aliases="validationfixture" />
     <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />
     <ProjectReference Include="../../Adapters/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj" Aliases="adaptertests" />

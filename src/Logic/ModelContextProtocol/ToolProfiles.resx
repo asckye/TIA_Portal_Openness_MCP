@@ -6488,7 +6488,10 @@
       "releaseKey": "14sp1",
       "entry": "GetUnifiedRuntimeAlarms",
       "family": "F04",
-      "example": {}
+      "example": {
+        "filter": "Priority &gt;= 10",
+        "languageId": 1033
+      }
     },
     {
       "releaseKey": "14sp1",
@@ -6979,7 +6982,10 @@
       "releaseKey": "14sp1",
       "entry": "GetOpennessGuidance",
       "family": "F01",
-      "example": {}
+      "example": {
+        "offset": 0,
+        "limit": 100
+      }
     },
     {
       "releaseKey": "14sp1",
@@ -6991,7 +6997,10 @@
       "releaseKey": "14sp1",
       "entry": "GetV21EcosystemCatalog",
       "family": "F01",
-      "example": {}
+      "example": {
+        "source": "all",
+        "limit": 50
+      }
     },
     {
       "releaseKey": "14sp1",
@@ -7365,7 +7374,10 @@
       "releaseKey": "14sp1",
       "entry": "GetLibraryOverview",
       "family": "F23",
-      "example": {}
+      "example": {
+        "includeTypes": true,
+        "includeMasterCopies": true
+      }
     },
     {
       "releaseKey": "14sp1",
@@ -7782,7 +7794,9 @@
       "releaseKey": "14sp1",
       "entry": "ListClassicHmiFaceplates",
       "family": "F25",
-      "example": {}
+      "example": {
+        "kind": "faceplate"
+      }
     },
     {
       "releaseKey": "14sp1",
@@ -8108,8 +8122,6 @@
       "example": {
         "softwarePath": "PLC_1",
         "action": "list",
-        "name": "FC_Add",
-        "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
       }
@@ -8261,7 +8273,9 @@
       "releaseKey": "14sp1",
       "entry": "ListDevices",
       "family": "F18",
-      "example": {}
+      "example": {
+        "includePlcSoftware": true
+      }
     },
     {
       "releaseKey": "14sp1",
@@ -8725,7 +8739,10 @@
       "releaseKey": "15.1",
       "entry": "GetUnifiedRuntimeAlarms",
       "family": "F04",
-      "example": {}
+      "example": {
+        "filter": "Priority &gt;= 10",
+        "languageId": 1033
+      }
     },
     {
       "releaseKey": "15.1",
@@ -9446,7 +9463,10 @@
       "releaseKey": "15.1",
       "entry": "GetOpennessGuidance",
       "family": "F01",
-      "example": {}
+      "example": {
+        "offset": 0,
+        "limit": 100
+      }
     },
     {
       "releaseKey": "15.1",
@@ -9458,7 +9478,10 @@
       "releaseKey": "15.1",
       "entry": "GetV21EcosystemCatalog",
       "family": "F01",
-      "example": {}
+      "example": {
+        "source": "all",
+        "limit": 50
+      }
     },
     {
       "releaseKey": "15.1",
@@ -9832,7 +9855,10 @@
       "releaseKey": "15.1",
       "entry": "GetLibraryOverview",
       "family": "F23",
-      "example": {}
+      "example": {
+        "includeTypes": true,
+        "includeMasterCopies": true
+      }
     },
     {
       "releaseKey": "15.1",
@@ -10249,7 +10275,9 @@
       "releaseKey": "15.1",
       "entry": "ListClassicHmiFaceplates",
       "family": "F25",
-      "example": {}
+      "example": {
+        "kind": "faceplate"
+      }
     },
     {
       "releaseKey": "15.1",
@@ -10598,8 +10626,6 @@
       "example": {
         "softwarePath": "PLC_1",
         "action": "list",
-        "name": "FC_Add",
-        "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
       }
@@ -10609,7 +10635,7 @@
       "entry": "ExportPlcWatchTablesToDirectory",
       "family": "F12",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "tableKind": "watch",
         "dryRun": true,
@@ -10920,7 +10946,9 @@
       "releaseKey": "15.1",
       "entry": "ListDevices",
       "family": "F18",
-      "example": {}
+      "example": {
+        "includePlcSoftware": true
+      }
     },
     {
       "releaseKey": "15.1",
@@ -11417,7 +11445,10 @@
       "releaseKey": "16",
       "entry": "GetUnifiedRuntimeAlarms",
       "family": "F04",
-      "example": {}
+      "example": {
+        "filter": "Priority &gt;= 10",
+        "languageId": 1033
+      }
     },
     {
       "releaseKey": "16",
@@ -12139,9 +12170,7 @@
       "example": {
         "workspaceName": "Engineering",
         "folderPath": "C:/Examples/VCI/Engineering",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "dryRun": true
       }
     },
     {
@@ -12329,7 +12358,10 @@
       "releaseKey": "16",
       "entry": "GetOpennessGuidance",
       "family": "F01",
-      "example": {}
+      "example": {
+        "offset": 0,
+        "limit": 100
+      }
     },
     {
       "releaseKey": "16",
@@ -12341,7 +12373,10 @@
       "releaseKey": "16",
       "entry": "GetV21EcosystemCatalog",
       "family": "F01",
-      "example": {}
+      "example": {
+        "source": "all",
+        "limit": 50
+      }
     },
     {
       "releaseKey": "16",
@@ -12724,7 +12759,10 @@
       "releaseKey": "16",
       "entry": "GetLibraryOverview",
       "family": "F23",
-      "example": {}
+      "example": {
+        "includeTypes": true,
+        "includeMasterCopies": true
+      }
     },
     {
       "releaseKey": "16",
@@ -13141,7 +13179,9 @@
       "releaseKey": "16",
       "entry": "ListClassicHmiFaceplates",
       "family": "F25",
-      "example": {}
+      "example": {
+        "kind": "faceplate"
+      }
     },
     {
       "releaseKey": "16",
@@ -13490,8 +13530,6 @@
       "example": {
         "softwarePath": "PLC_1",
         "action": "list",
-        "name": "FC_Add",
-        "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
       }
@@ -13501,7 +13539,7 @@
       "entry": "ExportPlcWatchTablesToDirectory",
       "family": "F12",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "tableKind": "watch",
         "dryRun": true,
@@ -13907,7 +13945,9 @@
       "releaseKey": "16",
       "entry": "ListDevices",
       "family": "F18",
-      "example": {}
+      "example": {
+        "includePlcSoftware": true
+      }
     },
     {
       "releaseKey": "16",
@@ -14425,7 +14465,10 @@
       "releaseKey": "17",
       "entry": "GetUnifiedRuntimeAlarms",
       "family": "F04",
-      "example": {}
+      "example": {
+        "filter": "Priority &gt;= 10",
+        "languageId": 1033
+      }
     },
     {
       "releaseKey": "17",
@@ -15221,7 +15264,9 @@
       "releaseKey": "17",
       "entry": "GetProjectUserManagement",
       "family": "F07",
-      "example": {}
+      "example": {
+        "category": "users"
+      }
     },
     {
       "releaseKey": "17",
@@ -15274,9 +15319,7 @@
       "example": {
         "workspaceName": "Engineering",
         "folderPath": "C:/Examples/VCI/Engineering",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "dryRun": true
       }
     },
     {
@@ -15464,7 +15507,10 @@
       "releaseKey": "17",
       "entry": "GetOpennessGuidance",
       "family": "F01",
-      "example": {}
+      "example": {
+        "offset": 0,
+        "limit": 100
+      }
     },
     {
       "releaseKey": "17",
@@ -15476,7 +15522,10 @@
       "releaseKey": "17",
       "entry": "GetV21EcosystemCatalog",
       "family": "F01",
-      "example": {}
+      "example": {
+        "source": "all",
+        "limit": 50
+      }
     },
     {
       "releaseKey": "17",
@@ -15869,7 +15918,10 @@
       "releaseKey": "17",
       "entry": "GetLibraryOverview",
       "family": "F23",
-      "example": {}
+      "example": {
+        "includeTypes": true,
+        "includeMasterCopies": true
+      }
     },
     {
       "releaseKey": "17",
@@ -16286,7 +16338,9 @@
       "releaseKey": "17",
       "entry": "ListClassicHmiFaceplates",
       "family": "F25",
-      "example": {}
+      "example": {
+        "kind": "faceplate"
+      }
     },
     {
       "releaseKey": "17",
@@ -16635,8 +16689,6 @@
       "example": {
         "softwarePath": "PLC_1",
         "action": "list",
-        "name": "FC_Add",
-        "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
       }
@@ -16646,7 +16698,7 @@
       "entry": "ExportPlcWatchTablesToDirectory",
       "family": "F12",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "tableKind": "watch",
         "dryRun": true,
@@ -17139,7 +17191,9 @@
       "releaseKey": "17",
       "entry": "ListDevices",
       "family": "F18",
-      "example": {}
+      "example": {
+        "includePlcSoftware": true
+      }
     },
     {
       "releaseKey": "17",
@@ -17668,7 +17722,10 @@
       "releaseKey": "18",
       "entry": "GetUnifiedRuntimeAlarms",
       "family": "F04",
-      "example": {}
+      "example": {
+        "filter": "Priority &gt;= 10",
+        "languageId": 1033
+      }
     },
     {
       "releaseKey": "18",
@@ -18638,7 +18695,9 @@
       "releaseKey": "18",
       "entry": "GetProjectUserManagement",
       "family": "F07",
-      "example": {}
+      "example": {
+        "category": "users"
+      }
     },
     {
       "releaseKey": "18",
@@ -18701,9 +18760,7 @@
       "example": {
         "workspaceName": "Engineering",
         "folderPath": "C:/Examples/VCI/Engineering",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "dryRun": true
       }
     },
     {
@@ -18922,7 +18979,10 @@
       "releaseKey": "18",
       "entry": "GetOpennessGuidance",
       "family": "F01",
-      "example": {}
+      "example": {
+        "offset": 0,
+        "limit": 100
+      }
     },
     {
       "releaseKey": "18",
@@ -18934,7 +18994,10 @@
       "releaseKey": "18",
       "entry": "GetV21EcosystemCatalog",
       "family": "F01",
-      "example": {}
+      "example": {
+        "source": "all",
+        "limit": 50
+      }
     },
     {
       "releaseKey": "18",
@@ -19360,7 +19423,10 @@
       "releaseKey": "18",
       "entry": "GetLibraryOverview",
       "family": "F23",
-      "example": {}
+      "example": {
+        "includeTypes": true,
+        "includeMasterCopies": true
+      }
     },
     {
       "releaseKey": "18",
@@ -19787,7 +19853,9 @@
       "releaseKey": "18",
       "entry": "ListClassicHmiFaceplates",
       "family": "F25",
-      "example": {}
+      "example": {
+        "kind": "faceplate"
+      }
     },
     {
       "releaseKey": "18",
@@ -20146,8 +20214,6 @@
       "example": {
         "softwarePath": "PLC_1",
         "action": "list",
-        "name": "FC_Add",
-        "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
       }
@@ -20168,7 +20234,7 @@
       "entry": "ExportPlcWatchTablesToDirectory",
       "family": "F12",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "tableKind": "watch",
         "dryRun": true,
@@ -20694,7 +20760,9 @@
       "releaseKey": "18",
       "entry": "ListDevices",
       "family": "F18",
-      "example": {}
+      "example": {
+        "includePlcSoftware": true
+      }
     },
     {
       "releaseKey": "18",
@@ -21240,7 +21308,10 @@
       "releaseKey": "19",
       "entry": "GetUnifiedRuntimeAlarms",
       "family": "F04",
-      "example": {}
+      "example": {
+        "filter": "Priority &gt;= 10",
+        "languageId": 1033
+      }
     },
     {
       "releaseKey": "19",
@@ -22260,7 +22331,9 @@
       "releaseKey": "19",
       "entry": "GetProjectUserManagement",
       "family": "F07",
-      "example": {}
+      "example": {
+        "category": "users"
+      }
     },
     {
       "releaseKey": "19",
@@ -22333,9 +22406,7 @@
       "example": {
         "workspaceName": "Engineering",
         "folderPath": "C:/Examples/VCI/Engineering",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "dryRun": true
       }
     },
     {
@@ -22554,7 +22625,10 @@
       "releaseKey": "19",
       "entry": "GetOpennessGuidance",
       "family": "F01",
-      "example": {}
+      "example": {
+        "offset": 0,
+        "limit": 100
+      }
     },
     {
       "releaseKey": "19",
@@ -22566,7 +22640,10 @@
       "releaseKey": "19",
       "entry": "GetV21EcosystemCatalog",
       "family": "F01",
-      "example": {}
+      "example": {
+        "source": "all",
+        "limit": 50
+      }
     },
     {
       "releaseKey": "19",
@@ -23079,7 +23156,10 @@
       "releaseKey": "19",
       "entry": "GetLibraryOverview",
       "family": "F23",
-      "example": {}
+      "example": {
+        "includeTypes": true,
+        "includeMasterCopies": true
+      }
     },
     {
       "releaseKey": "19",
@@ -23564,7 +23644,10 @@
       "releaseKey": "19",
       "entry": "DescribeUnifiedScreenItemType",
       "family": "F26",
-      "example": {}
+      "example": {
+        "itemType": "HmiButton",
+        "depth": 2
+      }
     },
     {
       "releaseKey": "19",
@@ -23644,7 +23727,8 @@
         "tagName": "Ready",
         "plcName": "PLC_1",
         "plcTag": "&lt;exact PLC tag name from project reads&gt;",
-        "dryRun": true
+        "dryRun": true,
+        "connectionName": "&lt;exact connection name from the selected Unified HMI&gt;"
       }
     },
     {
@@ -23693,7 +23777,9 @@
       "releaseKey": "19",
       "entry": "ListUnifiedHmiApiTypes",
       "family": "F26",
-      "example": {}
+      "example": {
+        "nameContains": "Dynamization"
+      }
     },
     {
       "releaseKey": "19",
@@ -24491,7 +24577,9 @@
       "releaseKey": "19",
       "entry": "ListClassicHmiFaceplates",
       "family": "F25",
-      "example": {}
+      "example": {
+        "kind": "faceplate"
+      }
     },
     {
       "releaseKey": "19",
@@ -24850,8 +24938,6 @@
       "example": {
         "softwarePath": "PLC_1",
         "action": "list",
-        "name": "FC_Add",
-        "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
       }
@@ -24872,7 +24958,7 @@
       "entry": "ExportPlcWatchTablesToDirectory",
       "family": "F12",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "tableKind": "watch",
         "dryRun": true,
@@ -25398,7 +25484,9 @@
       "releaseKey": "19",
       "entry": "ListDevices",
       "family": "F18",
-      "example": {}
+      "example": {
+        "includePlcSoftware": true
+      }
     },
     {
       "releaseKey": "19",
@@ -25944,7 +26032,10 @@
       "releaseKey": "20",
       "entry": "GetUnifiedRuntimeAlarms",
       "family": "F04",
-      "example": {}
+      "example": {
+        "filter": "Priority &gt;= 10",
+        "languageId": 1033
+      }
     },
     {
       "releaseKey": "20",
@@ -26964,7 +27055,9 @@
       "releaseKey": "20",
       "entry": "GetProjectUserManagement",
       "family": "F07",
-      "example": {}
+      "example": {
+        "category": "users"
+      }
     },
     {
       "releaseKey": "20",
@@ -27037,9 +27130,7 @@
       "example": {
         "workspaceName": "Engineering",
         "folderPath": "C:/Examples/VCI/Engineering",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "dryRun": true
       }
     },
     {
@@ -27258,7 +27349,10 @@
       "releaseKey": "20",
       "entry": "GetOpennessGuidance",
       "family": "F01",
-      "example": {}
+      "example": {
+        "offset": 0,
+        "limit": 100
+      }
     },
     {
       "releaseKey": "20",
@@ -27270,7 +27364,10 @@
       "releaseKey": "20",
       "entry": "GetV21EcosystemCatalog",
       "family": "F01",
-      "example": {}
+      "example": {
+        "source": "all",
+        "limit": 50
+      }
     },
     {
       "releaseKey": "20",
@@ -27885,7 +27982,10 @@
       "releaseKey": "20",
       "entry": "GetLibraryOverview",
       "family": "F23",
-      "example": {}
+      "example": {
+        "includeTypes": true,
+        "includeMasterCopies": true
+      }
     },
     {
       "releaseKey": "20",
@@ -28382,7 +28482,10 @@
       "releaseKey": "20",
       "entry": "DescribeUnifiedScreenItemType",
       "family": "F26",
-      "example": {}
+      "example": {
+        "itemType": "HmiButton",
+        "depth": 2
+      }
     },
     {
       "releaseKey": "20",
@@ -28462,7 +28565,8 @@
         "tagName": "Ready",
         "plcName": "PLC_1",
         "plcTag": "&lt;exact PLC tag name from project reads&gt;",
-        "dryRun": true
+        "dryRun": true,
+        "connectionName": "&lt;exact connection name from the selected Unified HMI&gt;"
       }
     },
     {
@@ -28511,7 +28615,9 @@
       "releaseKey": "20",
       "entry": "ListUnifiedHmiApiTypes",
       "family": "F26",
-      "example": {}
+      "example": {
+        "nameContains": "Dynamization"
+      }
     },
     {
       "releaseKey": "20",
@@ -29348,7 +29454,9 @@
       "releaseKey": "20",
       "entry": "ListClassicHmiFaceplates",
       "family": "F25",
-      "example": {}
+      "example": {
+        "kind": "faceplate"
+      }
     },
     {
       "releaseKey": "20",
@@ -29707,8 +29815,6 @@
       "example": {
         "softwarePath": "PLC_1",
         "action": "list",
-        "name": "FC_Add",
-        "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
       }
@@ -29729,7 +29835,7 @@
       "entry": "ExportPlcWatchTablesToDirectory",
       "family": "F12",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "tableKind": "watch",
         "dryRun": true,
@@ -30328,7 +30434,9 @@
       "releaseKey": "20",
       "entry": "ListDevices",
       "family": "F18",
-      "example": {}
+      "example": {
+        "includePlcSoftware": true
+      }
     },
     {
       "releaseKey": "20",
@@ -30874,7 +30982,10 @@
       "releaseKey": "21",
       "entry": "GetUnifiedRuntimeAlarms",
       "family": "F04",
-      "example": {}
+      "example": {
+        "filter": "Priority &gt;= 10",
+        "languageId": 1033
+      }
     },
     {
       "releaseKey": "21",
@@ -31688,7 +31799,9 @@
       "releaseKey": "21",
       "entry": "ListSafetyActivationTests",
       "family": "F30",
-      "example": {}
+      "example": {
+        "includeConditions": true
+      }
     },
     {
       "releaseKey": "21",
@@ -31976,7 +32089,9 @@
       "releaseKey": "21",
       "entry": "GetProjectUserManagement",
       "family": "F07",
-      "example": {}
+      "example": {
+        "category": "users"
+      }
     },
     {
       "releaseKey": "21",
@@ -32049,9 +32164,7 @@
       "example": {
         "workspaceName": "Engineering",
         "folderPath": "C:/Examples/VCI/Engineering",
-        "dryRun": false,
-        "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-        "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+        "dryRun": true
       }
     },
     {
@@ -32270,7 +32383,10 @@
       "releaseKey": "21",
       "entry": "GetOpennessGuidance",
       "family": "F01",
-      "example": {}
+      "example": {
+        "offset": 0,
+        "limit": 100
+      }
     },
     {
       "releaseKey": "21",
@@ -32282,7 +32398,10 @@
       "releaseKey": "21",
       "entry": "GetV21EcosystemCatalog",
       "family": "F01",
-      "example": {}
+      "example": {
+        "source": "all",
+        "limit": 50
+      }
     },
     {
       "releaseKey": "21",
@@ -32972,7 +33091,10 @@
       "releaseKey": "21",
       "entry": "GetLibraryOverview",
       "family": "F23",
-      "example": {}
+      "example": {
+        "includeTypes": true,
+        "includeMasterCopies": true
+      }
     },
     {
       "releaseKey": "21",
@@ -33481,7 +33603,10 @@
       "releaseKey": "21",
       "entry": "DescribeUnifiedScreenItemType",
       "family": "F26",
-      "example": {}
+      "example": {
+        "itemType": "HmiButton",
+        "depth": 2
+      }
     },
     {
       "releaseKey": "21",
@@ -33561,7 +33686,8 @@
         "tagName": "Ready",
         "plcName": "PLC_1",
         "plcTag": "&lt;exact PLC tag name from project reads&gt;",
-        "dryRun": true
+        "dryRun": true,
+        "connectionName": "&lt;exact connection name from the selected Unified HMI&gt;"
       }
     },
     {
@@ -33610,7 +33736,9 @@
       "releaseKey": "21",
       "entry": "ListUnifiedHmiApiTypes",
       "family": "F26",
-      "example": {}
+      "example": {
+        "nameContains": "Dynamization"
+      }
     },
     {
       "releaseKey": "21",
@@ -34447,7 +34575,9 @@
       "releaseKey": "21",
       "entry": "ListClassicHmiFaceplates",
       "family": "F25",
-      "example": {}
+      "example": {
+        "kind": "faceplate"
+      }
     },
     {
       "releaseKey": "21",
@@ -34806,8 +34936,6 @@
       "example": {
         "softwarePath": "PLC_1",
         "action": "list",
-        "name": "FC_Add",
-        "filePath": "C:\\Temp\\FC_Add.scl",
         "dryRun": true,
         "confirmDelete": false
       }
@@ -34828,7 +34956,7 @@
       "entry": "ExportPlcWatchTablesToDirectory",
       "family": "F12",
       "example": {
-        "softwarePath": "PLC_1",
+        "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
         "exportDirectory": "C:\\Examples\\exports",
         "tableKind": "watch",
         "dryRun": true,
@@ -35459,7 +35587,9 @@
       "releaseKey": "21",
       "entry": "ListDevices",
       "family": "F18",
-      "example": {}
+      "example": {
+        "includePlcSoftware": true
+      }
     },
     {
       "releaseKey": "21",
@@ -41715,9 +41845,7 @@
         "arguments": {
           "workspaceName": "Engineering",
           "folderPath": "C:/Examples/VCI/Engineering",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42090,7 +42218,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "itemType": "HmiButton",
+          "depth": 2
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -42318,7 +42449,8 @@
           "tagName": "Ready",
           "plcName": "PLC_1",
           "plcTag": "&lt;exact PLC tag name from project reads&gt;",
-          "dryRun": true
+          "dryRun": true,
+          "connectionName": "&lt;exact connection name from the selected Unified HMI&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -42844,7 +42976,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "tableKind": "watch",
           "dryRun": true,
@@ -43465,7 +43597,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeTypes": true,
+          "includeMasterCopies": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -43598,7 +43733,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -44015,7 +44153,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "category": "users"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -44357,7 +44497,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "filter": "Priority &gt;= 10",
+          "languageId": 1033
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -44420,7 +44563,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "source": "all",
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -45025,7 +45171,10 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
       },
@@ -45146,7 +45295,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "kind": "faceplate"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -45211,7 +45362,9 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includePlcSoftware": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -45721,7 +45874,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "nameContains": "Dynamization"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -46588,8 +46743,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
-          "name": "FC_Add",
-          "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
         },
@@ -51378,9 +51531,7 @@
         "arguments": {
           "workspaceName": "Engineering",
           "folderPath": "C:/Examples/VCI/Engineering",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -51753,7 +51904,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "itemType": "HmiButton",
+          "depth": 2
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -51981,7 +52135,8 @@
           "tagName": "Ready",
           "plcName": "PLC_1",
           "plcTag": "&lt;exact PLC tag name from project reads&gt;",
-          "dryRun": true
+          "dryRun": true,
+          "connectionName": "&lt;exact connection name from the selected Unified HMI&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -52507,7 +52662,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "tableKind": "watch",
           "dryRun": true,
@@ -53113,7 +53268,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeTypes": true,
+          "includeMasterCopies": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -53260,7 +53418,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -53677,7 +53838,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "category": "users"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -54019,7 +54182,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "filter": "Priority &gt;= 10",
+          "languageId": 1033
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -54082,7 +54248,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "source": "all",
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -54667,7 +54836,10 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
       },
@@ -54774,7 +54946,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "kind": "faceplate"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -54855,7 +55029,9 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includePlcSoftware": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -55221,7 +55397,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeConditions": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -55392,7 +55570,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "nameContains": "Dynamization"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -56354,8 +56534,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
-          "name": "FC_Add",
-          "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
         },
@@ -61437,7 +61615,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeTypes": true,
+          "includeMasterCopies": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -61534,7 +61715,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -61903,7 +62087,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "filter": "Priority &gt;= 10",
+          "languageId": 1033
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -61931,7 +62118,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "source": "all",
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -62259,7 +62449,10 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
       },
@@ -62366,7 +62559,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "kind": "faceplate"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -62412,7 +62607,9 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includePlcSoftware": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -63159,8 +63356,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
-          "name": "FC_Add",
-          "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
         },
@@ -66511,7 +66706,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "tableKind": "watch",
           "dryRun": true,
@@ -67043,7 +67238,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeTypes": true,
+          "includeMasterCopies": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -67159,7 +67357,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -67629,7 +67830,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "filter": "Priority &gt;= 10",
+          "languageId": 1033
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -67657,7 +67861,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "source": "all",
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -68020,7 +68227,10 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
       },
@@ -68127,7 +68337,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "kind": "faceplate"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -68173,7 +68385,9 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includePlcSoftware": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -69078,8 +69292,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
-          "name": "FC_Add",
-          "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
         },
@@ -72027,9 +72239,7 @@
         "arguments": {
           "workspaceName": "Engineering",
           "folderPath": "C:/Examples/VCI/Engineering",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -72687,7 +72897,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "tableKind": "watch",
           "dryRun": true,
@@ -73238,7 +73448,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeTypes": true,
+          "includeMasterCopies": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -73354,7 +73567,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -73840,7 +74056,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "filter": "Priority &gt;= 10",
+          "languageId": 1033
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -73868,7 +74087,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "source": "all",
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -74319,7 +74541,10 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
       },
@@ -74412,7 +74637,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "kind": "faceplate"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -74477,7 +74704,9 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includePlcSoftware": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -75528,8 +75757,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
-          "name": "FC_Add",
-          "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
         },
@@ -78619,9 +78846,7 @@
         "arguments": {
           "workspaceName": "Engineering",
           "folderPath": "C:/Examples/VCI/Engineering",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -79393,7 +79618,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "tableKind": "watch",
           "dryRun": true,
@@ -79975,7 +80200,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeTypes": true,
+          "includeMasterCopies": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -80091,7 +80319,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -80491,7 +80722,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "category": "users"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -80603,7 +80836,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "filter": "Priority &gt;= 10",
+          "languageId": 1033
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -80631,7 +80867,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "source": "all",
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -81100,7 +81339,10 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
       },
@@ -81207,7 +81449,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "kind": "faceplate"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -81272,7 +81516,9 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includePlcSoftware": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -82353,8 +82599,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
-          "name": "FC_Add",
-          "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
         },
@@ -85699,9 +85943,7 @@
         "arguments": {
           "workspaceName": "Engineering",
           "folderPath": "C:/Examples/VCI/Engineering",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -86491,7 +86733,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "tableKind": "watch",
           "dryRun": true,
@@ -87094,7 +87336,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeTypes": true,
+          "includeMasterCopies": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -87210,7 +87455,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -87627,7 +87875,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "category": "users"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -87739,7 +87989,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "filter": "Priority &gt;= 10",
+          "languageId": 1033
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -87767,7 +88020,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "source": "all",
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -88256,7 +88512,10 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
       },
@@ -88363,7 +88622,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "kind": "faceplate"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -88428,7 +88689,9 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includePlcSoftware": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -89659,8 +89922,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
-          "name": "FC_Add",
-          "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
         },
@@ -93517,9 +93778,7 @@
         "arguments": {
           "workspaceName": "Engineering",
           "folderPath": "C:/Examples/VCI/Engineering",
-          "dryRun": false,
-          "expectedProjectFile": "C:/Examples/Project.ap{extension}",
-          "expectedPlanHash": "&lt;planHash from this tool's preview for these arguments and bound project&gt;"
+          "dryRun": true
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -93878,7 +94137,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "itemType": "HmiButton",
+          "depth": 2
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -94106,7 +94368,8 @@
           "tagName": "Ready",
           "plcName": "PLC_1",
           "plcTag": "&lt;exact PLC tag name from project reads&gt;",
-          "dryRun": true
+          "dryRun": true,
+          "connectionName": "&lt;exact connection name from the selected Unified HMI&gt;"
         },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
@@ -94596,7 +94859,7 @@
           "plc-foundation"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "exportDirectory": "C:\\Examples\\exports",
           "tableKind": "watch",
           "dryRun": true,
@@ -95199,7 +95462,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includeTypes": true,
+          "includeMasterCopies": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -95315,7 +95581,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 100
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -95732,7 +96001,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "category": "users"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -96074,7 +96345,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "filter": "Priority &gt;= 10",
+          "languageId": 1033
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -96137,7 +96411,10 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "source": "all",
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -96663,7 +96940,10 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "offset": 0,
+          "limit": 50
+        },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
       },
@@ -96770,7 +97050,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "kind": "faceplate"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -96835,7 +97117,9 @@
           "lite",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "includePlcSoftware": true
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -97345,7 +97629,9 @@
           "full",
           "plc-foundation"
         ],
-        "arguments": {},
+        "arguments": {
+          "nameContains": "Dynamization"
+        },
         "envelopeVersion": 4,
         "exampleSource": "full-engine"
       },
@@ -98180,8 +98466,6 @@
         "arguments": {
           "softwarePath": "PLC_1",
           "action": "list",
-          "name": "FC_Add",
-          "filePath": "C:\\Temp\\FC_Add.scl",
           "dryRun": true,
           "confirmDelete": false
         },
@@ -103240,7 +103524,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4
@@ -110571,7 +110855,7 @@
           "full"
         ],
         "arguments": {
-          "softwarePath": "PLC_1",
+          "softwarePath": "&lt;exact softwarePath from GetProjectTree&gt;",
           "dir": "C:\\Examples\\exports"
         },
         "envelopeVersion": 4

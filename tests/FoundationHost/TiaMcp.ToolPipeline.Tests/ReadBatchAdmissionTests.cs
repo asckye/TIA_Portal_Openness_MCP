@@ -19,6 +19,36 @@ public sealed partial class ReadBatchAdmissionTests
 
     public static IEnumerable<object[]> Releases() => Order.Select(key => new object[] { key });
 
+    [Theory, MemberData(nameof(Releases))]
+    public void Published_batch_recipes_pass_admission_and_bind_the_matching_preview_token(string release)
+    {
+        using var fixture = new Fixture(release);
+        using var session = fixture.EnterSession();
+        var catalog = new TiaMcp.Engine.Tests.Shared.ServedToolOperations(release);
+        var apply = catalog.For("ApplyToolBatch").ToDictionary(row => row.Operation, row => row.Usage);
+        var previews = catalog.For("PreviewToolBatch").ToArray();
+        Assert.NotEmpty(previews);
+        Assert.Equal(previews.Select(row => row.Operation).Order(), apply.Keys.Order());
+        Assert.Equal(Serves("19", release), apply.ContainsKey("unifiedAlarms"));
+        var plans = new BatchPlanStore();
+        foreach (var (operation, usage) in previews)
+        {
+            var args = usage["example"]!["request"]!["params"]!["arguments"]!;
+            var calls = TiaMcp.Logic.V4.V4Json.Deserialize<TiaMcp.Logic.V4.Inputs.ToolCall[]>(args["operations"]!.ToJsonString());
+            var error = McpServer.ValidateBatch(calls, true, out var admitted);
+            Assert.True(error == null, operation + ": " + error?.Message);
+            Assert.Equal(calls.Length, admitted!.Length);
+            var execution = apply[operation]["example"]!["request"]!["params"]!["arguments"]!.AsObject();
+            Assert.Single(execution);
+            Assert.Contains("PreviewToolBatch", (string?)execution["previewToken"]);
+            var now = DateTime.UtcNow;
+            var ops = args["operations"]!.AsArray();
+            string token = plans.Add(new BatchPlanStore.Plan { Project = (string)args["expectedProject"]!, Operations = ops }, now);
+            Assert.True(JsonNode.DeepEquals(ops, plans.Take(token, now).Operations));
+        }
+        fixture.AssertNothingDispatched();
+    }
+
     // The first release that serves each opened tool (the review's "Served on" column); all of them are served on V21.
     private static readonly IReadOnlyDictionary<string, string> Opened = new Dictionary<string, string>(StringComparer.Ordinal)
     {

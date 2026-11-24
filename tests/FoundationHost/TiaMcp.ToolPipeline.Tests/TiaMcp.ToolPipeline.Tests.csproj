@@ -13,7 +13,13 @@
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" />
     <Compile Include="../../../src/PlcWorker/WorkerProjectScaffold.cs" Link="WorkerProjectScaffold.cs" />
     <Compile Include="../../Adapters/TiaMcp.Adapters.Contracts.Tests/ScaffoldWorkerFake.cs" Link="ScaffoldWorkerFake.cs" />
-    <ProjectReference Include="../../../src/ToolPipeline/TiaMcp.ToolPipeline.csproj" />
+    <ProjectReference Include="../../../src/ToolPipeline/TiaMcp.ToolPipeline.csproj" Aliases="global,toolpipeline" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcWatchPolicy.cs" Link="PlcWatchPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcMotionPolicy.cs" Link="PlcMotionPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/ClassicHmiLogic.cs" Link="ClassicHmiLogic.cs" />
+    <Compile Include="../../Shared/ServedToolOperations.cs" Link="ServedToolOperations.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcIntegrityPolicy.cs" Link="PlcIntegrityPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" Link="HardwareAddressingPolicy.cs" />
     <None Update="Fixtures/EngineSource20.json" Link="Catalog/20.json" TargetPath="Catalog/20.json" CopyToOutputDirectory="Always" />
     <None Update="Fixtures/EngineSource21.json" Link="Catalog/21.json" TargetPath="Catalog/21.json" CopyToOutputDirectory="Always" />
     <None Update="Fixtures/TableExchange/*" CopyToOutputDirectory="PreserveNewest" />

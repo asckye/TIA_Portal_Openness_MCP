@@ -1,3 +1,4 @@
+using TiaMcp.Adapters.Native.Hmi;
 using TiaMcp.Adapters.Native.Plc;
 using Xunit;
 
@@ -5,6 +6,51 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class HmiExportPolicyTests
     {
+        [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
+        public void Served_unified_exchange_operations_satisfy_native_file_and_selection_rules(string release)
+        {
+            var catalog = new TiaMcp.Engine.Tests.Shared.ServedToolOperations(release);
+            string fixture = Directory.CreateTempSubdirectory("unified-exchange-").FullName;
+            try
+            {
+                foreach (string name in new[] { "ExchangeUnifiedTags", "ExchangeUnifiedScriptModules", "ImportUnifiedOpcUaAlarms" })
+                {
+                    var requests = catalog.For(name).ToArray();
+                    Assert.NotEmpty(requests);
+                    foreach (var (_, usage) in requests)
+                    {
+                        var args = usage["example"]!["request"]!["params"]!["arguments"]!;
+                        string Text(string field) => (string?)args[field] ?? "";
+                        string action = Text("action");
+                        if (name == "ImportUnifiedOpcUaAlarms")
+                        {
+                            Assert.Contains(action, UnifiedExchangeLogic.OpcUaAlarmActions);
+                            Assert.NotEmpty(Text("connectionName"));
+                            if (action == "import") UnifiedExchangeLogic.ValidateXmlPath(Text("xmlPath"));
+                            else Assert.Empty(Text("xmlPath"));
+                            continue;
+                        }
+                        Assert.Contains(action, UnifiedExchangeLogic.ExchangeActions);
+                        bool exporting = action == "export";
+                        string path = Text(exporting ? "exportDirectory" : "sourceDirectory");
+                        Assert.Empty(Text(exporting ? "sourceDirectory" : "exportDirectory"));
+                        if (!exporting || path != "") Assert.True(Path.IsPathFullyQualified(path), name + "/" + action);
+                        // Bind the example to a fresh export child or an existing import directory on this host.
+                        UnifiedExchangeLogic.ValidateDirectory(exporting ? Path.Combine(fixture, "export") : fixture, exporting);
+                        string file = UnifiedExchangeLogic.ValidateFileName(Text("fileName"));
+                        if (name == "ExchangeUnifiedTags")
+                        {
+                            var expected = UnifiedExchangeLogic.ParseExpectedNames(args["expectedTagNames"]?.ToJsonString() ?? "[]");
+                            if (exporting) Assert.Empty(expected);
+                        }
+                        else if (!exporting) Assert.Empty(Text("moduleName"));
+                        else if (file != "") Assert.NotEmpty(Text("moduleName"));
+                    }
+                }
+            }
+            finally { Directory.Delete(fixture); }
+        }
+
         [Theory]
         [InlineData("None")]
         [InlineData("WithDefaults")]

@@ -6577,7 +6577,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "16015a55f242d398444fe68072fcd80e4ffcc527645691f472eda902991358d3",
+      "descriptionSha256": "98d956752ddf88327d7fd86206b6e7f770a5aeec06aa74e27d3776ebb6d6ca6e",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -6618,14 +6618,14 @@
           "orderNumber": {
             "description": "Exact catalog article number or full OrderNumber TypeIdentifier, passed unchanged to preferredMlfb.",
             "examples": [
-              "6ES7 515-2AM02-0AB0"
+              "6ES7 513-1AL02-0AB0"
             ],
             "type": "string"
           },
           "version": {
             "description": "Exact catalog version; empty for a full TypeIdentifier, passed unchanged to preferredVersion.",
             "examples": [
-              "V2.9"
+              "V2.8"
             ],
             "type": "string"
           }
@@ -18769,7 +18769,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3e8e10a72b6e19cf183b999c3727e3b5e92654e27825a81e1eb5fbc2b809dca7",
+      "descriptionSha256": "1077ed7c3b27bf26ab5d1e399d16436190de870aea06fc790e90b22d69f0759a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -18836,9 +18836,6 @@
           "filePath": {
             "default": "",
             "description": "filePath: for createFromFile - fully qualified path (local or mapped drive) of the .scl / .awl / .db / .udt file on the TIA machine.",
-            "examples": [
-              "C:\\Temp\\FC_Add.scl"
-            ],
             "type": "string"
           },
           "generateOption": {
@@ -18868,9 +18865,6 @@
           "name": {
             "default": "",
             "description": "name: external source name (read / createFromFile / delete / generateBlocks) or group name (createGroup / renameGroup / deleteGroup).",
-            "examples": [
-              "FC_Add"
-            ],
             "type": "string"
           },
           "newName": {

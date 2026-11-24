@@ -121,7 +121,16 @@
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryInstantiation.cs" Link="Libraries/LibraryInstantiation.cs" />
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryInstantiation.Targets.cs" Link="Libraries/LibraryInstantiation.Targets.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/SivarcGeneration.cs" />
+    <Compile Include="../../../src/Adapters/Native/Optional/SivarcPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Optional/OptionalRules.cs" />
+    <Compile Include="../../../src/Adapters/Native/Optional/OptionalInputs.cs" />
+    <Compile Include="../../../src/Adapters/Native/Optional/OptionalScalars.cs" />
+    <Compile Include="../../../src/Adapters/Native/Optional/OptionalObjectAddress.cs" />
+    <Compile Include="../../../src/Adapters/Native/Safety/SafetyPrimitives.cs" />
+    <Compile Include="../../../src/Adapters/Native/Security/SecurityProperties.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalNativeOperations.cs" Link="OptionalNativeOperations.cs" />
+    <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" />
+    <Compile Include="../../Shared/ServedToolOperations.cs" Link="ServedToolOperations.cs" />
     <Compile Include="../../../src/Adapters/Native/Optional/OptionalAssemblyAdmission.cs" Link="OptionalAssemblyAdmission.cs" />
     <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
     <Compile Include="../../../src/Shared/SafetyPolicy.cs" Link="SafetyPolicy.cs" />

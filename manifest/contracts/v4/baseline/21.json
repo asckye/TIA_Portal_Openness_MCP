@@ -34509,7 +34509,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "3e8e10a72b6e19cf183b999c3727e3b5e92654e27825a81e1eb5fbc2b809dca7",
+      "descriptionSha256": "1077ed7c3b27bf26ab5d1e399d16436190de870aea06fc790e90b22d69f0759a",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -34576,9 +34576,6 @@
           "filePath": {
             "default": "",
             "description": "filePath: for createFromFile - fully qualified path (local or mapped drive) of the .scl / .awl / .db / .udt file on the TIA machine.",
-            "examples": [
-              "C:\\Temp\\FC_Add.scl"
-            ],
             "type": "string"
           },
           "generateOption": {
@@ -34608,9 +34605,6 @@
           "name": {
             "default": "",
             "description": "name: external source name (read / createFromFile / delete / generateBlocks) or group name (createGroup / renameGroup / deleteGroup).",
-            "examples": [
-              "FC_Add"
-            ],
             "type": "string"
           },
           "newName": {

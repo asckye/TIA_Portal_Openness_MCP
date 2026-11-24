@@ -903,11 +903,12 @@
         "tool": "EnsureUnifiedHmiTag",
         "arguments": {
           "hmiSoftwarePath": "HMI_RT_1",
-          "tagTableName": "/Default tag table",
+          "tagTableName": "<exact existing Unified table path from ListHmiTagTables>",
           "tagName": "<Tag>",
           "plcName": "PLC_1",
           "plcTag": "<PLC tag>",
-          "dryRun": false
+          "dryRun": false,
+          "connectionName": "HMI_Connection_1"
         },
         "expect": "SymbolicVerified true"
       },

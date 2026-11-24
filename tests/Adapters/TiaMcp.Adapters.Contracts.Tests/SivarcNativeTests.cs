@@ -11,6 +11,34 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class SivarcNativeTests
     {
+        [Theory, InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+        public void Served_container_operations_pass_the_native_rule_table_policy(string release)
+        {
+            var requests = new TiaMcp.Engine.Tests.Shared.ServedToolOperations(release).For("ManageSivarcRuleContainer").ToArray();
+            Assert.Contains(requests, row => row.Operation == "createFromType");
+            foreach (var (_, usage) in requests)
+            {
+                var args = usage["example"]!["request"]!["params"]!["arguments"]!;
+                Assert.False(SivarcPolicy.ValidateContainerRequest((string)args["category"]!, (string)args["kind"]!, (string)args["path"]!,
+                    (string)args["action"]!, (string?)args["typePath"] ?? "", (string?)args["typeVersion"] ?? "",
+                    (bool?)args["confirmDelete"] ?? false, (bool)args["dryRun"]!));
+            }
+        }
+
+        [Theory, InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18")]
+        [InlineData("19"), InlineData("20"), InlineData("21")]
+        public void Served_rule_operations_pass_the_native_property_policy(string release)
+        {
+            var requests = new TiaMcp.Engine.Tests.Shared.ServedToolOperations(release).For("ManageSivarcRule").ToArray();
+            Assert.NotEmpty(requests);
+            foreach (var (_, usage) in requests)
+            {
+                var args = usage["example"]!["request"]!["params"]!["arguments"]!;
+                var properties = args["properties"]?.AsObject().ToDictionary(p => p.Key, p => (object?)p.Value) ?? [];
+                OptionalNativeOperations.ValidateRuleProperties((string)args["action"]!, properties);
+            }
+        }
+
         [Theory, InlineData("update", "Name"), InlineData("create", "Name"), InlineData("delete", "Enabled")]
         public void Rule_property_refusal_identifies_the_requested_action(string action, string key)
         {

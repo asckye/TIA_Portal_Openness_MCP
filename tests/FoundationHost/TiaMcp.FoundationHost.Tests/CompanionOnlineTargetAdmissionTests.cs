@@ -50,6 +50,44 @@ public sealed class CompanionOnlineTargetAdmissionTests
         from mode in new[] { "run", "catalog", "help" }
         select new object[] { release, mode };
 
+    public static IEnumerable<object[]> ServedReleases => ReleaseRange.All.Select(release => new object[] { release });
+
+    [Theory, MemberData(nameof(ServedReleases))]
+    public async Task Published_companion_examples_pass_admission_and_use_the_selected_command_path(string release)
+    {
+        using var settings = new OnlineTargetSettingsScope(null);
+        using var counter = new CompanionCounter();
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        using var session = fixture.EnterSession();
+        counter.Install();
+        var served = new TiaMcp.Engine.Tests.Shared.ServedToolOperations(release).For("RunPlcCompanionTool").ToArray();
+        Assert.NotEmpty(served);
+        foreach (var (_, usage) in served)
+        {
+            var input = usage["example"]!["request"]!["params"]!["arguments"]!.DeepClone().AsObject();
+            Assert.True(Path.IsPathFullyQualified((string)input["workingDirectory"]!));
+            Assert.True((bool?)input["dryRun"]);
+            input["workingDirectory"] = fixture.Root;
+            string mode = (string?)input["mode"] ?? "catalog";
+            int starts = counter.Starts;
+            var body = (await fixture.Call("RunPlcCompanionTool", input)).StructuredContent!;
+            Assert.True((bool?)body["ok"], body.ToJsonString());
+            if (mode == "run")
+            {
+                Assert.Equal(starts, counter.Starts);
+                Assert.Equal(new[] { "code", "lint", "--help" }, input["arguments"]!.Deserialize<string[]>());
+            }
+            else
+            {
+                Assert.True(counter.Starts > starts);
+                Assert.Equal(mode, (string?)counter.Request!["mode"]);
+                string[] expected = mode == "help" ? ["code", "lint"] : [];
+                Assert.Equal(expected, counter.Request["arguments"]!.Deserialize<string[]>());
+            }
+        }
+        Assert.Equal(0, fixture.Worker.Calls);
+    }
+
     [Theory, MemberData(nameof(AllowedModes))]
     public async Task Missing_list_preserves_run_and_configured_lists_allow_non_connecting_modes(string release, string mode)
     {
@@ -74,6 +112,7 @@ public sealed class CompanionOnlineTargetAdmissionTests
             = Host.McpServer.ApprovalWaitOverrideForTests;
         internal int Approvals;
         internal int Starts;
+        internal JsonNode? Request;
         internal CompanionCounter()
         {
             Environment.SetEnvironmentVariable("TIA_MCP_PLC_TOOLS_PYTHON", Environment.ProcessPath);
@@ -81,7 +120,8 @@ public sealed class CompanionOnlineTargetAdmissionTests
                 Approvals++; return Task.FromResult(new ApprovalOutcome(card, true, null)); };
         }
         internal void Install() => ((Engine.WorkerToolInvoker)Host.McpServer.ToolInvoker).SetLocalTarget(typeof(Host.EcosystemTools),
-            new Host.EcosystemTools { CompanionRun = (_, _, _, _, _) => {
+            new Host.EcosystemTools { CompanionRun = (_, _, _, request, _) => {
+                Request = JsonNode.Parse(request!);
                 Starts++; return Task.FromResult(new JsonObject { ["success"] = true, ["exitCode"] = 0, ["stdout"] = "fixture" }); } });
         public void Dispose()
         {

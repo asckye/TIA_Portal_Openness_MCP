@@ -12,8 +12,46 @@ using Xunit;
 
 // The fixture mutates process-wide release and approval state; run it alone.
 [Collection(BundleSelectionCollection.Name)]
-public sealed class UnifiedPortAdmissionTests
+public sealed class UnifiedPortAdmissionTests(Xunit.Abstractions.ITestOutputHelper output)
 {
+    [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
+    [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public void Served_ported_operations_pass_offline_admission(string release)
+    {
+        var catalog = new TiaMcp.Engine.Tests.Shared.ServedToolOperations(release);
+        using var worker = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(worker, release);
+        var errors = new List<string>();
+        var names = new List<string>();
+        foreach (var tool in PortedToolContract.Create(worker, release).OfType<FoundationTool>())
+        {
+            string name = tool.ProtocolTool.Name;
+            if (TiaOpenness.Shared.ToolUsageCatalog.ServedCall(name, release)?["operations"] is not JsonObject { Count: > 0 }) continue;
+            names.Add(name);
+            foreach (var (operation, usage) in catalog.For(name))
+            {
+                var example = usage["example"]!;
+                var args = example["request"]!["params"]!["arguments"]!.Deserialize<Dictionary<string, JsonElement>>()!;
+                try
+                {
+                    var refusal = tool.RefusePortedCapability(args);
+                    if (example["releaseProblem"] == null)
+                        Assert.True(refusal == null, refusal?.StructuredContent?.ToString());
+                    if (PortedFamilies.ForTool(name).Name is "F27" or "F28")
+                    {
+                        var request = FoundationTool.BindUnifiedRequest(name, Method(name), args);
+                        toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.DecodeInputs(request);
+                        toolpipeline::TiaMcpServer.Siemens.Services.UnifiedPortService.ValidateInputs(request);
+                    }
+                }
+                catch (Exception error) { errors.Add($"{release}/{name}/{operation}: {error.Message}"); }
+            }
+        }
+        Assert.NotEmpty(names);
+        output.WriteLine($"V{release} ported operation policies: {string.Join(", ", names.Order(StringComparer.Ordinal))}");
+        Assert.True(errors.Count == 0, string.Join(Environment.NewLine, errors));
+    }
+
     [Fact]
     public async Task Runtime_settings_name_each_unknown_key_without_echoing_change_values()
     {

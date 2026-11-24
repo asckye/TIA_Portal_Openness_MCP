@@ -394,6 +394,11 @@ namespace TiaOpenness.Shared
             foreach (var property in properties)
             {
                 var source = Data.Value["parameterSources"]?[property.Key] as JsonObject;
+                var schemaText = property.Value?["description"];
+                if (string.IsNullOrWhiteSpace((string?)schemaText) || (string?)schemaText == "Exact foundation argument: " + property.Key)
+                    schemaText = null;
+                if (source?["fallbackMeaning"] is JsonNode fallback)
+                    source = new JsonObject { ["meaning"] = (schemaText ?? fallback).DeepClone() };
                 origins[property.Key] = call?["parameters"]?[property.Key]?.DeepClone() ?? source?.DeepClone()
                     ?? new JsonObject {
                         ["meaning"] = property.Value?["description"]?.DeepClone() ?? JsonValue.Create("Supply the value required by this parameter's schema.")
@@ -401,8 +406,21 @@ namespace TiaOpenness.Shared
                 origins[property.Key]!["exampleValue"] = args[property.Key]?.DeepClone()
                     ?? origins[property.Key]!["exampleValue"]?.DeepClone() ?? ExampleValue(property.Key, property.Value!.AsObject());
                 origins[property.Key]!["schemaDescription"] = property.Value?["description"]?.DeepClone();
+                if (origins[property.Key]!["argumentExamples"] is JsonArray alternatives)
+                {
+                    var refusals = new JsonObject();
+                    foreach (var alternative in alternatives.OfType<JsonObject>().ToArray())
+                    {
+                        string reason = Problem(alternative);
+                        if (reason.Length == 0) continue;
+                        refusals[(string)alternative[property.Key]!] = reason;
+                        alternatives.Remove(alternative);
+                    }
+                    if (refusals.Count > 0) origins[property.Key]!["unavailableChoices"] = refusals;
+                }
                 if (origins[property.Key]!["meaning"] == null)
-                    origins[property.Key]!["meaning"] = property.Value?["description"]?.DeepClone() ?? source?["meaning"]?.DeepClone();
+                    origins[property.Key]!["meaning"] = schemaText?.DeepClone() ?? source?["meaning"]?.DeepClone()
+                        ?? property.Value?["description"]?.DeepClone();
                 if (origins[property.Key]!["tools"] == null && source?["tools"] != null) origins[property.Key]!["tools"] = source["tools"]!.DeepClone();
                 if (property.Key.EndsWith("Json", StringComparison.Ordinal) || property.Key == "json" || property.Key == "spec")
                     origins[property.Key]!["encoding"] = "Serialize the inner value once as a JSON string unless inputSchema accepts an object/array.";
@@ -439,6 +457,13 @@ namespace TiaOpenness.Shared
                     { args[discriminator] = context.DeepClone(); chosenContext = true; }
                 }
                 bool refused = ReleaseCapabilityQuery.RefusesOperation(name, release, selector, (string)choice!, discriminator, contexts);
+                if (recipe?["requiredContext"] is JsonObject requiredContext)
+                {
+                    // These selectors are required by the operation's request policy on every release.
+                    var required = requiredContext.DeepClone().AsObject();
+                    required[selector] = choice.DeepClone();
+                    refused |= Problem(required).Length > 0;
+                }
                 if (operation == (string?)choice) selectedOperationRefused = refused;
                 var option = new JsonObject { ["operation"] = choice!.DeepClone(), ["refusedByReleaseGuard"] = refused };
                 if (selector.Length > 0) option["selector"] = selector;
@@ -447,6 +472,7 @@ namespace TiaOpenness.Shared
                 operations.Add(option);
             }
             string selectedProblem = releaseProblem.Length > 0 ? releaseProblem : Problem(args);
+            var selectedExample = operation.Length == 0 ? call : call?["operations"]?[operation];
             var response = new JsonObject {
                 ["toolName"] = name, ["releaseKey"] = release, ["profile"] = "plc-foundation", ["available"] = true,
                 ["description"] = description, ["inputSchema"] = schema.DeepClone(),
@@ -461,7 +487,8 @@ namespace TiaOpenness.Shared
                         : matches ? curatedNote
                             : "Required arguments and the selected operation are shown. Add the optional parameters required by this operation using " +
                             "inputSchema and parameterSources. Placeholders are not engineering target values.",
-                    ["validation"] = call?["validation"]?.DeepClone() ?? JsonValue.Create("Schema/contract checked; native execution of this example NOT RUN."),
+                    ["validation"] = (selectedExample?["verified"]?[release] ?? selectedExample?["validation"] ?? call?["validation"])?.DeepClone()
+                        ?? JsonValue.Create("Schema/contract checked; native execution of this example NOT RUN."),
                     ["releaseProblem"] = selectedProblem.Length == 0 ? null : selectedProblem },
                 ["officialReference"] = mapping,
                 ["operations"] = operations, ["parameterSources"] = origins,
