@@ -95,8 +95,9 @@ namespace TiaMcp.Adapters
                 {
                     using(var secure=new System.Net.NetworkCredential("",password).SecurePassword)
                     {
-                        try { admin.LoginToSafetyOfflineProgram(secure); } catch {
-                            throw new InvalidOperationException("Safety offline login failed; password and native login details are not echoed."); }
+                        var failure = SafetyLoginFailure.Attempt(() => admin.LoginToSafetyOfflineProgram(secure),
+                            () => admin.IsLoggedOnToSafetyOfflineProgram, () => admin.LogoffFromSafetyOfflineProgram(), reportConnectionLoss: true);
+                        if (failure != null) throw failure.CompileException();
                     }
                     loggedOnHere=true;
                 }

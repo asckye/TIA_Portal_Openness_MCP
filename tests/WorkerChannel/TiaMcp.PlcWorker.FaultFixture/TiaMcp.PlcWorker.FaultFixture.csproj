@@ -3,12 +3,40 @@
     <OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework><PlatformTarget>x64</PlatformTarget>
     <Nullable>enable</Nullable><LangVersion>latest</LangVersion>
     <AppConfig>../../../src/PlcWorker/App.config</AppConfig>
+    <DefineConstants>$(DefineConstants);PLC_SAFETY;SAFETY_GLOBAL;SAFETY_PROGRAM</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="TiaMcpPlcWorkerSdkFixture" />
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <ProjectReference Include="../../../src/OnlineChannels/Simulation/TiaMcp.PlcSimAdvanced.csproj" Aliases="plcsim" GlobalPropertiesToRemove="TiaMcpPlcWorkerSdkFixture" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
     <Compile Include="../../../src/PlcWorker/WorkerLaunchOptions.cs" Link="WorkerLaunchOptions.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerJson.cs" Link="WorkerJson.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerFailurePolicy.cs" Link="WorkerFailurePolicy.cs" />
+    <Compile Include="../../../src/PlcWorker/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerOperationModule.cs" Link="WorkerOperationModule.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
+    <Compile Include="../../../src/PlcWorker/OnlineDownloadGuard.cs" Link="OnlineDownloadGuard.cs" />
+    <Compile Include="../../../src/PlcWorker/PlcSimAdvancedWorkerModule.cs" Link="PlcSimAdvancedWorkerModule.cs" />
+    <Compile Include="../../../src/Logic/Siemens/DownloadTargetPolicy.cs" Link="DownloadTargetPolicy.cs" />
+    <Compile Include="../../../src/Logic/Siemens/LocalNetworkPolicy.cs" Link="LocalNetworkPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
+    <Compile Include="../../../src/Shared/SessionBehavior.cs" Link="SessionBehavior.cs" />
+    <Compile Include="../../../src/Shared/HostFailurePolicy.cs" Link="HostFailurePolicy.cs" />
+    <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" Link="ProcessLossPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcLegacyCompile.cs" Link="PlcLegacyCompile.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.Compile.cs" Link="PlcFoundationEngine.Compile.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcCompilePolicy.cs" Link="PlcCompilePolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcObjectPath.cs" Link="PlcObjectPath.cs" />
+    <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
+    <Compile Include="../../../src/Shared/OpennessEnvironment.cs" Link="OpennessEnvironment.cs" />
+    <Compile Include="../../../src/Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
+    <Compile Include="../../../src/Adapters/Native/Safety/SafetyManagementAdapter.cs" Link="SafetyManagementAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Safety/SafetyPrimitives.cs" Link="SafetyPrimitives.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiValues.cs" Link="HmiValues.cs" />
+    <Compile Include="../../../src/Shared/SafetyPolicy.cs" Link="SafetyPolicy.cs" />
+    <Compile Include="../../../src/Logic/ModelContextProtocol/ResponseClock.cs" Link="ResponseClock.cs" />
     <Compile Include="../../../src/Shared/WindowsOpennessGroup.cs" Link="WindowsOpennessGroup.cs" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(TiaMcpPlcWorkerSdkFixture)' == 'true'">
       <_Parameter1>TiaMcpPlcWorkerSdkFixture</_Parameter1><_Parameter2>true</_Parameter2>

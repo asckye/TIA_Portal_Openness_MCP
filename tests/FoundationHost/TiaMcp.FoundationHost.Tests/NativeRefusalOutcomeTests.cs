@@ -11,6 +11,32 @@ using Xunit;
 
 public sealed class NativeRefusalOutcomeTests
 {
+    [Theory]
+    [InlineData(false, false)][InlineData(true, false)][InlineData(null, false)]
+    [InlineData(true, true)][InlineData(null, true)]
+    public void Standalone_safety_login_retains_its_readback_across_the_worker_boundary(bool? loggedOn, bool channelFailure)
+    {
+        using var release = Host.HardwareContract.UseRelease("17");
+        string scenario = loggedOn switch { false => "off", true => "on-cleanup", null => "unreadable-cleanup" };
+        var reply = SafetyLoginFrameworkTests.RunFixture("standalone", scenario)["result"]!;
+        var response = new Host.ResponseMessage { Message = (string)reply["Message"]!, Meta = reply["Meta"]!.AsObject() };
+        var body = Host.SecurityToolContract.Invoke("ManagePlcSafety", false, true, () => {
+            if (channelFailure)
+                throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure("The write outcome is unknown.",
+                    new JsonObject { ["Meta"] = response.Meta.DeepClone() });
+            return response;
+        }).StructuredContent!;
+        Assert.Equal(loggedOn == false ? "ACCESS_DENIED" : "OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        var evidence = loggedOn == false ? body["data"] : body["error"]?["details"]?["evidence"];
+        Assert.Equal(typeof(UnauthorizedAccessException).FullName, (string?)evidence?["nativeExceptionType"]);
+        if (loggedOn != false)
+        {
+            Assert.Contains(loggedOn == true ? "was logged on" : "could not be read", (string?)body["error"]?["message"]);
+            Assert.Contains("cleanup logoff also failed", (string?)body["error"]?["message"]);
+        }
+        Assert.DoesNotContain("private ", body.ToJsonString());
+    }
+
     public static IEnumerable<object[]> Outcomes() =>
         from tool in new[] { "ManagePortInterconnection", "ManageMotionAxis", "ConfigureMotionHardwareConnection", "InvokeObject", "ManageDeviceUsers" }
         from outcome in new[] { "unchanged", "changed", "missing" }

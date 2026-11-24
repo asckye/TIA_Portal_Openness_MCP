@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Security;
 using System.Net;
 using Siemens.Engineering;
 using Siemens.Engineering.Compiler;
@@ -92,14 +91,17 @@ namespace TiaMcp.Adapters.Native.Plc
                 {
                     if (!PlcBlockPrimitives.IsLoggedOn(admin))
                     {
-                        SecureString secString = new NetworkCredential("", password).SecurePassword;
-                        try
+                        using var secString = new NetworkCredential("", password).SecurePassword;
+                        bool priorMutation = MutationStarted;
+                        // A connection loss escapes to the worker before the login state can be confirmed.
+                        MutationStarted = true;
+                        var failure = SafetyLoginFailure.Attempt(() => PlcBlockPrimitives.Login(admin, secString),
+                            () => PlcBlockPrimitives.IsLoggedOn(admin), () => admin.LogoffFromSafetyOfflineProgram());
+                        MutationStarted = priorMutation || (failure != null && failure.LoggedOn != false);
+                        if (failure != null)
                         {
-                            PlcBlockPrimitives.Login(admin, secString);
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new PlcSoftwareException("OpennessError", $"Safety login failed: {ex.Message}", null, ex);
+                            throw failure.AttachTo(new PlcSoftwareException(MutationStarted ? "OpennessError" : "AccessDenied",
+                                SafetyLoginFailure.Message(true, failure.LoggedOn, failure.LogoffFailed)), mutationStarted: MutationStarted);
                         }
                     }
                 }

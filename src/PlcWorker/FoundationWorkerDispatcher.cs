@@ -33,7 +33,7 @@ namespace TiaMcp.PlcWorker
     }
 
     // Both worker products use the same allowlist, argument binding and failure boundary.
-    internal sealed class FoundationWorkerDispatcher
+    internal sealed partial class FoundationWorkerDispatcher
     {
         private readonly PlcFoundationEngine engine;
         private readonly string releaseKey;

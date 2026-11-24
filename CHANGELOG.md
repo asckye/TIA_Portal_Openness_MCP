@@ -16,6 +16,9 @@
 - Integer range errors name the field and its allowed bounds, including the 1..100 page size for `ListPlcBlocks`.
 - `ExportDeviceAml` now reports `NATIVE_OPERATION_FAILED` when CAx returns `false`.
   The call is settled. The response identifies the native log and the path where a partial AML file may remain.
+- On V17–V21, both PLC compile tools report access denied when a safety offline login fails and TIA confirms the session is logged off.
+  Compilation never starts after a failed login. Both compile tools and the standalone `ManagePlcSafety` login read the session state once
+  after a login error and attempt logoff if the session is logged on or its state cannot be read. A lost connection ends further native calls.
 
 ## [4.0.0-rc.4] - 2026-11-24
 

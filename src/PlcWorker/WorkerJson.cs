@@ -38,6 +38,12 @@ namespace TiaMcp.PlcWorker
 
         internal static string Evidence(Exception cause)
         {
+            if (SafetyLoginFailure.FromException(cause) is { } login)
+            {
+                var fields = new Dictionary<string, object?>();
+                login.RecordEvidence(fields, compiling: true, typeField: "exceptionType");
+                return Serialize(fields);
+            }
             string evidence = EvidenceCore(cause);
             var condition = TiaOpenness.Shared.HostFailurePolicy.Precondition(cause)?.Condition;
             var deviceError = cause.GetBaseException() as PlcSoftwareException;

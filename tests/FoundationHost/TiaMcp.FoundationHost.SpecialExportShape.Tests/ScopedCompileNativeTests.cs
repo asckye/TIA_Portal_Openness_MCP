@@ -279,6 +279,7 @@ public sealed class ScopedCompileNativeTests
         if (!alreadyLoggedOn) expected.Add("login");
         expected.AddRange(new[] { "target-offline", "project-offline", "compile" });
         if (!alreadyLoggedOn) expected.Add("logoff");
+        Assert.Equal(1, admin.StateReads);
         Assert.Equal(expected, engine.CompileEvents); Assert.Equal(alreadyLoggedOn, admin.IsLoggedOnToSafetyOfflineProgram);
     }
 
@@ -303,6 +304,41 @@ public sealed class ScopedCompileNativeTests
         var error = Assert.Throws<InvalidOperationException>(() => engine.CompileSoftwareScoped("CPU", "secret", false, "group", PathFor("group")));
         Assert.DoesNotContain("secret", error.Message); Assert.DoesNotContain("native secret", error.Message);
         Assert.Equal(new[] { "target-offline", "project-offline", "login" }, engine.CompileEvents); Assert.Equal(0, compiler.Calls);
+    }
+
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, true)]
+    public void Failed_login_checks_session_once_before_any_compile(bool loggedOn, bool readFails, bool logoffFails)
+    {
+        var (engine, _, compiler) = Target("software");
+        var admin = new SafetyAdministration { FailLogin = true, FailReadback = readFails, FailLogoff = logoffFails };
+        admin.Observing = step => {
+            engine.CompileEvents.Add(step);
+            if (step == "login") admin.IsLoggedOnToSafetyOfflineProgram = loggedOn;
+        };
+        engine.CompileDevice.Services.Add(typeof(SafetyAdministration), admin);
+        var failure = Assert.Throws<InvalidOperationException>(() => engine.CompileSoftware("CPU", "fixture-password", false));
+        Assert.Equal(2, admin.StateReads);
+        bool uncertain = loggedOn || readFails;
+        var expected = new List<string> { "target-offline", "project-offline", "login" };
+        if (uncertain) expected.Add("logoff");
+        Assert.Equal(expected, engine.CompileEvents);
+        Assert.Equal(0, compiler.Calls);
+        Assert.Equal(!uncertain, failure.Data["foundationKnownNoMutation"] is true);
+        Assert.IsType<string>(failure.Data[nameof(SafetyLoginFailure)]);
+        var login = Assert.IsType<SafetyLoginFailure>(SafetyLoginFailure.FromException(failure));
+        Assert.Equal(typeof(InvalidOperationException).FullName, login.NativeExceptionType);
+        Assert.Equal(readFails ? (bool?)null : loggedOn, login.LoggedOn);
+        Assert.Equal(logoffFails, login.LogoffFailed);
+        Assert.StartsWith("Safety offline login failed; nothing was compiled", failure.Message);
+        Assert.Null(failure.InnerException);
+        string diagnostic = failure + JsonSerializer.Serialize(failure.Data);
+        Assert.DoesNotContain("fixture-password", diagnostic);
+        Assert.DoesNotContain("native secret", diagnostic);
+        Assert.DoesNotContain("native read detail", diagnostic);
     }
 
     [Fact]

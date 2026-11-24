@@ -241,8 +241,13 @@ namespace TiaMcp.Adapters
                         && error is AdapterPreconditionException { Condition: "not-found" } or AdapterPreconditionException { IsArgument: true }
                         ? StepFailureStatus.Of(error) : error.GetType().Name, Message = error.Message,
                     Candidates = (error as PlcSoftwareException)?.Candidates?.ToArray() };
-                reply.Failure.Evidence["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
-                reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
+                if (SafetyLoginFailure.FromException(error) is { } login)
+                    login.RecordEvidence(reply.Failure.Evidence, compiling: true);
+                else
+                {
+                    reply.Failure.Evidence["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
+                    reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
+                }
                 reply.Failure.Evidence["mayHaveChanged"] = adapter.MutationStarted;
                 reply.Failure.Evidence["status"] = StepFailureStatus.Of(error);
                 if (StepFailureStatus.Parameter(error) is string parameter) reply.Failure.Evidence["parameter"] = parameter;

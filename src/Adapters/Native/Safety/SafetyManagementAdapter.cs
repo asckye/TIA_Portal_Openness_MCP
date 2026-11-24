@@ -380,7 +380,12 @@ namespace TiaMcp.Adapters.Native.Safety
                             throw new InvalidOperationException("No safety offline program password is set; login is not needed.");
                         if (!writing) return "Login preview; no native call.";
                         meta["mayHaveChanged"] = true;
-                        using (var secure = PlcBlockServicesLogic.ToSecureString(password)) administration.LoginToSafetyOfflineProgram(secure);
+                        using (var secure = PlcBlockServicesLogic.ToSecureString(password))
+                        {
+                            var failure = SafetyLoginFailure.Attempt(() => administration.LoginToSafetyOfflineProgram(secure),
+                                () => administration.IsLoggedOnToSafetyOfflineProgram, () => administration.LogoffFromSafetyOfflineProgram());
+                            if (failure != null) return failure.RecordLoginResult(meta);
+                        }
                         meta["apiCallSuccess"] = true;
                         if (!administration.IsLoggedOnToSafetyOfflineProgram)
                             throw new InvalidOperationException("Login returned but IsLoggedOnToSafetyOfflineProgram is still false.");

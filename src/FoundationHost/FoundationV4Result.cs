@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using ModelContextProtocol.Protocol;
 using TiaMcp.Logic.V4;
 using TiaMcp.Logic.V4.Inputs;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.FoundationHost;
 
@@ -264,6 +265,18 @@ internal static class FoundationV4Result
             else HostBehavior.SanitizeEvidence(retained);
             data ??= new JsonObject();
             data["evidence"] = retained;
+            if (name is "CompilePlcSoftware" or "CompilePlcDiagnostics" && retained is JsonObject login
+                && (string?)login["phase"] == SafetyLoginFailure.Phase && (bool?)login["compileStarted"] == false)
+            {
+                bool? loggedOn = (bool?)login["loggedOnAfterFailure"];
+                if (worker.Outcome == "rejected-before-operation" && loggedOn == false && !TiaOpenness.Shared.HostFailurePolicy.WorkerOutcomeUnknown(worker))
+                    return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
+                        new Error(SafetyLoginFailure.CompileRefusal, new AccessDeniedDetails(SafetyLoginFailure.Phase, null)), true);
+                var unknownLogin = new OutcomeUnknownDetails(SafetyLoginFailure.Phase, login.Deserialize<Dictionary<string, JsonElement>>()!);
+                string message = loggedOn == false ? SafetyLoginFailure.CompileRefusal + ". The worker reported an unknown session state."
+                    : SafetyLoginFailure.Message(true, loggedOn, (bool?)login["logoffFailed"] == true, (bool?)login["connectionLost"] == true);
+                return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, new Error(message, unknownLogin), true);
+            }
             if (name is ("ImportPlcBlock" or "ImportPlcType") && worker.KnownNoMutation && retained is JsonObject importEvidence
                 && (bool?)importEvidence["verifiedAbsent"] == true && (bool?)importEvidence["mayHaveChanged"] == false)
                 return Wire(release, name, id, data, Outcome.Failed, Execution.Completed, Completeness.Complete,

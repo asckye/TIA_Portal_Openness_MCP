@@ -8,6 +8,7 @@ using TiaMcp.Adapters;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.FoundationHost;
 using TiaMcp.PlcWorker;
+using TiaMcp.WorkerChannel;
 using TiaOpenness.Shared;
 using Xunit;
 
@@ -181,11 +182,100 @@ public sealed class ScopedCompileContractTests
         Assert.Equal(2, result.ErrorCount);
     }
 
+    [Theory]
+    [InlineData("17")][InlineData("18")][InlineData("19")][InlineData("20")][InlineData("21")]
+    public async Task Compile_login_failure_preserves_the_worker_verdict_and_protects_credentials(string release)
+    {
+        const string password = "fixture-login-password";
+        const string nativeText = "private vendor login detail";
+        string root = Path.Combine(AppContext.BaseDirectory, "compile-login-audit", Guid.NewGuid().ToString("N"));
+        var log = new AuditLog(root);
+        using var audit = AuditInvocation.UseLog(log);
+        var rows = new List<string>();
+        TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(rows.Add);
+        try
+        {
+            foreach (string name in new[] { "CompilePlcSoftware", "CompilePlcDiagnostics" })
+            foreach (bool? readback in new bool?[] { false, true, null })
+            {
+                using var worker = new Worker { ApplyScenario = readback switch { false => "off", true => "on", null => "unreadable" } };
+                var native = new FoundationTool(FoundationTools.ForRelease(FoundationTools.Definitions.Single(d => d.Name == name), release), worker);
+                var tool = new FoundationV4Tool(native, release, () => new ApprovalSettings(false, 2));
+                var args = new JsonObject { ["softwarePath"] = "CPU", ["dryRun"] = false, ["confirm"] = true,
+                    ["expectedProjectFile"] = Project, ["password"] = password };
+                var body = (await tool.InvokeAsync(Request(name, args))).StructuredContent!;
+                bool denied = readback == false;
+                Assert.Equal(denied ? "ACCESS_DENIED" : "OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+                Assert.Equal(denied ? "rejected-before-operation" : "unknown", (string?)body["meta"]?["outcome"]);
+                Assert.Equal(denied ? "not-started" : "unknown", (string?)body["meta"]?["execution"]);
+                Assert.Equal(denied ? 0 : 1, native.Unsettled.Snapshot().Count);
+                Assert.Equal(denied ? 0 : 1, worker.Dispatched!["calls"]!.AsArray().Count(call => (string?)call == "logoff"));
+                Assert.Equal(0, (int?)worker.Dispatched["compileCalls"]);
+                var evidence = body["data"]!["evidence"]!;
+                Assert.False((bool?)evidence["compileStarted"]);
+                Assert.Equal(typeof(UnauthorizedAccessException).FullName, (string?)evidence["exceptionType"]);
+                Assert.Equal(readback, (bool?)evidence["loggedOnAfterFailure"]);
+                if (denied) Assert.Equal("Safety offline login failed; nothing was compiled", (string?)body["error"]?["message"]);
+                else Assert.Contains(readback == true ? "was logged on" : "could not be read", (string?)body["error"]?["message"]);
+                Assert.DoesNotContain(password, body.ToJsonString());
+                Assert.DoesNotContain(nativeText, body.ToJsonString());
+            }
+            Assert.NotEmpty(rows);
+            Assert.NotEmpty(log.Read());
+            string recorded = string.Join("\n", rows.Concat(Directory.GetFiles(root, "*.jsonl").Select(File.ReadAllText)));
+            Assert.DoesNotContain(password, recorded);
+            Assert.DoesNotContain(nativeText, recorded);
+        }
+        finally
+        {
+            TiaMcpServer.ModelContextProtocol.InvocationJournal.ConfigureOutput(null);
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
     [Fact]
     public void Unit_scope_begins_at_V16()
     {
         Assert.Throws<AdapterPreconditionException>(() => PlcCompilePolicy.RequireScope("15.1", "unit", "Unit", ""));
         Assert.Equal(new[] { "Unit" }, PlcCompilePolicy.RequireScope("16", "unit", "Unit", ""));
+    }
+
+    [Theory]
+    [InlineData("CompilePlcSoftware")][InlineData("CompilePlcDiagnostics")]
+    public async Task Compile_exception_after_login_keeps_the_original_unknown_outcome(string name)
+    {
+        foreach (string release in new[] { "17", "18", "19", "20", "21" })
+        {
+            using var worker = new Worker { ApplyScenario = "success" };
+            var native = new FoundationTool(FoundationTools.ForRelease(FoundationTools.Definitions.Single(d => d.Name == name), release), worker);
+            var tool = new FoundationV4Tool(native, release, () => new ApprovalSettings(false, 2));
+            var args = new JsonObject { ["softwarePath"] = "CPU", ["password"] = "fixture-login-password", ["dryRun"] = false,
+                ["confirm"] = true, ["expectedProjectFile"] = Project };
+            var body = (await tool.InvokeAsync(Request(name, args))).StructuredContent!;
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+            Assert.Equal("tool-call", (string?)body["error"]?["details"]?["stage"]);
+            Assert.Null(body["data"]?["evidence"]?["compileStarted"]);
+            Assert.Equal(1, (int?)worker.Dispatched!["compileCalls"]);
+            Assert.Single(native.Unsettled.Snapshot());
+        }
+    }
+
+    [Theory]
+    [InlineData("CompilePlcSoftware")][InlineData("CompilePlcDiagnostics")]
+    public async Task Lost_connection_during_login_leaves_the_compile_unsettled(string name)
+    {
+        using var worker = new Worker { ApplyScenario = "login-com" };
+        var native = Tool(name, worker);
+        var tool = new FoundationV4Tool(native, "21", () => new ApprovalSettings(false, 2));
+        var args = new JsonObject { ["softwarePath"] = "CPU", ["password"] = "fixture-login-password", ["dryRun"] = false,
+            ["confirm"] = true, ["expectedProjectFile"] = Project };
+        var body = (await tool.InvokeAsync(Request(name, args))).StructuredContent!;
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Contains("connection was lost", (string?)body["error"]?["message"]);
+        Assert.False((bool?)body["data"]?["evidence"]?["compileStarted"]);
+        Assert.True((bool?)body["data"]?["evidence"]?["connectionLost"]);
+        Assert.Equal(0, (int?)worker.Dispatched!["compileCalls"]);
+        Assert.Single(native.Unsettled.Snapshot());
     }
 
     private const string Project = "C:/Projects/Scoped.ap21";
@@ -195,16 +285,17 @@ public sealed class ScopedCompileContractTests
         internal int Calls;
         internal bool ServiceAvailable = true;
         internal bool ForeignRoots;
+        internal string? ApplyScenario;
+        internal JsonObject? Dispatched;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
         {
             Assert.Equal("CompileSoftware", operation); Calls++; Arguments = arguments.DeepClone().AsObject();
             bool dry = (bool?)arguments["dryRun"] ?? true;
-            if (!dry && !ServiceAvailable)
+            if (!dry && (ApplyScenario != null || !ServiceAvailable))
             {
-                var cause = PlcCompilePolicy.ScopeUnavailable("Exact owner has no ICompilable.");
-                var classified = WorkerFailurePolicy.Classify(cause, true, false);
-                throw WorkerOperationException.FromChannelFailure(new TiaMcp.WorkerChannel.ChannelFailureException(
-                    cause.Message, classified.Code, classified.Outcome, WorkerJson.Evidence(cause)));
+                Dispatched = SafetyLoginFrameworkTests.RunFixture("foundation", ApplyScenario ?? "scope-unavailable", arguments);
+                throw WorkerOperationException.FromChannelFailure(new ChannelFailureException((string)Dispatched["message"]!, (int)Dispatched["code"]!,
+                    Enum.Parse<ChannelOutcome>((string)Dispatched["outcome"]!), Dispatched["evidence"]!.ToJsonString()));
             }
             PlcCompileResult result = new PlcCompileResult();
             string scope = (string?)arguments["scope"] ?? "software";

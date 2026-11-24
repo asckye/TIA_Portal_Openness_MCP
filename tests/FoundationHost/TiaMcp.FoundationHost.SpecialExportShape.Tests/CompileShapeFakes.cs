@@ -47,7 +47,19 @@ namespace Siemens.Engineering.Safety
 {
     public sealed class SafetyAdministration
     {
-        public bool IsLoggedOnToSafetyOfflineProgram { get; set; }
+        private bool loggedOn;
+        internal int StateReads { get; private set; }
+        internal bool FailReadback { get; set; }
+        public bool IsLoggedOnToSafetyOfflineProgram
+        {
+            get
+            {
+                StateReads++;
+                if (FailReadback && StateReads > 1) throw new IOException("native read detail");
+                return loggedOn;
+            }
+            set => loggedOn = value;
+        }
         public Action<string>? Observing { get; set; }
         public bool FailLogin { get; set; }
         public bool FailLogoff { get; set; }

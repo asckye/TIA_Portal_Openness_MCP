@@ -194,10 +194,16 @@ namespace TiaMcpServer.ModelContextProtocol
         private static Error NativeFailure(string? nativeMessage = null) =>
             new Error(nativeMessage ?? "The operation did not establish a successful result.",
             new NativeOperationFailedDetails(null, nativeMessage, new Dictionary<string, JsonElement>()));
-        private static Error UnknownFailure(IReadOnlyDictionary<string, JsonElement>? evidence = null) =>
-            new Error("The operation outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. " +
-                "GetSessionState lists unsettled request IDs.",
-            new OutcomeUnknownDetails("security-operation", evidence ?? new Dictionary<string, JsonElement>()));
+        private static Error UnknownFailure(IReadOnlyDictionary<string, JsonElement>? evidence = null)
+        {
+            var details = new OutcomeUnknownDetails("security-operation", evidence ?? new Dictionary<string, JsonElement>());
+            if (evidence != null && evidence.TryGetValue("phase", out var phase) && phase.ToString() == TiaMcp.Adapters.Contracts.SafetyLoginFailure.Phase
+                && evidence.TryGetValue("loggedOnAfterFailure", out var state) && state.ValueKind is JsonValueKind.True or JsonValueKind.Null)
+                return new Error(TiaMcp.Adapters.Contracts.SafetyLoginFailure.Message(false, state.ValueKind == JsonValueKind.True ? true : null,
+                    evidence.TryGetValue("logoffFailed", out var failed) && failed.ValueKind == JsonValueKind.True), details);
+            return new Error("The operation outcome is unknown. Inspect the target before repeating this call. Never replay it automatically. " +
+                "GetSessionState lists unsettled request IDs.", details);
+        }
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, Execution execution,
             Completeness completeness, bool current, Paging? paging = null)

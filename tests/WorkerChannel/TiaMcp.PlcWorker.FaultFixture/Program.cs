@@ -17,6 +17,8 @@ internal static class Program
 
     private static int Run(string[] args)
     {
+        if (args.Length == 3 && args[0] == "--safety-login")
+            return SafetyLoginFixture.Run(args[1], args[2]);
         var options = WorkerLaunchOptions.Parse(args);
         if (options.TiaPortalLocation != null) Environment.SetEnvironmentVariable("TiaPortalLocation", options.TiaPortalLocation);
         AppDomain.CurrentDomain.UnhandledException += (_, error) => Console.Error.WriteLine(

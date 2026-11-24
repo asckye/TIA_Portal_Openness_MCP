@@ -422,6 +422,11 @@ namespace TiaMcp.Logic.V4
 
         private static void CollectWorkerEvidence(JsonObject source, JsonObject retained, Func<string, string>? redact = null)
         {
+            if (source["phase"]?.ToString() == TiaMcp.Adapters.Contracts.SafetyLoginFailure.Phase && source.ContainsKey("loggedOnAfterFailure"))
+            {
+                foreach (string field in new[] { "nativeExceptionType", "loggedOnAfterFailure", "logoffFailed", "compileStarted" })
+                    if (source.ContainsKey(field)) retained[field] = source[field]?.DeepClone();
+            }
             if (source["cleanupRequired"] is JsonArray tasks)
             {
                 var safe = new JsonArray();
