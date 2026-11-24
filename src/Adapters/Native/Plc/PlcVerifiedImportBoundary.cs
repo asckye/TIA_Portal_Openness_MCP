@@ -28,14 +28,20 @@ namespace TiaMcp.Adapters.Native.Plc
                         ?? throw new PlcSoftwareException("NotFound", "Exact existing block not found in its target group.");
                     void Check() { _session.VerifyBinding("ImportPlcBlockVerified"); _session.ExactPlcForEngineering(softwarePath, true); }
                     const ExportOptions verifiedOptions = ExportOptions.WithDefaults | ExportOptions.WithReadOnly;
-                    void Export(string path) {
+                    PlcBlock ConsistentBlock() {
                         var block = Resolve();
                         if (!PlcBlockPrimitives.IsConsistent(block))
                             throw new PlcSoftwareException("BlockInconsistent",
                                 "Block is inconsistent; export verification is unavailable. No automatic compile or further import.");
+                        return block;
+                    }
+                    void Export(string path) {
+                        var block = ConsistentBlock();
                         PlcBlockPrimitives
                             .Export(block, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), verifiedOptions);
                     }
+                    void ExportNone(string path) => PlcBlockPrimitives
+                        .Export(ConsistentBlock(), new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ExportOptions.None);
                     ILookup<string, object>? groupsByType = null;
                     bool ExportType(string name, string path)
                     {
@@ -82,7 +88,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (string.IsNullOrEmpty(identity)) throw new InvalidOperationException("Exact binding identity required.");
                     var scope = identity + "\n" + softwarePath + "\n" + blockPath;
                     return execute(new PlcVerifiedExecution { Request = request, CandidateXml = candidate.Xml, Binding = scope,
-                        Export = Export, Import = Import, ExportType = ExportType, VerifyBinding = Check, Meta = meta,
+                        Export = Export, Import = Import, ExportType = ExportType, ExportNone = ExportNone, VerifyBinding = Check, Meta = meta,
                         Compile = request.CompileAfterImport ? (Action)Compile : null });
                 }
                 catch (Exception ex) {

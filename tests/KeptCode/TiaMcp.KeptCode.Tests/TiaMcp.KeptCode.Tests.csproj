@@ -100,6 +100,7 @@
     <Compile Include="../../../src/Shared/ImportDependencyPlanner.cs" />
     <Compile Include="../../../src/Shared/MotionProDiagClassicHmiLogic.cs" />
     <Compile Include="../../../src/Shared/PlcVerifiedImport.cs" />
+    <Compile Include="../../../src/PlcWorker/PlcVerifiedImportBridge.cs" />
     <Compile Include="../../../src/Shared/ProgressHeartbeat.cs" />
     <Compile Include="../../../src/Shared/SwallowedExceptions.cs" />
     <Compile Include="../../../src/Shared/UnifiedHmiPropertyAdmission.cs" />

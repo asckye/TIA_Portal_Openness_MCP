@@ -41,7 +41,8 @@ namespace TiaMcp.PlcWorker
                     meta[pair.Key] = JsonSerializer.SerializeToNode(pair.Value);
             }
             try { return PlcVerifiedImport.Execute(execution.CandidateXml, execution.Binding, request.EvidenceDirectory, request.DryRun, request.ExpectedToken,
-                execution.Export, execution.Import, execution.VerifyBinding, meta, execution.Compile == null ? null : (Action)Compile, execution.ExportType); }
+                execution.Export, execution.Import, execution.VerifyBinding, meta, execution.Compile == null ? null : (Action)Compile,
+                execution.ExportType, execution.ExportNone); }
             finally { execution.Meta.Clear(); foreach (var pair in meta) execution.Meta[pair.Key] = Plain(pair.Value); }
         }
         private static object? Plain(JsonNode? node)

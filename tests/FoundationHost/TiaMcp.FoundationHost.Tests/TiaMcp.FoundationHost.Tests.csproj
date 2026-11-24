@@ -22,6 +22,9 @@
     <Compile Include="../../Generation/TiaMcp.Generation.Planning.Tests/PlanningFixture.cs" Link="Generation/PlanningFixture.cs" />
     <Compile Include="../../../src/FoundationHost/GenerationTool.cs" Link="GenerationTool.cs" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.WorkerChannel.TransportFixture/TiaMcp.WorkerChannel.TransportFixture.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../KeptCode/TiaMcp.VerifiedImport.Net48.Tests/TiaMcp.VerifiedImport.Net48.Tests.csproj"
+                      ReferenceOutputAssembly="false" OutputItemType="VerifiedFixtureExe" SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;TargetFrameworks;DefineConstants" />
     <ProjectReference Include="../../WorkerChannel/TiaMcp.PlcWorker.FaultFixture/TiaMcp.PlcWorker.FaultFixture.csproj" ReferenceOutputAssembly="false" AdditionalProperties="TiaMcpPlcWorkerSdkFixture=true" />
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" Aliases="foundationhost" GlobalPropertiesToRemove="DefineConstants" />
     <ProjectReference Include="../../../src/ToolPipeline/TiaMcp.ToolPipeline.csproj" Aliases="toolpipeline" GlobalPropertiesToRemove="DefineConstants" />
@@ -143,6 +146,8 @@
     <Compile Include="../../../src/PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../../../src/PlcWorker/FoundationProcessLease.cs" Link="FoundationProcessLease.cs" />
     <Compile Include="../../../src/PlcWorker/FoundationWorkerDispatcher.cs" Link="FoundationWorkerDispatcher.cs" />
+    <Compile Include="../../../src/PlcWorker/PlcVerifiedImportBridge.cs" />
+    <Compile Include="../../../src/Shared/CompilerDiagnostics.cs" />
     <Compile Include="../../../src/Shared/PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerJson.cs" Link="WorkerJson.cs" />
     <Compile Include="../../../src/PlcWorker/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
@@ -176,4 +181,11 @@
     <Compile Include="../../Shared/FixtureCrashGuard.cs" Link="Shared/FixtureCrashGuard.cs" />
     <Compile Include="../../Shared/FixtureExit.cs" Link="Shared/FixtureExit.cs" />
   </ItemGroup>
+  <Target Name="CopyVerifiedImportFixture" AfterTargets="Build">
+    <Error Condition="'@(VerifiedFixtureExe->Count())' != '1' or !Exists('@(VerifiedFixtureExe)')" Text="Missing verified import fixture from this build." />
+    <ItemGroup><VerifiedFixtureFiles Include="%(VerifiedFixtureExe.RootDir)%(VerifiedFixtureExe.Directory)*" /></ItemGroup>
+    <Copy SourceFiles="@(VerifiedFixtureFiles)" DestinationFolder="$(TargetDir)verified-net48" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+  </Target>
 </Project>

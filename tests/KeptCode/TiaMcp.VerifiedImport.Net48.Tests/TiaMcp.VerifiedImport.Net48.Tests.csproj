@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
+    <PackageReference Include="System.Text.Json" />
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <Compile Include="../../../src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs" />
+    <Compile Include="../../../src/Shared/CompilerDiagnostics.cs" />
+    <Compile Include="../../../src/Shared/PlcVerifiedImport.cs" />
+    <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" />
+    <Compile Include="../../../src/PlcWorker/PlcVerifiedImportBridge.cs" />
+    <Compile Include="../TiaMcp.KeptCode.Tests/VerifiedExportStyleTests.cs" />
+    <Compile Include="../../Shared/FixtureCrashGuard.cs" />
+    <Compile Include="../../Shared/FixtureExit.cs" />
+  </ItemGroup>
+</Project>

@@ -19,6 +19,8 @@
 - On V17–V21, both PLC compile tools report access denied when a safety offline login fails and TIA confirms the session is logged off.
   Compilation never starts after a failed login. Both compile tools and the standalone `ManagePlcSafety` login read the session state once
   after a login error and attempt logoff if the session is logged on or its state cannot be read. A lost connection ends further native calls.
+- Verified PLC block imports now compare the original candidate with a standard export when the full readback differs.
+  Verification checks restored settings and explicit member attributes against the full readback while allowing timestamps and memory lengths to change.
 
 ## [4.0.0-rc.4] - 2026-11-24
 

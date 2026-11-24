@@ -36,6 +36,7 @@ namespace TiaMcp.Adapters.Contracts
         public string CandidateXml { get; set; } = "";
         public string Binding { get; set; } = "";
         public Action<string> Export { get; set; } = null!;
+        public Action<string>? ExportNone { get; set; }
         public Func<string, string, bool> ExportType { get; set; } = null!;
         public Action<string> Import { get; set; } = null!;
         public Action VerifyBinding { get; set; } = null!;

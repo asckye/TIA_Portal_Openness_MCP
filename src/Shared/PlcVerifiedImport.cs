@@ -41,7 +41,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static string Execute(string candidateXml, string binding, string evidenceRoot, bool dryRun, string expectedToken,
             Action<string> export, Action<string> import, Action verifyBinding, JsonObject meta, Action? compile = null,
-            Func<string, string, bool>? exportType = null)
+            Func<string, string, bool>? exportType = null, Action<string>? exportNone = null)
         {
             meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["operationSuccess"] = false;
             meta["verificationSuccess"] = false; meta["automaticRollback"] = false; meta["compileRequested"] = compile != null;
@@ -67,7 +67,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var before = PlcDocumentEditing.Read(beforePath);
             meta["backup"] = new JsonObject { ["path"] = beforePath, ["sha256"] = PlcDocumentEditing.Hash(File.ReadAllBytes(beforePath)) };
             var preserved = new JsonArray();
-            var planned = Candidate(() => PlcDocumentEditing.PrepareImport(before, candidateXml, preserved));
+            var restored = new List<XElement>();
+            var planned = Candidate(() => PlcDocumentEditing.PrepareImport(before, candidateXml, preserved, restored));
             var verificationPlan = PlcDocumentEditing.Parse(planned);
             var expected = PlcDocumentEditing.Canonical(verificationPlan, verificationPlan);
             var tokenData = new JsonObject { ["session"] = Session, ["binding"] = binding, ["compileRequested"] = compile != null,
@@ -140,6 +141,15 @@ namespace TiaMcpServer.ModelContextProtocol
             if (compile != null) actual = PlcDocumentEditing.NormalizeCompiledReadback(actual, expected, declarations, out difference);
             var matches = expected == actual;
             meta["afterPath"] = afterPath; meta["actualFingerprint"] = PlcDocumentEditing.HashText(actual);
+            var comparison = new JsonObject { ["method"] = "plannedWithDefaults" };
+            meta["comparison"] = comparison;
+            if (!matches && exportNone != null)
+            {
+                comparison["method"] = "candidateWithNone";
+                var reason = CompareNone(Path.Combine(folder, "after-none.xml"), candidateXml, readback, restored, preserved, verifyBinding, exportNone);
+                matches = reason == null;
+                if (reason != null) comparison["reason"] = reason;
+            }
             meta["verificationSuccess"] = matches; meta["operationSuccess"] = matches;
             meta["status"] = matches ? "DocumentReadbackMatched" : "DocumentReadbackMismatch";
             if (matches) meta.Remove("cleanupRequired");
@@ -149,6 +159,69 @@ namespace TiaMcpServer.ModelContextProtocol
                 ? "Imported and re-exported document matches after identifier normalization. Inspect compileRequested/compileReturned for compilation; " +
                 "project was not saved."
                 : "Import returned, but document readback differs. Original backup and both documents retained. No automatic repair or rollback was attempted.";
+        }
+
+        private static string? CompareNone(string path, string candidateXml, XDocument readback, List<XElement> restored, JsonArray preserved,
+            Action verifyBinding, Action<string> exportNone)
+        {
+            try
+            {
+                verifyBinding();
+                exportNone(path);
+                var candidate = PlcDocumentEditing.Parse(candidateXml);
+                var none = PlcDocumentEditing.Parse(PlcDocumentEditing.Read(path));
+                if (PlcDocumentEditing.Canonical(candidate) != PlcDocumentEditing.Canonical(none)) return "Candidate differs from after-none.xml.";
+                if (PlcDocumentEditing.Block(candidate).Name != PlcDocumentEditing.Block(readback).Name
+                    || PlcDocumentEditing.Name(candidate) != PlcDocumentEditing.Name(readback)) return "Readbacks identify different blocks.";
+                return FullReadbackDifference(candidate, readback, restored, preserved);
+            }
+            catch (Exception error) when (error is not OperationCanceledException && !HmiReadPolicy.ConnectionUnavailable(error)
+                && TiaOpenness.Shared.ProcessLossPolicy.Reason(error) == null)
+            {
+                // The import and primary readback have returned. Retain their mismatch on supplemental read failure.
+                return "Same-style verification failed: " + NativeFailureText.Compose(error.Message, null, Array.Empty<string>());
+            }
+        }
+
+        private static string? FullReadbackDifference(XDocument candidate, XDocument readback, List<XElement> restored, JsonArray preserved)
+        {
+            var attributes = PlcDocumentEditing.Child(PlcDocumentEditing.Block(readback), "AttributeList");
+            var children = attributes.Elements().Concat(PlcDocumentEditing.Child(attributes, "Interface").Descendants())
+                .ToLookup(e => (e.Parent, e.Name, (string?)e.Attribute("Name"), (string?)e.Attribute("Path")));
+
+            XElement? Find(XElement wanted, XElement root)
+            {
+                // Follow individual Name/Path values. The reported labels can contain unescaped slashes.
+                var actual = attributes;
+                foreach (var step in wanted.AncestorsAndSelf().TakeWhile(e => e != root).Reverse())
+                {
+                    var matches = children[(actual, step.Name, (string?)step.Attribute("Name"), (string?)step.Attribute("Path"))];
+                    if (matches.Count() != 1) return null;
+                    actual = matches.First();
+                }
+                return actual;
+            }
+
+            if (restored.Count > 0)
+            {
+                var planned = PlcDocumentEditing.Child(PlcDocumentEditing.Block(restored[0].Document!), "AttributeList");
+                for (int i = 0; i < restored.Count; i++)
+                {
+                    var item = restored[i];
+                    if (item.Parent == planned && PlcDocumentEditing.IgnoreInBlockComparison(item)) continue;
+                    var actual = Find(item, planned);
+                    if (actual == null || (item.HasElements || actual.HasElements ? !XNode.DeepEquals(item, actual) : item.Value != actual.Value))
+                        return "Restored attribute differs in after.xml: " + (string?)preserved[i];
+                }
+            }
+            var input = PlcDocumentEditing.Child(PlcDocumentEditing.Block(candidate), "AttributeList");
+            foreach (var member in PlcDocumentEditing.Child(input, "Interface").Descendants().Where(PlcDocumentEditing.IsInterfaceMember))
+            {
+                foreach (var (name, _) in PlcDocumentEditing.MemberExportDefaults)
+                    if (member.Attribute(name) is XAttribute stated && (string?)Find(member, input)?.Attribute(name) != stated.Value)
+                        return "Explicit member attribute differs in after.xml: " + (string?)member.Attribute("Name") + "/" + name;
+            }
+            return null;
         }
     }
 }

@@ -1,3 +1,4 @@
+extern alias plcpathfixture;
 extern alias adaptertests;
 extern alias foundationhost;
 extern alias toolpipeline;
@@ -15,10 +16,71 @@ using Fixture = adaptertests::TiaMcp.Adapters.Contracts.Tests.MutationEvidenceTe
 using TypeImportFixture = adaptertests::TiaMcp.Adapters.Contracts.Tests.ScopedImportOutcomeTests;
 using NativeException = adaptertests::Siemens.Engineering.EngineeringException;
 using Foundation = foundationhost::TiaMcp.FoundationHost;
+using TestPaths = TiaMcp.Engine.Tests.Shared.TestPaths;
 using Xunit;
 
 public sealed class VerifiedImportOutcomeTests
 {
+    private sealed class FixtureNonRecoverableException : Exception { }
+
+    [Theory, InlineData(false, false), InlineData(false, true), InlineData(true, false), InlineData(true, true)]
+    public void Losing_the_connection_during_either_native_readback_preserves_the_unknown_write(bool supplemental, bool confirmed)
+    {
+        const string tool = "ImportPlcBlockVerified";
+        string xml = PlcBlockImportAdmissionTests.Scl15;
+        var engine = new plcpathfixture::TiaMcp.Adapters.PlcFoundationEngine("15.1") { Step = (name, run) => Fixture.RunStep("15.1", name, run) };
+        var root = engine.Plc.BlockGroup;
+        var existing = new plcpathfixture::Siemens.Engineering.SW.Blocks.PlcBlock { Name = "FC_Ready", Language = "SCL", Parent = root };
+        root.Blocks.Add(existing);
+        root.AfterImport = _ => root.Blocks.Remove(existing);
+        string repo = TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        var directory = Directory.CreateDirectory(Path.Combine(repo, "bin-build", "verified-loss-" + Guid.NewGuid()));
+        var state = new WorkerSessionOutcomeState();
+        var recovery = new WorkerSessionRecovery(state, () => false, () => { }, () => { }, () => { }, () => { });
+        var calls = new List<string>();
+        Exception fault = confirmed ? new FixtureNonRecoverableException() : new System.Runtime.InteropServices.COMException("Readback channel unavailable.");
+        root.AfterBlockExport = file => {
+            calls.Add(file.Name);
+            if (file.Name == (supplemental ? "after-none.xml" : "after.xml"))
+            {
+                recovery.ObserveFailure(fault);
+                throw fault;
+            }
+            File.WriteAllText(file.FullName, file.Name == "after.xml" ? xml.Replace("<Number>10", "<Number>11") : xml);
+        };
+        try
+        {
+            var input = new PlcSoftwareRequest { FilePath = Path.Combine(directory.FullName, "candidate.xml"), SoftwarePath = "PLC",
+                Path = existing.Name, EvidenceDirectory = directory.FullName, DryRun = true };
+            File.WriteAllText(input.FilePath, xml);
+            var candidate = PlcVerifiedImportBridge.Validate(input);
+            var preview = engine.VerifiedImport(input, candidate, PlcVerifiedImportBridge.Execute);
+            input.ExpectedToken = Assert.IsType<string>(preview.Meta["token"]);
+            input.DryRun = false;
+            var request = new ChannelRequest(1, "adapter.plc-software.ExecutePlcOrganisation", """{"dryRun":false}""", (_, _) => { });
+            var response = recovery.Dispatch(request, _ => {
+                var step = engine.VerifiedImport(input, candidate, PlcVerifiedImportBridge.Execute);
+                Assert.Equal(tool, step.Meta["tool"]);
+                Assert.Equal(true, step.Meta["importReturned"]);
+                Assert.Equal("exportReadback", step.Meta["phase"]);
+                Assert.Equal(true, step.Meta["connectionUnavailable"]);
+                Assert.Equal(true, step.Meta["exclusiveReleaseSkipped"]);
+                Assert.Equal(true, step.Meta["writeOutcomeUnknown"]);
+                Assert.True(step.OutcomeUnknown);
+                Assert.Equal(fault.GetType().FullName, step.Meta["nativeExceptionType"]);
+                return WorkerOperationResponse.Complete(step, false, state);
+            });
+            Assert.Equal(supplemental ? new[] { "before.xml", "before.xml", "after.xml", "after-none.xml" }
+                : new[] { "before.xml", "before.xml", "after.xml" }, calls);
+            var wire = recovery.Synchronize(request, response);
+            Assert.True(state.Uncertain);
+            Assert.Equal(ChannelOutcome.Unknown, wire.Failure!.Outcome);
+            var evidence = JsonNode.Parse(wire.Failure.EvidenceJson!)!;
+            Assert.Equal(confirmed ? fault.GetType().FullName : null, (string?)evidence["portalLost"]);
+        }
+        finally { directory.Delete(recursive: true); }
+    }
+
     [Fact]
     public void Compiled_db_manifest_keeps_the_type_reference_and_omits_its_expansion()
     {

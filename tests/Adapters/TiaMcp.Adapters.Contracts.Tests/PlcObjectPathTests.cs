@@ -1,5 +1,6 @@
 extern alias plcpathfixture;
 using PathEngine = plcpathfixture::TiaMcp.Adapters.PlcFoundationEngine;
+using ExportOptions = plcpathfixture::Siemens.Engineering.ExportOptions;
 using Block = plcpathfixture::Siemens.Engineering.SW.Blocks.PlcBlock;
 using Group = plcpathfixture::Siemens.Engineering.SW.Blocks.PlcBlockUserGroup;
 using TypeGroup = plcpathfixture::Siemens.Engineering.SW.Types.PlcTypeGroup;
@@ -11,6 +12,35 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class PlcObjectPathTests
 {
+    [Fact]
+    public void Verified_exports_select_the_bound_block_and_check_consistency_for_both_styles()
+    {
+        var engine = new PathEngine("19");
+        var block = AddBlock(AddGroup(engine.Plc.BlockGroup, "Group"), "Data");
+        block.Language = "DB";
+        var sibling = AddBlock(AddGroup(engine.Plc.BlockGroup, "Other"), "Data");
+        var request = new PlcSoftwareRequest { SoftwarePath = "PLC", Path = "Group/Data" };
+        var candidate = new PlcVerifiedCandidate { Name = "Data", Xml = """
+            <Document><Engineering version="V19"/><SW.Blocks.GlobalDB ID="0"><AttributeList>
+            <Name>Data</Name><ProgrammingLanguage>DB</ProgrammingLanguage><Interface><Sections/></Interface>
+            </AttributeList></SW.Blocks.GlobalDB></Document>
+            """ };
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".xml");
+        try
+        {
+            engine.VerifiedImport(request, candidate, execution => {
+                execution.Export(path);
+                execution.ExportNone!(path);
+                block.IsConsistent = false;
+                Assert.Equal("BlockInconsistent", Assert.Throws<PlcSoftwareException>(() => execution.ExportNone(path)).Code);
+                return "";
+            });
+            Assert.Equal(new[] { ExportOptions.WithDefaults | ExportOptions.WithReadOnly, ExportOptions.None }, block.ExportOptionsUsed);
+            Assert.Empty(sibling.ExportOptionsUsed);
+        }
+        finally { File.Delete(path); }
+    }
+
     public static IEnumerable<object[]> Releases() => new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }
         .Select(key => new object[] { key });
 

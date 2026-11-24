@@ -23,6 +23,7 @@ namespace Siemens.Engineering.SW.Blocks
         public object? Parent { get; set; }
         public Action<string>? OnCall { get; set; }
         public Action<PlcBlock>? AfterImport { get; set; }
+        public Action<FileInfo>? AfterBlockExport { get; set; }
         public GroupList Groups { get; }
         public BlockList Blocks { get; }
         public PlcBlockGroup() { Groups = new(this); Blocks = new(this); }
@@ -52,6 +53,7 @@ namespace Siemens.Engineering.SW.Blocks
         public bool IsConsistent { get; set; } = true;
         public string Language { get; set; } = "LAD";
         public int Exports { get; set; }
+        public List<Siemens.Engineering.ExportOptions> ExportOptionsUsed { get; } = new();
         public bool IsKnowHowProtected => false;
         public void Delete() => ((PlcBlockGroup)Parent!).Blocks.Remove(this);
     }
@@ -128,8 +130,10 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static void Export(PlcBlock block, FileInfo file, Siemens.Engineering.ExportOptions options)
         {
             block.Exports++;
+            block.ExportOptionsUsed.Add(options);
             File.WriteAllText(file.FullName, "<Document><SW.Blocks.FC><AttributeList><Name>" +
                 System.Security.SecurityElement.Escape(block.Name) + "</Name></AttributeList></SW.Blocks.FC></Document>");
+            (block.Parent as PlcBlockGroup)?.AfterBlockExport?.Invoke(file);
         }
     }
 }
@@ -173,6 +177,7 @@ namespace TiaMcp.Adapters
             => Artifacts.DeletePlcBlock("PLC", path, dryRun, crossReferences);
         public HardwareAddressingReply MovePlcBlockToGroup(string path, string group)
             => new PlcOrganisationAdapter(new OrganisationSession(this)).MoveBlockToGroup("PLC", path, group);
+        public Func<string, Func<Dictionary<string, object?>, string>, HardwareAddressingReply>? Step { get; set; }
         public HardwareAddressingReply VerifiedImport(PlcSoftwareRequest request, PlcVerifiedCandidate candidate, Func<PlcVerifiedExecution, string> run)
             => new PlcOrganisationAdapter(new OrganisationSession(this)).ImportPlcBlockVerified(request, _ => candidate, run);
         public HardwareAddressingReply ApplyMove(string path, string group, string recovery, string hash)
@@ -185,6 +190,7 @@ namespace TiaMcp.Adapters
             public void VerifyBinding(string tool) { }
             public HardwareAddressingReply RunHmiStepTool(string tool, Func<Dictionary<string, object?>, string> operation)
             {
+                if (engine.Step != null) return engine.Step(tool, operation);
                 var meta = new Dictionary<string, object?>();
                 return new HardwareAddressingReply { Message = operation(meta), Meta = meta };
             }

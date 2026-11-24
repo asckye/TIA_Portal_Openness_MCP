@@ -15,9 +15,18 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class PlcDocumentEditing
     {
         public const int MaxBytes = 16 * 1024 * 1024;
-        private static readonly string[] ComputedBlockAttributes = {
+        private static readonly string[] IgnoredBlockAttributes = {
+            "ModifiedDate", "CompileDate", "CreationDate",
             "CodeModifiedDate", "InterfaceModifiedDate", "ParameterModified", "StructureModified", "LoadMemoryLength", "WorkMemoryLength"
         };
+        internal static bool IgnoreInBlockComparison(XElement attribute) => IgnoredBlockAttributes.Contains(attribute.Name.LocalName);
+
+        internal static readonly (XName Name, string Value)[] MemberExportDefaults = {
+            ("Remanence", "NonRetain"), ("Accessibility", "Public"), ("Informative", "false")
+        };
+        internal static bool IsInterfaceMember(XElement e) =>
+            e.Name.LocalName == "Member" && Regex.IsMatch(e.Name.NamespaceName, @"/SW/Interface/v[0-9]+\z", RegexOptions.CultureInvariant);
+
         public static string Hash(byte[] bytes) {
             using var sha = System.Security.Cryptography.SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "")
                 .ToLowerInvariant();
@@ -90,8 +99,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     a.Value = mapped;
                 }
             }
-            Child(block, "AttributeList").Elements().Where(e => new[] { "ModifiedDate", "CompileDate", "CreationDate" }.Contains(e.Name.LocalName)
-                || ComputedBlockAttributes.Contains(e.Name.LocalName)).Remove();
+            Child(block, "AttributeList").Elements().Where(IgnoreInBlockComparison).Remove();
             foreach (var e in block.DescendantsAndSelf())
             {
                 // Formatting whitespace between elements is not program text. Leaf values
@@ -99,12 +107,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (e.HasElements && !e.Nodes().OfType<XText>().Any(t => !string.IsNullOrWhiteSpace(t.Value))
                     && !e.AncestorsAndSelf().Any(p => (string?)p.Attribute(XNamespace.Xml + "space") == "preserve"))
                     e.Nodes().OfType<XText>().Where(t => string.IsNullOrWhiteSpace(t.Value)).Remove();
-                if (e.Name.LocalName == "Member" && Regex.IsMatch(e.Name.NamespaceName, @"/SW/Interface/v[0-9]+\z", RegexOptions.CultureInvariant))
-                {
-                    if ((string?)e.Attribute("Remanence") == "NonRetain") e.Attribute("Remanence")!.Remove();
-                    if ((string?)e.Attribute("Accessibility") == "Public") e.Attribute("Accessibility")!.Remove();
-                    if ((string?)e.Attribute("Informative") == "false") e.Attribute("Informative")!.Remove();
-                }
+                if (IsInterfaceMember(e))
+                    foreach (var (name, value) in MemberExportDefaults)
+                        if (e.Attribute(name) is XAttribute attr && attr.Value == value) attr.Remove();
                 var attrs = e.Attributes().OrderBy(a => a.Name.ToString(), StringComparer.Ordinal).ToArray();
                 e.RemoveAttributes(); e.Add(attrs);
             }
@@ -630,6 +635,9 @@ namespace TiaMcpServer.ModelContextProtocol
             entry.Value = value;
         }
         public static string PrepareImport(string beforeXml, string candidateXml, JsonArray preserved)
+            => PrepareImport(beforeXml, candidateXml, preserved, null);
+
+        public static string PrepareImport(string beforeXml, string candidateXml, JsonArray preserved, ICollection<XElement>? restored)
         {
             var before = ParseDocument(beforeXml, editable: false, blockImport: true);
             var candidate = ParseDocument(candidateXml, editable: false, blockImport: true);
@@ -649,8 +657,15 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var key in new[] { "Name", "Number", "MemoryLayout", "ProgrammingLanguage", "SecondaryType" })
                 if (Value(ca, key).Length > 0 && Value(ba, key) != Value(ca, key))
                     throw new ArgumentException("This import does not change block identity/layout/language: " + key);
+            void Restore(XElement parent, XElement attribute, string key)
+            {
+                var copy = new XElement(attribute);
+                parent.Add(copy);
+                preserved.Add(key);
+                restored?.Add(copy);
+            }
             foreach (var e in ba.Elements().Where(e => !e.HasElements && !new[] { "ModifiedDate", "CompileDate", "CreationDate" }.Contains(e.Name.LocalName)))
-                if (!ca.Elements().Any(c => c.Name == e.Name)) { ca.Add(new XElement(e)); preserved.Add(e.Name.LocalName); }
+                if (!ca.Elements().Any(c => c.Name == e.Name)) Restore(ca, e, e.Name.LocalName);
             string MemberKey(XElement member) => string.Join("/", member.AncestorsAndSelf().Reverse()
                 .Where(e => e.Name.LocalName == "Section" || e.Name.LocalName == "Member" || e.Name.LocalName == "Subelement")
                 .Select(e => e.Name.LocalName + ":" + ((string?)e.Attribute("Name") ?? (string?)e.Attribute("Path") ?? "")));
@@ -669,10 +684,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (newAttributes == null) { newAttributes = new XElement(oldAttributes.Name); member.AddFirst(newAttributes); }
                 foreach (var attribute in oldAttributes.Elements())
                     if (!newAttributes.Elements().Any(e => e.Name == attribute.Name && (string?)e.Attribute("Name") == (string?)attribute.Attribute("Name")))
-                    {
-                        newAttributes.Add(new XElement(attribute)); preserved
-                            .Add(key + "/" + attribute.Name.LocalName + ":" + (string?)attribute.Attribute("Name"));
-                    }
+                        Restore(newAttributes, attribute, key + "/" + attribute.Name.LocalName + ":" + (string?)attribute.Attribute("Name"));
             }
             return candidate.ToString();
         }
