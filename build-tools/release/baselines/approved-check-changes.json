@@ -8437,6 +8437,88 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):c3cf3b6ac2984d853bd3a97cb9b3bfd8024a9a46a6b0c89da2a33543307ea7d7:1"
         }
       ]
+    },
+    {
+      "task": "UI-PROJECT",
+      "maintainerDate": "2026-11-23",
+      "reason": "Maintainer approved on 2026-11-23 that the project page assertions listed in the UI-PROJECT gap analysis follow the final design",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Tree.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_their_parents_across_tabs_and_breakpoints( ):2d433450d8404d07a4956dc9e2c96a570993df8597d1caffece189f7f0e024f4:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Tree.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_their_parents_across_tabs_and_breakpoints( ):93998673148f190bc133b5b279fc5b610d539d1a017fcfc676783474e74932f0:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Tree.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_their_parents_across_tabs_and_breakpoints( ):a3cefb4f4fe2da1bf34528dac5750a4c850ce29c0f59d9f9db8f25faa2132973:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Tree.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_their_parents_across_tabs_and_breakpoints( ):bca2331d98156390b1cdb2c47ec342e1022962f2f22911acf27970880be12128:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Tree.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_their_parents_across_tabs_and_breakpoints( ):ea7d75bf8be1d8533ff79c7421a87f8af59bb5ddd4830fffc63a9fe3a3666c10:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_toolbar_save_is_the_only_accent_fill_and_runs_the_existing_confirmation( ):eb85d150440990de80731b18da842e1d1dc0af09cd486fa7fd150fea6133906e:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Rules_menu_opens_the_drawer_with_a_separate_inspect_command( AppLanguage language , string inspect , string openRules ):55bdfcc8060755db4d1d6d9a1df3244a6eede67ce350e944ed7946da56d2d3be:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectStateRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectStateRenderTests/Project_states_follow_session_documents_and_command_results( int width , int height , AppTheme theme , AppLanguage language , bool contrast ):7c25948813df19c755c220e343aea08e61aedceff1b95608ea1668adbe5fa1c2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectStateRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectStateRenderTests/Project_states_follow_session_documents_and_command_results( int width , int height , AppTheme theme , AppLanguage language , bool contrast ):8dd956d16e36060d21909bf34962248e140301f25e40ad07bb0e633bcf769d31:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):592b0b4aab0e6b3723c6a3f56eb7a8c08a8deb10d945800d61e690f748c09340:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):67aee14753f755fbb14c0acf5822b4002a53da6e1f6cd309c35ca582c54a185d:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):8b08b163e58cd133568a8a4e04ddf9df7c0b757fe89c7229df530afe082d2045:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):8b4e33f24708a549d7f827644eae08c130e82a8c544b7d80fa78354f6b5f110b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):97ebdc1197196fae02be32247474978502e9102b459d4777c3947e526126675c:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderProjectPagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):ba226e698837c7bd1bec74c81fa2b0e6e8733480ed3223f265824fb9ae39ed30:1"
+        }
+      ]
     }
   ]
 }
