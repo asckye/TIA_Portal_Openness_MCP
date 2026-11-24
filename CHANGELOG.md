@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [4.0.0-rc.4] - 2026-11-24
+
 ### Changed
 
 - Workbench AI activity now appears in a timed notification. A persistent card lists pending prefills and offers confirmation or clearing.
@@ -31,6 +33,16 @@
 - Settings opens over the current page. Save errors appear immediately above the dialog. Ctrl+, toggles the centred dialog, which opens on Appearance & language. Safety & approval, Storage & logs, and About & updates have separate sections.
   Each storage directory offers a copy-path button. The command palette opens Download options.
 - The workbench now opens at 1360 × 812.
+
+### Fixed
+
+- Cancelling an audit verification no longer shows the previous result.
+- Selected call rows and broken audit rows no longer shift their content.
+- Background events such as a lost session no longer close Settings. An arriving approval request still closes Settings and focuses the request.
+- In narrow windows, the AI Clients tab order follows the visual order.
+- Git / VCI dry-run counts use preview wording.
+- The AI activity notification stays visible when three persistent notifications are shown.
+- When a dialog closes, the page restores exactly the enabled state it had before, and its bindings keep working.
 
 ## [4.0.0-rc.3] - 2026-11-23
 
