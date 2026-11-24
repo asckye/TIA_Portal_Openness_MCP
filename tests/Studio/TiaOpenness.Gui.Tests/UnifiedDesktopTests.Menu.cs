@@ -474,6 +474,60 @@ public sealed partial class UnifiedDesktopTests
     }
 
     [Fact]
+    public void Closing_settings_restores_rail_focus_after_its_ancestor_is_reenabled()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            try
+            {
+                window.Navigate("Log");
+                Assert.True(window.RailLog.Focus());
+                window.Root.IsEnabled = false;
+                Assert.False(window.ShellFrame.IsEnabled);
+                window.OpenSettings();
+                window.Root.IsEnabled = true;
+                WpfContext.Drain();
+                Assert.Same(window.SettingsContent.AppearanceSection, Keyboard.FocusedElement);
+                Assert.False(window.RailLog.IsEnabled);
+                Assert.True(WorkbenchToastTests.PressEscape(window.SettingsContent.AppearanceSection).Handled);
+                Assert.False(window.SettingsOpen);
+                Assert.True(window.RailLog.IsEnabled);
+                Assert.Same(window.RailLog, Keyboard.FocusedElement);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Settings_preserves_a_background_siblings_enabled_binding()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            try
+            {
+                var source = new CheckBox { IsChecked = false };
+                var sibling = window.DroppedErrorAnnouncement;
+                var binding = sibling.SetBinding(UIElement.IsEnabledProperty, new Binding(nameof(CheckBox.IsChecked)) { Source = source });
+                Assert.False(sibling.IsEnabled);
+                window.OpenSettings();
+                WpfContext.Drain();
+                source.IsChecked = true;
+                Assert.False(sibling.IsEnabled);
+                source.IsChecked = false;
+                Assert.True(WorkbenchToastTests.PressEscape(window.SettingsContent.AppearanceSection).Handled);
+                Assert.False(window.SettingsOpen);
+                Assert.False(sibling.IsEnabled);
+                Assert.Same(binding, sibling.GetBindingExpression(UIElement.IsEnabledProperty));
+                source.IsChecked = true;
+                Assert.True(sibling.IsEnabled);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Rail_arrow_keys_cover_the_order_and_agent_restores_its_subpage_unless_approval_is_pending()
     {
         wpf.Run(() =>
@@ -482,6 +536,7 @@ public sealed partial class UnifiedDesktopTests
             var window = new MainWindow(ProjectPageTestSupport.Model(), false, approvals);
             try
             {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment());
                 WpfContext.ShowWindow(window); WpfContext.Drain();
                 var items = new[] { "RailEngineering", "RailAgent", "RailMcp", "RailClients", "RailEnvironment", "RailAudit", "RailLog", "SettingsButton" }
                     .Select(name => (RadioButton)window.FindName(name)).ToArray();
@@ -500,7 +555,15 @@ public sealed partial class UnifiedDesktopTests
                         Assert.True(window.SettingsButton.IsChecked);
                         Assert.Same(window.SettingsButton, Assert.Single(items, item => item.IsTabStop));
                         Assert.Same(window.SettingsContent.AppearanceSection, Keyboard.FocusedElement);
+                        var beforeEscape = window.NewestCard.Notice;
                         Assert.True(WorkbenchToastTests.PressEscape(window.SettingsContent.AppearanceSection).Handled);
+                        var afterEscape = window.NewestCard.Notice;
+                        static string Describe(ToastNotice? toast) => toast == null ? "none" : $"{toast.Source} ({toast.FullText})";
+                        string state = $"SettingsOpen={window.SettingsOpen}, toast before Escape={Describe(beforeEscape)}, " +
+                            $"toast after Escape={Describe(afterEscape)}, {items[i].Name}.IsEnabled={items[i].IsEnabled}";
+                        Assert.False(window.SettingsOpen, state);
+                        Assert.True(beforeEscape == null && afterEscape == null, state);
+                        Assert.True(items[i].IsEnabled && items[i].IsKeyboardFocused, $"{state}, focused={Keyboard.FocusedElement}");
                         Assert.Same(items[i], Keyboard.FocusedElement);
                         items[^1].Focus();
                     }

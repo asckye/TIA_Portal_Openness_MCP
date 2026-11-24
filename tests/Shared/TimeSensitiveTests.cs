@@ -333,6 +333,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Configuration_loading_failures_are_shown_by_both_navigation_commands",
                 "Escape_closes_newest_and_each_action_invokes_its_own_handler",
                 "Failed_approval_save_shows_an_interactive_error_above_settings_immediately",
+                "Environment_completion_above_settings_consumes_one_escape_before_focus_returns_to_log",
                 "Sticky_description_scrolls_and_keyboard_dismissal_restores_focus",
                 "Sticky_notices_announce_once_and_a_dropped_error_is_still_announced"
             },
@@ -477,6 +478,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Dispatcher_idle_does_not_complete_an_approval_save",
                 "Narrow_left_pane_overlays_the_page_and_returns_keyboard_focus",
                 "Rail_arrow_keys_cover_the_order_and_agent_restores_its_subpage_unless_approval_is_pending",
+                "Closing_settings_restores_rail_focus_after_its_ancestor_is_reenabled",
+                "Settings_preserves_a_background_siblings_enabled_binding",
                 "Visible_overlay_handles_the_window_control_shortcuts_on_preview_key_down",
                 "Mouse_opened_settings_restores_a_tab_stop",
                 "Opening_settings_focuses_the_requested_section_in_a_short_wide_window"

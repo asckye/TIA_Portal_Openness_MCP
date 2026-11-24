@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -16,8 +17,21 @@ internal sealed class ModalPane : IDisposable
     private readonly Action _dismiss;
     private readonly IInputElement? _previous;
     private readonly Action? _restoreFocus;
-    private readonly List<(UIElement Element, bool Enabled)> _background = [];
+    private readonly List<UIElement> _background = [];
     private bool _closed;
+
+    private static readonly DependencyProperty BlockCountProperty = DependencyProperty.RegisterAttached(
+        "BlockCount", typeof(int), typeof(ModalPane), new PropertyMetadata(0, (element, _) => element.CoerceValue(UIElement.IsEnabledProperty)));
+
+    static ModalPane()
+    {
+        // Siblings can be arbitrary WPF controls. This final coercion runs after their own IsEnabled coercion
+        // and leaves bindings, current values and inherited state under WPF's control.
+        var enabled = DependencyPropertyDescriptor.FromProperty(UIElement.IsEnabledProperty, typeof(UIElement));
+        var previous = enabled.DesignerCoerceValueCallback;
+        enabled.DesignerCoerceValueCallback = (element, value) =>
+            (int)element.GetValue(BlockCountProperty) > 0 ? false : previous?.Invoke(element, value) ?? value;
+    }
 
     internal ModalPane(FrameworkElement pane, FrameworkElement initial, Action dismiss)
         : this(pane, () => initial, dismiss) { }
@@ -42,8 +56,8 @@ internal sealed class ModalPane : IDisposable
                 foreach (UIElement sibling in panel.Children)
                     if (sibling != branch && sibling != interactiveSibling && sibling.Visibility == Visibility.Visible)
                     {
-                        _background.Add((sibling, sibling.IsEnabled));
-                        sibling.SetCurrentValue(UIElement.IsEnabledProperty, false);
+                        _background.Add(sibling);
+                        sibling.SetValue(BlockCountProperty, (int)sibling.GetValue(BlockCountProperty) + 1);
                     }
             branch = parent;
         }
@@ -65,7 +79,12 @@ internal sealed class ModalPane : IDisposable
         if (_closed) return;
         _closed = true;
         _pane.PreviewKeyDown -= OnKeyDown;
-        foreach (var (element, enabled) in _background) element.SetCurrentValue(UIElement.IsEnabledProperty, enabled);
+        foreach (var element in _background)
+        {
+            int remaining = (int)element.GetValue(BlockCountProperty) - 1;
+            if (remaining == 0) element.ClearValue(BlockCountProperty);
+            else element.SetValue(BlockCountProperty, remaining);
+        }
         if (_restoreFocus != null) _restoreFocus();
         else if (_previous is UIElement { IsVisible: true, IsEnabled: true } previous) previous.Focus();
     }

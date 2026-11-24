@@ -22,7 +22,7 @@ public partial class MainWindow
     private IInputElement? _beforeToastFocus;
     private ToastCard[] _toastCards = [];
     internal ToastCard? FindToastCard(string source) => _toastCards.FirstOrDefault(card => card.Notice?.Source == source);
-    private ToastCard NewestCard => _toastCards[^1];
+    internal ToastCard NewestCard => _toastCards[^1];
     internal Border Toast => NewestCard.Surface;
     internal Ellipse ToastDot => NewestCard.Dot;
     internal TextBlock ToastTitle => NewestCard.Title;

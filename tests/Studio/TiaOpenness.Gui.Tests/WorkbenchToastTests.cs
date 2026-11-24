@@ -444,6 +444,40 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Environment_completion_above_settings_consumes_one_escape_before_focus_returns_to_log()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window(toastClock: () => TimeSpan.Zero);
+            try
+            {
+                var environment = Assert.IsType<FeaturePageFixtures.Environment>(window.Features.Environment);
+                window.Navigate("Environment");
+                Assert.Equal(1, environment.RecheckCount);
+                window.Navigate("Log");
+                Assert.True(window.RailLog.Focus());
+                window.OpenSettings();
+                WpfContext.Drain();
+                environment.Complete(environment.Groups);
+                WpfContext.Drain();
+                Assert.Equal("environment", window.NewestCard.Notice?.Source);
+                var section = window.SettingsContent.AppearanceSection;
+                Assert.Same(section, Keyboard.FocusedElement);
+                Assert.True(PressEscape(section).Handled);
+                Assert.Null(window.NewestCard.Notice);
+                Assert.True(window.SettingsOpen);
+                Assert.False(window.RailLog.IsChecked);
+                Assert.Same(section, Keyboard.FocusedElement);
+                Assert.True(PressEscape(section).Handled);
+                Assert.False(window.SettingsOpen);
+                Assert.True(window.RailLog.IsChecked);
+                Assert.Same(window.RailLog, Keyboard.FocusedElement);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Failed_approval_save_shows_an_interactive_error_above_settings_immediately()
     {
         wpf.Run(() =>
