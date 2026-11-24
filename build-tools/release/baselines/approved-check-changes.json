@@ -8278,6 +8278,43 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchToastTests/Toast_announces_full_text_and_dismisses_without_stealing_focus_or_blocking_control( ):e18a7e002c33a2bf6644115793037ab22b2a70b58d6c42283958ebc752e4b35e:1"
         }
       ]
+    },
+    {
+      "task": "UI-AGENT",
+      "maintainerDate": "2026-11-23",
+      "reason": "Maintainer approved on 2026-11-23 that the Agent, Audit and Logs page assertions listed in the UI-AGENT gap analysis follow the final design",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ApprovalPageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ApprovalPageTests/Page_renders_both_risks_and_languages_with_caption_clear_of_ring_and_HC_selection( int width , int height ):f098c4b3da23cd71122c784aea323d32f2a546d2264b2cd38b5a0cec36e5ef36:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Calls_inspector_preserves_the_control_record_and_modal_boundary( int width , bool docked ):1135c93738d80134334f92c3ad294987afa55ecfdca9e28d85b0ce026db06e10:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderFeaturePagesTests/Final_feature_views_use_the_design_sizes_and_actual_request_fields( int width , int height , AppTheme theme , AppLanguage language ):fd26f82b80240613e1ad1181a00433a8f889be2b736bdfc7f2497c9f930a792a:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderFeaturePagesTests/Render_feature_pages_and_drawers_without_services( ):4815f41a95298dd7b64473440f6d8997709009e349bed187942fc894ecb55e23:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):3befb05b1eecf3e08b92d481b36edfc3fd72de77e409a0db11a3f03e601c9d86:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchShellDesignTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchShellDesignTests/Chrome_frames_each_page_and_overlay( int width , int height , AppTheme theme , AppLanguage language , bool hc = false ):b0f874fb287be7149fcf8ca4f16cf57bb4be5bdb59fe67e64da5eb15cbf27c09:1"
+        }
+      ]
     }
   ]
 }
