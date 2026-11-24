@@ -36,6 +36,9 @@ internal sealed class VciExportAttempts
         }
     }
 
+    internal bool ExportToWorkspace(string root, string stem, Action write, Func<bool> freshMapping, Action<string> report)
+        => Export(write, freshMapping, report, () => VciSyncTarget.ConnectSnapshot(root, stem));
+
     internal bool Export(Action write, Func<bool> freshMapping, Action<string> report,
         Func<(string Name, long Length, DateTime Modified)[]?>? snapshot = null)
     {

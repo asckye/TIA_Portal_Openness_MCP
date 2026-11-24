@@ -21,6 +21,10 @@
   after a login error and attempt logoff if the session is logged on or its state cannot be read. A lost connection ends further native calls.
 - Verified PLC block imports now compare the original candidate with a standard export when the full readback differs.
   Verification checks restored settings and explicit member attributes against the full readback while allowing timestamps and memory lengths to change.
+- `ConnectProjectToWorkspace` now reports a refused export as a definite failure when a fresh lookup finds no mapping and the workspace files are unchanged.
+  Mixed results report the mapped and failed counts, with the native refusal reason on each failed item.
+  The older XML export path also reports an unknown outcome when a snapshot encounters a reparse point, exceeds 10,000 entries,
+  or detects a new unrelated file.
 
 ## [4.0.0-rc.4] - 2026-11-24
 

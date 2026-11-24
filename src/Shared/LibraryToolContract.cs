@@ -201,9 +201,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (data["items"] is JsonArray lines)
                 for (int i = 0; i < lines.Count; i++)
                     if (lines[i] is JsonValue line && line.TryGetValue<string>(out var text))
-                        lines[i] = Regex
-                            .Replace(text, @"(\| FAILED:|\| could not enumerate children:|Unknown\().*$", "| Native observation or operation failed.",
-                                RegexOptions.Singleline);
+                        lines[i] = Regex.Replace(text, @"(\| FAILED:|\| could not enumerate children:|Unknown\()(.*)$", match =>
+                            tool == "ConnectProjectToWorkspace" && match.Groups[1].Value == "| FAILED:"
+                                && HostBehavior.SafeDiagnostic(match.Groups[2].Value.TrimStart()) is string reason
+                                ? "| FAILED: " + reason : "| Native observation or operation failed.", RegexOptions.Singleline);
             return Result(tool, data, error, outcome, completeness, writes, paging, current);
         }
         private static bool Incomplete(JsonNode? node)

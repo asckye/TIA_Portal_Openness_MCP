@@ -1,6 +1,12 @@
 <!-- Keep the test-host define when a caller supplies additional constants. -->
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="DefineConstants">
   <Import Project="../../Shared/Xunit.props" />
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <Compile Include="../Windows/VciExportFrameworkTests.cs" Link="VciExportFrameworkTests.cs" />
+    <ProjectReference Include="../../Adapters/TiaMcp.VciExport.Net48.Tests/TiaMcp.VciExport.Net48.Tests.csproj"
+                      ReferenceOutputAssembly="false" OutputItemType="VciFixtureExe" SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;TargetFrameworks;DefineConstants" />
+  </ItemGroup>
   <ItemGroup><None Update="Fixtures/SimaticMl/17/*" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><Compile Include="../../Shared/DownloadTargetCases.cs" Link="Shared/DownloadTargetCases.cs" /></ItemGroup>
   <PropertyGroup>
@@ -185,6 +191,13 @@
     <Error Condition="'@(VerifiedFixtureExe->Count())' != '1' or !Exists('@(VerifiedFixtureExe)')" Text="Missing verified import fixture from this build." />
     <ItemGroup><VerifiedFixtureFiles Include="%(VerifiedFixtureExe.RootDir)%(VerifiedFixtureExe.Directory)*" /></ItemGroup>
     <Copy SourceFiles="@(VerifiedFixtureFiles)" DestinationFolder="$(TargetDir)verified-net48" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+  </Target>
+  <Target Name="CopyVciExportFixture" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <Error Condition="'@(VciFixtureExe->Count())' != '1' or !Exists('@(VciFixtureExe)')" Text="Missing VCI export fixture from this build." />
+    <ItemGroup><VciFixtureFiles Include="%(VciFixtureExe.RootDir)%(VciFixtureExe.Directory)*" /></ItemGroup>
+    <Copy SourceFiles="@(VciFixtureFiles)" DestinationFolder="$(TargetDir)vci-net48" SkipUnchangedFiles="true">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
     </Copy>
   </Target>

@@ -292,11 +292,10 @@ namespace TiaMcp.Adapters.Native.Vci
                         }
                         else
                         {
-                            var target = LegacyXmlExport ? VciSyncTarget.Capture(flatName, () => wsRootPath) : null;
-                            if (attempts.Export(() => PortVci.Export(ws, node.Obj, VciExportPolicy.RootDirectory(), flatName, fmt),
+                            if (attempts.ExportToWorkspace(wsRootPath, flatName,
+                                () => PortVci.Export(ws, node.Obj, VciExportPolicy.RootDirectory(), flatName, fmt),
                                 () => { ws = ReAcquire(); return PortVci.Find(PortVci.MappedObjects(ws), node.Obj) != null; },
-                                detail => lines.Add(node.Label + " | " + detail),
-                                target == null ? null : () => target.Snapshot(wsRootPath, checkWorkspaceWhenEmpty: true)))
+                                detail => lines.Add(node.Label + " | " + detail)))
                             {
                                 mapped++;
                                 lines.Add(node.Label + " | mapped | format=" + fmt + " | dir=<root> | file=" + flatName);

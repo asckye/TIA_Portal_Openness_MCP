@@ -1,15 +1,75 @@
 extern alias adaptertests;
+extern alias foundationhost;
 extern alias toolpipeline;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaMcp.WorkerChannel;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+using Foundation = foundationhost::TiaMcp.FoundationHost;
 using Xunit;
 
 public sealed class WriteOutcomeContractTests
 {
+    [Theory, InlineData(7, "partial", "PARTIAL_FAILURE"), InlineData(0, "failed", "NATIVE_OPERATION_FAILED")]
+    public async Task Confirmed_connect_refusals_retain_each_reason_and_leave_no_unsettled_request(int mapped, string outcome, string code)
+    {
+        const string tool = "ConnectProjectToWorkspace";
+        using var context = new HardwareAddressingAdmissionTests.UnboundWorker();
+        using var session = new HardwareAddressingAdmissionTests.SessionFixture(context, "20");
+        using var worker = new ConnectWorker(mapped);
+        var method = typeof(Host.VersionControlTools).GetMethod(nameof(Host.VersionControlTools.ConnectProjectToWorkspaceV4))!;
+        var entry = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(worker, "20", method, tool), "20", () => new(false, 1));
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
+            Params = new() { Name = tool, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>("""{"dryRun":false}""") } };
+        var body = (await entry.InvokeAsync(request)).StructuredContent!;
+        Assert.Equal(1, worker.Applies);
+        Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
+        Assert.Equal(code, (string?)body["error"]?["code"]);
+        var evidence = body["data"]!["evidence"]!;
+        Assert.Equal(mapped + 2, (int?)evidence["exportsIssued"]);
+        Assert.Equal(mapped, (int?)evidence["mapped"]);
+        Assert.Equal(2, (int?)evidence["failed"]);
+        Assert.Equal(0, (int?)evidence["unconfirmed"]);
+        if (mapped > 0)
+        {
+            Assert.Equal(mapped, (int?)body["error"]?["details"]?["succeeded"]);
+            Assert.Equal(2, (int?)body["error"]?["details"]?["failed"]);
+        }
+        var items = body["data"]!["items"]!.AsArray().Select(item => (string)item!).ToArray();
+        Assert.Contains(items, item => item.StartsWith("PLC/FC1 |") && item.Contains("FC1 is not consistent"));
+        Assert.Contains(items, item => item.StartsWith("PLC/FB2 |") && item.Contains("FB2 could not be exported"));
+        Assert.DoesNotContain("sensitiveValue", body.ToJsonString());
+        Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot());
+    }
+
+    private sealed class ConnectWorker(int mapped) : Foundation.IFoundationWorker
+    {
+        internal int Applies;
+
+        public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
+        {
+            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject {
+                ["ProcessId"] = 20, ["IsAttached"] = true, ["ProjectFile"] = "C:/fixture.ap20" });
+            Assert.Equal("version-control.ExecuteVersionControl", operation);
+            Assert.Equal("ConnectProjectToWorkspace", (string?)arguments["request"]?["Operation"]);
+            Assert.False((bool?)arguments["dryRun"]);
+            Applies++;
+            var items = Enumerable.Range(1, mapped).Select(i => "PLC/DB" + i + " | mapped | format=s7dcl").Concat(new[] {
+                "PLC/FC1 | FAILED: FC1 is not consistent token=sensitiveValue", "PLC/FB2 | FAILED: FB2 could not be exported" });
+            return Task.FromResult(JsonSerializer.SerializeToNode(new {
+                Message = "Connect completed", Items = items, MayHaveChanged = mapped > 0, OutcomeUnknown = false,
+                Meta = new { success = false, dryRun = false, mapped, exportsIssued = mapped + 2, failed = 2, mappedAfterFailure = 0,
+                    unconfirmed = 0, writeOutcomeUnknown = false, mayHaveChanged = mapped > 0, nativeMessage = "FB2 could not be exported" }
+            }));
+        }
+
+        public void Dispose() { }
+    }
+
     [Theory, InlineData("ManageNetworkDomain"), InlineData("ManageCommunicationConnection"), InlineData("ManageProjectUserManagement"),
         InlineData("ManageGlobalLibrary"), InlineData("ManagePlcBlockDocuments"), InlineData("SetOpcUaInterfaceEnabled")]
     public void Completed_write_discloses_its_redacted_readback_failure_in_both_representations(string tool)
