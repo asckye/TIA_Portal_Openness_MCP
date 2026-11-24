@@ -67,7 +67,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var hasBlock = !string.IsNullOrWhiteSpace(blockPath);
             var parameter = side == "document" ? "filePath" : side + "FilePath";
             var blockParameter = side == "document" ? "blockPath" : side + "BlockPath";
-            if (hasFile == hasBlock) throw new AdapterPreconditionException("Supply exactly one of " + parameter + " or " + blockParameter + ".", parameter);
+            if (hasFile == hasBlock) throw new AdapterPreconditionException("Supply exactly one of " + parameter + " or " + blockParameter + ".");
             if (hasFile)
             {
                 RequireDocumentFile(filePath, parameter);
@@ -144,16 +144,21 @@ namespace TiaMcpServer.ModelContextProtocol
                         return new ResponseMessage { Message = toolName + " refused the document: " + reason, Meta = meta };
                     }
                 }
-                meta["error"] = cause.ToString();
-                if (cause is ArgumentException || cause is JsonException)
-                    meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";
-                ResponseMeta.Failed(meta);
-                meta["status"] = cause is PortalException pex ? pex.Code.ToString()
-                    : cause is ArgumentException || cause is FileNotFoundException || cause is DirectoryNotFoundException || cause is JsonException
-                        ? "InvalidParams"
-                    : "ReadOrWriteFailed";
-                return new ResponseMessage { Message = toolName + " failed: " + cause.Message, Meta = meta };
+                return AnalysisFailure(toolName, meta, cause);
             }
+        }
+
+        internal static ResponseMessage AnalysisFailure(string toolName, JsonObject meta, Exception cause)
+        {
+            meta["error"] = cause.ToString();
+            if (cause is ArgumentException || cause is JsonException)
+                meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";
+            ResponseMeta.Failed(meta);
+            meta["status"] = cause is PortalException pex ? pex.Code.ToString()
+                : cause is ArgumentException || cause is FileNotFoundException || cause is DirectoryNotFoundException || cause is JsonException
+                    ? "InvalidParams"
+                : "ReadOrWriteFailed";
+            return new ResponseMessage { Message = toolName + " failed: " + cause.Message, Meta = meta };
         }
     }
 }

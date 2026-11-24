@@ -76,8 +76,58 @@ public sealed class OfflineDocumentOutcomeTests
         var result = (await fixture.Call(tool, args)).StructuredContent!;
         AssertRefused(result);
         if (tool == "GetPlcBlockEditCapabilities") Assert.Equal("/filePath", (string?)result["error"]!["details"]!["parameter"]);
+        if (tool == "BuildDeviceAmlDocument") AssertUnnamedArgument(result);
         Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot());
         Assert.Empty(worker.Requests);
+    }
+
+    private static void AssertUnnamedArgument(JsonNode body)
+    {
+        var details = body["error"]!["details"]!.AsObject();
+        Assert.Equal("", (string?)details["parameter"]);
+        Assert.Null(details["expected"]);
+        Assert.Empty(details["allowedValues"]!.AsArray());
+    }
+
+    [Fact]
+    public async Task Missing_comparison_source_preserves_the_unnamed_argument()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        var body = (await fixture.Call("ComparePlcBlockDocuments", new { })).StructuredContent!;
+        AssertRefused(body);
+        AssertUnnamedArgument(body);
+    }
+
+    [Fact]
+    public async Task Missing_patch_output_preserves_the_unnamed_argument()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        var filePath = Path.Combine(fixture.Root, "source.xml");
+        File.WriteAllText(filePath, Document);
+        var change = new { action = "setMemberStartValue", section = "None", memberPath = "Motor/Speed", expectedValue = "1.5", value = "2.5" };
+        var body = (await fixture.Call("PatchPlcBlockDocument", new { filePath, changes = new[] { change }, dryRun = false,
+            expectedDocumentHash = (string)Editing.Inspect(Document)["documentFingerprint"]! })).StructuredContent!;
+        AssertRefused(body);
+        AssertUnnamedArgument(body);
+    }
+
+    [Fact]
+    public async Task Existing_aml_output_preserves_the_hardware_precondition()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        string exportFile = Path.Combine(fixture.Root, "occupied.aml");
+        File.WriteAllText(exportFile, "original");
+        var body = (await fixture.Call("BuildDeviceAmlDocument", new { exportFile, spec = new { projectName = "Fixture",
+            devices = new[] { new { name = "PLC", typeIdentifier = "System:Device.S71500", deviceItems = Array.Empty<object>() } } } })).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]!["code"]);
+        Assert.Equal("hardware-admission", (string?)body["error"]!["details"]!["condition"]);
+        Assert.Null(body["error"]!["details"]!["parameter"]);
+        Assert.Equal("not-started", (string?)body["meta"]!["execution"]);
+        Assert.False((bool?)body["data"]!["evidence"]!["mayHaveWrittenFiles"]);
+        Assert.Equal("original", File.ReadAllText(exportFile));
     }
 
     [Fact]
@@ -377,6 +427,49 @@ public sealed class OfflineDocumentOutcomeTests
         const string change = """[{"action":"setMemberStartValue","section":"None","memberPath":"Motor/Speed","expectedValue":"1.5","value":"2.5"}]""";
         var refusal = Assert.Throws<InvalidOperationException>(() => Editing.Patch(xml, change, (string)info["documentFingerprint"]!));
         Assert.Contains("Library-connected", refusal.Message);
+    }
+
+    [Theory]
+    [InlineData("integer", 1, null, 0, "at least 1")]
+    [InlineData("integer", null, 10, 11, "at most 10")]
+    [InlineData("integer", 1, 10, 0, "1..10")]
+    [InlineData("integer", 1, 10, 11, "1..10")]
+    [InlineData("number", 1, null, 0.5, "at least 1")]
+    [InlineData("number", null, 10, 10.5, "at most 10")]
+    [InlineData("number", 1, 10, 0.5, "1..10")]
+    [InlineData("number", 1, 10, 10.5, "1..10")]
+    public void Numeric_range_failures_keep_the_declared_type(string type, int? minimum, int? maximum, double value, string range)
+    {
+        var definition = new JsonObject { ["type"] = type };
+        if (minimum.HasValue) definition["minimum"] = minimum.Value;
+        if (maximum.HasValue) definition["maximum"] = maximum.Value;
+        var schema = new TiaMcp.Logic.V4.Inputs.InputSchema(System.Text.Json.JsonSerializer.SerializeToElement(definition));
+        var error = schema.Validate(System.Text.Json.JsonSerializer.SerializeToElement(value), "limit")!;
+        var details = Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(error.Details);
+        Assert.Equal(type, details.Expected);
+        Assert.Equal("/limit", details.Parameter);
+        Assert.Empty(details.AllowedValues);
+        Assert.Contains("/limit must be " + range, error.Message);
+    }
+
+    [Theory]
+    [InlineData("string", "Length", "\"\"", "\"ab\"")]
+    [InlineData("array", "Items", "[]", "[1,2]")]
+    [InlineData("object", "Properties", "{}", "{\"a\":1,\"b\":2}")]
+    public void Size_bounds_preserve_their_distinct_error_details(string type, string keyword, string below, string above)
+    {
+        var definition = new JsonObject { ["type"] = type, ["min" + keyword] = 1, ["max" + keyword] = 1 };
+        var schema = new TiaMcp.Logic.V4.Inputs.InputSchema(System.Text.Json.JsonSerializer.SerializeToElement(definition));
+        using var small = System.Text.Json.JsonDocument.Parse(below);
+        using var large = System.Text.Json.JsonDocument.Parse(above);
+        var minimum = Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(schema.Validate(small.RootElement, "field")!.Details);
+        Assert.Equal("/field", minimum.Parameter);
+        Assert.Equal(type, minimum.Expected);
+        Assert.Empty(minimum.AllowedValues);
+        var maximum = Assert.IsType<TiaMcp.Logic.V4.LimitExceededDetails>(schema.Validate(large.RootElement, "field")!.Details);
+        Assert.Equal("field", maximum.Parameter);
+        Assert.Equal(1, maximum.Limit);
+        Assert.Equal(2, maximum.Actual);
     }
 
     [Fact]

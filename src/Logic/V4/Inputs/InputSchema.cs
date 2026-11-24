@@ -487,7 +487,7 @@ namespace TiaMcp.Logic.V4.Inputs
                     string range = hasMin && hasMax ? min.GetRawText() + ".." + max.GetRawText()
                         : hasMin ? "at least " + min.GetRawText() : "at most " + max.GetRawText();
                     string field = pointer.Length == 0 ? "The value" : pointer;
-                    throw new InputRejectionException(diagnostic: field + " must be " + range + ".").At(pointer, range);
+                    throw new InputRejectionException(diagnostic: field + " must be " + range + ".");
                 }
             }
             if (value.ValueKind == JsonValueKind.Array)

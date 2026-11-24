@@ -122,12 +122,21 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("specJson: JSON object describing the document to build (see the tool description).")] string specJson,
             string outputPath,
             [Description("referenceAmlPath: full path of a reference AML file whose structure is reused.")] string referenceAmlPath = "")
-            => OfflineToolExecution.RunOfflineAnalysisTool("BuildDeviceAmlDocument", meta =>
+        {
+            const string tool = "BuildDeviceAmlDocument";
+            FileInfo output;
+            try { output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath)); }
+            catch (Exception error) when (error is not TiaMcp.Adapters.Contracts.AdapterPreconditionException)
+            {
+                // Hardware admission reports an occupied target before document validation starts.
+                var admission = ResponseMeta.Step(tool, ("offlineOnly", true), ("mayHaveWrittenFiles", false));
+                return OfflineToolExecution.AnalysisFailure(tool, admission, error);
+            }
+            return OfflineToolExecution.RunOfflineAnalysisTool(tool, meta =>
             {
                 meta["mayHaveWrittenFiles"] = false;
-                var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath), "Supply a new absolute AML file in an existing directory.");
                 if (!output.Extension.Equals(".aml", StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException("outputPath must end with .aml.", nameof(outputPath));
+                    throw new ArgumentException("outputPath must end with .aml.");
                 var spec = HardwareAmlLogic.ParseSpec(specJson);
                 var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "";
                 var result = HardwareAmlLogic.Build(spec, string.IsNullOrWhiteSpace(referenceAmlPath) ? null : referenceAmlPath, output.Name, version);
@@ -141,5 +150,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "AML written: " + result.Devices + " device(s), " + result.DeviceItems + " device item(s), " + result.Nodes + " node(s), " + result
                     .Subnets + " subnet(s) -> " + output.FullName + " (libraries: " + result.LibraryOrigin + ").";
             });
+        }
     }
 }

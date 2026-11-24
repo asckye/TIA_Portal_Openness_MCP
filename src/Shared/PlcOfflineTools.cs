@@ -104,6 +104,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["warnings"] = new JsonArray("This patch edits the XML only. The document cannot establish or restore the SCL implementation.");
                 meta["nativeImportValidated"] = false;
                 if (!dryRun) {
+                    if (string.IsNullOrWhiteSpace(outputPath)) throw new ArgumentException("New absolute outputPath required.");
                     var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath), "Supply a new absolute output file in an existing directory.");
                     OfflineToolExecution.WriteNewDocument(output, edited, new UTF8Encoding(true), meta);
                     meta["output"] = VerifyOutput(output);
