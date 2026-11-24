@@ -14,6 +14,8 @@
 - Verified block import accepts empty title and comment entries that TIA adds during re-export. Populated block texts and
   interface changes still produce a readback mismatch.
 - Integer range errors name the field and its allowed bounds, including the 1..100 page size for `ListPlcBlocks`.
+- `ExportDeviceAml` now reports `NATIVE_OPERATION_FAILED` when CAx returns `false`.
+  The call is settled. The response identifies the native log and the path where a partial AML file may remain.
 
 ## [4.0.0-rc.4] - 2026-11-24
 

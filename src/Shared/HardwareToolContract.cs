@@ -195,6 +195,12 @@ namespace TiaMcpServer.ModelContextProtocol
             { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
             else if (HostBehavior.UnchangedNativeFailure(evidence, verdict))
             { outcome = write ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence); }
+            else if (tool == "ExportDeviceAml" && Bool(evidence, "nativeBooleanResult") == false)
+            {
+                outcome = Outcome.Failed;
+                body["summary"] = response.Message;
+                error = Failure(false, evidence, response.Message);
+            }
             else if (unknown || write && verdict != true && (issued || !started.HasValue) && applied == 0
                 && Bool(evidence, "postStateKnown") != true && status != "InvalidState" && status != "HmiReadSessionBlocked")
             {
@@ -276,14 +282,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 new OutcomeUnknownDetails("hardware-operation", retained.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
         }
 
-        private static Error Failure(bool unknown, JsonObject evidence)
+        private static Error Failure(bool unknown, JsonObject evidence, string? failureMessage = null)
         {
             var details = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(evidence.ToJsonString())!;
             return unknown
                 ? new Error("The write outcome cannot be confirmed. Rebuild the session and inspect the target before continuing.",
                     new OutcomeUnknownDetails("hardware-operation", details.Where(p => p.Key is not ("nativeMessage" or "workerMessage" or "readError"))
                         .ToDictionary(p => p.Key, p => p.Value)))
-                : new Error("The hardware operation did not succeed.", new NativeOperationFailedDetails(null, null, details));
+                : new Error(failureMessage ?? "The hardware operation did not succeed.", new NativeOperationFailedDetails(null, null, details));
         }
 
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, bool current,

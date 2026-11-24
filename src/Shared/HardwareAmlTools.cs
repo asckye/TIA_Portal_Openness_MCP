@@ -55,8 +55,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 return new ResponseExportDeviceAml
                 {
-                    Message =
-                        $"Device '{result.DeviceName}' exported to AML at '{result.FilePath}' (state={result.State}, errors={result.ErrorCount}, warnings={result.WarningCount})",
+                    Message = result.NativeBooleanResult == false
+                        ? "CAx export returned false. Inspect the native log listed in data.messages. " + HostBehavior.PartialExportHint
+                        : $"Device '{result.DeviceName}' exported to AML at '{result.FilePath}' " +
+                            $"(state={result.State}, errors={result.ErrorCount}, warnings={result.WarningCount})",
                     DeviceName = result.DeviceName,
                     FilePath = result.FilePath,
                     Success = result.Success,

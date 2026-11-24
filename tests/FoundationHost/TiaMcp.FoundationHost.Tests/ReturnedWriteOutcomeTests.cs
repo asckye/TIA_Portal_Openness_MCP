@@ -83,6 +83,36 @@ public sealed class ReturnedWriteOutcomeTests
     }
 
     [Theory, InlineData(false), InlineData(true)]
+    public void False_CAx_export_is_settled_and_identifies_the_native_log_and_possible_partial_file(bool partialFile)
+    {
+        using var files = new Files();
+        using var release = Host.HardwareContract.UseRelease("16");
+        var output = Path.Combine(files.Root, "MCP_RC_HMI.aml");
+        var log = output + "." + Guid.NewGuid().ToString("N") + ".log";
+        var state = new WorkerSessionOutcomeState();
+        var service = new Services.HardwareAmlService((_, _) => {
+            File.WriteAllText(log, "CAx export failed.");
+            if (partialFile) File.WriteAllText(output, """<CAEXFile SchemaVersion="2.15">""");
+            var reply = new HardwareAmlExportReply { DeviceName = "MCP_RC_HMI", FilePath = output, State = "False",
+                Success = false, NativeBooleanResult = false, Messages = ["CAx Export returned bool; native log: " + log] };
+            return JsonNode.Parse(WorkerOperationResponse.Complete(reply, false, state).ResultJson);
+        }, () => true, () => "Project.ap16");
+        var body = new Host.HardwareAmlTools(service).ExportDeviceAmlV4("MCP_RC_HMI", output).StructuredContent!;
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("failed", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("completed", (string?)body["meta"]?["execution"]);
+        Assert.False(state.Uncertain);
+        Assert.False(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.HasUnknownOutcome(body));
+        Assert.False((bool?)body["data"]?["evidence"]?["nativeBooleanResult"]);
+        Assert.Equal(output, (string?)body["data"]?["filePath"]);
+        Assert.Contains(log, (string?)body["data"]?["messages"]?[0]);
+        Assert.Contains("partial", (string?)body["error"]?["message"], StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("rebuild", (string?)body["error"]?["message"], StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(partialFile, File.Exists(output));
+        Assert.True(File.Exists(log));
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
     public void False_CAx_import_survives_worker_completion_with_bounded_log_evidence(bool logExists)
     {
         using var files = new Files();
