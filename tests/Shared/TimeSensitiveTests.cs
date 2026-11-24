@@ -315,7 +315,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Measure_hidden_page_with_unchanged_journals"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlLoadTests"] = new[] {
-                "Continuous_control_queue_applies_requests_and_keeps_reads_available"
+                "Continuous_control_queue_applies_requests_and_keeps_reads_available",
+                "Default_width_docks_the_AI_call_detail_without_a_modal_blocker_or_focus_trap"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchToastTests"] = new[] {
                 "Toast_announces_full_text_and_dismisses_without_stealing_focus_or_blocking_control",
@@ -328,7 +329,11 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Operations_publish_their_outcome_in_the_shell",
                 "Dispatcher_error_is_readable_in_full_from_the_active_shell",
                 "New_AI_completion_opens_the_exact_call_from_another_page",
-                "Configuration_loading_failures_are_shown_by_both_navigation_commands"
+                "Configuration_loading_failures_are_shown_by_both_navigation_commands",
+                "Escape_closes_newest_and_each_action_invokes_its_own_handler",
+                "Failed_approval_save_shows_an_interactive_error_above_settings_immediately",
+                "Sticky_description_scrolls_and_keyboard_dismissal_restores_focus",
+                "Sticky_notices_announce_once_and_a_dropped_error_is_still_announced"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlOverlayTests"] = new[] {
                 "Frozen_state_follows_recent_input_and_clears_after_the_operator_is_idle",
@@ -339,7 +344,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Popover_discovers_attaches_detaches_and_creates_through_the_operator_panel",
                 "Overlay_cards_show_the_bound_project_and_safe_choices",
                 "Palette_finds_a_block_by_metadata_or_path_and_keeps_the_short_page_names_searchable",
-                "Session_escape_returns_focus_and_AI_navigation_closes_the_non_modal_flyout"
+                "Session_escape_returns_focus_and_AI_navigation_closes_the_non_modal_flyout",
+                "Resizing_over_a_docked_call_keeps_settings_modal_until_dismissed"
             },
             ["TiaOpenness.Gui.Tests.ApprovalServiceTests"] = new[] {
                 "Workbench_v2_write_stays_pending_until_the_same_approval_card_is_decided",
@@ -402,7 +408,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Final_feature_views_use_the_design_sizes_and_actual_request_fields"
             },
             ["TiaOpenness.Gui.Tests.CallJournalPanelTests"] = new[] {
-                "Escape_rejects_a_destructive_request_only_after_its_confirmation_sheet_closes"
+                "Escape_rejects_a_destructive_request_only_after_its_confirmation_sheet_closes",
+                "Actor_and_release_filter_popup_announces_active_filters_and_cycles_focus"
             },
             ["TiaOpenness.Gui.Tests.ApprovalPageTests"] = new[] {
                 "Capture_loss_releases_keyboard_but_a_normal_mouse_release_keeps_the_press_guard",
@@ -426,7 +433,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Arrows_browse_plcs_tags_and_version_control_and_only_activation_opens_them",
                 "Expanding_a_plc_loads_only_its_blocks_and_tree_nodes_open_the_existing_documents",
                 "Tree_keyboard_and_mouse_select_blocks_without_exporting",
-                "Tags_wait_for_the_target_plc_blocks_and_exclude_competing_operations"
+                "Tags_wait_for_the_target_plc_blocks_and_exclude_competing_operations",
+                "Unsupported_direction_is_explained_and_cannot_be_selected_by_focus_or_automation"
             },
             ["TiaOpenness.Gui.Tests.RemoteConfigurationTests"] = new[] {
                 "Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection",
@@ -434,7 +442,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Service_and_client_design_states_keep_their_actions_and_confirm_the_actual_targets"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchApprovalConfirmationTests"] = new[] {
-                "Enter_is_inert_and_cancel_or_escape_preserves_approval_and_reopening_clears_input"
+                "Enter_is_inert_and_cancel_or_escape_preserves_approval_and_reopening_clears_input",
+                "Status_chip_allows_local_click_and_space_and_refuses_the_control_guard"
             },
             ["TiaOpenness.Gui.Tests.WpfContextTests"] = new[] {
                 "Window_left_button_stays_released_when_the_native_button_state_changes_without_capture",
@@ -458,7 +467,9 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Dispatcher_idle_does_not_complete_an_approval_save",
                 "Narrow_left_pane_overlays_the_page_and_returns_keyboard_focus",
                 "Rail_arrow_keys_cover_the_order_and_agent_restores_its_subpage_unless_approval_is_pending",
-                "Visible_overlay_handles_the_window_control_shortcuts_on_preview_key_down"
+                "Visible_overlay_handles_the_window_control_shortcuts_on_preview_key_down",
+                "Mouse_opened_settings_restores_a_tab_stop",
+                "Opening_settings_focuses_the_requested_section_in_a_short_wide_window"
             },
             ["TiaOpenness.Gui.Tests.ProjectStateRenderTests"] = new[] {
                 "Project_states_follow_session_documents_and_command_results",
