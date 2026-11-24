@@ -54,7 +54,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 {
                     // Measure the MCP page before navigating to each shell page for the final capture.
                     window.ShowConfiguration(false);
-                    ((Expander)window.Configuration!.FindName("ConfigurationActivity")).IsExpanded = true;
+                    Assert.True(window.Configuration!.ActivityCard.IsAncestorOf(window.Configuration.ActivityLog));
                     var host = CreateHost(window);
                     Assert.Equal(!state.Local, ((RadioButton)window.Configuration!.FindName("RemoteNav")).IsChecked);
                     Assert.Equal(state.Local, ((RadioButton)window.Configuration.FindName("LocalNav")).IsChecked);
@@ -63,18 +63,21 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     var serviceState = (ContentControl)window.Configuration.FindName("ServiceStateChip");
                     var mcp = window.Configuration;
                     Assert.Equal(state.Local ? Visibility.Collapsed : Visibility.Visible, mcp.ServerPane.Visibility);
-                    Assert.Equal(state.Local ? Visibility.Collapsed : Visibility.Visible, mcp.HostsCard.Visibility);
-                    Assert.Equal(!state.Local, mcp.InstallDetails.IsExpanded);
+                    Assert.Equal(Visibility.Visible, mcp.HostsCard.Visibility);
+                    Assert.False(mcp.InstallDetails.IsExpanded);
                     Assert.True(mcp.ModeHead.TranslatePoint(new Point(0, mcp.ModeHead.ActualHeight), host).Y
                         < mcp.InstallationCard.TranslatePoint(new Point(), host).Y);
                     // Measure both detailed status chips in the mode that displays them, then restore the capture state.
                     mcp.RemoteNav.IsChecked = true;
+                    mcp.InstallDetails.IsExpanded = true;
                     WpfContext.Drain();
                     host.UpdateLayout();
                     Assert.True(serviceState.TranslatePoint(new Point(0, serviceState.ActualHeight), host).Y
                         < installationState.TranslatePoint(new Point(), host).Y);
                     var start = (Button)window.Configuration.FindName(state.Running ? "StopServer" : "StartServer");
-                    Assert.True(serviceState.TranslatePoint(new Point(), host).Y + serviceState.ActualHeight < start.TranslatePoint(new Point(), host).Y);
+                    Assert.True(mcp.RuntimeActions.IsAncestorOf(serviceState));
+                    Assert.True(mcp.RuntimeActions.IsAncestorOf(start));
+                    Assert.True(mcp.ServerPane.IsAncestorOf(serviceState));
                     foreach (var chip in new[] { installationState, serviceState })
                     {
                         var dot = WorkbenchRenderFeaturePagesTests.Descendants<System.Windows.Shapes.Ellipse>(chip).Single();
@@ -89,6 +92,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(FontWeights.Normal, value.FontWeight);
                         Assert.Equal(TextAlignment.Right, value.TextAlignment);
                     }
+                    mcp.InstallDetails.IsExpanded = false;
                     if (state.Local) mcp.LocalNav.IsChecked = true;
                     window.Navigate("Calls"); host.UpdateLayout();
                     var callsCount = DesktopCapture.Descendants<Border>(window.CallsContent).Single(b => b.Name == "CallsCountBadge");
@@ -100,7 +104,8 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     if (state.Page == "Mcp")
                     {
                         window.Navigate("Clients"); WpfContext.Drain(); host.UpdateLayout();
-                        Assert.Equal(860, clientPane.ActualWidth);
+                        Assert.Equal(mcp.Clients.ClientsColumn.ActualWidth, clientPane.ActualWidth);
+                        RemoteConfigurationTests.CheckPageColumns(mcp.Clients.ClientsScroll, mcp.Clients.ClientActionsBand, host, host.ActualWidth, 392);
                         window.Navigate("Mcp"); WpfContext.Drain(); host.UpdateLayout();
                     }
                     string serviceStatus = state.Local ? Loc.Current["Pages.ServiceOnDemand"] : Loc.Current[state.Running ? "Config.Running" : "Config.Idle"];
@@ -139,7 +144,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         Assert.Equal(12, table.RowGroups[0].Rows[0].Cells[0].Padding.Right);
                         double textHeight = message.ContentEnd.GetCharacterRect(LogicalDirection.Backward).Bottom
                             - message.ContentStart.GetCharacterRect(LogicalDirection.Forward).Top;
-                        const int expectedMessageLines = 2;
+                        const int expectedMessageLines = 8;
                         Assert.Equal(12, log.FontSize);
                         Assert.Equal(17, message.LineHeight);
                         Assert.Equal(new Thickness(0, 9, 14, 9), messageCell.Padding);
@@ -148,14 +153,15 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                         for (TextPointer? line = message.ContentStart.GetLineStartPosition(0);
                             line != null && line.CompareTo(message.ContentEnd) < 0;)
                         {
-                            Assert.True(renderedLines <= expectedMessageLines, "Line traversal must terminate within the expected layout.");
+                            Assert.True(renderedLines <= expectedMessageLines,
+                                $"Expected {expectedMessageLines} lines at {log.ActualWidth}px, text height {textHeight} at {message.LineHeight}px.");
                             renderedLines++;
                             var next = line.GetLineStartPosition(1);
                             Assert.True(next == null || next.CompareTo(line) > 0, "Formatted line traversal must advance.");
                             line = next;
                         }
                         Assert.Equal(expectedMessageLines, renderedLines);
-                        // Character rectangles exclude the 9 + 9 epx cell padding from the two-line row height.
+                        // Character rectangles exclude the 9 + 9 epx cell padding from the wrapped sidebar row height.
                         double verticalPadding = messageCell.Padding.Top + messageCell.Padding.Bottom;
                         double maximumRowHeight = message.LineHeight * expectedMessageLines + verticalPadding;
                         double maximumTextHeight = maximumRowHeight - verticalPadding;

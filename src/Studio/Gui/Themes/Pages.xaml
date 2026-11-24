@@ -290,17 +290,17 @@
   <Style x:Key="Primer.DoctorTagGlyph" TargetType="TextBlock">
     <Setter Property="Text" Value="•"/>
     <Setter Property="FontWeight" Value="Bold"/>
-    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.10_5}"/>
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.13}"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
-    <Setter Property="Margin" Value="0,0,4,0"/>
+    <Setter Property="HorizontalAlignment" Value="Center"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource Self}}" Value="Success">
         <Setter Property="Text" Value="✓"/>
         <Setter Property="Foreground" Value="{DynamicResource Primer.ok}"/>
       </DataTrigger>
       <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource Self}}" Value="Error">
-        <Setter Property="Text" Value="✕"/>
-        <Setter Property="Foreground" Value="{DynamicResource Ant.colorError}"/>
+        <Setter Property="Text" Value="!"/>
+        <Setter Property="Foreground" Value="{DynamicResource Primer.onDanger}"/>
       </DataTrigger>
       <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource Self}}" Value="Accent">
         <Setter Property="Foreground" Value="{DynamicResource Primer.accent}"/>
@@ -450,5 +450,70 @@
     <Style.Triggers><Trigger Property="IsChecked" Value="True">
       <Setter Property="Content" Value="{l:Tr Calls.Follow}"/>
     </Trigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.EnvironmentVerdict" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="Padding" Value="14"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding EnvironmentTone}" Value="Success"><Setter Property="Background" Value="{DynamicResource Primer.okBg}"/></DataTrigger>
+      <DataTrigger Binding="{Binding EnvironmentTone}" Value="Error"><Setter Property="Background" Value="{DynamicResource Ant.colorErrorBg}"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.VerdictIcon" TargetType="Border">
+    <Setter Property="Width" Value="28"/><Setter Property="Height" Value="28"/><Setter Property="CornerRadius" Value="7"/>
+    <Setter Property="Margin" Value="0,0,10,0"/><Setter Property="VerticalAlignment" Value="Top"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding EnvironmentTone}" Value="Success">
+          <Setter Property="Background" Value="{DynamicResource Primer.bg}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource Primer.ok}"/><Setter Property="BorderThickness" Value="1"/>
+        </DataTrigger>
+      <DataTrigger Binding="{Binding EnvironmentTone}" Value="Error"><Setter Property="Background" Value="{DynamicResource Ant.colorErrorSolid}"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.PassedCheckIcon" TargetType="Border">
+    <Setter Property="Width" Value="22"/><Setter Property="Height" Value="22"/><Setter Property="CornerRadius" Value="11"/>
+    <Setter Property="Margin" Value="0,0,12,0"/><Setter Property="VerticalAlignment" Value="Top"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.okBg}"/>
+  </Style>
+  <Style x:Key="Primer.ConfigurationSidebar" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="CornerRadius" Value="0"/>
+    <Setter Property="BorderThickness" Value="1,0,0,0"/>
+    <Setter Property="Padding" Value="16"/>
+  </Style>
+  <Style x:Key="Primer.ClientTile" TargetType="ToggleButton" BasedOn="{StaticResource Primer.Tile}">
+    <Style.Triggers>
+      <Trigger Property="IsChecked" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Primer.accentSoft}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+      </Trigger>
+      <MultiDataTrigger>
+        <MultiDataTrigger.Conditions>
+          <Condition Binding="{Binding Detected}" Value="False"/>
+          <Condition Binding="{Binding IsChecked,RelativeSource={RelativeSource Self}}" Value="False"/>
+        </MultiDataTrigger.Conditions>
+        <Setter Property="ux:Ux.Variant" Value="Dashed"/>
+      </MultiDataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ClientCheck" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="Width" Value="18"/><Setter Property="Height" Value="18"/>
+    <Setter Property="CornerRadius" Value="9"/><Setter Property="Padding" Value="0"/>
+  </Style>
+  <Style x:Key="Primer.PreviewFile" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="Padding" Value="8,5"/><Setter Property="Margin" Value="0,2"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+        <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+        <Setter Property="Background" Value="{DynamicResource Primer.accentSoft}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ClientFormat" TargetType="Border" BasedOn="{StaticResource Primer.Tag}">
+    <Setter Property="Padding" Value="4,1"/>
+    <Setter Property="TextElement.FontSize" Value="{DynamicResource Ui.FontSize.10}"/>
+  </Style>
+  <Style x:Key="Primer.NetworkPanel" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
+    <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Margin" Value="0,10,0,0"/>
   </Style>
 </ResourceDictionary>

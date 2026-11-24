@@ -42,7 +42,7 @@ public sealed class WorkbenchMcpPrefillTests(WpfContext wpf)
                 var configuration = window.Configuration!;
                 var choices = (ListBox)configuration.Clients.FindName("ClientChoices");
                 var host = WorkbenchRenderTests.CreateHost(window);
-                var row = (ListBoxItem)choices.ItemContainerGenerator.ContainerFromIndex(1);
+                var row = (ListBoxItem)choices.ItemContainerGenerator.ContainerFromItem(profiles[1]);
                 var toggle = WorkbenchRenderFeaturePagesTests.Descendants<System.Windows.Controls.Primitives.ToggleButton>(row).Single();
                 var peer = new System.Windows.Automation.Peers.ToggleButtonAutomationPeer(toggle);
                 var provider = Assert.IsAssignableFrom<System.Windows.Automation.Provider.IToggleProvider>(peer.GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle));

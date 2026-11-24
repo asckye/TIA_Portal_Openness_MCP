@@ -88,7 +88,6 @@ internal static partial class Strings
         ("Pages.LogErrors", "Errors", "错误"),
         ("Pages.LogSearch", "Search logs… (_S)", "搜索日志…（_S）"),
         ("Env.AttentionGroup", "Needs attention", "需要处理"),
-        ("Env.DiagnosticsLink", "Generate a diagnostics package on Logs & diagnostics (_L)", "在日志与诊断页生成诊断包（_L）"),
         ("Pages.PreviewSync", "Preview sync (_P)", "预览同步（_P）"),
         ("Pages.RunSync", "Run sync… (_Y)", "执行同步…（_Y）"),
         ("Pages.ClientWritePreview", "This client will be included when you write configuration. Review the connection settings before saving.",

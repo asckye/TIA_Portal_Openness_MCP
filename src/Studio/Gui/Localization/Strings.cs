@@ -185,7 +185,6 @@ internal static partial class Strings
         ("Settings.Homepage", "Project home", "项目主页"),
         ("Settings.PathMissing", "The folder does not exist yet: {0}", "目录尚不存在：{0}"),
         ("Mcp.Clients", "AI clients", "AI 客户端"),
-        ("Mcp.ClientsNote", "Writes MCP connection info only · undetected clients still writable", "仅写入 MCP 连接信息 · 未检测到的仍可写入"),
         ("Mcp.ClientCounts", "· {0} selected · {1} detected", "· 已选 {0} 个 · 检测到 {1} 个"),
         ("Mcp.Detected", "Detected", "已检测到"),
         ("Mcp.WillWrite", "Will write to:", "将写入："),

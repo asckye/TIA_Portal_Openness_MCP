@@ -12,6 +12,10 @@
 - Audit verification reports progress after each record and can be cancelled within a single chain.
   A broken chain links to its record from the toolbar and the persistent notification.
 - Runtime logs keep multiline entries together, show warning and error counts, and support copying individual entries or the filtered list.
+- MCP Server shows local hosts in both transports, offers a private IPv4 adapter picker and copies the current endpoint or STDIO command.
+- AI Clients groups the catalogue by installation status and previews the actual JSON or TOML for each selected file.
+  In narrow windows, the write action stays at the bottom while the catalogue and preview scroll.
+- Environment shows findings beside a redacted, copyable system summary and provides diagnostic export alongside recheck.
 
 - Workbench notifications stack above the status bar. Environment findings and lost TIA sessions stay visible until dismissed.
   A disconnected session shows a read-only snapshot indicator and offers process rescanning and logs.

@@ -22,6 +22,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
     private readonly Func<string, string, DoctorRun?> _fixMembership;
     private readonly bool _allowFix;
     private int _busy;
+    public DateTimeOffset? LastChecked { get; private set; }
     public Task Completion { get; private set; } = Task.CompletedTask;
     public IReadOnlyList<EnvironmentFinding> Findings { get; private set; } = [];
     public IReadOnlyList<EnvironmentGroup> Groups { get; private set; }
@@ -65,7 +66,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
                     .ToArray();
                 Groups = CompletedGroups(Findings);
             }
-            finally { Interlocked.Exchange(ref _busy, 0); Raise(nameof(Groups)); Raise(nameof(LogTail)); }
+            finally { LastChecked = DateTimeOffset.Now; Interlocked.Exchange(ref _busy, 0); Raise(nameof(Groups)); Raise(nameof(LogTail)); }
         });
         return LocalizedText.Empty;
     }
@@ -116,6 +117,7 @@ public class EnvironmentCheckService : ObservableObject, IEnvironmentCheckServic
                     if (report == null) RequireDoctorSuccess(run.ExitCode);
                 }
                 Findings = Capture();
+                LastChecked = DateTimeOffset.Now;
                 if (report is { } outcome) Findings = Findings.Select(f => f.Id == checkId ? FixOutcome(f, outcome) : f).ToArray();
                 Groups = CompletedGroups(Findings);
             }
@@ -356,7 +358,13 @@ public static class EnvironmentCheckCatalogue
 
     public static string ResultKey(EnvironmentFinding finding) => finding.Result switch
     {
-        "Pass" => finding.Id == "engines" ? "Env.FilesPresent" : "Env.Passed",
+        "Pass" => finding.Id switch
+        {
+            "engines" => "Env.FilesPresent", "runtime" => "Env.RuntimePresent", "framework" => "Env.FrameworkPresent",
+            "membership" => "Env.GroupMember", "data" => "Env.DataWritable", "installations" => "Env.InstallDetected",
+            "port" => "Env.PortFree", "url" => "Env.UrlReserved", "firewall" => "Env.FirewallAllowed", "openness-readiness" => "Env.OpennessReady",
+            "openness-allowlist" => "Env.WorkersAllowed", "proxy-remote" => "Env.ProxyReady", _ => "Env.Passed",
+        },
         "Fail" => finding.Id switch
         {
             "membership" => "Env.GroupMissing", "installations" => "Env.InstallationMissing", "framework" => "Env.FrameworkMissing",

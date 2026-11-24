@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +37,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
     [Theory]
     [InlineData(AppLanguage.Chinese)]
     [InlineData(AppLanguage.English)]
-    public void Doctor_renders_failures_and_repairs_and_logs_owns_the_export_access_key(AppLanguage language)
+    public void Doctor_renders_failures_repairs_and_diagnostics_on_both_pages(AppLanguage language)
     {
         wpf.RunWithLanguage(language, () =>
         {
@@ -60,16 +61,18 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 window.Navigate("Environment"); WpfContext.ShowWindow(window); WpfContext.Drain(); window.UpdateLayout();
                 var doctor = window.EnvironmentContent;
                 Assert.Equal(FeatureTone.Error, window.Features.EnvironmentTone);
-                var neutralTag = window.FindResource("Primer.Tag");
-                Assert.Same(neutralTag, doctor.SummaryChip.Style);
-                Assert.Equal("✕", doctor.SummaryGlyph.Text);
-                Assert.Same(window.FindResource("Ant.colorError"), doctor.SummaryGlyph.Foreground);
+                Assert.Same(window.FindResource("Primer.EnvironmentVerdict"), doctor.SummaryChip.Style);
+                Assert.Same(window.FindResource("Ant.colorErrorBg"), doctor.SummaryChip.Background);
+                Assert.Equal("!", doctor.SummaryGlyph.Text);
+                Assert.Same(window.FindResource("Primer.onDanger"), doctor.SummaryGlyph.Foreground);
+                Assert.Same(window.FindResource("Ant.colorErrorSolid"), doctor.VerdictIcon.Background);
                 var tag = Assert.Single(Descendants<Border>(doctor.PassedList), border => border.IsVisible && border.Name == "PassedTag");
-                Assert.Same(neutralTag, tag.Style);
-                Assert.Collection(Assert.IsType<StackPanel>(tag.Child).Children.Cast<TextBlock>(),
-                    glyph => { Assert.Equal("✓", glyph.Text); Assert.Same(window.FindResource("Primer.ok"), glyph.Foreground); },
-                    label => Assert.Equal(Loc.Current["Env.Passed"], label.Text));
-                Assert.Single(Descendants<TextBlock>(doctor.PassedList), text => text.IsVisible && text.Text == Loc.Current["Env.Passed"]);
+                Assert.Same(window.FindResource("Primer.PassedCheckIcon"), tag.Style);
+                var glyph = Assert.IsAssignableFrom<TextBlock>(tag.Child);
+                Assert.Equal("✓", glyph.Text);
+                Assert.Same(window.FindResource("Primer.ok"), glyph.Foreground);
+                Assert.Single(Descendants<TextBlock>(doctor.PassedList), text => text.IsVisible && text.Text == Loc.Current["Env.RuntimePresent"]);
+                Assert.DoesNotContain(Descendants<TextBlock>(doctor.PassedList), text => text.IsVisible && text.Text == Loc.Current["Env.Passed"]);
                 Assert.DoesNotContain(Descendants<Button>(doctor.PassedList), button => button.IsVisible);
                 var buttons = Descendants<Button>(doctor.CheckList).Where(button => button.IsVisible).ToArray();
                 Assert.Equal(
@@ -90,7 +93,9 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                     Assert.Contains(Descendants<TextBlock>(doctor.CheckList), text => text.IsVisible && text.Text == row.Result);
                 }
                 Assert.Contains("8765", window.Features.FailedChecks.Single(row => row.Check.Id == "firewall").Result);
-                Assert.DoesNotContain(Descendants<Button>(doctor), button => Equals(button.Content, Loc.Current["Env.Generate"]));
+                Assert.Same(doctor.GenerateButton, Assert.Single(Descendants<Button>(doctor),
+                    button => Equals(button.Content, Loc.Current["Env.ExportRedacted"])));
+                Assert.Same(Controls.WorkbenchCommands.ExportDiagnostics, doctor.GenerateButton.Command);
                 environment.Replace([new(LocalizedText.Key("Env.Runtime"), [Services.EnvironmentCheckCatalogue.Checking("runtime")])]);
                 WpfContext.Drain();
                 Assert.Equal("•", doctor.SummaryGlyph.Text);
@@ -105,6 +110,71 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
             finally { window.Close(); }
         });
     }
+
+    [Theory]
+    [InlineData(AppLanguage.English, "en-US", "zh-CN")]
+    [InlineData(AppLanguage.Chinese, "zh-CN", "en-US")]
+    public void Last_environment_check_uses_the_selected_app_language(AppLanguage language, string appCulture, string hostCulture) =>
+        wpf.RunWithLanguage(language, () =>
+        {
+            var previous = CultureInfo.CurrentCulture;
+            var time = new DateTimeOffset(new DateTime(2026, 11, 23, 15, 4, 5, DateTimeKind.Local));
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+            try
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(hostCulture);
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(),
+                    new FeaturePageFixtures.Environment { LastChecked = time });
+                string expected = time.ToString("T", CultureInfo.GetCultureInfo(appCulture));
+                Assert.NotEqual(time.ToString("T"), expected);
+                Assert.Equal(Loc.Current.T("Env.LastChecked", expected), window.Features.LastEnvironmentCheck);
+            }
+            finally { CultureInfo.CurrentCulture = previous; window.Close(); }
+        });
+
+    [Theory]
+    [InlineData(1360, 812)]
+    [InlineData(1024, 640)]
+    public void Environment_snapshot_matches_findings_and_copies_a_redacted_summary(int width, int height) =>
+        wpf.RunWithLanguage(AppLanguage.Chinese, () =>
+        {
+            var environment = new FeaturePageFixtures.Environment();
+            var window = new MainWindow(ProjectPageTestSupport.Model(release: "21"), false,
+                FeaturePageFixtures.Approvals(), new FeaturePageFixtures.Diagnostics());
+            var theme = ThemeManager.Current.Theme;
+            try
+            {
+                ThemeManager.Current.Theme = AppTheme.Light;
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit(), environment);
+                var host = WorkbenchRenderTests.CreateHost(window, width, height);
+                window.Navigate("Environment");
+                WpfContext.Drain(); host.UpdateLayout();
+                var doctor = window.EnvironmentContent;
+                RemoteConfigurationTests.CheckPageColumns(doctor.DoctorScroll, doctor.SnapshotPane, host, width, 348);
+                var snapshot = window.Features.EnvironmentSnapshot;
+                Assert.Equal(5, snapshot.Count);
+                Assert.Contains(snapshot, row => row.Value == "V21 · MTA");
+                Assert.Contains(snapshot, row => row.Value == window.Features.EnvironmentRows.Single(check => check.Check.Id == "membership").Result);
+                Assert.Contains(snapshot, row => row.Value == window.Features.EnvironmentRows.Single(check => check.Check.Id == "runtime").Result);
+                Assert.Equal(Loc.Current["Env.NoCompletedCheck"], window.Features.LastEnvironmentCheck);
+                if (Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR") is { } output)
+                {
+                    var folder = Directory.CreateDirectory(Path.Combine(output, "b3"));
+                    WorkbenchRenderTests.SaveRender(host, Path.Combine(folder.FullName, $"environment-light-zh-{width}x{height}.png"), width, height);
+                }
+                var source = environment.Groups.SelectMany(group => group.Rows).First(row => row.Id == "runtime");
+                environment.Replace([new(LocalizedText.Key("Env.Runtime"), [source with { Result = LocalizedText.Literal("token=synthetic-secret") }])]);
+                WpfContext.Drain();
+                string? copied = null;
+                window.Features.CopyText = value => copied = value;
+                UnifiedDesktopTests.ClickControl(doctor.CopySummary);
+                Assert.DoesNotContain("synthetic-secret", copied);
+                Assert.Contains(Core.Environment.DiagnosticRedactor.Mask, copied);
+                Assert.Contains(window.Features.EnvironmentSummary, copied);
+                Assert.All(window.Features.EnvironmentSnapshot, row => Assert.Contains(row.Value, copied));
+            }
+            finally { window.Close(); ThemeManager.Current.Theme = theme; }
+        });
 
     [Fact]
     public void Environment_check_waits_for_a_visible_page_with_a_feature_model()
@@ -662,7 +732,7 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Capture("doctor-pass");
                 Assert.Empty(window.EnvironmentContent.CheckList.Items);
                 Assert.NotEmpty(window.EnvironmentContent.PassedList.Items);
-                AssertCenteredColumn(window.EnvironmentContent.EnvironmentColumn, Viewport(window.EnvironmentContent.DoctorScroll), 860);
+                RemoteConfigurationTests.CheckPageColumns(window.EnvironmentContent.DoctorScroll, window.EnvironmentContent.SnapshotPane, host, width, 348);
                 window.Navigate("Audit");
                 Assert.Equal(64, window.Features.SelectedAudit!.Hash.Length);
                 Capture("audit");

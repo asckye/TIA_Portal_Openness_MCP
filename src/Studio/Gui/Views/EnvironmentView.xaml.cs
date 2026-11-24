@@ -29,6 +29,7 @@ public partial class EnvironmentView : UserControl
         HasChecked = true;
         model.Run(model.Environment.Recheck);
     }
+    private void OnCopySummary(object sender, RoutedEventArgs e) => Model.CopyEnvironmentSummary();
     private void OnRecheck(object sender, RoutedEventArgs e) => Recheck();
     private async void OnFix(object sender, RoutedEventArgs e)
     {

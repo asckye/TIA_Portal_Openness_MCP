@@ -53,9 +53,12 @@ namespace TiaMcpConfigurator
             {
                 string address = Text("ServerAddress");
                 return !Remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"]
-                    : "http://" + address + ":" + Text("ServerPort") + "/mcp";
+                    : "http://" + EndpointHost(address) + ":" + Text("ServerPort") + "/mcp";
             }
         }
+        private static string EndpointHost(string address) => IPAddress.TryParse(address, out var ip)
+            && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? "[" + ip + "]" : address;
+
         public string SelectedReleaseKey
         {
             get { return SelectedVersion; }
@@ -100,16 +103,14 @@ namespace TiaMcpConfigurator
             root = preview == null ? TiaOpenness.Shared.BundleLayout.RequireWorkbenchRoot(AppContext.BaseDirectory, bundleRoot) : bundleRoot;
             InitializeComponent();
             ((INotifyCollectionChanged)HostList.Items).CollectionChanged += (_, _) => UpdateHostsCard();
-            ConfigurationActivity.Expanded += (_, _) => UpdateLogCount();
-            ConfigurationActivity.Collapsed += (_, _) => UpdateLogCount();
             InitializeHosts(loadExisting && preview == null);
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
             versions.SelectedValue = TiaOpenness.Core.Environment.WorkbenchReleaseSelection.DefaultKey(root);
             InitializeReleaseTiles();
             InitializeClients();
-            RemoteNav.Checked += delegate { InstallDetails.IsExpanded = true; Mode(true); };
-            LocalNav.Checked += delegate { InstallDetails.IsExpanded = false; Mode(false); };
+            RemoteNav.Checked += delegate { Mode(true); };
+            LocalNav.Checked += delegate { Mode(false); };
             ServerAddress.TextChanged += OnEndpointChanged;
             ServerPort.TextChanged += OnEndpointChanged;
             Click("BrowseTia", delegate {
@@ -118,7 +119,9 @@ namespace TiaMcpConfigurator
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
             Click("DetectTia", delegate { RefreshReleaseDetections(); UpdateReleaseSelection(); DetectTiaPath(true); });
-            TiaPath.TextChanged += (_, _) => { UpdateAssemblyStatus(); UpdateJsonPreview(); };
+            TiaPath.TextChanged += (_, _) => { UpdateAssemblyStatus(); UpdateStdioCommand(); UpdateJsonPreview(); };
+            Click("CopyEndpoint", () => CopyConnection(ServiceEndpoint));
+            Click("CopyStdio", () => CopyConnection(StdioCommand.Text));
             Click("SaveBoth", OnSaveBoth);
             Click("StartServer", OnStartServer);
             ClickAsync("StopServer", OnStopServer);
@@ -173,7 +176,7 @@ namespace TiaMcpConfigurator
                 LocalNav.IsChecked = preview.Local;
                 RemoteNav.IsChecked = !preview.Local;
             }
-            InstallDetails.IsExpanded = Remote;
+            InstallDetails.IsExpanded = false;
             UpdateLanguage();
             Loc.Current.LanguageChanged += OnLanguageChanged;
             Append(Loc.Current["Config.Ready"]);
@@ -320,8 +323,6 @@ namespace TiaMcpConfigurator
         private void UpdateLogCount()
         {
             LogCount.Text = Loc.Current.T(logEntries == 1 ? "Config.Entry" : "Config.Entries", logEntries);
-            ActivityTitle.Text = Loc.Current.T("Config.ActivityCount", logEntries);
-            ActivityDisclosure.Text = Loc.Current[ConfigurationActivity.IsExpanded ? "Config.Collapse" : "Config.Expand"];
         }
 
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
@@ -340,16 +341,8 @@ namespace TiaMcpConfigurator
         // Mode changes only presentation; existing configuration values stay in place.
         private void Mode(bool remote)
         {
-            Clients.RelayNote.Text = Loc.Current[remote ? "Config.RelayLabel" : "Mcp.ClientsNote"];
+            Clients.RelayNote.Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
             Clients.RelayNote.ToolTip = remote ? Loc.Current["Config.RelayMode"] : null;
-            Clients.RemoteGuidance.Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
-            ModeHead.Margin = new Thickness(0, 0, 0, remote ? 0 : 20);
-            foreach (var mode in new[] { LocalNav, RemoteNav })
-            {
-                mode.SetResourceReference(Control.BackgroundProperty, "Primer.card");
-                mode.BorderThickness = new Thickness(mode.IsChecked == true ? 2 : 1);
-            }
-            ModeTag.Text = Loc.Current[remote ? "Config.RemoteTag" : "Config.LocalTag"];
             Find<TextBlock>("Transport").Text = remote ? "HTTP" : "stdio";
             UpdateHostsCard();
             AddressRow.IsEnabled = remote;
@@ -361,7 +354,6 @@ namespace TiaMcpConfigurator
         private void UpdateHostsCard()
         {
             bool hasHosts = HostList.HasItems;
-            ActivityCard.Visibility = HostsCard.Visibility = Remote || hasHosts ? Visibility.Visible : Visibility.Collapsed;
             NoHosts.Visibility = hasHosts ? Visibility.Collapsed : Visibility.Visible;
             HostList.Visibility = hasHosts ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -393,6 +385,7 @@ namespace TiaMcpConfigurator
         }
         private void OnEndpointChanged(object sender, TextChangedEventArgs e)
         {
+            ProbeMetrics.Text = "";
             lastTestResult = null;
             lastTestFailed = false;
             UpdateLastTest();

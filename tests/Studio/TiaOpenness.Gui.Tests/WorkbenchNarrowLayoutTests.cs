@@ -216,8 +216,8 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                     var host = WorkbenchRenderTests.CreateHost(window);
                     var list = (ListBox)window.Configuration!.Clients.FindName("ClientChoices");
                     Settle(host, 1200, 780);
-                    var rows = clients.Select((client, i) =>
-                        Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(i))).ToArray();
+                    var rows = clients.Select(client =>
+                        Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromItem(client))).ToArray();
                     int wrapped = 0;
                     foreach (var row in rows)
                     {
@@ -434,7 +434,10 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
         {
             double actual = ((FrameworkElement)form.FindName(name)).ActualHeight;
             Assert.Equal(double.NaN, ((FrameworkElement)form.FindName(name)).Height);
-            Assert.True(actual >= 156, $"{context}: {name} sizes to its numbered header, fields and actions");
+            var card = (FrameworkElement)form.FindName(name);
+            var last = name == "ServerPane" ? (FrameworkElement)form.SaveBoth : form.InstallDetails;
+            var bounds = last.TranslatePoint(new Point(0, last.ActualHeight), card);
+            Assert.True(last.ActualHeight > 0 && bounds.Y <= actual + 1, $"{context}: {name} clips its last action");
         }
     }
 

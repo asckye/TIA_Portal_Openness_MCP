@@ -55,7 +55,7 @@ public sealed class FeaturePageTests(WpfContext wpf)
                 Assert.True(((RadioButton)settings.FindName("Size50")).IsChecked);
                 WpfContext.Complete(features.SetRetentionAsync(10, false)); WpfContext.Drain();
                 Assert.True(((RadioButton)settings.FindName("Copies10")).IsChecked);
-                Assert.Null(((Views.EnvironmentView)window.FindName("EnvironmentContent")).FindName("GenerateButton"));
+                Assert.Same(Controls.WorkbenchCommands.ExportDiagnostics, window.EnvironmentContent.GenerateButton.Command);
                 Assert.Null(((Views.AuditLogView)window.FindName("AuditContent")).FindName("Size50"));
             }
             finally { window.Close(); }

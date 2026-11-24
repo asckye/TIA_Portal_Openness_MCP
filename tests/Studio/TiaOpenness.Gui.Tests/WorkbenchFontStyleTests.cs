@@ -274,7 +274,7 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             Assert.True(new Rect(statusBar.RenderSize).Contains(versionBounds), context);
                             for (int i = 0; i < clients.Count; i++)
                             {
-                                var row = Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(i));
+                                var row = Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromItem(clients[i]));
                                 var name = Descendants<TextBlock>(row).Single(text => text.Name == "ClientName");
                                 Assert.Equal(clients[i].DisplayName, name.Text);
                                 var content = Assert.IsType<Grid>(VisualTreeHelper.GetParent(name));

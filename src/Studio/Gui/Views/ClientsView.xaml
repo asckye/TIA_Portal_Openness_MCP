@@ -6,40 +6,52 @@
     xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes"
     Foreground="{DynamicResource Primer.text}" FontFamily="{DynamicResource Ui.Font}" FontSize="{DynamicResource Ui.FontSize.Body}">
   <DockPanel Margin="-16,-12">
-    <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
-      <DockPanel LastChildFill="False" VerticalAlignment="Center">
-        <TextBlock Text="{l:Tr Shell.Clients}" Style="{StaticResource Primer.ContainerTitle}"
-                   FontSize="{DynamicResource Ui.FontSize.13}" VerticalAlignment="Center"/>
-        <Border Style="{StaticResource Primer.VerticalDivider}" Height="16" Margin="8,0"/>
-        <Button x:Name="EditTarget" Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Mcp"
-                Style="{StaticResource Primer.IdeToolButton}" AutomationProperties.Name="{l:Tr Config.EditTarget}" ToolTip="{l:Tr Config.EditTarget}">
-          <StackPanel Orientation="Horizontal">
-            <Ellipse x:Name="TargetDot" Width="6" Height="6" Margin="0,0,6,0"/>
-            <TextBlock x:Name="TargetEndpoint" Style="{StaticResource Primer.Mono}" MaxWidth="240" TextTrimming="CharacterEllipsis"
-                       FontSize="{DynamicResource Ui.FontSize.11_5}"/>
-            <TextBlock Text="{l:Tr Config.Edit}" Margin="6,0,0,0" Foreground="{DynamicResource Primer.accent}"/>
-          </StackPanel>
-        </Button>
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-          <Button x:Name="SelectDetected" AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"
-                  Style="{StaticResource Primer.IdeToolButton}"/>
-          <Button x:Name="ClearClients" Content="{l:Tr Primer.Clear}" AutomationProperties.Name="{l:Tr Primer.Clear}"
-                  Style="{StaticResource Primer.IdeToolButton}" Margin="6,0,0,0"/>
-        </StackPanel>
-      </DockPanel>
-    </Border>
-    <ScrollViewer x:Name="ClientsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-      <Grid Margin="24">
-        <StackPanel x:Name="ClientsColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="860">
+    <Border DockPanel.Dock="Bottom" x:Name="ViewportFooter" Style="{StaticResource Primer.IdeBar}" Padding="16,8" Visibility="Collapsed"/>
+    <Grid x:Name="ClientLayout" ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
+      <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="392"/></Grid.ColumnDefinitions>
+      <ScrollViewer x:Name="ClientsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="ClientsColumn" Margin="20">
           <StackPanel x:Name="ClientPane">
-            <views:ClientChoiceList x:Name="ClientChoices" SelectionMode="Multiple" AutomationProperties.HelpText="{l:Tr Config.ChooseTargets}" AutomationProperties.Name="{l:Tr Mcp.Clients}"
-                     Style="{StaticResource Primer.List}" ItemContainerStyle="{StaticResource Primer.FileItem}" Margin="-5,-5,-5,0" Padding="0" BorderThickness="0"
-                     Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+            <DockPanel Margin="0,0,0,8">
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="SelectDetected" AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"
+                    Style="{StaticResource Primer.IdeToolButton}"/>
+                <Button x:Name="ClearClients" Content="{l:Tr Primer.Clear}" AutomationProperties.Name="{l:Tr Primer.Clear}"
+                    Style="{StaticResource Primer.IdeToolButton}" Margin="6,0,0,0"/>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse x:Name="DetectedDot" Width="6" Height="6" Margin="0,0,6,0"/>
+                <TextBlock x:Name="DetectedCount" Focusable="True" ToolTip="{Binding ToolTip,ElementName=ClientSelection}"
+                    AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}" Style="{StaticResource Primer.ContainerTitle}" Cursor="Hand"/>
+              </StackPanel>
+            </DockPanel>
+            <views:ClientChoiceList x:Name="ClientChoices" SelectionMode="Multiple" AutomationProperties.HelpText="{l:Tr Config.ChooseTargets}"
+                AutomationProperties.Name="{l:Tr Mcp.Clients}"
+                Style="{StaticResource Primer.List}" ItemContainerStyle="{StaticResource Primer.FileItem}" Margin="-5,-5,-5,0" Padding="0" BorderThickness="0"
+                Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+              <ListBox.GroupStyle>
+                <GroupStyle HidesIfEmpty="False">
+                  <GroupStyle.HeaderTemplate>
+                    <DataTemplate>
+                      <WrapPanel x:Name="UndetectedHeader" Margin="5,12,0,4">
+                        <TextBlock Text="{l:Tr Config.NotDetected}" Style="{StaticResource Primer.ContainerTitle}"/>
+                        <TextBlock Text="{Binding ItemCount}" Margin="6,0" Style="{StaticResource Primer.Muted}"/>
+                        <TextBlock Text="{l:Tr Config.UndetectedHint}" Style="{StaticResource Primer.Muted.textFaint}" TextWrapping="Wrap"/>
+                      </WrapPanel>
+                      <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Name}" Value="True">
+                          <Setter TargetName="UndetectedHeader" Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                      </DataTemplate.Triggers>
+                    </DataTemplate>
+                  </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+              </ListBox.GroupStyle>
               <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                   <UniformGrid>
                     <UniformGrid.Columns>
-                      <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=views:ClientsView}">
+                      <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ListBox}">
                         <Binding.Converter><views:ClientTileColumnsConverter/></Binding.Converter>
                       </Binding>
                     </UniformGrid.Columns>
@@ -48,38 +60,40 @@
               </ListBox.ItemsPanel>
               <ListBox.ItemTemplate>
                 <DataTemplate>
-                  <ToggleButton x:Name="ClientTile" Style="{StaticResource Primer.Tile}" VerticalAlignment="Stretch" Padding="14" Focusable="False"
-                                MinHeight="66" ux:ContrastSelection.Active="False"
-                                AutomationProperties.Name="{Binding DisplayName}" AutomationProperties.HelpText="{Binding Tooltip}" ToolTip="{Binding Tooltip}"
-                                IsChecked="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem},Mode=OneWay}">
+                  <ToggleButton x:Name="ClientTile" Style="{StaticResource Primer.ClientTile}" VerticalAlignment="Stretch" Padding="10,8" Focusable="False"
+                      MinHeight="66" ux:ContrastSelection.Active="False"
+                      AutomationProperties.Name="{Binding DisplayName}" AutomationProperties.HelpText="{Binding Tooltip}" ToolTip="{Binding Tooltip}"
+                      IsChecked="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem},Mode=OneWay}">
                     <DockPanel>
                       <Border x:Name="Monogram" DockPanel.Dock="Left" Width="32" Height="32" Padding="0" Margin="0,0,12,0"
-                              VerticalAlignment="Center" Style="{StaticResource Primer.IdeChip}" views:ClientsView.Monogram="{Binding}">
+                          VerticalAlignment="Center" Style="{StaticResource Primer.IdeChip}" views:ClientsView.Monogram="{Binding}">
                         <TextBlock x:Name="MonogramText" Text="{Binding Tag,ElementName=Monogram}"
-                                   Foreground="{Binding Path=(TextElement.Foreground),ElementName=Monogram}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{DynamicResource Ui.FontMono}"
-                                   FontSize="{DynamicResource Ui.FontSize.11_5}" FontWeight="SemiBold"/>
+                            Foreground="{Binding Path=(TextElement.Foreground),ElementName=Monogram}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{DynamicResource Ui.FontMono}"
+                            FontSize="{DynamicResource Ui.FontSize.11_5}" FontWeight="SemiBold"/>
                       </Border>
-                      <Grid DockPanel.Dock="Right" Width="12" Height="16" Margin="6,0,0,0">
-                        <TextBlock x:Name="Mark" Text="○" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Foreground="{DynamicResource Primer.textFaint}" FontSize="{DynamicResource Ui.FontSize.12}"/>
-                      </Grid>
+                      <Border DockPanel.Dock="Right" Style="{StaticResource Primer.ClientCheck}" Margin="6,0,0,0">
+                        <TextBlock x:Name="Mark" Text="" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Foreground="{DynamicResource Primer.textFaint}" FontSize="{DynamicResource Ui.FontSize.12}"/>
+                      </Border>
                       <StackPanel>
                         <Grid ToolTip="{Binding Tooltip}" HorizontalAlignment="Left">
                           <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                          <TextBlock x:Name="ClientName" Foreground="{DynamicResource Primer.text}" Text="{Binding DisplayName}" MinWidth="40" TextWrapping="Wrap" TextTrimming="None"
-                                     FontWeight="Medium" FontSize="{DynamicResource Ui.FontSize.13}" LineHeight="18" LineStackingStrategy="BlockLineHeight"/>
-                          <Ellipse Grid.Column="1" Width="6" Height="6" Margin="6,0,0,0" Fill="{DynamicResource Primer.ok}"
-                                   Visibility="{Binding Detected,Converter={StaticResource BoolToVisibility}}"/>
+                          <TextBlock x:Name="ClientName"
+                              VerticalAlignment="Center" Foreground="{DynamicResource Primer.text}" Text="{Binding DisplayName}" MinWidth="40"
+                              TextWrapping="Wrap" TextTrimming="None"
+                              FontWeight="Medium" FontSize="{DynamicResource Ui.FontSize.13}" LineHeight="18" LineStackingStrategy="BlockLineHeight"/>
+                          <Border Grid.Column="1" Style="{StaticResource Primer.ClientFormat}" Margin="4,0,0,0">
+                            <TextBlock Text="{Binding Format}"/>
+                          </Border>
                         </Grid>
-                        <TextBlock Text="{Binding DisplayPath}" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"
-                                     FontWeight="Normal" FontSize="{DynamicResource Ui.FontSize.11}" Margin="0,2,0,0" ToolTip="{Binding Path}"/>
+                        <TextBlock Text="{Binding Path}" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"
+                            FontWeight="Normal" FontSize="{DynamicResource Ui.FontSize.11}" Margin="0,2,0,0" ToolTip="{Binding Path}"/>
                       </StackPanel>
                     </DockPanel>
                   </ToggleButton>
                   <DataTemplate.Triggers>
                     <DataTrigger Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                      <Setter TargetName="ClientTile" Property="BorderThickness" Value="2"/>
                       <Setter TargetName="Mark" Property="Text" Value="✓"/>
                       <Setter TargetName="Mark" Property="Foreground" Value="{DynamicResource Primer.accent}"/>
                     </DataTrigger>
@@ -95,69 +109,62 @@
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </views:ClientChoiceList>
-            <Border x:Name="ClientActionsBand" Style="{StaticResource Primer.Container}" Padding="0" Margin="0,11,0,0">
-              <StackPanel>
-                <DockPanel Margin="16,12">
-                  <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Expander x:Name="PreviewJson" Style="{StaticResource Primer.Expander}" VerticalAlignment="Center"
-                              AutomationProperties.Name="{Binding Header,RelativeSource={RelativeSource Self},TargetNullValue=''}">
-                      <Expander.HeaderTemplate>
-                        <DataTemplate>
-                          <StackPanel Orientation="Horizontal" Height="28" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding}" Style="{StaticResource Primer.Muted}" VerticalAlignment="Center"/>
-                          </StackPanel>
-                        </DataTemplate>
-                      </Expander.HeaderTemplate>
-                    </Expander>
-                    <Button x:Name="CopyJson" Style="{StaticResource Primer.Button.Secondary.Small}" IsEnabled="False"
-                            Margin="6,0" AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"/>
-                    <Button x:Name="SaveClient" Content="{l:Tr Config.Write}" Style="{StaticResource Primer.Button.Primary.Small}"
-                            AutomationProperties.Name="{Binding Tag,RelativeSource={RelativeSource Self},TargetNullValue=''}"
-                            AutomationProperties.HelpText="{Binding Content,RelativeSource={RelativeSource Self}}" ToolTip="{l:Tr Config.BackupWrite}">
-                      <Button.ContentTemplate>
-                        <DataTemplate><TextBlock Text="{Binding Tag,RelativeSource={RelativeSource AncestorType=Button}}"/></DataTemplate>
-                      </Button.ContentTemplate>
-                    </Button>
-                  </StackPanel>
-                  <TextBlock x:Name="WriteTargets" Style="{StaticResource Primer.Muted}" FontSize="{DynamicResource Ui.FontSize.12_5}"
-                             VerticalAlignment="Center" TextWrapping="Wrap" TextTrimming="None" Margin="0,0,8,0"/>
-                </DockPanel>
-                <Border Style="{StaticResource Primer.CodeBlock}" Padding="16,12"
-                        Visibility="{Binding IsExpanded,ElementName=PreviewJson,Converter={StaticResource BoolToVisibility}}">
-                  <StackPanel>
-                    <DockPanel LastChildFill="False">
-                      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <Ellipse x:Name="DetectedDot" Width="6" Height="6" Margin="0,0,6,0"/>
-                        <TextBlock x:Name="DetectedCount" Focusable="True" ToolTip="{Binding ToolTip,ElementName=ClientSelection}" AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}"
-                                   FontSize="{DynamicResource Ui.FontSize.11_5}" Style="{StaticResource Primer.Muted.textFaint}" Cursor="Hand"/>
-                      </StackPanel>
-                      <Label x:Name="PreviewTargetLabel" Target="{Binding ElementName=PreviewTarget}" Content="{l:Tr Config.PreviewTarget}"
-                             Style="{StaticResource Primer.FormLabel}" VerticalAlignment="Center"/>
-                      <ComboBox x:Name="PreviewTarget" MinWidth="140" DisplayMemberPath="DisplayName" Margin="8,0,0,0"
-                                AutomationProperties.Name="{l:Tr Config.PreviewTarget}" AutomationProperties.LabeledBy="{Binding ElementName=PreviewTargetLabel}"/>
-                    </DockPanel>
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                      <TextBlock x:Name="JsonText" Style="{StaticResource Primer.Mono}" FontSize="{DynamicResource Ui.FontSize.12}"
-                               TextWrapping="NoWrap" TextTrimming="None" LineHeight="24" LineStackingStrategy="BlockLineHeight" Margin="0,8,0,0"/>
-                    </ScrollViewer>
-                  </StackPanel>
-                </Border>
-              </StackPanel>
-            </Border>
           </StackPanel>
-          <DockPanel x:Name="RemoteGuidance" Margin="2,12,0,0">
-            <StackPanel DockPanel.Dock="Right" Margin="16,0,0,0">
-              <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.ContainerTitle}" FontSize="{DynamicResource Ui.FontSize.12_5}"/>
-              <TextBlock x:Name="ClientSelection" Focusable="True" Cursor="Hand" Style="{StaticResource Primer.Muted}"
-                         AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}" Margin="0,2,0,0"/>
-            </StackPanel>
-            <StackPanel>
-              <TextBlock Text="{l:Tr Config.Write}" Style="{StaticResource Primer.ContainerTitle}" FontSize="{DynamicResource Ui.FontSize.12_5}"/>
-              <TextBlock x:Name="RelayNote" TextWrapping="Wrap" Style="{StaticResource Primer.Muted}" Margin="0,2,0,0"/>
-            </StackPanel>
-          </DockPanel>
         </StackPanel>
-      </Grid>
-    </ScrollViewer>
+      </ScrollViewer>
+      <Border x:Name="ClientActionsBand" Grid.Column="1" Style="{StaticResource Primer.ConfigurationSidebar}">
+        <DockPanel>
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <Button x:Name="CopyJson" DockPanel.Dock="Right" Content="{l:Tr Config.CopySnippet}" Style="{StaticResource Primer.Button.Secondary.Small}"
+                AutomationProperties.Name="{l:Tr Config.CopySnippet}"/>
+            <TextBlock Text="{l:Tr Config.LivePreview}" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
+          </DockPanel>
+          <Decorator x:Name="SidebarFooter" DockPanel.Dock="Bottom" Margin="0,12,0,0">
+            <StackPanel x:Name="WriteBar">
+              <TextBlock Text="{l:Tr Config.Write}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,0,4"/>
+              <TextBlock x:Name="RelayNote" Text="{l:Tr Config.RelayLabel}" Style="{StaticResource Primer.Muted}"
+                  TextTrimming="CharacterEllipsis" Margin="0,0,0,4"/>
+              <TextBlock Text="{l:Tr Config.WriteFooter}" TextWrapping="Wrap" Style="{StaticResource Primer.Muted}" Margin="0,0,0,8"/>
+              <Button x:Name="SaveClient" Content="{l:Tr Config.Write}" Style="{StaticResource Primer.Button.Primary.Medium}"
+                  AutomationProperties.Name="{Binding Tag,RelativeSource={RelativeSource Self},TargetNullValue=''}"
+                  AutomationProperties.HelpText="{Binding Content,RelativeSource={RelativeSource Self}}" ToolTip="{l:Tr Config.BackupWrite}">
+                <Button.ContentTemplate>
+                  <DataTemplate><TextBlock Text="{Binding Tag,RelativeSource={RelativeSource AncestorType=Button}}"/></DataTemplate>
+                </Button.ContentTemplate>
+              </Button>
+            </StackPanel>
+          </Decorator>
+          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+              <DockPanel Margin="0,0,0,8">
+                <Ellipse x:Name="TargetDot" DockPanel.Dock="Left" Width="6" Height="6" Margin="0,0,6,0"/>
+                <TextBlock x:Name="TargetEndpoint" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap"/>
+              </DockPanel>
+              <TextBlock x:Name="WriteTargets" Style="{StaticResource Primer.ContainerTitle}" TextWrapping="Wrap"/>
+              <ListBox x:Name="PreviewTarget" Style="{StaticResource Primer.List}" ItemContainerStyle="{StaticResource Primer.FileItem}"
+                  AutomationProperties.Name="{l:Tr Config.PreviewTarget}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="0,6,0,12">
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <Border Style="{StaticResource Primer.PreviewFile}" ToolTip="{Binding Path}">
+                      <StackPanel>
+                        <TextBlock Text="{Binding DisplayName}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding DisplayPath}" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"/>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <TextBlock x:Name="PreviewFormatLabel" Text="{Binding SelectedItem.Format,ElementName=PreviewTarget}" Style="{StaticResource Primer.Muted}"/>
+              <Border Style="{StaticResource Primer.CodeBlock}" Padding="12" Margin="0,6,0,8">
+                <TextBlock x:Name="JsonText" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap" TextTrimming="None"/>
+              </Border>
+              <TextBlock Text="{l:Tr Mcp.Clients}" Style="{StaticResource Primer.ContainerTitle}" Margin="0,0,0,4"/>
+              <TextBlock x:Name="ClientSelection" Focusable="True" Cursor="Hand" Style="{StaticResource Primer.Muted}"
+                  AutomationProperties.Name="{l:Tr Config.ClientInstructionsCaption}"/>
+            </StackPanel>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </Grid>
   </DockPanel>
 </UserControl>

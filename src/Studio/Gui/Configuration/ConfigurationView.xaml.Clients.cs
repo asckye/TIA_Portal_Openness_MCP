@@ -28,21 +28,22 @@ namespace TiaMcpConfigurator
             // Existing configuration consumers resolve these names on the shared configuration surface.
             // Register the controls themselves so selection, UI Automation and localization all use the same instances.
             foreach (var control in new FrameworkElement[] { Clients.ClientChoices, Clients.ClientSelection, Clients.SaveClient,
-                Clients.WriteTargets, Clients.ClientPane, Clients.ClientActionsBand, Clients.RelayNote })
+                Clients.ClientPane, Clients.ClientActionsBand, Clients.WriteTargets, Clients.RelayNote })
                 RegisterName(control.Name, control);
 
             var choices = Clients.ClientChoices;
             var cards = preview?.Clients ?? ClientProfiles.All();
+            var group = new System.Windows.Data.PropertyGroupDescription(nameof(ClientProfile.Detected));
+            group.GroupNames.Add(true);
+            group.GroupNames.Add(false);
             choices.ItemsSource = cards;
-            int firstDetected = cards.FindIndex(profile => profile.Detected);
-            choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
+            choices.Items.GroupDescriptions.Add(group);
+            choices.SelectedItem = cards.FirstOrDefault(profile => profile.Detected) ?? cards.FirstOrDefault();
             Append(Loc.Current.T("Config.ClientDetection",
                 string.Join(Loc.Current["Config.ClientListSeparator"], cards.Select(profile => profile.DisplayName + (profile.Detected ? " ✓" : " –")))));
 
-            Clients.PreviewTarget.ItemsSource = choices.SelectedItems;
             Clients.PreviewTarget.SelectionChanged += (_, _) => UpdateJsonPreview();
-            Clients.PreviewJson.Expanded += (_, _) => UpdateJsonPreview();
-            Clients.PreviewJson.Collapsed += (_, _) => UpdateJsonPreview();
+
             choices.SelectionChanged += (_, _) => UpdateInstructions();
             choices.PreviewMouseLeftButtonDown += OnClientPreviewMouse;
             choices.PreviewKeyDown += OnClientPreviewKey;
@@ -75,12 +76,10 @@ namespace TiaMcpConfigurator
                 if (!choices.SelectedItems.Contains(profile)) choices.SelectedItems.Add(profile);
         }
 
-        private string PreviewFormatName => (Clients.PreviewTarget.SelectedItem as ClientProfile)?.Client == "codex" ? "TOML" : "JSON";
+        private string PreviewFormatName => (Clients.PreviewTarget.SelectedItem as ClientProfile)?.Format ?? "";
 
         private void UpdateJsonPreview()
         {
-            Clients.PreviewJson.Header = Loc.Current.T(Clients.PreviewJson.IsExpanded ? "Config.HideFormat" : "Config.PreviewFormat", PreviewFormatName);
-            Clients.CopyJson.Content = Loc.Current.T("Config.CopyFormat", PreviewFormatName);
             Clients.CopyJson.IsEnabled = false;
             if (Clients.PreviewTarget.SelectedItem is not ClientProfile target)
             {
@@ -187,7 +186,7 @@ namespace TiaMcpConfigurator
             string address = Text("ServerAddress");
             bool http = remote && address.Length > 0;
             EndpointScheme.Text = http ? "http://" : "";
-            EndpointAddress.Text = http ? address + ":" + Text("ServerPort") : ServiceEndpoint;
+            EndpointAddress.Text = http ? EndpointHost(address) + ":" + Text("ServerPort") : ServiceEndpoint;
             EndpointPath.Text = http ? "/mcp" : "";
             Find<TextBlock>("LinkState").Text = Loc.Current[!remote ? "Config.Local" : running ? "Config.Running" : "Config.Idle"];
             ServiceStateChip.Tag = !remote || running ? FeatureTone.Success : FeatureTone.Muted;
@@ -200,6 +199,10 @@ namespace TiaMcpConfigurator
             string statusBrush = remote && !running ? "Primer.textFaint" : "Primer.ok";
             Clients.TargetDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, statusBrush);
             Clients.TargetEndpoint.Text = remote ? ServiceEndpoint : "STDIO · TIA " + release.DisplayName;
+            CopyEndpoint.IsEnabled = http && System.Net.IPAddress.TryParse(address, out var ip)
+                && ip.ToString().Equals(address, StringComparison.OrdinalIgnoreCase)
+                && int.TryParse(Text("ServerPort"), out int port) && port is > 0 and <= 65535;
+            UpdateStdioCommand();
             UpdateJsonPreview();
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
@@ -214,8 +217,12 @@ namespace TiaMcpConfigurator
             Clients.SaveClient.Tag = selected.Count == 0 ? Loc.Current["Config.SelectForWrite"] : Loc.Current.T("Config.WriteCount", selected.Count);
             Clients.SelectDetected.Content = Loc.Current.T("Config.SelectDetected", detected);
             Clients.SelectDetected.IsEnabled = detected > 0;
-            if (Clients.PreviewTarget.SelectedIndex < 0 && selected.Count > 0) Clients.PreviewTarget.SelectedIndex = 0;
-            Clients.WriteTargets.Text = selected.Count == 0 ? Loc.Current["Config.EmptySelection"] : Loc.Current.T("Config.SelectionBackup", selected.Count);
+            var previewPath = (Clients.PreviewTarget.SelectedItem as ClientProfile)?.Path;
+            var files = selected.DistinctBy(profile => profile.Path, StringComparer.OrdinalIgnoreCase).ToList();
+            Clients.PreviewTarget.ItemsSource = files;
+            Clients.PreviewTarget.SelectedItem = files.FirstOrDefault(profile => StringComparer.OrdinalIgnoreCase.Equals(profile.Path, previewPath))
+                ?? files.FirstOrDefault();
+            Clients.WriteTargets.Text = selected.Count == 0 ? Loc.Current["Config.EmptySelection"] : Loc.Current.T("Config.TargetFileCount", files.Count);
             Clients.WriteTargets.ToolTip = Loc.Current["Mcp.WillWrite"] + "\n" + string.Join("\n", selected.Select(x => x.DisplayName + " → " + x.Path));
             clientInstructions = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
                 string
@@ -315,7 +322,10 @@ namespace TiaMcpConfigurator
             {
                 string ip = Text("ServerAddress"); ReadEndpoint(out int port);
                 SetBusy(true); SetStatus("Config.Testing");
-                string result = await Task.Run(() => ConfigCore.TestRemote(ip, port));
+                string metrics = "";
+                string result;
+                try { result = await Task.Run(() => ConfigCore.TestRemote(ip, port, value => metrics = value)); }
+                finally { ProbeMetrics.Text = metrics; }
                 lastTestResult = result; lastTestFailed = false; UpdateLastTest();
                 Append(result);
                 Notify(ToastKind.Success, LocalizedText.Literal(Loc.Current["Config.ConnectionOk"] + " · " + result));

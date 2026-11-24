@@ -40,6 +40,7 @@ namespace TiaMcpConfigurator
         internal void SetDetectionEvidence(IReadOnlyList<LocalizedText> found) { detectionEvidence = found; }
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e) { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null)); }
+        public string Format => Client == "codex" ? "TOML" : "JSON";
         public string DisplayName => Id switch
         {
             "codex" => "Codex CLI",

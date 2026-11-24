@@ -6,12 +6,29 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using TiaMcpConfigurator;
+using TiaOpenness.Gui.Controls;
 
 namespace TiaOpenness.Gui.Views;
 
 public partial class ClientsView : UserControl
 {
-    public ClientsView() => InitializeComponent();
+    public ClientsView()
+    {
+        InitializeComponent();
+        ClientLayout.LayoutUpdated += UpdateFooterPlacement;
+    }
+
+    private void UpdateFooterPlacement(object? sender, EventArgs e)
+    {
+        bool stacked = ResponsiveLayout.IsStacked(ClientLayout);
+        var destination = stacked ? ViewportFooter : SidebarFooter;
+        if (destination.Child == WriteBar) return;
+        var previous = (Decorator)WriteBar.Parent;
+        previous.Child = null;
+        previous.Visibility = Visibility.Collapsed;
+        destination.Child = WriteBar;
+        destination.Visibility = Visibility.Visible;
+    }
 
     public static readonly DependencyProperty MonogramProperty = DependencyProperty.RegisterAttached(
         "Monogram", typeof(ClientProfile), typeof(ClientsView), new PropertyMetadata(null, OnMonogramChanged));
@@ -56,7 +73,7 @@ public sealed class ClientChoiceList : ListBox
     protected override void PrepareContainerForItemOverride(DependencyObject element, object item)
     {
         base.PrepareContainerForItemOverride(element, item);
-        var row = (ListBoxItem)element;
+        if (element is not ListBoxItem row) return;
         row.Margin = new Thickness(5);
         TiaOpenness.Gui.Controls.ContrastSelection.SetActive(row, false);
     }
@@ -65,7 +82,7 @@ public sealed class ClientChoiceList : ListBox
 public sealed class ClientTileColumnsConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
-        value is double width ? width switch { < 570 => 1, < 850 => 2, _ => 3 } : 1;
+        value is double width && width >= 525 ? 2 : 1;
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
 }

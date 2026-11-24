@@ -89,7 +89,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                         "VersionControl" => ["Pages.PreviewSync", "Pages.RunSync"],
                         "Mcp" => ["Pages.SaveBoth"],
                         "Audit" => ["Audit.Verify"],
-                        "Environment" => ["Env.Recheck", "Env.DiagnosticsLink"],
+                        "Environment" => ["Env.Recheck", "Env.ExportRedacted"],
                         "Log" => ["Log.StorageLink", "Pages.ClearLog", "Env.Generate"],
                         "Settings" => ["Audit.OpenFolder"],
                         _ => [],

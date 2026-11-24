@@ -30,7 +30,10 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
         string? invoked = null;
         var service = new EnvironmentCheckService(() => fixture.Context, Sources, path =>
         { invoked = path; EnvironmentCheckService.RequireDoctorSuccess(2); });
+        Assert.Null(service.LastChecked);
+        var beforeCheck = DateTimeOffset.Now;
         service.Recheck(); await service.Completion;
+        Assert.InRange(service.LastChecked!.Value, beforeCheck, DateTimeOffset.Now);
         service.Fix("membership"); await service.Completion;
         Assert.Equal(host, invoked);
         Assert.Equal("FixFailed", service.Findings.Single(f => f.Id == "membership").Result);

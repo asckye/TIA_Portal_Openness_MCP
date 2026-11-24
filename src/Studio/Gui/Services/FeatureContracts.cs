@@ -93,6 +93,7 @@ public sealed record EnvironmentGroup(LocalizedText Name, IReadOnlyList<Environm
 
 public interface IEnvironmentCheckService : INotifyPropertyChanged
 {
+    public DateTimeOffset? LastChecked => null;
     public IReadOnlyList<EnvironmentGroup> Groups { get; }
     public IReadOnlyList<string> LogTail { get; }
     public LocalizedText Recheck();

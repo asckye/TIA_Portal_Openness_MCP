@@ -135,9 +135,9 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 AssertCenteredColumn(forms.ConnectionForms, window.ProjectOverview, 820);
                 window.Navigate("Mcp"); host.UpdateLayout();
                 var config = window.Configuration!;
-                AssertCenteredColumn(config.McpColumn, Viewport(config.Panes), 880);
+                RemoteConfigurationTests.CheckPageColumns(config.Panes, config.ActivityCard, host, width, 348);
                 window.Navigate("Clients"); host.UpdateLayout();
-                AssertCenteredColumn(config.Clients.ClientsColumn, Viewport(config.Clients.ClientsScroll), 860);
+                RemoteConfigurationTests.CheckPageColumns(config.Clients.ClientsScroll, config.Clients.ClientActionsBand, host, width, 392);
                 window.Navigate("Engineering");
                 var attachedProject = client.AttachedProject;
                 client.AttachedProject = null;

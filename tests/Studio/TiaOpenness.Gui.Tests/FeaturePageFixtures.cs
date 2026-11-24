@@ -77,6 +77,7 @@ internal static class FeaturePageFixtures
 
     internal sealed class Environment : ObservableObject, IEnvironmentCheckService
     {
+        public DateTimeOffset? LastChecked { get; init; }
         private static EnvironmentCheck Row(string id, CheckStatus status, LocalizedText name, string en, string zh,
             string fixEn = "", string fixZh = "", string detailEn = "Offline fixture details.", string detailZh = "离线夹具详情。")
             => new(id, status, name, Text(en, zh), Text(fixEn, fixZh), Text(detailEn, detailZh)) { CanRepair = id == "membership" };

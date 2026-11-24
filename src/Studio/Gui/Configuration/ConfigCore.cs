@@ -213,22 +213,46 @@ namespace TiaMcpConfigurator
             }
         }
 
-        private static Dictionary<string, object> GetJson(string url)
+        internal delegate Dictionary<string, object> JsonProbe(string url, ref HttpStatusCode? status);
+
+        private static Dictionary<string, object> GetJson(string url, ref HttpStatusCode? status)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Proxy = null;
             request.Timeout = 8000;
             request.ReadWriteTimeout = 8000;
-            using (var response = request.GetResponse())
+            using (var response = (HttpWebResponse)request.GetResponse())
             using (var reader = new StreamReader(response.GetResponseStream()))
+            {
+                status = response.StatusCode;
                 return Json().DeserializeObject(reader.ReadToEnd()) as Dictionary<string, object>;
+            }
         }
 
-        public static string TestRemote(string address, int port)
+        public static string TestRemote(string address, int port) => TestRemote(address, port, null);
+
+        internal static string TestRemote(string address, int port, Action<string>? reportMetrics, JsonProbe? probe = null)
         {
+            probe ??= GetJson;
             string prefix = RelayPrefix(address, port);
-            var health = GetJson(prefix + "mcp/health");
-            var ready = GetJson(prefix + "mcp/ready");
+            var timer = Stopwatch.StartNew();
+            HttpStatusCode? status = null;
+            Dictionary<string, object> health, ready;
+            try
+            {
+                health = probe(prefix + "mcp/health", ref status);
+                status = null;
+                ready = probe(prefix + "mcp/ready", ref status);
+            }
+            catch (WebException ex) when (ex.Response is HttpWebResponse response)
+            {
+                status = response.StatusCode;
+                throw;
+            }
+            finally
+            {
+                reportMetrics?.Invoke(status.HasValue ? $"{(int)status.Value} {status} · {timer.ElapsedMilliseconds} ms" : $"{timer.ElapsedMilliseconds} ms");
+            }
             object isReady;
             if (ready == null || !ready.TryGetValue("mcpHostReady", out isReady) || !(isReady is bool) || !(bool)isReady)
                 throw new InvalidOperationException(Loc.Current["Config.RemoteNotReady"]);

@@ -21,7 +21,7 @@ public enum ToastKind { Success, Warning, Error, Info }
 public readonly record struct FeatureFeedback(LocalizedText Message, ToastKind Kind = ToastKind.Success, string Source = "feature",
     Action? Action = null, LocalizedText ActionLabel = default, bool Sticky = false);
 
-public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
+public sealed partial class FeaturePagesViewModel : ObservableObject, IDisposable
 {
     private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
     private readonly INotifyPropertyChanged[] _sources;
@@ -138,7 +138,11 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         }
     }
     public string Search { get => _search; set { if (Set(ref _search, value)) RefreshCalls(); } }
-    public string Release { get => _release; set { if (Set(ref _release, value)) { RefreshCalls(); Raise(nameof(ReleaseFilter)); } } }
+    public string Release
+    {
+        get => _release;
+        set { if (Set(ref _release, value)) { RefreshCalls(); Notify(nameof(ReleaseFilter), nameof(EnvironmentSnapshot)); } }
+    }
     public string ReleaseFilter => Loc.Current.T("Calls.ReleaseOnly", TiaMcp.Versioning.TiaVersionCatalog.Get(Release).DisplayName);
     public bool FollowLatest => _pausedCalls == null;
     public string FollowLabel => Loc.Current[FollowLatest ? "Calls.Follow" : "Calls.Paused"];
@@ -397,6 +401,7 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
         string? id = _selectedEnvironment?.Check.Id;
         _selectedEnvironment = _groups.SelectMany(g => g.Rows).FirstOrDefault(r => r.Check.Id == id)
             ?? AttentionChecks.FirstOrDefault(row => row.Warning) ?? AttentionChecks.FirstOrDefault() ?? PassedChecks.FirstOrDefault();
+        Notify(nameof(EnvironmentSnapshot), nameof(LastEnvironmentCheck));
         Notify(nameof(FailedChecks), nameof(PendingChecks), nameof(FailedHeader), nameof(PassedHeader), nameof(PendingHeader));
         Notify(nameof(HasEnvironmentStats), nameof(EnvironmentStats), nameof(EnvironmentRows), nameof(AttentionChecks), nameof(PassedChecks),
             nameof(SelectedEnvironment));
