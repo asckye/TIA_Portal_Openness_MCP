@@ -93,6 +93,9 @@ namespace TiaMcp.Logic.Exchange
             => section + "\0" + string.Join("/", path.Split('/').Select(s => ObjectPathEncoding.EncodeSegment(ObjectPathEncoding.DecodeSegment(s))));
 
         public static DataBlockStartValueEdit FromTable(XDocument template, TableData table)
+            => FromTable(template, table, PlcDocumentEditing.CreateMemberLookup);
+
+        internal static DataBlockStartValueEdit FromTable(XDocument template, TableData table, Func<XDocument, PlcDocumentEditing.MemberLookup> buildLookup)
         {
             TableFile.Validate(table);
             var original = ToTable(template);
@@ -105,6 +108,7 @@ namespace TiaMcp.Logic.Exchange
                 row => (string)row!["reason"]!, StringComparer.Ordinal);
             var seen = new HashSet<string>(StringComparer.Ordinal);
             var document = new XDocument(template);
+            var members = buildLookup(document);
             var changes = new JsonArray();
             int updated = 0, unchanged = 0;
             for (int index = 0; index < table.Rows.Count; index++)
@@ -131,8 +135,8 @@ namespace TiaMcp.Logic.Exchange
                             + "verified import would mismatch. Keep an existing explicit default unchanged.");
                 }
                 catch (ArgumentException error) { throw TableFile.Error("table", sourceRow, value + 1, error.Message); }
-                PlcDocumentEditing.SetMemberStartValue(document, before[0], before[1].Split('/').Select(ObjectPathEncoding.DecodeSegment).ToArray(),
-                    before[3], normalized);
+                var member = members.FindMember(before[0], before[1].Split('/').Select(ObjectPathEncoding.DecodeSegment).ToArray());
+                PlcDocumentEditing.SetMemberStartValue(member, before[3], normalized);
                 updated++;
                 if (changes.Count < 50) changes.Add(new JsonObject { ["section"] = before[0], ["memberPath"] = before[1],
                     ["old"] = before[3], ["new"] = normalized });

@@ -59,7 +59,9 @@ namespace TiaMcpServer.ModelContextProtocol
             new[] { "LibraryType", "LibraryTypeGuid", "LibraryTypeVersionGuid" }.Contains(e.Name.LocalName) && !string.IsNullOrWhiteSpace(e.Value));
 
         // Preserve namespaces, program strings and wiring while normalizing identifiers and AttributeList ordering.
-        public static string Canonical(XDocument document)
+        public static string Canonical(XDocument document) => Canonical(document, null);
+
+        public static string Canonical(XDocument document, XDocument? verificationPlan)
         {
             var block = new XElement(Block(document));
             // TIA emits schema order, while PrepareImport appends omitted attributes. Sort before assigning object IDs.
@@ -74,13 +76,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 int child = 0;
                 foreach (var node in nodes) list.Add(node is XElement ? sorted[child++] : node);
             }
-            var ids = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (var e in block.DescendantsAndSelf())
-                if (e.Attribute("ID") is XAttribute id)
-                {
-                    if (ids.ContainsKey(id.Value)) throw new ArgumentException("Duplicate object ID.");
-                    ids.Add(id.Value, "o" + ids.Count);
-                }
+            var ids = ObjectIds(block);
+            // Validate all IDs first. Removing TIA-added objects can shift the canonical IDs of retained objects.
+            if (verificationPlan != null && RemoveAddedBlockText(block, Block(verificationPlan))) ids = ObjectIds(block);
             foreach (var a in block.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName == "ID" || a.Name.LocalName == "RefId"))
                 if (ids.TryGetValue(a.Value, out var replacement)) a.Value = replacement;
             foreach (var network in block.Descendants().Where(e => e.Name.LocalName == "SW.Blocks.CompileUnit"))
@@ -112,6 +110,60 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return block.ToString(SaveOptions.DisableFormatting);
         }
+
+        private static Dictionary<string, string> ObjectIds(XElement block)
+        {
+            var ids = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var e in block.DescendantsAndSelf())
+                if (e.Attribute("ID") is XAttribute id)
+                {
+                    if (ids.ContainsKey(id.Value)) throw new ArgumentException("Duplicate object ID.");
+                    ids.Add(id.Value, "o" + ids.Count);
+                }
+            return ids;
+        }
+
+        private static bool RemoveAddedBlockText(XElement block, XElement plan)
+        {
+            var list = block.Element("ObjectList");
+            if (list == null || block.Elements("ObjectList").Skip(1).Any()) return false;
+            bool changed = false;
+            foreach (string field in new[] { "Title", "Comment" })
+            {
+                bool HasField(XElement text) => (string?)text.Attribute("CompositionName") == field;
+                if (plan.Elements("ObjectList").Elements("MultilingualText").Any(HasField)) continue;
+                var added = list.Elements("MultilingualText").Where(HasField).Take(2).ToArray();
+                if (added.Length == 1 && EmptyBlockText(added[0])) { added[0].Remove(); changed = true; }
+            }
+            if (!list.HasAttributes && !list.HasElements && OnlyChildElements(list)) { list.Remove(); changed = true; }
+            return changed;
+        }
+
+        private static bool OnlyChildElements(XElement element) =>
+            element.Nodes().All(n => n is XElement || n is XText t && string.IsNullOrWhiteSpace(t.Value));
+
+        private static bool OnlyObjectAttributes(XElement element) => element.Attributes().All(a => a.Name == "ID" || a.Name == "CompositionName");
+
+        // Recognize the block-level multilingual wrapper and its culture records. Preserve extensions and all nonempty Text.
+        private static bool EmptyBlockText(XElement text)
+        {
+            if (!OnlyObjectAttributes(text) || !OnlyChildElements(text)) return false;
+            var list = text.Element("ObjectList");
+            if (list == null) return !text.HasElements;
+            return text.Elements().Count() == 1 && !list.HasAttributes && OnlyChildElements(list) && list.Elements().All(EmptyTextItem);
+        }
+
+        private static bool EmptyTextItem(XElement item)
+        {
+            if (item.Name != "MultilingualTextItem" || !OnlyObjectAttributes(item) || !OnlyChildElements(item)
+                || (string?)item.Attribute("CompositionName") is not (null or "Items")) return false;
+            var attributes = item.Element("AttributeList");
+            if (attributes == null) return !item.HasElements;
+            if (item.Elements().Count() != 1 || attributes.HasAttributes || !OnlyChildElements(attributes)) return false;
+            return attributes.Elements().All(field => !field.HasAttributes && (field.Name == "Culture" && field.Nodes().All(n => n is XText)
+                || field.Name == "Text" && field.Nodes().All(n => n is XText t && t.Value.Length == 0)));
+        }
+
         private static IEnumerable<XElement> DbMembers(XElement block)
         {
             if (block.Name.LocalName != "SW.Blocks.GlobalDB") yield break;
@@ -265,7 +317,15 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 string path = MemberLocation(node);
                 if (prefix.Length > 0) path = path.Length == 0 ? prefix : prefix + "/" + path;
-                if (path.Length == 0) path = node.Name.LocalName;
+                if (path.Length == 0)
+                {
+                    var first = node.Name == "ObjectList" ? node.Elements().FirstOrDefault() : node;
+                    var text = first?.AncestorsAndSelf("MultilingualText").FirstOrDefault();
+                    if (text?.Parent?.Name == "ObjectList" && text.Parent.Parent?.Parent == null
+                        && (string?)text.Attribute("CompositionName") is "Comment" or "Title")
+                        return (string?)text.Attribute("CompositionName") + ": blockAttribute";
+                    path = node.Name.LocalName;
+                }
                 return (path.Length <= 200 ? path : "..." + path.Substring(path.Length - 197)) + ": " + aspect;
             }
             while (true)
@@ -329,28 +389,39 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var members = new JsonArray();
             var interfaceElement = Child(Block(d), "AttributeList").Elements().SingleOrDefault(e => e.Name.LocalName == "Interface");
+            bool libraryBound = LibraryBound(d);
             if (interfaceElement != null)
+            {
+                var targets = libraryBound ? null : new MemberLookup(interfaceElement);
                 foreach (var member in interfaceElement.Descendants().Where(e => e.Name.LocalName == "Member"))
                 {
-                    var section = member.Ancestors().FirstOrDefault(e => e.Name.LocalName == "Section");
-                    var path = string
-                        .Join("/", member.AncestorsAndSelf().Reverse().Where(e => e.Name.LocalName == "Member")
-                            .Select(e => ObjectPathEncoding.EncodeSegment((string?)e.Attribute("Name") ?? "")));
+                    string? section = (string?)MemberSection(member)?.Attribute("Name");
+                    string path = EncodedMemberPath(MemberNames(member));
+                    if (targets != null && (section == null || targets.Lookup(section, path) != member || ReadOnlyMember(member))) continue;
+                    var start = member.Elements().SingleOrDefault(e => e.Name.LocalName == "StartValue");
+                    if (targets != null)
+                    {
+                        if (ComplexMember(member) || start?.HasElements == true) start = null;
+                        if (start == null && member.Elements().Any(e => e.Name.LocalName == "Comment"
+                            && string.Equals((string?)e.Attribute("Informative"), "true", StringComparison.OrdinalIgnoreCase))) continue;
+                    }
                     var comments = new JsonObject();
                     foreach (var text in member.Elements().Where(e => e.Name.LocalName == "Comment")
                             .Elements().Where(e => e.Name.LocalName == "MultiLanguageText"))
                         comments[(string)text.Attribute("Lang")!] = text.Value;
-                    members.Add(new JsonObject { ["section"] = (string?)section?.Attribute("Name"), ["memberPath"] = path,
-                        ["datatype"] = (string?)member.Attribute("Datatype"), ["startValue"] = member.Elements()
-                            .SingleOrDefault(e => e.Name.LocalName == "StartValue")?.Value,
+                    members.Add(new JsonObject { ["section"] = section, ["memberPath"] = path,
+                        ["datatype"] = (string?)member.Attribute("Datatype"), ["startValue"] = start?.Value,
                         ["attributeXml"] = member.Elements().SingleOrDefault(e => e.Name.LocalName == "AttributeList")?.ToString(SaveOptions.DisableFormatting),
                         ["comments"] = comments
                         });
                 }
-            return new JsonObject { ["name"] = Name(d), ["kind"] = Block(d).Name.LocalName, ["libraryBound"] = LibraryBound(d),
+            }
+            return new JsonObject { ["name"] = Name(d), ["kind"] = Block(d).Name.LocalName, ["libraryBound"] = libraryBound,
                 ["documentFingerprint"] = HashText(Canonical(d)), ["networks"] = rows, ["members"] = members, ["blockTextTargets"] = TextTargets(Block(d)),
-                ["supportedPatchActions"] = new JsonArray("setBlockText", "setNetworkText", "setMemberStartValue", "setMemberComment"),
-                ["nativeImportValidated"] = false, ["scope"] =
+                ["supportedPatchActions"] = libraryBound ? new JsonArray()
+                    : new JsonArray("setBlockText", "setNetworkText", "setMemberStartValue", "setMemberComment"),
+                ["nativeImportValidated"] = false, ["scope"] = libraryBound ? "Library-connected members are read-only. Use the library update workflow." :
+                    "setMemberStartValue requires a non-null startValue. Members with null startValue support comment edits only. " +
                     "Exported structure only; does not establish target CPU compatibility, consistency or native import safety." };
         }
         private static JsonArray TextTargets(XElement owner)
@@ -375,6 +446,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (changes.Count < 1 || changes.Count > 100) throw new ArgumentException("Supply 1..100 changes.");
             var used = new HashSet<(XElement Target, string Culture)>();
             HashSet<string>? cultures = null;
+            MemberLookup? members = null;
+            XElement SelectMember(string section, string[] path) =>
+                (members ??= new MemberLookup(Child(Child(Block(d), "AttributeList"), "Interface"))).FindMember(section, path);
             foreach (var node in changes)
             {
                 var c = node as JsonObject ?? throw new ArgumentException("Each change must be an object.");
@@ -388,7 +462,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (c.Any(p => !allowed.Contains(p.Key))) throw new ArgumentException("Unknown patch property.");
                 if (action == "setMemberComment")
                 {
-                    var member = FindMember(d, Get("section"), MemberPath(Get("memberPath")));
+                    var member = SelectMember(Get("section"), MemberPath(Get("memberPath")));
                     var culture = Get("culture");
                     if (!Regex.IsMatch(culture, @"\A[a-zA-Z]{2}(-[a-zA-Z]{4})?-[a-zA-Z]{2}\z"))
                         throw new ArgumentException("culture must be a culture name such as zh-CN.");
@@ -408,13 +482,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (action == "setMemberStartValue")
                 {
                     var section = Get("section"); var path = MemberPath(Get("memberPath"));
-                    var current = FindMember(d, section, path);
-                    if (current.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections"))
+                    var current = SelectMember(section, path);
+                    if (ComplexMember(current))
                         throw new ArgumentException("Select a scalar member.");
                     target = current.Elements().SingleOrDefault(e => e.Name.LocalName == "StartValue")
                         ?? throw new InvalidOperationException("Selected member has no explicit StartValue.");
                     if (!used.Add((target, ""))) throw new InvalidOperationException("Target is complex, repeated or its old value changed.");
-                    SetMemberStartValue(d, section, path, Get("expectedValue"), Get("value"));
+                    SetMemberStartValue(current, Get("expectedValue"), Get("value"));
                     continue;
                 }
                 else
@@ -443,25 +517,61 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             return d.ToString();
         }
+        private static XElement? MemberSection(XElement member) => member.Ancestors().FirstOrDefault(e => e.Name.LocalName == "Section");
+
+        private static IEnumerable<string> MemberNames(XElement element) => element.AncestorsAndSelf().Reverse()
+            .Where(e => e.Name.LocalName == "Member").Select(e => (string?)e.Attribute("Name") ?? "");
+
         private static string[] MemberPath(string path) => Array.ConvertAll(path.Split('/'), ObjectPathEncoding.DecodeSegment);
-        private static XElement FindMember(XDocument d, string section, string[] path)
+        private static string EncodedMemberPath(IEnumerable<string> names) => string.Join("/", names.Select(ObjectPathEncoding.EncodeSegment));
+
+        private static bool ReadOnlyMember(XElement member) => member.AncestorsAndSelf().Any(e => e.Attributes()
+            .Any(a => (a.Name.LocalName == "ReadOnly" || a.Name.LocalName == "Informative") && a.Value.Equals("true", StringComparison.OrdinalIgnoreCase)));
+
+        private static bool ComplexMember(XElement member) => member.Elements().Any(e => e.Name.LocalName is "Member" or "Sections");
+
+        internal sealed class MemberLookup
         {
-            var sections = Child(Child(Block(d), "AttributeList"), "Interface").Descendants()
-                .Where(e => e.Name.LocalName == "Section" && (string?)e.Attribute("Name") == section).ToArray();
-            if (sections.Length != 1) throw new ArgumentException("Section is absent or ambiguous.");
-            var current = sections[0];
-            foreach (var segment in path)
+            private readonly ILookup<string, XElement> sections;
+            private readonly Dictionary<(string Section, string Path), XElement?> targets = new();
+
+            internal MemberLookup(XElement face)
             {
-                var matches = current.Elements().Where(e => e.Name.LocalName == "Member" && (string?)e.Attribute("Name") == segment).ToArray();
-                if (matches.Length != 1) throw new ArgumentException("Member path is absent or ambiguous: " + segment);
-                current = matches[0];
+                sections = face.Descendants().Where(e => e.Name.LocalName == "Section").ToLookup(e => (string?)e.Attribute("Name") ?? "");
+                foreach (var member in face.Descendants().Where(e => e.Name.LocalName == "Member"))
+                {
+                    var section = MemberSection(member);
+                    if (section?.Attribute("Name") is not XAttribute name) continue;
+                    var names = MemberNames(member).ToArray();
+                    Add(name.Value, EncodedMemberPath(names), member);
+                    // Legacy paths omit the enclosing instance of a unique section.
+                    if (sections[name.Value].Count() == 1)
+                    {
+                        int prefix = MemberNames(section).Count();
+                        if (prefix != 0) Add(name.Value, EncodedMemberPath(names.Skip(prefix)), member);
+                    }
+                }
             }
-            if (current.AncestorsAndSelf().Any(e => e.Attributes()
-                    .Any(a => (a.Name.LocalName == "ReadOnly" || a.Name.LocalName == "Informative")
-                        && a.Value.Equals("true", StringComparison.OrdinalIgnoreCase))))
-                throw new ArgumentException("Read-only/informative member cannot be edited.");
-            return current;
+
+            private void Add(string section, string path, XElement member)
+            {
+                var key = (section, path);
+                targets[key] = targets.TryGetValue(key, out var existing) && existing != member ? null : member;
+            }
+
+            internal XElement? Lookup(string section, string path) => targets.TryGetValue((section, path), out var member) ? member : null;
+
+            internal XElement FindMember(string section, string[] path)
+            {
+                if (!sections.Contains(section)) throw new ArgumentException("Section is absent or ambiguous.");
+                string selector = EncodedMemberPath(path);
+                var member = Lookup(section, selector) ?? throw new ArgumentException("Member path is absent or ambiguous: " + selector
+                    + ". Use an unambiguous section and memberPath from GetPlcBlockEditCapabilities.");
+                if (ReadOnlyMember(member)) throw new ArgumentException("Read-only/informative member cannot be edited.");
+                return member;
+            }
         }
+
         public static bool ElementaryMember(XElement member)
         {
             string type = (string?)member.Attribute("Datatype") ?? "";
@@ -470,10 +580,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 "Real", "LReal", "Char", "WChar", "String", "WString", "Time", "LTime", "S5Time", "Date", "Time_Of_Day", "LTime_Of_Day",
                 "Date_And_Time", "LDT" }.Contains(type, StringComparer.OrdinalIgnoreCase);
         }
+        internal static MemberLookup CreateMemberLookup(XDocument document) => new MemberLookup(Child(Child(Block(document), "AttributeList"), "Interface"));
+
         public static void SetMemberStartValue(XDocument document, string section, string[] path, string expected, string value)
+            => SetMemberStartValue(CreateMemberLookup(document).FindMember(section, path), expected, value);
+
+        internal static void SetMemberStartValue(XElement member, string expected, string value)
         {
-            var member = FindMember(document, section, path);
-            if (member.Elements().Any(e => e.Name.LocalName == "Member" || e.Name.LocalName == "Sections"))
+            if (ComplexMember(member))
                 throw new ArgumentException("Select a scalar member.");
             var target = member.Elements().SingleOrDefault(e => e.Name.LocalName == "StartValue");
             if (target?.HasElements == true || (target?.Value ?? "") != expected)

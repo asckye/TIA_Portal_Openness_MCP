@@ -185,14 +185,15 @@ namespace TiaMcp.Logic.V4.Inputs
         }
         internal Error ToError(string parameter, string? form = null) => limit.HasValue
             ? new Error("Input exceeds its declared budget.", new LimitExceededDetails(parameter, limit, actual))
-            : new Error(diagnostic ?? "Input does not satisfy the declared contract.", new InvalidArgumentDetails(parameter, allowed,
+            : new Error(diagnostic ?? InputGuard.ContractMessage, new InvalidArgumentDetails(parameter, allowed,
                 pointers?.Select(p => InvalidArgumentDetails.Pointer(parameter) + p).ToArray(), expected ?? form));
     }
 
     internal static class InputGuard
     {
+        internal const string ContractMessage = "Input does not satisfy the declared contract.";
         internal static Error Invalid(string parameter, string[]? allowed = null, string? expected = null) =>
-            new Error("Input does not satisfy the declared contract.",
+            new Error(ContractMessage,
                 new InvalidArgumentDetails(parameter, allowed ?? Array.Empty<string>(), expected: expected));
         internal static void Require(bool condition, string[]? allowed = null)
         { if (!condition) throw new InputRejectionException(allowed); }

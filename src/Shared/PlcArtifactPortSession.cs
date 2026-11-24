@@ -33,10 +33,10 @@ namespace TiaMcpServer.Siemens.Services
                         DryRun = action == "softwarePath"
                 }, beforeDispatch);
         // overwrite=false refuses an existing object of the same name before the native import (API audit 2026-10-19 F25).
-        public bool ImportBlock(string path, string group, string file, bool overwrite) =>
-            (bool?)Invoke("importBlock", path, group, file, overwrite)["Found"] == true;
-        public bool ImportType(string path, string group, string file, bool overwrite) =>
-            (bool?)Invoke("importType", path, group, file, overwrite)["Found"] == true;
+        public bool ImportBlock(string path, string group, string file, bool overwrite, Action? beforeDispatch = null) =>
+            (bool?)Invoke("importBlock", path, group, file, overwrite, beforeDispatch)["Found"] == true;
+        public bool ImportType(string path, string group, string file, bool overwrite, Action? beforeDispatch = null) =>
+            (bool?)Invoke("importType", path, group, file, overwrite, beforeDispatch)["Found"] == true;
         public bool ImportPlcTagTable(string path, string group, string file, bool overwrite, Action? beforeDispatch = null)
             => (bool?)Invoke("importTagTable", path, group, file, overwrite, beforeDispatch)["Found"] == true;
         public string SoftwarePath(string path) => (string?)Invoke("softwarePath", path)["Message"] ?? "";

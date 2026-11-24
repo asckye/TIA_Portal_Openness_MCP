@@ -112,7 +112,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static CallToolResult Failure(string tool, Exception error, bool writes, bool current)
         {
-            var cause = error.InnerException ?? error;
+            var buildEvidence = error.Data[PlcBuildTools.BeforeImportEvidence] as JsonObject;
+            if (buildEvidence != null && error is OperationCanceledException)
+                return Result(tool, buildEvidence, new Error("Request cancelled before import.", new CancelledDetails("before-import")),
+                    Outcome.RejectedBeforeOperation, Completeness.None, current);
+            var cause = buildEvidence != null ? error : error.InnerException ?? error;
             if (cause is TiaMcp.Logic.ModelContextProtocol.DecoderRuntimeException)
                 return Result(tool, null,
                         new Error(cause.Message, new IoFailedDetails("decoder-runtime", TiaMcp.Logic.ModelContextProtocol.DecoderRuntime.RelativeDirectory)),
@@ -133,7 +137,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (HostFailurePolicy.Precondition(error) is TiaMcp.Adapters.Contracts.AdapterPreconditionException precondition)
             {
                 var evidence = HostBehavior.FailureEvidence(precondition.GetType().Name, precondition.Message);
-                return Result(tool, null, HostBehavior.FailureError(precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition,
+                return Result(tool, buildEvidence, HostBehavior.FailureError(precondition.IsArgument ? HostFailureKind.Argument : HostFailureKind.Precondition,
                     precondition.ParamName, evidence, HostBehavior.AdmissionDiagnostic(error), condition: precondition.Condition,
                     resolveMissingTarget: field => McpServer.MissingTargetDetails(tool, field)),
                     Outcome.RejectedBeforeOperation, Completeness.None, current);

@@ -571,6 +571,14 @@ internal static class FoundationV4Result
         }
         var success = !isError
             && (Flag(data, "success") ?? Flag(data, "ok") ?? Flag(data, "valid") ?? Flag(data["checks"] as JsonObject, "passed") ?? name == "GetToolUsage");
+        if (name == "BuildPlcSymbolManifestFromPath" && !success && data["errors"] is JsonArray { Count: > 0 } findings)
+        {
+            string? code = (string?)findings[0]?["code"];
+            string parameter = code is "invalid-input-root" or "absolute-input-root-required" ? "inputRoot"
+                : code == "input-origin-required" ? "expectedOrigin" : "files";
+            return Wire(release, name, id, data, Outcome.RejectedBeforeOperation, Execution.NotStarted, Completeness.None,
+                new Error("The supplied XML snapshot failed validation: " + code, new InvalidArgumentDetails(parameter, [])), false);
+        }
         if (name == "CheckProductUpdate" && !success && args != null && args.TryGetValue("repository", out var repository)
             && !TiaMcpServer.ModelContextProtocol.UpdateLogic.IsValidRepository(repository.GetString()))
             return Reject(release, name, id, new Error("The operation did not establish success; inspect the returned result.",

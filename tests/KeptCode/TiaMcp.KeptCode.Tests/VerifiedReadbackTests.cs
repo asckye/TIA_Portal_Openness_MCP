@@ -138,6 +138,56 @@ namespace TiaMcp.Engine.Tests
             Assert.Equal(1, fixture.Imports);
         }
 
+        [Theory]
+        [InlineData("", true)]
+        [InlineData("<Text />", true)]
+        [InlineData("<Text>Operator note</Text>", false)]
+        [InlineData("<Text> </Text>", false)]
+        [InlineData("<Other />", false)]
+        [InlineData("<Text><![CDATA[]]></Text>", true)]
+        public void Minimal_DB_readback_checks_the_contents_of_added_block_text(string content, bool matches)
+        {
+            const string xml = """
+                <Document><SW.Blocks.GlobalDB ID="0"><AttributeList><Name>Fixture</Name><ProgrammingLanguage>DB</ProgrammingLanguage>
+                <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v3"><Section Name="Static">
+                <Member Name="Level" Datatype="Int"><StartValue>9</StartValue></Member></Section></Sections></Interface>
+                </AttributeList></SW.Blocks.GlobalDB></Document>
+                """;
+            using var fixture = new Fixture(xml);
+            fixture.After = xml.Replace("</SW.Blocks.GlobalDB>", $"""
+                <ObjectList><MultilingualText ID="1" CompositionName="Title" /><MultilingualText ID="2" CompositionName="Comment">
+                <ObjectList><MultilingualTextItem ID="3" CompositionName="Items"><AttributeList><Culture>zh-CN</Culture>{content}</AttributeList>
+                </MultilingualTextItem></ObjectList></MultilingualText></ObjectList></SW.Blocks.GlobalDB>
+                """);
+            var preview = fixture.Run(true);
+            var result = fixture.Run(false, (string)preview["token"]!);
+            Assert.Equal(matches, (bool?)result["verificationSuccess"]);
+            Assert.Equal(matches, (string?)result["actualFingerprint"] == (string?)preview["plannedFingerprint"]);
+            if (!matches) Assert.Contains("Comment", (string)result["readbackDifference"]!);
+        }
+
+        [Theory]
+        [InlineData("extraObject")]
+        [InlineData("explicitTitle")]
+        [InlineData("interface")]
+        public void Empty_block_text_normalization_preserves_other_planned_and_readback_content(string difference)
+        {
+            const string title = "<MultilingualText ID='1' CompositionName='Title'/>";
+            const string comment = "<MultilingualText ID='2' CompositionName='Comment'/>";
+            string xml = "<Document><SW.Blocks.GlobalDB ID='0'><AttributeList><Name>Fixture</Name><Interface>" +
+                "<Sections xmlns='http://www.siemens.com/automation/Openness/SW/Interface/v3'><Section Name='Static'>" +
+                "<Member Name='Level' Datatype='Int'><StartValue>9</StartValue></Member></Section></Sections></Interface></AttributeList>";
+            const string end = "</SW.Blocks.GlobalDB></Document>";
+            using var fixture = new Fixture(xml + (difference == "explicitTitle" ? "<ObjectList>" + title + "</ObjectList>" : "") + end);
+            fixture.After = (difference == "interface" ? xml.Replace(">9<", ">8<") : xml) + "<ObjectList>" + comment
+                + (difference == "extraObject" ? "<OtherObject/>" : "") + "</ObjectList>" + end;
+            var preview = fixture.Run(true);
+            var result = fixture.Run(false, (string)preview["token"]!);
+            Assert.Equal("DocumentReadbackMismatch", (string?)result["status"]);
+            Assert.NotEqual((string?)result["actualFingerprint"], (string?)preview["plannedFingerprint"]);
+            if (difference == "interface") Assert.Equal("Static/Level: startValue", (string?)result["readbackDifference"]);
+        }
+
         [Fact]
         public void V17_global_db_readback_matches_when_TIA_materializes_member_defaults()
         {

@@ -25,6 +25,8 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class PlcOfflineTools
     {
+        internal Func<FileInfo, JsonObject> VerifyOutput { get; set; } = NativeFileOutput.Verify;
+
         [McpServerTool(Name = "AnalyzePlcReferences"),
                 Description("[L2][Validation][OFFLINE] Query supplied exports without native CrossReferenceService. action " +
                 "summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); " +
@@ -92,7 +94,9 @@ namespace TiaMcpServer.ModelContextProtocol
             string outputPath = "",
             bool dryRun = true)
             => OfflineToolExecution.RunOfflineAnalysisTool("PatchPlcBlockDocument", meta => {
-                var edited = PlcDocumentEditing.Patch(PlcDocumentEditing.Read(filePath), changesJson, expectedFingerprint);
+                meta["mayHaveWrittenFiles"] = false;
+                var xml = OfflineToolExecution.ReadDocument(nameof(filePath), () => PlcDocumentEditing.Read(filePath));
+                var edited = PlcDocumentEditing.Patch(xml, changesJson, expectedFingerprint);
                 meta["dryRun"] = dryRun; meta["result"] = PlcDocumentEditing.Inspect(edited);
                 var document = SimaticMlImportWindow.Load(Encoding.UTF8.GetBytes(edited));
                 if (PlcDocumentEditing.Block(document).Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal)
@@ -100,11 +104,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["warnings"] = new JsonArray("This patch edits the XML only. The document cannot establish or restore the SCL implementation.");
                 meta["nativeImportValidated"] = false;
                 if (!dryRun) {
-                    if (string.IsNullOrWhiteSpace(outputPath)) throw new ArgumentException("New absolute outputPath required.");
-                    var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath));
-                    using (var stream = new FileStream(output.FullName, FileMode.CreateNew, FileAccess.Write))
-                    using (var writer = new StreamWriter(stream, new UTF8Encoding(true))) writer.Write(edited);
-                    meta["output"] = Siemens.NativeFileOutput.Verify(output);
+                    var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath), "Supply a new absolute output file in an existing directory.");
+                    OfflineToolExecution.WriteNewDocument(output, edited, new UTF8Encoding(true), meta);
+                    meta["output"] = VerifyOutput(output);
                 }
                 string summary = dryRun ? "Offline patch preview validated. No file or project changed."
                     : "Patched document written; native import/compilation remain unverified.";

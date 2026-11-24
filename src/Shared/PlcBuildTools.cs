@@ -26,6 +26,17 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private readonly PlcArtifactPortSession _session;
 
+        internal const string BeforeImportEvidence = "plcBuildBeforeImport";
+        internal delegate string Classifier(string file, out string subKind, out string objectName);
+        internal Classifier ClassifyDocument { get; set; } = PlcProgramImport.ClassifyPlcXml;
+
+        private sealed class CandidateFileException : IOException
+        {
+            internal string FilePath { get; }
+            internal CandidateFileException(string path, Exception cause)
+                : base("Inspect the generated XML file before repeating the build: " + path, cause) => FilePath = path;
+        }
+
         public PlcBuildTools(PlcOrganisationPortService service) => _session = new PlcArtifactPortSession(service, "BuildAndImportPlcArtifact");
 
         [McpServerTool(Name = "BuildAndImportPlcArtifact"), Description("[L1][PLC-Software] MAIN tool for creating new PLC blocks from natural language. Build one PLC artifact (UDT/tag table/GlobalDB/FC/FB) from structured JSON, then optionally import and compile. Use dryRun=true first to validate. Workflow: describe block in JSON → dryRun → review → dryRun=false to import. Replaces the multi-step Build*Xml + ImportPlcBlock sequence. kind fc|fb writes the V21 document format and is available on V21 only; udt, tagtable and globaldb use the serving release's header. overwrite=false (default) refuses an existing object of the same name before the import (Siemens.Engineering.ImportOptions.None); overwrite=true replaces it (Siemens.Engineering.ImportOptions.Override). Native behaviorPolicy remains current; V4 native acceptance is pending.")]
@@ -42,11 +53,20 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("overwrite: false (default) refuses an existing object of the same name before the import; true replaces it " +
                 "(Siemens.Engineering.ImportOptions.Override).")] bool overwrite =
                 false)
-            => OfflineContracts
-                .Run("BuildAndImportPlcArtifact", () =>
-                    PlcBuildAndImport(softwarePath, kind, OfflineContracts.Artifact(kind, spec, "spec"), typeGroupPath, tagFolderPath, blockGroupPath,
-                        compileAfter, dryRun, overwrite),
-                    writes: true, current: true);
+            => OfflineContracts.Run("BuildAndImportPlcArtifact", () =>
+            {
+                try
+                {
+                    return PlcBuildAndImport(softwarePath, kind, OfflineContracts.Artifact(kind, spec, "spec"), typeGroupPath, tagFolderPath,
+                        blockGroupPath, compileAfter, dryRun, overwrite);
+                }
+                catch (CandidateFileException failure)
+                {
+                    var meta = new JsonObject { ["operationSuccess"] = false, ["mayHaveWrittenFiles"] = true };
+                    OfflineToolExecution.RecordUnconfirmedOutput(meta, failure.FilePath);
+                    return new ResponsePlcProgramImport { Message = failure.Message, Meta = meta };
+                }
+            }, writes: true, current: true);
 
         public ResponsePlcProgramImport PlcBuildAndImport(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'. Required only when dryRun=false.")] string softwarePath,
@@ -64,6 +84,9 @@ namespace TiaMcpServer.ModelContextProtocol
             var importedTagTables = new List<string>();
             var importedBlocks = new List<string>();
             ResponseCompile? compile = null;
+            string? xmlPath = null;
+            var fileState = new JsonObject();
+            bool importStarted = false;
 
             try
             {
@@ -76,15 +99,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 TiaMcp.Adapters.Contracts.SimaticMlImportWindow.RequireBlockProgram(HardwareContract.ReleaseKey,
                     TiaMcp.Adapters.Contracts.SimaticMlImportWindow.Load(System.Text.Encoding.UTF8.GetBytes(xml)), "spec");
                 var objectName = ResolveBuiltPlcObjectName(xml);
-                var tempDir = Path
-                    .Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory, "tia_mcp_plc_build_import_" + DateTime.Now
-                        .ToString("yyyyMMdd_HHmmss_fff"));
-                Directory.CreateDirectory(tempDir);
+                var tempDir = Path.GetFullPath(Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory,
+                    "tia_mcp_plc_build_import_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff")));
                 var fileName = EngineeringFileNames.MakeSafeFileName(string.IsNullOrWhiteSpace(objectName) ? normalizedKind : objectName) + ".xml";
-                var xmlPath = Path.Combine(tempDir, fileName);
-                File.WriteAllText(xmlPath, xml, System.Text.Encoding.UTF8);
+                xmlPath = Path.Combine(tempDir, fileName);
+                Directory.CreateDirectory(tempDir);
+                OfflineToolExecution.WriteNewDocument(new FileInfo(xmlPath), xml, System.Text.Encoding.UTF8, fileState);
 
-                var classifiedKind = PlcProgramImport.ClassifyPlcXml(xmlPath, out var subKind, out var classifiedObjectName);
+                var classifiedKind = ClassifyDocument(xmlPath, out var subKind, out var classifiedObjectName);
                 if (classifiedKind == "unknown")
                 {
                     failed.Add(new ImportFailure { Path = xmlPath, Error = "Generated XML could not be classified as a supported PLC XML artifact." });
@@ -97,7 +119,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!dryRun && failed.Count == 0)
                     compile =
                         PlcBuildAndImportApply(softwarePath, typeGroupPath, tagFolderPath, blockGroupPath, compileAfter, xmlPath, classifiedKind,
-                            classifiedObjectName, importedTypes, importedTagTables, importedBlocks, failed, overwrite);
+                            classifiedObjectName, importedTypes, importedTagTables, importedBlocks, failed, overwrite, () => importStarted = true);
 
                 var response = PlcProgramImport.BuildPlcProgramImportResponse(
                     tempDir,
@@ -122,6 +144,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ? $"PLC build/import dry-run kind={normalizedKind}: generated '{xmlPath}', classified={classifiedKind}/{subKind}, failed={failed.Count}"
                     : $"PLC build/import kind={normalizedKind}: generated '{xmlPath}', importedTypes={importedTypes.Count}, importedTagTables={importedTagTables.Count}, importedBlocks={importedBlocks.Count}, failed={failed.Count}, compileState={compile?.State ?? "-"}";
                 response.Meta ??= new JsonObject();
+                if (!importStarted && failed.Count > 0) OfflineToolExecution.RecordUnconfirmedOutput(response.Meta, xmlPath);
                 response.Meta["offlineBuildOk"] = build["ok"]?.GetValue<bool>() == true;
                 response.Meta["classifiedKind"] = classifiedKind;
                 response.Meta["classifiedSubKind"] = subKind;
@@ -129,6 +152,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 response.Meta["capabilityWarnings"] = new JsonArray(capability.Warnings.Select(x => (JsonNode)x).ToArray());
                 response.Meta["recommendedNextActions"] = new JsonArray(capability.NextActions.Select(x => (JsonNode)x).ToArray());
                 return response;
+            }
+            catch (Exception error) when (!importStarted && error is OperationCanceledException or TiaMcp.Adapters.Contracts.AdapterPreconditionException)
+            {
+                if ((string?)fileState["filePath"] is string path) OfflineToolExecution.RecordOutputCleanup(fileState, path);
+                error.Data[BeforeImportEvidence] = fileState;
+                throw;
+            }
+            catch (Exception error) when (xmlPath == null
+                && error is ArgumentException or InvalidOperationException or System.Xml.XmlException or System.Text.Json.JsonException)
+            {
+                throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException(error.Message, "spec");
+            }
+            catch (Exception error) when (!importStarted && xmlPath != null)
+            {
+                if ((bool?)fileState["mayHaveWrittenFiles"] != true)
+                    throw new TiaOpenness.Shared.DataLocationIOException(xmlPath, "Could not create the candidate XML");
+                throw new CandidateFileException(xmlPath, error);
             }
             catch (Exception ex) when (ex is not McpException && ex is not NotSupportedException && ex is not TiaMcp.Adapters.Contracts
                     .AdapterPreconditionException)
@@ -150,21 +190,26 @@ namespace TiaMcpServer.ModelContextProtocol
             List<string> importedTagTables,
             List<string> importedBlocks,
             List<ImportFailure> failed,
-            bool overwrite)
+            bool overwrite,
+            Action beforeDispatch)
         {
             if (classifiedKind == "type")
             {
-                try { _session.ImportType(softwarePath, typeGroupPath, xmlPath, overwrite); importedTypes.Add(classifiedObjectName); }
+                try { _session.ImportType(softwarePath, typeGroupPath, xmlPath, overwrite, beforeDispatch); importedTypes.Add(classifiedObjectName); }
                 catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else if (classifiedKind == "tagtable")
             {
-                try { _session.ImportPlcTagTable(softwarePath, tagFolderPath, xmlPath, overwrite); importedTagTables.Add(classifiedObjectName); }
+                try
+                {
+                    _session.ImportPlcTagTable(softwarePath, tagFolderPath, xmlPath, overwrite, beforeDispatch);
+                    importedTagTables.Add(classifiedObjectName);
+                }
                 catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else if (classifiedKind == "block")
             {
-                try { _session.ImportBlock(softwarePath, blockGroupPath, xmlPath, overwrite); importedBlocks.Add(classifiedObjectName); }
+                try { _session.ImportBlock(softwarePath, blockGroupPath, xmlPath, overwrite, beforeDispatch); importedBlocks.Add(classifiedObjectName); }
                 catch (PortalException pex) { failed.Add(new ImportFailure { Path = xmlPath, Error = pex.Message }); }
             }
             else

@@ -20,16 +20,57 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        internal static void WriteNewDocument(FileInfo output, string content, System.Text.Encoding encoding, JsonObject meta)
+        {
+            // CreateNew rejects an existing target even if another writer won the race after planning.
+            using var stream = new FileStream(output.FullName, FileMode.CreateNew, FileAccess.Write);
+            meta["filePath"] = output.FullName;
+            meta["mayHaveWrittenFiles"] = true;
+            using var writer = new StreamWriter(stream, encoding);
+            writer.Write(content);
+        }
+
+        internal static void RecordUnconfirmedOutput(JsonObject meta, string path)
+        {
+            meta["writeOutcomeUnknown"] = true;
+            RecordOutputCleanup(meta, path);
+        }
+
+        internal static void RecordOutputCleanup(JsonObject meta, string path)
+        {
+            meta["filePath"] = path;
+            meta["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = path,
+                ["action"] = "Inspect this output file for incomplete content before retrying." });
+        }
+
+        internal static T ReadDocument<T>(string? parameter, Func<T> read)
+        {
+            try { return read(); }
+            catch (Exception error) when (parameter != null
+                && error is IOException or UnauthorizedAccessException or System.Xml.XmlException or InvalidDataException)
+            {
+                string reason = error is System.Xml.XmlException ? "Supply a well-formed XML document." : "The supplied document could not be read.";
+                throw new AdapterPreconditionException(reason, parameter);
+            }
+        }
+
+        internal static void RequireDocumentFile(string path, string parameter)
+        {
+            if (!Path.IsPathRooted(path) || !File.Exists(path))
+                throw new AdapterPreconditionException("Supply an existing absolute document file.", parameter);
+        }
+
         internal static string ResolveCompareSide(string side, string filePath, string blockPath, string softwarePath, JsonObject meta, out string? tempDir)
         {
             tempDir = null;
             var hasFile = !string.IsNullOrWhiteSpace(filePath);
             var hasBlock = !string.IsNullOrWhiteSpace(blockPath);
-            if (hasFile == hasBlock) throw new ArgumentException("Exactly one of " + side + "FilePath or " + side + "BlockPath must be given.");
+            var parameter = side == "document" ? "filePath" : side + "FilePath";
+            var blockParameter = side == "document" ? "blockPath" : side + "BlockPath";
+            if (hasFile == hasBlock) throw new AdapterPreconditionException("Supply exactly one of " + parameter + " or " + blockParameter + ".", parameter);
             if (hasFile)
             {
-                if (!Path.IsPathRooted(filePath)) throw new ArgumentException(side + "FilePath must be absolute.");
-                if (!File.Exists(filePath)) throw new FileNotFoundException(side + "FilePath not found: " + filePath, filePath);
+                RequireDocumentFile(filePath, parameter);
                 meta[side + "Source"] = new JsonObject { ["mode"] = "file", ["path"] = filePath };
                 return filePath;
             }
@@ -58,6 +99,14 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex)
             {
                 var cause = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
+                if ((bool?)meta["mayHaveWrittenFiles"] == true && (string?)meta["filePath"] is string output)
+                {
+                    RecordUnconfirmedOutput(meta, output);
+                    var reason = TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(cause.Message) ?? cause.GetType().Name;
+                    meta["nativeMessage"] = reason;
+                    ResponseMeta.Failed(meta);
+                    return new ResponseMessage { Message = "Inspect the output file before retrying. " + reason, Meta = meta };
+                }
                 if (cause is TiaOpenness.Shared.BundleResourceUnavailableException) throw;
                 if (cause is TiaOpenness.Shared.DataLocationIOException) throw;
                 if (cause is AdapterPreconditionException { Condition: "output-parent-missing" } missing
@@ -80,6 +129,20 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["mayHaveChanged"] = false;
                     meta["nativeMessage"] = ambiguous.Message;
                     return new ResponseMessage { Message = ambiguous.Message, Meta = meta };
+                }
+                if ((bool?)meta["mayHaveWrittenFiles"] == false)
+                {
+                    meta["mayHaveChanged"] = false;
+                    if (cause is ArgumentException or InvalidOperationException or JsonException or System.Xml.XmlException
+                        or IOException or UnauthorizedAccessException or InvalidDataException)
+                    {
+                        ResponseMeta.Failed(meta);
+                        meta["status"] = "InvalidParams";
+                        meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";
+                        var reason = TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(cause.Message) ?? "Document input could not be validated.";
+                        meta["nativeMessage"] = reason;
+                        return new ResponseMessage { Message = toolName + " refused the document: " + reason, Meta = meta };
+                    }
                 }
                 meta["error"] = cause.ToString();
                 if (cause is ArgumentException || cause is JsonException)

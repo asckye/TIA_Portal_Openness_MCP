@@ -89,6 +89,30 @@ public sealed class DataBlockStartValueExchangeTests
     }
 
     [Fact]
+    public void Many_changed_rows_share_one_lookup_and_match_individual_edits()
+    {
+        var template = Read();
+        var section = Member(template, "Enabled").Parent!;
+        for (int index = 0; index < 120; index++)
+            section.Add(new XElement(section.Name.Namespace + "Member", new XAttribute("Name", "Signal" + index), new XAttribute("Datatype", "Int")));
+        var expected = new XDocument(template);
+        var table = DataBlockStartValueExchange.ToTable(template);
+        foreach (var row in table.Rows.Where(row => row[1].StartsWith("Signal", StringComparison.Ordinal)))
+        {
+            row[3] = "42";
+            PlcDocumentEditing.SetMemberStartValue(expected, row[0], new[] { row[1] }, "", row[3]);
+        }
+        int builds = 0;
+        var result = DataBlockStartValueExchange.FromTable(template, table, document => {
+            builds++;
+            return PlcDocumentEditing.CreateMemberLookup(document);
+        });
+        Assert.Equal(120, (int)result.Summary["updated"]!);
+        Assert.True(XNode.DeepEquals(expected, result.Document));
+        Assert.Equal(1, builds);
+    }
+
+    [Fact]
     public void More_than_100_edits_use_file_limits_and_preview_changes_are_bounded()
     {
         var template = Read(); var section = Member(template, "Enabled").Parent!; section.RemoveNodes();

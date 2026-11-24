@@ -1,0 +1,431 @@
+extern alias toolpipeline;
+using System.Text.Json.Nodes;
+using System.Xml.Linq;
+using Xunit;
+using Editing = TiaMcpServer.ModelContextProtocol.PlcDocumentEditing;
+using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
+
+[Collection(BundleSelectionCollection.Name)]
+public sealed class OfflineDocumentOutcomeTests
+{
+    private const string Document = """
+        <Document><Engineering version="V15.1"/><SW.Blocks.GlobalDB ID="0"><AttributeList><Name>Fixture</Name>
+        <ProgrammingLanguage>DB</ProgrammingLanguage><Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v3">
+        <Section Name="Static"><Member Name="Motor" Datatype="&quot;Drive&quot;"><Sections><Section Name="None">
+        <Member Name="Speed" Datatype="Real"><StartValue>1.5</StartValue></Member></Section></Sections></Member>
+        <Member Name="Grp" Datatype="Struct"><Member Name="Inner" Datatype="&quot;Drive&quot;"><Sections><Section Name="None">
+        <Member Name="Speed" Datatype="Real"><StartValue>2.5</StartValue></Member></Section></Sections></Member></Member>
+        </Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>
+        """;
+
+    [Theory]
+    [InlineData("2.5", true)]
+    [InlineData("stale", false)]
+    public async Task Patch_uses_the_advertised_nested_member_and_settles_the_result(string expected, bool succeeds)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        string filePath = Path.Combine(fixture.Root, "source.xml"), outputPath = Path.Combine(fixture.Root, "patched.xml");
+        File.WriteAllText(filePath, Document);
+        var inspection = (await fixture.Call("GetPlcBlockEditCapabilities", new { filePath })).StructuredContent!;
+        var data = inspection["data"]!["evidence"]!["data"]!;
+        var member = data["members"]!.AsArray().Single(m => (string?)m!["memberPath"] == "Grp/Inner/Speed")!;
+        var change = new { action = "setMemberStartValue", section = (string)member["section"]!, memberPath = (string)member["memberPath"]!,
+            expectedValue = expected, value = "3.5" };
+        var result = (await fixture.Call("PatchPlcBlockDocument", new { filePath, expectedDocumentHash = (string)data["documentFingerprint"]!,
+            exportFile = outputPath, dryRun = false, changes = new[] { change } })).StructuredContent!;
+        Assert.Equal(succeeds, (bool?)result["ok"]);
+        Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(fixture.Worker).Snapshot());
+        Assert.Equal(succeeds, File.Exists(outputPath));
+        if (succeeds)
+            Assert.Equal(new[] { "1.5", "3.5" }, XDocument.Load(outputPath).Descendants().Where(e => e.Name.LocalName == "StartValue").Select(e => e.Value));
+        else AssertRefused(result);
+    }
+
+    private static void AssertRefused(JsonNode result)
+    {
+        Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)result["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
+    }
+
+    [Theory]
+    [InlineData("GetPlcBlockEditCapabilities")]
+    [InlineData("ComparePlcBlockDocuments")]
+    [InlineData("BuildPlcSymbolManifestFromPath")]
+    [InlineData("BuildPlcGlobalDb")]
+    [InlineData("BuildAndImportPlcArtifact")]
+    [InlineData("BuildDeviceAmlDocument")]
+    public async Task Invalid_offline_document_request_is_a_definite_refusal(string tool)
+    {
+        using var worker = new HmiTagPathContractTests.PreviewWorker();
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1", worker: worker);
+        using var session = fixture.EnterSession();
+        string missing = Path.Combine(fixture.Root, "absent.xml");
+        object args = tool switch {
+            "GetPlcBlockEditCapabilities" => new { filePath = missing },
+            "ComparePlcBlockDocuments" => new { leftFilePath = missing, rightFilePath = missing },
+            "BuildPlcSymbolManifestFromPath" => new { inputRoot = fixture.Root, files = new[] { "absent.xml" },
+                expectedOrigin = "caller-owned-immutable-export-snapshot" },
+            "BuildAndImportPlcArtifact" => new { softwarePath = "", kind = "udt", dryRun = true, spec = new { name = "Drive",
+                members = new[] { new { name = "Speed", datatype = "Real" }, new { name = "Speed", datatype = "Real" } } } },
+            "BuildDeviceAmlDocument" => new { exportFile = Path.Combine(fixture.Root, "wrong.xml"), spec = new { projectName = "Fixture",
+                devices = new[] { new { name = "PLC", typeIdentifier = "System:Device.S71500", deviceItems = Array.Empty<object>() } } } },
+            _ => new { globalDb = new { dbName = "Fixture", dbNumber = 1, staticMembers = Array.Empty<object>() } }
+        };
+        var result = (await fixture.Call(tool, args)).StructuredContent!;
+        AssertRefused(result);
+        if (tool == "GetPlcBlockEditCapabilities") Assert.Equal("/filePath", (string?)result["error"]!["details"]!["parameter"]);
+        Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot());
+        Assert.Empty(worker.Requests);
+    }
+
+    [Fact]
+    public void Failure_after_file_creation_identifies_the_unconfirmed_output()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        var output = new FileInfo(Path.Combine(fixture.Root, "patched.xml"));
+        const string tool = "PatchPlcBlockDocument";
+        var reply = Host.OfflineToolExecution.RunOfflineAnalysisTool(tool, meta => {
+            meta["mayHaveWrittenFiles"] = false;
+            Host.OfflineToolExecution.WriteNewDocument(output, Document, System.Text.Encoding.UTF8, meta);
+            throw new IOException("Forced post-write failure.");
+        });
+        var body = Host.PlcToolContract.Map(tool, reply, true, false).StructuredContent!;
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Equal(output.FullName, (string?)body["data"]?["evidence"]?["cleanupRequired"]?[0]?["target"]);
+        Assert.True(File.Exists(output.FullName));
+    }
+
+    [Fact]
+    public async Task Declared_integer_bounds_are_explained_on_another_tool()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        var body = (await fixture.Call("GetToolUsage", new { toolName = "ListPlcBlocks", limit = 201 })).StructuredContent!;
+        AssertRefused(body);
+        Assert.Equal("/limit", (string?)body["error"]!["details"]!["parameter"]);
+        Assert.Contains("1..200", (string)body["error"]!["message"]!);
+    }
+
+    [Fact]
+    public async Task Block_page_limit_refusal_gives_the_range()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        var body = (await fixture.Call("ListPlcBlocks", new { softwarePath = "PLC", limit = 1000 })).StructuredContent!;
+        AssertRefused(body);
+        Assert.Equal("/limit", (string?)body["error"]!["details"]!["parameter"]);
+        Assert.Contains("1..100", (string)body["error"]!["message"]!);
+    }
+
+    [Theory]
+    [InlineData("GeneratePlcDocumentation")]
+    [InlineData("RenderPlcBlockDocument")]
+    [InlineData("RenderPlcVisualDiff")]
+    public void Report_verification_failure_identifies_the_created_file(string tool)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        string input = Path.Combine(fixture.Root, "Fixture.xml");
+        string output = Path.Combine(fixture.Root, tool == "RenderPlcVisualDiff" ? "report.html" : "report.md");
+        const string aliases = """[{"source":["Sensor"],"destination":["DB","Reading"],"title":"Reading"}]""";
+        File.WriteAllText(input, TiaMcpServer.ModelContextProtocol.PlcAliasAlarmBuilder.Build("FC_Map", 100, aliases));
+        string? verifiedPath = null;
+        JsonObject FailVerification(FileInfo file)
+        {
+            verifiedPath = file.FullName;
+            throw new IOException("The written report could not be verified.");
+        }
+        var docs = new Host.PlcDocumentationTools { VerifyOutput = FailVerification };
+        var result = tool switch {
+            "GeneratePlcDocumentation" => docs.GeneratePlcDocumentationV4(fixture.Root, output),
+            "RenderPlcBlockDocument" => docs.RenderPlcBlockDocumentV4(input, outputPath: output),
+            _ => new Host.EcosystemTools { VerifyOutput = FailVerification }.RenderPlcVisualDiffV4(input, input, output)
+        };
+        var body = result.StructuredContent!;
+        Assert.Equal(output, verifiedPath);
+        Assert.True(File.Exists(output), body.ToJsonString());
+        Assert.NotEmpty(File.ReadAllText(output));
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Equal(output, (string?)body["data"]?["cleanupRequired"]?[0]?["target"]);
+    }
+
+    [Theory]
+    [InlineData("xml")]
+    [InlineData("io")]
+    [InlineData("unknown-kind")]
+    [InlineData("before-dispatch")]
+    public void Build_candidate_classification_failure_names_the_file_and_cleanup(string failure)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        int imports = 0;
+        var port = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((_, _) => {
+            imports++; throw new InvalidOperationException("Unexpected import.");
+        }, () => failure == "before-dispatch" ? throw new IOException("Session unavailable before dispatch.") : true, () => "C:/fixture.ap15_1");
+        string? candidate = null;
+        var tool = new Host.PlcBuildTools(port) {
+            ClassifyDocument = (string file, out string kind, out string name) => {
+                candidate = file;
+                kind = name = "";
+                return failure switch {
+                    "xml" => throw new System.Xml.XmlException("Malformed candidate."),
+                    "io" => throw new IOException("Candidate read failed."),
+                    "unknown-kind" => "unknown",
+                    _ => Host.PlcProgramImport.ClassifyPlcXml(file, out kind, out name)
+                };
+            }
+        };
+        var spec = TiaMcp.Logic.V4.Construction.PlcArtifactSpec.Deserialize("udt", """{"name":"Drive","members":[{"name":"Speed","datatype":"Real"}]}""");
+        var body = tool.PlcBuildAndImportV4("PLC", "udt", spec, dryRun: false).StructuredContent!;
+        Assert.Equal(0, imports);
+        Assert.True(File.Exists(candidate), body.ToJsonString());
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        Assert.Equal(candidate, (string?)body["data"]?["cleanupRequired"]?[0]?["target"]);
+    }
+
+    [Fact]
+    public void Scaffold_builder_receives_an_exception_when_the_candidate_cannot_be_verified()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        var port = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((_, _) =>
+            throw new InvalidOperationException("Unexpected import."), () => true, () => "C:/fixture.ap15_1");
+        string? candidate = null;
+        var tool = new Host.PlcBuildTools(port) {
+            ClassifyDocument = (string file, out string kind, out string name) => {
+                candidate = file;
+                throw new IOException("Candidate cannot be verified.");
+            }
+        };
+        const string spec = """{"name":"Drive","members":[{"name":"Speed","datatype":"Real"}]}""";
+        var error = Assert.ThrowsAny<IOException>(() => tool.PlcBuildAndImport("PLC", "udt", spec, dryRun: true));
+        Assert.True(File.Exists(candidate));
+        Assert.Contains(candidate!, error.Message);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Build_apply_tracks_only_a_dispatched_unconfirmed_import(bool valid)
+    {
+        int calls = 0;
+        using var worker = new DirectoryImportRegressionTests.Worker((_, input) => {
+            Assert.Equal("importType", (string?)input["request"]?["Action"]);
+            Assert.True(File.Exists((string?)input["request"]?["FilePath"]));
+            calls++;
+            throw new IOException("Import reply lost.");
+        });
+        const string tool = "BuildAndImportPlcArtifact";
+        var raw = TiaMcp.FoundationHost.PortedToolContract.Create(worker, "15.1").Single(t => t.ProtocolTool.Name == tool);
+        var entry = new TiaMcp.FoundationHost.FoundationV4Tool(raw, "15.1", () => new TiaOpenness.Shared.ApprovalSettings(false, 5));
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1", worker: worker, replacementTool: entry);
+        using var session = fixture.EnterSession();
+        var speed = new { name = "Speed", datatype = "Real" };
+        var body = (await fixture.Call("BuildAndImportPlcArtifact", new { softwarePath = "PLC", kind = "udt", dryRun = false,
+            spec = new { name = "Drive", members = valid ? new[] { speed } : new[] { speed, speed } } })).StructuredContent!;
+        var unsettled = toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot();
+        Assert.True(calls == (valid ? 1 : 0), body.ToJsonString());
+        if (valid)
+        {
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+            Assert.Single(unsettled);
+        }
+        else { AssertRefused(body); Assert.Empty(unsettled); }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Malformed_comparison_input_names_its_side(bool malformedLeft)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        string left = Path.Combine(fixture.Root, "left.xml"), right = Path.Combine(fixture.Root, "right.xml");
+        File.WriteAllText(left, malformedLeft ? "<Document>" : Document);
+        File.WriteAllText(right, malformedLeft ? Document : "<Document>");
+        var body = (await fixture.Call("ComparePlcBlockDocuments", new { leftFilePath = left, rightFilePath = right })).StructuredContent!;
+        AssertRefused(body);
+        Assert.Equal(malformedLeft ? "/leftFilePath" : "/rightFilePath", (string?)body["error"]?["details"]?["parameter"]);
+        Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(fixture.Worker).Snapshot());
+    }
+
+    [Theory]
+    [InlineData("GetPlcBlockEditCapabilities")]
+    [InlineData("RenderPlcBlockDocument")]
+    public async Task Unreadable_document_names_filePath(string tool)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        string filePath = Path.Combine(fixture.Root, "locked.xml");
+        File.WriteAllText(filePath, Document);
+        using var held = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var body = (await fixture.Call(tool, new { filePath })).StructuredContent!;
+        if (tool == "RenderPlcBlockDocument")
+        {
+            // The registered renderer probes file sharing at admission, before its document reader runs.
+            Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Equal("filePath", (string?)body["error"]?["details"]?["parameter"]);
+            Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+            body = new Host.PlcDocumentationTools().RenderPlcBlockDocumentV4(filePath).StructuredContent!;
+        }
+        AssertRefused(body);
+        Assert.Equal("/filePath", (string?)body["error"]?["details"]?["parameter"]);
+    }
+
+    [Theory]
+    [InlineData("PatchPlcBlockDocument")]
+    [InlineData("BuildDeviceAmlDocument")]
+    public void Real_document_writer_retains_the_output_and_sanitizes_its_verification_error(string name)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        bool patch = name == "PatchPlcBlockDocument";
+        var file = Path.Combine(fixture.Root, patch ? "edited.xml" : "hardware.aml");
+        string? verified = null;
+        JsonObject Fail(FileInfo output)
+        {
+            verified = output.FullName;
+            throw new IOException("Verification interrupted, token=secret-fixture-value\n   at PrivateVerificationFrame()");
+        }
+        JsonNode body;
+        if (patch)
+        {
+            string input = Path.Combine(fixture.Root, "source.xml");
+            File.WriteAllText(input, Document);
+            var edit = new TiaMcp.Logic.V4.Domain.MemberStartValueEdit(System.Text.Json.JsonSerializer.SerializeToElement(new {
+                action = "setMemberStartValue", section = "None", memberPath = "Motor/Speed", expectedValue = "1.5", value = "3.5" }));
+            var tool = new Host.PlcOfflineTools { VerifyOutput = Fail };
+            body = tool.PatchPlcBlockDocumentV4(input, new[] { edit }, (string)Editing.Inspect(Document)["documentFingerprint"]!,
+                file, dryRun: false).StructuredContent!;
+        }
+        else
+        {
+            var service = new toolpipeline::TiaMcpServer.Siemens.Services.HardwareAmlService((_, _) =>
+                throw new InvalidOperationException("Unexpected native call."), () => false, () => "");
+            var tool = new Host.HardwareAmlTools(service) { VerifyOutput = Fail };
+            var device = new TiaMcp.Logic.V4.Hmi.AmlDeviceSpec("PLC", "System:Device.S71500", Array.Empty<TiaMcp.Logic.V4.Hmi.DeviceItemSpec>());
+            body = tool.BuildDeviceAmlDocumentV4(new TiaMcp.Logic.V4.Hmi.DeviceAmlSpec("Fixture", new[] { device }), file).StructuredContent!;
+        }
+        Assert.Equal(file, verified);
+        var document = XDocument.Load(file);
+        if (patch) Assert.Contains(document.Descendants(), e => e.Name.LocalName == "StartValue" && e.Value == "3.5");
+        else Assert.Equal("CAEXFile", document.Root!.Name.LocalName);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+        var evidence = body["data"]!["evidence"]!;
+        Assert.Equal(file, (string?)evidence["filePath"]);
+        Assert.Equal(file, (string?)evidence["cleanupRequired"]?[0]?["target"]);
+        Assert.Contains("Inspect", (string)evidence["cleanupRequired"]![0]!["action"]!);
+        Assert.Contains("Verification interrupted", (string?)evidence["nativeMessage"]);
+        Assert.DoesNotContain("secret-fixture-value", body.ToJsonString());
+        Assert.DoesNotContain("PrivateVerificationFrame", body.ToJsonString());
+    }
+
+    [Theory]
+    [InlineData("cancel", "CANCELLED")]
+    [InlineData("precondition", "PRECONDITION_FAILED")]
+    [InlineData("argument", "INVALID_ARGUMENT")]
+    public void Build_refused_after_candidate_creation_keeps_definite_outcome(string failure, string expectedCode)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("15.1");
+        using var session = fixture.EnterSession();
+        int imports = 0;
+        string? candidate = null;
+        var port = new toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService((_, _) => {
+            imports++; throw new InvalidOperationException("Unexpected import.");
+        }, () => true, () => throw (failure switch {
+            "cancel" => (Exception)new OperationCanceledException(),
+            "precondition" => TiaMcp.Adapters.Contracts.AdapterPreconditionException.Failed("Project changed.", "project-changed", "softwarePath"),
+            _ => new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Invalid project.", "softwarePath")
+        }));
+        var tool = new Host.PlcBuildTools(port) {
+            ClassifyDocument = (string file, out string kind, out string name) => {
+                candidate = file;
+                return Host.PlcProgramImport.ClassifyPlcXml(file, out kind, out name);
+            }
+        };
+        var spec = TiaMcp.Logic.V4.Construction.PlcArtifactSpec.Deserialize("udt", """{"name":"Drive","members":[{"name":"Speed","datatype":"Real"}]}""");
+        var result = tool.PlcBuildAndImportV4("PLC", "udt", spec, dryRun: false);
+        var body = Host.McpServer.ObserveSessionOutcome("BuildAndImportPlcArtifact", result, true, """{"dryRun":false}""").StructuredContent!;
+        Assert.Equal(0, imports);
+        Assert.True(File.Exists(candidate));
+        Assert.Equal(expectedCode, (string?)body["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.Equal(candidate, (string?)body["data"]?["filePath"]);
+        Assert.Equal(candidate, (string?)body["data"]?["cleanupRequired"]?[0]?["target"]);
+        if (failure == "precondition") Assert.Equal("project-changed", (string?)body["error"]?["details"]?["condition"]);
+        Assert.False(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.HasUnknownOutcome(body));
+        Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(fixture.Worker).Snapshot());
+    }
+
+    [Fact]
+    public void Library_bound_document_lists_its_members_for_reading_and_refuses_patches()
+    {
+        string xml = Document.Replace("<Name>Fixture", "<LibraryTypeGuid>type</LibraryTypeGuid><Name>Fixture")
+            .Replace("Name=\"Motor\"", "Name=\"Motor\" ReadOnly=\"true\"")
+            .Replace("<StartValue>1.5", "<Comment><MultiLanguageText Lang=\"en-US\">Motor reading</MultiLanguageText></Comment><StartValue>1.5");
+        var info = Editing.Inspect(xml);
+        Assert.True((bool?)info["libraryBound"]);
+        var members = info["members"]!.AsArray();
+        Assert.Equal(new[] { "Motor", "Motor/Speed", "Grp", "Grp/Inner", "Grp/Inner/Speed" }, members.Select(m => (string?)m!["memberPath"]));
+        Assert.Equal("1.5", (string?)members[1]!["startValue"]);
+        Assert.Equal("Motor reading", (string?)members[1]!["comments"]?["en-US"]);
+        Assert.Empty(info["supportedPatchActions"]!.AsArray());
+        const string change = """[{"action":"setMemberStartValue","section":"None","memberPath":"Motor/Speed","expectedValue":"1.5","value":"2.5"}]""";
+        var refusal = Assert.Throws<InvalidOperationException>(() => Editing.Patch(xml, change, (string)info["documentFingerprint"]!));
+        Assert.Contains("Library-connected", refusal.Message);
+    }
+
+    [Fact]
+    public void Each_invalid_range_names_its_own_field()
+    {
+        var schema = TiaMcp.Logic.V4.Inputs.InputSchema.Object(new Dictionary<string, TiaMcp.Logic.V4.Inputs.InputSchema> {
+            ["limit"] = TiaMcp.Logic.V4.Inputs.InputSchema.Integer(1, 100),
+            ["offset"] = TiaMcp.Logic.V4.Inputs.InputSchema.Integer(0, 200)
+        });
+        var input = System.Text.Json.JsonSerializer.SerializeToElement(new { limit = 101, offset = -1 });
+        var message = schema.Validate(input, "arguments")!.Message;
+        Assert.Matches(@"/limit[^./]*1\.\.100", message);
+        Assert.Matches(@"/offset[^./]*0\.\.200", message);
+    }
+
+    [Fact]
+    public void Conflicting_full_and_section_relative_member_paths_are_ambiguous()
+    {
+        const string xml = """
+            <Document><SW.Blocks.GlobalDB><AttributeList><Name>Fixture</Name><Interface><Sections><Section Name="Static">
+            <Member Name="Motor" Datatype="&quot;Drive&quot;"><Sections><Section Name="None">
+            <Member Name="Speed" Datatype="Real"><StartValue>1</StartValue></Member>
+            <Member Name="Motor" Datatype="Struct"><Member Name="Speed" Datatype="Real"><StartValue>1</StartValue></Member></Member>
+            </Section></Sections></Member></Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>
+            """;
+        var info = Editing.Inspect(xml);
+        const string change = """[{"action":"setMemberStartValue","section":"None","memberPath":"Motor/Speed","expectedValue":"1","value":"2"}]""";
+        var refusal = Assert.Throws<ArgumentException>(() => Editing.Patch(xml, change, (string)info["documentFingerprint"]!));
+        Assert.Contains("ambiguous", refusal.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(info["members"]!.AsArray(), row => (string?)row!["memberPath"] == "Motor/Speed");
+    }
+
+    [Fact]
+    public void Capabilities_distinguish_editable_start_values_from_comment_only_members()
+    {
+        string xml = Document.Replace("Name=\"Motor\"", "Name=\"Motor\" Informative=\"true\"")
+            .Replace("Name=\"Grp\" Datatype=\"Struct\">", "Name=\"Grp\" Datatype=\"Struct\"><StartValue>complex</StartValue>")
+            .Replace("<Member Name=\"Inner\"", "<Member Name=\"NoStart\" Datatype=\"Int\"/><Member Name=\"Inner\"");
+        var info = Editing.Inspect(xml);
+        var members = info["members"]!.AsArray().ToDictionary(row => (string)row!["memberPath"]!, row => row!);
+        Assert.DoesNotContain("Motor", members.Keys);
+        Assert.DoesNotContain("Motor/Speed", members.Keys);
+        Assert.Null(members["Grp"]["startValue"]);
+        Assert.Null(members["Grp/NoStart"]["startValue"]);
+        Assert.Equal("2.5", (string?)members["Grp/Inner/Speed"]["startValue"]);
+        Assert.Contains("non-null startValue", (string)info["scope"]!);
+        var changes = new[] { "Grp", "Grp/NoStart" }.Select(path => new { action = "setMemberComment", section = "Static",
+            memberPath = path, culture = "en-US", expectedValue = "", value = "Editable comment" });
+        string edited = Editing.Patch(xml, System.Text.Json.JsonSerializer.Serialize(changes), (string)info["documentFingerprint"]!);
+        Assert.Equal(2, XDocument.Parse(edited).Descendants().Count(e => e.Name.LocalName == "MultiLanguageText" && e.Value == "Editable comment"));
+    }
+}

@@ -21,6 +21,7 @@ namespace TiaMcpServer.ModelContextProtocol
     internal sealed class HardwareAmlTools
     {
         private readonly HardwareAmlService _service;
+        internal Func<FileInfo, JsonObject> VerifyOutput { get; set; } = NativeFileOutput.Verify;
 
         public HardwareAmlTools(HardwareAmlService service) => _service = service;
 
@@ -124,16 +125,16 @@ namespace TiaMcpServer.ModelContextProtocol
             => OfflineToolExecution.RunOfflineAnalysisTool("BuildDeviceAmlDocument", meta =>
             {
                 meta["mayHaveWrittenFiles"] = false;
-                var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath));
-                if (!output.Extension.Equals(".aml", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("outputPath must end with .aml.");
+                var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath), "Supply a new absolute AML file in an existing directory.");
+                if (!output.Extension.Equals(".aml", StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("outputPath must end with .aml.", nameof(outputPath));
                 var spec = HardwareAmlLogic.ParseSpec(specJson);
                 var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "";
                 var result = HardwareAmlLogic.Build(spec, string.IsNullOrWhiteSpace(referenceAmlPath) ? null : referenceAmlPath, output.Name, version);
-                meta["mayHaveWrittenFiles"] = true;
-                File.WriteAllText(output.FullName, HardwareAmlLogic.Serialize(result.Document), new UTF8Encoding(false));
+                OfflineToolExecution.WriteNewDocument(output, HardwareAmlLogic.Serialize(result.Document), new UTF8Encoding(false), meta);
                 foreach (var kv in HardwareAmlLogic.Summary(result)) meta[kv.Key] = kv.Value?.DeepClone();
-                meta["output"] = NativeFileOutput.Verify(output);
-                meta["mayHaveWrittenFiles"] = true; meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
+                meta["output"] = VerifyOutput(output);
+                meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
                 meta["nextStep"] =
                     "ImportDeviceAml with this file (dryRun first); on import errors export a reference AML with ExportDeviceAml and pass it as " +
                     "referenceAmlPath.";

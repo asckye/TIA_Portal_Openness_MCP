@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Offline document tools identify unreadable inputs and name the output to inspect when a PLC report or build fails after file creation.
+- PLC block patches accept full nested UDT member paths and reject a path that selects different members under its two supported spellings.
+  Edit capabilities identify which listed members have a patchable start value and retain the read-only listing for library-connected documents.
+- DB start-value table imports reuse one member lookup across all rows. PLC builds report cancellation and refused prerequisites before native import
+  with the generated file path. Offline write failures retain the sanitized cause alongside the output to inspect.
+- Verified block import accepts empty title and comment entries that TIA adds during re-export. Populated block texts and
+  interface changes still produce a readback mismatch.
+- Integer range errors name the field and its allowed bounds, including the 1..100 page size for `ListPlcBlocks`.
+
 ## [4.0.0-rc.4] - 2026-11-24
 
 ### Changed

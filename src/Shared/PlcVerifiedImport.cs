@@ -68,7 +68,8 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["backup"] = new JsonObject { ["path"] = beforePath, ["sha256"] = PlcDocumentEditing.Hash(File.ReadAllBytes(beforePath)) };
             var preserved = new JsonArray();
             var planned = Candidate(() => PlcDocumentEditing.PrepareImport(before, candidateXml, preserved));
-            var expected = PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(planned));
+            var verificationPlan = PlcDocumentEditing.Parse(planned);
+            var expected = PlcDocumentEditing.Canonical(verificationPlan, verificationPlan);
             var tokenData = new JsonObject { ["session"] = Session, ["binding"] = binding, ["compileRequested"] = compile != null,
                 ["before"] = PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(before)), ["planned"] = expected };
             var declarations = new Dictionary<string, XElement>(StringComparer.Ordinal);
@@ -134,7 +135,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "Block imported, content unverifiable until compiled. Original backup retained.";
             }
             var readback = PlcDocumentEditing.Parse(PlcDocumentEditing.Read(afterPath));
-            var actual = PlcDocumentEditing.Canonical(readback);
+            var actual = PlcDocumentEditing.Canonical(readback, verificationPlan);
             string? difference = null;
             if (compile != null) actual = PlcDocumentEditing.NormalizeCompiledReadback(actual, expected, declarations, out difference);
             var matches = expected == actual;

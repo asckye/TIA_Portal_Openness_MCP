@@ -14,6 +14,8 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     public sealed class EcosystemTools
     {
+        internal Func<FileInfo, JsonObject> VerifyOutput { get; set; } = NativeFileOutput.Verify;
+
         internal Func<string, System.Collections.Generic.IEnumerable<string>, string, string?, int, Task<JsonObject>> CompanionRun { get; set; }
             = EcosystemFiles.Run;
 
@@ -59,13 +61,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 [Description("New absolute output file; existing files are refused.")] string outputPath)
             => OfflineToolExecution.RunOfflineAnalysisTool("RenderPlcVisualDiff", meta =>
             {
+                meta["mayHaveWrittenFiles"] = false;
                 if (!outputPath.EndsWith(".html", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("outputPath must end in .html.");
                 var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath));
                 var result = PlcVisualComparison.Compare(leftFilePath, rightFilePath, out var html);
                 foreach (var item in result) meta[item.Key] = item.Value?.DeepClone();
-                using (var stream = new FileStream(output.FullName, FileMode.CreateNew, FileAccess.Write))
-                using (var writer = new StreamWriter(stream, new UTF8Encoding(false))) writer.Write(html);
-                meta["output"] = NativeFileOutput.Verify(output); meta["mayHaveWrittenFiles"] = true;
+                OfflineToolExecution.WriteNewDocument(output, html, new UTF8Encoding(false), meta);
+                meta["output"] = VerifyOutput(output);
                 return "PLC visual and structural comparison written.";
             });
         [McpServerTool(Name = "GetOpennessGuidance"),

@@ -116,11 +116,13 @@ namespace TiaMcp.Logic.V4.Inputs
                 return "Input does not satisfy the declared contract.";
             var missing = new SortedSet<string>(StringComparer.Ordinal);
             var invalid = new SortedSet<string>(StringComparer.Ordinal);
+            var diagnostics = new List<string>();
             bool unknown = Json.TryGetProperty("additionalProperties", out var additional) && additional.ValueKind == JsonValueKind.False
                 && value.EnumerateObject().Any(p => !declared.TryGetProperty(p.Name, out _));
             foreach (var error in ValidateFields(value))
             {
                 if (error.Details is not InvalidArgumentDetails details) continue;
+                if (error.Message != InputGuard.ContractMessage) diagnostics.Add(error.Message);
                 foreach (string pointer in details.Parameters)
                 {
                     if (pointer.Length == 0) continue;
@@ -134,6 +136,7 @@ namespace TiaMcp.Logic.V4.Inputs
             if (unknown) groups.Add("Unknown parameter(s): [undeclared].");
             if (missing.Count > 0) groups.Add("Missing required: " + string.Join(", ", missing) + ".");
             if (invalid.Count > 0) groups.Add("Invalid: " + string.Join(", ", invalid) + ".");
+            groups.AddRange(diagnostics.Distinct(StringComparer.Ordinal));
             return groups.Count == 0 ? "Input does not satisfy the declared contract." : string.Join(" ", groups);
         }
 
@@ -478,8 +481,14 @@ namespace TiaMcp.Logic.V4.Inputs
             if (value.ValueKind == JsonValueKind.Number)
             {
                 InputGuard.Require(value.TryGetDouble(out double number) && !double.IsInfinity(number) && !double.IsNaN(number));
-                if (schema.TryGetProperty("minimum", out var min)) InputGuard.Require(CompareNumber(value, min) >= 0);
-                if (schema.TryGetProperty("maximum", out var max)) InputGuard.Require(CompareNumber(value, max) <= 0);
+                bool hasMin = schema.TryGetProperty("minimum", out var min), hasMax = schema.TryGetProperty("maximum", out var max);
+                if (hasMin && CompareNumber(value, min) < 0 || hasMax && CompareNumber(value, max) > 0)
+                {
+                    string range = hasMin && hasMax ? min.GetRawText() + ".." + max.GetRawText()
+                        : hasMin ? "at least " + min.GetRawText() : "at most " + max.GetRawText();
+                    string field = pointer.Length == 0 ? "The value" : pointer;
+                    throw new InputRejectionException(diagnostic: field + " must be " + range + ".").At(pointer, range);
+                }
             }
             if (value.ValueKind == JsonValueKind.Array)
             {

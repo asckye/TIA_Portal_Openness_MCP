@@ -15,6 +15,8 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     internal sealed class PlcDocumentationTools
     {
+        internal Func<FileInfo, JsonObject> VerifyOutput { get; set; } = NativeFileOutput.Verify;
+
         [McpServerTool(Name = "RenderPlcBlockDocument"),
                 Description("[L2][Validation][READ] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards; this native export branch retains behaviorPolicy=current pending V4 native acceptance). mermaidDirection LR (default) or TD. Returns the Markdown in data.markdown (truncated to maxChars, default 60000, full length in data.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded.")]
         public CallToolResult RenderPlcBlockDocumentV4(
@@ -37,6 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("maxChars: cap on characters rendered.")] int maxChars = 60000)
             => OfflineToolExecution.RunOfflineAnalysisTool("RenderPlcBlockDocument", meta =>
             {
+                if (string.IsNullOrWhiteSpace(blockPath)) meta["mayHaveWrittenFiles"] = false;
                 if (maxChars < 1000 || maxChars > 2000000) throw new ArgumentException("maxChars must be between 1000 and 2000000.");
                 var output = string.IsNullOrWhiteSpace(outputPath) ? null : OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath));
                 string? temp = null;
@@ -48,8 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     string path;
                     if (hasFile)
                     {
-                        if (!Path.IsPathRooted(filePath)) throw new ArgumentException("filePath must be absolute.");
-                        if (!File.Exists(filePath)) throw new FileNotFoundException("filePath not found: " + filePath, filePath);
+                        OfflineToolExecution.RequireDocumentFile(filePath, nameof(filePath));
                         path = filePath;
                         meta["source"] = new JsonObject { ["mode"] = "file", ["path"] = filePath };
                     }
@@ -60,7 +62,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         meta["source"] = new JsonObject {
                             ["mode"] = "block", ["softwarePath"] = softwarePath, ["blockPath"] = blockPath, ["tempExportDeleted"] = true };
                     }
-                    var rendered = PlcDocumentationLogic.RenderFile(path, mermaidDirection ?? "LR");
+                    var rendered = OfflineToolExecution.ReadDocument(hasFile ? nameof(filePath) : null,
+                        () => PlcDocumentationLogic.RenderFile(path, mermaidDirection ?? "LR"));
                     var md = rendered.Markdown;
                     meta["blockName"] = rendered.Document.BlockName; meta["blockType"] = rendered.Document.BlockType; meta["language"] = rendered.Document
                         .Language;
@@ -72,9 +75,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["truncated"] = md.Length > maxChars;
                     if (output != null)
                     {
-                        File.WriteAllText(output.FullName, md, new UTF8Encoding(false));
-                        meta["output"] = NativeFileOutput.Verify(output);
-                        meta["mayHaveWrittenFiles"] = true;
+                        OfflineToolExecution.WriteNewDocument(output, md, new UTF8Encoding(false), meta);
+                        meta["output"] = VerifyOutput(output);
                     }
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = md.Length <= maxChars || output != null;
                     return "Rendered " + rendered.Document.BlockType + " '" + rendered.Document.BlockName + "': " + rendered.Networks.Count + " network(s) ("
@@ -108,10 +110,11 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("mermaidDirection: direction of the generated Mermaid diagram - TB or LR.")] string mermaidDirection = "LR")
             => OfflineToolExecution.RunOfflineAnalysisTool("GeneratePlcDocumentation", meta =>
             {
+                meta["mayHaveWrittenFiles"] = false;
                 var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath));
                 var extensions = OfflineAnalysisLogic.ParseExtensions(extensionsJson);
                 var hb = PlcDocumentationLogic.RenderHandbook(directory, recursive, extensions, title ?? "", mermaidDirection ?? "LR");
-                File.WriteAllText(output.FullName, hb.Markdown, new UTF8Encoding(false));
+                OfflineToolExecution.WriteNewDocument(output, hb.Markdown, new UTF8Encoding(false), meta);
                 meta["directory"] = directory; meta["recursive"] = recursive;
                 meta["documentCount"] = hb.Entries.Count; meta["renderedBlocks"] = hb.Entries.Count - hb.Failed; meta["failedDocuments"] = hb.Failed;
                 meta["failures"] =
@@ -122,9 +125,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["name"] = e.Block!.Document.BlockName, ["type"] = e.Block.Document.BlockType, ["language"] = e.Block.Document.Language,
                     ["networks"] = e.Block.Networks.Count, ["calls"] = e.Block.Document.BlockCalls.Distinct().Count()
                 }).ToArray());
-                meta["output"] = NativeFileOutput.Verify(output);
+                meta["output"] = VerifyOutput(output);
                 meta["markdownLength"] = hb.Markdown.Length;
-                meta["mayHaveWrittenFiles"] = true; meta["apiCallSuccess"] = true; meta["dataComplete"] = hb.Failed == 0;
+                meta["apiCallSuccess"] = true; meta["dataComplete"] = hb.Failed == 0;
                 return "Documented " + (hb.Entries.Count - hb.Failed) + " block(s) from " + hb.Entries.Count + " document(s)"
                     + (hb.Failed > 0 ? " (" + hb.Failed + " failed to parse)" : "") + " into " + output.FullName + ".";
             });

@@ -141,7 +141,7 @@ public sealed class DirectoryImportRegressionTests
         }
     }
 
-    private sealed class Worker(Func<string, JsonObject, JsonNode?> handle) : IFoundationWorker, Engine.IEngineWorker
+    internal sealed class Worker(Func<string, JsonObject, JsonNode?> handle) : IFoundationWorker, Engine.IEngineWorker
     {
         internal const string Project = "C:/Fixture/Project.ap15_1";
         public bool Faulted => false;

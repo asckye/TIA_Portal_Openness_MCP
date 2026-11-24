@@ -168,7 +168,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 try {
                     meta["offlineOnly"] = !string.IsNullOrWhiteSpace(filePath);
                     var path = OfflineToolExecution.ResolveCompareSide("document", filePath, blockPath, softwarePath, meta, out temp);
-                    meta["data"] = PlcDocumentEditing.Inspect(PlcDocumentEditing.Read(path));
+                    if (!string.IsNullOrWhiteSpace(filePath)) meta["mayHaveWrittenFiles"] = false;
+                    meta["data"] = OfflineToolExecution.ReadDocument(temp == null ? nameof(filePath) : null,
+                        () => PlcDocumentEditing.Inspect(PlcDocumentEditing.Read(path)));
                     return "Exported block editing capabilities inspected. Network indexes are zero-based; native import remains unverified.";
                 } finally { OfflineToolExecution.DeleteAnalysisTempDir(temp); }
             });
