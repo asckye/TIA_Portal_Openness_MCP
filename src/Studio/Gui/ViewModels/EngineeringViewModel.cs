@@ -65,19 +65,25 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         int generation = _tagGeneration;
         await _blockLoad;
         if (generation != _tagGeneration || !CanReadTags) return;
-        await _activity.Guarded("Project.LoadingTags", async () =>
+        await ReadDocumentAsync("Project.LoadingTags", string.IsNullOrEmpty(TagTable) ? device.Name : device.Name + "/" + TagTable, async token =>
         {
             PlcTags = [];
             TagCount = null;
             Set(ref _tagStatus, LocalizedText.Working("Project.LoadingTags"), nameof(TagStatus));
             try
             {
-                var tags = await _client.ListPlcTagsAsync(device.Id, TagTable, includeUnits: true);
+                var tags = await _client.ListPlcTagsAsync(device.Id, TagTable, includeUnits: true, token);
+                token.ThrowIfCancellationRequested();
                 if (generation != _tagGeneration) return;
                 PlcTags = tags;
                 TagCount = tags.Count;
                 Set(ref _tagStatus, tags.Count == 0 ? LocalizedText.Key("Project.EmptyTags") : LocalizedText.Empty, nameof(TagStatus));
                 _activity.SetStatus("Project.TagsRead", kind: null, tags.Count);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                if (generation == _tagGeneration) Set(ref _tagStatus, LocalizedText.Key("Session.CancelledRead"), nameof(TagStatus));
+                throw;
             }
             catch (Exception error)
             {
@@ -136,7 +142,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
 
     /// <summary>The devices as TIA shows them: the project, its device groups, then the devices.</summary>
     public ObservableCollection<DeviceNode> DeviceTree { get; } = [];
-    public IEnumerable<DeviceNode> ProjectDevices => DeviceTree.SelectMany(root => root.Children);
+    public IEnumerable<DeviceNode> ProjectDevices => DeviceTree.SelectMany(root => root.Children).OrderBy(node => node.Category == "Hmi");
 
     public AsyncCommand RetrySource { get; }
     public AsyncCommand Refresh { get; }
@@ -180,7 +186,25 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
         set { if (Set(ref _outputDirectory, value)) Export.RaiseCanExecuteChanged(); }
     }
 
-    public string NamePattern { get => _namePattern; set { if (Set(ref _namePattern, value)) Raise(nameof(RulePatternStatus)); } }
+    public string NamePattern
+    {
+        get => _namePattern;
+        set
+        {
+            if (Set(ref _namePattern, value)) { Raise(nameof(RulePatternStatus)); Raise(nameof(EnabledRules)); }
+        }
+    }
+    public IEnumerable<string> EnabledRules
+    {
+        get
+        {
+            var options = new TiaOpenness.Core.Abstractions.InspectionOptions { BlockNamePattern = NamePattern };
+            if (!string.IsNullOrWhiteSpace(options.BlockNamePattern)) yield return Loc.Current["Project.RuleNaming"];
+            if (options.FlagInconsistentBlocks) yield return Loc.Current["Project.RuleBuild"];
+            yield return Loc.Current["Project.RuleProtection"];
+            if (options.RequireBlockComment) yield return Loc.Current["Project.RuleAuthors"];
+        }
+    }
     public string RulePatternStatus
     {
         get
@@ -584,7 +608,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
-        Raise(nameof(RulePatternStatus)); Raise(nameof(LogicModeLabel));
+        Raise(nameof(RulePatternStatus)); Raise(nameof(EnabledRules)); Raise(nameof(LogicModeLabel));
         Raise(nameof(TagStatus));
         Raise(nameof(SourceStatus)); Raise(nameof(SourceErrorTitle));
         Raise(nameof(LineCountLabel));
@@ -614,6 +638,7 @@ public sealed partial class EngineeringViewModel : ObservableObject, IDisposable
     }
     public void Dispose()
     {
+        CancelDocumentRead();
         _sourceRequest++;
         Loc.Current.LanguageChanged -= OnLanguageChanged;
         _activity.PropertyChanged -= OnActivityChanged;

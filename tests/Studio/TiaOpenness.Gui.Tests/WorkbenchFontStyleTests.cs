@@ -320,6 +320,7 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                         string suffix = $"{width}x{height}-{language}-{theme}";
                         foreach (string page in new[] { "Mcp", "Clients", "Engineering", "VersionControl", "Calls", "Audit", "Environment", "Log" })
                         {
+                            if (page == "Engineering") ((MainViewModel)window.DataContext).Engineering.Document = ProjectDocument.Render;
                             window.Navigate(page); Layout(host, width, height);
                             Assert.Same(Application.Current.FindResource("Primer.bg"), ((Grid)window.FindName("Root")).Background);
                             string context = page + " " + suffix;
@@ -342,6 +343,9 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                             }
                             if (page == "Engineering")
                             {
+                                var tabs = window.OperationsContent.DocumentTabs;
+                                foreach (var choice in Descendants<RadioButton>(tabs))
+                                    Assert.True(choice.TranslatePoint(new Point(choice.ActualWidth, 0), tabs).X <= tabs.ActualWidth + 1, context);
                                 var blocks = (DependencyObject)window.FindName("BlocksContent");
                                 foreach (var header in Descendants<TextBlock>(blocks).Where(text =>
                                     ReferenceEquals(text.Style, Application.Current.FindResource("Primer.TableHeader"))))
@@ -351,7 +355,12 @@ public sealed class WorkbenchFontStyleTests(WpfContext wpf)
                                 AssertWholeWords((TextBlock)ProjectPageTestSupport.Find(window, "BlocksSummary"), context);
                             }
                             if (page == "VersionControl")
+                            {
                                 AssertSingleLine((TextBlock)ProjectPageTestSupport.Find(window, "MappedMeta"), context);
+                                var filters = (Border)ProjectPageTestSupport.Find(window, "SyncCard");
+                                foreach (var choice in Descendants<RadioButton>(filters))
+                                    Assert.True(choice.TranslatePoint(new Point(choice.ActualWidth, 0), filters).X <= filters.ActualWidth + 1, context);
+                            }
                             if (page == "Audit")
                             {
                                 var audit = (DependencyObject)window.FindName("AuditContent");

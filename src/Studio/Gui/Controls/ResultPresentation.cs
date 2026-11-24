@@ -97,7 +97,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public bool HasProject => model.Session.IsConnected && model.Session.ProjectName.Length > 0;
     public bool CanConnect => !model.Busy;
     public string MappedMeta => Loc.Current
-        .T("Pages.MappedMeta", model.VersionControl.SelectedWorkspace?.MappedObjectCount ?? 0, model.VersionControl.VcStatusItems
+        .T("Pages.MappedMeta", model.VersionControl.MappedCount, model.VersionControl.VcStatusItems
             .Count(i => i.CompareState != VcCompareState.Equal));
     public bool CanOperate => HasProject && !model.Busy;
     public double OperationOpacity => HasProject ? 1 : .5;
@@ -139,9 +139,10 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
         .Where(i=>i!=model.VersionControl.SelectedVcItem && i.CompareState!=VcCompareState.Equal).Take(3).ToArray();
     public string BlocksSummary => Loc.Current.T("Primer.BlocksSummary", model.Engineering.Blocks.Count,
         model.Engineering.Blocks.Count(b=>b.Selected), model.Engineering.BlocksView.Cast<BlockRow>().Count());
-    public string DifferenceLabel => Loc.Current["Primer.Differ"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.Unequal);
-    public string MissingLabel => Loc.Current["Primer.Missing"] + " · " + model.VersionControl.VcStatusItems
-        .Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
+    private string FilterLabel(string label, VcCompareState state) => model.VersionControl.HasStatus
+        ? Loc.Current[label] + " · " + model.VersionControl.VcStatusItems.Count(item => item.CompareState == state) : Loc.Current[label];
+    public string DifferenceLabel => FilterLabel("Primer.Differ", VcCompareState.Unequal);
+    public string MissingLabel => FilterLabel("Primer.Missing", VcCompareState.WorkspaceFileMissing);
     public string WorkspaceSummary => model.VersionControl.SelectedWorkspace is null ? model.VersionControl.WorkspaceRootDisplay
         : Loc.Current.T("Primer.WorkspaceSummary", model.VersionControl.WorkspaceRootDisplay,
             model.VersionControl.SelectedWorkspace.MappedObjectCount, model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal));

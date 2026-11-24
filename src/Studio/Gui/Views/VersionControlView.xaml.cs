@@ -10,6 +10,7 @@ public partial class VersionControlView : UserControl
     public VersionControlView()
     {
         InitializeComponent();
+        SizeChanged += (_, e) => SyncStrip.Tag = e.NewSize.Width < 820 ? "Compact" : null;
         Options.LocalScrim.Source = WorkspaceBackdrop;
     }
     private MainViewModel Model => (MainViewModel)DataContext;
@@ -17,22 +18,7 @@ public partial class VersionControlView : UserControl
     internal bool OptionsOpen => Options.IsOpen;
     private void OnBackToWorkspace(object sender, RoutedEventArgs e) => Model.VersionControl.CloseSyncResult();
     private void OnBrowseWorkspace(object sender, RoutedEventArgs e) => Model.VersionControl.BrowseWorkspaceFolder();
-    private void OnWorkspaceAction(object sender, RoutedEventArgs e)
-    {
-        if (Model.VersionControl.SelectedWorkspace == null) { Options.Show("Workspace"); return; }
-        try
-        {
-            System.Diagnostics.Process
-                .Start(new System.Diagnostics.ProcessStartInfo(Model.VersionControl.SelectedWorkspace.RootPath) { UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            Model.Activity.Append(ex.Message);
-            Model.Activity.Notify(ToastKind.Error, Localization.LocalizedText.Literal(ex.Message), "workspace");
-        }
-    }
-    private void OnGitTools(object sender, RoutedEventArgs e)
-        => Model.Activity.Notify(ToastKind.Info, Localization.LocalizedText.Key("Pages.GitHint"), "git-guidance");
+    internal Button GitToolsButton => Options.GitToolsButton;
     private void OnWorkspaceOptions(object sender, RoutedEventArgs e) => Options.Show("Workspace");
     private void OnMappedFile(object sender, RoutedEventArgs e) => Model.VersionControl.SelectedVcItem =
         (TiaOpenness.Contracts.Models.MappedObjectInfo)((Button)sender).Tag;
@@ -44,8 +30,9 @@ public partial class VersionControlView : UserControl
     private void OnMappedAll(object sender, RoutedEventArgs e)
     {
         MappedList.Items.Filter = null;
-        Model.VersionControl.VcShowAll = true;
-        if (Model.VersionControl.VcStatus.CanExecute(null)) Model.VersionControl.VcStatus.Execute(null);
+        var vc = Model.VersionControl;
+        vc.VcShowAll = true;
+        if (vc.VcStatus.CanExecute(null)) vc.VcStatus.Execute(null);
     }
     private void OnDirection(object sender, RoutedEventArgs e) => Model.VersionControl.CloseSyncResult();
     private void OnApplyPreview(object sender, RoutedEventArgs e)

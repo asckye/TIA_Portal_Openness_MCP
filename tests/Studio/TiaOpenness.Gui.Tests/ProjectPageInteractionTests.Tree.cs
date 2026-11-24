@@ -37,19 +37,18 @@ public sealed partial class ProjectPageInteractionTests
                         Assert.Same(window.DocumentHost, window.BlockDocument.Parent);
                         Assert.Same(window.DocumentHost, window.CompileDocument.Parent);
                     }
+                    Assert.Same(window.OperationsContent.CompileTab, window.OperationsContent.FindName("CompileTab"));
+                    Assert.True(window.OperationsContent.CompileTab.IsChecked);
                     var side = window.CompileDocument;
                     var blocks = window.BlockDocument;
-                    Assert.True(side.TranslatePoint(new Point(), blocks).Y >= blocks.ActualHeight);
-                    Assert.Equal(System.Math.Min(920, window.ProjectOverview.ActualWidth - 48), side.ActualWidth);
-                    if (width < 1200) Assert.Equal(Visibility.Collapsed, window.FoldProjectContext.Visibility);
-                    else
-                    {
-                        Assert.Equal(Visibility.Visible, window.FoldProjectContext.Visibility);
-                        UnifiedDesktopTests.ClickControl(window.FoldProjectContext);
-                        Assert.Equal(Visibility.Collapsed, side.Visibility);
-                        UnifiedDesktopTests.ClickControl(window.FoldProjectContext);
-                        Assert.Equal(Visibility.Visible, side.Visibility);
-                    }
+                    Assert.Equal(Visibility.Collapsed, blocks.Visibility);
+                    Assert.Equal(window.ProjectOverview.ActualWidth, side.ActualWidth);
+                    Assert.Equal(Visibility.Visible, side.Visibility);
+                    var result = window.EngineeringSideContent;
+                    bool stacked = result.Results.ActualWidth < 780;
+                    Assert.Equal(stacked ? 0 : 2, Grid.GetColumn(result.InspectionPane));
+                    Assert.Equal(stacked ? 1 : 0, Grid.GetRow(result.InspectionPane));
+                    Assert.Equal(result.CompileCard.ActualWidth, result.InspectionCard.ActualWidth, 0);
                 }
             }
             finally { window.Close(); }
@@ -100,10 +99,17 @@ public sealed partial class ProjectPageInteractionTests
                 Assert.Equal("Overview", Assert.Single(model.Engineering.Screens));
                 Assert.False(model.Engineering.Compile.CanExecute(null));
                 PressTreeKey(plc, Key.Enter); WpfContext.Drain(); tree.UpdateLayout();
-                var unit = (TreeViewItem)plc.ItemContainerGenerator.ContainerFromItem(Assert.Single(client.Units));
+                var group = (TreeViewItem)plc.ItemContainerGenerator.ContainerFromItem(Assert.Single(plc.Items.OfType<SoftwareUnitGroup>()));
+                PressTreeKey(group, Key.Enter); WpfContext.Drain(); tree.UpdateLayout();
+                Assert.True(group.IsExpanded);
+                var unit = (TreeViewItem)group.ItemContainerGenerator.ContainerFromItem(Assert.Single(client.Units));
                 PressTreeKey(unit, Key.Enter); WpfContext.Drain(); tree.UpdateLayout();
                 Assert.Equal(ProjectDocument.SoftwareUnit, model.Engineering.Document);
                 Assert.Equal("Motion", model.Engineering.SelectedUnit!.Name);
+                var action = Assert.Single(DesktopCapture.Descendants<Button>(window.BlocksContent.UnitMembers));
+                var caption = Assert.Single(DesktopCapture.Descendants<TextBlock>(action));
+                Assert.Contains(Assert.Single(client.Units[0].Blocks), caption.Text);
+                Assert.DoesNotContain("System.Windows.", caption.Text);
                 var member = (TreeViewItem)unit.ItemContainerGenerator.ContainerFromIndex(0);
                 client.Calls.Clear();
                 PressTreeKey(member, Key.Enter); WpfContext.Drain();

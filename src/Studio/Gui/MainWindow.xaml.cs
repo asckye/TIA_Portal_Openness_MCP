@@ -30,6 +30,7 @@ public partial class MainWindow : Window
         DpiChanged += (_, change) => UpdateWindowFrame(change.NewDpi);
         DataContext = _model;
         Root.Tag = new Controls.ResultPresentation(_model);
+        RegisterProjectControls();
         InitializeToast();
         InitializeShell(approvals, diagnostics);
         UpdateMcpStatus();

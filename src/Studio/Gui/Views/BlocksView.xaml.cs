@@ -24,7 +24,7 @@ public sealed partial class BlocksView : UserControl, IDisposable
         {
             if (change.OldValue is MainViewModel old) old.Engineering.PropertyChanged -= OnDocumentChanged;
             Atlas?.Dispose();
-            Atlas = DataContext is MainViewModel model ? new AtlasPresentation(model, model.AtlasService) : null;
+            Atlas = DataContext is MainViewModel model ? CreateAtlas(model, model.AtlasService) : null;
             if (DataContext is MainViewModel current)
             {
                 current.Engineering.PropertyChanged += OnDocumentChanged;
@@ -33,19 +33,29 @@ public sealed partial class BlocksView : UserControl, IDisposable
         };
     }
 
-    internal event EventHandler? DownloadRequested;
+    internal MenuItem ViewLadderAtlas => (MenuItem)FindName("ViewLadderAtlas");
+    internal event Action<Services.ToastNotice>? AtlasNotice;
+    internal event Action? ClearAtlasNotice;
+    private AtlasPresentation CreateAtlas(MainViewModel model, IAtlasService service, Action<string>? open = null)
+    {
+        var atlas = new AtlasPresentation(model, service, open, notice => AtlasNotice?.Invoke(notice));
+        atlas.ClearNotice += () => ClearAtlasNotice?.Invoke();
+        return atlas;
+    }
+    internal Action<string> CopyText { get; set; } = Clipboard.SetText;
+    private void OnCopySource(object sender, RoutedEventArgs e)
+    {
+        try { CopyText(Model.Engineering.SourceText); }
+        catch (System.Runtime.InteropServices.ExternalException error)
+        {
+            Model.Activity.Notify(ToastKind.Error, Localization.LocalizedText.Literal(error.Message), "copy-source");
+        }
+    }
     private async void OnOpenUnitMember(object sender, RoutedEventArgs e)
     {
         if (((Button)sender).DataContext is Services.UnitBlockInfo member) await Model.Engineering.OpenUnitBlockAsync(member.Unit, member.Name);
     }
-    private void OnDownload(object sender, RoutedEventArgs e) => DownloadRequested?.Invoke(this, EventArgs.Empty);
-    private async void OnViewLadderAtlas(object sender, RoutedEventArgs e)
-    {
-        if (Atlas != null) await Atlas.GenerateAsync(singleBlock: true);
-    }
     private void OnLadderMode(object sender, RoutedEventArgs e) => UpdateEditor();
-    private async void OnExportXml(object sender, RoutedEventArgs e) => await Model.Engineering.OpenXmlAsync(export: true);
-    private async void OnOpenXml(object sender, RoutedEventArgs e) => await Model.Engineering.OpenXmlAsync();
 
     private void OnDocumentChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -83,16 +93,19 @@ public sealed partial class BlocksView : UserControl, IDisposable
             NodeItems.ItemsSource = hmi ? Model.Engineering.Screens : null;
         }
         bool ladder = doc == ProjectDocument.Render && Model.Engineering.FocusedBlock?.HasLadderOrFbd == true;
-        LadderToolbar.Visibility = ladder ? Visibility.Visible : Visibility.Collapsed;
-        LadderPanel.Visibility = ladder && VisualTab.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        bool visualNetwork = ladder && VisualTab.IsChecked == true;
+        TextActions.Visibility = visualNetwork ? Visibility.Collapsed : Visibility.Visible;
+        LadderModes.Visibility = ladder ? Visibility.Visible : Visibility.Collapsed;
+        LadderPanel.Visibility = visualNetwork ? Visibility.Visible : Visibility.Collapsed;
         bool empty = (Model.Engineering.EmptyBlockList || Model.Engineering.EmptyDeviceList) && doc == ProjectDocument.Render;
         bool error = Model.Engineering.SourceFailed && Model.Engineering.Xml.Length == 0 && doc == ProjectDocument.Render;
         EmptyBlocks.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
         SourceError.Visibility = error ? Visibility.Visible : Visibility.Collapsed;
         BlockChooser.Visibility = !empty && Model.Engineering.FocusedBlock == null ? Visibility.Visible : Visibility.Collapsed;
-        BlocksHeaderCard.Visibility = empty || error ? Visibility.Collapsed : Visibility.Visible;
+        BlocksHeaderCard.Visibility = doc == ProjectDocument.Render && !empty && !error
+            ? Visibility.Visible : Visibility.Collapsed;
         Editor.Visibility = doc == ProjectDocument.Compile || empty || error ? Visibility.Collapsed : Visibility.Visible;
-        CodePanel.Visibility = doc == ProjectDocument.Render && !empty && !error && LadderPanel.Visibility != Visibility.Visible
+        CodePanel.Visibility = doc == ProjectDocument.Render && !empty && !error && !visualNetwork
             ? Visibility.Visible : Visibility.Collapsed;
         InterfacePanel.Visibility = doc == ProjectDocument.Interface ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -113,7 +126,7 @@ public sealed partial class BlocksView : UserControl, IDisposable
     internal void SetAtlasService(IAtlasService service, Action<string>? open = null)
     {
         Atlas?.Dispose();
-        Atlas = new AtlasPresentation(Model, service, open);
+        Atlas = CreateAtlas(Model, service, open);
     }
     internal void ShowCompileTab() => Model.Engineering.Document = ProjectDocument.Compile;
     internal void HideOptions() => Options.Hide();
@@ -143,14 +156,6 @@ public sealed partial class BlocksView : UserControl, IDisposable
     {
         if (Atlas != null) await Atlas.GenerateAsync(false);
     }
-    private void OnAtlasFolder(object sender, RoutedEventArgs e) => Atlas?.Open(true);
-    private void OnDismissAtlas(object sender, RoutedEventArgs e) => Atlas?.Dismiss();
-    private async void OnRetryAtlas(object sender, RoutedEventArgs e)
-    {
-        if (Atlas != null) await Atlas.GenerateAsync(false, skipProtected: true);
-    }
-    private void OnOpenAtlas(object sender, RoutedEventArgs e) => Atlas?.Open();
-    private void OnCancelAtlas(object sender, RoutedEventArgs e) => Atlas?.Cancel();
     public void Dispose()
     {
         if (DataContext is MainViewModel model) model.Engineering.PropertyChanged -= OnDocumentChanged;

@@ -5,6 +5,7 @@ using System.Linq;
 using System.IO;
 using TiaOpenness.Gui.Services;
 using PlcDocumentationLogic = PlcRendering::TiaMcpServer.ModelContextProtocol.PlcDocumentationLogic;
+using System.Threading;
 using System.Threading.Tasks;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Gui.Localization;
@@ -33,6 +34,40 @@ public sealed partial class EngineeringViewModel
     }
     internal void ClearSnapshot() => Snapshot = null;
 
+    private CancellationTokenSource? _documentRead;
+    public bool ReadingDocument => _documentRead != null;
+    public string ReadPath { get; private set; } = "";
+    internal void CancelDocumentRead() => _documentRead?.Cancel();
+
+    private async Task ReadDocumentAsync(string title, string objectPath, Func<CancellationToken, Task> read)
+    {
+        using var cancellation = new CancellationTokenSource();
+        ReadPath = objectPath;
+        _documentRead = cancellation;
+        Raise(nameof(ReadingDocument)); Raise(nameof(ReadPath));
+        try
+        {
+            await _activity.Guarded(title, async () =>
+            {
+                try { await read(cancellation.Token); }
+                catch (OperationCanceledException error) when (error.CancellationToken == cancellation.Token && cancellation.IsCancellationRequested)
+                {
+                    System.Diagnostics.Trace.TraceInformation("Cancelled project read {0}: {1}", objectPath, error.Message);
+                    _activity.SetStatus("Session.CancelledRead", kind: null);
+                }
+            });
+        }
+        finally
+        {
+            if (_documentRead == cancellation)
+            {
+                ReadPath = "";
+                _documentRead = null;
+                Raise(nameof(ReadingDocument)); Raise(nameof(ReadPath));
+            }
+        }
+    }
+
     private BlockRow? _interfaceBlock;
     private IReadOnlyList<BlockMember> _members = [];
     public IReadOnlyList<BlockMember> Members
@@ -48,17 +83,21 @@ public sealed partial class EngineeringViewModel
     public string LogicModeLabel => ShowXml ? "XML" : Loc.Current["Project.LadText"];
     private bool ShowXml => Xml.Length != 0 && FocusedBlock?.HasLadderOrFbd == true;
     private IReadOnlyList<string> _xmlLines = [];
+    private string _sourceText = "";
+    internal string SourceText => ShowXml ? Xml : _sourceText;
+    public bool HasTextLines => TextLines.Count > 0;
     public IReadOnlyList<string> TextLines => ShowXml ? _xmlLines : SourceLines;
 
     internal async Task ReadInterfaceAsync()
     {
         if (FocusedBlock is not { } row || SelectedDevice == null || _interfaceBlock == row || _activity.Busy) return;
         int request = _sourceRequest;
-        await _activity.Guarded("Project.Interface", async () =>
+        await ReadDocumentAsync("Project.Interface", SourcePath, async token =>
         {
-            var members = await _client.ReadInterfaceAsync(SelectedDevice.Id, row.Path);
+            var members = await _client.ReadInterfaceAsync(SelectedDevice.Id, row.Path, token);
             if (_sourceRequest != request) return;
             Members = members; _interfaceBlock = row;
+            _activity.SetStatus("Project.InterfaceRead", kind: null, members.Count);
         });
     }
 
@@ -66,17 +105,18 @@ public sealed partial class EngineeringViewModel
     {
         if (FocusedBlock is not { } row || _activity.Busy) return;
         var plc = SelectedDevice;
-        await _activity.Guarded("Project.OpenXml", async () =>
+        await ReadDocumentAsync("Project.OpenXml", SourcePath, async token =>
         {
-            string? path = await SelectXmlAsync(export, plc?.Id, null, row.Path);
+            string? path = await SelectXmlAsync(export, plc?.Id, null, row.Path, token);
             if (path == null || FocusedBlock != row) return;
-            string xml = await File.ReadAllTextAsync(path);
+            string xml = await File.ReadAllTextAsync(path, token);
             var (document, networks) = await Task.Run(() =>
             {
                 var document = PlcDocumentationLogic.RenderText(xml, path).Document;
                 bool matches = document.Format == "SimaticML" && document.BlockName == row.Name;
                 return (matches ? document : null, matches && row.HasLadderOrFbd ? ProjectLadderNetwork.FromXml(xml) : null);
             });
+            token.ThrowIfCancellationRequested();
             if (FocusedBlock != row) return;
             if (document == null)
                 throw new InvalidDataException(Loc.Current["Project.XmlMismatch"]);
@@ -88,23 +128,26 @@ public sealed partial class EngineeringViewModel
             DocumentComment = document.Comment;
             Members = document.Members.Select(m => new BlockMember(m.Section, m.Path, m.Datatype, "")).ToArray();
             _interfaceBlock = row;
-            Raise(nameof(Xml)); Raise(nameof(LogicModeLabel)); Raise(nameof(TextLines)); Raise(nameof(DocumentComment));
+            Raise(nameof(Xml)); Raise(nameof(LogicModeLabel)); Raise(nameof(TextLines)); Raise(nameof(HasTextLines)); Raise(nameof(DocumentComment));
         });
     }
 
     public bool CanExportXml => SelectedDevice?.Category == "Plc" && _client is McpProjectClient;
-    private async Task<string?> SelectXmlAsync(bool export, string? plc, string? unit, string blockPath)
+    private async Task<string?> SelectXmlAsync(bool export, string? plc, string? unit, string blockPath, CancellationToken token)
     {
         if (!export || _client is not McpProjectClient host || plc == null)
             return _dialogs.OpenFiles(Loc.Current["Project.OpenXml"], Loc.Current["Project.XmlFilter"])?.FirstOrDefault();
         var folder = _dialogs.OpenFolder(Loc.Current["Project.ExportLocation"]);
         if (folder == null) return null;
+        token.ThrowIfCancellationRequested();
         string file = await host.ExportBlockXmlAsync(plc, blockPath, folder, unit, false);
         string root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder)) + Path.DirectorySeparatorChar;
         if (!File.Exists(file) || !Path.GetFullPath(file).StartsWith(root, StringComparison.OrdinalIgnoreCase)
             || !string.Equals(Path.GetExtension(file), ".xml", StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException(Loc.Current["Project.MissingExport"]);
-        return file;
+        _activity.SetStatus("Toast.Exported", ToastKind.Success, file);
+        // Cancellation received during export stops the optional local read after the actual result is visible.
+        return token.IsCancellationRequested ? null : file;
     }
 
     public string UnitSourceFile { get; private set; } = "";
@@ -119,14 +162,15 @@ public sealed partial class EngineeringViewModel
         if (_activity.Busy || !unit.Blocks.Contains(name, StringComparer.Ordinal)) return;
         SelectedUnit = unit; Document = ProjectDocument.SoftwareUnit;
         var plc = SelectedDevice;
-        await _activity.Guarded("Project.OpenXml", async () =>
+        await ReadDocumentAsync("Project.OpenXml", $"{plc?.Name}/{unit.Name}/{name}", async token =>
         {
             string? path = _client is McpProjectClient { SupportsUnitExport: true }
-                ? await SelectXmlAsync(true, plc?.Id, unit.Name, Uri.EscapeDataString(name))
+                ? await SelectXmlAsync(true, plc?.Id, unit.Name, Uri.EscapeDataString(name), token)
                 : _dialogs.OpenFiles(Loc.Current.T("Project.UnitExport", unit.Name, name), Loc.Current["Project.XmlFilter"])?.FirstOrDefault();
             if (path == null || SelectedUnit != unit) return;
-            string xml = await File.ReadAllTextAsync(path);
+            string xml = await File.ReadAllTextAsync(path, token);
             var rendered = await Task.Run(() => PlcDocumentationLogic.RenderText(xml, path));
+            token.ThrowIfCancellationRequested();
             if (SelectedUnit != unit || Document != ProjectDocument.SoftwareUnit) return;
             if (rendered.Document.Format != "SimaticML" || rendered.Document.BlockName != name)
                 throw new InvalidDataException(Loc.Current["Project.XmlMismatch"]);
@@ -166,6 +210,7 @@ public sealed partial class EngineeringViewModel
 
     private void ResetSource()
     {
+        CancelDocumentRead();
         _sourceRequest++;
         _readBlock = _interfaceBlock = null;
         Xml = _xmlFile = DocumentComment = ""; _xmlLines = [];
@@ -180,14 +225,15 @@ public sealed partial class EngineeringViewModel
         SourceFailed = failed;
         Raise(nameof(SourceFailed));
         RetrySource.RaiseCanExecuteChanged();
+        if (lines.Count == 0) _sourceText = "";
         SourceLines = lines;
         if (Xml.Length == 0) Networks = FocusedBlock?.HasLadderOrFbd == true ? ProjectLadderNetwork.FromListing(lines) : [];
-        Raise(nameof(Networks)); Raise(nameof(TextLines));
+        Raise(nameof(Networks)); Raise(nameof(TextLines)); Raise(nameof(HasTextLines));
         _sourceStatus = status;
         Raise(nameof(SourceLines)); Raise(nameof(SourceStatus)); Raise(nameof(LineCountLabel));
     }
 
-    private async Task ResolveLadderMetadataAsync(string plc, int request)
+    private async Task ResolveLadderMetadataAsync(string plc, int request, CancellationToken token)
     {
         var networks = Networks;
         var calls = networks.SelectMany(n => n.Rungs).Where(r => r.IsBox).Select(r => r.Box).Distinct(StringComparer.OrdinalIgnoreCase);
@@ -196,17 +242,17 @@ public sealed partial class EngineeringViewModel
         {
             var targets = Blocks.Where(b => string.Equals(b.Name, call, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
             if (targets.Length != 1 || targets[0].Info.IsKnowHowProtected) continue;
-            try { interfaces[call] = await _client.ReadInterfaceAsync(plc, targets[0].Path); }
-            catch (Exception error) { _activity.Append(error.Message); }
-            if (request != _sourceRequest) return;
+            try { interfaces[call] = await _client.ReadInterfaceAsync(plc, targets[0].Path, token); }
+            catch (Exception error) when (!token.IsCancellationRequested) { _activity.Append(error.Message); }
+            if (token.IsCancellationRequested || request != _sourceRequest) return;
         }
 
         IReadOnlyList<TagInfo> tags = [];
         if (networks.SelectMany(n => n.Rungs).SelectMany(r => r.Elements).Any(e => !e.Operand.StartsWith('#')))
         {
             // Only PLC-root tags can resolve symbols in these PLC-root blocks.
-            try { tags = await _client.ListPlcTagsAsync(plc, "", includeUnits: false); }
-            catch (Exception error) { _activity.Append(error.Message); }
+            try { tags = await _client.ListPlcTagsAsync(plc, "", includeUnits: false, token); }
+            catch (Exception error) when (!token.IsCancellationRequested) { _activity.Append(error.Message); }
             if (request != _sourceRequest) return;
         }
         string? Section(int _, string block, string pin) => interfaces.TryGetValue(block, out var members)
@@ -227,11 +273,11 @@ public sealed partial class EngineeringViewModel
         int request = ++_sourceRequest;
         _readBlock = row;
         SetSource([], LocalizedText.Key("Project.LoadingCode"));
-        await _activity.Guarded("Project.LoadingCode", async () =>
+        await ReadDocumentAsync("Project.LoadingCode", SourcePath, async token =>
         {
             try
             {
-                string source = await _client.DescribeBlockLogicAsync(plc.Id, row.Path);
+                string source = await _client.DescribeBlockLogicAsync(plc.Id, row.Path, token);
                 if (request != _sourceRequest) return;
                 if (string.IsNullOrWhiteSpace(source))
                 {
@@ -239,13 +285,23 @@ public sealed partial class EngineeringViewModel
                     _activity.SetStatus("Project.NoSource", kind: null);
                     return;
                 }
+                _sourceText = source;
                 string normalized = source.ReplaceLineEndings("\n");
                 if (normalized.EndsWith('\n')) normalized = normalized[..^1];
                 SetSource(normalized.Split('\n'), LocalizedText.Empty);
-                if (Networks.Count != 0) await ResolveLadderMetadataAsync(plc.Id, request);
+                if (!token.IsCancellationRequested && Networks.Count != 0) await ResolveLadderMetadataAsync(plc.Id, request, token);
                 if (request != _sourceRequest) return;
                 if (SourceLines.Count == 1) _activity.SetStatus("Project.OneLine", kind: null);
                 else _activity.SetStatus("Project.Lines", kind: null, SourceLines.Count);
+            }
+            catch (OperationCanceledException error) when (error.CancellationToken == token && token.IsCancellationRequested)
+            {
+                if (request == _sourceRequest)
+                {
+                    _readBlock = null;
+                    SetSource([], LocalizedText.Key("Session.CancelledRead"));
+                }
+                throw;
             }
             catch (Exception error)
             {

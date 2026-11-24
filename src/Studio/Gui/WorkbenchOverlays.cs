@@ -127,6 +127,7 @@ public partial class MainWindow
         if (ShellModalOpen) return;
         var popover = new SessionPopover(_model, OpenMcpFromSession, () => CloseSessionPopover(),
             release => _preview == null ? TiaMcpConfigurator.ConfigCore.DetectTia(release).Key != null : _preview.Detected && _preview.ReleaseKey == release);
+        popover.Details = OperationsContent.Sessions;
         _sessionPopover = popover;
         SetServiceHelp(popover.SwitchVersion, AutomationProperties.GetHelpText(RailMcp));
         popover.SwitchVersion.IsEnabled = PageUnavailable("Mcp") == null;
@@ -181,6 +182,7 @@ public partial class MainWindow
         RemoveHandler(Keyboard.PreviewKeyDownEvent, new KeyEventHandler(OnSessionKey));
         popover.LostKeyboardFocus -= OnSessionFocusLeft;
         popover.VersionMenuButton.ContextMenu.IsOpen = false;
+        popover.SessionDetails.Content = null;
         Root.Children.Remove(popover);
         if (restoreFocus) SessionStatusButton.Focus();
     }

@@ -5,41 +5,44 @@
     <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
       <DockPanel VerticalAlignment="Center">
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-          <Label x:Name="SearchLabel" Target="{Binding ElementName=TagSearch}" Content="{l:Tr Project.TagFilter}" Visibility="Collapsed"/>
-          <TextBox x:Name="TagSearch" Width="210" Style="{StaticResource Primer.IdeSearch}" Tag="{l:Tr Project.TagFilter}"
-            TextChanged="OnFilter" AutomationProperties.Name="{l:Tr Project.TagFilter}" AutomationProperties.LabeledBy="{Binding ElementName=SearchLabel}"/>
           <Button x:Name="ExportCsv" Content="{l:Tr Project.ExportCsv}" AutomationProperties.Name="{l:Tr Project.ExportCsv}"
             Click="OnCsv" Style="{StaticResource Primer.Button.Secondary.Small}" Margin="8,0,0,0" IsEnabled="{Binding HasItems,ElementName=TagRows}"/>
-          <ToggleButton x:Name="TableOptions" AutomationProperties.Name="{l:Tr Project.Table}" ToolTip="{l:Tr Project.TableScope}"
+          <ToggleButton x:Name="TableOptions" Click="OnTableOptions" AutomationProperties.Name="{l:Tr Project.Table}" ToolTip="{l:Tr Project.TableScope}"
             Style="{StaticResource Primer.IdeToolToggle}" Margin="4,0,0,0"><Path Data="{StaticResource Icon.Ellipsis}" Style="{StaticResource Project.Glyph}"/>
           </ToggleButton>
         </StackPanel>
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
           <TextBlock Text="{Binding Engineering.SelectedDevice.Name}" Style="{StaticResource Primer.Mono}" FontWeight="SemiBold"/>
           <TextBlock Text="/" Margin="8,0" Style="{StaticResource Primer.Muted}"/>
-          <RadioButton x:Name="TagsTab" Content="{l:Tr Project.Tags}" Click="OnRead" Style="{StaticResource Primer.ProjectTagsTab}"
-            AutomationProperties.Name="{l:Tr Project.Tags}" IsEnabled="{Binding Engineering.CanReadTags}"/>
-          <TextBlock Text="{Binding Engineering.TagCount}" Style="{StaticResource Project.Caption}" Margin="5,0,0,0"/>
+          <Border Style="{StaticResource Primer.SegmentGroup}">
+            <RadioButton x:Name="TagsTab" Content="{l:Tr Project.Tags}" Click="OnRead" Style="{StaticResource Primer.ProjectTagsTab}"
+            AutomationProperties.Name="{l:Tr Project.Tags}" IsEnabled="{Binding Engineering.CanReadTags}"/></Border>
+          <TextBlock Text="{Binding Engineering.TagCount}" Style="{StaticResource Project.Caption}" Margin="5,0,12,0"/>
+          <Label x:Name="SearchLabel" Target="{Binding ElementName=TagSearch}" Content="{l:Tr Project.TagFilter}" Visibility="Collapsed"/>
+          <TextBox x:Name="TagSearch" Width="210" Style="{StaticResource Primer.IdeSearch}" Tag="{l:Tr Project.TagFilter}"
+            TextChanged="OnFilter" AutomationProperties.Name="{l:Tr Project.TagFilter}" AutomationProperties.LabeledBy="{Binding ElementName=SearchLabel}"/>
         </StackPanel>
       </DockPanel>
     </Border>
     <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
-    <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeSubBar}"
-      Visibility="{Binding IsChecked,ElementName=TableOptions,Converter={StaticResource BoolToVisibility}}">
-      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-        <Label x:Name="TableLabel" Content="{l:Tr Project.Table}" Target="{Binding ElementName=TablePath}" Style="{StaticResource Primer.FormLabel}"/>
-        <TextBox x:Name="TablePath" Text="{Binding Engineering.TagTable,UpdateSourceTrigger=PropertyChanged}" Width="240"
-          AutomationProperties.Name="{l:Tr Project.Table}" AutomationProperties.LabeledBy="{Binding ElementName=TableLabel}"
-          ToolTip="{l:Tr Project.TableScope}" Tag="{l:Tr Project.TableHint}" Style="{StaticResource Primer.IdeSearch}" Margin="8,0"/>
-        <Button x:Name="ReloadTags" Content="{l:Tr Common.Reload}" AutomationProperties.Name="{l:Tr Common.Reload}" Click="OnRead"
-          IsEnabled="{Binding Engineering.CanReadTags}" Style="{StaticResource Primer.IdeToolButton}"/>
-      </StackPanel>
-    </Border>
+    <Popup x:Name="TableMenu" PlacementTarget="{Binding ElementName=TableOptions}" Placement="Bottom" StaysOpen="False"
+      Opened="OnTableOpened" Closed="OnTableClosed" AllowsTransparency="True">
+      <Border Style="{StaticResource Primer.Container}" Padding="12" PreviewKeyDown="OnTableKey">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Label x:Name="TableLabel" Content="{l:Tr Project.Table}" Target="{Binding ElementName=TablePath}" Style="{StaticResource Primer.FormLabel}"/>
+          <TextBox x:Name="TablePath" Text="{Binding Engineering.TagTable,UpdateSourceTrigger=PropertyChanged}" Width="240"
+            AutomationProperties.Name="{l:Tr Project.Table}" AutomationProperties.LabeledBy="{Binding ElementName=TableLabel}"
+            ToolTip="{l:Tr Project.TableScope}" Tag="{l:Tr Project.TableHint}" Style="{StaticResource Primer.IdeSearch}" Margin="8,0"/>
+          <Button x:Name="ReloadTags" Content="{l:Tr Common.Reload}" AutomationProperties.Name="{l:Tr Common.Reload}" Click="OnRead"
+            IsEnabled="{Binding Engineering.CanReadTags}" Style="{StaticResource Primer.IdeToolButton}"/>
+        </StackPanel>
+      </Border>
+    </Popup>
     <Grid>
-      <DockPanel x:Name="TagsColumn" Style="{StaticResource Primer.PageColumn}" Margin="24" MaxWidth="920" VerticalAlignment="Top">
+      <DockPanel x:Name="TagsColumn" Style="{StaticResource Primer.PageColumn}">
         <TextBlock DockPanel.Dock="Bottom" Text="{Binding Engineering.TagStatus}" ux:AccessibleStatus.Text="{Binding Engineering.TagStatus}"
           AutomationProperties.LiveSetting="Polite" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
-        <Border Style="{StaticResource Primer.ProjectTagTable}" Padding="0">
+
           <DataGrid x:Name="TagRows" ItemsSource="{Binding Engineering.PlcTags}" AutomationProperties.Name="{l:Tr Project.Tags}"
             AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column"
             ColumnHeaderStyle="{StaticResource Project.TagHeader}" ColumnHeaderHeight="34" RowHeight="40">
@@ -52,7 +55,6 @@
               <DataGridTextColumn Header="{l:Tr Project.Comment}" Binding="{Binding Comment}" Width="1.4*" ElementStyle="{StaticResource Project.TagName}"/>
             </DataGrid.Columns>
           </DataGrid>
-        </Border>
       </DockPanel>
     </Grid>
   </DockPanel>

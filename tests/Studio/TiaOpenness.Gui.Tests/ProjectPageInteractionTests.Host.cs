@@ -1,4 +1,6 @@
 using System;
+using System.Windows;
+using System.Windows.Controls;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -76,8 +78,11 @@ public sealed partial class ProjectPageInteractionTests
                 string? opened = null;
                 blocks.SetAtlasService(service, path => opened = path);
                 WpfContext.Drain();
+                var toolbar = window.OperationsContent;
+                UnifiedDesktopTests.ClickControl(toolbar.ExportMenuButton);
                 Assert.True(blocks.ViewLadderAtlas.IsVisible && blocks.ViewLadderAtlas.IsEnabled);
-                UnifiedDesktopTests.ClickControl(blocks.ViewLadderAtlas);
+                toolbar.ViewLadderAtlas.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                toolbar.ExportMenuButton.ContextMenu.IsOpen = false;
                 Assert.True(service.Request!.SingleBlock);
                 Assert.Equal(main.Path, Assert.Single(service.Request.BlockPaths));
                 string html = Path.Combine(McpOperatorFixture.RepositoryRoot, "tests", "FoundationHost", "TiaMcp.Engine.Tests",
@@ -113,6 +118,7 @@ public sealed partial class ProjectPageInteractionTests
         internal readonly List<(string Tool, IReadOnlyDictionary<string, object?> Args)> Calls = [];
         internal string Release = "21";
         internal bool AdvertiseTools { get; init; } = true;
+        internal Func<string, IReadOnlyDictionary<string, object?>, CancellationToken, Task>? BeforeResponse;
         internal string? FailureCode;
         internal int Epoch = 1;
         public string SessionKey => "fixture";
@@ -130,19 +136,20 @@ public sealed partial class ProjectPageInteractionTests
             foreach (var p in parameters) properties[p] = new JsonObject();
             return new() { ["properties"] = properties };
         }
-        public Task<JsonObject> CallAsync(string tool, IReadOnlyDictionary<string, object?> arguments, CancellationToken token = default)
+        public async Task<JsonObject> CallAsync(string tool, IReadOnlyDictionary<string, object?> arguments, CancellationToken token = default)
         {
             Calls.Add((tool, new Dictionary<string, object?>(arguments)));
+            if (BeforeResponse != null) await BeforeResponse(tool, arguments, token);
             if (FailureCode != null)
-                return Task.FromResult(new JsonObject { ["schemaVersion"] = 4, ["ok"] = false, ["data"] = null,
-                    ["error"] = new JsonObject { ["code"] = FailureCode, ["message"] = "Device response" }, ["meta"] = new JsonObject { ["tool"] = tool } });
+                return new JsonObject { ["schemaVersion"] = 4, ["ok"] = false, ["data"] = null,
+                    ["error"] = new JsonObject { ["code"] = FailureCode, ["message"] = "Device response" }, ["meta"] = new JsonObject { ["tool"] = tool } };
             bool apply = arguments.TryGetValue("dryRun", out var dry) && dry is false;
             var envelope = new JsonObject { ["schemaVersion"] = 4, ["ok"] = true, ["data"] = JsonNode.Parse(response(tool, arguments)), ["error"] = null,
                 ["meta"] = new JsonObject { ["tool"] = tool, ["requestId"] = "fixture", ["releaseKey"] = Release,
                     ["timestamp"] = "2026-11-20T00:00:00.0000000Z", ["outcome"] = "succeeded", ["execution"] = apply ? "completed" : "read-only",
                     ["completeness"] = "complete", ["behaviorPolicy"] = "not-applicable", ["warnings"] = new JsonArray(), ["paging"] = null } };
             _ = TiaOpenness.Core.EngineToolResult.Read(envelope.ToJsonString());
-            return Task.FromResult(envelope);
+            return envelope;
         }
         public event EventHandler<JsonObject>? StateChanged { add { } remove { } }
         public event EventHandler? Detached { add { } remove { } }

@@ -1,18 +1,16 @@
 <UserControl xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TiaOpenness.Gui.Views.EngineeringSideView" x:Name="PageRoot">
   <!-- PLC-wide compiler messages and inspection results share the Compile document. -->
   <ScrollViewer x:Name="ResultScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="16"/>
-        <RowDefinition Height="Auto"/>
-      </Grid.RowDefinitions>
+    <Grid Margin="16" x:Name="Results" SizeChanged="OnResultsSizeChanged">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition/>
+        <ColumnDefinition x:Name="Gutter" Width="16"/>
+        <ColumnDefinition x:Name="SecondColumn"/>
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
       <Border Style="{StaticResource Primer.ProjectResultCard}" x:Name="CompileCard" Padding="20">
         <StackPanel>
           <DockPanel>
-            <Button DockPanel.Dock="Right" x:Name="CompileButton" Content="{l:Tr Pages.CompileSoftware}" AutomationProperties.Name="{l:Tr Pages.CompileSoftware}"
-              AutomationProperties.AcceleratorKey="Ctrl+B" ToolTip="Ctrl+B" Command="{Binding Engineering.Compile}"
-              Style="{StaticResource Primer.IdeToolButton}" ContentTemplate="{StaticResource Primer.CommandText}" IsDefault="True"/>
             <TextBlock Text="{Binding Engineering.CompileSummary}" Style="{StaticResource Primer.Text}" FontWeight="SemiBold" TextWrapping="Wrap"/>
           </DockPanel>
           <ItemsControl ItemsSource="{Binding Engineering.CompilerMessages}">
@@ -36,7 +34,7 @@
           <TextBlock Text="{Binding Tag.CompileTime,ElementName=PageRoot}" Style="{StaticResource Project.Caption}"/>
         </StackPanel>
       </Border>
-      <Grid Grid.Row="2">
+      <Grid Grid.Column="2" x:Name="InspectionPane">
         <Border x:Name="InspectionCard" Style="{StaticResource Primer.Container}">
           <Grid>
             <Grid.RowDefinitions>
@@ -51,20 +49,27 @@
               <Button AutomationProperties.Name="{l:Tr Pages.Rules}" Content="{l:Tr Pages.Rules}" Click="OnInspectionRules" Style="{StaticResource Primer.Link}" Padding="4,0" MinHeight="32"/>
             </StackPanel>
             <TextBlock Grid.Row="1" Text="{Binding ElementName=PageRoot, Path=Tag.InspectionDisplay}" Style="{StaticResource Primer.Text}" TextWrapping="Wrap" Margin="0,8,0,8"/>
-            <ItemsControl Grid.Row="2" ItemsSource="{Binding ElementName=PageRoot, Path=Tag.Rules}">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <WrapPanel/>
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Border Style="{StaticResource Primer.Chip}" Margin="0,0,8,8">
-                    <TextBlock Text="{Binding}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-                  </Border>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <StackPanel Grid.Row="2">
+              <ItemsControl ItemsSource="{Binding Engineering.EnabledRules}">
+                <ItemsControl.ItemTemplate><DataTemplate>
+                  <TextBlock Text="{Binding}" Style="{StaticResource Primer.Muted}" Margin="0,3" TextWrapping="Wrap"/>
+                </DataTemplate></ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <ItemsControl ItemsSource="{Binding ElementName=PageRoot, Path=Tag.Rules}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel/>
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Style="{StaticResource Primer.Chip}" Margin="0,0,8,8">
+                      <TextBlock Text="{Binding}" Style="{StaticResource Primer.Text.text}" FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
             <Button Grid.Row="3" Content="{l:Tr Pages.Inspect}" AutomationProperties.Name="{l:Tr Pages.Inspect}" x:Name="InspectButton" Command="{Binding Engineering.Inspect}" Style="{StaticResource Primer.Secondary}" HorizontalAlignment="Left" Margin="0,8,0,0"/>
           </Grid>
         </Border>

@@ -23,7 +23,7 @@ public sealed class ProjectNodeStyleSelector : StyleSelector
     public Style Link { get; set; } = null!;
     public override Style SelectStyle(object item, DependencyObject container) => item switch
     {
-        Services.SoftwareUnitInfo or Services.UnitBlockInfo => Unit, ProjectLink => Link, DeviceNode => Device, _ => Block,
+        SoftwareUnitGroup or Services.SoftwareUnitInfo or Services.UnitBlockInfo => Unit, ProjectLink => Link, DeviceNode => Device, _ => Block,
     };
 }
 
@@ -157,7 +157,7 @@ public partial class ProjectTreeView : UserControl
         }
         if (e.Key is not (Key.Enter or Key.Space)) return;
         e.Handled = true;
-        if (item.Header is BlockNode { IsFolder: true } or DeviceNode { IsFolder: true }) item.IsExpanded = !item.IsExpanded;
+        if (item.Header is BlockNode { IsFolder: true } or DeviceNode { IsFolder: true } or SoftwareUnitGroup) item.IsExpanded = !item.IsExpanded;
         else
         {
             if (item.Header is BlockNode { Row: { } row })
@@ -208,6 +208,9 @@ public partial class ProjectTreeView : UserControl
         var engineering = model.Engineering;
         switch (item.Header)
         {
+            case SoftwareUnitGroup:
+                item.IsExpanded = true;
+                break;
             case ProjectLink { IsVersionControl: true } vcs when !model.Busy:
                 if (OpenPage("VersionControl", false)) engineering.SelectedDevice = vcs.Device;
                 break;

@@ -1,0 +1,34 @@
+<UserControl x:Class="TiaOpenness.Gui.Controls.ProjectSessionDetails"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" MaxHeight="220">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel>
+      <Label x:Name="AccessibleLabel1" Content="{l:Tr Access.FieldSessionTitle}" Target="{Binding ElementName=SessionPicker}"
+        AutomationProperties.Name="{l:Tr Session.Title}" Style="{StaticResource Primer.FormLabel}"/>
+      <ComboBox x:Name="SessionPicker" ItemsSource="{Binding Panel.Sessions}" SelectedItem="{Binding Panel.Selected}" DisplayMemberPath="DisplayName"
+        AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel1}" AutomationProperties.Name="{l:Tr Session.Title}"
+        Style="{StaticResource Primer.ProjectSelect}"/>
+      <TextBlock Text="{Binding Panel.Participants}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+      <TextBlock Text="{Binding Panel.Status}" TextWrapping="Wrap"/>
+      <TextBlock Text="{Binding Panel.Lane}" TextWrapping="Wrap"/>
+      <TextBlock Text="{Binding Panel.Ended}" TextWrapping="Wrap"/>
+      <TextBlock AutomationProperties.Name="{Binding Panel.Unsettled}" Text="{Binding Panel.Unsettled}" TextWrapping="Wrap"/>
+      <Button Content="{l:Tr Session.Cancel}" Command="{Binding Panel.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}"
+        Style="{StaticResource Primer.Secondary}" HorizontalAlignment="Left"/>
+      <Expander AutomationProperties.Name="{l:Tr Session.Result}" Header="{l:Tr Session.Result}">
+        <StackPanel>
+          <Label x:Name="AccessibleLabel2" Target="{Binding ElementName=ReceiptPicker}" Content="{l:Tr Access.FieldSessionResult}"
+            AutomationProperties.Name="{l:Tr Session.Result}" Style="{StaticResource Primer.FormLabel}"/>
+          <ComboBox x:Name="ReceiptPicker" ItemsSource="{Binding Receipts}" SelectedItem="{Binding SelectedReceipt}" DisplayMemberPath="Label"
+            AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel2}" AutomationProperties.Name="{l:Tr Session.Result}"
+            Style="{StaticResource Primer.ProjectSelect}"/>
+          <Label x:Name="AccessibleLabel3" Target="{Binding ElementName=McpEnvelopeResult}" Content="{l:Tr Access.FieldSessionResult}"
+            AutomationProperties.Name="{l:Tr Session.Result}" Style="{StaticResource Primer.FormLabel}"/>
+          <TextBox x:Name="McpEnvelopeResult" Text="{Binding LastEnvelope,Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="180"
+            VerticalScrollBarVisibility="Auto" FontFamily="{DynamicResource Ui.FontMono}" Style="{StaticResource Primer.ProjectInput}"
+            AutomationProperties.LabeledBy="{Binding ElementName=AccessibleLabel3}" AutomationProperties.Name="{l:Tr Session.Result}"/>
+        </StackPanel>
+      </Expander>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

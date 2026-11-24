@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TiaOpenness.Client;
 using TiaOpenness.Contracts.Models;
@@ -94,7 +95,7 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
     public List<string> AlarmNames { get; } = [];
     public Task<(int? Tags, int? Alarms)> HmiCountsAsync(DeviceInfo hmi) => Task.FromResult<(int?, int?)>((HmiTagNames.Count, AlarmNames.Count));
     public IReadOnlyList<BlockMember> Members { get; set; } = [];
-    public Task<IReadOnlyList<BlockMember>> ReadInterfaceAsync(string plc, string block) => Task.FromResult(Members);
+    public Task<IReadOnlyList<BlockMember>> ReadInterfaceAsync(string plc, string block, CancellationToken token = default) => Task.FromResult(Members);
     public Func<int?, Task<SessionState>>? ConnectHandler { get; set; }
     public Task<SessionState> ConnectAsync(bool withUserInterface, int? processId = null)
     {
@@ -113,17 +114,17 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
         return BlockHandler?.Invoke(deviceId) ?? Task.FromResult(Blocks);
     }
     public Func<string, string, Task<string>>? LogicHandler { get; set; }
-    public Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath)
+    public Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath, CancellationToken token = default)
     {
         Record("DescribePlcBlockLogic", softwarePath, blockPath);
-        return LogicHandler?.Invoke(softwarePath, blockPath) ?? Task.FromResult("");
+        return (LogicHandler?.Invoke(softwarePath, blockPath) ?? Task.FromResult("")).WaitAsync(token);
     }
     public List<TagInfo> Tags { get; } = [];
     public Func<string, Task<List<TagInfo>>>? TagHandler { get; set; }
-    public Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits)
+    public Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits, CancellationToken token = default)
     {
         Record("Tags", plc, table, includeUnits);
-        return TagHandler?.Invoke(plc) ?? Task.FromResult(Tags);
+        return (TagHandler?.Invoke(plc) ?? Task.FromResult(Tags)).WaitAsync(token);
     }
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format)
         => Reply("Export", ExportHandler?.Invoke(deviceId, blocks.ToArray(), outputDirectory, format)

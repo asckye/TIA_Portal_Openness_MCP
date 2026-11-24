@@ -76,6 +76,25 @@ public class PrimerViewTests(WpfContext wpf)
         });
     }
 
+    private static void AssertStrip(FrameworkElement host, AppTheme theme, Border strip, double height)
+    {
+        Assert.Equal(height, strip.ActualHeight);
+        Assert.InRange(strip.ActualHeight, 24, 44);
+        Assert.True(strip.ActualWidth > 40);
+        var origin = strip.TranslatePoint(new Point(), host);
+        var bitmap = DesktopCapture.Render(host);
+        var rect = new Int32Rect((int)origin.X, (int)origin.Y, (int)strip.ActualWidth, (int)strip.ActualHeight);
+        Assert.InRange(rect.X, 0, bitmap.PixelWidth - rect.Width);
+        Assert.InRange(rect.Y, 0, bitmap.PixelHeight - rect.Height);
+        var pixels = new byte[rect.Width * rect.Height * 4];
+        bitmap.CopyPixels(rect, pixels, rect.Width * 4, 0);
+        double sum = 0;
+        for (int i = 0; i < pixels.Length; i += 4)
+            sum += ThemeSurfaceTests.Luminance(Color.FromRgb(pixels[i + 2], pixels[i + 1], pixels[i]));
+        double mean = sum / (rect.Width * rect.Height);
+        Assert.True(theme == AppTheme.Light ? mean > 0.55 : mean < 0.15, $"{theme} {strip.Name}: {mean:F3}");
+    }
+
     internal void RenderEngineeringFixture(AppTheme theme, bool vci, AppLanguage language, bool log = false)
     {
         wpf.RunWithLanguage(language, () =>
@@ -131,8 +150,31 @@ public class PrimerViewTests(WpfContext wpf)
                 host.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ContextIdle);
                 host.UpdateLayout();
                 Assert.Equal(theme, ThemeManager.Current.Theme);
-                string[] cards = log ? new[] { "LogCard" } : vci ? new[] { "WorkspaceCard", "VciStatusCard", "SyncCard", "MappedObjectsCard", "DiffCard" } : new[] { "BlocksHeaderCard", "BlocksCard", "CompileCard", "InspectionCard" };
-                var checkedCards = cards.Where(name => name != "DiffCard").Select(name => (Border)ProjectPageTestSupport.Find(window, name)).ToArray();
+                if (!log && !vci)
+                {
+                    model.Engineering.Document = ProjectDocument.Render;
+                    model.Engineering.FocusedBlock = model.Engineering.Blocks[1];
+                    host.UpdateLayout();
+                    DesktopCapture.AssertCards(host, theme, window.BlocksContent.BlocksCard);
+                    AssertStrip(host, theme, window.BlocksContent.BlocksHeaderCard, 36);
+                    model.Engineering.Document = ViewModels.ProjectDocument.Compile;
+                    host.UpdateLayout();
+                }
+                string[] cards = log ? ["LogCard"] : vci ? ["WorkspaceCard", "MappedObjectsCard", "DiffCard"] : ["CompileCard", "InspectionCard"];
+                var checkedCards = cards.Select(name => (Border)ProjectPageTestSupport.Find(window, name)).ToArray();
+                if (vci)
+                {
+                    AssertStrip(host, theme, window.VersionControlContent.VciStatusCard, 36);
+                    AssertStrip(host, theme, window.VersionControlContent.SyncCard, 30);
+                    Assert.Equal(300, window.VersionControlContent.MappedObjectsCard.ActualWidth);
+                    Assert.True(window.VersionControlContent.SyncStrip.ActualWidth > 40);
+                }
+                else if (!log)
+                {
+                    Assert.True(window.OperationsContent.CompileTab.IsChecked);
+                    Assert.Equal(44, window.OperationsContent.ProjectToolbar.ActualHeight);
+                    Assert.Equal(window.ProjectOverview.ActualWidth, window.CompileDocument.ActualWidth);
+                }
                 // Compact pages scroll as a whole; expose each card before checking its full rendered surface.
                 foreach (var card in checkedCards)
                 {

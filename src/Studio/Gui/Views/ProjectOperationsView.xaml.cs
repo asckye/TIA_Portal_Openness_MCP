@@ -10,20 +10,14 @@ public partial class ProjectOperationsView : UserControl
     public ProjectOperationsView()
     {
         InitializeComponent();
+        ProjectToolbar.SizeChanged += (_, e) => ProjectToolbar.Tag = e.NewSize.Width < 850 ? "Compact" : null;
+        RegisterName("SessionPicker", Sessions.SessionPicker);
         Options.LocalScrim.Source = ProjectBackdrop;
         Options.ClearPrefillRequested += (_, form) => ClearPrefillRequested?.Invoke(this, form);
     }
+    internal Controls.ProjectSessionDetails Sessions { get; } = new();
     internal RadioButton TagsTab { get; set; } = null!;
     internal bool OptionsOpen => Options.IsOpen;
-    private Action? _environmentRequested;
-    internal event Action<Services.Stubs.IApprovalService?>? ReviewsChanged;
-    internal void SetFeatures(FeaturePagesViewModel? features, Action? environmentRequested)
-    {
-        ReviewsChanged?.Invoke(features?.Approvals);
-        RunEnvironmentItem.DataContext = features;
-        _environmentRequested = environmentRequested;
-    }
-    private void OnEnvironment(object sender, RoutedEventArgs e) => _environmentRequested?.Invoke();
     internal event EventHandler<string>? ClearPrefillRequested;
     private MainViewModel Model => (MainViewModel)DataContext;
     internal void ShowProjectOptions() => Options.Show("Project");
@@ -47,9 +41,12 @@ public partial class ProjectOperationsView : UserControl
     }
     internal void ShowDownloadOptions() => Options.Show("Download");
     private void OnImportDrawer(object sender, RoutedEventArgs e) => Options.Show("Import");
-    private void OnAtlas(object sender, RoutedEventArgs e) => GenerateAtlasItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+    private void OnDownload(object sender, RoutedEventArgs e) => ShowDownloadOptions();
+    private async void OnExportXml(object sender, RoutedEventArgs e) => await Model.Engineering.OpenXmlAsync(true);
+    private async void OnOpenXml(object sender, RoutedEventArgs e) => await Model.Engineering.OpenXmlAsync();
     private async void OnScan(object sender, RoutedEventArgs e) => await Model.Session.RefreshProcessesAsync();
     private async void OnPick(object sender, RoutedEventArgs e) => await Model.Session.ChooseProcessAsync(true);
+    private async void OnReconnect(object sender, RoutedEventArgs e) => await Model.Session.ChooseProcessAsync(attach: true, showEmpty: true);
     private async void OnAttach(object sender, RoutedEventArgs e)
     {
         if (((FrameworkElement)sender).DataContext is ProjectProcessRow row) await Model.Session.SelectProcessAsync(row.ProcessId, true);
@@ -59,13 +56,7 @@ public partial class ProjectOperationsView : UserControl
         var menu = ExportMenuButton.ContextMenu;
         menu.PlacementTarget = ExportMenuButton;
         menu.DataContext = Model;
-        SessionItem.Visibility = Model.HasMcpPanel ? Visibility.Visible : Visibility.Collapsed;
         menu.IsOpen = true;
-    }
-    private void OnSessions(object sender, RoutedEventArgs e)
-    {
-        Sessions.Visibility = Visibility.Visible;
-        Sessions.IsExpanded = true;
     }
     private void OnOpenRules(object sender, RoutedEventArgs e) => ShowControlInspectionRules();
     private async void OnRender(object sender, RoutedEventArgs e)

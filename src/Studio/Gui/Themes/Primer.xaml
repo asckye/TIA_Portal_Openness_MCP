@@ -1159,15 +1159,14 @@
     </Style.Triggers>
   </Style>
   <Style x:Key="Primer.VciColumn" TargetType="StackPanel" BasedOn="{StaticResource Primer.PageColumn}">
-    <Setter Property="MaxWidth" Value="920"/>
     <Style.Triggers>
-      <DataTrigger Binding="{Binding VersionControl.HasWorkspace}" Value="False"><Setter Property="MaxWidth" Value="640"/></DataTrigger>
-      <DataTrigger Binding="{Binding VersionControl.ShowSyncResult}" Value="True"><Setter Property="MaxWidth" Value="780"/></DataTrigger>
-      <DataTrigger Binding="{Binding VersionControl.SyncResult.DryRun}" Value="True"><Setter Property="MaxWidth" Value="900"/></DataTrigger>
-      <DataTrigger Binding="{Binding VersionControl.Synchronizing}" Value="True"><Setter Property="MaxWidth" Value="740"/></DataTrigger>
+      <DataTrigger Binding="{Binding VersionControl.ShowCreateWorkspace}" Value="True">
+        <Setter Property="MaxWidth" Value="600"/>
+        <Setter Property="Margin" Value="24"/>
+      </DataTrigger>
     </Style.Triggers>
   </Style>
-  <Style x:Key="Primer.SyncPreview" TargetType="Button" BasedOn="{StaticResource Primer.Run}">
+  <Style x:Key="Primer.SyncPreview" TargetType="Button" BasedOn="{StaticResource Primer.Secondary}">
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
     <Setter Property="Command" Value="{Binding VersionControl.VcPush}"/>
     <Style.Triggers>
@@ -1176,7 +1175,7 @@
       </DataTrigger>
     </Style.Triggers>
   </Style>
-  <Style x:Key="Primer.SyncRun" TargetType="Button" BasedOn="{StaticResource Primer.Secondary}">
+  <Style x:Key="Primer.SyncRun" TargetType="Button" BasedOn="{StaticResource Primer.Run}">
     <Setter Property="FocusVisualStyle" Value="{StaticResource Primer.Focus}"/>
     <Setter Property="Command" Value="{Binding VersionControl.VcPush}"/>
     <Style.Triggers>

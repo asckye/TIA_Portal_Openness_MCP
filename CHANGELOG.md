@@ -17,6 +17,10 @@
   In narrow windows, the write action stays at the bottom while the catalogue and preview scroll.
 - Environment shows findings beside a redacted, copyable system summary and provides diagnostic export alongside recheck.
 
+- Project documents use a single toolbar and full-width source, interface and tag views. The file bar copies source, ladder logic summaries and displayed XML.
+  A pending block review opens its matching approval request. The compile view puts diagnostics beside inspection rules.
+  Atlas generation reports progress in the floating task card and results in notifications.
+- Git / VCI shows mapped files beside their diff. Synchronization results include elapsed time, with workspace and mapping tools in the options drawer.
 - Workbench notifications stack above the status bar. Environment findings and lost TIA sessions stay visible until dismissed.
   A disconnected session shows a read-only snapshot indicator and offers process rescanning and logs.
 - The status-bar approval button switches ordinary writes between manual approval and auto-approval. The local approval channel must be available.

@@ -7,12 +7,12 @@
     <Border Style="{StaticResource Primer.ProjectHeaderLine}" DockPanel.Dock="Top" Padding="12,10">
       <StackPanel>
         <DockPanel LastChildFill="False" Margin="0,0,0,8">
-          <TextBlock DockPanel.Dock="Left" Text="{l:Tr Project.Tree}" Style="{StaticResource Primer.Muted}"
+          <TextBlock DockPanel.Dock="Left" Style="{StaticResource Primer.ProjectTreeTitle}"
             FontSize="{DynamicResource Ui.FontSize.11}" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level2"/>
           <Button DockPanel.Dock="Right" Content="{l:Tr Pages.Options}" AutomationProperties.Name="{l:Tr Project.Options}"
             Click="OnProjectOptions" Style="{StaticResource Primer.IdeToolButton}"/>
         </DockPanel>
-        <Grid>
+        <Grid Visibility="{Binding Session.LostConnection,Converter={StaticResource NotBoolToVisibility}}">
           <Label x:Name="FilterLabel" Content="{l:Tr Project.Filter}" Target="{Binding ElementName=ControlFilter}" Visibility="Collapsed"/>
           <TextBox x:Name="ControlFilter" Style="{StaticResource Primer.IdeSearch}" Padding="25,0,6,0"
             Text="{Binding Engineering.BlockFilter,UpdateSourceTrigger=PropertyChanged}" Tag="{l:Tr Project.Filter}"
@@ -30,7 +30,6 @@
         IsEnabled="{Binding Session.CanOpenConnection}" Click="OnReloadTree" Style="{StaticResource Primer.Button.Secondary.Small}" HorizontalAlignment="Center"/>
     </StackPanel>
     <StackPanel DockPanel.Dock="Top" Visibility="{Binding Session.LostConnection,Converter={StaticResource BoolToVisibility}}">
-      <TextBlock Text="{l:Tr Project.Snapshot}" Style="{StaticResource Project.Caption}" Margin="12,8"/>
       <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=UserControl}}">
         <ItemsControl ItemsSource="{Binding Engineering.Snapshot.Tree}" Margin="12,0">
           <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" Style="{StaticResource Primer.Mono}" TextTrimming="CharacterEllipsis"
@@ -38,7 +37,8 @@
         </ItemsControl>
       </ScrollViewer>
     </StackPanel>
-    <TreeView x:Name="Nodes" ItemsSource="{Binding Engineering.ProjectDevices}" AutomationProperties.Name="{l:Tr Access.Software}"
+    <TreeView x:Name="Nodes" Visibility="{Binding Session.LostConnection,Converter={StaticResource NotBoolToVisibility}}"
+      ItemsSource="{Binding Engineering.ProjectDevices}" AutomationProperties.Name="{l:Tr Access.Software}"
       PreviewMouseLeftButtonDown="OnNodeClick" PreviewKeyDown="OnNodeKey" ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}"
       Background="Transparent" BorderThickness="0" Padding="8" AlternationCount="2147483647" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
       PreviewMouseRightButtonDown="OnContextRow">
@@ -142,6 +142,13 @@
             </DataTrigger>
           </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
+        <HierarchicalDataTemplate DataType="{x:Type vm:SoftwareUnitGroup}" ItemsSource="{Binding Units}"
+          ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}">
+          <DockPanel Margin="4,4,8,2">
+            <TextBlock DockPanel.Dock="Right" Text="{Binding Units.Count}" Style="{StaticResource Project.Caption}"/>
+            <TextBlock Text="{l:Tr Project.SoftwareUnits}" Style="{StaticResource Primer.Muted}"/>
+          </DockPanel>
+        </HierarchicalDataTemplate>
         <HierarchicalDataTemplate DataType="{x:Type s:SoftwareUnitInfo}" ItemsSource="{Binding Children}"
           ItemContainerStyleSelector="{StaticResource Primer.ProjectNodeSelector}">
           <DockPanel Margin="12,2,8,2">
@@ -159,7 +166,10 @@
           <DockPanel MinHeight="28">
             <Path x:Name="LinkIcon" Style="{StaticResource Project.Glyph}" Data="{StaticResource Icon.FileText}"/>
             <TextBlock DockPanel.Dock="Right" Text="{Binding CountLabel}" Style="{StaticResource Project.Caption}"/>
-            <TextBlock Style="{StaticResource Primer.ProjectLinkLabel}"/>
+            <StackPanel>
+              <TextBlock Style="{StaticResource Primer.ProjectLinkLabel}"/>
+              <TextBlock Style="{StaticResource Primer.ProjectVciAvailability}" Text="{l:Tr Shell.VersionControlUnavailable}" TextWrapping="Wrap"/>
+            </StackPanel>
           </DockPanel>
           <DataTemplate.Triggers><DataTrigger Binding="{Binding IsVersionControl}" Value="True">
             <Setter TargetName="LinkIcon" Property="Data" Value="{StaticResource Icon.Branch}"/>

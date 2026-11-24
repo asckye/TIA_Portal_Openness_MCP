@@ -5,48 +5,51 @@
     <DockPanel x:Name="WorkspaceBackdrop">
       <Border DockPanel.Dock="Top" Style="{StaticResource Primer.IdeBar}">
         <DockPanel VerticalAlignment="Center">
-          <Button AutomationProperties.Name="{l:Tr Pages.RunSync}" Content="{l:Tr Pages.RunSync}" Click="OnRun"
-            Style="{StaticResource Primer.SyncRun}" DockPanel.Dock="Right" MinHeight="28" Padding="8,0"/>
-          <Button AutomationProperties.Name="{l:Tr Pages.PreviewSync}" Content="{l:Tr Pages.PreviewSync}" IsDefault="True" Click="OnPreview"
-            Margin="0,0,8,0" Style="{StaticResource Primer.SyncPreview}" DockPanel.Dock="Right" MinHeight="28" Padding="8,0"/>
-          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <Button AutomationProperties.Name="{Binding Engineering.SelectedDevice.Name}" AutomationProperties.HelpText="{l:Tr Rail.Project}"
-              Command="{x:Static ux:WorkbenchCommands.Navigate}" CommandParameter="Blocks" Style="{StaticResource Primer.IdeToolButton}" ContentTemplate="{x:Null}">
-              <TextBlock Text="{Binding Engineering.SelectedDevice.Name}"/>
-            </Button>
-            <TextBlock Text="/" Margin="8,0" Style="{StaticResource Primer.Muted}"/>
-            <TextBlock Text="Git / VCI" ToolTip="{l:Tr Vc.Subtitle}" Style="{StaticResource Primer.ContainerTitle}" Margin="0"
-              AutomationProperties.HeadingLevel="Level2" VerticalAlignment="Center"/>
-            <Border Style="{StaticResource Primer.Tag}" Margin="8,0,0,0" VerticalAlignment="Center"
-              Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource BoolToVisibility}}">
-              <TextBlock Text="{Binding VersionControl.SelectedWorkspace.Name}" Style="{StaticResource Project.Caption}"/>
-            </Border>
-          </StackPanel>
+          <Button Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource BoolToVisibility}}"
+            AutomationProperties.Name="{l:Tr Pages.RunSync}" Content="{l:Tr Pages.RunSync}" Click="OnRun"
+            Style="{StaticResource Primer.SyncRun}" DockPanel.Dock="Right" MinHeight="28" Padding="6,0"/>
+          <Button Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource BoolToVisibility}}"
+            AutomationProperties.Name="{l:Tr Pages.PreviewSync}" Content="{l:Tr Pages.PreviewSync}" IsDefault="True" Click="OnPreview"
+            Margin="0,0,4,0" Style="{StaticResource Primer.SyncPreview}" DockPanel.Dock="Right" MinHeight="28" Padding="6,0"/>
+          <Button x:Name="WorkspaceOptionsButton" DockPanel.Dock="Right" Content="⋯" Click="OnWorkspaceOptions"
+            Style="{StaticResource Primer.IdeToolButton}" AutomationProperties.Name="{l:Tr Pages.Options}"/>
+          <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}" Padding="2" Margin="4,0"
+            Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource BoolToVisibility}}">
+            <UniformGrid Columns="2" x:Name="SyncStrip" AutomationProperties.Name="{l:Tr Primer.Sync}" ToolTip="{l:Tr Primer.NotGitPush}">
+              <RadioButton x:Name="ToWorkspace" Tag="{l:Tr Primer.ToWorkspace}"
+                Content="{l:Tr Project.ToWorkspace}" AutomationProperties.Name="{l:Tr Project.ToWorkspace}"
+                IsChecked="True" ToolTip="{l:Tr Project.ToWorkspace}" Click="OnDirection"
+                GroupName="SyncDirection" Padding="3,0" Style="{StaticResource Primer.ProjectSyncDirection}"/>
+              <RadioButton x:Name="ToProject" Tag="{l:Tr Primer.ToProject}"
+                Content="{l:Tr Project.ToProject}" AutomationProperties.Name="{l:Tr Project.ToProject}"
+                IsEnabled="False" ToolTipService.ShowOnDisabled="True" ToolTip="{l:Tr Project.UnsupportedDirection}"
+                Click="OnDirection" GroupName="SyncDirection" Padding="3,0" Style="{StaticResource Primer.ProjectSyncDirection}"/>
+            </UniformGrid>
+          </Border>
+          <TextBlock DockPanel.Dock="Left" Text="Git / VCI" ToolTip="{l:Tr Vc.Subtitle}" Style="{StaticResource Primer.ContainerTitle}"
+            Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource NotBoolToVisibility}}"/>
+          <Border x:Name="SyncCard" Style="{StaticResource Primer.SegmentGroup}" HorizontalAlignment="Left"
+            Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource BoolToVisibility}}">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton AutomationProperties.Name="{Binding VersionControl.AllMappingsLabel}" Content="{Binding VersionControl.AllMappingsLabel}"
+                  IsChecked="True" GroupName="MappedFilter" Click="OnMappedAll" ToolTip="{l:Tr Vc.ShowAll}"
+                  Padding="3,0" Style="{StaticResource Primer.Segment}"/>
+                <RadioButton GroupName="MappedFilter" AutomationProperties.Name="{Binding ElementName=PageRoot,Path=Tag.DifferenceLabel}"
+                  Content="{Binding ElementName=PageRoot,Path=Tag.DifferenceLabel}" ToolTip="{l:Tr Primer.Differ}" Tag="Unequal"
+                  Click="OnMappedFilter" Padding="3,0" Style="{StaticResource Primer.Segment}"/>
+                <RadioButton GroupName="MappedFilter" AutomationProperties.Name="{Binding ElementName=PageRoot,Path=Tag.MissingLabel}"
+                  Content="{Binding ElementName=PageRoot,Path=Tag.MissingLabel}" ToolTip="{l:Tr Primer.Missing}" Tag="WorkspaceFileMissing"
+                  Click="OnMappedFilter" Padding="3,0" Style="{StaticResource Primer.Segment}"/>
+              </StackPanel>
+          </Border>
         </DockPanel>
       </Border>
       <Grid x:Name="BannerSlot" DockPanel.Dock="Top"/>
-              <Border x:Name="SyncCard" DockPanel.Dock="Top" MinHeight="44" Padding="16,4" Style="{StaticResource Primer.IdeSubBar}">
-                <DockPanel VerticalAlignment="Center">
-                  <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}" Padding="2">
-                    <UniformGrid Columns="2" x:Name="SyncStrip">
-                      <RadioButton x:Name="ToWorkspace" Content="{l:Tr Primer.ToWorkspace}" AutomationProperties.Name="{l:Tr Primer.ToWorkspace}"
-                        IsChecked="True" Click="OnDirection" GroupName="SyncDirection" Style="{StaticResource Primer.Segment}"/>
-                      <RadioButton x:Name="ToProject" Content="{l:Tr Primer.ToProject}" AutomationProperties.Name="{l:Tr Primer.ToProject}"
-                        Click="OnDirection" GroupName="SyncDirection" Style="{StaticResource Primer.Segment}"/>
-                    </UniformGrid>
-                  </Border>
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{l:Tr Primer.Sync}" Style="{StaticResource Primer.Text}" ToolTip="{l:Tr Primer.NotGitPush}"/>
-                    <TextBlock Text="{Binding Tag.SyncSummary,ElementName=PageRoot}" Style="{StaticResource Project.Caption}"
-                      ToolTip="{Binding Tag.SyncSummary,ElementName=PageRoot}"/>
-                  </StackPanel>
-                </DockPanel>
-              </Border>
       <ScrollViewer x:Name="VciScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel x:Name="VciColumn" Style="{StaticResource Primer.VciColumn}" Margin="24">
+        <StackPanel x:Name="VciColumn" Style="{StaticResource Primer.VciColumn}">
           <TextBlock Text="{Binding VersionControl.AccessNotice}" Style="{StaticResource Project.SourceNotice}" TextWrapping="Wrap" Margin="0,0,0,8"/>
           <Border Style="{StaticResource Primer.ProjectResultCard}" Padding="20"
-            Visibility="{Binding VersionControl.HasWorkspace,Converter={StaticResource NotBoolToVisibility}}">
+            Visibility="{Binding VersionControl.ShowCreateWorkspace,Converter={StaticResource BoolToVisibility}}">
             <StackPanel>
               <TextBlock Text="{l:Tr Project.NoWorkspace}" Style="{StaticResource Primer.ContainerTitle}"/>
               <TextBlock Text="{l:Tr Project.WorkspaceHint}" TextWrapping="Wrap" Style="{StaticResource Primer.Muted}" Margin="0,4,0,16"/>
@@ -77,9 +80,11 @@
             <StackPanel>
               <TextBlock Text="{Binding VersionControl.SyncTitle}" Style="{StaticResource Primer.ContainerTitle}"/>
               <TextBlock Text="{Binding VersionControl.SyncCounts}" Style="{StaticResource Project.Caption}"/>
+              <TextBlock Text="{Binding VersionControl.ElapsedLabel}" Style="{StaticResource Project.Caption}"/>
               <Border Style="{StaticResource Primer.CodeBlock}" Padding="14" Margin="0,12">
-                <ItemsControl ItemsSource="{Binding VersionControl.SyncResult.Items}">
-                  <ItemsControl.ItemTemplate><DataTemplate><TextBlock Style="{StaticResource Primer.Mono}" TextWrapping="Wrap" Margin="0,3">
+                <ItemsControl ItemsSource="{Binding VersionControl.SyncRows}">
+                  <ItemsControl.ItemTemplate><DataTemplate>
+                    <TextBlock ToolTip="{Binding RawOutcome}" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap" Margin="0,3">
                     <Run Text="{Binding Outcome,Mode=OneWay}"/>  <Run Text="{Binding Name,Mode=OneWay}"/>  <Run Text="{Binding Error,Mode=OneWay}"/>
                   </TextBlock></DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -93,190 +98,111 @@
               </StackPanel>
             </StackPanel>
           </Border>
-          <Border Style="{StaticResource Primer.ProjectResultCard}" x:Name="WorkspaceCard" Padding="20"
+          <Border x:Name="WorkspaceCard" Style="{StaticResource Primer.ProjectLayoutSurface}"
             Visibility="{Binding VersionControl.ShowWorkspace,Converter={StaticResource BoolToVisibility}}">
-            <StackPanel>
-              <Border x:Name="VciStatusCard" MinHeight="44" Style="{StaticResource Primer.ProjectLayoutSurface}">
-                <DockPanel>
-                  <Border DockPanel.Dock="Right" Style="{StaticResource Primer.Tag}" VerticalAlignment="Center"
-                    Visibility="{Binding VersionControl.HasStatus,Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="{Binding VersionControl.ModifiedLabel}"/>
-                  </Border>
-                  <StackPanel>
-                    <TextBlock Text="{l:Tr Project.Workspace}" Style="{StaticResource Primer.ContainerTitle}"
-                      AutomationProperties.HeadingLevel="Level2"/>
-                    <TextBlock Text="{Binding VersionControl.WorkspaceRootDisplay}" Style="{StaticResource Project.Caption}" TextWrapping="Wrap"/>
-                  </StackPanel>
+            <DockPanel>
+              <Border x:Name="VciStatusCard" DockPanel.Dock="Top" Style="{StaticResource Primer.ProjectFileBar}">
+                <DockPanel VerticalAlignment="Center">
+                  <TextBlock DockPanel.Dock="Right" x:Name="MappedMeta" Text="{Binding Tag.MappedMeta,ElementName=PageRoot}"
+                    Visibility="{Binding VersionControl.HasStatus,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Project.Caption}"/>
+                  <TextBlock Text="{Binding VersionControl.WorkspaceRootDisplay}" ToolTip="{Binding VersionControl.WorkspaceRootDisplay}"
+                    TextTrimming="CharacterEllipsis" Style="{StaticResource Primer.Mono}"/>
                 </DockPanel>
               </Border>
-              <Border x:Name="MappedObjectsCard" Style="{StaticResource Primer.CodeBlock}" Padding="14" Margin="0,12,0,0">
-                <Grid>
-                  <ListBox x:Name="MappedList" AutomationProperties.Name="{l:Tr Primer.MappedObjects}" Style="{StaticResource Primer.List}"
-                    ScrollViewer.VerticalScrollBarVisibility="Disabled" ItemsSource="{Binding VersionControl.VcStatusItems}" SelectedItem="{Binding VersionControl.SelectedVcItem}"
-                    ItemContainerStyle="{StaticResource Project.ChangedFile}">
-                    <ListBox.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel ToolTip="{Binding Name}">
-                          <TextBlock DockPanel.Dock="Left" Style="{StaticResource Project.FileMark}" Margin="0,0,8,0"/>
-                          <TextBlock DockPanel.Dock="Right" ToolTip="{l:Tr Col.State}" Style="{StaticResource Primer.MappingState}">
-                            <TextBlock.Text>
-                              <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="compare">
-                                <Binding Path="CompareState"/>
-                                <Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
-                              </MultiBinding>
-                            </TextBlock.Text>
-                          </TextBlock>
-                          <TextBlock Text="{Binding FilePath}" AutomationProperties.Name="{l:Tr Primer.File}" ToolTip="{l:Tr Col.Object}"
-                            Style="{StaticResource Primer.Mono}"/>
-                        </DockPanel>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
-                  <TextBlock ToolTip="{l:Tr Vc.Empty.Title}" Text="{l:Tr Vc.Empty.Body}" TextWrapping="Wrap"
-                    Style="{StaticResource Primer.Muted}"
-                    Visibility="{Binding VersionControl.HasVcItems,Converter={StaticResource NotBoolToVisibility}}"/>
-                </Grid>
-              </Border>
-              <TextBlock Margin="0,8,0,0" x:Name="MappedMeta" Visibility="{Binding VersionControl.HasStatus,Converter={StaticResource BoolToVisibility}}"
-                  Text="{Binding Tag.MappedMeta,ElementName=PageRoot}" Style="{StaticResource Project.Caption}"/>
-            </StackPanel>
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Border x:Name="MappedObjectsCard" Style="{StaticResource Primer.ProjectLayoutSurface}" Padding="8">
+                  <Grid>
+                    <ListBox x:Name="MappedList" AutomationProperties.Name="{l:Tr Primer.MappedObjects}" Style="{StaticResource Primer.List}"
+                      ScrollViewer.VerticalScrollBarVisibility="Disabled" ItemsSource="{Binding VersionControl.VcStatusItems}"
+                      SelectedItem="{Binding VersionControl.SelectedVcItem}"
+                      ItemContainerStyle="{StaticResource Project.ChangedFile}">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <DockPanel ToolTip="{Binding Name}">
+                            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Project.FileMark}" Margin="0,0,8,0"/>
+                            <TextBlock DockPanel.Dock="Right" ToolTip="{l:Tr Col.State}" Style="{StaticResource Primer.MappingState}">
+                              <TextBlock.Text>
+                                <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="compare">
+                                  <Binding Path="CompareState"/>
+                                  <Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
+                                </MultiBinding>
+                              </TextBlock.Text>
+                            </TextBlock>
+                            <TextBlock Text="{Binding FilePath}" AutomationProperties.Name="{l:Tr Primer.File}" ToolTip="{l:Tr Col.Object}"
+                              Style="{StaticResource Primer.Mono}"/>
+                          </DockPanel>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock ToolTip="{l:Tr Vc.Empty.Title}" Text="{l:Tr Vc.Empty.Body}" TextWrapping="Wrap"
+                      Style="{StaticResource Primer.Muted}"
+                      Visibility="{Binding HasItems,ElementName=MappedList,Converter={StaticResource NotBoolToVisibility}}"/>
+                  </Grid>
+                </Border>
+                <Border x:Name="DiffCard" Grid.Column="1" Style="{StaticResource Primer.ProjectLayoutSurface}" Padding="12,8">
+                  <Grid>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" MinHeight="32"/>
+                      <RowDefinition Height="Auto" MinHeight="28"/>
+                      <RowDefinition Height="*"/>
+                      <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="{l:Tr Primer.LocalDiff}" Style="{StaticResource Primer.ContainerTitle}"/>
+                    <Border Style="{StaticResource Primer.Chip}" HorizontalAlignment="Right">
+                      <TextBlock Text="{l:Tr Primer.WorkingTree}" Style="{StaticResource Primer.Text.textMuted}"/>
+                    </Border>
+                    <DockPanel Grid.Row="1">
+                      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <TextBlock Text="{Binding ElementName=PageRoot,Path=Tag.DiffAdded}" FontFamily="{DynamicResource Ui.FontMono}"
+                          FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="8,0,6,0" VerticalAlignment="Center"
+                          Style="{StaticResource Primer.Text.diffGreen}"/>
+                        <TextBlock Text="{Binding ElementName=PageRoot,Path=Tag.DiffRemoved}" FontFamily="{DynamicResource Ui.FontMono}"
+                          FontSize="{DynamicResource Ui.FontSize.Caption}" VerticalAlignment="Center" Style="{StaticResource Primer.Text.diffRed}"/>
+                      </StackPanel>
+                      <TextBlock Text="{Binding Tag.DiffFileName,ElementName=PageRoot}" ToolTip="{Binding VersionControl.VcDiffCaption}"
+                        Style="{StaticResource Primer.Mono.textMuted}" FontWeight="SemiBold"/>
+                    </DockPanel>
+                    <Border Grid.Row="2" Padding="0,6" Margin="0,4,0,8" Style="{StaticResource Primer.ProjectLayoutSurface}">
+                      <Grid>
+                        <TextBlock Text="{Binding VersionControl.DiffHint}" Style="{StaticResource Primer.Muted.textMuted}" TextWrapping="Wrap"
+                          VerticalAlignment="Top" Visibility="{Binding VersionControl.HasVcDiff, Converter={StaticResource NotBoolToVisibility}}"/>
+                        <ListBox AutomationProperties.Name="{l:Tr Access.Diff}" ItemsSource="{Binding VersionControl.VcDiffLines}"
+                          Style="{StaticResource Primer.List}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          Visibility="{Binding VersionControl.HasVcDiff, Converter={StaticResource BoolToVisibility}}"
+                          ItemContainerStyle="{StaticResource Project.DiffRow}">
+                          <ListBox.ItemTemplate>
+                            <DataTemplate>
+                              <TextBlock Text="{Binding Text}" FontFamily="{DynamicResource Ui.FontMono}"
+                                FontSize="{DynamicResource Ui.FontSize.Caption}" LineHeight="17" Style="{StaticResource Primer.DiffLine}"/>
+                            </DataTemplate>
+                          </ListBox.ItemTemplate>
+                        </ListBox>
+                      </Grid>
+                    </Border>
+                    <StackPanel Grid.Row="3">
+                      <ItemsControl ItemsSource="{Binding ElementName=PageRoot,Path=Tag.OtherMappedFiles}" Margin="0,0,0,8">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Button AutomationProperties.Name="{Binding FilePath}" ContentTemplate="{x:Null}" Tag="{Binding}" Click="OnMappedFile"
+                              ToolTip="{l:Tr Primer.InspectFile}" Style="{StaticResource Primer.Quiet}" HorizontalContentAlignment="Left"
+                              MinHeight="24">
+                              <TextBlock Text="{Binding FilePath}" TextWrapping="Wrap"/>
+                            </Button>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <TextBlock Text="{l:Tr Primer.DiffScope}" Style="{StaticResource Primer.Muted.textMuted}" TextWrapping="Wrap"
+                        FontSize="{DynamicResource Ui.FontSize.Caption}"/>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+              </Grid>
+            </DockPanel>
           </Border>
-
-          <Grid Visibility="{Binding VersionControl.ShowWorkspace,Converter={StaticResource BoolToVisibility}}">
-          <Border x:Name="DiffCard" Margin="0,12,0,0" Visibility="{Binding VersionControl.HasVcDiff,Converter={StaticResource BoolToVisibility}}"
-            Style="{StaticResource Primer.Container}">
-            <Grid>
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" MinHeight="32"/>
-                <RowDefinition Height="Auto" MinHeight="28"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-              </Grid.RowDefinitions>
-              <TextBlock Text="{l:Tr Primer.LocalDiff}" Style="{StaticResource Primer.ContainerTitle}"/>
-              <Border Style="{StaticResource Primer.Chip}" HorizontalAlignment="Right">
-                <TextBlock Text="{l:Tr Primer.WorkingTree}" Style="{StaticResource Primer.Text.textMuted}"/>
-              </Border>
-              <DockPanel Grid.Row="1">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                  <TextBlock Text="{Binding ElementName=PageRoot,Path=Tag.DiffAdded}" FontFamily="{DynamicResource Ui.FontMono}"
-                    FontSize="{DynamicResource Ui.FontSize.Caption}" Margin="8,0,6,0" VerticalAlignment="Center"
-                    Style="{StaticResource Primer.Text.diffGreen}"/>
-                  <TextBlock Text="{Binding ElementName=PageRoot,Path=Tag.DiffRemoved}" FontFamily="{DynamicResource Ui.FontMono}"
-                    FontSize="{DynamicResource Ui.FontSize.Caption}" VerticalAlignment="Center" Style="{StaticResource Primer.Text.diffRed}"/>
-                </StackPanel>
-                <TextBlock Text="{Binding Tag.DiffFileName,ElementName=PageRoot}" ToolTip="{Binding VersionControl.VcDiffCaption}"
-                  Style="{StaticResource Primer.Mono.textMuted}" FontWeight="SemiBold"/>
-              </DockPanel>
-              <Border Grid.Row="2" Padding="0,6" Margin="0,4,0,8" Style="{StaticResource Primer.ProjectLayoutSurface}">
-                <Grid>
-                  <TextBlock Text="{l:Tr Pages.NoDiff}" Style="{StaticResource Primer.Muted.textMuted}" TextWrapping="Wrap"
-                    VerticalAlignment="Top" Visibility="{Binding VersionControl.HasVcDiff, Converter={StaticResource NotBoolToVisibility}}"/>
-                  <ListBox AutomationProperties.Name="{l:Tr Access.Diff}" ItemsSource="{Binding VersionControl.VcDiffLines}"
-                    Style="{StaticResource Primer.List}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                    Visibility="{Binding VersionControl.HasVcDiff, Converter={StaticResource BoolToVisibility}}"
-                    ItemContainerStyle="{StaticResource Project.DiffRow}">
-                    <ListBox.ItemTemplate>
-                      <DataTemplate>
-                        <TextBlock Text="{Binding Text}" FontFamily="{DynamicResource Ui.FontMono}"
-                          FontSize="{DynamicResource Ui.FontSize.Caption}" LineHeight="17" Style="{StaticResource Primer.DiffLine}"/>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
-                </Grid>
-              </Border>
-              <StackPanel Grid.Row="3">
-                <ItemsControl ItemsSource="{Binding ElementName=PageRoot,Path=Tag.OtherMappedFiles}" Margin="0,0,0,8">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                      <Button AutomationProperties.Name="{Binding FilePath}" ContentTemplate="{x:Null}" Tag="{Binding}" Click="OnMappedFile"
-                        ToolTip="{l:Tr Primer.InspectFile}" Style="{StaticResource Primer.Quiet}" HorizontalContentAlignment="Left"
-                        MinHeight="24">
-                        <TextBlock Text="{Binding FilePath}" TextWrapping="Wrap"/>
-                      </Button>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <TextBlock Text="{l:Tr Primer.DiffScope}" Style="{StaticResource Primer.Muted.textMuted}" TextWrapping="Wrap"
-                  FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-              </StackPanel>
-            </Grid>
-          </Border>
-          </Grid>
-          <Expander x:Name="Details" Header="{l:Tr Pages.Options}" AutomationProperties.Name="{l:Tr Pages.Options}"
-            Style="{StaticResource Primer.Expander}" Margin="0,8,0,0">
-            <StackPanel>
-              <WrapPanel Margin="0,4">
-                <Label AutomationProperties.Name="{Binding Path=(AutomationProperties.Name),ElementName=WorkspacePicker}" x:Name="WorkspaceLabel"
-                  Content="{l:Tr Access.Workspaces}" Target="{Binding ElementName=WorkspacePicker}" Style="{StaticResource Primer.FormLabel}"
-                  VerticalAlignment="Center" Padding="0,0,8,0"/>
-                <ComboBox x:Name="WorkspacePicker" AutomationProperties.LabeledBy="{Binding ElementName=WorkspaceLabel}"
-                  AutomationProperties.Name="{l:Tr Access.Workspaces}" ItemsSource="{Binding VersionControl.Workspaces}"
-                  SelectedItem="{Binding VersionControl.SelectedWorkspace}" Style="{StaticResource Primer.WorkspacePicker}" MinWidth="190"
-                  MaxWidth="360">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                      <TextBlock Text="{Binding Name}" FontSize="{DynamicResource Ui.FontSize.Title}" FontWeight="SemiBold"
-                        TextTrimming="CharacterEllipsis" AutomationProperties.HeadingLevel="Level1"/>
-                    </DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
-              </WrapPanel>
-              <WrapPanel>
-                <Button AutomationProperties.Name="{l:Tr Access.Workspaces}" Click="OnWorkspaceAction"
-                  Style="{StaticResource Primer.WorkspaceAction}"/>
-                <WrapPanel>
-                  <Button AutomationProperties.Name="{l:Tr Primer.ReadStatus}" Content="{l:Tr Primer.ReadStatus}"
-                    Command="{Binding VersionControl.VcRefresh}" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-                  <Button x:Name="GitToolsButton" AutomationProperties.Name="{l:Tr Pages.GitTools}" Content="{l:Tr Pages.GitTools}" Click="OnGitTools"
-                    Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-                  <Button AutomationProperties.Name="{l:Tr Pages.Options}" Content="{l:Tr Pages.Options}" Click="OnWorkspaceOptions"
-                    Style="{StaticResource Primer.Quiet}"/>
-                </WrapPanel>
-              </WrapPanel>
-              <WrapPanel Margin="0,8,0,0">
-                <RadioButton AutomationProperties.Name="{l:Tr Primer.All}" Content="{l:Tr Primer.All}"
-                  IsChecked="{Binding VersionControl.VcShowAll}" GroupName="MappedFilter" Click="OnMappedAll" ToolTip="{l:Tr Vc.ShowAll}"
-                  Style="{StaticResource Primer.Segment}"/>
-                <RadioButton GroupName="MappedFilter" AutomationProperties.Name="{Binding ElementName=PageRoot,Path=Tag.DifferenceLabel}"
-                  Content="{Binding ElementName=PageRoot,Path=Tag.DifferenceLabel}" ToolTip="{l:Tr Primer.Differ}" Tag="Unequal"
-                  Click="OnMappedFilter" Style="{StaticResource Primer.Segment}" Margin="6,0,0,0"/>
-                <RadioButton GroupName="MappedFilter" AutomationProperties.Name="{Binding ElementName=PageRoot,Path=Tag.MissingLabel}"
-                  Content="{Binding ElementName=PageRoot,Path=Tag.MissingLabel}" ToolTip="{l:Tr Primer.Missing}" Tag="WorkspaceFileMissing"
-                  Click="OnMappedFilter" Style="{StaticResource Primer.Segment}" Margin="6,0,0,0"/>
-              </WrapPanel>
-              <Border Style="{StaticResource Primer.Container}">
-                <Grid>
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" MinHeight="24"/>
-                    <RowDefinition Height="Auto" MinHeight="34"/>
-                    <RowDefinition Height="Auto" MinHeight="36"/>
-                    <RowDefinition Height="*"/>
-                  </Grid.RowDefinitions>
-                  <TextBlock Text="{l:Tr Primer.Mapping}" Style="{StaticResource Primer.ContainerTitle}"/>
-                  <TextBlock Text="{l:Tr Primer.WholeProject}" Style="{StaticResource Primer.Muted}" HorizontalAlignment="Right"
-                    FontSize="{DynamicResource Ui.FontSize.Caption}"/>
-                  <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center"
-                    ToolTip="{Binding ElementName=PageRoot,Path=Tag.MappingSummary}">
-                    <TextBlock Text="{Binding ElementName=PageRoot,Path=Tag.Mapped}" FontSize="{DynamicResource Ui.FontSize.Subtitle}"
-                      FontWeight="SemiBold"/>
-                    <TextBlock Text="{l:Tr Primer.Mapped}" Style="{StaticResource Primer.Muted}" Margin="3,0,12,0"/>
-                    <TextBlock Text="{Binding ElementName=PageRoot,Path=Tag.Unsupported}" FontSize="{DynamicResource Ui.FontSize.Subtitle}"
-                      FontWeight="SemiBold"/>
-                    <TextBlock Text="{l:Tr Primer.Unsupported}" Style="{StaticResource Primer.Muted}" Margin="3,0,12,0"/>
-                  </StackPanel>
-                  <WrapPanel Grid.Row="2">
-                    <Button AutomationProperties.Name="{l:Tr Primer.PreviewMapping}" Content="{l:Tr Primer.PreviewMapping}"
-                      Command="{Binding VersionControl.VcMap}" Click="OnPreview" Style="{StaticResource Primer.Secondary}" Margin="0,0,8,0"/>
-                    <Button AutomationProperties.Name="{l:Tr Primer.RunMapping}" Content="{l:Tr Primer.RunMapping}"
-                      Command="{Binding VersionControl.VcMap}" Click="OnRun" Style="{StaticResource Primer.OutlinedAccent}"/>
-                  </WrapPanel>
-                </Grid>
-              </Border>
-            </StackPanel>
-          </Expander>
         </StackPanel>
       </ScrollViewer>
     </DockPanel>
-    <views:EngineeringOptionsView x:Name="Options"/>
+    <views:EngineeringOptionsView x:Name="Options" Tag="{Binding Tag,ElementName=PageRoot}"/>
   </Grid>
 </UserControl>

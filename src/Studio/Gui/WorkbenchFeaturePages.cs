@@ -20,6 +20,8 @@ public partial class MainWindow
         ConfigureFeaturePages(new CallJournalService(_model.SelectedReleaseKey), new AuditLogService(),
                 new EnvironmentCheckService(!_model.OfflineDemo, () => _model.SelectedReleaseKey));
         Approvals.NewRequest += OnNewApproval;
+        Approvals.PropertyChanged += OnProjectReviewsChanged;
+        UpdateProjectReview();
         _model.PropertyChanged += OnFeatureReleaseChanged;
     }
 
@@ -39,7 +41,7 @@ public partial class MainWindow
         Features = new FeaturePagesViewModel(Approvals, journal, audit, environment, _diagnostics, now) { Release = _model.SelectedReleaseKey };
         DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext =
             CallDetailContent.DataContext = Features;
-        OperationsContent.SetFeatures(Features, () => Navigate("Environment"));
+        OperationsContent.Options.RunEnvironmentItem.DataContext = Features;
         LogContent.SetFeatures(Features);
         SettingsContent.SetFeatures(Features);
         Features.DrawerRequested += OnFeatureDrawer;
@@ -55,6 +57,7 @@ public partial class MainWindow
         if (e.PropertyName == nameof(MainViewModel.SelectedReleaseKey))
         {
             Features.Release = _model.SelectedReleaseKey;
+            UpdateProjectReview();
             if (Features.Journal is CallJournalService journal) journal.SetRelease(_model.SelectedReleaseKey);
         }
     }
@@ -119,13 +122,14 @@ public partial class MainWindow
     {
         _featuresDisposed = true;
         Approvals.NewRequest -= OnNewApproval;
+        Approvals.PropertyChanged -= OnProjectReviewsChanged;
         _model.PropertyChanged -= OnFeatureReleaseChanged;
         Features.DrawerRequested -= OnFeatureDrawer;
         Features.Feedback -= OnFeatureFeedback;
         Features.CallCompleted -= OnCallCompleted;
         DrawerHeading.DataContext = CallsContent.DataContext = AuditContent.DataContext = EnvironmentContent.DataContext = ApprovalsContent.DataContext =
             CallDetailContent.DataContext = null;
-        OperationsContent.SetFeatures(null, null);
+        OperationsContent.Options.RunEnvironmentItem.DataContext = null;
         LogContent.SetFeatures(null);
         SettingsContent.SetFeatures(null);
         Features.Dispose(); (Features.Journal as IDisposable)?.Dispose(); (Features.Audit as IDisposable)?.Dispose(); _approvalNotification.Dispose();

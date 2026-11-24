@@ -42,6 +42,16 @@ public partial class PlcTagsView : UserControl
             if (change.NewValue is MainViewModel model) model.Engineering.PropertyChanged += OnRowsChanged;
         };
     }
+    private void OnTableOptions(object sender, RoutedEventArgs e) => TableMenu.IsOpen = TableOptions.IsChecked == true;
+    private void OnTableOpened(object sender, EventArgs e) => TablePath.Focus();
+    private void OnTableKey(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Escape) return;
+        e.Handled = true;
+        TableMenu.IsOpen = false;
+        TableOptions.Focus();
+    }
+    private void OnTableClosed(object sender, EventArgs e) => TableOptions.IsChecked = false;
     private void OnRowsChanged(object? sender, PropertyChangedEventArgs args)
     {
         if (args.PropertyName == nameof(EngineeringViewModel.PlcTags)) ApplyFilter();

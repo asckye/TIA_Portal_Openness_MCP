@@ -316,9 +316,9 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
                 var page = window.OperationsContent;
                 UnifiedDesktopTests.ClickControl(page.ExportMenuButton);
                 var menu = page.ExportMenuButton.ContextMenu;
-                var item = Assert.Single(menu.Items.OfType<MenuItem>(), entry => Equals(entry.Header, openRules));
-                item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                Assert.DoesNotContain(menu.Items.OfType<MenuItem>(), entry => Equals(entry.Header, openRules));
                 menu.IsOpen = false;
+                UnifiedDesktopTests.ClickControl(page.RulesButton);
                 WpfContext.Drain();
                 Assert.Equal("Inspect", page.Options.CurrentSection);
                 var run = Assert.Single(DesktopCapture.Descendants<Button>(page.Options), b => b.IsVisible && b.Command == model.Engineering.Inspect);
@@ -347,14 +347,20 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
                 WpfContext.ShowWindow(window); WpfContext.Drain();
                 var host = window;
                 var bar = (Border)ProjectPageTestSupport.Find(window, "ProjectToolbar");
-                var buttons = WorkbenchRenderFeaturePagesTests.Descendants<Button>(bar).ToList();
-                Assert.Equal(5, buttons.Count);
+                var allButtons = WorkbenchRenderFeaturePagesTests.Descendants<Button>(bar).ToList();
+                Assert.Equal(8, allButtons.Count);
+                Assert.Equal(new[] { window.OperationsContent.Reconnect, window.OperationsContent.BlockReviewButton },
+                    allButtons.Where(button => !button.IsVisible));
+                var buttons = allButtons.Where(button => button.IsVisible).ToList();
+                Assert.Equal(6, buttons.Count);
+                Assert.Contains(window.OperationsContent.DownloadButton, buttons);
                 Assert.Equal(44, bar.ActualHeight);
                 Assert.All(buttons, button => Assert.Equal(28, button.ActualHeight));
                 UnifiedDesktopTests.ClickControl(window.OperationsContent.ExportMenuButton);
                 var menu = window.OperationsContent.ExportMenuButton.ContextMenu;
                 Assert.True(menu.IsOpen);
-                foreach (string key in new[] { "Project.OpenConnect", "Common.Reload", "Pages.Import", "Pages.OpenRules", "Primer.Transfer" })
+                foreach (string key in new[] { "Project.OpenConnect", "Common.Reload", "Pages.Import",
+                    "Project.GenerateViewAtlas", "Project.ExportXml", "Project.OpenXml", "Primer.Transfer" })
                     Assert.Contains(menu.Items.OfType<MenuItem>(), item => Equals(item.Header, Loc.Current[key]));
                 menu.IsOpen = false;
                 var save = Assert.Single(buttons, button => Equals(button.Background, host.FindResource("Primer.primaryBg")));
@@ -414,12 +420,21 @@ public sealed partial class ProjectPageInteractionTests(WpfContext wpf)
                 var menuButton = window.OperationsContent.ExportMenuButton;
                 UnifiedDesktopTests.ClickControl(menuButton);
                 Assert.True(menuButton.ContextMenu.IsOpen);
-                var item = window.OperationsContent.RunEnvironmentItem;
+                string[] expected = ["Primer.Transfer", "Pages.Import", "Project.GenerateViewAtlas", "Project.ExportXml", "Project.OpenXml",
+                    "Project.OpenConnect", "Common.Reload", "Pages.ViewLadder", "Pages.Options", "Pages.Disconnect"];
+                Assert.Equal(expected.Select(key => Loc.Current[key]), menuButton.ContextMenu.Items.OfType<MenuItem>().Select(item => item.Header));
+                menuButton.ContextMenu.IsOpen = false;
+                Assert.True(window.Features.EnvironmentNeedsAction);
+                Assert.False(window.RailEnvironment.IsChecked);
+                var options = window.OperationsContent.Options;
+                options.Show("Project");
+                options.AdvancedProjectTools.IsExpanded = true;
+                WpfContext.Drain();
+                var item = options.RunEnvironmentItem;
                 Assert.Equal(Visibility.Visible, item.Visibility);
                 Assert.Equal(window.Features.EnvironmentAttention, item.ToolTip);
                 Assert.True(item.IsEnabled);
-                item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent, item));
-                menuButton.ContextMenu.IsOpen = false;
+                UnifiedDesktopTests.ClickControl(item);
                 Assert.True(((RadioButton)window.FindName("RailEnvironment")).IsChecked);
             }
             finally { window.Close(); }

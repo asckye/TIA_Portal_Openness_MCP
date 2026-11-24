@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TiaOpenness.Client;
 using TiaOpenness.Contracts.Models;
@@ -34,9 +35,10 @@ public interface IProjectClient : IDisposable
     public Task<IReadOnlyList<SoftwareUnitInfo>> ListUnitsAsync(string plc) => Task.FromResult<IReadOnlyList<SoftwareUnitInfo>>([]);
     public Task<IReadOnlyList<string>?> ListScreensAsync(string hmi) => Task.FromResult<IReadOnlyList<string>?>(null);
     public Task<(int? Tags, int? Alarms)> HmiCountsAsync(DeviceInfo hmi) => Task.FromResult<(int?, int?)>((null, null));
-    public Task<IReadOnlyList<BlockMember>> ReadInterfaceAsync(string plc, string block) => Task.FromResult<IReadOnlyList<BlockMember>>([]);
-    public Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath);
-    public Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits);
+    public Task<IReadOnlyList<BlockMember>> ReadInterfaceAsync(string plc, string block, CancellationToken token = default)
+        => Task.FromResult<IReadOnlyList<BlockMember>>([]);
+    public Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath, CancellationToken token = default);
+    public Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits, CancellationToken token = default);
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format);
     public Task<ExportResult> ImportBlocksAsync(string deviceId, IEnumerable<string> files, bool overwrite);
     public Task<CompileResult> CompileAsync(string deviceId);

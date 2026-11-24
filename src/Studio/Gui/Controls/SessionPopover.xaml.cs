@@ -94,6 +94,10 @@ public partial class SessionPopover : UserControl
         SessionCount.Text = Loc.Current.T("Overlay.Sessions", panel?.Sessions.Count ?? 0);
     }
 
+    internal ProjectSessionDetails? Details { get; set; }
+    private void OnSessionDetails(object sender, RoutedEventArgs e)
+        => SessionDetails.Content = SessionDetails.Content == null ? Details : null;
+
     private void OnVersionMenu(object sender, RoutedEventArgs e)
     {
         var menu = VersionMenuButton.ContextMenu;

@@ -127,6 +127,12 @@ public partial class MainWindow
         var cards = _toasts.Cards.ToArray();
         int offset = _toastCards.Length - cards.Length;
         for (int i = 0; i < _toastCards.Length; i++) _toastCards[i].Display(i < offset ? null : cards[i - offset], ToastStack.Width);
+        var crashLogs = _toastCards.FirstOrDefault(card => card.Notice?.Source == "session-lost")?.SecondAction;
+        if (OperationsContent.FindName("CrashLogs") != crashLogs)
+        {
+            if (OperationsContent.FindName("CrashLogs") != null) OperationsContent.UnregisterName("CrashLogs");
+            if (crashLogs != null) OperationsContent.RegisterName("CrashLogs", crashLogs);
+        }
         if (!_toasts.HasSource("env-alert")) _environmentIssue = null;
         _announced.RemoveWhere(notice => !_toasts.Contains(notice));
         foreach (var card in _toastCards)

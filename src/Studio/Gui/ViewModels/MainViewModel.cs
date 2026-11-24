@@ -77,6 +77,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
     public bool ServiceOwnsRelease { get => Session.ServiceOwnsRelease; set => Session.ServiceOwnsRelease = value; }
     public bool CanSelectRelease => Session.CanSelectRelease;
     public bool Busy => Activity.Busy;
+    public bool ShowVersionControlReleaseNote => !OfflineDemo && !OpennessApi.VersionControl.Includes(SelectedReleaseKey);
     public bool VersionControlPageVisible => !OfflineDemo && OpennessApi.VersionControl.Includes(SelectedReleaseKey);
 
     public bool IsEngineeringPage => !_isConfigurationPage;
@@ -155,6 +156,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
         {
             Raise(e.PropertyName);
             Raise(nameof(VersionControlPageVisible));
+            Raise(nameof(ShowVersionControlReleaseNote));
             VersionControl.RefreshCommands();
         }
     }

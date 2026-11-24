@@ -15,19 +15,6 @@ namespace TiaOpenness.Gui;
 
 public partial class MainWindow
 {
-    private IApprovalService? _projectApprovals;
-    private void BindProjectReviews(IApprovalService? service)
-    {
-        if (_projectApprovals != null) _projectApprovals.PropertyChanged -= OnProjectReviewsChanged;
-        _projectApprovals = service;
-        if (service != null) service.PropertyChanged += OnProjectReviewsChanged;
-        UpdateProjectReview();
-    }
-    private void OnProjectReviewsChanged(object? sender, PropertyChangedEventArgs args)
-    {
-        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(UpdateProjectReview); return; }
-        UpdateProjectReview();
-    }
     internal static bool MatchesBlockReview(ApprovalRequest request, string release, string file, string plc, string path)
     {
         if (request.State != ApprovalState.Pending || request.Actor != "mcp" || request.Release != release || file.Length == 0
@@ -44,9 +31,15 @@ public partial class MainWindow
         }
     }
     private ApprovalRequest? BlockReview() => _model.Session.IsConnected && _model.Engineering.FocusedBlock is { } block
-        && _model.Engineering.SelectedDevice is { } plc ? _projectApprovals?.Requests.FirstOrDefault(request => MatchesBlockReview(request,
+        && _model.Engineering.SelectedDevice is { } plc ? Approvals?.Requests.FirstOrDefault(request => MatchesBlockReview(request,
             _model.SelectedReleaseKey, _model.Session.OpenProjectFile, plc.Id, block.Path)) : null;
-    private void UpdateProjectReview() => BlocksContent.BlockReviewButton.Visibility = BlockReview() == null ? Visibility.Collapsed : Visibility.Visible;
+    private void UpdateProjectReview()
+        => OperationsContent.BlockReviewButton.Visibility = BlockReview() == null ? Visibility.Collapsed : Visibility.Visible;
+    private void OnProjectReviewsChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (Dispatcher.CheckAccess()) UpdateProjectReview();
+        else Dispatcher.BeginInvoke(UpdateProjectReview);
+    }
 
     private Panel? _shellBannerSlot;
     private void PlaceSafetyBanner()
@@ -60,17 +53,31 @@ public partial class MainWindow
         slot.Children.Add(SafetyBanner);
     }
 
+    // Preserve automation lookups when a project command moves to another namescope.
+    private void RegisterProjectControls()
+    {
+        OperationsContent.RegisterName("TagsTab", OperationsContent.TagsTab);
+        OperationsContent.RegisterName("RunEnvironmentItem", OperationsContent.Options.RunEnvironmentItem);
+        EngineeringSideContent.RegisterName("CompileButton", OperationsContent.ToolbarCompile);
+        BlocksContent.RegisterName("ViewLadderAtlas", OperationsContent.ViewLadderAtlas);
+        BlocksContent.RegisterName("AtlasFooter", AtlasFooter);
+        BlocksContent.RegisterName("AtlasBar", AtlasBar);
+        VersionControlContent.RegisterName("GitToolsButton", VersionControlContent.Options.GitToolsButton);
+    }
+
     private void OnProjectPageInitialized(object sender, EventArgs e)
     {
         _shellBannerSlot = (Panel)SafetyBanner.Parent;
         EngineeringPage.IsVisibleChanged += (_, _) => PlaceSafetyBanner();
         VersionControlContent.IsVisibleChanged += (_, _) => PlaceSafetyBanner();
-        OperationsContent.ReviewsChanged += BindProjectReviews;
-        BlocksContent.BlockReviewButton.Click += (_, _) =>
+        OperationsContent.BlockReviewButton.Click += (_, _) =>
         {
             if (BlockReview() is not { } request) return;
-            OpenDrawer("Approvals"); ApprovalsContent.FocusRequest(request.Id);
+            Navigate("Approvals");
+            ApprovalsContent.FocusRequest(request.Id);
         };
+        BlocksContent.AtlasNotice += ShowToast;
+        BlocksContent.ClearAtlasNotice += () => _toasts.Remove("atlas");
         OperationsContent.PendingTransfer = () => _prefills.Latest?.Form == TiaOpenness.Shared.WorkbenchPrefillForm.ImportBlocks ? "Import" : "Export";
         OperationsContent.TagsTab = ((Views.PlcTagsView)PlcTagsContent.Content).TagsTab;
         ProjectExplorer.OptionsRequested += (_, _) => OperationsContent.ShowProjectOptions();
@@ -81,7 +88,11 @@ public partial class MainWindow
         }, () => _model.Engineering.Import.CanExecute(null));
         BlocksContent.EmptyBlocks.ActionCommand = openImport;
         _model.Engineering.Import.CanExecuteChanged += (_, _) => openImport.RaiseCanExecuteChanged();
-        BlocksContent.DownloadRequested += (_, _) => OperationsContent.ShowDownloadOptions();
+        OperationsContent.ViewLadderAtlas.Click += async (_, _) =>
+        {
+            if (BlocksContent.Atlas is { } atlas) await atlas.GenerateAsync(true);
+        };
+        OperationsContent.ViewLadderAtlas.SetBinding(IsEnabledProperty, new Binding("Atlas.CanViewBlock") { Source = BlocksContent });
         BlocksContent.SelectionMarker.Target = ProjectExplorer.Nodes;
         ProjectExplorer.SelectionMarker.SetBinding(VisibilityProperty, new Binding(nameof(Visibility)) { Source = BlocksContent.SelectionMarker });
         ProjectExplorer.SelectionMarker.ClearRequested += (source, _) => OnClearFieldPrefill(source, "BlockSelection");
@@ -102,7 +113,6 @@ public partial class MainWindow
         };
         _model.Session.PropertyChanged += (_, change) =>
         {
-            if (change.PropertyName == nameof(SessionViewModel.IsConnected)) OperationsContent.Sessions.ClearValue(VisibilityProperty);
             if (change.PropertyName is nameof(SessionViewModel.IsConnected) or nameof(SessionViewModel.ProjectName)
                 or nameof(SessionViewModel.LostConnection)) ShowDocument();
         };
@@ -111,26 +121,20 @@ public partial class MainWindow
         ShowDocument();
     }
 
-    private void OnProjectContextClick(object sender, RoutedEventArgs e) => ShowDocument();
-
     private void ShowDocument()
     {
-        UpdateProjectReview();
         PlaceSafetyBanner();
+        UpdateProjectReview();
         var document = _model.Engineering.Document;
         bool tags = document == ProjectDocument.Tags;
         bool compile = document == ProjectDocument.Compile;
-        bool foldable = compile && Root.ActualWidth >= 1200 && ProjectOverview.ActualWidth < 1232;
-        FoldProjectContext.Visibility = foldable ? Visibility.Visible : Visibility.Collapsed;
-        if (!foldable) FoldProjectContext.IsChecked = false;
-        // Keep the fold shortcut in the content margin, clear of the Save button.
-        FoldProjectContext.Margin = new Thickness(0, 47, 1, 0);
-        BlockDocument.Visibility = tags ? Visibility.Collapsed : Visibility.Visible;
-        CompileDocument.Visibility = compile && FoldProjectContext.IsChecked != true ? Visibility.Visible : Visibility.Collapsed;
+        BlockDocument.Visibility = tags || compile ? Visibility.Collapsed : Visibility.Visible;
+        CompileDocument.Visibility = compile ? Visibility.Visible : Visibility.Collapsed;
         PlcTagsContent.Visibility = tags ? Visibility.Visible : Visibility.Collapsed;
         bool empty = HasProject && document == ProjectDocument.Render && (_model.Engineering.EmptyBlockList || _model.Engineering.EmptyDeviceList);
         OperationsContent.EmptyToolbar.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
-        OperationsContent.ProjectToolbar.Visibility = HasProject && !empty && !tags && document is not (ProjectDocument.Hmi or ProjectDocument.SoftwareUnit)
+        OperationsContent.ProjectToolbar.Visibility = _model.Session.LostConnection ||
+            HasProject && !empty && !tags && document is not (ProjectDocument.Hmi or ProjectDocument.SoftwareUnit)
             ? Visibility.Visible : Visibility.Collapsed;
         bool lost = _model.Session.LostConnection;
         if (HasProject || lost) ProjectTree.ClearValue(VisibilityProperty);
@@ -140,6 +144,9 @@ public partial class MainWindow
         DocumentHost.RowDefinitions[0].Height = compile ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
         DocumentHost.RowDefinitions[1].Height = compile ? new GridLength(1, GridUnitType.Star) : GridLength.Auto;
     }
+
+    private void OnCancelAtlas(object sender, RoutedEventArgs e) => BlocksContent.Atlas?.Cancel();
+    private void OnCancelProjectRead(object sender, RoutedEventArgs e) => _model.Engineering.CancelDocumentRead();
 
     private bool OpenTreePage(string page, bool keepTreeOpen)
     {

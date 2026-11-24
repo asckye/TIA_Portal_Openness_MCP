@@ -140,7 +140,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 var project = window.OperationsContent;
                 UnifiedDesktopTests.ClickControl(project.ExportMenuButton);
                 var transfer = project.ExportMenuButton.ContextMenu;
-                try { CheckSurface(transfer, "Transfer menu", "Pages.Import", "Pages.GenerateAtlas"); }
+                try { CheckSurface(transfer, "Transfer menu", "Pages.Import", "Project.GenerateViewAtlas"); }
                 finally { transfer.IsOpen = false; }
                 var tree = window.ProjectExplorer.Nodes;
                 var menu = tree.ContextMenu;

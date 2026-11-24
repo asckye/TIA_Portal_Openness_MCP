@@ -1,5 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using TiaMcp.Adapters.Contracts;
@@ -83,6 +85,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     private void RaiseVcCommands()
     {
+        Raise(nameof(ShowCreateWorkspace)); Raise(nameof(AllMappingsLabel));
         Raise(nameof(IsReadOnly)); Raise(nameof(AccessNotice));
         foreach (var command in new[] { VcRefresh, VcCreate, VcMap, VcStatus, VcPush, VcPull })
         {
@@ -121,7 +124,45 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     public bool HasVcDiff => VcDiffLines.Count > 0;
 
-    public string VcDiffCaption { get => _vcDiffCaption; private set => Set(ref _vcDiffCaption, value); }
+    public string DiffHint => VcDiffCaption.Length > 0 ? VcDiffCaption : Loc.Current["Pages.NoDiff"];
+    public string VcDiffCaption
+    {
+        get => _vcDiffCaption;
+        private set { if (Set(ref _vcDiffCaption, value)) Raise(nameof(DiffHint)); }
+    }
+
+    private TimeSpan _syncElapsed;
+    public string ElapsedLabel => SyncResult is { DryRun: false } ? Loc.Current.T("Project.SyncElapsed", _syncElapsed.TotalSeconds) : "";
+    public sealed record SyncRow(string Name, string Outcome, string Error, string? RawOutcome);
+    public IEnumerable<SyncRow> SyncRows => SyncResult is { } result ? result.Items.Select(item =>
+        new SyncRow(item.Name, result.DryRun ? PreviewOutcome(item) : CompletedOutcome(item.Outcome), item.Error, item.Outcome)) : [];
+
+    private static string CompletedOutcome(string? outcome) => outcome?.ToLowerInvariant() switch
+    {
+        "completed" or "synchronized" => Loc.Current["Project.SyncCompleted"],
+        "failed" => Loc.Current["Project.SyncFailed"],
+        "equal" or "skip" or "skipped" or "skipped-equal" => Loc.Current["Project.SyncSkipped"],
+        _ => Loc.Current["Project.SyncOther"],
+    };
+
+    private string PreviewOutcome(SyncItem item)
+    {
+        switch (item.Outcome?.ToLowerInvariant())
+        {
+            case "create": case "created": case "would create": return "CREATE";
+            case "update": case "updated": case "would update": return "UPDATE";
+            case "skip": case "equal": case "skipped": case "skipped-equal": return "SKIP";
+            case "planned": case "would sync projecttoworkspace":
+                var matches = VcStatusItems.Where(row => row.Name == item.Name || row.FilePath == item.Name).Take(2).ToArray();
+                if (matches.Length == 1)
+                {
+                    if (matches[0].CompareState == VcCompareState.WorkspaceFileMissing) return "CREATE";
+                    if (matches[0].CompareState == VcCompareState.Unequal) return "UPDATE";
+                }
+                break;
+        }
+        return Loc.Current["Project.SyncAction"];
+    }
 
     private bool _synchronizing;
     private SyncResult? _syncResult;
@@ -137,9 +178,14 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     internal void CloseSyncResult() => SyncResult = null;
     private void RefreshSyncState()
     {
+        Raise(nameof(SyncRows)); Raise(nameof(ElapsedLabel));
         Raise(nameof(ShowWorkspace)); Raise(nameof(ShowSyncResult)); Raise(nameof(SyncTitle)); Raise(nameof(SyncCounts));
     }
 
+    public bool ShowCreateWorkspace => !HasWorkspace && VcSupported && _client.CanRead;
+    private int? _reportedTotal;
+    public int MappedCount => _reportedTotal ?? SelectedWorkspace?.MappedObjectCount ?? 0;
+    public string AllMappingsLabel => HasWorkspace ? Loc.Current.T("Project.AllMappings", MappedCount) : Loc.Current["Primer.All"];
     public bool HasWorkspace => SelectedWorkspace != null;
 
     public WorkspaceInfo? SelectedWorkspace
@@ -148,6 +194,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         set
         {
             if (!Set(ref _selectedWorkspace, value)) return;
+            _reportedTotal = null;
             SyncResult = null;
             RefreshSyncState();
             HasStatus = false;
@@ -190,10 +237,18 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     /// </summary>
     public Task VcRefreshAsync() => RefreshWorkspaceAsync(requested: true);
 
-    internal async Task RefreshWorkspaceAsync(bool requested) => await _activity.Guarded("Status.ReadingVc", async () =>
+    private Task? _refresh;
+    private int _projectGeneration;
+    internal Task RefreshWorkspaceAsync(bool requested)
+        => _refresh is { IsCompleted: false } ? _refresh : _refresh = ReadWorkspacesAsync(requested);
+
+    private async Task ReadWorkspacesAsync(bool requested) => await _activity.Guarded("Status.ReadingVc", async () =>
     {
         if (!_client.CanRead) { ClearPresentation(); return; }
-        VcSupported = await _client.VcSupportedAsync();
+        int generation = _projectGeneration;
+        bool supported = await _client.VcSupportedAsync();
+        if (_projectGeneration != generation) return;
+        VcSupported = supported;
 
         string? selectedName = SelectedWorkspace?.Name;
         Workspaces.Clear();
@@ -208,7 +263,9 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             return;
         }
 
-        foreach (var workspace in await _client.VcListWorkspacesAsync()) Workspaces.Add(workspace);
+        var workspaces = await _client.VcListWorkspacesAsync();
+        if (_projectGeneration != generation) return;
+        foreach (var workspace in workspaces) Workspaces.Add(workspace);
         SelectedWorkspace = Workspaces.FirstOrDefault(w => w.Name == selectedName) ?? Workspaces.FirstOrDefault();
 
         if (Workspaces.Count == 0)
@@ -276,6 +333,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         Raise(nameof(ModifiedLabel));
         var report = await _client.VcStatusAsync(workspace?.Name, changedOnly: !VcShowAll);
         if (workspace != SelectedWorkspace) return;
+        _reportedTotal = report.Total;
+        Raise(nameof(MappedCount)); Raise(nameof(AllMappingsLabel));
         HasStatus = true;
 
         VcStatusItems.Clear();
@@ -349,9 +408,11 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         SyncResult = null;
         Synchronizing = !preview;
         SyncResult result;
+        long start = Stopwatch.GetTimestamp();
         try { result = await _client.VcSyncAsync(workspace?.Name, direction, preview); }
         finally { Synchronizing = false; }
         if (SelectedWorkspace != workspace) return;
+        _syncElapsed = Stopwatch.GetElapsedTime(start);
         SyncResult = result;
 
         foreach (var item in result.Items.Where(i => i.Error is not null))
@@ -388,6 +449,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     internal void ClearPresentation()
     {
+        _projectGeneration++;
+        _refresh = null;
         SelectedVcItem = null;
         SelectedWorkspace = null;
         Workspaces.Clear();
@@ -398,7 +461,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
-        Raise(nameof(AccessNotice)); Raise(nameof(WorkspaceRootDisplay)); Raise(nameof(ModifiedLabel)); RefreshSyncState();
+        Raise(nameof(DiffHint)); Raise(nameof(AllMappingsLabel)); Raise(nameof(AccessNotice));
+        Raise(nameof(WorkspaceRootDisplay)); Raise(nameof(ModifiedLabel)); RefreshSyncState();
     }
 
     public void Dispose() { Loc.Current.LanguageChanged -= OnLanguageChanged; _client.Dispose(); }

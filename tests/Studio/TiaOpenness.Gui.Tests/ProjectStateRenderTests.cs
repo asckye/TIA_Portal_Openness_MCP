@@ -160,17 +160,22 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
 
                 OpenBlock("FB_MixerRun");
                 Assert.Contains(editor.SourceLines, line => line.Contains("#Running", StringComparison.Ordinal));
+                string? copied = null;
+                blocks.CopyText = value => copied = value;
+                Assert.True(blocks.CopySource.IsEnabled);
+                UnifiedDesktopTests.ClickControl(blocks.CopySource);
+                Assert.Equal(string.Join("\n", editor.SourceLines), copied);
                 Capture("project-code");
-                AssertCenteredColumn(blocks.BlocksCard, window.BlockDocument, 920);
+                AssertFullWidth(blocks.BlocksCard, window.BlockDocument);
                 foreach (var document in new[] { ProjectDocument.Hmi, ProjectDocument.SoftwareUnit })
                 {
                     editor.Document = document;
                     host.UpdateLayout();
-                    AssertCenteredColumn(blocks.NodeColumn, Viewport(blocks.NodeScroll), 900);
+                    AssertFullWidth(blocks.NodeColumn, Viewport(blocks.NodeScroll), 24);
                 }
                 editor.Document = ProjectDocument.Tags; host.UpdateLayout();
                 var tags = (Views.PlcTagsView)window.PlcTagsContent.Content;
-                AssertCenteredColumn(tags.TagsColumn, tags, 920);
+                AssertFullWidth(tags.TagsColumn, tags);
                 editor.Document = ProjectDocument.Render;
                 editor.FocusedBlock!.Selected = true;
                 editor.OutputDirectory = Path.Combine(McpOperatorFixture.RepositoryRoot, "bin-build", "refactor", "UI-0036GB1", "exports");
@@ -190,12 +195,16 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 }
                 UnifiedDesktopTests.ClickControl(ops.InterfaceTab);
                 Assert.Equal(3, editor.Members.Count);
+                var grid = Assert.Single(Descendants<DataGrid>(blocks.InterfacePanel));
+                Assert.Equal(DataGridHeadersVisibility.Column, grid.HeadersVisibility);
+                Assert.Equal(new double[] { 110, 200, 120 }, grid.Columns.Take(3).Select(column => column.Width.Value));
+                Assert.True(grid.Columns[3].Width.IsStar);
                 Capture("project-iface");
                 editor.Compile.Execute(null);
                 Assert.Equal(CompileSeverity.Warning, Assert.Single(editor.CompilerMessages).Severity);
                 Capture("project-diag");
-                AssertCenteredColumn(blocks.BlocksCard, window.BlockDocument, 920);
-                AssertCenteredColumn(window.CompileDocument, window.DocumentHost, 920);
+                Assert.Equal(Visibility.Collapsed, window.BlockDocument.Visibility);
+                AssertFullWidth(window.CompileDocument, window.DocumentHost);
                 OpenBlock("Main");
                 Assert.True(blocks.LadderPanel.Visibility == Visibility.Visible);
                 Assert.Equal(4, Assert.Single(editor.Networks[0].Rungs).Elements.Count);
@@ -206,11 +215,16 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 Assert.Equal("%I0.0", editor.Networks[0].Rungs[0].Elements[0].Address);
                 Assert.True(blocks.ViewLadderAtlas.IsEnabled);
                 Capture("project-lad-visual");
-                var toolbar = Assert.Single(WorkbenchRenderFeaturePagesTests.Descendants<Controls.PageHeadPanel>(blocks.LadderToolbar));
-                Assert.Equal(width == 1024, toolbar.IsWrapped);
+                Assert.Equal(36, blocks.BlocksHeaderCard.ActualHeight);
+                Assert.Equal(blocks.BlocksCard.ActualWidth, blocks.BlocksHeaderCard.ActualWidth);
+                Assert.Equal(Visibility.Visible, blocks.LadderModes.Visibility);
+                Assert.Equal(Visibility.Collapsed, blocks.TextActions.Visibility);
                 UnifiedDesktopTests.ClickControl(blocks.XmlTab);
                 Assert.True(blocks.CodePanel.Visibility == Visibility.Visible);
                 Assert.Contains("Output", editor.TextLines[1]);
+                Assert.Equal(Visibility.Visible, blocks.TextActions.Visibility);
+                UnifiedDesktopTests.ClickControl(blocks.CopySource);
+                Assert.Equal(string.Join("\n", editor.TextLines), copied?.ReplaceLineEndings("\n").TrimEnd('\n'));
                 OpenBlock("MCPVerify_FC_LAD_v3");
                 dialogs.Files = [Path.Combine(McpOperatorFixture.RepositoryRoot, "templates", "mcp-full-e2e-verify", "plc", "blocks",
                     "MCPVerify_FC_LAD_v3.xml")];
@@ -218,6 +232,9 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 Assert.StartsWith("<?xml", editor.TextLines[0]);
                 Assert.Contains(editor.Members, member => member.Name == "CmpA");
                 Assert.Equal("MCPVerify_FC_LAD_v3.xml", editor.SourcePath);
+                Assert.Equal(Visibility.Visible, blocks.TextActions.Visibility);
+                UnifiedDesktopTests.ClickControl(blocks.CopySource);
+                Assert.Equal(File.ReadAllText(dialogs.Files.Single()), copied);
                 Capture("project-lad-xml");
                 UnifiedDesktopTests.ClickControl(ops.TagsTab);
                 Assert.Equal(3, editor.TagCount);
@@ -238,7 +255,7 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                     var work = atlas.GenerateAsync(false);
                     WpfContext.Drain();
                     Assert.True(atlas.Visible);
-                    Capture("project-atlas-" + state);
+                    Capture("project-atlas-" + state, keepNotifications: true);
                     if (state == "running") { atlas.Cancel(); WpfContext.Complete(work); }
                 }
                 blocks.Atlas!.Dismiss();
@@ -268,27 +285,27 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                     file.ClearValue(UIElement.OpacityProperty);
                 }
                 Capture("project-vci-normal");
-                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 920);
+                AssertFullWidth(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll));
                 var vc = model.VersionControl;
                 vc.VcPush.Execute(null);
                 Assert.True(vc.SyncResult?.DryRun);
                 Capture("project-vci-preview");
-                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 900);
+                AssertFullWidth(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll));
                 var sync = new TaskCompletionSource<SyncResult>();
                 client.SyncHandler = (_, _) => sync.Task;
                 vc.VcDryRun = false;
                 vc.VcPush.Execute(null);
                 Assert.True(vc.Synchronizing);
                 Capture("project-vci-syncing");
-                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 740);
+                AssertFullWidth(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll));
                 sync.SetResult(Sync(false)); WpfContext.Drain();
                 Assert.Equal(2, vc.SyncResult?.Items.Count);
                 Capture("project-vci-done");
-                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 780);
+                AssertFullWidth(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll));
                 client.Workspaces.Clear(); WpfContext.Complete(vc.VcRefreshAsync());
                 Assert.False(vc.HasWorkspace);
                 Capture("project-vci-no-ws");
-                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 640);
+                AssertCenteredColumn(window.VersionControlContent.VciColumn, Viewport(window.VersionControlContent.VciScroll), 600);
 
                 window.Navigate("Engineering");
                 var originalLogic = client.LogicHandler!;
@@ -314,7 +331,17 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 Assert.False(editor.Compile.CanExecute(null));
                 Capture("state-crashed", keepNotifications: true);
                 Assert.Equal(Visibility.Visible, window.Toast.Visibility);
-                AssertCenteredColumn(ops.SnapshotColumn, window.ProjectOverview, 920);
+                AssertFullWidth(ops.SnapshotColumn, window.ProjectOverview, 24);
+                Assert.Equal(Visibility.Visible, ops.Reconnect.Visibility);
+                Assert.False(ops.DownloadButton.IsEnabled);
+                Assert.Equal(Visibility.Collapsed, window.ProjectExplorer.Nodes.Visibility);
+                Assert.Same(window.ToastSecondAction, ops.FindName("CrashLogs"));
+                int previousRequests = dialogs.ProcessRequests.Count;
+                UnifiedDesktopTests.ClickControl(ops.Reconnect);
+                Assert.Equal(previousRequests + 1, dialogs.ProcessRequests.Count);
+                Assert.Contains(dialogs.ProcessRequests.Last(), row => row.ProcessId == 4204);
+                Assert.False(ops.SaveButton.IsEnabled);
+                Assert.False(ops.ToolbarCompile.IsEnabled);
                 Assert.Contains(model.SelectedReleaseKey, window.ToastTitle.Text);
                 Assert.Equal(Loc.Current["Project.RescanProcesses"], window.ToastAction.Content);
                 Assert.Equal(Loc.Current["Project.ViewLogs"], window.ToastSecondAction.Content);
@@ -330,6 +357,16 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 (themes.Theme, themes.HighContrastOverride, themes.Accent, App.Settings.LeftPaneOpen) = previous;
             }
         });
+    }
+
+    private static void AssertFullWidth(FrameworkElement column, FrameworkElement viewport, double inset = 0)
+    {
+        Assert.Equal(Visibility.Visible, column.Visibility);
+        Assert.True(column.ActualHeight > 0);
+        Assert.True(viewport.ActualWidth > 48);
+        Assert.Equal(double.PositiveInfinity, column.MaxWidth);
+        Assert.Equal(viewport.ActualWidth - 2 * inset, column.ActualWidth);
+        Assert.InRange(Math.Abs(column.TranslatePoint(new Point(), viewport).X - inset), 0, 1);
     }
 
     private static byte[] RowPixels(FrameworkElement row)

@@ -463,4 +463,21 @@
     <Setter Property="BlurRadius" Value="2"/>
     <Setter Property="Margin" Value="0,38,0,26"/>
   </Style>
+  <Style x:Key="Primer.ProjectBusyCard" TargetType="Border" BasedOn="{StaticResource Primer.Workbench.BusyCard}">
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Busy}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+      <DataTrigger Binding="{Binding Atlas.Running,ElementName=BlocksContent}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectSessionCancel" TargetType="Button" BasedOn="{StaticResource Primer.Link}">
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Style.Triggers><MultiDataTrigger>
+      <MultiDataTrigger.Conditions>
+        <Condition Binding="{Binding Panel.Attached,FallbackValue=False}" Value="True"/>
+        <Condition Binding="{Binding Engineering.ReadingDocument}" Value="False"/>
+      </MultiDataTrigger.Conditions>
+      <Setter Property="Visibility" Value="Visible"/>
+    </MultiDataTrigger></Style.Triggers>
+  </Style>
 </ResourceDictionary>

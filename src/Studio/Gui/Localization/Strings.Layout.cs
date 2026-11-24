@@ -63,7 +63,7 @@ internal static partial class Strings
         ("Shell.Logs", "Runtime Logs", "运行日志与诊断包"),
         ("Shell.NoProject", "Open a project first.", "请先打开项目。"),
         ("Shell.OfflineUnavailable", "Unavailable in offline demo mode.", "离线演示模式下不可用。"),
-        ("Shell.VersionControlUnavailable", "Version control is unavailable for this TIA Portal release.", "此 TIA Portal 版本不支持版本控制。"),
+        ("Shell.VersionControlUnavailable", "This TIA Portal release has no version-control interface.", "此 TIA Portal 版本没有版本控制接口。"),
         ("Shell.PageUnavailable", "Page unavailable", "页面不可用"),
         ("Shell.Clients", "AI Clients", "AI 客户端配置"),
         ("Shell.CallsPill", "AI calls", "AI 调用"),

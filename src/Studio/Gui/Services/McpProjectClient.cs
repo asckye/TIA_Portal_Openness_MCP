@@ -248,11 +248,12 @@ public sealed partial class McpProjectClient : IProjectClient
         }
     }
 
-    public async Task<IReadOnlyList<BlockMember>> ReadInterfaceAsync(string plc, string block)
+    public async Task<IReadOnlyList<BlockMember>> ReadInterfaceAsync(string plc, string block, CancellationToken token = default)
     {
         if (!Supports("RenderPlcBlockDocument", "blockPath") || !TiaMcp.Adapters.Contracts.OpennessApi.PlcDocuments.Includes(
             (string?)Session.State?["releaseKey"] ?? "")) return [];
-        var page = await Read("RenderPlcBlockDocument", new() { ["softwarePath"] = plc, ["blockPath"] = block });
+        token.ThrowIfCancellationRequested();
+        var page = await Read("RenderPlcBlockDocument", new() { ["softwarePath"] = plc, ["blockPath"] = block }, CancellationToken.None);
         string markdown = (string?)page["evidence"]?["markdown"] ?? "";
         var members = new List<BlockMember>();
         bool table = false;
@@ -286,22 +287,23 @@ public sealed partial class McpProjectClient : IProjectClient
             ProgrammingLanguage = (string?)data["programmingLanguage"] ?? "", HeaderAuthor = Attribute("HeaderAuthor") ?? "" };
     }
     private static string Escape(string name) => Uri.EscapeDataString(name);
-    public async Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath)
+    public async Task<string> DescribeBlockLogicAsync(string softwarePath, string blockPath, CancellationToken token = default)
     {
-        var data = await Read("DescribePlcBlockLogic", new() { ["softwarePath"] = softwarePath, ["blockPath"] = blockPath });
+        token.ThrowIfCancellationRequested();
+        var data = await Read("DescribePlcBlockLogic", new() { ["softwarePath"] = softwarePath, ["blockPath"] = blockPath }, CancellationToken.None);
         if ((string?)data["evidence"]?["xmlContent"] == "interface-only")
             throw new InvalidOperationException((string?)data["summary"] ?? Loc.Current["Project.NoSource"]);
         return (string?)data["readable"] ?? "";
     }
 
-    public async Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits)
+    public async Task<List<TagInfo>> ListPlcTagsAsync(string plc, string table, bool includeUnits, CancellationToken token = default)
     {
         bool supportsUnits = Supports("ListPlcTags", "includeUnits");
         // Older releases require a table for each declaration read. Their table inventory returns root names.
         var tables = new List<string> { table };
         if (table.Length == 0 && !(supportsUnits && includeUnits))
         {
-            var inventory = await Read("ListPlcTagTables", new() { ["softwarePath"] = plc });
+            var inventory = await Read("ListPlcTagTables", new() { ["softwarePath"] = plc }, token);
             tables = inventory["items"]!.AsArray()
                 .Select(item => TiaMcp.Adapters.Contracts.ObjectPathEncoding.EncodeSegment(item!.GetValue<string>())).ToList();
         }
@@ -310,7 +312,7 @@ public sealed partial class McpProjectClient : IProjectClient
         {
             var args = new Dictionary<string, object?> { ["plc"] = plc, ["table"] = path };
             if (supportsUnits) args["includeUnits"] = includeUnits;
-            var data = await Read("ListPlcTags", args);
+            var data = await Read("ListPlcTags", args, token);
             foreach (var item in data["items"]!.AsArray())
             {
                 string identity = item!["path"]!.GetValue<string>();
@@ -340,7 +342,7 @@ public sealed partial class McpProjectClient : IProjectClient
     public Task<ExportResult> ExportBlocksAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format)
         => ExportAsync(deviceId, blocks, outputDirectory, format, CancellationToken.None);
     internal async Task<ExportResult> ExportAsync(string deviceId, IEnumerable<string> blocks, string outputDirectory, ExportFormat format,
-            CancellationToken token, bool stripVolatile = false)
+            CancellationToken token, bool stripVolatile = false, IProgress<Stubs.AtlasProgress>? progress = null)
     {
         Directory.CreateDirectory(outputDirectory);
         if (format == ExportFormat.Source)
@@ -349,7 +351,8 @@ public sealed partial class McpProjectClient : IProjectClient
             if (sourcePaths.Length == 0) sourcePaths = (await ListBlocksAsync(deviceId)).Select(b => b.Path).ToArray();
             string filePath = Path.Combine(outputDirectory, "blocks.scl");
             var arguments = new Dictionary<string, object?> { ["softwarePath"] = deviceId, ["blockPaths"] = sourcePaths, ["filePath"] = filePath };
-            await Write("GeneratePlcSourceFromBlocks", arguments, token);
+            token.ThrowIfCancellationRequested();
+            await Write("GeneratePlcSourceFromBlocks", arguments, CancellationToken.None);
             return new() { OutputDirectory = outputDirectory, Requested = sourcePaths.Length, Succeeded = sourcePaths.Length,
                 Items = sourcePaths.Select(path => new ExportedItem { BlockPath = path, FilePath = filePath, Succeeded = true }).ToList() };
         }
@@ -358,15 +361,16 @@ public sealed partial class McpProjectClient : IProjectClient
         var result = new ExportResult { OutputDirectory = outputDirectory, Requested = paths.Length };
         foreach (string path in paths)
         {
-            string file = await ExportBlockXmlAsync(deviceId, path, outputDirectory, null, stripVolatile, token);
+            progress?.Report(new(result.Succeeded, result.Requested, path));
+            token.ThrowIfCancellationRequested();
+            string file = await ExportBlockXmlAsync(deviceId, path, outputDirectory, null, stripVolatile);
             result.Items.Add(new() { BlockPath = path, FilePath = file, Succeeded = true }); result.Succeeded++;
         }
         return result;
     }
     internal bool SupportsVolatileFilter => Supports("ExportPlcBlock", "stripVolatile");
     internal bool SupportsUnitExport => Supports("ExportPlcBlock", "unitName");
-    internal async Task<string> ExportBlockXmlAsync(string plc, string path, string directory, string? unit, bool stripVolatile,
-        CancellationToken token = default)
+    internal async Task<string> ExportBlockXmlAsync(string plc, string path, string directory, string? unit, bool stripVolatile)
     {
         var arguments = new Dictionary<string, object?> { ["softwarePath"] = plc, ["blockPath"] = path, ["exportPath"] = directory, ["preservePath"] = true };
         if (unit != null)
@@ -375,7 +379,7 @@ public sealed partial class McpProjectClient : IProjectClient
             arguments["unitName"] = unit;
         }
         if (stripVolatile && SupportsVolatileFilter) arguments["stripVolatile"] = true;
-        var data = await Write("ExportPlcBlock", arguments, token);
+        var data = await Write("ExportPlcBlock", arguments, CancellationToken.None);
         return (string?)data["outputFile"] ?? (string?)data["filePath"] ?? (string?)data["items"]?[0]?["result"]?["data"]?["files"]?[0]?["path"] ?? "";
     }
 

@@ -115,9 +115,13 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 model.Activity.AppendLocalized("Status.InspectResult", 1, 2);
                 window.Navigate("Blocks");
                 Layout(host);
+                model.Engineering.Document = ProjectDocument.Render;
+                Layout(host);
                 var blocks = Descendants<ListBox>(host).Single(list => ReferenceEquals(list.ItemsSource, model.Engineering.BlocksView));
                 RealizeItems(host, blocks, 2);
                 Assert.Contains(Descendants<TextBlock>(blocks), text => text.Text == "Protected");
+                model.Engineering.Document = ProjectDocument.Compile;
+                Layout(host);
                 var diagnostics = Descendants<ItemsControl>(host).Single(items => BindingOperations.GetBinding(items, ItemsControl.ItemsSourceProperty)?.Path.Path == "Tag.Diagnostics");
                 RealizeItems(host, diagnostics, 1);
                 var rules = Descendants<ItemsControl>(host).Single(items => BindingOperations.GetBinding(items, ItemsControl.ItemsSourceProperty)?.Path.Path == "Tag.Rules");

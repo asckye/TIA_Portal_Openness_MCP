@@ -30,7 +30,7 @@ public partial class EngineeringOptionsView : UserControl
         foreach (RadioButton tab in OptionTabs.Children) tab.IsChecked = Equals(tab.Tag, section);
         TabBar.Visibility = section == "Workspace" ? Visibility.Collapsed : Visibility.Visible;
         OptionsTitle.SetBinding(TextBlock.TextProperty, section == "Workspace"
-            ? Localization.TrExtension.CreateBinding("Primer.NewWorkspace") : Localization.TrExtension.CreateBinding("Project.OptionsTitle"));
+            ? Localization.TrExtension.CreateBinding("Project.WorkspaceOptions") : Localization.TrExtension.CreateBinding("Project.OptionsTitle"));
     }
     internal void Hide()
     {
@@ -50,6 +50,11 @@ public partial class EngineeringOptionsView : UserControl
     private void OnClearPrefill(object? sender, EventArgs e)
         => ClearPrefillRequested?.Invoke(this, (string)((FrameworkElement)sender!).Tag);
     private void OnCloseOptions(object sender, RoutedEventArgs e) => Hide();
+    private void OnWorkspaceSelected(object sender, SelectionChangedEventArgs e)
+    {
+        if (IsOpen && CurrentSection == "Workspace" && Model.VersionControl.VcStatus.CanExecute(null))
+            Model.VersionControl.VcStatus.Execute(null);
+    }
     private void OnDeviceSelected(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         if (e.NewValue is ViewModels.DeviceNode { Device: not null } node) Model.Engineering.SelectedDevice = node.Device;
@@ -77,6 +82,25 @@ public partial class EngineeringOptionsView : UserControl
     private void OnResetRules(object sender, RoutedEventArgs e) => Model.Engineering.NamePattern = EngineeringViewModel.DefaultNamePattern;
 
     private void OnBrowseOutput(object sender, RoutedEventArgs e) => Model.Engineering.BrowseOutput();
+
+    private void OnWorkspaceAction(object sender, RoutedEventArgs e)
+    {
+        if (Model.VersionControl.SelectedWorkspace == null) { Show("Workspace"); return; }
+        try
+        {
+            System.Diagnostics.Process
+                .Start(new System.Diagnostics.ProcessStartInfo(Model.VersionControl.SelectedWorkspace.RootPath) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Model.Activity.Append(ex.Message);
+            Model.Activity.Notify(ToastKind.Error, Localization.LocalizedText.Literal(ex.Message), "workspace");
+        }
+    }
+    private void OnGitTools(object sender, RoutedEventArgs e)
+        => Model.Activity.Notify(ToastKind.Info, Localization.LocalizedText.Key("Pages.GitHint"), "git-guidance");
+    private void OnMappingPreview(object sender, RoutedEventArgs e) => Model.VersionControl.VcDryRun = true;
+    private void OnMappingRun(object sender, RoutedEventArgs e) => Model.VersionControl.VcDryRun = false;
 
     private void OnBrowseWorkspace(object sender, RoutedEventArgs e) => Model.VersionControl.BrowseWorkspaceFolder();
 

@@ -31,21 +31,20 @@ public sealed class AtlasService : IAtlasService
         string directory = Path.Combine(_reportDirectory(), "plc-atlas-" + Guid.NewGuid().ToString("N"));
         string exports = Path.Combine(directory, "exports");
         Directory.CreateDirectory(exports);
-        progress.Report(new AtlasProgress(0, request.BlockPaths.Count, "SimaticML export"));
+        progress.Report(new AtlasProgress(0, request.BlockPaths.Count, request.SingleBlock ? request.BlockPaths[0] : request.DeviceId));
         // Preserve the existing client's export method, arguments and bridge-thread ownership.
         var exported = await _client.ExportBlocksAsync(request.DeviceId, request.BlockPaths, exports, ExportFormat.SimaticMl);
-        cancellationToken.ThrowIfCancellationRequested();
         if (exported.Requested != request.BlockPaths.Count || exported.Failed != 0 || exported.Succeeded != request.BlockPaths.Count
             || exported.Items.Count != request.BlockPaths.Count || exported.Items.Any(item => !item.Succeeded || !File.Exists(item.FilePath)))
             return new AtlasResult(null, "SimaticML export is incomplete. No atlas was generated. Export files: " + exports);
         string prefix = Path.GetFullPath(exports) + Path.DirectorySeparatorChar;
         if (exported.Items.Any(item => !Path.GetFullPath(item.FilePath).StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
             return new AtlasResult(null, "Export returned a file outside the requested directory.");
-        progress.Report(new AtlasProgress(exported.Succeeded, exported.Requested, "Rendering"));
         string input = request.SingleBlock ? exported.Items[0].FilePath : exports;
+        progress.Report(new AtlasProgress(exported.Succeeded, exported.Requested, input));
         string output = Path.Combine(directory, request.SingleBlock ? "block.html" : "atlas.html");
-        var rendered = await Task.Run(() => PlcProgramRenderer.Write(input, output, !request.SingleBlock, null,
-            cancellationToken: cancellationToken), cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        var rendered = await Task.Run(() => PlcProgramRenderer.Write(input, output, !request.SingleBlock, null), cancellationToken);
         return rendered.Ok ? new AtlasResult(output, null) : new AtlasResult(null, rendered.Error?.Message ?? "Rendering failed.");
     }
 }

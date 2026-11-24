@@ -116,28 +116,28 @@
     <Setter Property="MinHeight" Value="28"/>
     <Setter Property="Padding" Value="8,0"/>
   </Style>
-  <Style x:Key="Primer.ProjectRenderTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.IdePill}">
+  <Style x:Key="Primer.ProjectRenderTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.Segment}">
     <Setter Property="ContentTemplate" Value="{x:Null}"/>
     <Setter Property="IsChecked" Value="False"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding Engineering.Document}" Value="Render"><Setter Property="IsChecked" Value="True"/></DataTrigger>
     </Style.Triggers>
   </Style>
-  <Style x:Key="Primer.ProjectInterfaceTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.IdePill}">
+  <Style x:Key="Primer.ProjectInterfaceTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.Segment}">
     <Setter Property="ContentTemplate" Value="{x:Null}"/>
     <Setter Property="IsChecked" Value="False"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding Engineering.Document}" Value="Interface"><Setter Property="IsChecked" Value="True"/></DataTrigger>
     </Style.Triggers>
   </Style>
-  <Style x:Key="Primer.ProjectCompileTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.IdePill}">
+  <Style x:Key="Primer.ProjectCompileTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.Segment}">
     <Setter Property="ContentTemplate" Value="{x:Null}"/>
     <Setter Property="IsChecked" Value="False"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding Engineering.Document}" Value="Compile"><Setter Property="IsChecked" Value="True"/></DataTrigger>
     </Style.Triggers>
   </Style>
-  <Style x:Key="Primer.ProjectTagsTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.IdePill}">
+  <Style x:Key="Primer.ProjectTagsTab" TargetType="RadioButton" BasedOn="{StaticResource Primer.Segment}">
     <Setter Property="IsChecked" Value="False"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding Engineering.Document}" Value="Tags"><Setter Property="IsChecked" Value="True"/></DataTrigger>
@@ -162,6 +162,21 @@
   <Style x:Key="Project.Caption" TargetType="TextBlock" BasedOn="{StaticResource Primer.Mono}">
     <Setter Property="Foreground" Value="{DynamicResource Primer.textFaint}"/>
     <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.10_5}"/>
+  </Style>
+  <Style x:Key="Primer.ProjectProgressDetail" TargetType="TextBlock" BasedOn="{StaticResource Project.Caption}">
+    <Setter Property="Text" Value="{Binding Activity.ProgressLabel}"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Engineering.ReadingDocument}" Value="True"><Setter Property="Text" Value="{Binding Engineering.ReadPath}"/></DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectFileSummary" TargetType="TextBlock" BasedOn="{StaticResource Project.Caption}">
+    <Setter Property="Text" Value="{Binding Engineering.DocumentComment}"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Engineering.FocusedBlock}" Value="{x:Null}">
+        <Setter Property="Text" Value="{Binding Engineering.SelectionSummary}"/>
+      </DataTrigger>
+    </Style.Triggers>
   </Style>
   <Style x:Key="Project.Glyph" TargetType="Path" BasedOn="{StaticResource Primer.ButtonIcon}">
     <Setter Property="Stroke" Value="{DynamicResource Primer.textMuted}"/>
@@ -239,6 +254,11 @@
   </Style>
   <Style x:Key="Primer.ProjectDeviceSurface" TargetType="Border" BasedOn="{StaticResource Primer.ProjectLayoutSurface}">
     <Setter Property="CornerRadius" Value="7"/>
+    <Style.Triggers><DataTrigger Binding="{Binding Category}" Value="Hmi">
+      <Setter Property="BorderBrush" Value="{DynamicResource Primer.cardBorder}"/>
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="Padding" Value="0,6,0,0"/>
+    </DataTrigger></Style.Triggers>
   </Style>
   <Style x:Key="Primer.ProjectDeviceTile" TargetType="Border" BasedOn="{StaticResource Primer.Plain}">
     <Setter Property="CornerRadius" Value="5"/>
@@ -268,7 +288,9 @@
   <Style x:Key="Project.DeviceDetail" TargetType="TextBlock" BasedOn="{StaticResource Project.Caption}">
     <Style.Triggers><Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger></Style.Triggers>
   </Style>
-  <Style x:Key="Primer.ProjectCompileCount" TargetType="Border" BasedOn="{StaticResource Primer.IdePillCount}">
+  <Style x:Key="Primer.ProjectCompileCount" TargetType="TextBlock" BasedOn="{StaticResource Primer.Mono}">
+    <Setter Property="Foreground" Value="{DynamicResource Primer.warn}"/>
+    <Setter Property="Margin" Value="4,0,0,0"/>
     <Style.Triggers><DataTrigger Binding="{Binding Engineering.LastCompile}" Value="{x:Null}">
       <Setter Property="Visibility" Value="Collapsed"/>
     </DataTrigger></Style.Triggers>
@@ -424,5 +446,58 @@
       <DataTrigger Binding="{Binding Engineering.EmptyDeviceList}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
       <DataTrigger Binding="{Binding Session.LostConnection}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
     </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectReviewCapsule" TargetType="Button" BasedOn="{StaticResource Primer.IdeToolButton}">
+    <Setter Property="Foreground" Value="{DynamicResource Primer.accent}"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.menuBg}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Primer.accent}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="ux:Ux.CornerRadius" Value="12"/>
+    <Setter Property="MinHeight" Value="24"/>
+  </Style>
+  <Style x:Key="Primer.ProjectFileBar" TargetType="Border" BasedOn="{StaticResource Primer.IdeSubBar}">
+    <Setter Property="MinHeight" Value="36"/>
+    <Setter Property="Height" Value="36"/>
+  </Style>
+  <DataTemplate x:Key="Project.DirectionDestination">
+    <TextBlock Text="{Binding Tag,RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+  </DataTemplate>
+  <Style x:Key="Primer.ProjectSyncDirection" TargetType="RadioButton" BasedOn="{StaticResource Primer.Segment}">
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource AncestorType=UniformGrid}}" Value="Compact">
+        <Setter Property="ContentTemplate" Value="{StaticResource Project.DirectionDestination}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <DataTemplate x:Key="Project.CompactToolGlyph">
+    <Path Data="{Binding Tag,RelativeSource={RelativeSource AncestorType=Button}}" Style="{StaticResource Project.ButtonGlyph}" Margin="0"/>
+  </DataTemplate>
+  <Style x:Key="Primer.ProjectToolButton" TargetType="Button" BasedOn="{StaticResource Primer.IdeToolButton}">
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Tag,RelativeSource={RelativeSource AncestorType=Border}}" Value="Compact">
+        <Setter Property="Padding" Value="6,0"/>
+        <Setter Property="ContentTemplate" Value="{StaticResource Project.CompactToolGlyph}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectReconnect" TargetType="Button" BasedOn="{StaticResource Primer.Button.Danger.Small}">
+    <Setter Property="Margin" Value="0,0,6,0"/>
+    <Setter Property="ux:Ux.CornerRadius" Value="14"/>
+  </Style>
+  <Style x:Key="Primer.ProjectTreeTitle" TargetType="TextBlock" BasedOn="{StaticResource Primer.Muted}">
+    <Setter Property="Text" Value="{l:Tr Project.Tree}"/>
+    <Style.Triggers><DataTrigger Binding="{Binding Session.LostConnection}" Value="True">
+      <Setter Property="Text" Value="{l:Tr Project.SnapshotTree}"/>
+    </DataTrigger></Style.Triggers>
+  </Style>
+  <Style x:Key="Primer.ProjectVciAvailability" TargetType="TextBlock" BasedOn="{StaticResource Project.Caption}">
+    <Setter Property="Visibility" Value="Collapsed"/>
+    <Style.Triggers><MultiDataTrigger>
+      <MultiDataTrigger.Conditions>
+        <Condition Binding="{Binding IsVersionControl}" Value="True"/>
+        <Condition Binding="{Binding DataContext.ShowVersionControlReleaseNote,RelativeSource={RelativeSource AncestorType=TreeView}}" Value="True"/>
+      </MultiDataTrigger.Conditions>
+      <Setter Property="Visibility" Value="Visible"/>
+    </MultiDataTrigger></Style.Triggers>
   </Style>
 </ResourceDictionary>

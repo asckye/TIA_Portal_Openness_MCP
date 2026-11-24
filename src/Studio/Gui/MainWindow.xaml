@@ -89,7 +89,7 @@
         </Border>
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2">
           <Control x:Name="BusyHairline" Style="{StaticResource Primer.Workbench.Hairline}"
-            Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" AutomationProperties.Name="{Binding Activity.ProgressLabel}"/>
+            Visibility="{Binding Visibility,ElementName=BusyCard}" AutomationProperties.Name="{Binding Activity.ProgressLabel}"/>
         </StackPanel>
         <Border x:Name="Sider" Grid.Row="2" Width="60" Style="{StaticResource Primer.Workbench.Sider}">
           <Grid x:Name="SiderMenu" Margin="0,10" KeyboardNavigation.TabNavigation="Once" PreviewKeyDown="OnRailKeyDown">
@@ -198,7 +198,8 @@
                       <Grid x:Name="BlockDocument">
                         <views:BlocksView x:Name="BlocksContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
                       </Grid>
-                      <Grid x:Name="CompileDocument" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Primer.PageColumn}" MaxWidth="920" Margin="24,16,24,20" Visibility="Collapsed">
+                      <Grid x:Name="CompileDocument" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource Primer.PageColumn}" Margin="0"
+                        Visibility="Collapsed">
                         <views:EngineeringSideView x:Name="EngineeringSideContent" Tag="{Binding Tag,ElementName=Root}"/>
                       </Grid>
                       <ContentControl x:Name="PlcTagsContent" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
@@ -206,11 +207,6 @@
                     </Grid>
                   </Grid>
                 </ScrollViewer>
-                <ToggleButton x:Name="FoldProjectContext" Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
-                  Margin="0" Visibility="Collapsed" Style="{StaticResource Primer.ProjectContextToggle}" Click="OnProjectContextClick"
-                  AutomationProperties.Name="{Binding ToolTip,RelativeSource={RelativeSource Self}}">
-                  <Path Style="{StaticResource Primer.ProjectContextIcon}"/>
-                </ToggleButton>
               </Grid>
               <views:VersionControlView x:Name="VersionControlContent" Grid.Column="1" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
             </Grid>
@@ -284,8 +280,9 @@
       Height="{Binding ActualHeight,ElementName=BusyCard}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
       Margin="{Binding Margin,ElementName=BusyCard}" Visibility="{Binding Visibility,ElementName=BusyCard}"/>
     <Border x:Name="BusyCard" Width="340" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16,0,16,34"
-      Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Workbench.BusyCard}">
-      <StackPanel>
+      Style="{StaticResource Primer.ProjectBusyCard}">
+      <Grid>
+      <StackPanel Visibility="{Binding Atlas.Running,ElementName=BlocksContent,Converter={StaticResource NotBoolToVisibility},FallbackValue=Visible}">
         <DockPanel>
           <TextBlock DockPanel.Dock="Right" Margin="8,0,0,0" Style="{StaticResource Primer.Mono}" Foreground="{DynamicResource Primer.accent}"
             FontSize="{DynamicResource Ui.FontSize.11}" Visibility="{Binding Activity.ProgressIndeterminate,Converter={StaticResource NotBoolToVisibility}}">
@@ -298,10 +295,28 @@
           Maximum="{Binding Activity.ProgressMax}" Value="{Binding Activity.ProgressValue,Mode=OneWay}"/>
         <DockPanel>
           <Button DockPanel.Dock="Right" Command="{Binding Panel.Cancel}" Content="{l:Tr Session.Cancel}" AutomationProperties.Name="{l:Tr Session.Cancel}"
-            Style="{StaticResource Primer.Link}" Visibility="{Binding Panel.Attached,Converter={StaticResource BoolToVisibility},FallbackValue=Collapsed}"/>
-          <TextBlock Text="{Binding Text,ElementName=SessionStatus}" Style="{StaticResource Primer.Workbench.StatusText}" FontFamily="{DynamicResource Ui.FontMono}"/>
+            Style="{StaticResource Primer.ProjectSessionCancel}"/>
+          <Button x:Name="CancelProjectRead" DockPanel.Dock="Right" Content="{l:Tr Session.Cancel}"
+              AutomationProperties.Name="{l:Tr Session.Cancel}" Click="OnCancelProjectRead"
+            Style="{StaticResource Primer.Link}" Visibility="{Binding Engineering.ReadingDocument,Converter={StaticResource BoolToVisibility}}"/>
+          <TextBlock Style="{StaticResource Primer.ProjectProgressDetail}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
         </DockPanel>
       </StackPanel>
+      <Border x:Name="AtlasFooter" Style="{StaticResource Primer.ProjectLayoutSurface}" DataContext="{Binding Atlas,ElementName=BlocksContent}"
+        Visibility="{Binding Running,Converter={StaticResource BoolToVisibility},FallbackValue=Collapsed}">
+        <StackPanel x:Name="AtlasBar">
+          <TextBlock Text="{Binding Label}" FontWeight="SemiBold" AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Label}"/>
+          <ProgressBar Margin="0,8" Maximum="100" Value="{Binding Percent,Mode=OneWay}" IsIndeterminate="{Binding Indeterminate}"
+            Style="{StaticResource Primer.Progress}"/>
+          <DockPanel>
+            <Button x:Name="CancelAtlas" DockPanel.Dock="Right" Click="OnCancelAtlas" Content="{l:Tr Session.Cancel}"
+              AutomationProperties.Name="{l:Tr Session.Cancel}"
+              Style="{StaticResource Primer.Link}"/>
+            <TextBlock Text="{Binding Detail}" ToolTip="{Binding Detail}" Style="{StaticResource Project.Caption}" TextTrimming="CharacterEllipsis"/>
+          </DockPanel>
+        </StackPanel>
+      </Border>
+      </Grid>
     </Border>
     <Grid x:Name="DrawerOverlay" AutomationProperties.Name="{Binding Text,ElementName=DrawerTitle}" Visibility="Collapsed">
       <ux:WorkbenchScrim x:Name="CallDrawerScrim" Source="{Binding ElementName=ShellFrame}" BlurRadius="2" MouseLeftButtonUp="OnDrawerBackdrop"/>

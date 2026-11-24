@@ -7,6 +7,8 @@ using TiaOpenness.Gui.Services;
 
 namespace TiaOpenness.Gui.ViewModels;
 
+public sealed record SoftwareUnitGroup(IReadOnlyList<SoftwareUnitInfo> Units);
+
 public sealed class ProjectLink(DeviceInfo device, bool isVersionControl) : ObservableObject
 {
     private string _countLabel = "";
@@ -58,7 +60,7 @@ public sealed class DeviceNode : ObservableObject
 
     public ObservableCollection<DeviceNode> Children { get; } = [];
 
-    public System.Collections.IEnumerable ProjectChildren => Category == "Plc" ? _plcChildren : Children;
+    public System.Collections.IEnumerable ProjectChildren => Category == "Plc" ? _plcChildren : Children.OrderBy(child => child.Category == "Hmi");
 
     internal void ShowBlocks(IReadOnlyList<BlockNode> blocks)
     {
@@ -69,9 +71,9 @@ public sealed class DeviceNode : ObservableObject
 
     internal void ShowUnits(IReadOnlyList<SoftwareUnitInfo> units)
     {
-        foreach (var previous in _plcChildren.OfType<SoftwareUnitInfo>().ToArray()) _plcChildren.Remove(previous);
+        foreach (var previous in _plcChildren.OfType<SoftwareUnitGroup>().ToArray()) _plcChildren.Remove(previous);
         int index = _plcChildren.TakeWhile(item => item is BlockNode).Count();
-        foreach (var unit in units) _plcChildren.Insert(index++, unit);
+        if (units.Count > 0) _plcChildren.Insert(index, new SoftwareUnitGroup(units));
     }
 
     internal IEnumerable<DeviceNode> DeviceNodes() => Device != null ? [this] : Children.SelectMany(child => child.DeviceNodes());

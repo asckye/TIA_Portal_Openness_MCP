@@ -237,11 +237,12 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
     {
         public Task<AtlasResult> GenerateAsync(AtlasRequest request, IProgress<AtlasProgress> progress, CancellationToken cancellationToken)
         {
-            progress.Report(new AtlasProgress(3, 9, "Scale_Analog_FC"));
+            int index = Math.Min(2, request.BlockPaths.Count - 1);
+            progress.Report(new AtlasProgress(index, request.BlockPaths.Count, request.BlockPaths[index]));
             if (state == "running") return Task.Delay(Timeout.Infinite, cancellationToken).ContinueWith<AtlasResult>(
                 _ => throw new OperationCanceledException(cancellationToken), TaskScheduler.Default);
             return Task.FromResult(state == "done" ? new AtlasResult(@"D:\Projects\Line04\atlas\index.html", null)
-                : new AtlasResult(null, "atlas generation is not connected yet (P6-48)"));
+                : new AtlasResult(null, Loc.Current.IsChinese ? "无法导出受保护的程序块。" : "A protected block could not be exported."));
         }
     }
 
@@ -296,16 +297,19 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         window.Dispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
                         host.UpdateLayout();
                         Assert.True(blocks.Atlas.Visible);
-                        var bar = state.Item7 == "failed" ? window.Toast : (Border)blocks.FindName("AtlasBar");
+                        var bar = state.Item7 == "running" ? window.BusyCard : window.Toast;
                         if (state.Item7 == "failed")
                         {
-                            Assert.Equal(Visibility.Visible, blocks.AtlasBar.Visibility);
+                            Assert.Equal(Loc.Current["Project.RetryAtlas"], window.ToastAction.Content);
                             Assert.Contains(blocks.Atlas.Detail, window.ToastMessage.Text);
                             Assert.Same(window.FindResource("Ant.colorError"), window.ToastDot.Fill);
                         }
                         if (state.Item7 == "done")
                         {
-                            Assert.Equal(Loc.Current["Pages.AtlasDone"], window.ToastMessage.Text);
+                            Assert.Equal(Loc.Current["Pages.AtlasDone"], window.ToastTitle.Text);
+                            Assert.Equal(blocks.Atlas.Detail, window.ToastMessage.Text);
+                            Assert.Equal(Loc.Current["Project.OpenAtlas"], window.ToastAction.Content);
+                            Assert.Equal(Loc.Current["Project.OpenFolder"], window.ToastSecondAction.Content);
                             Assert.Same(window.FindResource("Primer.ok"), window.ToastDot.Fill);
                         }
                         Assert.Equal(Visibility.Visible, bar.Visibility);
@@ -317,11 +321,12 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         Assert.Equal(Visibility.Collapsed, ((Border)blocks.FindName("AtlasFooter")).Visibility);
                         var card = (Border)blocks.FindName("BlocksCard");
                         var rows = (Grid)card.Child;
-                        var header = rows.Children.OfType<Border>().Single(border => Grid.GetRow(border) == 0);
                         var selection = rows.Children.OfType<StackPanel>().Single(panel => Grid.GetRow(panel) == 1);
-                        Assert.Equal(header.TranslatePoint(new Point(0, header.ActualHeight), card).Y, selection.TranslatePoint(new Point(), card).Y);
-                        Assert.Equal(new Thickness(24, 24, 24, 0), card.Margin);
-                        Assert.Equal(920, card.MaxWidth);
+                        Assert.Equal(selection.TranslatePoint(new Point(0, selection.ActualHeight), card).Y,
+                            blocks.Editor.TranslatePoint(new Point(), card).Y);
+                        Assert.Equal(new Thickness(0), card.Margin);
+                        Assert.Equal(window.BlockDocument.ActualWidth, card.ActualWidth);
+                        Assert.Equal(double.PositiveInfinity, card.MaxWidth);
                     }
                     WorkbenchRenderTests.SaveRender(host, Path.Combine(output, state.Item1 + ".png"));
                     if (state.Item2 is "Engineering" or "Blocks")
@@ -338,9 +343,10 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         }
                         host.UpdateLayout();
                         Assert.True(tab.IsChecked);
-                        Assert.Equal(Math.Min(920, window.ProjectOverview.ActualWidth - 48), side.ActualWidth);
+                        Assert.Equal(window.ProjectOverview.ActualWidth, side.ActualWidth);
                         Assert.Null(side.FindName("EnvironmentCard"));
                         Assert.Null(side.FindName("BlocksLogCard"));
+                        Assert.Same(model.Engineering.Compile, window.OperationsContent.ToolbarCompile.Command);
                         Assert.True(((Button)side.FindName("CompileButton")).IsDefault);
                     }
                 }
