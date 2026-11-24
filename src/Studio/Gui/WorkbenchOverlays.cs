@@ -88,7 +88,7 @@ public partial class MainWindow
                 if (_page == "Engineering") open();
             }));
             Drawer(Loc.Current["Overlay.Rules"], OperationsContent.ShowControlInspectionRules);
-            Drawer(Loc.Current["Overlay.Transfer"], OperationsContent.ShowTransferOptions);
+            Drawer(Loc.Current["Overlay.Download"], OperationsContent.ShowDownloadOptions);
         }
 
         var themes = ThemeManager.Current;

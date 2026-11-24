@@ -307,9 +307,6 @@
       <DataTrigger Binding="{Binding CompareState}" Value="WorkspaceFileMissing"><Setter Property="Text" Value="−"/></DataTrigger>
     </Style.Triggers>
   </Style>
-  <Style x:Key="Primer.ProjectCrashBand" TargetType="Border" BasedOn="{StaticResource Primer.ProjectHeaderLine}">
-    <Setter Property="Background" Value="{DynamicResource Primer.diffDelBg}"/>
-  </Style>
   <Style x:Key="Primer.ProjectAtlasState" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.cardBorder}"/>

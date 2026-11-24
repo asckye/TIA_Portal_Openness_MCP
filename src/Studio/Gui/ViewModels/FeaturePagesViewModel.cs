@@ -17,7 +17,8 @@ namespace TiaOpenness.Gui.ViewModels;
 public enum FeatureTone { Normal, Muted, Accent, Warning, Success, Unchecked, Error }
 
 public enum ToastKind { Success, Warning, Error, Info }
-public readonly record struct FeatureFeedback(LocalizedText Message, ToastKind Kind = ToastKind.Success, string Source = "feature");
+public readonly record struct FeatureFeedback(LocalizedText Message, ToastKind Kind = ToastKind.Success, string Source = "feature",
+    Action? Action = null, LocalizedText ActionLabel = default, bool Sticky = false);
 
 public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
 {
@@ -262,7 +263,9 @@ public sealed class FeaturePagesViewModel : ObservableObject, IDisposable
             _auditBreak = broken == null ? null : (broken.Chain, broken.Index);
             RefreshAudit(); NotifyVerification();
             Feedback?.Invoke(this, new(LocalizedText.Literal(VerificationText),
-                _verification.Passed switch { true => ToastKind.Success, false => ToastKind.Error, null => ToastKind.Info }, "verify"));
+                _verification.Passed switch { true => ToastKind.Success, false => ToastKind.Error, null => ToastKind.Info }, "verify",
+                CanJumpToBreak ? () => DrawerRequested?.Invoke(this, "AuditBreak") : null,
+                LocalizedText.Key("Audit.LocateBreak", BreakIndex), VerificationBroken));
         }
         catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Error, "verify")); }
         finally { _verifying = false; Notify(nameof(Verifying), nameof(CanVerify), nameof(ShowVerification)); }

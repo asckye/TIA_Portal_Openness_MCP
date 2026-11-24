@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Workbench notifications stack above the status bar. Environment findings and lost TIA sessions stay visible until dismissed.
+  A disconnected session shows a read-only snapshot indicator and offers process rescanning and logs.
+- The status-bar approval button switches ordinary writes between manual approval and auto-approval. The local approval channel must be available.
+- Settings opens over the current page. Save errors appear immediately above the dialog. Ctrl+, toggles the centred dialog, which opens on Appearance & language. Safety & approval, Storage & logs, and About & updates have separate sections.
+  Each storage directory offers a copy-path button. The command palette opens Download options.
+- The workbench now opens at 1360 × 812.
+
 ## [4.0.0-rc.3] - 2026-11-23
 
 ### Changed

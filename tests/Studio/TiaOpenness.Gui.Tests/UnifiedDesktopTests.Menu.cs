@@ -1,6 +1,7 @@
 using TiaMcp.Engine.Tests.Shared;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
@@ -32,7 +33,7 @@ public sealed partial class UnifiedDesktopTests
 
     private static void FlushMenu() => Application.Current.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
 
-    private static void ClickApprovalControl(ButtonBase button, Stubs.IApprovalService approvals, string property)
+    internal static void ClickApprovalControl(ButtonBase button, Stubs.IApprovalService approvals, string property)
     {
         var changed = new System.Threading.Tasks.TaskCompletionSource<bool>(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
         void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) { if (e.PropertyName == property) changed.TrySetResult(true); }
@@ -65,7 +66,11 @@ public sealed partial class UnifiedDesktopTests
             using var trace = new BindingPathTests.BindingTrace();
             var previous = ThemeManager.Current.Theme;
             ThemeManager.Current.Theme = theme;
-            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, toastClock: () => TimeSpan.Zero);
+            var id = Guid.NewGuid().ToString("N");
+            string root = Directory.CreateDirectory(Path.Combine(McpOperatorFixture.RepositoryRoot, "bin-build", "approval-chip", id)).FullName;
+            string policy = Path.Combine(root, "approval.settings");
+            var approvals = new ApprovalService(policy, "tia-gui-chip-" + id, new TiaOpenness.Shared.AuditLog(Path.Combine(root, "audit")));
+            var window = new MainWindow(new MainViewModel(new FakeProjectClient(), new FakeDialogService()), false, approvals, toastClock: () => TimeSpan.Zero);
             try
             {
                 window.ShowConfiguration(false);
@@ -102,10 +107,13 @@ public sealed partial class UnifiedDesktopTests
                 window.OpenSettings();
                 Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("DrawerOverlay")).Visibility);
                 var settings = (TiaOpenness.Gui.Views.SettingsView)window.FindName("SettingsContent");
-                Assert.Equal(Visibility.Visible, settings.Visibility);
-                Assert.Equal(3, ((ListBox)settings.FindName("SectionList")).Items.Count);
+                Assert.Equal(Visibility.Visible, window.SettingsOverlay.Visibility);
+                Assert.Equal(4, ((ListBox)settings.FindName("SectionList")).Items.Count);
+                Assert.Equal(new[] { settings.AppearanceSection, settings.AiSection, settings.ServiceSection, settings.AboutSection },
+                    settings.SectionList.Items.Cast<ListBoxItem>());
+                Assert.Same(settings.AppearanceSection, settings.SectionList.SelectedItem);
                 var sectionList = (ListBox)settings.FindName("SectionList");
-                Assert.Equal(228, ((Border)sectionList.Parent).Width);
+                Assert.Equal(204, ((Border)sectionList.Parent).Width);
                 foreach (string name in new[] { "CheckUpdate", "RunUpdate", "OpenReleases", "OpenProjectPage", "OpenConfig", "OpenLog", "OpenData" })
                     Assert.IsType<Button>(settings.FindName(name));
                 ClickControl((RadioButton)settings.FindName("Chinese"));
@@ -114,17 +122,24 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Equal(AppLanguage.English, Loc.Current.Language);
                 ClickControl((RadioButton)settings.FindName("Dark"));
                 Assert.Equal(AppTheme.Dark, ThemeManager.Current.Theme);
+                var darkShell = ((SolidColorBrush)window.Root.Background).Color;
                 ClickControl((RadioButton)settings.FindName("Light"));
+                Assert.NotEqual(darkShell, ((SolidColorBrush)window.Root.Background).Color);
                 Assert.Equal(AppTheme.Light, ThemeManager.Current.Theme);
                 var previousAccent = ThemeManager.Current.Accent;
                 try
                 {
                     ClickControl((RadioButton)settings.FindName("AccentPetrol"));
                     Assert.Equal(AppAccent.Petrol, ThemeManager.Current.Accent);
+                    window.SettingsButton.ApplyTemplate();
+                    var glyph = (System.Windows.Shapes.Path)window.SettingsButton.Template.FindName("Glyph", window.SettingsButton);
+                    var petrolRail = ((SolidColorBrush)glyph.Stroke).Color;
                     ClickControl((RadioButton)settings.FindName("AccentCobalt"));
+                    Assert.NotEqual(petrolRail, ((SolidColorBrush)glyph.Stroke).Color);
                     Assert.Equal(AppAccent.Cobalt, ThemeManager.Current.Accent);
                 }
                 finally { ThemeManager.Current.Accent = previousAccent; }
+                ClickControl(settings.CloseSettingsButton);
                 ClickControl((Button)window.FindName("QuickThemeButton"));
                 Assert.Equal(AppTheme.Dark, ThemeManager.Current.Theme);
                 ClickControl((Button)window.FindName("QuickThemeButton"));
@@ -141,20 +156,29 @@ public sealed partial class UnifiedDesktopTests
                 ClickControl(service); AssertPage(window, true);
                 ClickControl((Button)window.FindName("SessionStatusButton")); AssertPage(window, true);
                 bool approvalEnabled = window.Approvals.Enabled, controlEnabled = App.Settings.WorkbenchControlEnabled;
-                ClickControl((Button)window.FindName("ApprovalStatusButton"));
-                Assert.Equal(approvalEnabled, window.Approvals.Enabled);
+                var selectedSection = sectionList.SelectedItem;
+                Assert.True(window.ApprovalStatusButton.IsEnabled);
+                ClickApprovalControl(window.ApprovalStatusButton, window.Approvals, nameof(window.Approvals.Enabled));
+                Assert.Equal(!approvalEnabled, window.Approvals.Enabled);
+                Assert.Equal(!approvalEnabled, TiaOpenness.Shared.ApprovalSettings.Load(policy).Enabled);
                 Assert.Equal(controlEnabled, App.Settings.WorkbenchControlEnabled);
                 var settingsRail = (RadioButton)window.FindName("SettingsButton");
-                Assert.True(settingsRail.IsChecked);
+                Assert.False(settingsRail.IsChecked);
                 Assert.Equal(8, System.Windows.Automation.AutomationProperties.GetPositionInSet(settingsRail));
                 Assert.Equal(8, System.Windows.Automation.AutomationProperties.GetSizeOfSet(settingsRail));
                 Assert.Equal("Ctrl+,", System.Windows.Automation.AutomationProperties.GetAcceleratorKey(settingsRail));
                 Assert.Contains("Ctrl+,", (string)settingsRail.ToolTip);
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)settings.FindName("AiPanel")).Visibility);
-                Assert.Same(settings.FindName("AiSection"), ((ListBox)settings.FindName("SectionList")).SelectedItem);
+                Assert.False(((FrameworkElement)settings.FindName("AiPanel")).IsVisible);
+                Assert.Same(selectedSection, sectionList.SelectedItem);
+                Assert.True(window.RailMcp.IsChecked);
 
             }
-            finally { window.Close(); ThemeManager.Current.Theme = previous; }
+            finally
+            {
+                window.Close();
+                ThemeManager.Current.Theme = previous;
+                Directory.Delete(root, recursive: true);
+            }
             Assert.True(string.IsNullOrWhiteSpace(trace.Text), trace.Text);
         });
     }
@@ -203,13 +227,17 @@ public sealed partial class UnifiedDesktopTests
             var window = new MainWindow(ProjectPageTestSupport.Model(), false, toastClock: () => TimeSpan.Zero) { Width = 1024, Height = 640 };
             try
             {
-                WpfContext.ShowWindow(window); window.Navigate(page); WpfContext.Drain();
+                WpfContext.ShowWindow(window);
+                if (page == "Settings")
+                {
+                    CheckNarrowSettingsModal(window);
+                    return;
+                }
+                window.Navigate(page); WpfContext.Drain();
                 var toggle = (Button)window.FindName("LeftPaneToggle");
                 var tree = (ContentControl)window.FindName("ProjectTree");
-                var settings = (Views.SettingsView)window.FindName("SettingsContent");
-                var list = (ListBox)settings.FindName("SectionList");
-                FrameworkElement pane = page == "Settings" ? (Border)list.Parent : tree;
-                var detail = (FrameworkElement)(page == "Settings" ? settings.FindName("DetailScroll") : window.FindName("ProjectOverview"));
+                FrameworkElement pane = tree;
+                var detail = window.ProjectOverview;
                 double width = detail.ActualWidth;
                 Assert.True(toggle.IsEnabled);
                 Assert.Equal(Visibility.Collapsed, pane.Visibility);
@@ -230,24 +258,184 @@ public sealed partial class UnifiedDesktopTests
                     System.IO.Directory.CreateDirectory(output);
                     WorkbenchRenderTests.SaveRender((FrameworkElement)window.Content, System.IO.Path.Combine(output, $"flyout-{page}-1024x640.png"), 1024, 640);
                 }
-                if (page == "Settings") Assert.Same(list.SelectedItem, Keyboard.FocusedElement);
-                else Assert.Same(tree, Keyboard.FocusedElement);
+                Assert.Same(tree, Keyboard.FocusedElement);
                 window.ShowToast(ViewModels.ToastKind.Info, LocalizedText.Literal("fixture"), "flyout");
                 var escape = WorkbenchToastTests.PressEscape((UIElement)Keyboard.FocusedElement);
                 Assert.Equal(Visibility.Visible, window.Toast.Visibility);
                 Assert.True(escape.Handled);
                 Assert.Equal(Visibility.Collapsed, pane.Visibility);
                 Assert.Same(toggle, Keyboard.FocusedElement);
-                if (page == "Engineering") tree.Content = new Button { Content = "PLC_1" };
+                tree.Content = new Button { Content = "PLC_1" };
                 WpfContext.PressSpace(toggle);
                 Assert.True(pane.IsKeyboardFocusWithin);
-                if (page == "Engineering") Assert.Same(tree.Content, Keyboard.FocusedElement);
+                Assert.Same(tree.Content, Keyboard.FocusedElement);
                 toggle.Focus(); WpfContext.PressSpace(toggle);
                 Assert.Equal(Visibility.Collapsed, pane.Visibility);
                 Assert.Same(toggle, Keyboard.FocusedElement);
                 Assert.False(App.Settings.LeftPaneOpen);
             }
             finally { window.Close(); App.Settings.LeftPaneOpen = saved; }
+        });
+    }
+
+    private static void CheckNarrowSettingsModal(MainWindow window)
+    {
+        window.Navigate("Engineering");
+        Assert.True(window.LeftPaneToggle.IsEnabled);
+        var trigger = window.CurrentPageTitle;
+        Assert.True(trigger.Focus());
+        string breadcrumb = trigger.Text;
+        var settings = window.SettingsContent;
+
+        void Shortcut()
+        {
+            WpfContext.WithControlPressed(() =>
+            {
+                var target = (UIElement)Keyboard.FocusedElement;
+                var key = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(target), 0, Key.OemComma)
+                    { RoutedEvent = Keyboard.PreviewKeyDownEvent };
+                target.RaiseEvent(key);
+                Assert.True(key.Handled);
+            });
+            WpfContext.Drain();
+        }
+
+        void Open()
+        {
+            Shortcut();
+            Assert.True(window.SettingsOpen);
+            Assert.Equal("Engineering", window.CurrentPage);
+            Assert.Equal(breadcrumb, trigger.Text);
+            Assert.True(window.SettingsButton.IsChecked);
+            Assert.True(settings.SectionList.IsKeyboardFocusWithin);
+            Assert.Same(settings.AppearanceSection, Keyboard.FocusedElement);
+            var nav = (Border)settings.SectionList.Parent;
+            Assert.Equal(Visibility.Visible, nav.Visibility);
+            Assert.Equal(204, nav.ActualWidth);
+            Assert.Equal(((Grid)settings.Content).ActualWidth - 204, settings.DetailScroll.ActualWidth);
+            Assert.Equal(-204, nav.TranslatePoint(new Point(), settings.DetailScroll).X);
+            Assert.Same(window.SettingsScrim, window.Root.InputHitTest(new Point(4, 4)));
+            Assert.Equal(Visibility.Collapsed, window.OverlayHost.Visibility);
+            WorkbenchShellDesignTests.AssertSettingsBounds(window, window.Root.ActualWidth * 0.94, window.Root.ActualHeight * 0.88);
+            Assert.Equal(KeyboardNavigationMode.Cycle, KeyboardNavigation.GetTabNavigation(window.SettingsOverlay));
+            Assert.False(window.ShellFrame.IsEnabled);
+            Assert.False(window.LeftPaneToggle.IsEnabled);
+            Assert.True(AutomationProperties.GetIsDialog(window.SettingsOverlay));
+            Assert.False(App.Settings.LeftPaneOpen);
+        }
+
+        void Closed()
+        {
+            Assert.Equal(Visibility.Collapsed, window.SettingsOverlay.Visibility);
+            Assert.True(window.ShellFrame.IsEnabled);
+            Assert.Same(trigger, Keyboard.FocusedElement);
+            Assert.True(window.RailEngineering.IsChecked);
+            Assert.True(window.LeftPaneToggle.IsEnabled);
+            Assert.Equal(breadcrumb, trigger.Text);
+            Assert.False(App.Settings.LeftPaneOpen);
+        }
+
+        Open();
+        if (Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR") is { Length: > 0 } output)
+        {
+            Directory.CreateDirectory(output);
+            WorkbenchRenderTests.SaveRender((FrameworkElement)window.Content, Path.Combine(output, "settings-modal-1024x640.png"), 1024, 640);
+        }
+        foreach (var direction in new[] { FocusNavigationDirection.Previous, FocusNavigationDirection.Next })
+            for (int step = 0; step < 15; step++)
+            {
+                Assert.True(((UIElement)Keyboard.FocusedElement).MoveFocus(new TraversalRequest(direction)));
+                Assert.True(window.SettingsOverlay.IsKeyboardFocusWithin);
+            }
+        window.ShowToast(ViewModels.ToastKind.Info, LocalizedText.Literal("fixture"), "modal");
+        Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+        Assert.True(WorkbenchToastTests.PressEscape((UIElement)Keyboard.FocusedElement).Handled);
+        Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
+        Assert.True(window.SettingsOpen);
+        Assert.True(window.SettingsOverlay.IsKeyboardFocusWithin);
+        Assert.True(WorkbenchToastTests.PressEscape((UIElement)Keyboard.FocusedElement).Handled);
+        Closed();
+        Open(); Shortcut(); Closed();
+        Open(); ClickControl(settings.CloseSettingsButton); Closed();
+        Open();
+        window.SettingsScrim.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left) { RoutedEvent = UIElement.MouseLeftButtonUpEvent });
+        Closed();
+
+        WpfContext.PressSpace(window.LeftPaneToggle);
+        Assert.True(window.ProjectTree.IsKeyboardFocusWithin);
+        Shortcut();
+        Assert.True(window.SettingsOpen);
+        Assert.True(App.Settings.LeftPaneOpen);
+        Shortcut();
+        Assert.True(window.ProjectTree.IsKeyboardFocusWithin);
+        Assert.True(WorkbenchToastTests.PressEscape((UIElement)Keyboard.FocusedElement).Handled);
+        Assert.False(App.Settings.LeftPaneOpen);
+        Assert.Same(window.LeftPaneToggle, Keyboard.FocusedElement);
+    }
+
+    [Theory]
+    [InlineData("toolbar")]
+    [InlineData("heading")]
+    [InlineData("command")]
+    public void Mouse_opened_settings_restores_a_tab_stop(string origin)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            try
+            {
+                window.Navigate("Log");
+                UIElement before = origin switch
+                {
+                    "toolbar" => window.QuickThemeButton,
+                    "command" => window.CommandPaletteButton,
+                    _ => window.CurrentPageTitle,
+                };
+                Assert.Equal(origin != "heading", KeyboardNavigation.GetIsTabStop(before));
+                Assert.True(before.Focus());
+                window.SettingsButton.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                    { RoutedEvent = Mouse.PreviewMouseDownEvent });
+                window.SettingsButton.Focus();
+                ClickControl(window.SettingsButton);
+                Assert.True(window.SettingsOpen);
+                ClickControl(window.SettingsContent.CloseSettingsButton);
+                if (origin == "command")
+                    // CommandManager can re-enable the palette button after focus has already returned to the rail.
+                    Assert.Contains(Keyboard.FocusedElement, new IInputElement[] { before, window.RailLog });
+                else Assert.Same(origin == "toolbar" ? before : window.RailLog, Keyboard.FocusedElement);
+                Assert.True(KeyboardNavigation.GetIsTabStop((DependencyObject)Keyboard.FocusedElement));
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData("Service")]
+    [InlineData("AI")]
+    [InlineData("About")]
+    public void Opening_settings_focuses_the_requested_section_in_a_short_wide_window(string section)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            try
+            {
+                window.Width = 1200; window.Height = 640;
+                window.Navigate("Log"); WpfContext.Drain();
+                if (section == "Service") ClickControl(window.LogContent.StorageSettingsButton);
+                else
+                {
+                    window.OpenSettings();
+                    window.SettingsContent.ShowSection(section);
+                }
+                WpfContext.Drain(); window.UpdateLayout();
+                var selected = Assert.IsType<ListBoxItem>(window.SettingsContent.SectionList.SelectedItem);
+                Assert.Equal(section, selected.Tag);
+                Assert.Same(selected, Keyboard.FocusedElement);
+                Assert.Equal("Log", window.CurrentPage);
+                WorkbenchShellDesignTests.AssertSettingsBounds(window, 840, window.Root.ActualHeight * 0.88);
+            }
+            finally { window.Close(); }
         });
     }
 
@@ -301,11 +489,22 @@ public sealed partial class UnifiedDesktopTests
                 items[0].Focus();
                 for (int i = 0; i < items.Length; i++)
                 {
-                    Assert.True(items[i].IsChecked);
-                    Assert.Same(items[i], Assert.Single(items, item => item.IsTabStop));
+                    var active = i == items.Length - 1 ? window.RailLog : items[i];
+                    Assert.True(active.IsChecked);
+                    Assert.Same(active, Assert.Single(items, item => item.IsTabStop));
                     items[i].RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(items[i]), 0, Key.Down)
                         { RoutedEvent = Keyboard.PreviewKeyDownEvent });
-                    Assert.Same(items[(i + 1) % items.Length], Keyboard.FocusedElement);
+                    if (window.SettingsOpen)
+                    {
+                        WpfContext.Drain();
+                        Assert.True(window.SettingsButton.IsChecked);
+                        Assert.Same(window.SettingsButton, Assert.Single(items, item => item.IsTabStop));
+                        Assert.Same(window.SettingsContent.AppearanceSection, Keyboard.FocusedElement);
+                        Assert.True(WorkbenchToastTests.PressEscape(window.SettingsContent.AppearanceSection).Handled);
+                        Assert.Same(items[i], Keyboard.FocusedElement);
+                        items[^1].Focus();
+                    }
+                    else Assert.Same(items[(i + 1) % items.Length], Keyboard.FocusedElement);
                     if (i == 0) Assert.Equal("Calls", window.CurrentPage);
                 }
                 window.Navigate("Approvals"); window.Navigate("Mcp"); window.Navigate("Agent");

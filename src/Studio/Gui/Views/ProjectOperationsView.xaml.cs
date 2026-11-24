@@ -48,7 +48,6 @@ public partial class ProjectOperationsView : UserControl
     internal void ShowDownloadOptions() => Options.Show("Download");
     private void OnImportDrawer(object sender, RoutedEventArgs e) => Options.Show("Import");
     private void OnAtlas(object sender, RoutedEventArgs e) => GenerateAtlasItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-    private void OnCrashLogs(object sender, RoutedEventArgs e) => Controls.WorkbenchCommands.Navigate.Execute("Log", this);
     private async void OnScan(object sender, RoutedEventArgs e) => await Model.Session.RefreshProcessesAsync();
     private async void OnPick(object sender, RoutedEventArgs e) => await Model.Session.ChooseProcessAsync(true);
     private async void OnAttach(object sender, RoutedEventArgs e)

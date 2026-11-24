@@ -41,7 +41,7 @@
           <Button x:Name="ClearLogButton" ToolTip="{l:Tr Pages.ClearLogPrompt}" Content="{l:Tr Pages.ClearLog}" AutomationProperties.Name="{l:Tr Pages.ClearLog}" Click="OnClearLog"
             Style="{StaticResource Primer.Button.Secondary.Small}" ContentTemplate="{StaticResource Primer.CommandText}" Margin="6,0,0,0"/>
           <Button x:Name="StorageSettingsButton" Content="{l:Tr Log.StorageLink}" AutomationProperties.Name="{l:Tr Log.StorageLink}"
-          Margin="6,0,0,0" Click="OnOpenStorageSettings" ToolTip="{l:Tr Pages.LogStorageSettings}" CommandParameter="Settings" Style="{StaticResource Primer.Link}"/>
+          Margin="6,0,0,0" Click="OnOpenStorageSettings" ToolTip="{l:Tr Pages.LogStorageSettings}" Style="{StaticResource Primer.Link}"/>
         </WrapPanel>
       </ux:PageHeadPanel>
     </Border>

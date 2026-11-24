@@ -251,6 +251,7 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
             var window = new Window { Content = view, Width = 1024, Height = 640 };
             try
             {
+                view.ShowSection("AI");
                 WpfContext.ShowWindow(window);
                 var track = (Grid)view.ApprovalOn.Parent;
                 void CheckHitTargets(RadioButton expected)
@@ -298,6 +299,7 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
             var window = new Window { Content = view };
             try
             {
+                view.ShowSection("AI");
                 WpfContext.ShowWindow(window);
                 WpfContext.Complete(view.LoadSafetyAsync());
                 view.UpdateLayout();
@@ -362,6 +364,7 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
             var window = new Window { Content = view };
             try
             {
+                view.ShowSection("AI");
                 WpfContext.ShowWindow(window);
                 WpfContext.Complete(view.LoadSafetyAsync());
                 view.SafetyConfirmationForTests = _ => true;
@@ -426,6 +429,7 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
             var window = new Window { Content = view, Width = 1024, Height = 640 };
             try
             {
+                view.ShowSection("AI");
                 WpfContext.ShowWindow(window);
                 WpfContext.Complete(view.LoadSafetyAsync());
                 view.OnlineTargetInput.Text = "192.0.2.10";
@@ -455,6 +459,7 @@ public sealed class SafetySettingsViewTests(WpfContext wpf)
             var window = new Window { Content = view, Width = 1024, Height = 640 };
             try
             {
+                view.ShowSection("AI");
                 WpfContext.ShowWindow(window);
                 WpfContext.Complete(view.LoadSafetyAsync());
                 Assert.Equal(Loc.Current["Settings.TargetsUnconfigured"], view.SafetyStatus.Text);

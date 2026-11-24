@@ -13,6 +13,27 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class WorkbenchControlLoadTests(WpfContext wpf)
 {
     [Fact]
+    public void Default_width_docks_the_AI_call_detail_without_a_modal_blocker_or_focus_trap()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                Assert.Equal(1360, window.Width);
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.DisplayCall)).Status);
+                WpfContext.Drain();
+                Assert.Same(window.DockedInspector, window.DrawerPanel.Parent);
+                Assert.Null(window.ApplyControl(Request(WorkbenchControlOperation.ReadState)).Data!.Workbench!.BlockedBy);
+                Assert.False(window.DrawerPanel.IsKeyboardFocusWithin);
+                Assert.True(window.RailLog.Focus());
+                Assert.Same(window.RailLog, System.Windows.Input.Keyboard.FocusedElement);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Frozen_state_tracks_an_owned_dialog_even_when_it_opens_without_activation()
     {
         wpf.Run(() =>
@@ -108,6 +129,8 @@ public sealed class WorkbenchControlLoadTests(WpfContext wpf)
             var (window, _, client) = Window();
             try
             {
+                window.Width = 1200; // Call details must open as a modal for this permission check.
+                window.UpdateLayout();
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.DisplayCall)).Status);
                 Assert.Equal(Visibility.Visible, window.DrawerOverlay.Visibility);
                 Assert.Null(window.ApplyControl(Request(WorkbenchControlOperation.ReadState)).Data!.Workbench!.BlockedBy);

@@ -1,4 +1,14 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="clr-namespace:TiaOpenness.Gui.Localization" xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes" xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls" xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework" xmlns:views="clr-namespace:TiaOpenness.Gui.Views" xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls" x:Class="TiaOpenness.Gui.MainWindow" Title="{l:Tr App.Title}" Width="1200" Height="780" MinWidth="1024" MinHeight="640" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize" Style="{StaticResource Ui.Window}">
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:l="clr-namespace:TiaOpenness.Gui.Localization"
+  xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes"
+  xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls"
+  xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+  xmlns:views="clr-namespace:TiaOpenness.Gui.Views"
+  xmlns:controls="clr-namespace:TiaOpenness.Gui.Controls"
+  x:Class="TiaOpenness.Gui.MainWindow" Title="{l:Tr App.Title}"
+  Width="1360" Height="812" MinWidth="1024" MinHeight="640" WindowStartupLocation="CenterScreen"
+  WindowStyle="None" ResizeMode="CanResize" Style="{StaticResource Ui.Window}">
   <shell:WindowChrome.WindowChrome>
     <shell:WindowChrome CaptionHeight="38" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="6" UseAeroCaptionButtons="False"/>
   </shell:WindowChrome.WindowChrome>
@@ -80,23 +90,6 @@
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2">
           <Control x:Name="BusyHairline" Style="{StaticResource Primer.Workbench.Hairline}"
             Visibility="{Binding Busy,Converter={StaticResource BoolToVisibility}}" AutomationProperties.Name="{Binding Activity.ProgressLabel}"/>
-          <Border x:Name="GlobalEnvironmentBanner" Visibility="Collapsed" Style="{StaticResource Primer.Workbench.EnvironmentBanner}">
-            <DockPanel>
-              <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                <Button x:Name="EnvironmentAction" Content="" Tag="" Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnEnvironmentAction"
-                  AutomationProperties.Name="{Binding Tag,RelativeSource={RelativeSource Self}}"/>
-                <Button Content="×" Margin="6,0,0,0" Style="{StaticResource Primer.IdeToolButton}" Click="OnDismissEnvironment"
-                  AutomationProperties.Name="{l:Tr Access.Dismiss}"/>
-              </StackPanel>
-              <TextBlock x:Name="EnvironmentGlyph" DockPanel.Dock="Left" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
-              <DockPanel VerticalAlignment="Center">
-                <TextBlock x:Name="EnvironmentTitle" DockPanel.Dock="Left" FontWeight="SemiBold" FontSize="{DynamicResource Ui.FontSize.12}"
-                  AutomationProperties.LiveSetting="Polite" ux:AccessibleStatus.Text="{Binding Text,RelativeSource={RelativeSource Self}}"/>
-                <TextBlock x:Name="EnvironmentDescription" TextTrimming="CharacterEllipsis" Margin="8,0" Foreground="{DynamicResource Primer.textMuted}"
-                  FontSize="{DynamicResource Ui.FontSize.12}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}"/>
-              </DockPanel>
-            </DockPanel>
-          </Border>
         </StackPanel>
         <Border x:Name="Sider" Grid.Row="2" Width="60" Style="{StaticResource Primer.Workbench.Sider}">
           <Grid x:Name="SiderMenu" Margin="0,10" KeyboardNavigation.TabNavigation="Once" PreviewKeyDown="OnRailKeyDown">
@@ -175,7 +168,6 @@
             </Grid>
           </Border>
           <Grid Grid.Row="1" Margin="16,12">
-            <views:SettingsView x:Name="SettingsContent" Margin="-16,-12" Visibility="Collapsed"/>
             <views:ApprovalsDrawer x:Name="ApprovalsContent" Margin="-16,-12" Visibility="Collapsed"/>
             <ContentControl x:Name="ConfigurationHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
             <ContentControl x:Name="ClientsHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
@@ -219,7 +211,7 @@
               </Grid>
               <views:VersionControlView x:Name="VersionControlContent" Grid.Column="1" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
             </Grid>
-            <views:LogView x:Name="LogContent" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
+            <views:LogView x:Name="LogContent" StorageSettingsRequested="OnStorageSettings" Tag="{Binding Tag,ElementName=Root}" Visibility="Collapsed"/>
           </Grid>
         </Grid>
         <Border x:Name="IdeStatusBar" Grid.Row="3" Grid.ColumnSpan="2" Style="{StaticResource Primer.Workbench.StatusBar}">
@@ -245,7 +237,7 @@
             </Button>
             <Button x:Name="ApprovalStatusButton" Grid.Column="2" HorizontalAlignment="Right" Margin="8,0,0,0" Style="{StaticResource Primer.Workbench.StatusButton}"
               AutomationProperties.Name="{Binding Text,ElementName=ApprovalStatusText}" ToolTip="{Binding Text,ElementName=ApprovalStatusText}"
-              Click="OnApprovalStatus">
+              PreviewKeyDown="OnApprovalChipKeyDown" Click="OnApprovalStatus">
               <DockPanel>
                 <Ellipse x:Name="ApprovalStatusDot" AutomationProperties.Name="{Binding Text,ElementName=ApprovalStatusText}" ToolTip="{Binding Text,ElementName=ApprovalStatusText}" Style="{StaticResource Primer.StatusDot}" DockPanel.Dock="Left" Margin="0,0,6,0" VerticalAlignment="Center"/>
                 <TextBlock AutomationProperties.LiveSetting="Polite" x:Name="ApprovalStatusText" Style="{StaticResource Primer.Workbench.StatusText}"/>
@@ -337,22 +329,17 @@
         </Grid>
       </Border>
     </Grid>
-    <ContentControl Style="{StaticResource Primer.Workbench.FloatShadow}" Width="{Binding ActualWidth,ElementName=Toast}" Height="{Binding ActualHeight,ElementName=Toast}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="{Binding Margin,ElementName=Toast}" Visibility="{Binding Visibility,ElementName=Toast}"/>
-    <Border x:Name="Toast" HorizontalAlignment="Center" VerticalAlignment="Bottom" MinWidth="240" MaxWidth="560" Height="36" Margin="16,0,16,36"
-      Visibility="Collapsed" Style="{StaticResource Primer.Toast}">
-      <local:ToastPanel x:Name="ToastLine" xmlns:local="clr-namespace:TiaOpenness.Gui" VerticalAlignment="Center">
-        <Ellipse x:Name="ToastDot" DockPanel.Dock="Left" Width="6" Height="6" Margin="0,0,8,0"/>
-        <Button x:Name="ToastClose" Focusable="False" DockPanel.Dock="Right" Content="×" AutomationProperties.Name="{l:Tr Access.Dismiss}" Click="OnDismissToast"
-          Style="{StaticResource Primer.IdeToolButton}" Margin="4,0,0,0"/>
-        <Button x:Name="ToastAction" Focusable="False" DockPanel.Dock="Right" Content="{l:Tr Common.Open}"
-          AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"
-          Click="OnToastClick" Style="{StaticResource Primer.Link}" Margin="8,0,0,0" Padding="4,0"/>
-        <TextBlock x:Name="ToastTitle" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="{DynamicResource Ui.FontSize.12_5}"
-          TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" Margin="0,0,8,0"/>
-        <TextBlock x:Name="ToastMessage" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"
-          Foreground="{DynamicResource Primer.text}" FontWeight="Medium" FontSize="{DynamicResource Ui.FontSize.12_5}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-      </local:ToastPanel>
-    </Border>
+    <TextBlock x:Name="DroppedErrorAnnouncement" Width="0" Height="0" IsHitTestVisible="False" AutomationProperties.LiveSetting="Assertive"/>
+    <Grid x:Name="SettingsOverlay" Visibility="Collapsed" AutomationProperties.Name="{l:Tr Settings.Sections}">
+      <ux:WorkbenchScrim x:Name="SettingsScrim" Source="{Binding ElementName=ShellFrame}" BlurRadius="4" MouseLeftButtonUp="OnSettingsBackdrop"/>
+      <ContentControl Style="{StaticResource Primer.Shadow}" HorizontalAlignment="Center" VerticalAlignment="Center"
+        Width="{Binding Width,ElementName=SettingsCard}" Height="{Binding Height,ElementName=SettingsCard}"/>
+      <Border x:Name="SettingsCard" Width="840" Height="584" HorizontalAlignment="Center" VerticalAlignment="Center"
+        Style="{StaticResource Primer.Workbench.SettingsCard}" SizeChanged="OnSettingsCardSizeChanged">
+        <views:SettingsView x:Name="SettingsContent"/>
+      </Border>
+    </Grid>
+    <StackPanel x:Name="ToastStack" Width="336" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16,0,16,36"/>
     <Grid x:Name="OverlayHost" Visibility="Collapsed"/>
   </Grid>
     <ux:WorkbenchScrim x:Name="OwnedDialogScrim" Source="{Binding ElementName=Root}" Visibility="Collapsed" IsHitTestVisible="False"/>

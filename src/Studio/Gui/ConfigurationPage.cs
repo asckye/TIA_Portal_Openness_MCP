@@ -106,13 +106,20 @@ public partial class MainWindow
             new TextRange(run.ContentStart, end).ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.SemiBold);
             var label = (Run)SessionStatus.Inlines.FirstInline!;
             var name = (Run)SessionStatus.Inlines.LastInline!;
-            label.SetResourceReference(TextElement.ForegroundProperty, "Primer.text");
+            label.SetResourceReference(TextElement.ForegroundProperty, ConnectionLost ? "Ant.colorError" : "Primer.text");
+            if (ConnectionLost)
+            {
+                name.SetResourceReference(TextElement.ForegroundProperty, "Ant.colorError");
+                SessionStatusButton.SetResourceReference(BackgroundProperty, "Ant.colorErrorBg");
+            }
+            else SessionStatusButton.ClearValue(BackgroundProperty);
             label.SetResourceReference(TextElement.FontFamilyProperty, "Ui.FontMono");
             name.FontWeight = FontWeights.Normal;
             name.SetResourceReference(TextElement.FontFamilyProperty, "Ui.Font");
             double prefixWidth = MeasureSessionRun(label);
-            SessionStatus.MaxWidth = prefixWidth + 170;
-            SessionStatus.Width = prefixWidth + Math.Min(170, MeasureSessionRun(name));
+            double fileWidth = MeasureSessionRun(name);
+            SessionStatus.Width = prefixWidth + (ConnectionLost ? fileWidth : Math.Min(170, fileWidth));
+            SessionStatus.MaxWidth = prefixWidth + (ConnectionLost ? fileWidth : 170);
         }
         SessionStatus.ToolTip = SessionStatus.Text;
     }

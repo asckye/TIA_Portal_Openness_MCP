@@ -26,9 +26,49 @@ public sealed class WorkbenchApprovalConfirmationTests(WpfContext wpf)
                 window.Navigate("Approvals");
                 Assert.True(owner.ChannelAvailable);
                 Assert.False(other.ChannelAvailable);
+                Assert.False(window.ApprovalStatusButton.IsEnabled);
                 Assert.Equal(Visibility.Collapsed, window.ApprovalsContent.DecisionArea.Visibility);
                 Assert.False(window.SettingsContent.AiPanel.IsEnabled);
                 Assert.Equal(Loc.Current["Shell.ApprovalUnavailable"], window.ApprovalStatusText.Text);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Status_chip_allows_local_click_and_space_and_refuses_the_control_guard()
+    {
+        wpf.Run(() =>
+        {
+            var now = WorkbenchControlTests.TestNow;
+            var guard = new ControlChannel.ControlInputGuard(() => now, () => false);
+            var (window, _, _) = WorkbenchControlTests.Window(input: guard);
+            try
+            {
+                var chip = window.ApprovalStatusButton;
+                Assert.Equal(TiaOpenness.Shared.WorkbenchControlStatus.Done, window.ApplyControl(WorkbenchControlTests.Request()).Status);
+                Assert.True(guard.ShouldBlock(chip));
+                UnifiedDesktopTests.ClickControl(chip);
+                Assert.True(window.Approvals.Enabled);
+                now += System.TimeSpan.FromSeconds(1);
+                void Toggle(System.Action press, bool manual, string tone)
+                {
+                    var saved = new System.Threading.Tasks.TaskCompletionSource();
+                    void OnEnabled(object sender, DependencyPropertyChangedEventArgs e)
+                    {
+                        if (chip.IsEnabled && window.Approvals.Enabled == manual) saved.TrySetResult();
+                    }
+                    chip.IsEnabledChanged += OnEnabled;
+                    try { press(); WpfContext.Complete(saved.Task.WaitAsync(TestDeadlines.Hang)); }
+                    finally { chip.IsEnabledChanged -= OnEnabled; }
+                    Assert.Equal(manual, window.Approvals.Enabled);
+                    Assert.Same(window.FindResource(tone), window.ToastDot.Fill);
+                    Assert.Equal("Log", window.CurrentPage);
+                }
+                Toggle(() => UnifiedDesktopTests.ClickControl(chip), false, "Primer.warn");
+                chip.Focus();
+                Toggle(() => WpfContext.PressSpace(chip), true, "Primer.ok");
+                Assert.Same(chip, System.Windows.Input.Keyboard.FocusedElement);
             }
             finally { window.Close(); }
         });

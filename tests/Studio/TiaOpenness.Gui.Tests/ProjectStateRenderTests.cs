@@ -18,6 +18,60 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class ProjectStateRenderTests(WpfContext wpf)
 {
+    [Fact]
+    public void Failed_crash_rescan_reports_the_failure_without_opening_the_picker()
+    {
+        wpf.Run(() =>
+        {
+            var client = Fixture();
+            var dialogs = new FakeDialogService();
+            var model = new MainViewModel(client, dialogs);
+            var window = new MainWindow(model, false, new Services.Stubs.ApprovalServiceStub());
+            try
+            {
+                model.Session.ProcessId = 4204;
+                model.Session.Connect.Execute(null);
+                client.Exit(); WpfContext.Drain();
+                client.ProcessScanError = new System.IO.IOException("fixture scan failed");
+                UnifiedDesktopTests.ClickControl(window.ToastAction);
+                Assert.Empty(dialogs.ProcessRequests);
+                Assert.Equal("fixture scan failed", window.ToastMessage.Text);
+                Assert.Same(window.FindResource("Ant.colorError"), window.ToastDot.Fill);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Crash_alert_identifies_the_process_and_rescans_before_showing_the_picker(bool hasProcesses)
+    {
+        wpf.Run(() =>
+        {
+            var client = Fixture();
+            var dialogs = new FakeDialogService();
+            var model = new MainViewModel(client, dialogs);
+            var window = new MainWindow(model, false, new Services.Stubs.ApprovalServiceStub());
+            try
+            {
+                model.Session.ProcessId = 4204;
+                model.Session.Connect.Execute(null);
+                client.Exit();
+                WpfContext.Drain();
+                Assert.Contains("PID 4204", window.ToastTitle.Text);
+                client.Calls.Clear();
+                if (!hasProcesses) client.Processes = [];
+                UnifiedDesktopTests.ClickControl(window.ToastAction);
+                var choices = Assert.Single(dialogs.ProcessRequests);
+                Assert.Equal(hasProcesses ? new[] { 4204, 4316 } : Array.Empty<int>(), choices.Select(choice => choice.ProcessId));
+                Assert.DoesNotContain(client.Calls, call => call.Name == "Connect");
+                Assert.True(model.Session.LostConnection);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData(1360, 812, AppTheme.Light, AppLanguage.Chinese, false)]
     [InlineData(1360, 812, AppTheme.Light, AppLanguage.English, false)]
@@ -53,11 +107,15 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 window.Hide();
                 var host = WorkbenchRenderTests.CreateHost(window, width, height);
                 WorkbenchRenderTests.ApplyCurrentPalette(host);
-                void Capture(string view)
+                void Capture(string view, bool keepNotifications = false)
                 {
                     Assert.Equal(Visibility.Visible, window.EngineeringPage.Visibility);
                     WpfContext.Drain(); host.UpdateLayout();
-                    while (window.Toast.Visibility == Visibility.Visible) { UnifiedDesktopTests.ClickControl(window.ToastClose); WpfContext.Drain(); }
+                    while (!keepNotifications && window.Toast.Visibility == Visibility.Visible)
+                    {
+                        UnifiedDesktopTests.ClickControl(window.ToastClose);
+                        WpfContext.Drain();
+                    }
                     SaveState(host, view, width, height, theme, language, contrast);
                 }
 
@@ -254,9 +312,16 @@ public sealed class ProjectStateRenderTests(WpfContext wpf)
                 Assert.True(model.Session.LostConnection);
                 Assert.Contains(editor.Snapshot!.Lines, line => line.Contains("Last source", StringComparison.Ordinal));
                 Assert.False(editor.Compile.CanExecute(null));
-                Capture("state-crashed");
+                Capture("state-crashed", keepNotifications: true);
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
                 AssertCenteredColumn(ops.SnapshotColumn, window.ProjectOverview, 920);
-                UnifiedDesktopTests.ClickControl(ops.CrashLogs); WpfContext.Drain();
+                Assert.Contains(model.SelectedReleaseKey, window.ToastTitle.Text);
+                Assert.Equal(Loc.Current["Project.RescanProcesses"], window.ToastAction.Content);
+                Assert.Equal(Loc.Current["Project.ViewLogs"], window.ToastSecondAction.Content);
+                Assert.Same(window.FindResource("Ant.colorError"), window.Toast.BorderBrush);
+                Assert.Same(window.FindResource("Ant.colorErrorBg"), window.SessionStatusButton.Background);
+                Assert.Contains(Loc.Current["Shell.SessionLost"], window.SessionStatus.Text);
+                UnifiedDesktopTests.ClickControl(window.ToastSecondAction); WpfContext.Drain();
                 Assert.True(window.RailLog.IsChecked);
             }
             finally

@@ -59,7 +59,11 @@ public partial class MainWindow
         }
     }
 
-    private void OnFeatureDrawer(object? sender, string drawer) => OpenDrawer(drawer);
+    private void OnFeatureDrawer(object? sender, string drawer)
+    {
+        if (drawer == "AuditBreak") { Navigate("Audit"); AuditContent.ShowBreak(); }
+        else OpenDrawer(drawer);
+    }
     private void OnFeatureFeedback(object? sender, FeatureFeedback feedback)
     {
         if (feedback.Source == nameof(FeaturePagesViewModel.Decide))
@@ -67,7 +71,7 @@ public partial class MainWindow
             Controls.AccessibleStatus.Announce(ApprovalsContent);
             return;
         }
-        ShowToast(feedback.Kind, feedback.Message, feedback.Source);
+        ShowToast(feedback.Kind, feedback.Message, feedback.Source, feedback.Action, sticky: feedback.Sticky, actionLabel: feedback.ActionLabel);
     }
 
     private void OnCallCompleted(CallRecord call)

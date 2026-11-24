@@ -1,65 +1,76 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui.Services;
 
 internal sealed record ToastNotice(string Source, ToastKind Kind, LocalizedText Text, LocalizedText Title,
-    Action? Action, string ActionKey, bool ActionShowsDetails = false)
+    Action? Action, string ActionKey, bool ActionShowsDetails = false, bool Sticky = false,
+    Action? SecondAction = null, LocalizedText SecondActionKey = default, LocalizedText ActionLabel = default, Action? OnDismiss = null)
 {
     internal string FullText => Title.Resolve() is { Length: > 0 } title ? title + " · " + Text.Resolve() : Text.Resolve();
 }
 
-/// <summary>Dispatcher-owned FIFO. Only time actually visible and unpaused counts toward dismissal.</summary>
+/// <summary>Time advances for all visible transient cards together while the stack is unpaused.</summary>
 internal sealed class ToastQueue(Func<TimeSpan> now)
 {
-    private readonly List<ToastNotice> pending = [];
-    private TimeSpan remaining, started;
+    private sealed record Entry(ToastNotice Notice, TimeSpan Deadline);
+    private readonly List<Entry> cards = [];
+    private TimeSpan pausedAt, pausedDuration;
     private bool hovered, modal;
-    private ToastNotice? current;
-    internal ToastNotice? Visible => modal ? null : current;
-    internal TimeSpan? Delay => Visible != null && !hovered ? remaining - (now() - started) : null;
+    private TimeSpan Clock => (hovered || modal ? pausedAt : now()) - pausedDuration;
+    internal IEnumerable<ToastNotice> Cards => modal ? [] : cards.Select(entry => entry.Notice);
+    internal ToastNotice? Visible => modal || cards.Count == 0 ? null : cards[^1].Notice;
+    internal TimeSpan? Delay => hovered || modal ? null : cards.Where(entry => !entry.Notice.Sticky)
+        .Select(entry => (TimeSpan?)(entry.Deadline - Clock)).Min();
     internal event Action? Changed;
+    internal event Action<ToastNotice>? ErrorDropped;
+    internal bool HasSource(string source) => cards.Any(entry => entry.Notice.Source == source);
+    internal bool Contains(ToastNotice notice) => cards.Any(entry => ReferenceEquals(entry.Notice, notice));
 
     internal void Show(ToastNotice notice)
     {
-        if (current == null || current.Source == notice.Source) Start(notice);
-        else
+        cards.RemoveAll(entry => entry.Notice.Source == notice.Source);
+        if (cards.Count == 3)
         {
-            int index = pending.FindIndex(item => item.Source == notice.Source);
-            if (index < 0) pending.Add(notice);
-            else pending[index] = notice;
+            int oldest = cards.FindIndex(entry => !entry.Notice.Sticky);
+            if (oldest < 0 && !notice.Sticky)
+            {
+                if (notice.Kind == ToastKind.Error) ErrorDropped?.Invoke(notice);
+                return;
+            }
+            cards.RemoveAt(oldest < 0 ? 0 : oldest);
         }
-    }
-
-    private void Start(ToastNotice? notice)
-    {
-        current = notice;
-        remaining = TimeSpan.FromSeconds(notice?.Kind == ToastKind.Error ? 8 : 4);
-        started = now();
+        cards.Add(new(notice, Clock + TimeSpan.FromSeconds(notice.Kind == ToastKind.Error ? 8 : 4)));
         Changed?.Invoke();
     }
 
-    internal void Dismiss()
+    internal void Remove(string source)
     {
-        if (Visible == null) return;
-        var next = pending.Count > 0 ? pending[0] : null;
-        if (next != null) pending.RemoveAt(0);
-        Start(next);
+        if (cards.RemoveAll(entry => entry.Notice.Source == source) > 0) Changed?.Invoke();
+    }
+
+    internal void Dismiss() { if (Visible is { } newest) Dismiss(newest); }
+    internal void Dismiss(ToastNotice notice)
+    {
+        if (cards.RemoveAll(entry => ReferenceEquals(entry.Notice, notice)) == 0) return;
+        notice.OnDismiss?.Invoke();
+        Changed?.Invoke();
     }
 
     internal void Tick()
     {
-        if (Delay is { } delay && delay <= TimeSpan.Zero) Dismiss();
-        else Changed?.Invoke();
+        if (!hovered && !modal) cards.RemoveAll(entry => !entry.Notice.Sticky && entry.Deadline <= Clock);
+        Changed?.Invoke();
     }
 
     internal void SetPresentation(bool isModal, bool isHovered)
     {
         if (modal == isModal && hovered == isHovered) return;
-        if (Delay is { } delay) remaining = delay;
-        started = now();
+        if (!modal && !hovered) pausedAt = now();
+        if (!isModal && !isHovered) pausedDuration += now() - pausedAt;
         modal = isModal;
         hovered = isHovered;
         Changed?.Invoke();

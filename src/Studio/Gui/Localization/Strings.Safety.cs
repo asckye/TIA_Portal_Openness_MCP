@@ -10,12 +10,16 @@ internal static partial class Strings
 {
     private static (string Key, string En, string Zh)[] SafetyCatalogue =>
     [
-        ("Settings.SafetyTitle", "Safety & AI", "安全与 AI 控制"),
-        ("Settings.AppearanceTitle", "Appearance", "外观与语言"),
-        ("Settings.StorageTitle", "Storage & about", "存储、更新与关于"),
+        ("Settings.SafetyTitle", "Safety & approval", "安全与审批"),
+        ("Settings.AppearanceTitle", "Appearance & language", "外观与语言"),
+        ("Settings.AboutTitle", "About & updates", "关于与更新"),
+        ("Settings.AboutSubtitle", "Version, updates and audit coverage", "版本、更新与审计范围"),
+        ("Settings.SupportedReleases", "Supported TIA Portal releases", "支持的 TIA Portal 版本"),
+        ("Settings.CopyPath", "Copy path", "复制路径"),
+        ("Settings.StorageTitle", "Storage & logs", "存储与日志"),
         ("Settings.SafetySubtitle", "Only editable in the local workbench", "仅允许在本机工作台修改，AI 客户端与远程调用无权改动"),
         ("Settings.AppearanceSubtitle", "Light and dark themes, accent and language", "浅色 / 深色主题、精密钴蓝 / 西门子青碧主色与语言"),
-        ("Settings.StorageSubtitle", "Log retention, diagnostics, data paths and updates", "日志轮转保留、脱敏诊断包、数据目录与版本更新"),
+        ("Settings.StorageSubtitle", "Log retention, diagnostics and data paths", "日志保留、脱敏诊断包与数据目录"),
         ("Settings.ApprovalRule", "Require approval for MCP writes", "普通写操作默认工作台人工审批"),
         ApprovalRuleHint(),
         ("Settings.ExpiryHint", "Auto-deny on expiry", "倒计时归零自动拒绝"),

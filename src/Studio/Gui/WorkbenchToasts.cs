@@ -1,7 +1,8 @@
 using System;
 using System.Linq;
-using System.Windows;
+using System.Collections.Generic;
 using System.Windows.Automation;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Shapes;
@@ -13,36 +14,47 @@ using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui;
 
-// Measure the untrimmed line before WPF rounds a trimmed TextBlock down to the last whole glyph.
-internal sealed class ToastPanel : DockPanel
-{
-    protected override Size MeasureOverride(Size available)
-    {
-        var natural = base.MeasureOverride(new Size(double.PositiveInfinity, available.Height));
-        if (natural.Width <= available.Width) return natural;
-        return new Size(available.Width, base.MeasureOverride(available).Height);
-    }
-}
-
 public partial class MainWindow
 {
     private readonly ToastQueue _toasts;
     private readonly DispatcherTimer _toastTimer = new();
-    private ToastNotice? _announced;
-    private bool _showToastDetails;
+    private readonly HashSet<ToastNotice> _announced = new(ReferenceEqualityComparer.Instance);
+    private IInputElement? _beforeToastFocus;
+    private ToastCard[] _toastCards = [];
+    private ToastCard NewestCard => _toastCards[^1];
+    internal Border Toast => NewestCard.Surface;
+    internal Ellipse ToastDot => NewestCard.Dot;
+    internal TextBlock ToastTitle => NewestCard.Title;
+    internal TextBlock ToastMessage => NewestCard.Message;
+    internal Button ToastClose => NewestCard.Close;
+    internal Button ToastSecondAction => NewestCard.SecondAction;
+    internal Button ToastAction => NewestCard.Action;
     internal bool ToastHostClosed { get; private set; }
 
     private Grid[] ToastSheets() => [DrawerOverlay, OverlayHost, ApprovalsContent.ConfirmationSheet, .. ControlOptionsPanels()];
 
     private void InitializeToast()
     {
+        var template = (DataTemplate)FindResource("Primer.Workbench.ToastCard");
+        _toastCards = [new(template), new(template), new(template)];
+        foreach (var card in _toastCards)
+        {
+            ToastStack.Children.Add(card.Host);
+            card.Close.Click += (_, _) => CloseToast(card);
+            card.Action.Click += (_, _) => InvokeToastAction(card);
+            card.SecondAction.Click += (_, _) => InvokeToastAction(card, second: true);
+        }
+        RegisterName(nameof(Toast), Toast);
+        foreach (var part in new FrameworkElement[] { ToastDot, ToastTitle, ToastMessage, ToastClose, ToastAction }) RegisterName(part.Name, part);
         _toasts.Changed += RenderToast;
-        Root.SizeChanged += OnToastSizeChanged;
+        _toasts.ErrorDropped += AnnounceDroppedError;
+        ToastStack.PreviewGotKeyboardFocus += RememberToastFocus;
         _toastTimer.Tick += OnToastTick;
         foreach (var sheet in ToastSheets()) OptionsVisibility.AddValueChanged(sheet, OnToastPresentationChanged);
         IsEnabledChanged += OnToastEnabledChanged;
-        Toast.MouseEnter += OnToastHover;
-        Toast.MouseLeave += OnToastHover;
+        ToastStack.IsKeyboardFocusWithinChanged += OnToastEnabledChanged;
+        ToastStack.MouseEnter += OnToastHover;
+        ToastStack.MouseLeave += OnToastHover;
         _model.Activity.Feedback += OnFeatureFeedback;
     }
 
@@ -52,29 +64,33 @@ public partial class MainWindow
         _toastTimer.Stop();
         _toastTimer.Tick -= OnToastTick;
         _toasts.Changed -= RenderToast;
-        Root.SizeChanged -= OnToastSizeChanged;
+        _toasts.ErrorDropped -= AnnounceDroppedError;
+        ToastStack.PreviewGotKeyboardFocus -= RememberToastFocus;
         foreach (var sheet in ToastSheets()) OptionsVisibility.RemoveValueChanged(sheet, OnToastPresentationChanged);
         IsEnabledChanged -= OnToastEnabledChanged;
-        Toast.MouseEnter -= OnToastHover;
-        Toast.MouseLeave -= OnToastHover;
+        ToastStack.IsKeyboardFocusWithinChanged -= OnToastEnabledChanged;
+        ToastStack.MouseEnter -= OnToastHover;
+        ToastStack.MouseLeave -= OnToastHover;
         _model.Activity.Feedback -= OnFeatureFeedback;
     }
 
     internal void ShowToast(ToastKind kind, LocalizedText text, string source, Action? action = null,
-        LocalizedText title = default, string actionKey = "Common.Open", bool actionShowsDetails = false)
+        LocalizedText title = default, string actionKey = "Common.Open", bool actionShowsDetails = false, bool sticky = false,
+        Action? secondAction = null, LocalizedText secondActionKey = default, LocalizedText actionLabel = default, Action? onDismiss = null)
+        => ShowToast(new ToastNotice(source, kind, text, title, action, actionKey, actionShowsDetails,
+            sticky, secondAction, secondActionKey, actionLabel, onDismiss));
+
+    private void ShowToast(ToastNotice notice)
     {
         if (ToastHostClosed) return;
-        if (!Dispatcher.CheckAccess())
-        {
-            Dispatcher.BeginInvoke(() => ShowToast(kind, text, source, action, title, actionKey, actionShowsDetails));
-            return;
-        }
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => ShowToast(notice)); return; }
         UpdateToastPresentation();
-        _toasts.Show(new(source, kind, text, title, action, actionKey, actionShowsDetails));
+        _toasts.Show(notice);
     }
 
     private void UpdateToastPresentation() =>
-        _toasts.SetPresentation(ShellModalOpen || !IsEnabled || OwnedWindows.OfType<Window>().Any(w => w.IsVisible), Toast.IsMouseOver);
+        _toasts.SetPresentation(ToastBlockingSheetOpen || !IsEnabled || OwnedWindows.OfType<Window>().Any(w => w.IsVisible),
+            ToastStack.IsMouseOver || ToastStack.IsKeyboardFocusWithin);
 
     private void OnToastPresentationChanged(object? sender, EventArgs e) => UpdateToastPresentation();
     private void OnToastEnabledChanged(object sender, DependencyPropertyChangedEventArgs e) => UpdateToastPresentation();
@@ -82,63 +98,39 @@ public partial class MainWindow
     private void OnToastTick(object? sender, EventArgs e) => TickToast();
     internal void TickToast() => _toasts.Tick();
 
-    private void OnToastSizeChanged(object sender, SizeChangedEventArgs e)
+    private void AnnounceDroppedError(ToastNotice notice)
     {
-        if (e.WidthChanged && _toasts.Visible is { } notice) UpdateToastAction(notice);
+        DroppedErrorAnnouncement.Text = notice.FullText;
+        AutomationProperties.SetName(DroppedErrorAnnouncement, notice.FullText);
+        AccessibleStatus.Announce(DroppedErrorAnnouncement);
     }
 
-    private void UpdateToastAction(ToastNotice notice)
+    private void RememberToastFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
-        // Measure the full single line with its original action before deciding whether it needs a Details link.
-        ToastAction.Visibility = notice.Action != null ? Visibility.Visible : Visibility.Collapsed;
-        ToastAction.Content = Loc.Current[notice.ActionKey];
-        ToastLine.InvalidateMeasure();
-        ToastLine.Measure(new Size(double.PositiveInfinity, Toast.Height));
-        double width = Math.Min(Toast.MaxWidth, Root.ActualWidth > 0 ? Root.ActualWidth - Toast.Margin.Left - Toast.Margin.Right : Toast.MaxWidth);
-        double inset = Toast.Padding.Left + Toast.Padding.Right + Toast.BorderThickness.Left + Toast.BorderThickness.Right;
-        string full = notice.FullText;
-        bool details = notice.Kind == ToastKind.Error || full != full.ReplaceLineEndings(" ") || ToastLine.DesiredSize.Width + inset > width;
-        _showToastDetails = details && !notice.ActionShowsDetails;
-        bool showAction = details || notice.Action != null;
-        ToastAction.Content = details ? Loc.Current["Toast.Details"] : Loc.Current[notice.ActionKey];
-        ToastAction.Visibility = showAction ? Visibility.Visible : Visibility.Collapsed;
-        string help = showAction ? Loc.Current.T("Toast.ActionShortcut", ToastAction.Content) : "";
-        AutomationProperties.SetHelpText(Toast, help);
-        AutomationProperties.SetHelpText(ToastMessage, help);
+        if (e.OldFocus is DependencyObject previous && !ToastStack.IsAncestorOf(previous)) _beforeToastFocus = e.OldFocus;
+    }
+
+    private void CloseToast(ToastCard card)
+    {
+        if (card.Notice is not { } notice) return;
+        bool restoreFocus = card.Host.IsKeyboardFocusWithin;
+        var previous = _beforeToastFocus;
+        _toasts.Dismiss(notice);
+        if (!restoreFocus) return;
+        if (_toasts.Visible != null) NewestCard.Close.Focus();
+        else previous?.Focus();
     }
 
     private void RenderToast()
     {
         _toastTimer.Stop();
-        if (_toasts.Visible is not { } notice)
-        {
-            _announced = null;
-            Toast.Visibility = Visibility.Collapsed;
-            return;
-        }
-        string title = notice.Title.Resolve(), message = notice.Text.Resolve();
-        string full = notice.FullText;
-        ToastTitle.Text = title.ReplaceLineEndings(" ");
-        ToastTitle.Visibility = title.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-        ToastMessage.Text = message.ReplaceLineEndings(" ");
-        Toast.ToolTip = full;
-        AutomationProperties.SetName(Toast, full);
-        AutomationProperties.SetName(ToastMessage, full);
-        AutomationProperties.SetLiveSetting(ToastMessage, notice.Kind == ToastKind.Error ? AutomationLiveSetting.Assertive : AutomationLiveSetting.Polite);
-        ToastDot.SetResourceReference(Shape.FillProperty, notice.Kind switch
-        {
-            ToastKind.Success => "Primer.ok",
-            ToastKind.Warning => "Primer.warn",
-            ToastKind.Error => "Ant.colorError",
-            _ => "Primer.accent"
-        });
-        Toast.Visibility = Visibility.Visible;
-        UpdateToastAction(notice);
-        if (!ReferenceEquals(notice, _announced))
-        {
-            _announced = notice;
-            AccessibleStatus.Announce(ToastMessage);
-        }
+        var cards = _toasts.Cards.ToArray();
+        int offset = _toastCards.Length - cards.Length;
+        for (int i = 0; i < _toastCards.Length; i++) _toastCards[i].Display(i < offset ? null : cards[i - offset], ToastStack.Width);
+        if (!_toasts.HasSource("env-alert")) _environmentIssue = null;
+        _announced.RemoveWhere(notice => !_toasts.Contains(notice));
+        foreach (var card in _toastCards)
+            if (card.Notice is { } notice && _announced.Add(notice)) AccessibleStatus.Announce(card.Message);
         if (_toasts.Delay is { } delay)
         {
             _toastTimer.Interval = delay > TimeSpan.Zero ? delay : TimeSpan.Zero;
@@ -146,17 +138,22 @@ public partial class MainWindow
         }
     }
 
-    private void OnDismissToast(object sender, RoutedEventArgs e) { _toasts.Dismiss(); e.Handled = true; }
     private void OnCanInvokeToastAction(object sender, CanExecuteRoutedEventArgs e) =>
         e.CanExecute = _toasts.Visible != null && ToastAction.Visibility == Visibility.Visible;
 
     private void OnToastClick(object sender, RoutedEventArgs e)
     {
-        if (_toasts.Visible is not { } notice || ToastAction.Visibility != Visibility.Visible) return;
-        bool showDetails = _showToastDetails;
-        _toasts.Dismiss();
-        if (showDetails) { Navigate("Log"); LogContent.ShowMessage(notice.FullText); }
-        else notice.Action?.Invoke();
+        InvokeToastAction(NewestCard);
         e.Handled = true;
+    }
+
+    private void InvokeToastAction(ToastCard card, bool second = false)
+    {
+        if (card.Notice is not { } notice) return;
+        bool details = !second && card.ShowDetails;
+        // Environment actions keep the finding visible until a check resolves it or the user dismisses it.
+        if (notice.OnDismiss == null) _toasts.Remove(notice.Source);
+        if (details) { Navigate("Log"); LogContent.ShowMessage(notice.FullText); }
+        else (second ? notice.SecondAction ?? notice.Action : notice.Action)?.Invoke();
     }
 }

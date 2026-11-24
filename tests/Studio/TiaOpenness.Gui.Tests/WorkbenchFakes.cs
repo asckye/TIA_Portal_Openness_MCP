@@ -82,7 +82,9 @@ internal sealed class FakeProjectClient : IProjectClient, IStudioClient
     }
     public IReadOnlyList<PortalProcessInfo> Processes { get; set; } = [];
     public Dictionary<int, ProjectLeaseState> ProcessLeases { get; } = [];
-    public Task<IReadOnlyList<ProjectProcessObservation>> ListProcessesAsync() => Task.FromResult<IReadOnlyList<ProjectProcessObservation>>(
+    public Exception? ProcessScanError { get; set; }
+    public Task<IReadOnlyList<ProjectProcessObservation>> ListProcessesAsync() => ProcessScanError is { } error
+        ? Task.FromException<IReadOnlyList<ProjectProcessObservation>>(error) : Task.FromResult<IReadOnlyList<ProjectProcessObservation>>(
         Processes.Select(p => new ProjectProcessObservation(p, ProcessLeases.GetValueOrDefault(p.ProcessId))).ToArray());
     public IReadOnlyList<SoftwareUnitInfo> Units { get; set; } = [];
     public Task<IReadOnlyList<SoftwareUnitInfo>> ListUnitsAsync(string plc) => Task.FromResult(Units);

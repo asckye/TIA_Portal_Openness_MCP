@@ -15,11 +15,17 @@ internal sealed class ModalPane : IDisposable
     private readonly FrameworkElement _pane;
     private readonly Action _dismiss;
     private readonly IInputElement? _previous;
+    private readonly Action? _restoreFocus;
     private readonly List<(UIElement Element, bool Enabled)> _background = [];
     private bool _closed;
 
     internal ModalPane(FrameworkElement pane, FrameworkElement initial, Action dismiss)
+        : this(pane, () => initial, dismiss) { }
+
+    internal ModalPane(FrameworkElement pane, Func<FrameworkElement> initial, Action dismiss,
+        UIElement? interactiveSibling = null, Action? restoreFocus = null)
     {
+        _restoreFocus = restoreFocus;
         _pane = pane;
         _dismiss = dismiss;
         _previous = Keyboard.FocusedElement;
@@ -34,7 +40,7 @@ internal sealed class ModalPane : IDisposable
             var parent = VisualTreeHelper.GetParent(branch);
             if (parent is Panel panel)
                 foreach (UIElement sibling in panel.Children)
-                    if (sibling != branch && sibling.Visibility == Visibility.Visible)
+                    if (sibling != branch && sibling != interactiveSibling && sibling.Visibility == Visibility.Visible)
                     {
                         _background.Add((sibling, sibling.IsEnabled));
                         sibling.SetCurrentValue(UIElement.IsEnabledProperty, false);
@@ -43,7 +49,7 @@ internal sealed class ModalPane : IDisposable
         }
         pane.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
         {
-            if (!_closed && pane.IsVisible) initial.Focus();
+            if (!_closed && pane.IsVisible) initial().Focus();
         }));
     }
 
@@ -60,6 +66,7 @@ internal sealed class ModalPane : IDisposable
         _closed = true;
         _pane.PreviewKeyDown -= OnKeyDown;
         foreach (var (element, enabled) in _background) element.SetCurrentValue(UIElement.IsEnabledProperty, enabled);
-        if (_previous is UIElement { IsVisible: true, IsEnabled: true } previous) previous.Focus();
+        if (_restoreFocus != null) _restoreFocus();
+        else if (_previous is UIElement { IsVisible: true, IsEnabled: true } previous) previous.Focus();
     }
 }

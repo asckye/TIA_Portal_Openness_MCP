@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -29,7 +30,8 @@ public partial class SettingsView : UserControl
             button.Loaded += (_, _) => AccessKeyManager.Register(key, button);
             button.Unloaded += (_, _) => AccessKeyManager.Unregister(key, button);
         }
-        ShowSection("AI");
+        ShowSection("Appearance");
+        SupportedReleases.Text = string.Join(" · ", TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(release => release.DisplayName));
         IsVisibleChanged += (_, _) => RefreshVisibleSection();
         VersionText.Text = MainViewModel.AppVersion;
         RuntimeText.Text = $".NET {Environment.Version.Major} WPF";
@@ -83,7 +85,7 @@ public partial class SettingsView : UserControl
 
     internal void ShowSection(string section)
     {
-        SectionList.SelectedItem = section switch { "Service" => ServiceSection, "AI" => AiSection, _ => AppearanceSection };
+        SectionList.SelectedItem = section switch { "Service" => ServiceSection, "AI" => AiSection, "About" => AboutSection, _ => AppearanceSection };
     }
 
     private void OnSectionChanged(object sender, SelectionChangedEventArgs e)
@@ -92,11 +94,13 @@ public partial class SettingsView : UserControl
         string section = (string)item.Tag;
         AppearancePanel.Visibility = section == "Appearance" ? Visibility.Visible : Visibility.Collapsed;
         ServicePanel.Visibility = section == "Service" ? Visibility.Visible : Visibility.Collapsed;
+        AboutPanel.Visibility = section == "About" ? Visibility.Visible : Visibility.Collapsed;
         AiPanel.Visibility = section == "AI" ? Visibility.Visible : Visibility.Collapsed;
         SectionTitle.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(section switch
-            { "Service" => "Settings.StorageTitle", "AI" => "Settings.SafetyTitle", _ => "Settings.AppearanceTitle" }));
+            { "About" => "Settings.AboutTitle", "Service" => "Settings.StorageTitle", "AI" => "Settings.SafetyTitle", _ => "Settings.AppearanceTitle" }));
         SectionSubtitle.SetBinding(TextBlock.TextProperty, TrExtension.CreateBinding(section switch
-            { "Service" => "Settings.StorageSubtitle", "AI" => "Settings.SafetySubtitle", _ => "Settings.AppearanceSubtitle" }));
+            { "About" => "Settings.AboutSubtitle", "Service" => "Settings.StorageSubtitle",
+              "AI" => "Settings.SafetySubtitle", _ => "Settings.AppearanceSubtitle" }));
         DetailScroll.ScrollToTop();
         RefreshVisibleSection();
     }
@@ -202,9 +206,9 @@ public partial class SettingsView : UserControl
         await SaveApproval(() => _approvals.TimeoutSeconds = seconds);
     }
 
-    internal async Task SaveApproval(Action action)
+    internal async Task SaveApproval(Action action, ToastKind kind = ToastKind.Success, string message = "Toast.Saved")
     {
-        try { await Task.Run(action); NotifySettings(ToastKind.Success, LocalizedText.Key("Toast.Saved")); }
+        try { await Task.Run(action); NotifySettings(kind, LocalizedText.Key(message)); }
         catch (Exception ex) {
             NotifySettings(ToastKind.Error, LocalizedText.Literal(ex.Message));
         }
@@ -231,6 +235,11 @@ public partial class SettingsView : UserControl
             NotifySettings(ToastKind.Error, LocalizedText.Literal(error));
         }
         ControlEnabledChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnCopyPath(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string path }) _features?.Copy(path);
     }
 
     private void OnOpenPath(object sender, RoutedEventArgs e)

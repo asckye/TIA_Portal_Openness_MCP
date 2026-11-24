@@ -75,7 +75,8 @@ public sealed class WorkbenchNarrowLayoutTests(WpfContext wpf)
                         window.Navigate("VersionControl");
                         window.OpenSettings();
                         Selected("Settings");
-                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("SettingsContent")).Visibility);
+                        Assert.Equal(Visibility.Visible, window.SettingsOverlay.Visibility);
+                        Assert.Equal("VersionControl", window.CurrentPage);
                         window.Navigate("Approvals"); Selected("Approvals");
                         Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("ApprovalsContent")).Visibility);
                         window.Navigate(page); Selected(page);

@@ -117,29 +117,48 @@
     </Grid>
     <StackPanel KeyboardNavigation.TabIndex="0">
       <Border Style="{StaticResource Primer.IdeBar}">
-        <ux:PageHeadPanel VerticalAlignment="Center" Spacing="4">
+        <ux:PageHeadPanel VerticalAlignment="Center" Spacing="8">
           <WrapPanel VerticalAlignment="Center">
-            <RadioButton AutomationProperties.Name="{l:Tr Audit.Latest}" Content="{l:Tr Audit.Latest}" Style="{StaticResource Primer.IdePill}" Click="OnLatest" Margin="0,0,4,0" IsChecked="{Binding LatestAuditPage, Mode=OneWay}"/>
-            <RadioButton AutomationProperties.Name="{l:Tr Audit.Older}" Content="{l:Tr Audit.Older}" Style="{StaticResource Primer.IdePill}" Click="OnOlder" Margin="0,0,8,0" IsChecked="{Binding OlderAuditPage, Mode=OneWay}" IsEnabled="{Binding CanPageOlder}"/>
-            <ToggleButton x:Name="ChainToggle" AutomationProperties.Name="{Binding AuditHead}" Content="{Binding AuditHead}"
-              AutomationProperties.HelpText="{l:Tr Audit.About}" ToolTip="{l:Tr Audit.About}" Style="{StaticResource Primer.IdeChipButton}"/>
-            <TextBlock Text="{Binding AuditCount}" Style="{StaticResource Primer.Muted}" Margin="8,0"/>
-          </WrapPanel>
-          <WrapPanel VerticalAlignment="Center">
+            <Border Style="{StaticResource Primer.SegmentGroup}" Margin="0,0,8,0">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton AutomationProperties.Name="{l:Tr Audit.Latest}" Content="{l:Tr Audit.Latest}" Style="{StaticResource Primer.Segment}" Click="OnLatest" IsChecked="{Binding LatestAuditPage, Mode=OneWay}"/>
+                <RadioButton AutomationProperties.Name="{l:Tr Audit.Older}" Content="{l:Tr Audit.Older}" Style="{StaticResource Primer.Segment}" Click="OnOlder" Margin="2,0,0,0" IsChecked="{Binding OlderAuditPage, Mode=OneWay}" IsEnabled="{Binding CanPageOlder}"/>
+              </StackPanel>
+            </Border>
             <Label x:Name="AuditSearchLabel" Target="{Binding ElementName=AuditSearchBox}" Content="{l:Tr Audit.Search}" AutomationProperties.Name="{l:Tr Audit.Search}" Style="{StaticResource Primer.FormLabel}" Visibility="Collapsed"/>
             <TextBox x:Name="AuditSearchBox" AutomationProperties.Name="{l:Tr Audit.Search}" AutomationProperties.LabeledBy="{Binding ElementName=AuditSearchLabel}"
-              Tag="{l:Tr Audit.Search}" Style="{StaticResource Primer.IdeSearch}" Width="200" Height="28" Text="{Binding AuditSearch, UpdateSourceTrigger=PropertyChanged}"/>
-            <ToggleButton x:Name="DetailsToggle" AutomationProperties.Name="{l:Tr Audit.Inspector}" Content="{l:Tr Audit.Inspector}" Style="{StaticResource Primer.IdeChipButton}" IsChecked="True" Margin="4,0"/>
+              Tag="{l:Tr Audit.Search}" Style="{StaticResource Primer.IdeSearch}" Width="220" Height="28" Text="{Binding AuditSearch, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding AuditCount}" Style="{StaticResource Primer.Muted}" Margin="8,0,0,0"/>
+          </WrapPanel>
+          <WrapPanel VerticalAlignment="Center">
+            <ToggleButton x:Name="ChainToggle" AutomationProperties.Name="{Binding AuditHead}" AutomationProperties.HelpText="{l:Tr Audit.About}" Content="{Binding AuditHead}" Style="{StaticResource Primer.AuditChainToggle}">
+              <ToggleButton.ToolTip>
+                <ToolTip MaxWidth="360" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                  <StackPanel>
+                    <TextBlock Text="{l:Tr Audit.AboutText}" Foreground="{DynamicResource Ant.colorTextLightSolid}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding VerificationText}" Foreground="{DynamicResource Ant.colorTextLightSolid}" Opacity="0.85" FontFamily="{DynamicResource Ui.FontMono}" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    <TextBlock Text="{l:Tr Audit.Limitation}" Foreground="{DynamicResource Ant.colorTextLightSolid}" Opacity="0.72" FontSize="{DynamicResource Ui.FontSize.Caption}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                  </StackPanel>
+                </ToolTip>
+              </ToggleButton.ToolTip>
+            </ToggleButton>
+            <Popup x:Name="ChainHintPopup" PlacementTarget="{Binding ElementName=ChainToggle}" Placement="Bottom" VerticalOffset="4" HorizontalOffset="-8"
+              AllowsTransparency="True" StaysOpen="False" PopupAnimation="{StaticResource Primer.PopupAnimation}"
+              IsOpen="{Binding IsChecked, ElementName=ChainToggle, Mode=TwoWay}">
+              <Border x:Name="ChainHint" Style="{StaticResource Primer.AuditChainHint}" Visibility="{Binding IsChecked, ElementName=ChainToggle, Converter={StaticResource BoolToVisibility}}">
+                <ContentControl Style="{StaticResource Primer.Elevated}" Padding="14,12">
+                  <StackPanel>
+                    <TextBlock Text="{l:Tr Audit.AboutText}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding VerificationText}" TextWrapping="Wrap" Style="{StaticResource Primer.Mono.textFaint}" Margin="0,6,0,0"/>
+                    <TextBlock Text="{l:Tr Audit.Limitation}" Style="{StaticResource Primer.Muted.textFaint}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                  </StackPanel>
+                </ContentControl>
+              </Border>
+            </Popup>
+            <ToggleButton x:Name="DetailsToggle" AutomationProperties.Name="{l:Tr Audit.Inspector}" Content="{l:Tr Audit.Inspector}" Style="{StaticResource Primer.IdeChipButton}" IsChecked="True" Margin="6,0"/>
             <Button AutomationProperties.Name="{l:Tr Audit.Verify}" x:Name="VerifyButton" ToolTip="{l:Tr Pages.AuditPurpose}" AutomationProperties.HelpText="{l:Tr Pages.AuditPurpose}" Content="{l:Tr Audit.Verify}" Style="{StaticResource Primer.Button.Primary.Small}" ContentTemplate="{StaticResource Primer.CommandText}" Click="OnVerify" IsEnabled="{Binding CanVerify}"/>
           </WrapPanel>
         </ux:PageHeadPanel>
-      </Border>
-      <Border x:Name="ChainHint" Style="{StaticResource Primer.IdeSubBar}" Padding="12,8" Visibility="{Binding IsChecked, ElementName=ChainToggle, Converter={StaticResource BoolToVisibility}}">
-        <StackPanel>
-          <TextBlock Text="{l:Tr Audit.AboutText}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
-          <TextBlock Text="{Binding VerificationText}" TextWrapping="Wrap" Style="{StaticResource Primer.Mono.textFaint}"/>
-          <TextBlock Text="{l:Tr Audit.Limitation}" Style="{StaticResource Primer.Muted.textFaint}" TextWrapping="Wrap"/>
-        </StackPanel>
       </Border>
       <Border Padding="16,8" Style="{StaticResource Primer.AuditProgressBand}"
         Visibility="{Binding Verifying, Converter={StaticResource BoolToVisibility}}">

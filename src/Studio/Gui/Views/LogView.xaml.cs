@@ -160,9 +160,6 @@ public partial class LogView : UserControl
     private void OnGenerate(object sender, RoutedEventArgs e) => _features?.Export();
     private void OnOpenFolder(object sender, RoutedEventArgs e) { if (_features != null) _features.Run(_features.Diagnostics.OpenFolder); }
     private void OnOpenStorageSettings(object sender, RoutedEventArgs e) => OpenStorageSettings();
-    private void OpenStorageSettings()
-    {
-        WorkbenchCommands.Navigate.Execute(StorageSettingsButton.CommandParameter, this);
-        if (Window.GetWindow(this) is MainWindow { CurrentPage: "Settings" } window) window.SettingsContent.ShowSection("Service");
-    }
+    internal event EventHandler? StorageSettingsRequested;
+    private void OpenStorageSettings() => StorageSettingsRequested?.Invoke(this, EventArgs.Empty);
 }

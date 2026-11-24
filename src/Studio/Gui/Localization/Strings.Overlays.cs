@@ -23,7 +23,7 @@ internal static partial class Strings
         ("Overlay.EmptySessions", "No sessions listed", "暂无会话"),
         ("Overlay.Picker", "Open TIA process picker", "打开 TIA 进程选择器"),
         ("Overlay.Rules", "Open inspection rules", "打开检查规则设置"),
-        ("Overlay.Transfer", "Open transfer options", "打开传输选项面板"),
+        ("Overlay.Download", "Open download options", "打开下载选项面板"),
         ("Overlay.Modal", "Dialog", "对话框"),
         ("Overlay.Drawer", "Drawer", "选项面板"),
         ("Overlay.PickerTitle", "Choose a TIA Portal process to attach to", "选择要附着的 TIA Portal 进程"),

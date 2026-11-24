@@ -136,20 +136,6 @@
       </StackPanel>
     </Expander>
   <StackPanel x:Name="CrashDocument" DockPanel.Dock="Top" Visibility="{Binding Session.LostConnection,Converter={StaticResource BoolToVisibility}}">
-    <Border Style="{StaticResource Primer.ProjectCrashBand}" Padding="16,8">
-      <DockPanel>
-        <Button DockPanel.Dock="Right" x:Name="CrashLogs" Click="OnCrashLogs" Content="{l:Tr Project.ViewLogs}" AutomationProperties.Name="{l:Tr Project.ViewLogs}"
-          Style="{StaticResource Primer.Button.Secondary.Small}" Margin="0,0,8,0"/>
-        <Button DockPanel.Dock="Right" Click="OnProjectOptions" Content="{l:Tr Pages.Options}" AutomationProperties.Name="{l:Tr Project.Options}"
-          Style="{StaticResource Primer.Button.Secondary.Small}"/>
-        <Button DockPanel.Dock="Right" Content="{l:Tr Session.Title}" AutomationProperties.Name="{l:Tr Session.Title}" Click="OnSessions"
-          Visibility="{Binding HasMcpPanel,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Primer.Button.Secondary.Small}" Margin="0,0,8,0"/>
-        <Button DockPanel.Dock="Right" Click="OnPick" Content="{l:Tr Project.RescanProcesses}" AutomationProperties.Name="{l:Tr Project.RescanProcesses}"
-          IsEnabled="{Binding Session.ProcessScanAvailable}" Style="{StaticResource Primer.Button.Primary.Small}" Margin="0,0,8,0"/>
-        <StackPanel><TextBlock Text="{l:Tr Project.CrashTitle}" FontWeight="SemiBold"/>
-          <TextBlock Text="{l:Tr Project.ReconnectHint}" Style="{StaticResource Project.Caption}"/></StackPanel>
-      </DockPanel>
-    </Border>
     <Grid>
       <StackPanel x:Name="SnapshotColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="920" Margin="24,18,24,0">
         <StackPanel Orientation="Horizontal">

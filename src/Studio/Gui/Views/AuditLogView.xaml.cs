@@ -17,7 +17,8 @@ public partial class AuditLogView : UserControl
     }
     private void OnCloseInspector(object sender, RoutedEventArgs e) => DetailsToggle.IsChecked = false;
     private void OnVerify(object sender, RoutedEventArgs e) => Model.Verify();
-    private void OnJump(object sender, RoutedEventArgs e)
+    private void OnJump(object sender, RoutedEventArgs e) => ShowBreak();
+    internal void ShowBreak()
     {
         var row = Model.JumpToBreak();
         if (row == null) return;

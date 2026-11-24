@@ -229,6 +229,7 @@ internal static partial class Strings
         ("Audit.Verify", "Verify integrity (_V)", "校验完整性（_V）"),
         ("Audit.Pass", "{0} events, hash chain intact", "共 {0} 条，哈希链完整"),
         ("Audit.Break", "Hash chain broken at #{0}", "哈希链在第 {0} 条断开"),
+        ("Audit.LocateBreak", "Go to broken record #{0} →", "定位到断裂处 #{0} →"),
         ("Audit.Jump", "Jump to", "跳到该位置"),
         ("Audit.Limitation", "Deleting the whole file or truncating its end cannot be detected.", "整个文件被删除或末尾被截掉无法检测。"),
         ("Audit.Event", "Event", "事件类型"),

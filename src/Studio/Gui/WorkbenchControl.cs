@@ -210,8 +210,8 @@ public partial class MainWindow
         if (!IsEnabled || OwnedWindows.OfType<Window>().Any(window => window.IsVisible)) return ("workbench-modal-open", "dialog");
         if (OverlayHost.Visibility == Visibility.Visible) return ("workbench-modal-open", "command-palette");
         if (ApprovalsContent.ConfirmationSheet.IsVisible) return ("workbench-modal-open", "confirmation-sheet");
+        if (SettingsOpen) return ("workbench-modal-open", "settings");
         if (_page == "Approvals") return ("workbench-modal-open", "approvals");
-        if (_page == "Settings") return ("workbench-modal-open", "settings");
         if (_drawer != null && (_controlCallDrawer == null || _drawerFocus != _controlCallDrawer))
             return ("workbench-modal-open", "call-drawer");
         if ((OperationsContent.OptionsOpen && !_controlOpenedOptions) || BlocksContent.OptionsOpen || VersionControlContent.OptionsOpen)

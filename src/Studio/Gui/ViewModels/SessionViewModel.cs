@@ -135,10 +135,10 @@ public sealed class SessionViewModel : ObservableObject, IDisposable
         });
     }
 
-    internal async Task ChooseProcessAsync(bool attach)
+    internal async Task ChooseProcessAsync(bool attach, bool showEmpty = false)
     {
         await RefreshProcessesAsync();
-        if (!ProcessScanAvailable || !HasProcesses) return;
+        if (!ProcessScanAvailable || !_scannedProcesses || (!HasProcesses && !showEmpty)) return;
         if (_dialogs.PickPortalProcess(_processes) is int pid) await SelectProcessAsync(pid, attach);
     }
 

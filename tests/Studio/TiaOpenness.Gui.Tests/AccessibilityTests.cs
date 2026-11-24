@@ -76,8 +76,12 @@ public sealed class AccessibilityTests(WpfContext wpf)
                     }
                     WpfContext.Drain();
                     window.UpdateLayout();
-                    Assert.Equal(page, window.CurrentPage);
-                    var keys = RenderedAccessKeys(window, page, language);
+                    Assert.Equal(page == "Settings" ? "Log" : page, window.CurrentPage);
+                    Assert.Equal(page == "Settings", window.SettingsOpen);
+                    if (window.SettingsOpen)
+                        Assert.All(DesktopCapture.Descendants<ButtonBase>(window.ShellFrame).Where(button => button.IsVisible),
+                            button => Assert.False(button.IsEnabled));
+                    var keys = RenderedAccessKeys(page == "Settings" ? window.SettingsContent : window, page, language);
                     total += keys.Count;
                     string[] expected = page switch
                     {
@@ -351,6 +355,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
         wpf.RunWithLanguage(language, () =>
         {
             var window = Window();
+            window.Width = 1200; // Exercise the modal call drawer below the docking breakpoint.
             var unnamed = new List<string>();
             int checkedControls = 0;
             try
@@ -370,8 +375,8 @@ public sealed class AccessibilityTests(WpfContext wpf)
                     }
                 }
                 window.OpenSettings(); WpfContext.Drain();
-                Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName("SettingsContent")).Visibility);
-                Assert.Same(window.FindName("CurrentPageTitle"), Keyboard.FocusedElement);
+                Assert.Equal(Visibility.Visible, window.SettingsOverlay.Visibility);
+                Assert.Same(window.SettingsContent.AppearanceSection, Keyboard.FocusedElement);
                 window.Navigate("Calls");
                 window.Features.OpenCall(window.Features.Calls[0]); WpfContext.Drain();
                 Assert.True(AutomationProperties.GetIsDialog((UIElement)window.FindName("DrawerOverlay")));
@@ -393,6 +398,7 @@ public sealed class AccessibilityTests(WpfContext wpf)
         wpf.Run(() =>
         {
             var window = Window();
+            window.Width = 1200; // Exercise the modal call drawer below the docking breakpoint.
             try
             {
                 WpfContext.ShowWindow(window);
@@ -565,10 +571,18 @@ public sealed class AccessibilityTests(WpfContext wpf)
     }
     private static void Navigate(MainWindow window, string page)
     {
+        string previousTitle = window.CurrentPageTitle.Text, previousPage = window.CurrentPage;
         window.Navigate(page); WpfContext.Drain(); window.UpdateLayout();
+        if (page == "Settings")
+        {
+            Assert.True(window.SettingsOpen);
+            Assert.Equal(previousPage, window.CurrentPage);
+            Assert.Equal(previousTitle, window.CurrentPageTitle.Text);
+            return;
+        }
         string title = page switch
         {
-            "Approvals" => "Shell.Approvals", "Settings" => "Shell.Settings",
+            "Approvals" => "Shell.Approvals",
             "Mcp" => "Desktop.Configuration", "Engineering" => "Shell.Engineering", "Blocks" => "Shell.Engineering",
             "VersionControl" => "Shell.Engineering", "Calls" => "Shell.Approvals", "Audit" => "Shell.Audit",
             "Environment" => "Shell.Environment", _ => "Shell.Logs",

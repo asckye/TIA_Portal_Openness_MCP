@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Windows.Automation;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,6 +21,39 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed partial class WorkbenchShellDesignTests(WpfContext wpf)
 {
+    internal static void AssertSettingsBounds(MainWindow window, double width, double height)
+    {
+        var card = window.SettingsCard;
+        Assert.Equal(width, card.Width);
+        Assert.Equal(height, card.Height);
+        var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(card);
+        double Rendered(double value, double scale) => card.UseLayoutRounding ? Math.Round(value * scale) / scale : value;
+        Assert.Equal(Rendered(width, dpi.DpiScaleX), card.ActualWidth, 5);
+        Assert.Equal(Rendered(height, dpi.DpiScaleY), card.ActualHeight, 5);
+        var corner = card.TranslatePoint(new Point(), window.Root);
+        Assert.InRange(Math.Abs(corner.X - (window.Root.ActualWidth - card.ActualWidth) / 2), 0, 1 / dpi.DpiScaleX);
+        Assert.InRange(Math.Abs(corner.Y - (window.Root.ActualHeight - card.ActualHeight) / 2), 0, 1 / dpi.DpiScaleY);
+    }
+
+    [Fact]
+    public void Default_frame_and_notification_stack_match_the_workbench_dimensions()
+    {
+        wpf.Run(() =>
+        {
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, new Services.Stubs.ApprovalServiceStub());
+            try
+            {
+                Assert.Equal(1360, window.Width);
+                Assert.Equal(812, window.Height);
+                Assert.Equal(HorizontalAlignment.Right, window.ToastStack.HorizontalAlignment);
+                Assert.Equal(VerticalAlignment.Bottom, window.ToastStack.VerticalAlignment);
+                Assert.Equal(16, window.ToastStack.Margin.Right);
+                Assert.Equal(36, window.ToastStack.Margin.Bottom);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Fact]
     public void Toast_uses_the_palette_for_the_event_that_opened_it()
     {
@@ -261,42 +296,64 @@ public sealed partial class WorkbenchShellDesignTests(WpfContext wpf)
                     environment.Replace([new(LocalizedText.Key("Shell.Environment"), rows)]);
                     WpfContext.Drain();
                 }
-                void Dismiss() => UnifiedDesktopTests.ClickControl(DesktopCapture.Descendants<Button>(window.GlobalEnvironmentBanner)
-                    .Single(button => button != window.EnvironmentAction));
                 Replace(membership, port, firewall);
-                Assert.Equal(Loc.Current["Shell.GroupLogon"], window.EnvironmentTitle.Text);
-                UnifiedDesktopTests.ClickControl(window.EnvironmentAction);
+                var announcements = new List<string>();
+                void Heard(FrameworkElement source) => announcements.Add(AutomationProperties.GetName(source));
+                AccessibleStatus.Announced += Heard;
+                try
+                {
+                    var refreshed = EnvironmentCheckCatalogue.Row(new("membership", Core.Environment.EnvironmentFindingStatus.Fail, "NewLogon", ""));
+                    Replace(refreshed, port, firewall);
+                    Assert.Empty(announcements);
+                    foreach (var key in new[] { "sticky-1", "sticky-2", "sticky-3" })
+                        window.ShowToast(ToastKind.Warning, LocalizedText.Literal(key), key, sticky: true);
+                    Replace(membership, port, firewall);
+                    Assert.Contains(announcements, title => title.Contains(Loc.Current["Shell.GroupLogon"]));
+                }
+                finally { AccessibleStatus.Announced -= Heard; }
+                Assert.Equal(Loc.Current["Shell.GroupLogon"], window.ToastTitle.Text);
+                UnifiedDesktopTests.ClickControl(window.ToastAction);
                 Assert.True(window.RailEnvironment.IsChecked);
                 Assert.Same(membership, window.Features.SelectedEnvironment!.Check);
-                Dismiss();
-                Assert.Contains("8123", window.EnvironmentTitle.Text);
-                Assert.Contains("PID 17", window.EnvironmentDescription.Text);
-                Assert.Equal(Loc.Current["Shell.ChangePort"], window.EnvironmentAction.Content);
+                Replace(membership with { }, port, firewall);
+                Assert.Equal(Loc.Current["Shell.GroupLogon"], window.ToastTitle.Text);
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
+                Assert.Contains("8123", window.ToastTitle.Text);
+                Assert.Contains("PID 17", window.ToastMessage.Text);
+                Assert.Equal(Loc.Current["Shell.ChangePort"], window.ToastAction.Content);
                 Assert.Equal(Loc.Current.IsChinese ? "前往 MCP 更改端口" : "Change port in MCP",
-                    new System.Windows.Automation.Peers.ButtonAutomationPeer(window.EnvironmentAction).GetName());
-                UnifiedDesktopTests.ClickControl(window.EnvironmentAction);
+                    new System.Windows.Automation.Peers.ButtonAutomationPeer(window.ToastAction).GetName());
+                UnifiedDesktopTests.ClickControl(window.ToastAction);
                 Assert.True(window.RailMcp.IsChecked);
                 Assert.True(window.Configuration!.RemoteNav.IsChecked);
-                Dismiss();
-                Assert.Same(window.FindResource("Primer.warnBg"), window.GlobalEnvironmentBanner.Background);
-                Assert.Equal(Loc.Current["Env.ConfigureNetworkPermission"], window.EnvironmentAction.Content);
-                UnifiedDesktopTests.ClickControl(window.EnvironmentAction);
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
+                Assert.Same(window.FindResource("Primer.warn"), window.Toast.BorderBrush);
+                Assert.Equal(Loc.Current["Env.ConfigureNetworkPermission"], window.ToastAction.Content);
+                UnifiedDesktopTests.ClickControl(window.ToastAction);
                 Assert.True(window.Configuration.RemoteNav.IsChecked);
                 Assert.NotEqual("8123", window.Configuration.ServerPort.Text);
-                Dismiss();
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
+                while (window.Toast.IsVisible && window.ToastMessage.Text.StartsWith("sticky-", StringComparison.Ordinal))
+                    UnifiedDesktopTests.ClickControl(window.ToastClose);
                 Replace(EnvironmentCheckCatalogue.Checking("port"));
                 Replace(membership, port, firewall);
-                Assert.Equal(Visibility.Collapsed, window.GlobalEnvironmentBanner.Visibility);
+                Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
                 Replace(unknown);
-                Assert.Equal(Visibility.Collapsed, window.GlobalEnvironmentBanner.Visibility);
+                Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
                 Replace(port);
-                Assert.Equal(Visibility.Visible, window.GlobalEnvironmentBanner.Visibility);
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                UnifiedDesktopTests.ClickControl(window.ToastClose);
+                Replace(EnvironmentCheckCatalogue.Checking("port"));
+                Replace(port);
+                Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
+                Replace(unknown);
+                Replace(port);
                 window.Configuration.LocalNav.IsChecked = true;
                 RoutedEventHandler fail = (_, _) => throw new InvalidOperationException("fixture network review failed");
                 window.Configuration.RemoteNav.Checked += fail;
                 try
                 {
-                    UnifiedDesktopTests.ClickControl(window.EnvironmentAction);
+                    UnifiedDesktopTests.ClickControl(window.ToastAction);
                     WpfContext.Drain();
                     Assert.Equal(Visibility.Visible, window.Toast.Visibility);
                     Assert.Equal("fixture network review failed", window.ToastMessage.Text);
@@ -398,12 +455,12 @@ public sealed partial class WorkbenchShellDesignTests(WpfContext wpf)
                     var check = EnvironmentCheckCatalogue.Row(new(id, Core.Environment.EnvironmentFindingStatus.Fail, result, evidence));
                     environment.Replace([new(LocalizedText.Key("Shell.Environment"), [check])]);
                     WpfContext.Drain(); host.UpdateLayout();
-                    Assert.Equal(Visibility.Visible, window.GlobalEnvironmentBanner.Visibility);
-                    if (id != "membership") Assert.Contains("8123", window.EnvironmentTitle.Text);
-                    Capture("banner-" + (id == "membership" ? "group" : id));
-                    var dismiss = DesktopCapture.Descendants<Button>(window.GlobalEnvironmentBanner).Single(button => button != window.EnvironmentAction);
+                    Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                    if (id != "membership") Assert.Contains("8123", window.ToastTitle.Text);
+                    Capture("env-alert-" + (id == "membership" ? "group" : id));
+                    var dismiss = window.ToastClose;
                     UnifiedDesktopTests.ClickControl(dismiss);
-                    Assert.Equal(Visibility.Collapsed, window.GlobalEnvironmentBanner.Visibility);
+                    Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
                 }
                 environment.Replace(normal);
                 WpfContext.Drain();
@@ -484,7 +541,8 @@ public sealed partial class WorkbenchShellDesignTests(WpfContext wpf)
                         window.SettingsContent.ShowSection("Appearance"); Capture("settings-appearance");
                         window.SettingsContent.ShowSection("AI"); Capture("settings-safety");
                         window.SettingsContent.ShowSection("Service"); Capture("settings-service");
-                        Assert.Equal(width == 1024 ? 214 : 228, ((Border)window.SettingsContent.SectionList.Parent).ActualWidth);
+                        Assert.Equal(204, ((Border)window.SettingsContent.SectionList.Parent).ActualWidth);
+                        AssertSettingsBounds(window, width == 1024 ? width * 0.94 : 840, width == 1024 ? height * 0.88 : 584);
                     }
                 }
                 window.Navigate("Engineering");
@@ -547,7 +605,10 @@ public sealed partial class WorkbenchShellDesignTests(WpfContext wpf)
                 window.BlocksContent.LocateControlBlock(model.Engineering.Blocks[1]);
                 WpfContext.Complete(model.Engineering.ReadFocusedBlockAsync());
                 service.Receive(FeaturePageFixtures.Request("after-empty"));
-                client.Exit(); WpfContext.Drain(); ClearFeedback();
+                ClearFeedback();
+                client.Exit(); WpfContext.Drain();
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                Assert.Equal(Loc.Current["Project.ViewLogs"], window.ToastSecondAction.Content);
                 Assert.Equal("✕", window.SessionGlyph.Text);
                 Capture("state-crashed");
                 model.Session.Connect.Execute(null); WpfContext.Drain();

@@ -123,6 +123,8 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
             var (window, _, _) = Window();
             try
             {
+                window.Width = 1200; // At this width call details open as a modal drawer.
+                window.UpdateLayout();
                 void Check(UIElement source)
                 {
                     Assert.False(WorkbenchCommands.CommandPalette.CanExecute(null, window));
@@ -164,7 +166,7 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
                     "Audit Chain", "Runtime Logs", "Settings & Safety", "Approvals", "AI calls", "Version control"];
                 string[] appearance = ["Settings.Light", "Settings.Dark", "Settings.AccentCobalt", "Settings.AccentPetrol",
                     "Settings.English", "Settings.Chinese"];
-                var commands = new[] { "Main", Loc.Current["Overlay.Rules"], Loc.Current["Overlay.Transfer"] };
+                var commands = new[] { "Main", Loc.Current["Overlay.Rules"], Loc.Current["Overlay.Download"] };
                 var titles = pages.Concat(commands).Concat(appearance.Select(key => Loc.Current[key])).ToArray();
                 var approvals = (ApprovalServiceStub)window.Approvals;
                 approvals.Receive(FeaturePageFixtures.Request(CallId) with { Deadline = DateTimeOffset.UtcNow.AddMinutes(2) });
@@ -181,14 +183,22 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
                     palette.SearchBox.Text = titles[i];
                     palette.ResultList.SelectedItem = palette.ResultList.Items.Cast<CommandPaletteItem>().Single(item => item.Title == titles[i]);
                     Assert.True(KeyDown(palette.SearchBox, Key.Enter));
-                    if (i < pages.Length) Assert.Equal(destinations[i], window.CurrentPage);
-                    if (titles[i] == Loc.Current["Overlay.Rules"] || titles[i] == Loc.Current["Overlay.Transfer"])
+                    if (i < pages.Length && destinations[i] == "Settings")
+                    {
+                        Assert.Equal("Log", window.CurrentPage);
+                        Assert.True(window.SettingsOpen);
+                        WpfContext.Drain(); window.UpdateLayout();
+                        Assert.True(window.SettingsContent.AppearancePanel.IsVisible);
+                        UnifiedDesktopTests.ClickControl(window.SettingsContent.CloseSettingsButton);
+                    }
+                    else if (i < pages.Length) Assert.Equal(destinations[i], window.CurrentPage);
+                    if (titles[i] == Loc.Current["Overlay.Rules"] || titles[i] == Loc.Current["Overlay.Download"])
                     {
                         Assert.Equal("Engineering", window.CurrentPage);
                         Assert.True(window.OperationsContent.OptionsOpen);
                         WpfContext.Drain(); window.UpdateLayout();
                         var options = window.OperationsContent.Options;
-                        Assert.True((titles[i] == Loc.Current["Overlay.Rules"] ? options.InspectOptions : options.ExportOptions).IsVisible);
+                        Assert.True((titles[i] == Loc.Current["Overlay.Rules"] ? options.InspectOptions : options.DownloadOptions).IsVisible);
                         options.Hide();
                     }
                     if (titles[i] == "Main")
@@ -207,6 +217,35 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
                 Assert.Equal(AppLanguage.Chinese, Loc.Current.Language);
             }
             finally { ThemeManager.Current.Theme = theme; ThemeManager.Current.Accent = accent; window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Resizing_over_a_docked_call_keeps_settings_modal_until_dismissed()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                window.Width = 1360;
+                window.Navigate("Calls"); WpfContext.Drain();
+                window.Features.OpenCall(window.Features.Calls[0]); WpfContext.Drain();
+                Assert.True(window.DockedInspector.IsVisible);
+                window.OpenSettings(); WpfContext.Drain();
+                window.Width = 1024; WpfContext.Drain(); window.UpdateLayout();
+                Assert.Equal("Calls", window.CurrentPage);
+                Assert.True(window.SettingsOverlay.IsEnabled);
+                Assert.True(window.SettingsOverlay.IsKeyboardFocusWithin);
+                Assert.Equal(Visibility.Collapsed, window.DrawerOverlay.Visibility);
+                Assert.Equal("settings", window.ApplyControl(Request(WorkbenchControlOperation.ReadState)).Data!.Workbench!.BlockedBy);
+                Assert.True(KeyDown((UIElement)Keyboard.FocusedElement, Key.Escape)); WpfContext.Drain();
+                Assert.False(window.SettingsOpen);
+                Assert.True(window.DrawerOverlay.IsVisible);
+                Assert.Same(window.DrawerTitle, Keyboard.FocusedElement);
+                Assert.Equal("call-drawer", window.ApplyControl(Request(WorkbenchControlOperation.ReadState)).Data!.Workbench!.BlockedBy);
+            }
+            finally { window.Close(); }
         });
     }
 
@@ -284,12 +323,14 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
         });
     }
 
-    [Fact]
+    [Fact(DisplayName = "Session Escape restores focus; AI navigation closes the flyout and the click guard refuses the approval chip")]
     public void Session_escape_returns_focus_and_AI_navigation_closes_the_non_modal_flyout()
     {
         wpf.Run(() =>
         {
-            var (window, _, client) = Window();
+            var now = TestNow;
+            var guard = new ControlChannel.ControlInputGuard(() => now, () => false);
+            var (window, _, client) = Window(input: guard);
             try
             {
                 var popover = OpenSession(window);
@@ -311,9 +352,16 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
                 Assert.Empty(client.Calls);
                 UnifiedDesktopTests.ClickControl(OpenSession(window).SwitchVersion);
                 Assert.Equal("Mcp", window.CurrentPage);
+                var enabled = window.Approvals.Enabled;
+                Assert.True(guard.ShouldBlock(window.ApprovalStatusButton));
                 UnifiedDesktopTests.ClickControl(window.ApprovalStatusButton);
-                Assert.Equal("Settings", window.CurrentPage);
-                Assert.Equal(Visibility.Visible, window.SettingsContent.AiPanel.Visibility);
+                Assert.Equal(enabled, window.Approvals.Enabled);
+                Assert.Equal("Mcp", window.CurrentPage);
+                Assert.False(window.SettingsContent.AiPanel.IsVisible);
+                now += TimeSpan.FromSeconds(1);
+                Assert.False(guard.ShouldBlock(window.ApprovalStatusButton));
+                UnifiedDesktopTests.ClickApprovalControl(window.ApprovalStatusButton, window.Approvals, nameof(window.Approvals.Enabled));
+                Assert.Equal(!enabled, window.Approvals.Enabled);
             }
             finally { window.Close(); }
         });

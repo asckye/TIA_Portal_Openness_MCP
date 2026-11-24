@@ -61,7 +61,7 @@
     <Setter Property="Foreground" Value="{DynamicResource Primer.text}"/>
     <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Control}"/>
     <Setter Property="MinHeight" Value="40"/>
-    <Setter Property="Padding" Value="14,8"/>
+    <Setter Property="Padding" Value="12,8,6,8"/>
     <Setter Property="Margin" Value="0,2"/>
     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="Template">
@@ -171,11 +171,48 @@
     <Setter Property="Padding" Value="20,6"/>
     <Style.Triggers><Trigger Property="Tag" Value="Warning"><Setter Property="Background" Value="{DynamicResource Primer.warnBg}"/><Setter Property="BorderBrush" Value="{DynamicResource Ant.colorWarningBorder}"/></Trigger></Style.Triggers>
   </Style>
-  <Style x:Key="Primer.Workbench.EnvironmentBanner" TargetType="Border">
-    <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
-    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-    <Setter Property="Padding" Value="16,8"/>
+  <Style x:Key="Primer.Workbench.Toast" TargetType="Border" BasedOn="{StaticResource Primer.Toast}">
+    <Setter Property="CornerRadius" Value="11"/>
+    <Setter Property="MaxHeight" Value="180"/>
+    <Setter Property="Padding" Value="14"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.card}"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Primer.text}"/>
+    <Setter Property="ux:Ux.OnSpotlight" Value="False"/>
   </Style>
+  <DataTemplate x:Key="Primer.Workbench.ToastCard">
+    <Grid Margin="0,8,0,0" Visibility="{Binding Visibility,ElementName=ToastSurface}">
+      <ContentControl Style="{DynamicResource Primer.Workbench.FloatShadow}"/>
+      <Border x:Name="ToastSurface" Style="{StaticResource Primer.Workbench.Toast}">
+        <Grid>
+          <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+          <Grid Width="24" Height="24" VerticalAlignment="Top">
+            <Ellipse x:Name="ToastDot" Fill="{DynamicResource Primer.accent}" Visibility="Collapsed"/>
+            <Border CornerRadius="6" Background="{Binding Fill,ElementName=ToastDot}" Opacity="0.12"/>
+            <Path x:Name="ToastIcon" Stroke="{Binding Fill,ElementName=ToastDot}" StrokeThickness="1.6"
+              Stretch="Uniform" Width="15" Height="15" StrokeLineJoin="Round"/>
+          </Grid>
+          <Grid Grid.Column="1" Margin="8,0,4,0">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <TextBlock x:Name="ToastTitle" FontSize="{DynamicResource Ui.FontSize.12_5}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+            <ScrollViewer x:Name="DescriptionScroll" Grid.Row="1" MaxHeight="64" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden"
+              Focusable="False" KeyboardNavigation.IsTabStop="False">
+              <TextBlock x:Name="ToastMessage" TextWrapping="Wrap" TextTrimming="None" FontSize="{DynamicResource Ui.FontSize.11_5}"
+                Foreground="{DynamicResource Primer.textMuted}"/>
+            </ScrollViewer>
+            <WrapPanel Grid.Row="2">
+              <Button x:Name="ToastAction" Style="{StaticResource Primer.Link}" Padding="0,3" Margin="0,0,10,0"
+                AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"/>
+              <Button x:Name="ToastSecondAction" Style="{StaticResource Primer.Link}" Padding="0,3"
+                Foreground="{DynamicResource Primer.textMuted}"
+                AutomationProperties.Name="{Binding Content,RelativeSource={RelativeSource Self},TargetNullValue=''}"/>
+            </WrapPanel>
+          </Grid>
+          <Button x:Name="ToastClose" Grid.Column="2" VerticalAlignment="Top" Content="×" AutomationProperties.Name="{l:Tr Access.Dismiss}"
+            Style="{StaticResource Primer.IdeToolButton}"/>
+        </Grid>
+      </Border>
+    </Grid>
+  </DataTemplate>
   <Style x:Key="Primer.Workbench.Hairline" TargetType="Control">
     <Setter Property="Height" Value="2"/>
     <Setter Property="Focusable" Value="False"/>
@@ -267,17 +304,18 @@
       <Trigger Property="ux:Ux.LeftPaneOpen" Value="False"><Setter Property="Visibility" Value="Collapsed"/></Trigger>
     </Style.Triggers>
   </Style>
+  <Style x:Key="Primer.Workbench.SettingsCard" TargetType="Border" BasedOn="{StaticResource Primer.Dialog}">
+    <Setter Property="CornerRadius" Value="14"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Background" Value="{DynamicResource Primer.bg}"/>
+  </Style>
   <Style x:Key="Primer.Workbench.SettingsPane" TargetType="Border">
     <Setter Property="BorderBrush" Value="{DynamicResource Primer.divider}"/>
     <Setter Property="BorderThickness" Value="0,0,1,0"/>
     <Setter Property="Background" Value="{DynamicResource Primer.sidebar}"/>
-    <Setter Property="Width" Value="228"/>
+    <Setter Property="Width" Value="204"/>
     <Setter Property="Panel.ZIndex" Value="2"/>
     <Setter Property="HorizontalAlignment" Value="Left"/>
-    <Style.Triggers>
-      <Trigger Property="ux:Ux.Narrow" Value="True"><Setter Property="Width" Value="214"/></Trigger>
-      <Trigger Property="ux:Ux.LeftPaneOpen" Value="False"><Setter Property="Visibility" Value="Collapsed"/></Trigger>
-    </Style.Triggers>
   </Style>
   <Style x:Key="Primer.Workbench.DiagnosticStrip" TargetType="Border" BasedOn="{StaticResource Primer.Container}">
     <Setter Property="CornerRadius" Value="{StaticResource Ui.Radius}"/>

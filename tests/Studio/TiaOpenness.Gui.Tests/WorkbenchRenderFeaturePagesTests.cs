@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -632,10 +633,32 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Capture("settings-safety");
                 var settingsView = window.SettingsContent;
                 AssertCenteredColumn(settingsView.SettingsColumn, Viewport(settingsView.DetailScroll), 740);
-                if (width == 1366)
+                var navLabels = Descendants<TextBlock>(settingsView.SectionList).Where(text => text.IsVisible).Select(text => text.Text).ToArray();
+                Assert.Contains(Loc.Current.IsChinese ? "设置" : "Settings", navLabels);
+                Assert.Contains("Ctrl ,", navLabels);
+                Assert.Contains(MainViewModel.AppVersion, navLabels);
+                Assert.Contains(Loc.Current["Settings.Immediate"], navLabels);
+                var navText = Descendants<TextBlock>(settingsView.SectionList).Where(text => text.IsVisible).ToArray();
+                var shortcut = navText.Single(text => text.Text == "Ctrl ,");
+                var navHeader = Assert.IsType<Border>(((DockPanel)shortcut.Parent).Parent);
+                Assert.Equal(hc ? new Thickness(1) : new Thickness(0, 0, 0, 1), navHeader.BorderThickness);
+                Assert.Same(navHeader.FindResource(hc ? "Primer.hcOutline" : "Primer.divider"), navHeader.BorderBrush);
+                var version = navText.Single(text => text.Text == MainViewModel.AppVersion);
+                var immediate = navText.Single(text => text.Text == Loc.Current["Settings.Immediate"]);
+                var footer = Assert.IsType<Grid>(version.Parent);
+                Assert.Same(footer, immediate.Parent);
+                Assert.Equal(new[] { MainViewModel.AppVersion, Loc.Current["Settings.Immediate"] },
+                    footer.Children.Cast<TextBlock>().Select(text => text.Text));
+                Assert.Equal(0, version.TranslatePoint(new Point(), footer).X);
+                Assert.Equal(footer.ActualWidth, immediate.TranslatePoint(new Point(immediate.ActualWidth, 0), footer).X);
+                foreach (var (item, resource) in new[] { (settingsView.AppearanceSection, "Icon.Theme"), (settingsView.AiSection, "Icon.WorkbenchAgent"),
+                    (settingsView.ServiceSection, "Icon.WorkbenchLogs"), (settingsView.AboutSection, "Icon.Info") })
                 {
-                    Assert.Contains(Descendants<TextBlock>(settingsView.SectionList),
-                        text => text.Text == (Loc.Current.IsChinese ? "偏好与安全" : "Settings"));
+                    var icon = Assert.Single(Descendants<System.Windows.Shapes.Path>(item), path => path.IsVisible);
+                    var label = Descendants<TextBlock>(item).Single(text => Equals(text.Text, item.Content));
+                    Assert.Same(item.FindResource(resource), icon.Data);
+                    Assert.True(icon.ActualWidth > 0);
+                    Assert.True(icon.TranslatePoint(new Point(icon.ActualWidth, 0), label).X < 0);
                 }
                 var policy = Descendants<TextBlock>(settingsView.AiPanel).Single(text => text.Text == Loc.Current["Settings.AlwaysConfirmed"]);
                 Assert.False(policy.IsVisible);
@@ -646,11 +669,11 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 WpfContext.Drain();
                 Assert.False(policy.IsVisible);
                 Assert.Equal(2, window.SettingsContent.OnlineTargets.Items.Count);
-                if (width == 1366) Assert.Equal(228, ((Border)window.SettingsContent.SectionList.Parent).ActualWidth);
+                Assert.Equal(204, ((Border)window.SettingsContent.SectionList.Parent).ActualWidth);
                 CaptureConfirmation(window, host, settingsView.ReviewSafety, "confirm-safety", directory, suffix);
                 settingsView.ShowSection("Appearance"); Capture("settings-appearance");
                 AssertCenteredColumn(settingsView.SettingsColumn, Viewport(settingsView.DetailScroll), 740);
-                settingsView.ShowSection("Service");
+                settingsView.ShowSection("About");
                 string bundleRoot = MainWindow.FindBundleRoot(AppContext.BaseDirectory);
                 bool hasVersion = TiaMcpConfigurator.UpdateCheck.Installed(bundleRoot) != null;
                 bool sourceCheckout = TiaMcpConfigurator.UpdateCheck.IsSourceRepository(bundleRoot);
@@ -658,11 +681,19 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Assert.Equal(Loc.Current["Settings.SourceCheckoutHint"], settingsView.SourceCheckoutHint.Text);
                 Assert.Equal(Loc.Current["Config.SourceRepositoryUpdate"], settingsView.SourceCheckoutHint.ToolTip);
                 Assert.Equal(hasVersion && !sourceCheckout, settingsView.CheckUpdate.IsEnabled);
-                if (sourceCheckout) Capture("settings-service-checkout");
+                if (sourceCheckout) Capture("settings-about-checkout");
                 // Both deployment layouts use the same installed manifest and measured journal data.
                 settingsView.SetUpdateAvailability(hasVersion, sourceCheckout: false);
                 Assert.Equal(hasVersion, settingsView.CheckUpdate.IsEnabled);
                 Assert.False(settingsView.SourceCheckoutHint.IsVisible);
+                Capture("settings-about");
+                var releases = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Select(release => release.DisplayName).ToArray();
+                Assert.Equal(8, releases.Length);
+                Assert.Equal(string.Join(" · ", releases), settingsView.SupportedReleases.Text);
+                Assert.Contains(Descendants<TextBlock>(settingsView.AboutPanel), text => text.IsVisible && text.Text == Loc.Current["Audit.Limitation"]);
+                Assert.Contains(Descendants<TextBlock>(settingsView.AboutPanel),
+                    text => text.IsVisible && text.Text == Loc.Current["Settings.ServiceTrademark"]);
+                settingsView.ShowSection("Service");
                 Capture("settings-service");
                 AssertCenteredColumn(settingsView.SettingsColumn, Viewport(settingsView.DetailScroll), 740);
                 settingsView.SetUpdateAvailability(hasVersion, sourceCheckout);
@@ -673,9 +704,14 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Assert.True(settingsView.Size5.IsChecked);
                 Assert.True(settingsView.Copies3.IsChecked);
                 Assert.Equal(Loc.Current["Settings.GenerateZip"], settingsView.SettingsGenerateButton.Content);
+                var copied = new List<string>();
+                window.Features.CopyText = copied.Add;
+                foreach (var button in new[] { settingsView.CopyConfig, settingsView.CopyLog, settingsView.CopyData, settingsView.CopyExports })
+                    UnifiedDesktopTests.ClickControl(button);
+                string[] expectedPaths = [settingsView.ConfigPath.Text, settingsView.LogPath.Text, settingsView.DataPath.Text, settingsView.ExportsPath.Text];
+                Assert.Equal(expectedPaths, copied);
                 foreach (var folder in new[] { settingsView.OpenConfig, settingsView.OpenLog, settingsView.OpenData, settingsView.OpenExports })
                     Assert.Equal(Loc.Current["Settings.StorageOpenFolder"], folder.Content);
-                Assert.Contains(Descendants<TextBlock>(settingsView.ServicePanel), text => text.Text == Loc.Current["Settings.ServiceTrademark"]);
                 var retentionToggle = Descendants<ToggleButton>(settingsView.RetentionDetails).Single();
                 UnifiedDesktopTests.ClickControl(retentionToggle); WpfContext.Drain(); host.UpdateLayout();
                 Assert.Contains(Descendants<TextBlock>(settingsView.RetentionDetails), text => text.IsVisible && text.Text == window.Features.Coverage);
@@ -690,7 +726,8 @@ public sealed partial class WorkbenchRenderFeaturePagesTests(WpfContext wpf)
                 Assert.True(window.LogContent.EmptyLog.IsVisible);
                 Assert.False(window.LogContent.ClearLogButton.IsEnabled);
                 UnifiedDesktopTests.ClickControl(Descendants<Button>(window.LogContent.EmptyLog).Single());
-                Assert.Equal("Settings", window.CurrentPage);
+                Assert.Equal("Log", window.CurrentPage);
+                Assert.True(window.SettingsOpen);
                 Assert.True(settingsView.ServicePanel.IsVisible);
 
                 Assert.True(approvals.Deny(destructive.Request.Id));

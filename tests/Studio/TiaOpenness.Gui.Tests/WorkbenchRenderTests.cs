@@ -180,7 +180,7 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                     window.Navigate(state.Page); WpfContext.Drain(); host.UpdateLayout(); WpfContext.Drain(); host.UpdateLayout();
                     if (state.Page is "Approvals" or "Settings")
                     {
-                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName(state.Page == "Approvals" ? "ApprovalsContent" : "SettingsContent")).Visibility);
+                        Assert.Equal(Visibility.Visible, ((FrameworkElement)window.FindName(state.Page == "Approvals" ? "ApprovalsContent" : "SettingsOverlay")).Visibility);
                         Assert.Equal(Visibility.Collapsed, ((FrameworkElement)window.FindName("DrawerOverlay")).Visibility);
                     }
                     if (state.Page == "Engineering") Assert.False(((MainViewModel)window.DataContext).Session.IsConnected);
@@ -268,14 +268,17 @@ public sealed class WorkbenchRenderTests(WpfContext wpf)
                 window.Navigate("Settings"); host.UpdateLayout();
                 var settings = (Views.SettingsView)window.FindName("SettingsContent");
                 var pane = (Border)((ListBox)settings.FindName("SectionList")).Parent;
-                Assert.Equal(Visibility.Collapsed, pane.Visibility);
-                UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout();
-                Assert.True(App.Settings.LeftPaneOpen); Assert.Equal(228, pane.ActualWidth);
+                Assert.True(window.SettingsOpen); Assert.Equal(Visibility.Visible, pane.Visibility);
+                Assert.False(toggle.IsEnabled);
+                Assert.False(App.Settings.LeftPaneOpen); Assert.Equal(204, pane.ActualWidth);
                 host.Width = 1024; host.Height = 640;
                 host.Measure(new Size(1024, 640)); host.Arrange(new Rect(0, 0, 1024, 640)); host.UpdateLayout();
-                Assert.True(App.Settings.LeftPaneOpen); Assert.Equal(Visibility.Visible, pane.Visibility);
-                Assert.Equal(214, ((Grid)settings.Content).ColumnDefinitions[0].ActualWidth);
-                window.Navigate("Engineering"); host.UpdateLayout();
+                Assert.False(App.Settings.LeftPaneOpen); Assert.Equal(Visibility.Visible, pane.Visibility);
+                Assert.Equal(204, ((Grid)settings.Content).ColumnDefinitions[0].ActualWidth);
+                UnifiedDesktopTests.ClickControl(settings.CloseSettingsButton); host.UpdateLayout();
+                Assert.Equal("Engineering", window.CurrentPage);
+                Assert.Equal(Visibility.Collapsed, tree.Visibility);
+                UnifiedDesktopTests.ClickControl(toggle); host.UpdateLayout();
                 Assert.Equal(Visibility.Visible, tree.Visibility);
                 Assert.Equal(214, ((Grid)window.FindName("EngineeringPage")).ColumnDefinitions[0].ActualWidth);
             }

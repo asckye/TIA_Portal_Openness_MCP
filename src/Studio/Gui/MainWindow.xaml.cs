@@ -208,13 +208,40 @@ public partial class MainWindow : Window
     private void OnMaximize(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState
         .Maximized;
     private void OnClose(object sender, RoutedEventArgs e) => Close();
-    private bool ShellModalOpen => DrawerOverlay.Visibility == Visibility.Visible || OverlayHost.Visibility == Visibility.Visible
+    private bool ShellModalOpen => SettingsOpen || ToastBlockingSheetOpen;
+    private bool ToastBlockingSheetOpen => DrawerOverlay.Visibility == Visibility.Visible || OverlayHost.Visibility == Visibility.Visible
         || ApprovalsContent.ConfirmationSheet.Visibility == Visibility.Visible
         || OperationsContent.OptionsOpen || BlocksContent.OptionsOpen || VersionControlContent.OptionsOpen;
+
+    private UIElement? _beforeMouseDown;
+
+    protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseDown(e);
+        if (!SettingsOpen) _beforeMouseDown = Keyboard.FocusedElement as UIElement ?? CurrentRail;
+    }
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
         base.OnPreviewKeyDown(e);
+        _beforeMouseDown = null;
+        if (e.Key == Key.Escape && SettingsOpen && !ToastBlockingSheetOpen)
+        {
+            if (_toasts.Visible != null) CloseToast(NewestCard);
+            else CloseSettings();
+            e.Handled = true;
+            return;
+        }
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.OemComma && (SettingsOpen || !ShellModalOpen))
+        {
+            e.Handled = true;
+            if (!e.IsRepeat)
+            {
+                if (SettingsOpen) CloseSettings();
+                else NavigateGuarded("Settings");
+            }
+            return;
+        }
         bool modal = ShellModalOpen;
         if (modal && Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
             && e.Key is Key.O or Key.S or Key.B or Key.K or Key.OemComma or >= Key.D1 and <= Key.D7) e.Handled = true;
@@ -225,7 +252,7 @@ public partial class MainWindow : Window
         base.OnKeyDown(e);
         if (e.Handled || e.Key != Key.Escape || ShellModalOpen) return;
         if (_leftPaneFlyoutOpen) CloseLeftPaneFlyout();
-        else if (_toasts.Visible != null) _toasts.Dismiss();
+        else if (_toasts.Visible != null) CloseToast(NewestCard);
         else return;
         e.Handled = true;
     }

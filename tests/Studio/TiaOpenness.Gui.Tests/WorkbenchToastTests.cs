@@ -147,15 +147,142 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
         var second = first with { Source = "b" };
         var third = first with { Source = "c" };
         var replacement = second with { Kind = ToastKind.Error };
-        queue.Show(first); queue.Show(second); queue.Show(third); queue.Show(replacement);
+        queue.Show(first); queue.Show(second); queue.Show(third);
+        Assert.Equal(new[] { first, second, third }, queue.Cards);
+        queue.Show(replacement);
+        Assert.Equal(new[] { first, third, replacement }, queue.Cards);
         now += TimeSpan.FromSeconds(3);
         var active = first with { Kind = ToastKind.Warning };
         queue.Show(active);
         Assert.Same(active, queue.Visible);
-        Assert.Equal(TimeSpan.FromSeconds(4), queue.Delay);
+        Assert.Equal(TimeSpan.FromSeconds(1), queue.Delay);
         queue.Dismiss(); Assert.Same(replacement, queue.Visible);
         queue.Dismiss(); Assert.Same(third, queue.Visible);
         queue.Dismiss(); Assert.Null(queue.Visible);
+        queue.Show(active);
+        Assert.Equal(TimeSpan.FromSeconds(4), queue.Delay);
+        now += TimeSpan.FromSeconds(4) - TimeSpan.FromTicks(1);
+        queue.Tick(); Assert.Same(active, queue.Visible);
+        now += TimeSpan.FromTicks(1);
+        queue.Tick(); Assert.Null(queue.Visible);
+    }
+
+    [Fact]
+    public void Capacity_evicts_the_oldest_transient_and_sticky_cards_have_no_timer()
+    {
+        var now = TimeSpan.Zero;
+        var queue = new ToastQueue(() => now);
+        var sticky = new ToastNotice("sticky", ToastKind.Warning, LocalizedText.Literal("warning"), default, null, "", Sticky: true);
+        queue.Show(sticky);
+        Assert.Null(queue.Delay);
+        foreach (var key in new[] { "a", "b", "c" }) queue.Show(sticky with { Source = key, Sticky = false });
+        Assert.Equal(new[] { "sticky", "b", "c" }, queue.Cards.Select(card => card.Source));
+        now += TimeSpan.FromDays(1);
+        queue.Tick();
+        Assert.Same(sticky, Assert.Single(queue.Cards));
+        Assert.Null(queue.Delay);
+    }
+
+    [Fact]
+    public void Broken_audit_toast_survives_the_clock_and_locates_the_broken_record()
+    {
+        wpf.Run(() =>
+        {
+            var elapsed = TimeSpan.Zero;
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, toastClock: () => elapsed);
+            try
+            {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), new FeaturePageFixtures.Audit { Broken = true },
+                    new FeaturePageFixtures.Environment());
+                window.Navigate("Log");
+                WpfContext.Complete(window.Features.VerifyAsync());
+                elapsed += TimeSpan.FromHours(1);
+                window.TickToast();
+                Assert.Equal(Visibility.Visible, window.Toast.Visibility);
+                Assert.Contains("#532", (string)window.ToastAction.Content);
+                UnifiedDesktopTests.ClickControl(window.ToastAction);
+                Assert.Equal("Audit", window.CurrentPage);
+                Assert.Equal(532, window.Features.SelectedAudit!.Record.Index);
+                Assert.True(window.AuditContent.DetailsToggle.IsChecked);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Sticky_notices_announce_once_and_a_dropped_error_is_still_announced()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            var heard = new List<string>();
+            void Record(FrameworkElement source) => heard.Add(AutomationProperties.GetName(source));
+            AccessibleStatus.Announced += Record;
+            try
+            {
+                foreach (string key in new[] { "first", "second", "third" })
+                    window.ShowToast(ToastKind.Warning, LocalizedText.Literal(key), key, sticky: true);
+                window.ShowToast(ToastKind.Error, LocalizedText.Literal("dropped error"), "fourth");
+                Assert.Equal("third", window.ToastMessage.Text);
+                Assert.Equal(AutomationLiveSetting.Assertive, AutomationProperties.GetLiveSetting(window.DroppedErrorAnnouncement));
+                Assert.True(PressEscape(window).Handled);
+                Assert.Equal("second", window.ToastMessage.Text);
+                Assert.Equal(new[] { "first", "second", "third", "dropped error" }, heard);
+            }
+            finally { AccessibleStatus.Announced -= Record; window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Sticky_description_scrolls_and_keyboard_dismissal_restores_focus()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            try
+            {
+                window.CurrentPageTitle.Focus();
+                window.ShowToast(ToastKind.Warning, LocalizedText.Literal("first"), "first", sticky: true);
+                window.ShowToast(ToastKind.Warning, LocalizedText.Literal(new string('W', 1700)), "long", sticky: true);
+                window.UpdateLayout();
+                var description = Assert.Single(DesktopCapture.Descendants<ScrollViewer>(window.Toast));
+                Assert.Equal(Visibility.Visible, description.ComputedVerticalScrollBarVisibility);
+                Assert.True(description.ScrollableHeight > 0);
+                Assert.Equal(180, window.Toast.ActualHeight);
+                Assert.True(window.ToastClose.Focus());
+                WpfContext.PressSpace(window.ToastClose);
+                Assert.Equal("first", window.ToastMessage.Text);
+                Assert.Same(window.ToastClose, Keyboard.FocusedElement);
+                Assert.True(PressEscape(window.ToastClose).Handled);
+                Assert.Same(window.CurrentPageTitle, Keyboard.FocusedElement);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Escape_closes_newest_and_each_action_invokes_its_own_handler()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = WorkbenchControlTests.Window();
+            try
+            {
+                var calls = new List<int>();
+                void Show() => window.ShowToast(ToastKind.Warning, LocalizedText.Literal("two actions"), "two",
+                    () => calls.Add(1), sticky: true, secondAction: () => calls.Add(2), secondActionKey: LocalizedText.Key("Project.ViewLogs"));
+                Show();
+                window.ShowToast(ToastKind.Info, LocalizedText.Literal("newest"), "one");
+                Assert.True(PressEscape(window).Handled);
+                Assert.Equal("two actions", window.ToastMessage.Text);
+                Assert.True(window.ToastSecondAction.IsVisible);
+                UnifiedDesktopTests.ClickControl(window.ToastSecondAction);
+                Show();
+                UnifiedDesktopTests.ClickControl(window.ToastAction);
+                Assert.Equal(new[] { 2, 1 }, calls);
+            }
+            finally { window.Close(); }
+        });
     }
 
     [Fact]
@@ -186,10 +313,12 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
                 Assert.Equal((full, AutomationLiveSetting.Assertive), Assert.Single(announcements));
                 Assert.Equal(full, window.Toast.ToolTip);
                 Assert.Equal(full, AutomationProperties.GetName(window.Toast));
-                Assert.Equal(TextWrapping.NoWrap, window.ToastMessage.TextWrapping);
-                Assert.Equal(TextTrimming.CharacterEllipsis, window.ToastMessage.TextTrimming);
-                Assert.Equal(560, window.Toast.ActualWidth);
-                Assert.Equal(36, window.Toast.ActualHeight);
+                Assert.Equal(TextWrapping.Wrap, window.ToastMessage.TextWrapping);
+                Assert.Equal(TextTrimming.None, window.ToastMessage.TextTrimming);
+                Assert.Equal(336, window.Toast.ActualWidth);
+                var description = Assert.Single(DesktopCapture.Descendants<ScrollViewer>(window.Toast));
+                Assert.Equal(64, description.ViewportHeight);
+                Assert.InRange(window.Toast.ActualHeight, 65, 180);
                 Assert.Equal(Loc.Current["Toast.Details"], window.ToastAction.Content);
                 Assert.Same(focus, Keyboard.FocusedElement);
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(WorkbenchControlTests.Request(WorkbenchControlOperation.ReadState)).Status);
@@ -202,7 +331,7 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
                 window.ShowToast(ToastKind.Info, LocalizedText.Literal("info"), "fixture");
                 Assert.Equal(("info", AutomationLiveSetting.Polite), announcements.Last());
                 window.UpdateLayout();
-                Assert.Equal(240, window.Toast.ActualWidth);
+                Assert.Equal(336, window.Toast.ActualWidth);
                 Assert.Equal(Visibility.Collapsed, window.ToastAction.Visibility);
                 var escape = PressEscape(window);
                 Assert.True(escape.Handled);
@@ -215,7 +344,7 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
                 window.ShowToast(ToastKind.Info, LocalizedText.Literal("short body"), "fixture", title: LocalizedText.Literal(new string('M', 20)));
                 window.UpdateLayout();
                 Assert.True(window.ToastTitle.ActualWidth > 168);
-                Assert.InRange(window.Toast.ActualWidth, 241, 559);
+                Assert.Equal(336, window.Toast.ActualWidth);
                 Assert.True(window.ToastMessage.ActualWidth > 0);
             }
             finally { AccessibleStatus.Announced -= Heard; window.Close(); }
@@ -229,6 +358,61 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
         target.RaiseEvent(key);
         if (!key.Handled) { key.RoutedEvent = Keyboard.KeyDownEvent; target.RaiseEvent(key); }
         return key;
+    }
+
+    [Fact]
+    public void Failed_approval_save_shows_an_interactive_error_above_settings_immediately()
+    {
+        wpf.Run(() =>
+        {
+            TimeSpan now = TimeSpan.Zero;
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(false), toastClock: () => now)
+                { Width = 1024, Height = 640 };
+            try
+            {
+                WpfContext.ShowWindow(window); WpfContext.Drain();
+                window.ShowToast(ToastKind.Info, LocalizedText.Literal("temporary"), "timer");
+                window.OpenSettings(); WpfContext.Drain();
+                Assert.True(window.Toast.IsVisible);
+                now += TimeSpan.FromSeconds(5); window.TickToast();
+                Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
+
+                bool invoked = false;
+                window.ShowToast(ToastKind.Info, LocalizedText.Literal("previous"), "previous", () => invoked = true);
+                WpfContext.Complete(window.SettingsContent.SaveApproval(() => throw new IOException("Save failed")));
+                Assert.True(window.SettingsOpen);
+                Assert.True(window.Toast.IsVisible);
+                Assert.Equal("Save failed", window.ToastMessage.Text);
+                Assert.Same(window.FindResource("Ant.colorError"), window.ToastDot.Fill);
+                window.UpdateLayout();
+                void AssertClickable(Button button)
+                {
+                    Assert.True(button.IsEnabled);
+                    var middle = button.TranslatePoint(new Point(button.ActualWidth / 2, button.ActualHeight / 2), window.Root);
+                    var hit = Assert.IsAssignableFrom<DependencyObject>(window.Root.InputHitTest(middle));
+                    while (hit is FrameworkContentElement content) hit = ContentOperations.GetParent(content) ?? content.Parent;
+                    Assert.True(ReferenceEquals(hit, button) || button.IsAncestorOf(hit));
+                }
+                AssertClickable(window.ToastClose);
+                if (Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR") is { Length: > 0 } output)
+                {
+                    Directory.CreateDirectory(output);
+                    WorkbenchRenderTests.SaveRender(window.Root, Path.Combine(output, "settings-failed-save-1024x640.png"), 1024, 640);
+                }
+                Assert.True(PressEscape(window.SettingsContent.AppearanceSection).Handled);
+                Assert.Equal("previous", window.ToastMessage.Text);
+                Assert.True(window.SettingsOpen);
+                window.UpdateLayout();
+                AssertClickable(window.ToastAction);
+                UnifiedDesktopTests.ClickControl(window.ToastAction);
+                Assert.True(invoked);
+                Assert.True(window.SettingsOpen);
+                Assert.Equal(Visibility.Collapsed, window.Toast.Visibility);
+                Assert.True(PressEscape(window.SettingsContent.AppearanceSection).Handled);
+                Assert.False(window.SettingsOpen);
+            }
+            finally { window.Close(); }
+        });
     }
 
     [Fact]
@@ -883,6 +1067,11 @@ public sealed class WorkbenchToastTests(WpfContext wpf)
                         input.Text = "";
                         Assert.Equal(Visibility.Collapsed, label.Visibility);
                         break;
+                }
+                if (window.SettingsOpen)
+                {
+                    Assert.True(window.Toast.IsVisible);
+                    Assert.True(window.ToastClose.IsEnabled);
                 }
                 Assert.Equal(Visibility.Visible, window.Toast.Visibility);
                 Assert.Same(window.FindResource(color), window.ToastDot.Fill);

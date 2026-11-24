@@ -29,7 +29,11 @@ public partial class MainWindow
     partial void ToggleSessionPopover();
     private bool _shellQueued;
     private Controls.ModalPane? _drawerFocus;
+    private Controls.ModalPane? _settingsFocus;
+    internal bool SettingsOpen => SettingsOverlay.Visibility == Visibility.Visible;
     private bool ConnectionLost => !_model.Session.IsConnected && !string.IsNullOrEmpty(_model.Session.OpenProjectFile);
+    private bool _snapshotAlertShown;
+    private bool _snapshotUpdateQueued;
     private bool HasProject => _model.Session.IsConnected && !string.IsNullOrEmpty(_model.Session.ProjectName);
 
     private void InitializeShell(IApprovalService? approvals, IDiagnosticBundleService? diagnostics)
@@ -50,7 +54,7 @@ public partial class MainWindow
         CallsContent.DataContextChanged += OnFeatureContextChanged;
         InitializeFeaturePages();
         SettingsContent.Initialize(Approvals, _model.Panel);
-        ((Grid)SettingsContent.Content).ColumnDefinitions[0].Width = GridLength.Auto;
+        SettingsContent.CloseSettingsButton.Click += (_, _) => CloseSettings();
         if (_model.Panel != null) _model.Panel.PropertyChanged += OnShellSessionChanged;
         EngineeringSideContent.InspectionRulesRequested += OnInspectionRulesRequested;
         BlocksContent.TransferOptionsRequested += OnTransferOptionsRequested;
@@ -67,6 +71,7 @@ public partial class MainWindow
 
     private void DisposeShell()
     {
+        _settingsFocus?.Dispose();
         _drawerFocus?.Dispose();
         DisposeControl();
         DisposeFeaturePages();
@@ -96,10 +101,15 @@ public partial class MainWindow
 
     private void OnShellSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        bool paneHadFocus = ProjectTree.IsKeyboardFocusWithin || ApprovalsContent.RequestListPane.IsKeyboardFocusWithin
-            || SettingsContent.SectionList.IsKeyboardFocusWithin;
+        bool paneHadFocus = ProjectTree.IsKeyboardFocusWithin || ApprovalsContent.RequestListPane.IsKeyboardFocusWithin;
+        ResizeSettingsCard();
         UpdateLeftPane();
         if (paneHadFocus && !Controls.Ux.GetLeftPaneOpen(Root)) LeftPaneToggle.Focus();
+        if (!SettingsOpen) UpdateDetailDocking();
+    }
+
+    private void UpdateDetailDocking()
+    {
         if ((_drawer == "CallDetail" || DetailDocked) && DetailDocked != CanDockDetail) OpenDrawer("CallDetail");
     }
 
@@ -108,12 +118,13 @@ public partial class MainWindow
 
     private void UpdateLeftPane()
     {
-        LeftPaneToggle.IsEnabled = _page is "Engineering" or "VersionControl" or "Approvals" or "Settings";
-        if (!NarrowContent || !LeftPaneToggle.IsEnabled) _leftPaneFlyoutOpen = false;
+        bool hasLeftPane = _page is "Engineering" or "VersionControl" or "Approvals";
+        LeftPaneToggle.IsEnabled = hasLeftPane;
+        if (!NarrowContent || !hasLeftPane) _leftPaneFlyoutOpen = false;
         Controls.Ux.SetLeftPaneOpen(Root, App.Settings.LeftPaneOpen);
         Controls.Ux.SetNarrow(Root, NarrowContent);
         var secondary = NarrowContent ? Visibility.Collapsed : Visibility.Visible;
-        BrandVersion.Visibility = EnvironmentDescription.Visibility = secondary;
+        BrandVersion.Visibility = secondary;
         bool hasParticipants = !string.IsNullOrWhiteSpace(ClientStatus.Text) || TiaProcessStatus.Visibility == Visibility.Visible;
         ParticipantStatus.Visibility = !NarrowContent && _model.Panel?.Attached == true && hasParticipants ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -125,11 +136,6 @@ public partial class MainWindow
         UpdateLeftPane();
         if (!_leftPaneFlyoutOpen) return;
         Root.UpdateLayout();
-        if (_page == "Settings")
-        {
-            ((ListBoxItem)SettingsContent.SectionList.SelectedItem).Focus();
-            return;
-        }
         if (_page == "Approvals") { ApprovalsContent.RequestList.Focus(); return; }
         if (ProjectTree.Content is UIElement content && content.Focus()) return;
         if (!ProjectTree.HasContent || !ProjectTree.MoveFocus(new TraversalRequest(FocusNavigationDirection.First))) ProjectTree.Focus();
@@ -158,13 +164,13 @@ public partial class MainWindow
             current.PropertyChanged += OnVerificationChanged;
             current.Audit.PropertyChanged += OnAuditChanged;
             UpdateAuditHead();
-            UpdateEnvironmentBanner();
+            UpdateEnvironmentAlert();
         }
     }
 
     private void OnVerificationChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(Features.EnvironmentRows)) UpdateEnvironmentBanner();
+        if (e.PropertyName == nameof(Features.EnvironmentRows)) UpdateEnvironmentAlert();
         if (e.PropertyName == nameof(Features.Verifying) && Features.Verifying)
         {
             _verificationStartHead = AuditIndex;
@@ -228,6 +234,7 @@ public partial class MainWindow
         bool available = Approvals is not Services.ApprovalService { ChannelAvailable: false };
         ApprovalsContent.DecisionArea.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
         SettingsContent.AiPanel.IsEnabled = available;
+        ApprovalStatusButton.IsEnabled = available && !_savingApprovalMode && !_model.OfflineDemo;
         string mode = Loc.Current[!available ? "Shell.ApprovalUnavailable" : Approvals.Enabled ? "Shell.ApprovalOnStatus" : "Shell.ApprovalOffStatus"];
         if (ApprovalStatusText.Text != mode)
         {
@@ -235,6 +242,12 @@ public partial class MainWindow
             Controls.AccessibleStatus.Announce(ApprovalStatusText);
         }
         UpdateSessionGlyph();
+        if (_snapshotAlertShown != ConnectionLost && !_snapshotUpdateQueued)
+        {
+            // Normal disconnect clears the project file after changing IsConnected.
+            _snapshotUpdateQueued = true;
+            Dispatcher.BeginInvoke(DispatcherPriority.DataBind, new Action(UpdateSnapshotAlert));
+        }
         ApprovalStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, available && Approvals.Enabled ? "Primer.ok" : "Primer.warn");
         foreach (var item in RailItems)
         {
@@ -265,7 +278,7 @@ public partial class MainWindow
         BlocksContent.Visibility = _page == "Engineering" && HasProject ? Visibility.Visible : Visibility.Collapsed;
         string crumb = Loc.Current[_page switch
         {
-            "Approvals" => "Shell.Approvals", "Settings" => "Shell.Settings",
+            "Approvals" => "Shell.Approvals",
             "Clients" => "Shell.Clients", "Mcp" => "Desktop.Configuration", "VersionControl" => "Shell.Engineering",
             "Calls" => "Shell.Approvals", "Audit" => "Shell.Audit", "Environment" => "Shell.Environment", "Log" => "Shell.Logs",
             _ => "Shell.Engineering",
@@ -274,13 +287,35 @@ public partial class MainWindow
             : _page == "Engineering" && !_model.Session.IsConnected ? crumb + " · " + Loc.Current["Shell.Disconnected"] : crumb;
         Title = CurrentPageTitle.Text + " – " + Loc.Current["App.Title"];
         UpdateControlHint();
-        UpdateEnvironmentBanner();
+        UpdateEnvironmentAlert();
         if (_drawer != null || DetailDocked)
         {
             DrawerTitle.Text = Features.SelectedCall?.Tool ?? Loc.Current["Calls.Detail"];
             DrawerTitle.SetResourceReference(TextBlock.FontFamilyProperty, "Ui.FontMono");
         }
         Features.Release = _model.SelectedReleaseKey;
+    }
+
+    private void UpdateSnapshotAlert()
+    {
+        _snapshotUpdateQueued = false;
+        if (_featuresDisposed || _snapshotAlertShown == ConnectionLost) return;
+        _snapshotAlertShown = ConnectionLost;
+        if (!ConnectionLost) { _toasts.Remove("session-lost"); return; }
+        var release = TiaMcp.Versioning.TiaVersionCatalog.Get(_model.SelectedReleaseKey).DisplayName;
+        var title = _model.Session.ProcessId > 0 ? LocalizedText.Key("Project.ProcessExited", release, _model.Session.ProcessId)
+            : LocalizedText.Key("Project.SessionLost", release);
+        ShowToast(ToastKind.Error, LocalizedText.Key("Project.ReconnectHint"), "session-lost",
+            RescanAfterDisconnect, title, sticky: true,
+            actionLabel: LocalizedText.Key("Project.RescanProcesses"),
+            secondAction: () => Navigate("Log"), secondActionKey: LocalizedText.Key("Project.ViewLogs"));
+    }
+
+    private void RescanAfterDisconnect()
+    {
+        if (_model.Session.ProcessScanAvailable) _ = _model.Session.ChooseProcessAsync(attach: true, showEmpty: true);
+        else ShowToast(ToastKind.Warning, _model.Busy ? LocalizedText.Key("Status.Working", _model.Activity.Status)
+            : LocalizedText.Key("Project.ScanSession"), "session-scan");
     }
 
     private void UpdateSessionGlyph()
@@ -316,8 +351,9 @@ public partial class MainWindow
             ShowToast(ToastKind.Warning, reason, "navigation", title: LocalizedText.Key("Shell.PageUnavailable"));
             return;
         }
-        if (page is "Mcp" or "Clients" or "Settings") EnsureConfiguration();
-        if (page == "Settings") SettingsContent.LoadPaths();
+        if (page == "Settings") { ShowSettings(); return; }
+        if (SettingsOpen) CloseSettings();
+        if (page is "Mcp" or "Clients") EnsureConfiguration();
         if (_drawer != null || DetailDocked) CloseDrawer();
         OperationsContent.HideOptions();
         BlocksContent.HideOptions();
@@ -340,19 +376,11 @@ public partial class MainWindow
         AuditContent.Visibility = page == "Audit" ? Visibility.Visible : Visibility.Collapsed;
         EnvironmentContent.Visibility = page == "Environment" ? Visibility.Visible : Visibility.Collapsed;
         ApprovalsContent.Visibility = page == "Approvals" ? Visibility.Visible : Visibility.Collapsed;
-        SettingsContent.Visibility = page == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         if (page == "VersionControl") _model.IsVcTab = true;
         else if (page == "Log") _model.IsLogTab = true;
         else if (page == "Engineering") _model.IsBlocksTab = true;
         QueueControlSnapshot();
-        var rail = page switch
-        {
-            "Approvals" or "Calls" => RailAgent,
-            "VersionControl" => RailEngineering,
-            "Settings" => SettingsButton,
-            _ => (RadioButton)FindName("Rail" + page),
-        };
-        rail.IsChecked = true;
+        CurrentRail.IsChecked = true;
         UpdateShell();
         if (IsLoaded) CurrentPageTitle.Focus();
     }
@@ -369,13 +397,13 @@ public partial class MainWindow
             _ => items[(Array.IndexOf(items, current) + items.Length + direction) % items.Length],
         };
         NavigateGuarded((string)next.Tag);
-        next.Focus();
+        if (!SettingsOpen) next.Focus();
         e.Handled = true;
     }
     private void OnNavigateExecuted(object sender, ExecutedRoutedEventArgs e)
     {
         NavigateGuarded((string)e.Parameter);
-        if (e.OriginalSource is RadioButton { GroupName: "Pages" } rail && Equals(rail.CommandParameter, e.Parameter)) rail.Focus();
+        if (!SettingsOpen && e.OriginalSource is RadioButton { GroupName: "Pages" } rail && Equals(rail.CommandParameter, e.Parameter)) rail.Focus();
     }
     // Disabled menu entries still have executable shortcuts, so the reason can be announced in a toast.
     private void OnCanNavigate(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
@@ -394,7 +422,82 @@ public partial class MainWindow
         if (_page == "Environment" && EnvironmentContent.IsVisible && needsRecheck) EnvironmentContent.Recheck();
     }
 
+    private RadioButton CurrentRail => _page switch
+    {
+        "Approvals" or "Calls" => RailAgent,
+        "VersionControl" => RailEngineering,
+        _ => (RadioButton)FindName("Rail" + _page),
+    };
+
     internal void OpenSettings() => Navigate("Settings");
+
+    private void OnStorageSettings(object? sender, EventArgs e)
+    {
+        OpenSettings();
+        if (SettingsOpen) SettingsContent.ShowSection("Service");
+    }
+
+    private void ShowSettings()
+    {
+        if (SettingsOpen || ApprovalsContent.ConfirmationSheet.IsVisible || OverlayHost.Visibility == Visibility.Visible) return;
+        EnsureConfiguration();
+        CloseSessionPopover();
+        if (_drawer != null) CloseDrawer();
+        OperationsContent.HideOptions();
+        BlocksContent.HideOptions();
+        VersionControlContent.HideOptions();
+        SettingsContent.LoadPaths();
+        SettingsContent.ShowSection("Appearance");
+        ResizeSettingsCard();
+        SettingsButton.IsChecked = true;
+        SettingsOverlay.Visibility = Visibility.Visible;
+        var mouseOrigin = _beforeMouseDown;
+        if (mouseOrigin == null && (Keyboard.FocusedElement == SettingsButton || Keyboard.FocusedElement == null))
+            mouseOrigin = CurrentRail;
+        _beforeMouseDown = null;
+        _settingsFocus = new Controls.ModalPane(SettingsOverlay, () => (ListBoxItem)SettingsContent.SectionList.SelectedItem,
+            CloseSettings, ToastStack, mouseOrigin == null ? null : () => RestoreMouseFocus(mouseOrigin));
+        UpdateShell();
+        QueueControlSnapshot();
+    }
+
+    private void OnSettingsCardSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var card = (Border)sender;
+        double radius = card.CornerRadius.TopLeft;
+        card.Clip = new System.Windows.Media.RectangleGeometry(new Rect(e.NewSize), radius, radius);
+    }
+
+    private void RestoreMouseFocus(UIElement origin)
+    {
+        if (Root.IsAncestorOf(origin) && origin.IsVisible && origin.IsEnabled && origin.Focusable
+            && KeyboardNavigation.GetIsTabStop(origin) && origin.Focus()) return;
+        CurrentRail.Focus();
+    }
+
+    private void ResizeSettingsCard()
+    {
+        SettingsCard.Width = NarrowContent ? Root.ActualWidth * 0.94 : 840;
+        double availableHeight = Root.ActualHeight > 0 ? Root.ActualHeight * 0.88 : 584;
+        SettingsCard.Height = NarrowContent ? availableHeight : Math.Min(584, availableHeight);
+    }
+
+    private void CloseSettings()
+    {
+        SettingsOverlay.Visibility = Visibility.Collapsed;
+        CurrentRail.IsChecked = true;
+        UpdateShell();
+        _settingsFocus?.Dispose();
+        _settingsFocus = null;
+        UpdateDetailDocking();
+        QueueControlSnapshot();
+    }
+
+    private void OnSettingsBackdrop(object sender, MouseButtonEventArgs e)
+    {
+        CloseSettings();
+        e.Handled = true;
+    }
     private void OnCompileStatus(object sender, RoutedEventArgs e)
     {
         NavigateGuarded("Engineering");
@@ -402,10 +505,32 @@ public partial class MainWindow
     }
 
     private void OnProjectStatus(object sender, RoutedEventArgs e) => ToggleSessionPopover();
-    private void OnApprovalStatus(object sender, RoutedEventArgs e)
+    private bool _savingApprovalMode;
+    private void OnApprovalChipKeyDown(object sender, KeyEventArgs e)
     {
-        NavigateGuarded("Settings");
-        if (_page == "Settings") SettingsContent.ShowSection("AI");
+        if (e.Key == Key.Enter || (e.Key == Key.Space && e.IsRepeat)) e.Handled = true;
+    }
+
+    private async void OnApprovalStatus(object sender, RoutedEventArgs e)
+    {
+        if (!ApprovalStatusButton.IsEnabled || Approvals is Services.ApprovalService { ChannelAvailable: false }
+            || ControlGuard.ShouldBlock(ApprovalStatusButton) || ShellModalOpen) return;
+        bool restoreFocus = ApprovalStatusButton.IsKeyboardFocused;
+        bool manual = !Approvals.Enabled;
+        _savingApprovalMode = true;
+        ApprovalStatusButton.IsEnabled = false;
+        try
+        {
+            await SettingsContent.SaveApproval(() => Approvals.Enabled = manual, manual ? ToastKind.Success : ToastKind.Warning,
+                manual ? "Shell.ManualEnabled" : "Shell.AutoEnabled");
+        }
+        finally
+        {
+            _savingApprovalMode = false;
+            UpdateShell();
+            if (restoreFocus && ApprovalStatusButton.IsEnabled && !ShellModalOpen && (Keyboard.FocusedElement == null || IsKeyboardFocused))
+                ApprovalStatusButton.Focus();
+        }
     }
 
     private void OnCanOpenPalette(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = OverlayHost != null && !ShellModalOpen;

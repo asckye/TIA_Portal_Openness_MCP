@@ -5,16 +5,21 @@
     <Border Grid.RowSpan="2" Style="{StaticResource Primer.Workbench.SettingsPane}">
       <ListBox x:Name="SectionList" Style="{StaticResource Primer.SettingsNavigation}" ItemContainerStyle="{StaticResource Primer.Workbench.SettingsSection}" AutomationProperties.Name="{l:Tr Settings.Sections}"
         SelectionChanged="OnSectionChanged" BorderThickness="0" Background="Transparent" Margin="8" HorizontalContentAlignment="Stretch">
-        <ListBoxItem x:Name="AiSection" Content="{l:Tr Settings.SafetyTitle}" Tag="AI" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
-        <ListBoxItem x:Name="AppearanceSection" ToolTip="{l:Tr Settings.Appearance}" Content="{l:Tr Settings.AppearanceTitle}" Tag="Appearance" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
-        <ListBoxItem x:Name="ServiceSection" Content="{l:Tr Settings.StorageTitle}" Tag="Service" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
+        <ListBoxItem x:Name="AppearanceSection" ux:Ux.Icon="{DynamicResource Icon.Theme}" ToolTip="{l:Tr Settings.Appearance}" Content="{l:Tr Settings.AppearanceTitle}" Tag="Appearance" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
+        <ListBoxItem x:Name="AiSection" ux:Ux.Icon="{DynamicResource Icon.WorkbenchAgent}" Content="{l:Tr Settings.SafetyTitle}" Tag="AI" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
+        <ListBoxItem x:Name="ServiceSection" ux:Ux.Icon="{DynamicResource Icon.WorkbenchLogs}" Content="{l:Tr Settings.StorageTitle}" Tag="Service" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
+        <ListBoxItem x:Name="AboutSection" ux:Ux.Icon="{DynamicResource Icon.Info}" Content="{l:Tr Settings.AboutTitle}" Tag="About" ContentTemplate="{StaticResource Pages.SettingsSectionLabel}" MinHeight="36"/>
       </ListBox>
     </Border>
-    <Border Grid.Column="1" Style="{StaticResource Primer.IdeBar}">
-      <StackPanel Orientation="Horizontal">
-        <TextBlock x:Name="SectionTitle" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
-        <TextBlock x:Name="SectionSubtitle" Margin="12,0,0,0" VerticalAlignment="Center" Style="{StaticResource Primer.SettingsSubtitle}"/>
-      </StackPanel>
+    <Border Grid.Column="1" MinHeight="48" Style="{StaticResource Primer.IdeBar}">
+      <DockPanel>
+        <Button x:Name="CloseSettingsButton" Content="✕" AutomationProperties.Name="{l:Tr Settings.Close}" ToolTip="{l:Tr Settings.Close}"
+          Style="{StaticResource Primer.IdeToolButton}" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+        <StackPanel Margin="0,3,8,3" VerticalAlignment="Center">
+          <TextBlock x:Name="SectionTitle" AutomationProperties.HeadingLevel="Level2" Style="{StaticResource Primer.ContainerTitle}" VerticalAlignment="Center"/>
+          <TextBlock x:Name="SectionSubtitle" VerticalAlignment="Center" Style="{StaticResource Primer.SettingsSubtitle}"/>
+        </StackPanel>
+      </DockPanel>
     </Border>
     <ScrollViewer x:Name="DetailScroll" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
       <Grid Margin="24"><StackPanel x:Name="SettingsColumn" Style="{StaticResource Primer.PageColumn}" MaxWidth="740" VerticalAlignment="Top">
@@ -27,6 +32,9 @@
                   AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTheme}" Style="{StaticResource Primer.Tile}" MinHeight="66" Margin="0,0,5,0"
                   Tag="{DynamicResource Primer.primaryBg}" IsChecked="{Binding IsLight,Source={x:Static themes:ThemeManager.Current}}">
                   <StackPanel>
+                    <ContentControl Content="Light" ContentTemplate="{StaticResource Pages.ThemePreview}" Focusable="False">
+                      <ContentControl.Resources><ResourceDictionary Source="/TiaOpenness;component/Themes/Palette.Light.xaml"/></ContentControl.Resources>
+                    </ContentControl>
                     <TextBlock Text="{l:Tr Settings.LightTile}" FontWeight="SemiBold"/>
                     <TextBlock Text="{l:Tr Settings.LightHint}" Style="{StaticResource Primer.Muted}" Margin="0,3,0,0"/>
                   </StackPanel>
@@ -35,6 +43,9 @@
                   AutomationProperties.LabeledBy="{Binding ElementName=GroupSettingsTheme}" Style="{StaticResource Primer.Tile}" MinHeight="66" Margin="5,0,0,0"
                   Tag="{DynamicResource Primer.primaryBg}" IsChecked="{Binding IsDark,Source={x:Static themes:ThemeManager.Current}}">
                   <StackPanel>
+                    <ContentControl Content="Dark" ContentTemplate="{StaticResource Pages.ThemePreview}" Focusable="False">
+                      <ContentControl.Resources><ResourceDictionary Source="/TiaOpenness;component/Themes/Palette.Dark.xaml"/></ContentControl.Resources>
+                    </ContentControl>
                     <TextBlock Text="{l:Tr Settings.DarkTile}" FontWeight="SemiBold"/>
                     <TextBlock Text="{l:Tr Settings.DarkHint}" Style="{StaticResource Primer.Muted}" Margin="0,3,0,0"/>
                   </StackPanel>
@@ -80,46 +91,8 @@
             </StackPanel>
           </Border>
         </StackPanel>
-        <StackPanel x:Name="ServicePanel" AutomationProperties.Name="{l:Tr Settings.About}" Visibility="Collapsed">
-          <Border Style="{StaticResource Primer.Container}" Padding="20">
-            <StackPanel>
-              <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
-                  <Button x:Name="CheckUpdate" Content="{l:Tr Settings.CheckUpdate}" AutomationProperties.Name="{l:Tr Settings.CheckUpdate}"
-                    Style="{StaticResource Primer.Button.Primary.Small}" Margin="0,0,8,0"/>
-                  <Button x:Name="OpenReleases" Content="GitHub Releases ↗" AutomationProperties.Name="{l:Tr Settings.Releases}"
-                    Style="{StaticResource Primer.Button.Secondary.Small}"/>
-                </StackPanel>
-                <Border Width="40" Height="40" Style="{StaticResource Primer.ProductIcon}" Margin="0,0,14,0" VerticalAlignment="Center">
-                  <Path Data="{StaticResource Icon.WorkbenchLayers}" Style="{StaticResource Primer.Icon}" Stroke="{DynamicResource Primer.onPrimary}" Width="20" Height="20"/>
-                </Border>
-                <StackPanel VerticalAlignment="Center">
-                  <TextBlock Text="{l:Tr App.Title}" Style="{StaticResource Primer.ContainerTitle}" ToolTip="{Binding Text, ElementName=PackageText}"/>
-                  <DockPanel Margin="0,2,0,0">
-                    <TextBlock x:Name="VersionText" Style="{StaticResource Primer.Mono.textFaint}"/>
-                    <TextBlock Text=" · " Style="{StaticResource Primer.Mono.textFaint}"/>
-                    <TextBlock x:Name="RuntimeText" Style="{StaticResource Primer.Mono.textFaint}"/>
-                    <TextBlock Text=" · " Style="{StaticResource Primer.Mono.textFaint}"/>
-                    <TextBlock Text="{l:Tr Settings.BundleCaption}" Style="{StaticResource Primer.Muted}" Margin="0,0,4,0"/>
-                    <TextBlock x:Name="UpdateInstalledItem" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"
-                      AutomationProperties.Name="{l:Tr Settings.Engine}" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                      AutomationProperties.HelpText="{Binding Text, ElementName=PackageText}"/>
-                  </DockPanel>
-                  <TextBlock x:Name="PackageText" Visibility="Collapsed"/>
-                  <TextBlock x:Name="SourceCheckoutHint" Visibility="Collapsed" Style="{StaticResource Primer.Muted.textFaint}"
-                    FontSize="{DynamicResource Ui.FontSize.Caption}" Text="{l:Tr Settings.SourceCheckoutHint}" ToolTip="{l:Tr Config.SourceRepositoryUpdate}"
-                    AutomationProperties.HelpText="{l:Tr Config.SourceRepositoryUpdate}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
-                </StackPanel>
-              </DockPanel>
-              <DockPanel>
-                <Button x:Name="RunUpdate" Content="{l:Tr Config.RunUpdate}" AutomationProperties.Name="{l:Tr Config.RunUpdate}"
-                  DockPanel.Dock="Right" Style="{StaticResource Primer.Button.Primary.Small}" IsEnabled="False" Visibility="Collapsed" Margin="8,8,0,0"/>
-                <TextBlock x:Name="UpdateStateItem" Visibility="Collapsed" Margin="0,8,0,0" AutomationProperties.Name="{l:Tr Settings.Update}"
-                  Text="{l:Tr Config.NotChecked}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
-              </DockPanel>
-            </StackPanel>
-          </Border>
-          <Border Style="{StaticResource Primer.Container}" Padding="0" Margin="0,16,0,0">
+        <StackPanel x:Name="ServicePanel" AutomationProperties.Name="{l:Tr Settings.StorageTitle}" Visibility="Collapsed">
+          <Border Style="{StaticResource Primer.Container}" Padding="0">
             <StackPanel x:Name="StorageTools">
               <Border Style="{StaticResource Primer.StorageRow}" Padding="20,16">
                 <StackPanel>
@@ -208,6 +181,9 @@
                   <Button x:Name="OpenConfig" DockPanel.Dock="Right" VerticalAlignment="Center" Content="{l:Tr Settings.StorageOpenFolder}"
                     AutomationProperties.Name="{l:Tr Settings.StorageOpenFolder}" AutomationProperties.HelpText="{Binding Text, ElementName=ConfigPath}"
                     Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnOpenPath"/>
+                  <Button x:Name="CopyConfig" DockPanel.Dock="Right" Content="{l:Tr Settings.CopyPath}" AutomationProperties.Name="{l:Tr Settings.CopyPath}"
+                    Tag="{Binding Text, ElementName=ConfigPath}" AutomationProperties.HelpText="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue=''}"
+                    Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnCopyPath" Margin="0,0,6,0"/>
                   <StackPanel Margin="0,0,12,0">
                     <TextBlock Text="{l:Tr Settings.ConfigDirectory}" FontWeight="Medium"/>
                     <TextBlock x:Name="ConfigPath" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"
@@ -220,6 +196,9 @@
                   <Button x:Name="OpenLog" DockPanel.Dock="Right" VerticalAlignment="Center" Content="{l:Tr Settings.StorageOpenFolder}"
                     AutomationProperties.Name="{l:Tr Pages.OpenRuntimeLog}" AutomationProperties.HelpText="{Binding Text, ElementName=LogPath}"
                     Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnOpenPath"/>
+                  <Button x:Name="CopyLog" DockPanel.Dock="Right" Content="{l:Tr Settings.CopyPath}" AutomationProperties.Name="{l:Tr Settings.CopyPath}"
+                    Tag="{Binding Text, ElementName=LogPath}" AutomationProperties.HelpText="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue=''}"
+                    Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnCopyPath" Margin="0,0,6,0"/>
                   <StackPanel Margin="0,0,12,0">
                     <TextBlock Text="{l:Tr Settings.LogDirectory}" FontWeight="Medium"/>
                     <TextBlock x:Name="LogPath" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"
@@ -232,6 +211,9 @@
                   <Button x:Name="OpenData" DockPanel.Dock="Right" VerticalAlignment="Center" Content="{l:Tr Settings.StorageOpenFolder}"
                     AutomationProperties.Name="{l:Tr Settings.StorageOpenFolder}" AutomationProperties.HelpText="{Binding Text, ElementName=DataPath}"
                     Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnOpenPath"/>
+                  <Button x:Name="CopyData" DockPanel.Dock="Right" Content="{l:Tr Settings.CopyPath}" AutomationProperties.Name="{l:Tr Settings.CopyPath}"
+                    Tag="{Binding Text, ElementName=DataPath}" AutomationProperties.HelpText="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue=''}"
+                    Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnCopyPath" Margin="0,0,6,0"/>
                   <StackPanel Margin="0,0,12,0">
                     <TextBlock Text="{l:Tr Settings.DataDirectory}" FontWeight="Medium"/>
                     <TextBlock x:Name="DataPath" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"
@@ -244,6 +226,9 @@
                   <Button x:Name="OpenExports" DockPanel.Dock="Right" VerticalAlignment="Center" Content="{l:Tr Settings.StorageOpenFolder}"
                     AutomationProperties.Name="{l:Tr Settings.StorageOpenFolder}" AutomationProperties.HelpText="{Binding Text, ElementName=ExportsPath}"
                     Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnOpenPath"/>
+                  <Button x:Name="CopyExports" DockPanel.Dock="Right" Content="{l:Tr Settings.CopyPath}" AutomationProperties.Name="{l:Tr Settings.CopyPath}"
+                    Tag="{Binding Text, ElementName=ExportsPath}" AutomationProperties.HelpText="{Binding Tag, RelativeSource={RelativeSource Self}, TargetNullValue=''}"
+                    Style="{StaticResource Primer.Button.Secondary.Small}" Click="OnCopyPath" Margin="0,0,6,0"/>
                   <StackPanel Margin="0,0,12,0">
                     <TextBlock Text="{l:Tr Settings.ExportDirectory}" FontWeight="Medium"/>
                     <TextBlock x:Name="ExportsPath" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"
@@ -251,6 +236,46 @@
                   </StackPanel>
                 </DockPanel>
               </Border>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+        <StackPanel x:Name="AboutPanel" AutomationProperties.Name="{l:Tr Settings.About}" Visibility="Collapsed">
+          <Border Style="{StaticResource Primer.Container}" Padding="20">
+            <StackPanel>
+              <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                  <Button x:Name="CheckUpdate" Content="{l:Tr Settings.CheckUpdate}" AutomationProperties.Name="{l:Tr Settings.CheckUpdate}"
+                    Style="{StaticResource Primer.Button.Primary.Small}" Margin="0,0,8,0"/>
+                  <Button x:Name="OpenReleases" Content="GitHub Releases ↗" AutomationProperties.Name="{l:Tr Settings.Releases}"
+                    Style="{StaticResource Primer.Button.Secondary.Small}"/>
+                </StackPanel>
+                <Border Width="40" Height="40" Style="{StaticResource Primer.ProductIcon}" Margin="0,0,14,0" VerticalAlignment="Center">
+                  <Path Data="{StaticResource Icon.WorkbenchLayers}" Style="{StaticResource Primer.Icon}" Stroke="{DynamicResource Primer.onPrimary}" Width="20" Height="20"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock Text="{l:Tr App.Title}" Style="{StaticResource Primer.ContainerTitle}" ToolTip="{Binding Text, ElementName=PackageText}"/>
+                  <DockPanel Margin="0,2,0,0">
+                    <TextBlock x:Name="VersionText" Style="{StaticResource Primer.Mono.textFaint}"/>
+                    <TextBlock Text=" · " Style="{StaticResource Primer.Mono.textFaint}"/>
+                    <TextBlock x:Name="RuntimeText" Style="{StaticResource Primer.Mono.textFaint}"/>
+                    <TextBlock Text=" · " Style="{StaticResource Primer.Mono.textFaint}"/>
+                    <TextBlock Text="{l:Tr Settings.BundleCaption}" Style="{StaticResource Primer.Muted}" Margin="0,0,4,0"/>
+                    <TextBlock x:Name="UpdateInstalledItem" Style="{StaticResource Primer.Mono.textFaint}" TextTrimming="CharacterEllipsis"
+                      AutomationProperties.Name="{l:Tr Settings.Engine}" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                      AutomationProperties.HelpText="{Binding Text, ElementName=PackageText}"/>
+                  </DockPanel>
+                  <TextBlock x:Name="PackageText" Visibility="Collapsed"/>
+                  <TextBlock x:Name="SourceCheckoutHint" Visibility="Collapsed" Style="{StaticResource Primer.Muted.textFaint}"
+                    FontSize="{DynamicResource Ui.FontSize.Caption}" Text="{l:Tr Settings.SourceCheckoutHint}" ToolTip="{l:Tr Config.SourceRepositoryUpdate}"
+                    AutomationProperties.HelpText="{l:Tr Config.SourceRepositoryUpdate}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                </StackPanel>
+              </DockPanel>
+              <DockPanel>
+                <Button x:Name="RunUpdate" Content="{l:Tr Config.RunUpdate}" AutomationProperties.Name="{l:Tr Config.RunUpdate}"
+                  DockPanel.Dock="Right" Style="{StaticResource Primer.Button.Primary.Small}" IsEnabled="False" Visibility="Collapsed" Margin="8,8,0,0"/>
+                <TextBlock x:Name="UpdateStateItem" Visibility="Collapsed" Margin="0,8,0,0" AutomationProperties.Name="{l:Tr Settings.Update}"
+                  Text="{l:Tr Config.NotChecked}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+              </DockPanel>
             </StackPanel>
           </Border>
           <Border Style="{StaticResource Primer.Container}" Padding="16" Margin="0,16,0,0">
@@ -261,6 +286,10 @@
                   AutomationProperties.Name="{l:Tr Settings.Homepage}" Style="{StaticResource Primer.Link}" FontFamily="{DynamicResource Ui.FontMono}"/>
               </DockPanel>
               <Border Style="{StaticResource Primer.SettingsDivider}" Height="1" Margin="0,8"/>
+              <TextBlock Text="{l:Tr Settings.SupportedReleases}" Style="{StaticResource Primer.Muted}"/>
+              <TextBlock x:Name="SupportedReleases" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap" Margin="0,4,0,10"/>
+              <TextBlock Text="{l:Tr Audit.AboutText}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap"/>
+              <TextBlock Text="{l:Tr Audit.Limitation}" Style="{StaticResource Primer.Muted}" TextWrapping="Wrap" Margin="0,2,0,10"/>
               <TextBlock Text="{l:Tr Settings.ServiceTrademark}" Style="{StaticResource Primer.Muted.textFaint}" TextWrapping="Wrap"/>
             </StackPanel>
           </Border>
@@ -370,8 +399,7 @@
             </StackPanel>
 
           </StackPanel></Border>
-          <Expander Header="{l:Tr Settings.DownloadSafety}" AutomationProperties.Name="{l:Tr Settings.DownloadSafety}"
-            Style="{StaticResource Primer.Expander}" Margin="0,16,0,0">
+          <Border AutomationProperties.Name="{l:Tr Settings.DownloadSafety}" Style="{StaticResource Primer.Container}" Padding="20,8" Margin="0,16,0,0">
             <StackPanel>
               <DockPanel Margin="0,10">
                 <Border DockPanel.Dock="Right" Style="{StaticResource Primer.SegmentGroup}" Margin="12,0,0,0">
@@ -404,7 +432,7 @@
                 Foreground="{DynamicResource Ant.colorError}" TextWrapping="Wrap"/>
 
             </StackPanel>
-          </Expander>
+          </Border>
         </StackPanel>
       </StackPanel></Grid>
     </ScrollViewer>
