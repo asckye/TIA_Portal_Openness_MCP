@@ -8315,6 +8315,128 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchShellDesignTests/Chrome_frames_each_page_and_overlay( int width , int height , AppTheme theme , AppLanguage language , bool hc = false ):b0f874fb287be7149fcf8ca4f16cf57bb4be5bdb59fe67e64da5eb15cbf27c09:1"
         }
       ]
+    },
+    {
+      "task": "UI-BPAGES",
+      "maintainerDate": "2026-11-23",
+      "reason": "Maintainer approved on 2026-11-23 that the MCP server, AI clients and Environment page assertions listed in the UI-BPAGES gap analysis follow the final design",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/FeaturePageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.FeaturePageTests/Environment_selection_survives_recheck_and_diagnostics_stay_on_logs_while_retention_lives_in_settings( ):02ffe315db23d17af44f29aecff7117ea555a086ea9a554d0c7666f645bf5af9:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.Design.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Service_and_client_design_states_keep_their_actions_and_confirm_the_actual_targets( string variant , int width , int height ):2d3f247e7f5349ea380198277dd6515f5eaebcf12c49ab8653cd8f9623892266:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.Design.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Service_and_client_design_states_keep_their_actions_and_confirm_the_actual_targets( string variant , int width , int height ):4b02a532548bbb657e377f01c9f45609c78a051aa235d70585bb9815ea65e6fc:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.Design.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Service_and_client_design_states_keep_their_actions_and_confirm_the_actual_targets( string variant , int width , int height ):b4ea84198bdd8d71191878886a00fd2c941f9253e9a6db718bcf36058241de03:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.Design.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Service_and_client_design_states_keep_their_actions_and_confirm_the_actual_targets( string variant , int width , int height ):dd098a3000895711a960eac25d4f6ed418042c23325eaf1e5078d1f587210660:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Configuration_pages_render_in_both_languages_and_all_contrast_modes( int width , int height ):09b916e50b6ff8e7d4b3587647a75d485d676e8aff7faee4ceb9b0f32658f43b:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Configuration_pages_render_in_both_languages_and_all_contrast_modes( int width , int height ):10f72d8c642cc880a1753884d803ee062d3cc84a71e519a647859bba559179d6:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Configuration_pages_render_in_both_languages_and_all_contrast_modes( int width , int height ):7f982554b2607845d7682fda6f1061e3f2a6b4f7085c5c7f323bb8cf7ddf2fd2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Configuration_pages_render_in_both_languages_and_all_contrast_modes( int width , int height ):dd098a3000895711a960eac25d4f6ed418042c23325eaf1e5078d1f587210660:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection( ):110a7b2d1508a2785e5811e2381b41142b23864062ae7d28bbc7ef657402937e:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection( ):af40b675828c1627976bd84cf977a61d0f43bd5519448345a693a8c10bb4a8f2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Mcp_and_clients_share_the_release_lock_transport_and_current_preview( ):dd098a3000895711a960eac25d4f6ed418042c23325eaf1e5078d1f587210660:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Mcp_and_clients_share_the_release_lock_transport_and_current_preview( ):dd098a3000895711a960eac25d4f6ed418042c23325eaf1e5078d1f587210660:2"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Navigate( Button button ):69314c3ab8a3d8b1af23bcee22e2675f10c03dc1fdc1bf5f4ecdee9ea2e98ec5:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/RemoteConfigurationTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.RemoteConfigurationTests/Navigate( Button button ):7a0019bcafe8e8cc76f34f1c0d6937efa89b885404056aedd1afcfc253adf86e:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchFontStyleTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchFontStyleTests/Catalog_client_names_wrap_only_between_words_without_truncation_and_sider_title_fits( int width , int height ):b8bccad2d1b063391d13c4a3fc067562ec765da4e3f179fc77d0e65c0ebc5a65:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchNarrowLayoutTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchNarrowLayoutTests/AssertConfigurationCards( MainWindow window , int height , string context ):c6d319e05f43ecc22df10d630f0233aef7e62689f243f61163ede5decc0cb9e2:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchNarrowLayoutTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchNarrowLayoutTests/English_client_switch_names_wrap_without_truncation_and_keep_equal_row_heights( ):b8bccad2d1b063391d13c4a3fc067562ec765da4e3f179fc77d0e65c0ebc5a65:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderFeaturePagesTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderFeaturePagesTests/Doctor_renders_failures_and_repairs_and_logs_owns_the_export_access_key( AppLanguage language ):085934b2cc163be28140af19638eeeede86ddad2fd1e2b836fdd0f23b00a6be8"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):16934d4b33cf54035e1439e449c5894191a4d220f844b8c853a5e70abcd6ea7f:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):53832496217843fabb9ca358e735a539944ffca8ce28de145be9424fd5e08d64:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):98b87fbac46e9e5db4a0313f9ee8b833335ba2fde6c8cc7e727984a50a848c72:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchRenderTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderTests/Render_all_handoff_states_without_an_engine( ):c3cf3b6ac2984d853bd3a97cb9b3bfd8024a9a46a6b0c89da2a33543307ea7d7:1"
+        }
+      ]
     }
   ]
 }
