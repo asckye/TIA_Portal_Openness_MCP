@@ -255,7 +255,11 @@ namespace TiaMcpConfigurator
                 void AssertShellLabels(bool chinese)
                 {
                     Assert(window.FindName("ExportDiagnostics") == null, "diagnostics export has moved out of the toolbar");
-                    Assert(((System.Windows.Controls.ListBox)settings.FindName("SectionList")).Items.Count == 3, "settings is a page with three sections");
+                    var sectionTitles = settings.SectionList.Items.Cast<System.Windows.Controls.ListBoxItem>().Select(item => item.Content.ToString());
+                    Assert(sectionTitles.SequenceEqual(chinese
+                        ? new[] { "外观与语言", "安全与审批", "存储与日志", "关于与更新" }
+                        : new[] { "Appearance & language", "Safety & approval", "Storage & logs", "About & updates" }),
+                        "settings lists Appearance, Safety, Storage and About in order in " + Loc.Current.Language);
                     string Content(string name) => ((System.Windows.Controls.ContentControl)(window.FindName(name) ?? settings.FindName(name))).Content.ToString();
                     var labels = new (Func<string> Read, string En, string Zh)[] {
                         (() => Content("RailEngineering"), "Project", "项目"),
@@ -313,30 +317,34 @@ namespace TiaMcpConfigurator
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).Text == "1 selected"
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkClient")).ToolTip.ToString() == "DeepSeek", "remote mode shows the live endpoint, state and selected client");
                 Assert(((System.Windows.Controls.Border)clients.FindName("ClientActionsBand")).Visibility == System.Windows.Visibility.Visible
-                    && ((System.Windows.Controls.Grid)form.FindName("AddressRow")).Visibility == System.Windows.Visibility.Visible,
+                    && form.AddressRow.IsVisible,
                     "remote mode shows the client actions band and the address row");
                 form.CapturePage(Path.Combine(output, "local.png"), 1);
                 // Local mode preserves configuration values while disabling HTTP-only operations.
                 Assert(((System.Windows.Controls.TextBlock)form.FindName("LinkEndpoint")).Text.StartsWith("stdio")
                     && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "stdio", "local mode reports the stdio transport");
                 Assert(((System.Windows.Controls.Border)clients.FindName("ClientActionsBand")).Visibility == System.Windows.Visibility.Visible
-                    && !((System.Windows.Controls.Grid)form.FindName("AddressRow")).IsEnabled
-                    && !((System.Windows.Controls.Grid)form.FindName("ServerActions")).IsEnabled
+                    && !form.AddressRow.IsEnabled && !form.ServerActions.IsEnabled
                     && form.ServerPane.Visibility == System.Windows.Visibility.Collapsed,
                     "local mode hides the HTTP card and disables address and service actions");
                 form.CapturePage(Path.Combine(output, "remote.png"), 0);
                 window.Navigate("Clients"); window.UpdateLayout();
                 var list = (System.Windows.Controls.ListBox)clients.FindName("ClientChoices");
-                var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
                 var clientPane = (System.Windows.FrameworkElement)form.Clients.FindName("ClientPane");
                 Assert(list.ActualHeight <= clientPane.ActualHeight && double.IsNaN(list.Height), "client list fits inside its card");
-                Assert(double.IsNaN(serverPane.Height) && serverPane.ActualHeight >= 156 && double.IsNaN(clientPane.Height) && clientPane.ActualHeight > list.ActualHeight, $"Primer service halves and client container use the handoff heights (server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1}, window {window.ActualWidth:F0}x{window.ActualHeight:F0})");
+                bool clientsFit = double.IsNaN(clientPane.Height) && clientPane.ActualHeight > list.ActualHeight;
                 window.Navigate("Mcp"); window.UpdateLayout();
+                var connectionCard = form.McpColumn.Children.OfType<System.Windows.Controls.ContentControl>()
+                    .Single(card => card.IsAncestorOf(form.ServerPane));
+                Assert(clientsFit && double.IsNaN(connectionCard.Height) && connectionCard.ActualHeight >= 156
+                    && double.IsNaN(form.ServerPane.Height) && Inside(form.ServerPane, connectionCard),
+                    $"connection card ({connectionCard.ActualHeight:F1}) fits the HTTP panel and the client container fits the list");
                 // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
                 var shell = (System.Windows.FrameworkElement)window.Content;
-                var pill = form.TransportChip;
+                var pill = form.ServiceStateChip;
                 double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
-                Assert(pill.ActualWidth > 0 && pillRight < shell.ActualWidth, "the visible transport status pill stays inside the panel");
+                Assert(pill.IsVisible && pillRight < shell.ActualWidth && Inside(pill, form.RuntimeActions),
+                    "the visible HTTP status chip stays inside the runtime row and the window");
                 var caption = (System.Windows.FrameworkElement)window.FindName("CaptionBar");
                 Assert(caption.ActualHeight == 38 && caption.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y == 1, "title bar occupies 38 pixels inside the frame");
                 using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
@@ -347,10 +355,11 @@ namespace TiaMcpConfigurator
                 form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
                 window.Navigate("Clients"); window.UpdateLayout();
                 var tilePanel = System.Windows.Media.VisualTreeHelper.GetParent(list.ItemContainerGenerator.ContainerFromIndex(0));
-                Assert(window.MinWidth == 1024 && window.MinHeight == 640 && tilePanel is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 3,
-                    "minimum window size keeps three columns of client switches");
+                Assert(window.MinWidth == 1024 && window.MinHeight == 640
+                    && tilePanel is System.Windows.Controls.Primitives.UniformGrid columns && columns.Columns == 2,
+                    "minimum window size shows two columns of client cards");
                 window.Navigate("Mcp");
-                NarrowWindowChecks(window, form, output);
+                NarrowWindowChecks(window, form, connectionCard, output);
                 window.Width = 1200; window.Height = 780;
                 Assert(window.FontFamily.Source == "Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI"
                     && window.FontFamily.Source == ((System.Windows.Media.FontFamily)System.Windows.Application.Current.FindResource("Ui.Font")).Source,
@@ -425,9 +434,9 @@ namespace TiaMcpConfigurator
             if (passed - previousChecks < 68) throw new Exception("Expected at least 68 workbench UI checks.");
         }
 
-        // CI runners have a 1024 px screen and open the 1200 px window at 1044x780. Below Ant's xl breakpoint the
-        // summary and log stack under the clients card, so the cards keep their handoff heights and nothing is cut.
-        private static void NarrowWindowChecks(MainWindow window, ConfigurationView form, string output)
+        // Exercise both pages at the narrow CI window size in each language and theme.
+        private static void NarrowWindowChecks(MainWindow window, ConfigurationView form,
+            System.Windows.Controls.ContentControl connectionCard, string output)
         {
             var serverPane = (System.Windows.Controls.Border)form.FindName("ServerPane");
             var installation = (System.Windows.Controls.Border)form.FindName("InstallationCard");
@@ -435,11 +444,6 @@ namespace TiaMcpConfigurator
             var head = (TiaOpenness.Gui.Controls.PageHeadPanel)form.FindName("ModeHead");
             var title = (System.Windows.Controls.TextBlock)form.FindName("ModeTitle");
             var segments = (System.Windows.FrameworkElement)((System.Windows.FrameworkElement)form.FindName("RemoteNav")).Parent;
-            bool Inside(System.Windows.FrameworkElement element, System.Windows.Controls.Border card)
-            {
-                var origin = element.TransformToAncestor(card).Transform(new System.Windows.Point());
-                return origin.X >= card.Padding.Left && origin.X + element.ActualWidth <= card.ActualWidth - card.Padding.Right + 0.5;
-            }
             window.Width = 1044; window.Height = 780;
             foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
             foreach (var theme in new[] { AppTheme.Light, AppTheme.Dark })
@@ -448,6 +452,7 @@ namespace TiaMcpConfigurator
                 window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                 string state = (language == AppLanguage.Chinese ? "zh" : "en") + "-" + theme.ToString().ToLowerInvariant();
                 window.Navigate("Clients"); window.UpdateLayout();
+                double clientHeight = clientPane.ActualHeight;
                 window.Navigate("Mcp");
                 form.CapturePage(Path.Combine(output, "remote-1044x780-" + state + ".png"), 0);
                 window.UpdateLayout();
@@ -456,17 +461,32 @@ namespace TiaMcpConfigurator
                 probe.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
                 double titleEnd = title.TransformToAncestor(head).Transform(new System.Windows.Point()).X + probe.DesiredSize.Width;
                 double segmentsStart = segments.TransformToAncestor(head).Transform(new System.Windows.Point()).X;
-                Assert(Math.Abs(window.ActualWidth - 1044) < 1 && double.IsNaN(serverPane.Height) && double.IsNaN(installation.Height)
-                    && serverPane.ActualHeight >= 156 && installation.ActualHeight >= 156 && clientPane.ActualHeight > 300,
-                    $"1044x780 {state}: service halves and client container keep the handoff heights (installation {installation.ActualHeight:F1}, server {serverPane.ActualHeight:F1}, client {clientPane.ActualHeight:F1})");
-                Assert(Inside((System.Windows.FrameworkElement)form.FindName("StartServer"), serverPane) && Inside((System.Windows.FrameworkElement)form.FindName("Network"), serverPane)
-                    && Inside(form.TiaPath, installation) && Inside(form.DetectTia, form.McpToolbar),
-                    $"1044x780 {state}: path and service controls stay in their cards and auto-detect stays in the MCP toolbar");
+                Assert(Math.Abs(window.ActualWidth - 1044) < 1 && double.IsNaN(connectionCard.Height) && double.IsNaN(installation.Height)
+                    && connectionCard.ActualHeight >= 156 && installation.ActualHeight >= 156 && clientHeight > 300
+                    && double.IsNaN(serverPane.Height) && Inside(serverPane, connectionCard),
+                    $"1044x780 {state}: connection ({connectionCard.ActualHeight:F1}), release ({installation.ActualHeight:F1})"
+                    + $" and client ({clientHeight:F1}) cards keep their minimum heights");
+                form.InstallDetails.IsExpanded = true;
+                window.UpdateLayout();
+                Assert(Inside(form.StartServer, serverPane) && Inside(form.Network, serverPane)
+                    && Inside(form.TiaPath, installation) && Inside(form.DetectTia, installation),
+                    $"1044x780 {state}: HTTP controls stay in the service panel and the path and re-detect button stay in the release card");
+                form.InstallDetails.IsExpanded = false;
                 Assert(head.IsWrapped ? segments.TransformToAncestor(head).Transform(new System.Windows.Point()).Y >= title.ActualHeight : titleEnd <= segmentsStart + 0.5,
                     $"1044x780 {state}: the page title ends at {titleEnd:F1} before the mode control at {segmentsStart:F1}");
             }
             Loc.Current.Language = AppLanguage.English; ThemeManager.Current.Theme = AppTheme.Light;
             window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+        }
+
+        private static bool Inside(System.Windows.FrameworkElement element, System.Windows.FrameworkElement panel)
+        {
+            var origin = element.TransformToAncestor(panel).Transform(new System.Windows.Point());
+            var padding = panel is System.Windows.Controls.Border border ? border.Padding : new System.Windows.Thickness();
+            return element.IsVisible && element.ActualWidth > 0 && element.ActualHeight > 0
+                && origin.X >= padding.Left && origin.Y >= padding.Top
+                && origin.X + element.ActualWidth <= panel.ActualWidth - padding.Right + 0.5
+                && origin.Y + element.ActualHeight <= panel.ActualHeight - padding.Bottom + 0.5;
         }
 
         [STAThread]
