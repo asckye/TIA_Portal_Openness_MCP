@@ -314,7 +314,8 @@ public sealed class ScopedCompileNativeTests
     public void Failed_login_checks_session_once_before_any_compile(bool loggedOn, bool readFails, bool logoffFails)
     {
         var (engine, _, compiler) = Target("software");
-        var admin = new SafetyAdministration { FailLogin = true, FailReadback = readFails, FailLogoff = logoffFails };
+        var admin = new SafetyAdministration { FailLogin = true, FailLogoff = logoffFails };
+        if (readFails) admin.OnReadback = () => throw new IOException("native read detail");
         admin.Observing = step => {
             engine.CompileEvents.Add(step);
             if (step == "login") admin.IsLoggedOnToSafetyOfflineProgram = loggedOn;

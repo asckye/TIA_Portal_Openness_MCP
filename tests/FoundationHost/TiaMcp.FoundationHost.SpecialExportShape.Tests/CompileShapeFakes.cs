@@ -49,13 +49,13 @@ namespace Siemens.Engineering.Safety
     {
         private bool loggedOn;
         internal int StateReads { get; private set; }
-        internal bool FailReadback { get; set; }
+        internal Action? OnReadback { get; set; }
         public bool IsLoggedOnToSafetyOfflineProgram
         {
             get
             {
                 StateReads++;
-                if (FailReadback && StateReads > 1) throw new IOException("native read detail");
+                if (StateReads > 1) OnReadback?.Invoke();
                 return loggedOn;
             }
             set => loggedOn = value;

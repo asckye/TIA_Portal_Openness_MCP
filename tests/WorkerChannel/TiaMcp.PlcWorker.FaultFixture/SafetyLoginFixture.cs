@@ -23,9 +23,10 @@ internal static class SafetyLoginFixture
         var admin = new SafetyAdministration {
             LoggedOnAfterLogin = scenario is "on" or "on-cleanup" or "success" || scenario.StartsWith("logoff-"),
             LoginError = scenario == "success" ? null : scenario.StartsWith("login-") ? loss : loginError,
-            ReadError = scenario.StartsWith("read-") ? loss : scenario.StartsWith("unreadable") ? new IOException("private native read") : null,
             LogoffError = scenario.StartsWith("logoff-") ? loss : scenario.EndsWith("-cleanup") ? new IOException("private native cleanup") : null
         };
+        if (scenario.StartsWith("read-")) admin.OnReadback = () => throw loss;
+        else if (scenario.StartsWith("unreadable")) admin.OnReadback = () => throw new IOException("private native read");
         var session = new SafetySession(admin);
         if (scenario == "scope-unavailable")
         {

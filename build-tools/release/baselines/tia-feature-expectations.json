@@ -1080,5 +1080,17 @@
       "TIA_PLC_PROGRESS_TESTS",
       "TRACE"
     ]
+  },
+  {
+    "project": "tests/WorkerChannel/TiaMcp.PlcWorker.FaultFixture/TiaMcp.PlcWorker.FaultFixture.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "PLC_SAFETY",
+      "RELEASE",
+      "SAFETY_GLOBAL",
+      "SAFETY_PROGRAM",
+      "TRACE"
+    ]
   }
 ]

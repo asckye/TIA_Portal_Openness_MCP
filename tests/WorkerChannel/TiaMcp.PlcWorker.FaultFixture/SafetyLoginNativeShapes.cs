@@ -6,8 +6,8 @@ using System.Security;
 // SDK-free shapes for the linked native callers. Only the safety login surface is exercised.
 namespace Siemens.Engineering
 {
-    public interface IEngineeringObject { object GetAttribute(string name); void SetAttribute(string name, object value); }
-    public interface IEngineeringServiceProvider { T? GetService<T>() where T : class; }
+    public interface IEngineeringObject { public object GetAttribute(string name); public void SetAttribute(string name, object value); }
+    public interface IEngineeringServiceProvider { public T? GetService<T>() where T : class; }
     public class EngineeringObject : IEngineeringObject, IEngineeringServiceProvider
     {
         public object? Parent { get; set; }
@@ -69,7 +69,7 @@ namespace Siemens.Engineering.SW.Blocks
 }
 namespace Siemens.Engineering.Compiler
 {
-    public interface ICompilable { CompilerResult Compile(); }
+    public interface ICompilable { public CompilerResult Compile(); }
     public enum CompilerResultState { Success }
     public class CompilerResult
     {
@@ -90,7 +90,7 @@ namespace Siemens.Engineering.Safety
     {
         internal readonly List<string> Calls = new List<string>();
         internal Exception? LoginError;
-        internal Exception? ReadError;
+        internal Action? OnReadback;
         internal Exception? LogoffError;
         internal bool LoggedOnAfterLogin;
         private bool attempted;
@@ -100,7 +100,7 @@ namespace Siemens.Engineering.Safety
             get
             {
                 Calls.Add(attempted ? "readback" : "precheck");
-                if (attempted && ReadError != null) throw ReadError;
+                if (attempted) OnReadback?.Invoke();
                 return attempted && LoggedOnAfterLogin;
             }
         }
