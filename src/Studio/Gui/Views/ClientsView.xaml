@@ -5,8 +5,8 @@
     xmlns:views="clr-namespace:TiaOpenness.Gui.Views"
     xmlns:themes="clr-namespace:TiaOpenness.Gui.Themes"
     Foreground="{DynamicResource Primer.text}" FontFamily="{DynamicResource Ui.Font}" FontSize="{DynamicResource Ui.FontSize.Body}">
-  <DockPanel Margin="-16,-12">
-    <Border DockPanel.Dock="Bottom" x:Name="ViewportFooter" Style="{StaticResource Primer.IdeBar}" Padding="16,8" Visibility="Collapsed"/>
+  <Grid Margin="-16,-12">
+    <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <Grid x:Name="ClientLayout" ux:ResponsiveLayout.Enabled="True" ux:ResponsiveLayout.ScrollWholePage="True">
       <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="392"/></Grid.ColumnDefinitions>
       <ScrollViewer x:Name="ClientsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -166,5 +166,6 @@
         </DockPanel>
       </Border>
     </Grid>
-  </DockPanel>
+    <Border Grid.Row="1" x:Name="ViewportFooter" Style="{StaticResource Primer.IdeBar}" Padding="16,8" Visibility="Collapsed"/>
+  </Grid>
 </UserControl>

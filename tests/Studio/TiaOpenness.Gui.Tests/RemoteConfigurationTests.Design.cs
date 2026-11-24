@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TiaMcpConfigurator;
@@ -199,6 +200,43 @@ public sealed partial class RemoteConfigurationTests
     }
 
     [Fact]
+    public void Clients_tab_through_the_catalogue_before_write_and_keep_write_focus_on_resize() => wpf.Run(() =>
+    {
+        var window = ConfigurationWindow();
+        try
+        {
+            window.Navigate("Clients");
+            var clients = window.Configuration!.Clients;
+            WpfContext.ShowWindow(window);
+            void Resize(int width)
+            {
+                window.Width = window.Root.Width = width;
+                WpfContext.Drain(); window.UpdateLayout();
+            }
+            Resize(1199);
+            clients.ClientChoices.SelectAll();
+            Assert.True(clients.MoveFocus(new TraversalRequest(FocusNavigationDirection.First)));
+            Assert.True(clients.ClientLayout.IsKeyboardFocusWithin);
+            var visited = new HashSet<UIElement>();
+            bool reachedTiles = false;
+            while (!clients.SaveClient.IsKeyboardFocused)
+            {
+                var current = Assert.IsAssignableFrom<UIElement>(Keyboard.FocusedElement);
+                Assert.True(visited.Add(current));
+                reachedTiles |= clients.ClientChoices.IsKeyboardFocusWithin;
+                Assert.True(current.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next)));
+            }
+            Assert.True(reachedTiles);
+            foreach (int width in new[] { 1200, 1199, 1360 })
+            {
+                Resize(width);
+                Assert.Same(clients.SaveClient, Keyboard.FocusedElement);
+            }
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
     public void Client_write_footer_tracks_the_viewport_while_the_narrow_catalogue_scrolls() => wpf.Run(() =>
     {
         var window = ConfigurationWindow(ClientProfiles.Catalogue());
@@ -208,7 +246,7 @@ public sealed partial class RemoteConfigurationTests
             window.Navigate("Clients");
             var host = WorkbenchRenderTests.CreateHost(window, 1360, 640);
             var clients = mcp.Clients;
-            var viewport = (DockPanel)clients.Content;
+            var viewport = (Grid)clients.Content;
             mcp.LocalNav.IsChecked = true;
             Assert.Equal(Visibility.Collapsed, clients.RelayNote.Visibility);
             mcp.RemoteNav.IsChecked = true;

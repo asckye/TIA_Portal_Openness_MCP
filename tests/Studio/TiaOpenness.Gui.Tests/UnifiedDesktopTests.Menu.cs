@@ -500,6 +500,59 @@ public sealed partial class UnifiedDesktopTests
     }
 
     [Fact]
+    public void Losing_the_project_navigates_behind_settings_until_the_user_leaves()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, client) = WorkbenchControlTests.Window();
+            try
+            {
+                window.Navigate("VersionControl");
+                Assert.Equal("VersionControl", window.CurrentPage);
+                window.OpenSettings();
+                WpfContext.Drain();
+                var focus = Keyboard.FocusedElement;
+                Assert.True(window.SettingsContent.IsKeyboardFocusWithin);
+                client.Exit();
+                WpfContext.Drain();
+                Assert.Equal("Engineering", window.CurrentPage);
+                Assert.True(window.SettingsOpen);
+                Assert.Same(focus, Keyboard.FocusedElement);
+                window.Navigate("Log");
+                Assert.False(window.SettingsOpen);
+                Assert.Equal("Log", window.CurrentPage);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Modal_isolation_coerces_sibling_control_types_even_when_shown_later(bool collapsed)
+    {
+        wpf.Run(() =>
+        {
+            var root = new Grid();
+            UIElement[] siblings = [new Button(), new RadioButton(), new ListBoxItem(), new StackPanel()];
+            foreach (var sibling in siblings)
+            {
+                sibling.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+                root.Children.Add(sibling);
+            }
+            var pane = new Button();
+            root.Children.Add(pane);
+            using (new ModalPane(pane, pane, () => { }))
+            {
+                foreach (var sibling in siblings) sibling.Visibility = Visibility.Visible;
+                Assert.All(siblings, sibling => Assert.False(sibling.IsEnabled));
+                Assert.True(pane.IsEnabled);
+            }
+            Assert.All(siblings, sibling => Assert.True(sibling.IsEnabled));
+        });
+    }
+
+    [Fact]
     public void Settings_preserves_a_background_siblings_enabled_binding()
     {
         wpf.Run(() =>

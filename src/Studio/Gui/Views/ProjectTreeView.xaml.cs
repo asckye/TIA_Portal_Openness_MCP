@@ -127,13 +127,15 @@ public partial class ProjectTreeView : UserControl
             if (DataContext is MainViewModel { Busy: false }) e.Handled = true;
             break;
         }
+        // Mouse events carry no keyboard device. Sample the modifiers before focus changes.
+        var modifiers = Keyboard.Modifiers;
         item.Focus();
         if (item.Header is BlockNode node)
         {
             e.Handled = true;
             if (DataContext is not MainViewModel { Busy: false } model) return;
             if (node.IsFolder) { item.IsExpanded = !item.IsExpanded; return; }
-            SelectRangeOrToggle(model.Engineering, node.Row!, Keyboard.Modifiers);
+            SelectRangeOrToggle(model.Engineering, node.Row!, modifiers);
         }
         await ActivateAsync(item);
     }
@@ -141,7 +143,7 @@ public partial class ProjectTreeView : UserControl
     private async void OnNodeKey(object sender, KeyEventArgs e)
     {
         if (e.OriginalSource is not TreeViewItem item) return;
-        if (e.Key == Key.A && Keyboard.Modifiers == ModifierKeys.Control && DataContext is MainViewModel { Busy: false } model)
+        if (e.Key == Key.A && e.KeyboardDevice.Modifiers == ModifierKeys.Control && DataContext is MainViewModel { Busy: false } model)
         {
             model.Engineering.SelectAll(true); e.Handled = true; return;
         }

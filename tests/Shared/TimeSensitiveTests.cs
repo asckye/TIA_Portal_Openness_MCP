@@ -338,6 +338,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Sticky_notices_announce_once_and_a_dropped_error_is_still_announced"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlOverlayTests"] = new[] {
+                "Call_drawer_closes_page_options_and_takes_keyboard_focus",
+                "Guard_blocks_control_shortcuts_from_the_event_keyboard",
                 "Frozen_state_follows_recent_input_and_clears_after_the_operator_is_idle",
                 "Palette_traps_focus_blocks_control_and_restores_its_invoker_on_escape",
                 "Existing_modals_suppress_the_palette_shortcut",
@@ -361,6 +363,8 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Malformed_first_frame_is_closed_without_impersonating_or_applying"
             },
             ["TiaOpenness.Gui.Tests.WorkbenchControlTests"] = new[] {
+                "New_activity_shares_a_full_stack_with_its_prefill_and_restores_a_displaced_card",
+                "New_form_replaces_a_dismissed_prefill_with_one_announcement",
                 "Control_cards_announce_independently_without_hiding_pending_approvals",
                 "Dismissal_preserves_field_ownership_and_the_field_accepts_or_restores_its_value",
                 "Field_actions_refuse_mouse_and_automation_invoke_until_the_guard_expires",
@@ -413,6 +417,9 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Cancelling_a_new_target_keeps_the_editor_and_disk_unchanged",
                 "The_write_approval_switch_uses_its_whole_track_and_Space_changes_the_setting_once"
             },
+            ["TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests"] = new[] {
+                "Project_documents_render_the_selected_fixture_at_design_size"
+            },
             ["TiaOpenness.Gui.Tests.WorkbenchRenderFeaturePagesTests"] = new[] {
                 "Final_feature_views_use_the_design_sizes_and_actual_request_fields"
             },
@@ -421,6 +428,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Actor_and_release_filter_popup_announces_active_filters_and_cycles_focus"
             },
             ["TiaOpenness.Gui.Tests.ApprovalPageTests"] = new[] {
+                "Workbench_approval_closes_settings_and_focuses_the_request_for_decision",
                 "Capture_loss_releases_keyboard_but_a_normal_mouse_release_keeps_the_press_guard",
                 "Press_started_on_first_request_cannot_decide_second_after_guard_expires",
                 "Destructive_rejection_is_default_and_Enter_on_Approve_rejects",
@@ -447,6 +455,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Unsupported_direction_is_explained_and_cannot_be_selected_by_focus_or_automation"
             },
             ["TiaOpenness.Gui.Tests.RemoteConfigurationTests"] = new[] {
+                "Clients_tab_through_the_catalogue_before_write_and_keep_write_focus_on_resize",
                 "Detected_selection_and_automation_toggles_review_each_new_target_before_changing_selection",
                 "Keyboard_can_select_local_transport_and_reopen_the_install_path_editor",
                 "Service_and_client_design_states_keep_their_actions_and_confirm_the_actual_targets"
@@ -475,6 +484,7 @@ namespace TiaMcp.Engine.Tests.Shared
                 "Network_helper_rejects_a_wrong_argument_count"
             },
             ["TiaOpenness.Gui.Tests.UnifiedDesktopTests"] = new[] {
+                "Losing_the_project_navigates_behind_settings_until_the_user_leaves",
                 "Dispatcher_idle_does_not_complete_an_approval_save",
                 "Narrow_left_pane_overlays_the_page_and_returns_keyboard_focus",
                 "Rail_arrow_keys_cover_the_order_and_agent_restores_its_subpage_unless_approval_is_pending",

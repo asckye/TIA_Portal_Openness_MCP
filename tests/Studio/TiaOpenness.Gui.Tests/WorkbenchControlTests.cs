@@ -106,6 +106,23 @@ public sealed partial class WorkbenchControlTests(WpfContext wpf)
     }
 
     [Fact]
+    public void Closing_the_window_detaches_its_listener_failure_handler()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            using var server = new WorkbenchControlServer(window.ControlSurface, window.Dispatcher, _ => Environment.ProcessPath!);
+            const BindingFlags instance = BindingFlags.NonPublic | BindingFlags.Instance;
+            var callback = typeof(MainWindow).GetMethod("OnControlListenerFailed", instance)!.CreateDelegate<Action>(window);
+            var handlers = typeof(WorkbenchControlServer).GetField(nameof(server.ListenerFailed), instance)!;
+            typeof(MainWindow).GetField("_controlServer", instance)!.SetValue(window, server);
+            server.ListenerFailed += callback;
+            window.Close();
+            Assert.DoesNotContain(callback, ((Delegate?)handlers.GetValue(server))?.GetInvocationList() ?? []);
+        });
+    }
+
+    [Fact]
     public void Clients_is_a_human_navigation_target_outside_the_control_protocol()
     {
         wpf.Run(() =>

@@ -25,8 +25,8 @@ internal sealed class ModalPane : IDisposable
 
     static ModalPane()
     {
-        // Siblings can be arbitrary WPF controls. This final coercion runs after their own IsEnabled coercion
-        // and leaves bindings, current values and inherited state under WPF's control.
+        // Blocking uses the process-wide DesignerCoerceValueCallback of UIElement.IsEnabledProperty.
+        // It runs after each control's own coercion, preserving bindings, current values and inherited state.
         var enabled = DependencyPropertyDescriptor.FromProperty(UIElement.IsEnabledProperty, typeof(UIElement));
         var previous = enabled.DesignerCoerceValueCallback;
         enabled.DesignerCoerceValueCallback = (element, value) =>
@@ -54,7 +54,7 @@ internal sealed class ModalPane : IDisposable
             var parent = VisualTreeHelper.GetParent(branch);
             if (parent is Panel panel)
                 foreach (UIElement sibling in panel.Children)
-                    if (sibling != branch && sibling != interactiveSibling && sibling.Visibility == Visibility.Visible)
+                    if (sibling != branch && sibling != interactiveSibling)
                     {
                         _background.Add(sibling);
                         sibling.SetValue(BlockCountProperty, (int)sibling.GetValue(BlockCountProperty) + 1);

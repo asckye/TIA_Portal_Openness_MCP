@@ -206,7 +206,7 @@ public partial class MainWindow
     private void OnShellSessionChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender == _model.Engineering && e.PropertyName is not (null or "" or nameof(EngineeringViewModel.LastCompile))) return;
-        if (!HasProject && _page == "VersionControl") Navigate("Engineering");
+        if (!HasProject && _page == "VersionControl") Navigate("Engineering", userNavigation: false);
         UpdateShell();
         CommandManager.InvalidateRequerySuggested();
     }
@@ -341,7 +341,7 @@ public partial class MainWindow
         _ => page,
     };
 
-    internal void Navigate(string page)
+    internal void Navigate(string page, bool userNavigation = true)
     {
         // Blocks remains a protocol alias for Project; it is not a second navigation target.
         page = ResolvePage(page);
@@ -351,12 +351,10 @@ public partial class MainWindow
             return;
         }
         if (page == "Settings") { ShowSettings(); return; }
-        if (SettingsOpen) CloseSettings();
+        if (userNavigation && SettingsOpen) CloseSettings();
         if (page is "Mcp" or "Clients") EnsureConfiguration();
         if (_drawer != null || DetailDocked) CloseDrawer();
-        OperationsContent.HideOptions();
-        BlocksContent.HideOptions();
-        VersionControlContent.HideOptions();
+        HidePageOptions();
         _leftPaneFlyoutOpen = false;
         if (_page != page) RestoreDismissedPrefill();
         _page = page;
@@ -382,7 +380,7 @@ public partial class MainWindow
         QueueControlSnapshot();
         CurrentRail.IsChecked = true;
         UpdateShell();
-        if (IsLoaded) CurrentPageTitle.Focus();
+        if (IsLoaded && !SettingsOpen) CurrentPageTitle.Focus();
     }
 
     private void OnRailKeyDown(object sender, KeyEventArgs e)
@@ -453,9 +451,7 @@ public partial class MainWindow
         EnsureConfiguration();
         CloseSessionPopover();
         if (_drawer != null) CloseDrawer();
-        OperationsContent.HideOptions();
-        BlocksContent.HideOptions();
-        VersionControlContent.HideOptions();
+        HidePageOptions();
         SettingsContent.LoadPaths();
         SettingsContent.ShowSection("Appearance");
         ResizeSettingsCard();
@@ -546,10 +542,18 @@ public partial class MainWindow
     private void OnCanOpenPalette(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = OverlayHost != null && !ShellModalOpen;
     private void OnCommandPalette(object sender, ExecutedRoutedEventArgs e) => OpenCommandPalette();
 
+    private void HidePageOptions()
+    {
+        OperationsContent.HideOptions();
+        BlocksContent.HideOptions();
+        VersionControlContent.HideOptions();
+    }
+
     private void OpenDrawer(string name)
     {
         if (name is "Approvals" or "Settings") { Navigate(name); return; }
         bool dock = CanDockDetail;
+        if (!dock) HidePageOptions();
         _drawerFocus?.Dispose();
         _drawerFocus = null;
         _drawer = dock ? null : name;

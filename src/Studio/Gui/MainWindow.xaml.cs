@@ -233,7 +233,7 @@ public partial class MainWindow : Window
             e.Handled = true;
             return;
         }
-        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.OemComma && (SettingsOpen || !ShellModalOpen))
+        if (e.KeyboardDevice.Modifiers == ModifierKeys.Control && e.Key == Key.OemComma && (SettingsOpen || !ShellModalOpen))
         {
             e.Handled = true;
             if (!e.IsRepeat)
@@ -244,7 +244,7 @@ public partial class MainWindow : Window
             return;
         }
         bool modal = ShellModalOpen;
-        if (modal && Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+        if (modal && e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control)
             && e.Key is Key.O or Key.S or Key.B or Key.K or Key.OemComma or >= Key.D1 and <= Key.D7) e.Handled = true;
     }
 

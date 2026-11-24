@@ -20,6 +20,65 @@ namespace TiaOpenness.Gui.Tests;
 public sealed partial class WorkbenchControlTests
 {
     [Fact]
+    public void New_activity_shares_a_full_stack_with_its_prefill_and_restores_a_displaced_card()
+    {
+        wpf.Run(() =>
+        {
+            var elapsed = TimeSpan.Zero;
+            var (window, _, _) = Window(toastClock: () => elapsed);
+            var heard = new System.Collections.Generic.List<string>();
+            void Record(FrameworkElement source) => heard.Add(System.Windows.Automation.AutomationProperties.GetName(source));
+            AccessibleStatus.Announced += Record;
+            try
+            {
+                foreach (string key in new[] { "first", "second", "third" })
+                    window.ShowToast(ToastKind.Warning, LocalizedText.Literal(key), key, sticky: true);
+                var second = window.FindToastCard("second")!.Notice;
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm)).Status);
+                var activity = window.FindToastCard("ai-activity");
+                Assert.NotNull(activity);
+                Assert.True(activity.Surface.IsVisible);
+                Assert.True(window.FindToastCard("ai-prefill")!.Surface.IsVisible);
+                Assert.Single(heard, text => text == activity.Notice!.FullText);
+                Assert.Null(window.FindToastCard("second"));
+                elapsed += TimeSpan.FromSeconds(4);
+                window.TickToast();
+                Assert.Same(second, window.FindToastCard("second")!.Notice);
+                Assert.Single(heard, text => text == second!.FullText);
+            }
+            finally { AccessibleStatus.Announced -= Record; window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void New_form_replaces_a_dismissed_prefill_with_one_announcement()
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            var heard = new System.Collections.Generic.List<string>();
+            void Record(FrameworkElement source) => heard.Add(System.Windows.Automation.AutomationProperties.GetName(source));
+            try
+            {
+                var rules = new WorkbenchPrefillArguments { Form = WorkbenchPrefillForm.InspectionRules,
+                    Fields = new WorkbenchInspectionRulesFields { NamePattern = "FB.*" } };
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm, rules)).Status);
+                window.OperationsContent.HideOptions();
+                window.Navigate("Log");
+                UnifiedDesktopTests.ClickControl(window.FindToastCard("ai-prefill")!.Close);
+                Assert.Null(window.FindToastCard("ai-prefill"));
+                AccessibleStatus.Announced += Record;
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.PrefillForm)).Status);
+                var summary = window.FindToastCard("ai-prefill")!.Notice!.FullText;
+                Assert.Contains(Loc.Current["Control.Form.BlockFilter"], summary);
+                Assert.Contains(Loc.Current["Control.Form.InspectionRules"], summary);
+                Assert.Single(heard, text => text == summary);
+            }
+            finally { AccessibleStatus.Announced -= Record; window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Prefill_card_actions_observe_the_mouse_keyboard_and_shortcut_guard()
     {
         wpf.Run(() =>

@@ -13,6 +13,44 @@ namespace TiaOpenness.Gui.Tests;
 
 public sealed partial class WorkbenchRenderFeaturePagesTests
 {
+    [Theory]
+    [InlineData(1360, 812, false)]
+    [InlineData(1024, 640, false)]
+    [InlineData(1360, 812, true)]
+    [InlineData(1024, 640, true)]
+    public void Journal_row_text_keeps_its_x_position(int width, int height, bool auditPage)
+    {
+        wpf.Run(() =>
+        {
+            var audit = new FeaturePageFixtures.Audit { Broken = true };
+            var window = new MainWindow(ProjectPageTestSupport.Model(), false, FeaturePageFixtures.Approvals(false));
+            try
+            {
+                window.ConfigureFeaturePages(new FeaturePageFixtures.Journal(), audit, new FeaturePageFixtures.Environment());
+                window.Navigate(auditPage ? "Audit" : "Calls");
+                var host = WorkbenchRenderTests.CreateHost(window, width, height);
+                var list = auditPage ? window.AuditContent.AuditList : window.CallsContent.CallList;
+                int index = auditPage ? list.Items.Count - 1 : 1;
+                double TextX()
+                {
+                    WpfContext.Drain(); host.UpdateLayout();
+                    var item = Assert.IsType<ListBoxItem>(list.ItemContainerGenerator.ContainerFromIndex(index));
+                    var label = Descendants<TextBlock>(item).First(text => text.Text.Length > 0);
+                    return label.TranslatePoint(default, list).X;
+                }
+                double before = TextX();
+                if (auditPage)
+                {
+                    WpfContext.Complete(window.Features.VerifyAsync());
+                    Assert.True(((ViewModels.AuditRow)list.Items[index]).Selected);
+                }
+                else list.SelectedIndex = index;
+                Assert.Equal(before, TextX());
+            }
+            finally { window.Close(); }
+        });
+    }
+
     private static string WriteRetentionFixture(string root)
     {
         string directory = Directory.CreateDirectory(Path.Combine(root, "diagnostics")).FullName;

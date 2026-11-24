@@ -615,6 +615,17 @@ public sealed partial class ProjectPageInteractionTests
     }
 
     [Theory]
+    [InlineData(AppLanguage.English, "1 to synchronize · 1 to skip")]
+    [InlineData(AppLanguage.Chinese, "将同步 1 · 跳过 1")]
+    public void Clean_preview_counts_describe_planned_work(AppLanguage language, string counts) => wpf.RunWithLanguage(language, () =>
+    {
+        using var model = ProjectPageTestSupport.Model(configure: client => client.SyncHandler = (direction, preview) =>
+            Task.FromResult(new SyncResult { Direction = direction, DryRun = preview, Synchronized = 1, SkippedEqual = 1 }));
+        model.VersionControl.VcPush.Execute(null);
+        Assert.Equal(counts, model.VersionControl.SyncCounts);
+    });
+
+    [Theory]
     [InlineData(AppLanguage.English, "Sync", "Synchronized", "Skipped", "Failed", "Other result")]
     [InlineData(AppLanguage.Chinese, "同步", "已同步", "已跳过", "失败", "其他结果")]
     public void Preview_dispositions_use_reported_outcomes_and_unambiguous_workspace_state(AppLanguage language,
@@ -645,6 +656,7 @@ public sealed partial class ProjectPageInteractionTests
                 Assert.Equal(new[] { "UPDATE", "CREATE", "SKIP", sync }, vc.SyncRows.Select(row => row.Outcome));
                 Assert.Equal("denied", vc.SyncRows.Last().Error);
                 Assert.Empty(vc.ElapsedLabel);
+                Assert.Equal(language == AppLanguage.English ? "2 to synchronize · 1 to skip · preview errors: 1" : "将同步 2 · 跳过 1 · 预演错误 1", vc.SyncCounts);
                 vc.VcDryRun = false;
                 vc.VcPush.Execute(null);
                 Assert.Equal(new[] { completed, completed, skipped, failed, other }, vc.SyncRows.Select(row => row.Outcome));

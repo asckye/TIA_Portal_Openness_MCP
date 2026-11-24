@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -22,6 +23,44 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class ApprovalPageTests(WpfContext wpf)
 {
+    [Fact]
+    public async Task Workbench_approval_closes_settings_and_focuses_the_request_for_decision()
+    {
+        await using var host = new McpOperatorFixture();
+        await using var client = host.Client();
+        await client.AttachAsync(Assert.Single(await client.DiscoverAsync(host.Host.ReleaseKey)));
+        wpf.Run(() =>
+        {
+            var approvals = new ApprovalServiceStub();
+            var model = new MainViewModel(new McpProjectClient(client), new FakeDialogService());
+            var window = new MainWindow(model, false, approvals);
+            try
+            {
+                WpfContext.ShowWindow(window);
+                window.Navigate("Settings");
+                WpfContext.Drain();
+                Assert.True(window.SettingsOpen);
+                var request = FeaturePageFixtures.Request() with
+                {
+                    Actor = "workbench", OperatorCallId = Guid.NewGuid().ToString("N"), Deadline = DateTimeOffset.UtcNow.AddMinutes(2)
+                };
+                approvals.Receive(request);
+                WpfContext.Drain();
+                Assert.False(window.SettingsOpen);
+                Assert.Equal("Approvals", window.CurrentPage);
+                Assert.Equal(request.Id, window.Features.SelectedRequest?.Request.Id);
+                var view = window.ApprovalsContent;
+                Assert.Same(view.RequestTitle, Keyboard.FocusedElement);
+                Assert.Equal(ApprovalState.Pending, Assert.Single(approvals.Requests).State);
+                WpfContext.WaitForDecisionGuard(view);
+                Assert.True(view.DenyRequest.IsEnabled);
+                UnifiedDesktopTests.ClickControl(view.DenyRequest);
+                Assert.Equal(ApprovalState.Rejected, Assert.Single(approvals.Requests).State);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public void Enter_never_approves_write_and_Escape_does_not_reject(bool focusApprove)

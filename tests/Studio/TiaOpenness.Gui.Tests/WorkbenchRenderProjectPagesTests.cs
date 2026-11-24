@@ -53,7 +53,8 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                         Description = "Unused temporary variable." }] };
                 client.Tags.Add(new() { Name = "ConveyorSpeed", DataType = "Real", LogicalAddress = "%QD4", TableName = "root/tag-tables/Drives" });
             });
-            var window = new MainWindow(model, false);
+            var approvals = FeaturePageFixtures.Approvals(false);
+            var window = new MainWindow(model, false, approvals);
             try
             {
                 window.ShowConfiguration(false);
@@ -80,6 +81,17 @@ public sealed class WorkbenchRenderProjectPagesTests(WpfContext wpf)
                 Assert.True(model.Engineering.FocusedBlock!.IsModified);
                 if (width >= 1280) AssertTreeGeometry(window.ProjectExplorer.Nodes);
                 Capture("code");
+                var block = model.Engineering.FocusedBlock!;
+                approvals.Receive(FeaturePageFixtures.Request("block-review") with
+                {
+                    Release = model.SelectedReleaseKey, Project = model.Session.OpenProjectFile, Plc = model.Engineering.SelectedDevice!.Id,
+                    ParametersJson = new System.Text.Json.Nodes.JsonObject { ["blockPath"] = block.Path }.ToJsonString(),
+                });
+                WpfContext.Drain(); host.UpdateLayout();
+                Assert.Equal(Visibility.Visible, window.OperationsContent.BlockReviewButton.Visibility);
+                Assert.True(window.OperationsContent.BlockReviewButton.ActualWidth > 0);
+                Capture("pending-review");
+                approvals.Deny("block-review");
                 UnifiedDesktopTests.ClickControl(window.OperationsContent.InterfaceTab);
                 Assert.Equal(ProjectDocument.Interface, model.Engineering.Document);
                 Capture("interface");

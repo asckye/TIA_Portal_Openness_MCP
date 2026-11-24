@@ -352,6 +352,11 @@ public sealed partial class FeaturePagesViewModel : ObservableObject, IDisposabl
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellation.Token && cancellation.IsCancellationRequested)
         {
             _verificationCancelled = true;
+            if (_verification != null)
+            {
+                ClearVerification();
+                if (!_disposed) RefreshAudit();
+            }
             if (!_disposed) Feedback?.Invoke(this, new(LocalizedText.Key("Audit.Cancelled"), ToastKind.Info, "verify"));
         }
         catch (Exception ex) { Feedback?.Invoke(this, new(LocalizedText.Literal(ex.Message), ToastKind.Error, "verify")); }
@@ -691,12 +696,7 @@ public sealed partial class FeaturePagesViewModel : ObservableObject, IDisposabl
         var selection = SelectedAudit?.Record;
         if (languageChanged) _auditRows.Clear();
         var events = Audit.Events;
-        if (_verification != null && !ReferenceEquals(_verifiedEvents, events))
-        {
-            _verification = null;
-            _auditBreak = null;
-            NotifyVerification();
-        }
+        if (_verification != null && !ReferenceEquals(_verifiedEvents, events)) ClearVerification();
         var page = events.TakeLast(AuditLogService.PageSize).ToArray();
         // Resolve the actual predecessor before filtering. The link claimed by a record is not proof that its predecessor is loaded.
         var byIndex = page.ToDictionary(e => (e.Chain, e.Index));
@@ -736,6 +736,13 @@ public sealed partial class FeaturePagesViewModel : ObservableObject, IDisposabl
         }
     }
     private void Notify(params string[] names) { foreach (string name in names) Raise(name); }
+    private void ClearVerification()
+    {
+        _verification = null;
+        _verifiedEvents = null;
+        _auditBreak = null;
+        NotifyVerification();
+    }
     private void NotifyVerification() =>
         Notify(nameof(ShowVerification), nameof(HasVerification), nameof(VerificationBroken),
             nameof(ChainLabel), nameof(BreakLabel), nameof(VerificationTone), nameof(VerificationText), nameof(VerificationSummary),

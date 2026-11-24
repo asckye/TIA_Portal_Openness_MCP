@@ -23,11 +23,13 @@ public partial class ClientsView : UserControl
         bool stacked = ResponsiveLayout.IsStacked(ClientLayout);
         var destination = stacked ? ViewportFooter : SidebarFooter;
         if (destination.Child == WriteBar) return;
+        bool restoreFocus = SaveClient.IsKeyboardFocused;
         var previous = (Decorator)WriteBar.Parent;
         previous.Child = null;
         previous.Visibility = Visibility.Collapsed;
         destination.Child = WriteBar;
         destination.Visibility = Visibility.Visible;
+        if (restoreFocus) SaveClient.Focus();
     }
 
     public static readonly DependencyProperty MonogramProperty = DependencyProperty.RegisterAttached(

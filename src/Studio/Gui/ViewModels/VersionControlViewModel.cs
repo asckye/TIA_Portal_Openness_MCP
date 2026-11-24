@@ -174,7 +174,13 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         : SyncResult?.DryRun == true ? Loc.Current["Project.SyncPreview"] + " · "
             + (SyncResult.Direction == SyncDirection.ProjectToWorkspace ? Loc.Current["Primer.ToWorkspace"] : Loc.Current["Primer.ToProject"])
             : Loc.Current["Project.Synced"];
-    public string SyncCounts => SyncResult is { } r ? Loc.Current.T("Project.SyncCounts", r.Synchronized, r.SkippedEqual, r.Failed) : "";
+    public string SyncCounts => SyncResult switch
+    {
+        { DryRun: true, Failed: > 0 } r => Loc.Current.T("Project.SyncPreviewErrors", r.Synchronized, r.SkippedEqual, r.Failed),
+        { DryRun: true } r => Loc.Current.T("Project.SyncPreviewCounts", r.Synchronized, r.SkippedEqual),
+        { } r => Loc.Current.T("Project.SyncCounts", r.Synchronized, r.SkippedEqual, r.Failed),
+        _ => "",
+    };
     internal void CloseSyncResult() => SyncResult = null;
     private void RefreshSyncState()
     {

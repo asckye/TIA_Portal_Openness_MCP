@@ -10,6 +10,8 @@ internal sealed record ToastNotice(string Source, ToastKind Kind, LocalizedText 
     Action? Action, string ActionKey, bool ActionShowsDetails = false, bool Sticky = false,
     Action? SecondAction = null, LocalizedText SecondActionKey = default, LocalizedText ActionLabel = default, Action? OnDismiss = null)
 {
+    internal bool MayDisplaceSticky { get; init; }
+    internal string? KeepNewestSource { get; init; }
     internal string FullText => Title.Resolve() is { Length: > 0 } title ? title + " · " + Text.Resolve() : Text.Resolve();
 }
 
@@ -39,7 +41,7 @@ internal sealed class ToastQueue(Func<TimeSpan> now)
         if (cards.Count == 3)
         {
             int oldest = cards.FindIndex(entry => !entry.Notice.Sticky);
-            if (oldest < 0 && !notice.Sticky)
+            if (oldest < 0 && !notice.Sticky && !notice.MayDisplaceSticky)
             {
                 if (notice.Kind == ToastKind.Error) ErrorDropped?.Invoke(notice);
                 return;
@@ -52,7 +54,8 @@ internal sealed class ToastQueue(Func<TimeSpan> now)
             }
             cards.RemoveAt(oldest);
         }
-        cards.Add(new(notice, Clock + TimeSpan.FromSeconds(notice.Kind == ToastKind.Error ? 8 : 4)));
+        int insertBefore = cards.FindIndex(entry => entry.Notice.Source == notice.KeepNewestSource);
+        cards.Insert(insertBefore < 0 ? cards.Count : insertBefore, new(notice, Clock + TimeSpan.FromSeconds(notice.Kind == ToastKind.Error ? 8 : 4)));
         Changed?.Invoke();
     }
 

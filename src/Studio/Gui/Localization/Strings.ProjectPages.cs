@@ -170,6 +170,8 @@ internal static partial class Strings
         ("Project.UnsupportedDirection", "Workspace-to-project synchronization is unsupported.", "当前不支持从工作区同步到项目。"),
         ("Project.ToProject", "Workspace → project", "工作区 → 项目"),
         ("Project.SyncElapsed", "Elapsed {0:0.00} s", "耗时 {0:0.00} 秒"),
+        ("Project.SyncPreviewCounts", "{0} to synchronize · {1} to skip", "将同步 {0} · 跳过 {1}"),
+        ("Project.SyncPreviewErrors", "{0} to synchronize · {1} to skip · preview errors: {2}", "将同步 {0} · 跳过 {1} · 预演错误 {2}"),
         ("Project.SyncCounts", "{0} synchronized · {1} skipped · {2} failed", "{0} 个同步 · {1} 个跳过 · {2} 个失败"),
         ("Project.OpenXml", "Open exported SimaticML…", "打开已导出的 SimaticML…"),
         ("Project.XmlFilter", "SimaticML block (*.xml)|*.xml", "SimaticML 程序块 (*.xml)|*.xml"),

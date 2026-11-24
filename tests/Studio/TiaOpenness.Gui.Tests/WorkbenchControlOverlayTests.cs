@@ -40,9 +40,17 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
         return Assert.Single(window.Root.Children.OfType<SessionPopover>());
     }
 
-    private static bool KeyDown(UIElement element, Key key)
+    private sealed class ControlKeyboard() : KeyboardDevice(InputManager.Current)
     {
-        var args = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(element), 0, key)
+        internal static readonly ControlKeyboard Instance = new();
+        protected override KeyStates GetKeyStatesFromSystem(Key key) => key == Key.LeftCtrl ? KeyStates.Down : KeyStates.None;
+    }
+
+    private KeyboardDevice? _keyboard;
+
+    private bool KeyDown(UIElement element, Key key)
+    {
+        var args = new KeyEventArgs(_keyboard ?? Keyboard.PrimaryDevice, PresentationSource.FromVisual(element), 0, key)
             { RoutedEvent = Keyboard.PreviewKeyDownEvent };
         element.RaiseEvent(args);
         return args.Handled;
@@ -125,10 +133,11 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
             {
                 window.Width = 1200; // At this width call details open as a modal drawer.
                 window.UpdateLayout();
+                _keyboard = ControlKeyboard.Instance;
                 void Check(UIElement source)
                 {
                     Assert.False(WorkbenchCommands.CommandPalette.CanExecute(null, window));
-                    WpfContext.WithControlPressed(() => Assert.True(KeyDown(source, Key.K)));
+                    Assert.True(KeyDown(source, Key.K));
                     Assert.Equal(Visibility.Collapsed, window.OverlayHost.Visibility);
                 }
                 window.OperationsContent.ShowProjectOptions();
@@ -145,6 +154,25 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
                 Assert.True(window.ApprovalsContent.ConfirmationSheet.IsVisible);
                 Assert.Equal("confirmation-sheet", window.ApplyControl(Request(WorkbenchControlOperation.ReadState)).Data!.Workbench!.BlockedBy);
                 Check(window.ApprovalsContent.ConfirmationSheet);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData(Key.S)]
+    [InlineData(Key.B)]
+    public void Guard_blocks_control_shortcuts_from_the_event_keyboard(Key key)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                _keyboard = ControlKeyboard.Instance;
+                Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request()).Status);
+                Assert.True(window.ControlGuard.ClickGuardActive);
+                Assert.True(KeyDown(window, key));
             }
             finally { window.Close(); }
         });
@@ -390,6 +418,44 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
                     new WorkbenchDisplayBlockArguments { SoftwarePath = "PLC_1", BlockPath = "Missing" }), "block-not-found");
                 Refused(Request(WorkbenchControlOperation.PrefillForm, session: "3333333333333333"), "prefill-pending");
                 Assert.Empty(client.Calls);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData("Engineering", "Project")]
+    [InlineData("Blocks", "Export")]
+    [InlineData("VersionControl", "Workspace")]
+    public void Call_drawer_closes_page_options_and_takes_keyboard_focus(string page, string section)
+    {
+        wpf.Run(() =>
+        {
+            var (window, _, _) = Window();
+            try
+            {
+                window.Width = 1200;
+                window.UpdateLayout();
+                window.Navigate("Calls");
+                var call = window.Features.Calls[0];
+                window.Navigate(page);
+                var options = page switch
+                {
+                    "Engineering" => window.OperationsContent.Options,
+                    "Blocks" => window.BlocksContent.Options,
+                    _ => window.VersionControlContent.Options,
+                };
+                options.Show(section);
+                WpfContext.Drain();
+                Assert.True(options.OptionsOverlay.IsVisible);
+                window.Features.OpenCall(call);
+                WpfContext.Drain();
+                Assert.False(options.IsOpen);
+                Assert.True(window.DrawerOverlay.IsVisible);
+                Assert.True(window.DrawerOverlay.IsEnabled);
+                Assert.Same(window.DrawerTitle, Keyboard.FocusedElement);
+                Assert.True(KeyDown(window.DrawerTitle, Key.Escape));
+                Assert.False(window.DrawerOverlay.IsVisible);
             }
             finally { window.Close(); }
         });

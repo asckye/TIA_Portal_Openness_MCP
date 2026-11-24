@@ -15,6 +15,30 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class FeaturePageTests(WpfContext wpf)
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Cancelling_a_repeat_verification_clears_the_previous_result(bool broken)
+    {
+        wpf.Run(() =>
+        {
+            var audit = new FeaturePageFixtures.Audit { Broken = broken };
+            using var model = Model(audit: audit);
+            WpfContext.Complete(model.VerifyAsync());
+            Assert.True(model.ShowVerification);
+            using var finish = new System.Threading.ManualResetEventSlim();
+            audit.BeforeVerify = finish.Wait;
+            var running = model.VerifyAsync();
+            try { model.Verify(); }
+            finally { finish.Set(); WpfContext.Complete(running); }
+            Assert.True(model.VerificationCancelled);
+            Assert.False(model.ShowVerification);
+            Assert.False(model.HasVerification);
+            Assert.Equal(Loc.Current["Audit.NotVerified"], model.VerificationText);
+            Assert.DoesNotContain(model.AuditRows, row => row.Selected);
+        });
+    }
+
     [Fact]
     public void Environment_selection_survives_recheck_and_diagnostics_stay_on_logs_while_retention_lives_in_settings()
     {

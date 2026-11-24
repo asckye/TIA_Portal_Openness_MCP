@@ -32,7 +32,7 @@ public partial class MainWindow
     private INotifyPropertyChanged? _controlFeatures, _controlJournal;
     private string? _controlDetailRequestId;
     private Controls.ModalPane? _controlCallDrawer;
-    private bool _controlOpenedOptions, _prefillCardDismissed;
+    private bool _controlOpenedOptions, _prefillCardDismissed, _applyingControl;
     private static readonly DependencyPropertyDescriptor OptionsVisibility =
         DependencyPropertyDescriptor.FromProperty(UIElement.VisibilityProperty, typeof(Grid));
     private readonly DispatcherTimer _inputIdleTimer = new() { Interval = TimeSpan.FromMilliseconds(150) };
@@ -255,6 +255,13 @@ public partial class MainWindow
         if (request.Operation is WorkbenchControlOperation.ReadState or WorkbenchControlOperation.ReadSelection)
             return ControlResponse.Done(request, ControlSurface.Snapshot.Read(request.Arguments));
         if (ControlBlocker() is { } blocker) return ControlResponse.Refuse(request, blocker.Condition);
+        _applyingControl = true;
+        try { return ApplyControlChange(request); }
+        finally { _applyingControl = false; }
+    }
+
+    private WorkbenchControlResponse ApplyControlChange(WorkbenchControlRequest request)
+    {
         bool prefillChanged = false;
         WorkbenchControlResponse response;
         switch (request.Arguments)
@@ -322,8 +329,11 @@ public partial class MainWindow
             CloseSessionPopover(false);
             ControlGuard.UiChanged();
             var age = new ControlActivityAge(ControlNow, ControlNow());
-            ShowToast(ToastKind.Info, LocalizedText.Key("Control.Activity", ControlTool(request.Operation), request.Origin.ClientName, age), "ai-activity");
             if (prefillChanged) UpdateControlPrefill();
+            var activity = LocalizedText.Key("Control.Activity", ControlTool(request.Operation), request.Origin.ClientName, age);
+            // The paired form keeps its Escape and action shortcut while the activity is visible.
+            ShowToast(new ToastNotice("ai-activity", ToastKind.Info, activity, default, null, "")
+                { MayDisplaceSticky = true, KeepNewestSource = prefillChanged ? "ai-prefill" : null });
             if (DrawerOverlay.Visibility != Visibility.Visible && !OperationsContent.OptionsOpen) CurrentPageTitle.Focus();
             ControlSurface.Publish(CaptureControlSnapshot());
         }
@@ -457,7 +467,7 @@ public partial class MainWindow
     }
     private void RestoreDismissedPrefill()
     {
-        if (!_prefillCardDismissed || _prefills.Latest == null) return;
+        if (_applyingControl || !_prefillCardDismissed || _prefills.Latest == null) return;
         _prefillCardDismissed = false;
         ShowPendingPrefill();
     }
@@ -535,8 +545,8 @@ public partial class MainWindow
     {
         if (e.Key is Key.Enter or Key.Space && (ControlGuard.ShouldBlock(e.OriginalSource as DependencyObject) || ControlGuard.ClickGuardActive)) e.Handled =
             true;
-        if (ControlGuard.ClickGuardActive && (e.Key == Key.System || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))) e.Handled = true;
-        if (ControlGuard.ClickGuardActive && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.B) e.Handled = true;
+        if (ControlGuard.ClickGuardActive && (e.Key == Key.System || e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Alt))) e.Handled = true;
+        if (ControlGuard.ClickGuardActive && e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control) && e.Key is Key.S or Key.B) e.Handled = true;
         RecordHumanInput();
     }
     private sealed record ControlActivityAge(Func<DateTimeOffset> Now, DateTimeOffset Started)
@@ -552,7 +562,12 @@ public partial class MainWindow
     };
     private void DisposeControl()
     {
-        _controlClosing = true; _controlServer?.Dispose();
+        _controlClosing = true;
+        if (_controlServer != null)
+        {
+            _controlServer.ListenerFailed -= OnControlListenerFailed;
+            _controlServer.Dispose();
+        }
         _inputIdleTimer.Stop();
         _inputIdleTimer.Tick -= OnInputIdleTick;
         IsEnabledChanged -= OnControlWindowChanged;
