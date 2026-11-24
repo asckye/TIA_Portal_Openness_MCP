@@ -8519,6 +8519,48 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchRenderProjectPagesTests/Render_project_pages_and_atlas_states_without_native_services( ):ba226e698837c7bd1bec74c81fa2b0e6e8733480ed3223f265824fb9ae39ed30:1"
         }
       ]
+    },
+    {
+      "task": "UI-AIHINT",
+      "maintainerDate": "2026-11-23",
+      "reason": "Final design removes the full-width AI safety banner and prefill hint (spec red line: no banners); the same states are asserted on the ai-prefill, ai-activity and ai-channel toast cards. Maintainer approved design-following assertion changes on 2026-11-23.",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/ProjectPageInteractionTests.Document.cs",
+          "kind": "test-removed",
+          "identifier": "TiaOpenness.Gui.Tests.ProjectPageInteractionTests/Project_documents_keep_the_single_safety_banner_below_their_toolbar( ):7ac471c17a27d8fe5627efba1eaded16d21cc4c808e35e46e4e3aed165a4ebe5"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Human_can_confirm_or_clear_prefill_and_release_form_ownership( ):99a9d35dd05b517bb5d1344189a262e67f6baf1adb53cb568a87145390eaa99c:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Status_and_prefill_markers_are_localized( AppLanguage language ):9e18f789a692acb9952897a75f8d985e58138c7e90f5cd94e4f63b8e7aeec9b6:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Status_and_prefill_markers_are_localized( AppLanguage language ):de44114a74abfffd00da1723ac9c5d00e35f74d5bacd69cad00687b4dcff1028:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlTests/Safety_banner_uses_one_priority_message_without_hiding_pending_approvals( ):3a354620d49d1290ea84d84efc57b1368ca2d10072620406fc82b9606688e4be"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchMcpPrefillTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchMcpPrefillTests/Real_window_prefill_preserves_ownership_markers_and_clear_without_executing( int form ):035a0a81008e3af75eb980a695d82e1a82630a32c441b92a3d4bce9d2951f3d0:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchMcpPrefillTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchMcpPrefillTests/Real_window_prefill_preserves_ownership_markers_and_clear_without_executing( int form ):f71cd7c9bbc299636b0d05bdcb07b4b72a61a1f17770c010822e8b19d4101c41:1"
+        }
+      ]
     }
   ]
 }
