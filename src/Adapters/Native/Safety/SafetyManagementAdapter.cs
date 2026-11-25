@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
+using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Hardware;
 using SafetyLogic = TiaOpenness.Shared.SafetyPolicy;
 using EngineeringScalarProperties = TiaMcp.Adapters.Native.Safety.SafetyScalars;
@@ -326,7 +327,9 @@ namespace TiaMcp.Adapters.Native.Safety
                             EngineeringScalarProperties.Apply(numbers!, preparedNumbers, meta);
                         }
                         if (version != null) {
-                            meta["mayHaveChanged"] = true; settings.SafetySystemVersion = version; if (settings.SafetySystemVersion?.Value != version.Value)
+                            EngineeringWriteJournal.ProbeWrite(meta, "SafetySystemVersion",
+                                () => new object?[] { settings.SafetySystemVersion?.Value }, () => settings.SafetySystemVersion = version);
+                            if (settings.SafetySystemVersion?.Value != version.Value)
                                 throw new InvalidOperationException("SafetySystemVersion readback differs.");
                         }
                         ApplySafetyAttributes(settings, changes.Attributes, meta);
@@ -460,9 +463,10 @@ namespace TiaMcp.Adapters.Native.Safety
             var applied = meta["appliedAttributes"] as HmiArray ?? new HmiArray(); meta["appliedAttributes"] = applied;
             foreach (var attribute in attributes)
             {
-                meta["mayHaveChanged"] = true; meta["lastAttemptedAttribute"] = attribute.Key;
+                meta["lastAttemptedAttribute"] = attribute.Key;
                 object value = attribute.Value is bool flag ? flag : attribute.Value!.GetValue<int>();
-                owner.SetAttribute(attribute.Key, value);
+                EngineeringWriteJournal.ProbeWrite(meta, attribute.Key, () => new[] { owner.GetAttribute(attribute.Key) },
+                    () => owner.SetAttribute(attribute.Key, value), error => OpennessRefusalMapping.Refusal(error, out _) != null);
                 var readback = owner.GetAttribute(attribute.Key);
                 if (!Equals(Convert.ToString(readback), Convert.ToString(value)))
                     throw new InvalidOperationException("Attribute readback differs: " + attribute.Key + ". Changes are not rolled back.");

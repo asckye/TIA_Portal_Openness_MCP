@@ -473,8 +473,7 @@ namespace TiaMcp.Adapters
                     meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
                     return "Device groups read; no modification.";
                 }
-                meta["result"] = HardwareGroupOperations.Manage(project!, groupPath, action, newName, dryRun, "Devices", "DeviceGroups");
-                if (!dryRun) meta["mayHaveChanged"] = true;
+                meta["result"] = HardwareGroupOperations.Manage(project!, groupPath, action, newName, dryRun, "Devices", "DeviceGroups", meta);
                 return dryRun ? "Device user group preview; nothing changed."
                     : "Device user group operation completed (CreateFrom(MasterCopy) is not exposed here). No save/compile/download.";
             }, writing: !dryRun && action != "read");

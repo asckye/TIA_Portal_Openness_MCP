@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="TiaFeatureProfile;TiaReleaseKey;DefineConstants">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TiaFeatureProfile>Adapter</TiaFeatureProfile>
+    <TiaReleaseKey>19</TiaReleaseKey>
+    <DefineConstants>$(DefineConstants);TIA_ADAPTER_INTERNAL_VERSIONING</DefineConstants>
+  </PropertyGroup>
+  <Import Project="../../../src/Shared/TiaFeatures.props" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
+    <Reference Include="System.Drawing" />
+    <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Adapter.Imports.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Evidence.cs" />
+    <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetwork.MappingRules.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelAdapter.Dynamization.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelLogic.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiValues.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestValues.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedHmiAccess.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcGroupOperations.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareScalarEvidence.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativeInputPolicy.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" />
+    <Compile Include="../../../src/Logic/ModelContextProtocol/ResponseClock.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiReadSafety.cs" />
+    <Compile Include="../../../src/Logic/ModelContextProtocol/PortalFailureClassifier.cs" />
+    <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcGroupCreation.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwarePath.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareServicesPolicy.cs" />
+    <Compile Include="../../../src/Shared/DataLocations.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedObjectAddress.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/HmiScalarPolicy.cs" />
+    <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" />
+    <Compile Include="../../../src/Shared/BundleLayout.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiScalar.Values.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/PlcOpcUaImportDocument.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedRequestScalar.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiValueTypes.cs" />
+    <Compile Include="../../../src/Adapters/Native/Libraries/LibraryPolicy.cs" />
+  </ItemGroup>
+</Project>

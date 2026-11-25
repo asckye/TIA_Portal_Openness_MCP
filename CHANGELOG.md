@@ -9,6 +9,8 @@
 - Tool usage examples now cover every registered parameter, show release-specific CPU and panel catalog choices, and identify the
   exported PLC block XML, localized HMI table, existing connection and workspace directory required by the corresponding calls.
   The examples distinguish previews from execution, preserve tool-specific units and bounds, and cite the release and run row for verified calls.
+- Batch exports and seed imports retain completed items when a later step fails. PLC, HMI, and hardware writes report an unknown outcome when
+  native changes cannot be verified. CPU settings report the requested and actual values for attributes that TIA normalizes.
 - Offline document tools identify unreadable inputs and name the output to inspect when a PLC report or build fails after file creation.
 - PLC block patches accept full nested UDT member paths and reject a path that selects different members under its two supported spellings.
   Edit capabilities identify which listed members have a patchable start value and retain the read-only listing for library-connected documents.

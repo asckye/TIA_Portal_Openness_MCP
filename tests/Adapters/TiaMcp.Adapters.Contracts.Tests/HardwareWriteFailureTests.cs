@@ -6,6 +6,44 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class HardwareWriteFailureTests
 {
+    [Fact]
+    public void A_later_rollback_cannot_settle_a_successful_syslog_update()
+    {
+        var fixture = NativeFixture();
+        var meta = new Dictionary<string, object?>();
+        var address = new Siemens.Engineering.HW.Address { StartAddress = 1 };
+        SecurityResult? syslogReply = null;
+        TiaMcp.Adapters.Native.Engineering.EngineeringWriteJournal.RunReported(meta, () => {
+            TiaMcp.Adapters.Native.Engineering.EngineeringWriteJournal.Property(address, address.GetType().GetProperty("StartAddress")!);
+            address.StartAddress = 2;
+            syslogReply = SyslogUpdate(fixture.Engine, new() { ["EnableSystemLogging"] = new HardwareScalar { Kind = "boolean", Text = "true" } });
+            throw new IOException("Follow-up failed.");
+        }, error => error.Message);
+        Assert.True((bool?)syslogReply?.Meta["operationSuccess"]);
+        Assert.Equal(1, address.StartAddress);
+        Assert.True(fixture.Syslog.EnableSystemLogging);
+        Assert.Equal("unknown", meta["rollbackOutcome"]);
+    }
+
+    [Fact]
+    public void Restored_address_scalars_do_not_settle_the_process_image_assignment()
+    {
+        var fixture = NativeFixture();
+        var address = new Siemens.Engineering.HW.Address { StartAddress = 1 };
+        fixture.Cpu.Addresses.Add(address);
+        var block = new Siemens.Engineering.SW.Blocks.OB { Name = "Main" };
+        fixture.Engine.ResolveEngineeringBlock = (_, _) => block;
+        Siemens.Engineering.SW.Blocks.OB? assigned = null;
+        address.AssignProcessImage = target => { assigned = target; throw new InvalidOperationException("Assignment reply lost."); };
+        var result = fixture.Engine.UpdateHardwareAddress(new HardwareAddressUpdate { DevicePath = ["PLC"], ItemPath = ["CPU"], IoType = "Input",
+            StartAddress = 1, Properties = new() { ["StartAddress"] = new HardwareScalar { Kind = "number", Text = "2" } },
+            DryRun = false, SoftwarePath = "PLC", ProcessImageObName = "Main" }, false);
+        Assert.Same(block, assigned);
+        Assert.Equal(1, address.StartAddress);
+        Assert.True(result.OutcomeUnknown);
+        Assert.False(Equals(result.Meta["rollbackCompleted"], true));
+    }
+
     [Theory]
     [InlineData("root", "Device not found: Missing. Candidates: PLC.")]
     [InlineData("ungrouped", "Device not found: $ungrouped/Missing. Candidates: PLC.")]

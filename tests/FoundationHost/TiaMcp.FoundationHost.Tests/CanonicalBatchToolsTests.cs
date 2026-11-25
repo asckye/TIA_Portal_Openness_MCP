@@ -11,6 +11,51 @@ using Xunit;
 
 public sealed class CanonicalBatchToolsTests
 {
+
+    [Fact]
+    public async Task Approval_completion_failure_after_export_records_an_unsettled_batch()
+    {
+        const string name = "ExportTechnologyObjectsToDirectory";
+        using var files = new Files();
+        var source = new Target(name, "20") { TechnologyPaths = new[] { "Group/Axis" }, HashInEvidence = true };
+        var export = new Target("ExportTechnologyObject", "20");
+        var unsettled = new toolpipeline::TiaMcp.FoundationHost.UnsettledCalls();
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [name] = source, [export.ProtocolTool.Name] = export }, "20", () => Binding.DeepClone().AsObject(), unsettled) {
+            Approve = (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)),
+            CompleteApproval = (_, _) => throw new IOException("Approval completion failed.") };
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["exportDir"] = files.Directory };
+        var preview = await batch.InvokeAsync(Request(name, args));
+        Apply(args, preview.StructuredContent!["data"]!.AsObject());
+        var result = await batch.InvokeAsync(Request(name, args));
+        Assert.Single(export.Writes);
+        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("completed", (string?)result.StructuredContent?["data"]?["items"]?[0]?["status"]);
+        Assert.Equal((string?)result.StructuredContent?["meta"]?["requestId"], Assert.Single(unsettled.Snapshot()).RequestId);
+    }
+
+    [Fact]
+    public async Task Approval_completion_failure_after_a_rejected_child_preserves_its_evidence()
+    {
+        const string name = "ExportTechnologyObjectsToDirectory";
+        using var files = new Files();
+        var source = new Target(name, "20") { TechnologyPaths = new[] { "Group/Axis" }, HashInEvidence = true };
+        var export = new Target("ExportTechnologyObject", "20") { RejectWrite = true, FailWrite = 1 };
+        var unsettled = new toolpipeline::TiaMcp.FoundationHost.UnsettledCalls();
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [name] = source, [export.ProtocolTool.Name] = export }, "20", () => Binding.DeepClone().AsObject(), unsettled) {
+            Approve = (pending, _, _) => Task.FromResult(new ApprovalOutcome(pending, false, null)),
+            CompleteApproval = (_, _) => throw new IOException("Approval completion failed.") };
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["exportDir"] = files.Directory };
+        var preview = await batch.InvokeAsync(Request(name, args));
+        Apply(args, preview.StructuredContent!["data"]!.AsObject());
+        var result = await batch.InvokeAsync(Request(name, args));
+        Assert.Single(export.Writes);
+        Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Empty(unsettled.Snapshot());
+        Assert.Equal("failed", (string?)result.StructuredContent?["data"]?["items"]?[0]?["status"]);
+    }
+
     [Fact]
     public async Task Force_directory_is_resolved_on_the_host_before_item_preview_and_execution()
     {
@@ -784,6 +829,7 @@ public sealed class CanonicalBatchToolsTests
         internal bool HashInEvidence;
         internal string[] TechnologyPaths = new[] { "Axis" };
         internal bool OmitRequestId;
+        internal bool RejectWrite;
         internal bool UnknownFailure, LegacyReset;
         internal Action<int>? AfterWrite;
         internal JsonArray? Inventory;
@@ -829,6 +875,8 @@ public sealed class CanonicalBatchToolsTests
                 unknown ? Execution.Unknown : write ? Execution.Completed : Execution.ReadOnly,
                 unknown ? new Error("canonical unknown", new OutcomeUnknownDetails("batch-item", new Dictionary<string, JsonElement>()))
                     : failure ? new Error("canonical failure", new NativeOperationFailedDetails(null, null, new Dictionary<string, JsonElement>())) : null);
+            if (RejectWrite && failure)
+                result = FoundationV4Result.Reject(release, name, "test", new Error("Refused", new PreconditionFailedDetails("target", null)));
             if (OmitRequestId) result.StructuredContent!["meta"]!.AsObject().Remove("requestId");
             return ValueTask.FromResult(result);
         }

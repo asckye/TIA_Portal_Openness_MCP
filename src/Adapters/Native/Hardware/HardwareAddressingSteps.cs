@@ -160,6 +160,7 @@ namespace TiaMcp.Adapters
                 if (ob != null && !dryRun)
                 {
                     meta["mayHaveChanged"] = true;
+                    EngineeringWriteJournal.Unrestored("ProcessImageOb");
 #if PLC_ADDRESS_PROCESS_IMAGE_SERVICE
                     processImage!.AssignProcessImageToOrganizationBlock(ob);
 #else

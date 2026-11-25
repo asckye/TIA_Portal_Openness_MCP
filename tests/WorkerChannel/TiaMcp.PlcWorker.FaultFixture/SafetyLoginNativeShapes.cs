@@ -12,9 +12,31 @@ namespace Siemens.Engineering
     {
         public object? Parent { get; set; }
         public virtual T? GetService<T>() where T : class => throw new NotSupportedException();
-        public object GetAttribute(string name) => throw new NotSupportedException();
-        public void SetAttribute(string name, object value) => throw new NotSupportedException();
+        internal bool AttributeWritten;
+        internal bool RefuseAttribute;
+        public object GetAttribute(string name) => false;
+        public void SetAttribute(string name, object value)
+        {
+            if (RefuseAttribute) throw new EngineeringSecurityException();
+            AttributeWritten = true;
+            throw new InvalidOperationException("Attribute reply lost.");
+        }
     }
+    public class EngineeringException : Exception
+    {
+        public EngineeringException() { }
+        public EngineeringException(Exception cause) : base("Native diagnostic.", cause) { }
+    }
+    public class EngineeringTargetInvocationException : EngineeringException
+    {
+        public EngineeringTargetInvocationException() { }
+        public EngineeringTargetInvocationException(Exception cause) : base(cause) { }
+    }
+    public class EngineeringUserAbortException : EngineeringTargetInvocationException { }
+    public class EngineeringSecurityException : EngineeringException { }
+    public class MissingProductsException : EngineeringTargetInvocationException { }
+    public class LicenseNotFoundException : EngineeringTargetInvocationException { }
+    public class EngineeringObjectDisposedException : EngineeringException { }
     public class NonRecoverableException : Exception { }
 }
 namespace Siemens.Engineering.HW
@@ -39,6 +61,7 @@ namespace Siemens.Engineering.SW
     public sealed class PlcSoftware : EngineeringObject, Compiler.ICompilable
     {
         public string Name => "CPU";
+        internal ExternalSources.Source Source { get; } = new ExternalSources.Source();
         public Blocks.PlcBlockGroup BlockGroup { get; } = new Blocks.PlcBlockGroup();
         public override T? GetService<T>() where T : class => this as T;
         internal int CompileCalls;
@@ -50,8 +73,10 @@ namespace Siemens.Engineering.SW.Blocks
     public class PlcBlock : EngineeringObject
     {
         public string Name { get; set; } = "";
+        public DateTime ModifiedDate => default;
         public int Number => 0;
         public string ProgrammingLanguage => "";
+        public bool IsConsistent => true;
         public bool IsKnowHowProtected => false;
         public override T? GetService<T>() where T : class => null;
     }
@@ -62,6 +87,7 @@ namespace Siemens.Engineering.SW.Blocks
     public class PlcBlockGroup
     {
         public PlcBlockGroups Groups { get; } = new PlcBlockGroups();
+        public List<PlcBlock> Types { get; } = new List<PlcBlock>();
         public List<PlcBlock> Blocks { get; } = new List<PlcBlock>();
         public string Name { get; set; } = "";
     }
@@ -94,7 +120,7 @@ namespace Siemens.Engineering.Safety
         internal Exception? LogoffError;
         internal bool LoggedOnAfterLogin;
         private bool attempted;
-        public bool IsSafetyOfflineProgramPasswordSet => true;
+        public bool IsSafetyOfflineProgramPasswordSet { get; set; } = true;
         public bool IsLoggedOnToSafetyOfflineProgram
         {
             get
@@ -117,23 +143,24 @@ namespace Siemens.Engineering.Safety
             LoggedOnAfterLogin = false;
         }
         public RuntimeGroupComposition RuntimeGroups { get; } = new RuntimeGroupComposition();
-        public SafetySettings Settings => throw new NotSupportedException();
+        public SafetySettings Settings { get; } = new SafetySettings();
         public void SetSafetyOfflineProgramPassword(SecureString password) => throw new NotSupportedException();
         public void RevokeSafetyOfflineProgramPassword(SecureString password) => throw new NotSupportedException();
     }
-    public class RuntimeGroup : EngineeringObject { }
-    public class RuntimeGroupComposition : List<RuntimeGroup> { public RuntimeGroup? Find(string name) => throw new NotSupportedException(); }
+    public class RuntimeGroup : EngineeringObject { public int Cycle { get; set; } }
+    public class RuntimeGroupComposition : List<RuntimeGroup> { public RuntimeGroup? Find(string name) => this.Find(_ => name == "Group"); }
     public class SafetySignature { public string Type => ""; public uint Value => 0; }
     public class SafetySignatureComposition : List<SafetySignature> { }
     public class SafetySignatureProvider { public SafetySignatureComposition Signatures => throw new NotSupportedException(); }
     public class SafetySettings : EngineeringObject
     {
         public AssignmentOfBlockNumbers? AssignmentOfBlockNumbers => null;
+        public int Cycle { get; set; }
         public SafetySystemVersion? SafetySystemVersion { get; set; }
-        public IEnumerable<SafetySystemVersion> GetApplicableSafetySystemVersions() => throw new NotSupportedException();
+        public IEnumerable<SafetySystemVersion> GetApplicableSafetySystemVersions() => new[] { new SafetySystemVersion() };
         public void CleanSystemGeneratedObjects() => throw new NotSupportedException();
     }
-    public class SafetySystemVersion { public string Value => ""; }
+    public class SafetySystemVersion { public string Value => "V2"; }
     public class AssignmentOfBlockNumbers { public int ManagementMode, FromFB, ToFB, FromFC, ToFC, FromDB, ToDB; }
     public class GlobalSettings
     {

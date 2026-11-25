@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 using System.Reflection;
+using TiaMcp.Adapters.Native.Engineering;
 
 namespace TiaMcp.Adapters.Hardware
 {
@@ -51,11 +52,27 @@ namespace TiaMcp.Adapters.Hardware
             }
             return current;
         }
+        private static object?[]? GroupNames(object collection)
+        {
+            if (collection is not IEnumerable items || collection is string) return null;
+            var names = new List<string>();
+            foreach (var item in items)
+            {
+                if (item == null || Get(item, "Name") is not string name || name.Length == 0 || names.Count == 10000) return null;
+                names.Add(name);
+            }
+            names.Sort(StringComparer.Ordinal);
+            return names.ToArray();
+        }
+
         internal static Dictionary<string, object?> Manage(object root, string path, string action, string newName, bool dryRun,
-            string contents, string firstGroups = "Groups")
+            string contents, string firstGroups = "Groups", IDictionary<string, object?>? evidence = null)
         {
             if (action != "create" && action != "rename" && action != "deleteEmpty")
                 throw new ArgumentException("action must be create, rename or deleteEmpty.");
+            evidence ??= new Dictionary<string, object?>();
+            void Write(object owner, string groups, Action operation) =>
+                EngineeringWriteJournal.ProbeWrite(evidence, path, () => GroupNames(Get(owner, groups)), operation);
             var parts = Parts(path);
             if (action == "create")
             {
@@ -66,7 +83,14 @@ namespace TiaMcp.Adapters.Hardware
                 return HardwareGroupCreation.Execute<object>(root, path, dryRun,
                     g => Items(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups")),
                     g => Get(g, "Name").ToString()!,
-                    (g, name) => Call(Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups"), "Create", new[] { typeof(string) }, name), false);
+                    (g, name) => {
+                        var children = Get(g, ReferenceEquals(g, root) ? firstGroups : "Groups");
+                        if (children.GetType().GetMethod("Create", new[] { typeof(string) }) == null)
+                            throw new NotSupportedException("Native group Create(string) unavailable.");
+                        object? created = null;
+                        Write(g, ReferenceEquals(g, root) ? firstGroups : "Groups", () => created = Call(children, "Create", new[] { typeof(string) }, name));
+                        return created ?? throw new InvalidOperationException("Native group creation returned no object.");
+                    }, false);
             }
             var parentPath = string.Join("/", parts.Take(parts.Length - 1));
             var parent = Group(root, parentPath, firstGroups);
@@ -87,8 +111,10 @@ namespace TiaMcp.Adapters.Hardware
                 if (!dryRun)
                 {
                     result["mayHaveChanged"] = true;
-                    if (dynamicName) Call(target, "SetAttribute", new[] { typeof(string), typeof(object) }, "Name", newName);
-                    else property!.SetValue(target, newName);
+                    Write(parent, parts.Length == 1 ? firstGroups : "Groups", () => {
+                        if (dynamicName) Call(target, "SetAttribute", new[] { typeof(string), typeof(object) }, "Name", newName);
+                        else property!.SetValue(target, newName);
+                    });
                     if (!string.Equals(Get(target, "Name").ToString(), newName, StringComparison.Ordinal))
                         throw new InvalidOperationException("Rename returned but readback differs.");
                     result["changed"] = true;
@@ -103,7 +129,7 @@ namespace TiaMcp.Adapters.Hardware
                 if (!dryRun)
                 {
                     result["mayHaveChanged"] = true;
-                    Call(target, "Delete", Type.EmptyTypes);
+                    Write(parent, parts.Length == 1 ? firstGroups : "Groups", () => Call(target, "Delete", Type.EmptyTypes));
                     if (Find(siblings, parts.Last()) != null)
                         throw new InvalidOperationException("Delete returned but target is still present; do not blindly retry.");
                     result["changed"] = true;

@@ -100,13 +100,30 @@ namespace TiaMcp.Adapters.Native.Security
                     switch (action)
                     {
                         case "update":
-                            if (properties.TryGetValue("EnableSystemLogging", out var enable)) { var value = enable!.GetValue<bool>();
-                                meta["mayHaveChanged"] = true; manager.EnableSystemLogging = value; if (manager.EnableSystemLogging !=
-                                value) throw new InvalidOperationException("EnableSystemLogging readback differs."); }
-                            if (properties.TryGetValue("TransportProtocol", out var protocol)) { var value =
-                                (SysLogTransportProtocolType)Enum.Parse(typeof(SysLogTransportProtocolType), protocol!.ToString()!);
-                                meta["mayHaveChanged"] = true; manager.TransportProtocol = value; if (manager.TransportProtocol !=
-                                value) throw new InvalidOperationException("TransportProtocol readback differs."); }
+                            if (properties.TryGetValue("EnableSystemLogging", out var enable))
+                            {
+                                void SetLogging()
+                                {
+                                    var value = enable!.GetValue<bool>();
+                                    meta["mayHaveChanged"] = true;
+                                    manager.EnableSystemLogging = value;
+                                    if (manager.EnableSystemLogging != value) throw new InvalidOperationException("EnableSystemLogging readback differs.");
+                                }
+                                if (enable is bool) EngineeringWriteJournal.ProbeWrite(meta, "EnableSystemLogging",
+                                    () => new object?[] { manager.EnableSystemLogging }, SetLogging);
+                                else SetLogging(); // Preserve the scalar conversion refusal before reaching the setter.
+                            }
+                            if (properties.TryGetValue("TransportProtocol", out var protocol))
+                            {
+                                var value = (SysLogTransportProtocolType)Enum.Parse(typeof(SysLogTransportProtocolType), protocol!.ToString()!);
+                                void SetProtocol()
+                                {
+                                    meta["mayHaveChanged"] = true;
+                                    manager.TransportProtocol = value;
+                                    if (manager.TransportProtocol != value) throw new InvalidOperationException("TransportProtocol readback differs.");
+                                }
+                                EngineeringWriteJournal.ProbeWrite(meta, "TransportProtocol", () => new object?[] { manager.TransportProtocol }, SetProtocol);
+                            }
                             if (attributes.Count > 0) _session.SetDynamicAttributes((IEngineeringObject)owner, attributes, meta);
                             break;
                         case "createServer":

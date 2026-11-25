@@ -256,6 +256,7 @@ namespace TiaMcp.Adapters
         public HardwareAddressingReply HardwareLegacySetCpuCommonSettings(string cpuPath, Dictionary<string, HardwareScalar> settingsJson)
         {
             var meta = HardwareStepMeta(DateTime.Now, false); meta["cpuPath"] = cpuPath; meta["mayHaveChanged"] = false;
+            bool verifiedMismatch = false;
             using var journal = new EngineeringWriteJournal();
 
             try
@@ -316,10 +317,11 @@ namespace TiaMcp.Adapters
 
                     bool writeIssued = false;
                     bool readbackComplete = false;
+                    object? oldValue = null;
+                    bool hadOldValue = false;
                     try
                     {
-                        object? oldValue = null;
-                        try { oldValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
+                        try { oldValue = di.GetAttribute(info.Name); hadOldValue = true; } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
                         if (!HardwareTryCoerceAttributeValue(value, oldValue, info, out var typedValue, out var typeProblem))
                         {
                             rejected.Add(new Dictionary<string, object?> { ["attribute"] = info.Name, ["reason"] = typeProblem });
@@ -330,7 +332,17 @@ namespace TiaMcp.Adapters
                         di.SetAttribute(info.Name, typedValue);
                         object? newValue = null;
                         try { newValue = di.GetAttribute(info.Name); readbackComplete = true; } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
-                        if (!readbackComplete) { meta["writeOutcomeUnknown"] = true; meta["readbackComplete"] = false; }
+                        if (!readbackComplete || !HardwareAddressingPolicy.SameValue(newValue, typedValue))
+                        {
+                            if (readbackComplete) meta["valueMismatch"] = true;
+                            else { meta["writeOutcomeUnknown"] = true; meta["readbackComplete"] = false; }
+                            rejected.Add(new Dictionary<string, object?> {
+                                ["attribute"] = info.Name, ["writeIssued"] = true,
+                                ["requestedValue"] = typedValue?.ToString(), ["newValue"] = newValue?.ToString(),
+                                ["reason"] = readbackComplete ? "CPU attribute readback differs." : "CPU attribute readback unavailable."
+                            });
+                            continue;
+                        }
                         applied.Add(new Dictionary<string, object?>
                         {
                             ["attribute"] = info.Name,
@@ -343,7 +355,9 @@ namespace TiaMcp.Adapters
                     catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
                     {
                         EngineeringWriteJournal.ObserveFailure(ex);
-                        if (writeIssued) meta["writeOutcomeUnknown"] = true;
+                        if (writeIssued && (NativeRefusalProbe.UncertainConnection(ex) || !hadOldValue
+                            || !HardwareAddressingPolicy.UnchangedAfterFailedSet(true, oldValue, () => di.GetAttribute(info.Name))))
+                            meta["writeOutcomeUnknown"] = true;
                         rejected.Add(new Dictionary<string, object?>
                         {
                             ["attribute"] = info.Name,
@@ -356,6 +370,7 @@ namespace TiaMcp.Adapters
                 meta["applied"] = applied;
                 meta["rejected"] = rejected;
                 meta["readback"] = HardwareBuildDeviceItemNetworkReadbackJson(cpuPath);
+                verifiedMismatch = meta.TryGetValue("valueMismatch", out var mismatch) && mismatch is true;
                 meta["success"] = applied.Count > 0 && rejected.Count == 0;
                 return new HardwareAddressingReply
                 {
@@ -373,7 +388,11 @@ namespace TiaMcp.Adapters
             }
             finally
             {
-                if (meta["success"] is true && !Equals(meta.TryGetValue("writeOutcomeUnknown", out var unknown) ? unknown : null, true)) journal.Commit();
+                if ((meta["success"] is true || verifiedMismatch) && !(meta.TryGetValue("writeOutcomeUnknown", out var unknown) && unknown is true))
+                {
+                    if (verifiedMismatch) meta["postStateKnown"] = true;
+                    journal.Commit();
+                }
                 else journal.Rollback(meta);
             }
         }

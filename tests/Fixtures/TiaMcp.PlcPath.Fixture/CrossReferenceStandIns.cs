@@ -70,6 +70,10 @@ namespace TiaMcp.Adapters.Native.Plc
     }
     internal static partial class PlcOrganisationPrimitives
     {
+        internal static object Tags(Siemens.Engineering.SW.Tags.PlcTagTable table) => table.Tags;
+        internal static object SystemConstants(Siemens.Engineering.SW.Tags.PlcTagTable table) => table.SystemConstants;
+        internal static CrossReferenceService CrossReferences(Siemens.Engineering.IEngineeringServiceProvider target)
+            => target.GetService<CrossReferenceService>();
         internal static CrossReferenceResult CrossReferences(CrossReferenceService service, CrossReferenceFilter filter)
             => service.GetCrossReferences(filter);
         internal static object TagTableGroup(object unit) => throw new NotSupportedException();

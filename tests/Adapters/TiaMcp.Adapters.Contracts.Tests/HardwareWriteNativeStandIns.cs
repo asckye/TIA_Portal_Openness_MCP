@@ -394,7 +394,8 @@ namespace Siemens.Engineering.HW
         public int Length { get; set; }
         public AddressIoType IoType { get; set; } = AddressIoType.Input;
         public object[] AddressControllers { get; set; } = [];
-        public void AssignProcessImageToOrganizationBlock(Siemens.Engineering.SW.Blocks.OB block) { }
+        public Action<Siemens.Engineering.SW.Blocks.OB>? AssignProcessImage { get; set; }
+        public void AssignProcessImageToOrganizationBlock(Siemens.Engineering.SW.Blocks.OB block) => AssignProcessImage?.Invoke(block);
         public object GetAttribute(string name) => throw new NotSupportedException();
         public void SetAttribute(string name, object? value) => throw new NotSupportedException();
     }

@@ -6,6 +6,37 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class LegacyUnknownWriteTests
 {
+
+    [Theory, InlineData("ImportAlarmClasses"), InlineData("ImportAlarmTextLists"), InlineData("ImportOpcUaInterface")]
+    public void B5_import_catch_without_native_evidence_keeps_unknown(string tool)
+    {
+        using var release = Host.HardwareContract.UseRelease("21");
+        var source = Path.GetTempFileName();
+        try
+        {
+            var workerReply = new TiaMcp.Adapters.Contracts.PlcB5Reply { Message = "Import failed" };
+            if (tool != "ImportAlarmClasses") workerReply.Meta = new() { ["success"] = false };
+            var service = new toolpipeline::TiaMcpServer.Siemens.Services.PlcB5PortService((_, _) =>
+                System.Text.Json.JsonSerializer.SerializeToNode(workerReply), () => "C:/fixture.ap21");
+            var result = Host.EngineeringToolContract.Run(tool, true, () => tool switch {
+                "ImportAlarmClasses" => service.ImportAlarmClasses("PLC", source),
+                "ImportAlarmTextLists" => service.ImportAlarmTextLists("PLC", source),
+                _ => service.ImportOpcUaInterface("PLC", source) });
+            Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        }
+        finally { File.Delete(source); }
+    }
+
+    [Fact]
+    public void Aml_unknown_transfer_state_in_an_older_worker_reply_keeps_unknown()
+    {
+        var response = new Host.ResponseMessage { Meta = new JsonObject { ["operationSuccess"] = false, ["status"] = "ImportFailed",
+            ["apiCallSuccess"] = true, ["mayHaveChanged"] = true, ["nativeResult"] = "Unknown",
+            ["cleanupRequired"] = new JsonArray(new JsonObject { ["action"] = "inspect devices per log" }) } };
+        var result = Host.HardwareToolContract.MapResult("ImportDeviceAml", response, false, true);
+        Assert.Equal("unknown", (string?)result.StructuredContent?["meta"]?["outcome"]);
+    }
+
     public static IEnumerable<object[]> Mappers => new[] { "drive", "engineering", "library", "optional", "hmi-exchange", "hmi-inspection",
         "unified", "plc", "motion", "hardware", "offline", "session" }
         .SelectMany(mapper => new[] { new object[] { mapper, false }, new object[] { mapper, true } });

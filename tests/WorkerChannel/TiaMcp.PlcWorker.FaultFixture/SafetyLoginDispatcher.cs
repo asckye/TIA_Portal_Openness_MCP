@@ -70,7 +70,13 @@ namespace TiaMcp.Adapters
             var container = session.GetSoftwareContainer(softwarePath);
             return (container.Software, (DeviceItem)container.Parent!, softwarePath, "D", "CPU");
         }
-        private static void RequireTargetOffline((PlcSoftware Value, DeviceItem Context, string ExactPath, string Device, string Host) target) { }
+        internal bool RefuseSecondOfflineCheck;
+        private int offlineChecks;
+        private void RequireTargetOffline((PlcSoftware Value, DeviceItem Context, string ExactPath, string Device, string Host) target)
+        {
+            if (++offlineChecks == 2 && RefuseSecondOfflineCheck)
+                throw new AdapterPreconditionException("The selected target is online.", "softwarePath", false);
+        }
         private static string[] CheckProjectOfflineProviders() => Array.Empty<string>();
         private static void Depth(int depth) { }
         private sealed class FixtureProject { internal FileInfo Path => new FileInfo(ProjectPath); }

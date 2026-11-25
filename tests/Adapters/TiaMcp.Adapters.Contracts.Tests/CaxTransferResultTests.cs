@@ -12,6 +12,16 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 
 public sealed class CaxTransferResultTests
 {
+
+    [Theory, InlineData(true), InlineData(false)]
+    public void Missing_or_unknown_transfer_state_keeps_import_uncertain(bool missing)
+    {
+        var result = missing ? null : new Cax.TransferResult(Cax.TransferResultState.Unknown, 0, 0, []);
+        var reply = Import("21", new Cax.CaxProvider(result!));
+        Assert.True(reply.OutcomeUnknown);
+        Assert.True(reply.MayHaveChanged);
+    }
+
     [Fact]
     public void Aml_export_marks_only_failures_before_the_CAEX_call_as_unmutated()
     {

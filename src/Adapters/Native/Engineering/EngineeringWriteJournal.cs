@@ -192,6 +192,39 @@ namespace TiaMcp.Adapters.Native.Engineering
             }
         }
 
+        // A setter or create without a verified inverse can only be discounted when its own readback proves refusal.
+        internal static void ProbeWrite(IDictionary<string, object?> meta, string target, Func<object?[]?> fingerprint, Action write,
+            Func<Exception, bool>? canProveRefusal = null)
+        {
+            bool prior = meta.TryGetValue("mayHaveChanged", out var previous) && previous is true;
+            var proof = new Dictionary<string, object?>();
+            try
+            {
+                NativeRefusalProbe.Run(proof, fingerprint, () => { meta["mayHaveChanged"] = true; write(); }, canProveRefusal);
+            }
+            catch (Exception error)
+            {
+                if (prior) error.Data.Remove("foundationKnownNoMutation");
+                throw;
+            }
+            finally
+            {
+                if (proof.TryGetValue("mayHaveChanged", out var issued) && issued is true) Unrestored(target);
+                foreach (var pair in proof)
+                {
+                    if (prior && (pair.Key == "mayHaveChanged" || pair.Key == "foundationKnownNoMutation")) continue;
+                    meta[pair.Key] = pair.Value;
+                }
+            }
+        }
+
+        internal static T ProbeCreate<T>(IDictionary<string, object?> meta, string target, Func<object?[]?> inventory, Func<T?> create) where T : class
+        {
+            T? item = null;
+            ProbeWrite(meta, target, inventory, () => item = create() ?? throw new InvalidOperationException("Native Create returned null."));
+            return item!;
+        }
+
         internal static void Unrestored(string target)
         {
             if (!Active) return;

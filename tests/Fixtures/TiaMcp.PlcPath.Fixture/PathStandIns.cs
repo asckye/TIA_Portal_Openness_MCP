@@ -22,6 +22,7 @@ namespace Siemens.Engineering.SW.Blocks
         public string Name { get; set; } = "";
         public object? Parent { get; set; }
         public Action<string>? OnCall { get; set; }
+        public bool EmptyImportResult { get; set; }
         public Action<PlcBlock>? AfterImport { get; set; }
         public Action<FileInfo>? AfterBlockExport { get; set; }
         public GroupList Groups { get; }
@@ -92,6 +93,12 @@ namespace TiaMcp.Adapters.Native.Plc
         public HardwareAddressingReply RunHmiStepTool(string tool, Func<Dictionary<string, object?>, string> operation);
         public PlcBlock? GetBlock(string path, string blockPath);
         public PlcBlock GetBlockForRead(string path, string blockPath);
+        public IEqualityComparer<object> ReferenceEqualityComparer { get; }
+        public object? ResolvePlcTagTableGroup(PlcSoftware plc);
+        public PlcType? GetType(string softwarePath, string typePath);
+        public List<string>? GetPlcTagTables(string softwarePath, out string? reason);
+        public string? CrossReferenceRefusal(string softwarePath);
+        public List<PlcCrossReference> TryFlattenCrossReferenceResult(object result, string fallback);
         public bool IsProjectNull();
         public string GetPlcBlockGroupPath(PlcBlockGroup group);
         public void RecordExportPath(string? path);
@@ -110,7 +117,6 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         public HardwareAddressingReply ManagePlcUserGroup(string softwarePath, string family, string groupPath, string action,
             string newName = "", bool dryRun = true) => throw new NotSupportedException("Group editing is outside this path fixture.");
-        private static List<object?> ToCrossReferenceArray(List<PlcCrossReference> references) => references.Cast<object?>().ToList();
     }
     internal static class PlcBlockPrimitives
     {
@@ -159,6 +165,7 @@ namespace TiaMcp.Adapters
     public sealed partial class PlcFoundationEngine
     {
         public sealed class Software : PlcSoftware { }
+        public Func<object?>? TagGroupReader { get; set; }
         public PlcOrganisationAdapter Artifacts => new PlcOrganisationAdapter(new OrganisationSession(this));
         public Software Plc { get; } = new();
         public PlcFoundationEngine(string release) => ReleaseKey = release;
@@ -203,6 +210,16 @@ namespace TiaMcp.Adapters
                 result.AddRange(root.Blocks);
                 foreach (var group in root.Groups) GetBlocksRecursive(group, result);
             }
+            public IEqualityComparer<object> ReferenceEqualityComparer => System.Collections.Generic.ReferenceEqualityComparer.Instance;
+            public object? ResolvePlcTagTableGroup(PlcSoftware plc) => engine.TagGroupReader == null ? plc.TagTableGroup : engine.TagGroupReader();
+            public List<string>? GetPlcTagTables(string path, out string? reason)
+            {
+                reason = null;
+                return engine.Plc.TagTableGroup.TagTables.Select(t => t.Name).ToList();
+            }
+            public string? CrossReferenceRefusal(string path) => null;
+            public List<PlcCrossReference> TryFlattenCrossReferenceResult(object result, string fallback)
+                => PlcCrossReferences.TryFlattenCrossReferenceResult(result, fallback);
             public bool IsProjectNull() => false;
             public void RecordExportPath(string? path) { }
             public char[] RegexChars => new[] { '.', '*', '+', '?', '^', '$', '[', ']', '(', ')', '{', '}', '|', '\\' };
@@ -233,6 +250,7 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static object ExternalSources(object value) => PlcGroupOperations.Get(value, "ExternalSources");
         internal static object Parent(PlcBlock block) => block.Parent!;
         internal static string Language(PlcBlock block) => block.Language;
+        internal static void Delete(PlcType type) => throw new NotSupportedException();
         internal static void Delete(PlcBlock block)
         {
             ((PlcBlockGroup)block.Parent!).OnCall?.Invoke("delete " + block.Name);
@@ -257,6 +275,7 @@ namespace TiaMcp.Adapters.Native.Plc
             var block = new PlcBlock { Name = definition.Elements("AttributeList").Single().Elements("Name").Single().Value, Parent = target.Parent };
             target.Add(block);
             target.Parent.AfterImport?.Invoke(block);
+            if (target.Parent.EmptyImportResult) return [];
             return new() { block };
         }
         internal static PlcBlockGroup BlockGroup(object plc) => ((PlcFoundationEngine.Software)plc).BlockGroup;

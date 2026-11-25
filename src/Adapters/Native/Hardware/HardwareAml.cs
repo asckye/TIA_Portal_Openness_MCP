@@ -130,6 +130,7 @@ namespace TiaMcp.Adapters
                 var state = result?.State.ToString() ?? "Unknown";
                 bool ok = result != null && NativeResultStates.Succeeded(result.State);
                 returnedFailure = !ok;
+                if (!ok && state != "Error") meta["writeOutcomeUnknown"] = true;
                 meta["apiCallSuccess"] = true; meta["nativeResult"] = state;
                 meta["errorCount"] = result?.ErrorCount ?? 0; meta["warningCount"] = result?.WarningCount ?? 0;
                 var messages = FlattenHardwareAmlMessages(result?.Messages, ok ? int.MaxValue : 40);

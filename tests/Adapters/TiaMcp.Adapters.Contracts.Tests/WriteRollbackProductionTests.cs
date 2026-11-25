@@ -10,6 +10,178 @@ namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class WriteRollbackProductionTests
     {
+
+        [Theory, InlineData("create"), InlineData("rename"), InlineData("deleteEmpty")]
+        public void Device_group_failure_after_native_change_keeps_unknown(string action)
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            var root = new FaultGroup();
+            var original = new FaultGroup("Group", root.Groups);
+            root.Groups.Add(original);
+            var result = engine.RunHmiStep("ManageDeviceUserGroup", meta => {
+                meta["mayHaveChanged"] = false;
+                meta["result"] = HardwareGroupOperations.Manage(root, action == "create" ? "New" : "Group", action, "New", false, "Devices");
+                return "unreachable";
+            }, true);
+            Assert.True(result.OutcomeUnknown);
+            Assert.True(result.MayHaveChanged);
+            if (action == "create") Assert.Contains(root.Groups, group => group.Name == "New");
+            else if (action == "rename") Assert.Equal("New", original.Name);
+            else Assert.DoesNotContain(original, root.Groups);
+        }
+
+        [Theory, InlineData("create"), InlineData("rename"), InlineData("deleteEmpty")]
+        public void Refused_device_group_write_preserves_the_unchanged_inventory(string action)
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            var root = new FaultGroup();
+            root.Groups.Refuse = true;
+            root.Groups.Add(new FaultGroup("Group", root.Groups));
+            var result = engine.RunHmiStep("ManageDeviceUserGroup", meta => {
+                meta["mayHaveChanged"] = false;
+                HardwareGroupOperations.Manage(root, action == "create" ? "New" : "Group", action, "New", false, "Devices");
+                return "unreachable";
+            }, true);
+            Assert.Equal("Group", Assert.Single(root.Groups).Name);
+            Assert.False(result.MayHaveChanged);
+            Assert.False(result.OutcomeUnknown);
+        }
+
+        [Fact]
+        public void Refusing_a_nested_create_keeps_the_created_parent_in_the_result()
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            var root = new FaultGroup();
+            root.Groups.CreateParent = true;
+            var result = engine.RunHmiStep("ManageDeviceUserGroup", meta => {
+                HardwareGroupOperations.Manage(root, "Parent/Child", "create", "", false, "Devices");
+                return "unreachable";
+            }, true);
+            Assert.Equal("Parent", Assert.Single(root.Groups).Name);
+            Assert.Empty(root.Groups[0].Groups);
+            Assert.True(result.MayHaveChanged);
+            Assert.True(result.OutcomeUnknown);
+            Assert.Equal("ManageDeviceUserGroup failed", result.Message);
+            Assert.Equal("Type group creation failed at 'Parent/Child'. Groups already created (not rolled back): [\"Parent\"]. Native operation refused.",
+                result.Meta["nativeMessage"]);
+        }
+
+        [Fact]
+        public void Refused_group_with_unreadable_fresh_inventory_is_unknown()
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            var root = new FaultGroup();
+            var groups = root.Groups;
+            groups.Refuse = true;
+            groups.OnRefusal = () => root.FailGroupRead = true;
+            var result = engine.RunHmiStep("ManageDeviceUserGroup", meta => {
+                HardwareGroupOperations.Manage(root, "Child", "create", "", false, "Devices");
+                return "unreachable";
+            }, true);
+            Assert.Empty(groups);
+            Assert.True(result.OutcomeUnknown);
+        }
+
+        private sealed class FaultGroups : List<FaultGroup>
+        {
+            public bool Refuse;
+            public Action? OnRefusal;
+            public bool CreateParent;
+            public void Check()
+            {
+                if (!Refuse) return;
+                OnRefusal?.Invoke();
+                throw new InvalidOperationException("Native operation refused.");
+            }
+            public FaultGroup Create(string name)
+            {
+                Check();
+                var child = new FaultGroup(name, this);
+                Add(child);
+                if (!CreateParent) throw new InvalidOperationException("Create reply lost.");
+                child.Groups.Refuse = true;
+                return child;
+            }
+        }
+        private sealed class FaultGroup(string originalName = "Root", FaultGroups? parent = null)
+        {
+            private string name = originalName;
+            public string Name { get => name; set { parent!.Check(); name = value; throw new InvalidOperationException("Rename reply lost."); } }
+            private readonly FaultGroups groups = new();
+            public bool FailGroupRead;
+            public FaultGroups Groups => !FailGroupRead ? groups : throw new IOException("Group inventory unavailable.");
+            public object[] Devices => Array.Empty<object>();
+            public void Delete() { parent!.Check(); parent.Remove(this); throw new InvalidOperationException("Delete reply lost."); }
+        }
+
+        [Fact]
+        public void Cpu_setting_readback_must_match_the_requested_value()
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            engine.RollbackCpu = new IgnoredCpuWrite();
+            var result = engine.HardwareLegacySetCpuCommonSettings("PLC/CPU", new() {
+                ["Value"] = new HardwareScalar { Kind = "number", Text = "2" } });
+            Assert.False(Equals(result.Meta["success"], true));
+            Assert.Empty((IEnumerable)result.Meta["applied"]!);
+        }
+
+        [Fact]
+        public void Cpu_normalization_preserves_the_other_applied_setting()
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            var cpu = new NormalizingCpu();
+            engine.RollbackCpu = cpu;
+            var result = engine.HardwareLegacySetCpuCommonSettings("PLC/CPU", new() {
+                ["Accepted"] = new HardwareScalar { Kind = "number", Text = "2" },
+                ["Masked"] = new HardwareScalar { Kind = "number", Text = "3" } });
+            Assert.Equal(2, cpu.Accepted);
+            Assert.Single(((IEnumerable)result.Meta["applied"]!).Cast<object>());
+            var rejected = Assert.IsType<Dictionary<string, object?>>(Assert.Single(((IEnumerable)result.Meta["rejected"]!).Cast<object>()));
+            Assert.Equal("3", rejected["requestedValue"]);
+            Assert.Equal("1", rejected["newValue"]);
+            Assert.Equal(true, result.Meta["postStateKnown"]);
+            Assert.False(result.OutcomeUnknown);
+        }
+
+        [Fact]
+        public void Cpu_setting_with_an_equivalent_numeric_readback_is_applied()
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            engine.RollbackCpu = new NormalizingCpu();
+            var result = engine.HardwareLegacySetCpuCommonSettings("PLC/CPU", new() { ["Accepted"] = new HardwareScalar { Kind = "number", Text = "2" } });
+            Assert.Equal(true, result.Meta["success"]);
+            Assert.Single(((IEnumerable)result.Meta["applied"]!).Cast<object>());
+        }
+
+        private sealed class NormalizingCpu : Siemens.Engineering.HW.HardwareObject
+        {
+            internal int Accepted;
+            public override IEnumerable<Siemens.Engineering.EngineeringAttributeInfo> GetAttributeInfos()
+                => new[] { "Accepted", "Masked" }.Select(name => new Siemens.Engineering.EngineeringAttributeInfo { Name = name });
+            public override object GetAttribute(string name) => name == "Accepted" ? (long)Accepted : 1L;
+            public override void SetAttribute(string name, object? value) { if (name == "Accepted") Accepted = Convert.ToInt32(value); }
+        }
+
+        [Fact]
+        public void Cpu_refused_setter_with_verified_original_value_is_definite()
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            engine.RollbackCpu = new IgnoredCpuWrite { Refuse = true };
+            var result = engine.HardwareLegacySetCpuCommonSettings("PLC/CPU", new() { ["Value"] = new HardwareScalar { Kind = "number", Text = "2" } });
+            Assert.Empty((IEnumerable)result.Meta["applied"]!);
+            Assert.False(Equals(result.Meta["mayHaveChanged"], true));
+            Assert.False(Equals(result.Meta.GetValueOrDefault("writeOutcomeUnknown"), true));
+        }
+
+        private sealed class IgnoredCpuWrite : Siemens.Engineering.HW.HardwareObject
+        {
+            public override IEnumerable<Siemens.Engineering.EngineeringAttributeInfo> GetAttributeInfos()
+                => new[] { new Siemens.Engineering.EngineeringAttributeInfo { Name = "Value" } };
+            public override object GetAttribute(string name) => 1;
+            public bool Refuse;
+            public override void SetAttribute(string name, object? requested) { if (Refuse) throw new InvalidOperationException("Setter refused."); }
+        }
+
         private sealed class PlantNodes : List<object>
         {
             public int Attempts { get; private set; }

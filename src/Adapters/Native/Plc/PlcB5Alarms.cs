@@ -128,58 +128,6 @@ namespace TiaMcp.Adapters.Native.Plc
         }
 #endif
 
-#if PLC_ALARM_CLASSES
-        public PlcB5Reply ImportAlarmClasses(string softwarePath, string importPath)
-        {
-            if (_session.IsProjectNull()) return new PlcB5Reply {
-                Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
-            var plc = _session.ResolvePlc(softwarePath, true);
-            if (plc == null) return new PlcB5Reply {
-                Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta
-                    .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
-            };
-
-            try
-            {
-                var provider = plc.GetService<AlarmClassDataProvider>() ?? _session.CurrentProject?.GetService<AlarmClassDataProvider>();
-                if (provider == null)
-                    return new PlcB5Reply {
-                        Message = "AlarmClassDataProvider not available for this PLC or project.", Meta = ResponseMeta
-                            .Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false))
-                    };
-
-                if (!File.Exists(importPath)) return new PlcB5Reply {
-                    Message = "Alarm class import file not found.", Meta = ResponseMeta
-                        .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
-                };
-                if (!importPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
-                    return new PlcB5Reply {
-                        Message = "importPath must be an existing .DAT file written by ExportAlarmClasses (official AlarmClassDataProvider format); got '"
-                            + importPath + "'.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "INVALID_ARGUMENT"), ("mayHaveChanged", false))
-                    };
-                AlarmClassExportImportResult result = provider.Import(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)));
-                var state = result?.State.ToString() ?? "Unknown";
-                var errCount = result?.ErrorCount ?? 0;
-                bool ok = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.AlarmClasses, state);
-                return new PlcB5Reply
-                {
-                    Message = ok
-                        ? $"Alarm classes imported from '{importPath}' (State={state}, Errors={errCount})."
-                        : $"Alarm class import failed. State={state}, Errors={errCount}.",
-                    Meta =
-                        NativeXlsxEvidence(new PlcB5Object {
-                            ["importPath"] = importPath, ["state"] = state, ["errorCount"] = errCount, ["warningCount"] = result?.WarningCount ?? 0,
-                                ["messages"] = AlarmClassMessages(result)
-                        }, state, true, null, importPath, TiaMcp.Adapters.Contracts.NativeResultStates.AlarmClasses)
-                };
-            }
-            catch (Exception ex)
-            {
-                return new PlcB5Reply { Message = $"Import failed: {ex.Message}" };
-            }
-        }
-#endif
-
         // ExportToXlsx / ImportFromXlsx belong to PlcAlarmTextListProvider, not PlcAlarmTextlistGroup.
         // Native observation (fresh 1515F, no text lists): TIA throws TextListNotFoundException.
         // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
@@ -233,44 +181,7 @@ namespace TiaMcp.Adapters.Native.Plc
             }
         }
 
-        public PlcB5Reply ImportAlarmTextLists(string softwarePath, string importPath)
-        {
-            if (_session.IsProjectNull()) return new PlcB5Reply {
-                Message = "No project open.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "PROJECT_NOT_BOUND"), ("mayHaveChanged", false)) };
-            var plc = _session.ResolvePlc(softwarePath, true);
-            if (plc == null) return new PlcB5Reply {
-                Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta
-                    .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
-            };
-            try
-            {
-                var provider = plc.GetService<PlcAlarmTextListProvider>();
-                if (provider == null) return new PlcB5Reply {
-                    Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = ResponseMeta
-                        .Unstamped(false, ("v4Rejection", "UNSUPPORTED_CAPABILITY"), ("mayHaveChanged", false))
-                };
-                if (!File.Exists(importPath)) return new PlcB5Reply {
-                    Message = $"Import file not found: {importPath}", Meta = ResponseMeta
-                        .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
-                };
-                TextListXlsxResult result = provider.ImportFromXlsx(new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)), ImportOptions.None);
-                var state = result?.State.ToString() ?? "Unknown";
-                bool ok = result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
-                return new PlcB5Reply
-                {
-                    Message = ok ? $"Alarm text lists imported from '{importPath}' (State={state}); compile afterwards."
-                        : $"Alarm text list import reported Error (State={state}, log {result?.LogFilePath?.FullName}).",
-                    Meta =
-                        NativeXlsxEvidence(new PlcB5Object {
-                            ["importPath"] = importPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["success"] = ok }, state, true, result
-                            ?.LogFilePath?.FullName, importPath, TiaMcp.Adapters.Contracts.NativeResultStates.TextLists)
-                };
-            }
-            catch (Exception ex)
-            {
-                return new PlcB5Reply { Message = $"Import failed: {ex.GetBaseException().Message}", Meta = ResponseMeta.Unstamped(false) };
-            }
-        }
+        public PlcB5Reply ImportAlarmTextLists(string softwarePath, string importPath) => ImportTextLists(softwarePath, importPath);
 
         // ExportInstanceTextsToXlsx(file, languages, option) receives all active project languages.
         public PlcB5Reply ExportAlarmInstanceTexts(string softwarePath, string exportPath, bool includeInfoText = true, bool includeAdditionalTexts = true,

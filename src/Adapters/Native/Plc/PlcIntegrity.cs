@@ -13,6 +13,7 @@ using Siemens.Engineering.SW.Alarm.TextLists;
 #endif
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Hardware;
+using TiaMcp.Adapters.Native.Engineering;
 #if PLC_UNITS
 using Siemens.Engineering.SW.Units;
 #if !PLC_SAFETY_UNITS
@@ -146,7 +147,9 @@ namespace TiaMcp.Adapters.Native.Plc
         public HardwareAddressingReply ManagePlcSoftwareUnit(string softwarePath, string action, string name, string relatedUnit,
             string relationType, Dictionary<string, HardwareScalar> properties, bool dryRun, string unitKind, PlcTagComment[] comments,
             string libraryName, string masterCopyPath, string copyMode, string validationError)
-            => _session.RunHmiStepTool("ManagePlcSoftwareUnit", meta => {
+        {
+            bool priorMutation = MutationStarted;
+            var result = _session.RunHmiStepTool("ManagePlcSoftwareUnit", meta => {
                 meta["mayHaveChanged"] = false;
                 if (validationError.Length != 0) throw new ArgumentException(validationError);
                 bool writing = action != "list" && action != "read" && !dryRun;
@@ -216,13 +219,13 @@ namespace TiaMcp.Adapters.Native.Plc
                                 + ").");
                     }
                     if (!writing) return "Unit update preview; no changes.";
-                    meta["mayHaveChanged"] = true; MutationStarted = true;
+                    MutationStarted = true;
                     if (prepared.Count > 0) HardwareScalarEvidence.Apply(unit, prepared, meta);
                     foreach (var (culture, text) in comments.Select(c => (c.Culture!, c.Text)))
                     {
                         MultilingualTextItem item = PlcGroupOperations.Items(unit.Comment.Items).Cast<MultilingualTextItem>()
                             .First(i => string.Equals(i.Language?.Culture?.Name, culture, StringComparison.OrdinalIgnoreCase));
-                        item.Text = text;
+                        EngineeringWriteJournal.ProbeWrite(meta, "Comment/" + culture, () => new object?[] { item.Text }, () => item.Text = text);
                         if (item.Text != text) throw new InvalidOperationException("Comment readback differs for culture " + culture + ".");
                     }
                     meta["apiCallSuccess"] = true; meta["after"] = UnitRow(unit, unitKind, false);
@@ -264,6 +267,10 @@ namespace TiaMcp.Adapters.Native.Plc
                 meta["verifiedAbsent"] = true;
                 return "Unit relation deleted and absence verified; project not saved.";
             });
+            if (action == "update" && result.Meta.TryGetValue("mayHaveChanged", out var changed) && changed is false)
+                MutationStarted = priorMutation;
+            return result;
+        }
 
 #endif
 #if PLC_INTEGRITY_PROVIDERS

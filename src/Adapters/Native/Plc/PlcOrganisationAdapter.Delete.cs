@@ -60,7 +60,8 @@ namespace TiaMcp.Adapters.Native.Plc
             }
 
             var wanted = tagTableName.Replace('\\', '/').Trim('/');
-            var table = FindTagTableWithPath(group, string.Empty, wanted,
+            var exactNames = new List<string>();
+            var table = FindTagTableWithPath(group, string.Empty, wanted, exactNames,
                 new HashSet<object>(_session.ReferenceEqualityComparer), out var resolvedPath);
             if (table == null)
             {
@@ -152,8 +153,9 @@ namespace TiaMcp.Adapters.Native.Plc
             // Delete() 之后原来的代理对象已死，读回必须从 PlcSoftware 重新取一遍句柄。
             var plc2 = _session.ResolvePlc(softwarePath, dryRun ? false : true);
             var group2 = plc2 == null ? null : _session.ResolvePlcTagTableGroup(plc2);
-            bool absent = group2 == null || FindTagTableWithPath(group2, string.Empty, resolvedPath,
-                new HashSet<object>(_session.ReferenceEqualityComparer), out _) == null;
+            if (group2 == null)
+                throw new PlcSoftwareException("OpennessError", "Tag table group unavailable after Delete.");
+            bool absent = !TagTablePresentAfterDelete(group2, exactNames);
 
             result["deleted"] = true;
             result["verifiedAbsent"] = absent;
@@ -272,8 +274,38 @@ namespace TiaMcp.Adapters.Native.Plc
             return arr;
         }
 
+        private static bool TagTablePresentAfterDelete(object group, List<string> exactNames)
+        {
+            foreach (var name in exactNames.Take(exactNames.Count - 1))
+            {
+                var children = ReadMembers(group, "Groups", "UserGroups", "SubGroups");
+                group = children.Cast<object>().SingleOrDefault(child => Matches(child, name))
+                    ?? throw new PlcSoftwareException("OpennessError", "Parent group unavailable after Delete: " + name);
+            }
+            return ReadMembers(group, "TagTables").Cast<object>().Any(table => Matches(table, exactNames[exactNames.Count - 1]));
+
+            static bool Matches(object member, string expected)
+            {
+                var name = member?.GetType().GetProperty("Name")?.GetValue(member) as string;
+                if (string.IsNullOrEmpty(name)) throw new PlcSoftwareException("OpennessError", "Tag table or group name unavailable after Delete.");
+                return string.Equals(name, expected, StringComparison.OrdinalIgnoreCase);
+            }
+
+            static IEnumerable ReadMembers(object owner, params string[] names)
+            {
+                foreach (var name in names)
+                {
+                    var property = owner.GetType().GetProperty(name);
+                    if (property == null) continue;
+                    if (property.GetValue(owner) is IEnumerable values and not string) return values;
+                    break;
+                }
+                throw new PlcSoftwareException("OpennessError", "Tag table collection unavailable after Delete.");
+            }
+        }
+
         private static object? FindTagTableWithPath(
-            object group, string prefix, string wanted, HashSet<object> visited, out string resolvedPath)
+            object group, string prefix, string wanted, List<string> exactNames, HashSet<object> visited, out string resolvedPath)
         {
             resolvedPath = wanted;
             if (!visited.Add(group)) return null;
@@ -290,6 +322,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (string.Equals(name, wanted, StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(qualified, wanted, StringComparison.OrdinalIgnoreCase))
                     {
+                        exactNames.Add(name);
                         resolvedPath = qualified;
                         return t;
                     }
@@ -304,8 +337,10 @@ namespace TiaMcp.Adapters.Native.Plc
                     if (sub == null) continue;
                     var gname = TryGetPropertyValue(sub, "Name")?.ToString() ?? string.Empty;
                     var next = string.IsNullOrEmpty(prefix) ? gname : prefix + "/" + gname;
-                    var hit = FindTagTableWithPath(sub, next, wanted, visited, out resolvedPath);
+                    exactNames.Add(gname);
+                    var hit = FindTagTableWithPath(sub, next, wanted, exactNames, visited, out resolvedPath);
                     if (hit != null) return hit;
+                    exactNames.RemoveAt(exactNames.Count - 1);
                 }
             }
             resolvedPath = wanted;

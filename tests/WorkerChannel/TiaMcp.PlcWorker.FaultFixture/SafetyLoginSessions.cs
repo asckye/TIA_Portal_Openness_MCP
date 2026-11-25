@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
+using TiaMcp.Adapters.Native.Engineering;
 using Siemens.Engineering;
 using Siemens.Engineering.Compiler;
 using Siemens.Engineering.HW;
@@ -34,21 +35,34 @@ namespace TiaMcp.Adapters.Native.Safety
         internal HardwareAddressingReply RunHmiStepTool(string tool, Func<HmiObject, string> action, bool requiresProject = true)
         {
             var meta = new HmiObject();
-            return new HardwareAddressingReply { Message = action(meta), Meta = meta };
+            return new HardwareAddressingReply { Message = TestWrite == null ? action(meta)
+                : EngineeringWriteJournal.RunReported(meta, () => action(meta), error => error.Message), Meta = meta };
         }
         internal object ExactMasterCopyPlcSource(string path, string block, bool exact) => throw new NotSupportedException();
         internal void GetBlocksRecursive(object group, List<PlcBlock> blocks) => throw new NotSupportedException();
-        internal (HmiObject Scalars, HmiObject Attributes) RuntimeGroupChanges() => throw new NotSupportedException();
+        internal string? TestWrite;
+        internal (HmiObject Scalars, HmiObject Attributes) RuntimeGroupChanges()
+            => (new HmiObject { ["Cycle"] = 2 }, new HmiObject { ["FOBCycleTime"] = 2 });
         internal (HmiObject Scalars, HmiObject Attributes, HmiObject BlockNumbers, string? SafetySystemVersion) SettingsChanges()
-            => throw new NotSupportedException();
+            => (new HmiObject { ["Cycle"] = 2 }, TestWrite == "version" ? new HmiObject() : new HmiObject { ["EnableFCommunicationIdTag"] = true },
+                new HmiObject(), TestWrite == "version" ? "V2" : null);
         internal List<KeyValuePair<string, object>> GlobalChanges() => throw new NotSupportedException();
     }
     internal static class SafetyScalars
     {
         internal static object? Json(object value) => value;
-        internal static HmiObject Read(object value) => throw new NotSupportedException();
-        internal static List<(PropertyInfo Property, object? Value)> Prepare(Type type, HmiObject values) => throw new NotSupportedException();
-        internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> values, HmiObject meta) => throw new NotSupportedException();
+        internal static HmiObject Read(object value) => value is SafetySettings { SafetySystemVersion: not null }
+            ? throw new InvalidOperationException("Settings readback failed.") : new HmiObject();
+        internal static List<(PropertyInfo Property, object? Value)> Prepare(Type type, HmiObject values)
+            => values.Select(entry => (type.GetProperty(entry.Key)!, entry.Value)).ToList();
+        internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> values, HmiObject meta)
+        {
+            foreach (var entry in values)
+            {
+                EngineeringWriteJournal.Property(target, entry.Property);
+                entry.Property.SetValue(target, entry.Value);
+            }
+        }
     }
     internal static class SafetyFileOutput
     {

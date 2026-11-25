@@ -12,6 +12,18 @@ namespace TiaMcp.FoundationHost.Tests;
 
 public sealed class RoundTwoRegressionTests
 {
+
+    [Fact]
+    public async Task Returned_failure_after_scaffold_writes_keeps_unknown()
+    {
+        const string name = "BuildProjectScaffold";
+        using var worker = new FlowWorker(name, false, false, "21") { ReturnFailure = true };
+        var tool = Tool(worker, "21", name);
+        var reply = await tool.InvokeAsync(Request(name, Arguments(name, tool.ProtocolTool.InputSchema)));
+        Assert.Equal(2, worker.Mutations);
+        Assert.Equal("unknown", (string?)reply.StructuredContent?["meta"]?["outcome"]);
+    }
+
     public static IEnumerable<object[]> ToolFailures()
     {
         foreach (string release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" })
@@ -153,6 +165,7 @@ public sealed class RoundTwoRegressionTests
     private sealed class FlowWorker(string tool, bool timeout, bool firstRefusal, string release, bool collectedSourceRefusal = false, bool unchanged = false)
         : IFoundationWorker
     {
+        internal bool ReturnFailure;
         internal int Mutations;
         private int bindingReads, sourceImports;
         public Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
@@ -173,6 +186,10 @@ public sealed class RoundTwoRegressionTests
             if (operation == "project-lifecycle.ExecuteProjectScaffoldPrimitive")
             {
                 string? kind = (string?)arguments["request"]?["Kind"];
+                if (ReturnFailure && kind == "addDevice")
+                    return Task.FromResult<JsonNode?>(new JsonObject { ["Ok"] = false, ["MayHaveChanged"] = false,
+                        ["Failure"] = new JsonObject { ["Code"] = "InvalidParams", ["Message"] = "Refused device." },
+                        ["Meta"] = new JsonObject { ["success"] = false, ["mayHaveChanged"] = false, ["status"] = "InvalidParams" } });
                 if (firstRefusal || !collectedSourceRefusal && kind == "addDevice") throw Failure();
                 if (collectedSourceRefusal && kind == "sclImport" && ++sourceImports == 1) throw Failure();
                 Mutations++;

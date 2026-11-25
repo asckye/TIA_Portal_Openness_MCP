@@ -116,8 +116,20 @@ namespace TiaMcp.Adapters
 #else
                 return new PlcExternalSourceObject[0];
 #endif
-            },ex=>ex is EngineeringException);
+            }, RecoverableGenerationRefusal);
             return result;
+        }
+
+        private static bool RecoverableGenerationRefusal(Exception error)
+        {
+            if (NativeRefusalProbe.UncertainConnection(error)) return false;
+            bool engineering = false;
+            for (Exception? cause = error; cause != null; cause = cause.InnerException)
+            {
+                if (cause is EngineeringUserAbortException) return false;
+                engineering |= cause is EngineeringException;
+            }
+            return engineering;
         }
     }
 }

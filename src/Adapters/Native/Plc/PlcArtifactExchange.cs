@@ -300,6 +300,7 @@ namespace TiaMcp.Adapters.Native.Plc
             var imported = new List<string>();
             var failed = new List<PlcSeedImportFailure>();
             var snapshots = new List<PreparedImport>();
+            string? unconfirmedFile = null;
 
             try
             {
@@ -350,20 +351,18 @@ namespace TiaMcp.Adapters.Native.Plc
 
                 foreach (var item in planned.OrderBy(p => PlcImportOrder.BlockRank(p.Prepared.Kind)).ThenBy(p => p.File, StringComparer.OrdinalIgnoreCase))
                 {
-                    var name = Path.GetFileNameWithoutExtension(item.File);
                     try
                     {
                         var fi = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(item.Prepared.Path));
                         MutationStarted = true;
                         var list = PlcBlockPrimitives.Import(group.Blocks, fi, overwrite ? ImportOptions.Override : ImportOptions.None);
-                        if (list != null && list.Count > 0)
+                        var names = list?.Select(block => block?.Name).ToArray();
+                        if (names == null || names.Length == 0 || names.Any(string.IsNullOrWhiteSpace))
                         {
-                            imported.AddRange(list.Select(b => b?.Name).Where(n => !string.IsNullOrWhiteSpace(n))!.Cast<string>());
+                            unconfirmedFile = item.File;
+                            break;
                         }
-                        else
-                        {
-                            imported.Add(name);
-                        }
+                        imported.AddRange(names!);
                     }
                     catch (Exception ex)
                     {
@@ -371,7 +370,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     }
                 }
 
-                return new PlcSeedHmiReply { Imported = imported, Failed = failed };
+                if (unconfirmedFile == null) return new PlcSeedHmiReply { Imported = imported, Failed = failed };
             }
             catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException) { throw; }
             catch (Exception ex)
@@ -380,6 +379,13 @@ namespace TiaMcp.Adapters.Native.Plc
                 return new PlcSeedHmiReply { Imported = imported, Failed = failed };
             }
             finally { foreach (var snapshot in snapshots) snapshot.Dispose(); }
+            const string reason = "Block import returned no confirmed object names";
+            failed.Add(new PlcSeedImportFailure { Path = unconfirmedFile, Error = reason });
+            var failure = new PlcSoftwareException("OpennessError", reason + " for " + unconfirmedFile);
+            failure.Data["nativeResultEvidence"] = new Dictionary<string, object?> {
+                ["imported"] = imported.ToArray(), ["failed"] = failed.ToArray()
+            };
+            throw failure;
         }
     }
 }

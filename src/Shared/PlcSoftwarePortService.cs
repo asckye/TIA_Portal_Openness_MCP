@@ -295,6 +295,15 @@ namespace TiaMcpServer.Siemens.Services
                             .AddRange(r.Failed?.Select(x => new ImportFailure { Path = x.Path, Error = "plc:block:" + x.Error }) ?? Array
                                 .Empty<ImportFailure>());
                     }
+                    catch (Exception error) when (error.Data["nativeResultEvidence"] is JsonObject evidence
+                        && evidence["imported"] is JsonArray && evidence["failed"] is JsonArray)
+                    {
+                        var batch = evidence.Deserialize<ResponseImportBatch>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+                        imported.AddRange(batch.Imported!.Select(name => "plc:block:" + name));
+                        failed.AddRange(batch.Failed!.Select(row => new ImportFailure { Path = row.Path, Error = "plc:block:" + row.Error }));
+                        return new ResponseSeed { Imported = imported, Failed = failed, TempDir = tempDir, Placeholders = placeholders,
+                            Meta = new JsonObject { ["mayHaveChanged"] = true, ["writeOutcomeUnknown"] = true } };
+                    }
                     catch (AdapterPreconditionException refusal) when (imported.Count + failed.Count > 0) {
                         failed.Add(new ImportFailure { Path = tempPlcBlocks, Error = "plc:block:" + refusal.Message }); }
                 }

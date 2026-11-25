@@ -23,6 +23,14 @@ namespace TiaMcpServer.Siemens.Services
             var reply = call(PortedFamilies.ForTool(request.Operation).OperationPrefix + ".ExecutePlcB5", args) as JsonObject
                 ?? throw new InvalidOperationException("Missing PLC B5 reply.");
             ObserveReply(reply);
+            // Older import catches serialized default false flags even when the native write threw.
+            if (!request.DryRun && request.Operation is ("ImportAlarmClasses" or "ImportAlarmTextLists" or "ImportOpcUaInterface")
+                && reply["Failure"] == null && reply["Meta"]?["mayHaveChanged"] == null && (bool?)reply["Ok"] != true
+                && (reply["Meta"] == null || (bool?)reply["Meta"]?["success"] == false))
+            {
+                reply["MayHaveChanged"] = true;
+                reply["OutcomeUnknown"] = true;
+            }
             // Message-only B5 failures still carry the worker's explicit mutation/reset flags.
             if (reply["Meta"] == null)
                 reply["Meta"] = new JsonObject { ["operationSuccess"] = (bool?)reply["Ok"] == true,

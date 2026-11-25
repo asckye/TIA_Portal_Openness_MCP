@@ -119,7 +119,9 @@ namespace TiaMcp.Logic.V4
             if (!Flag("writeOutcomeUnknown") && !Flag("unrestoredWrite") && !Flag("connectionUnavailable") && !Flag("portalLost")
                 && !evidence.ContainsKey("rollbackOutcome") && (bool?)evidence["operationSuccess"] == false)
             {
-                if (tool == "ImportDeviceAml" && (string?)evidence["status"] == "ImportFailed" && Flag("apiCallSuccess") && Flag("mayHaveChanged"))
+                if (tool == "ImportDeviceAml" && (string?)evidence["status"] == "ImportFailed" && Flag("apiCallSuccess") && Flag("mayHaveChanged")
+                    && evidence["nativeResult"] is JsonValue verdict && (verdict.TryGetValue<bool>(out var ok) && !ok
+                        || verdict.TryGetValue<string>(out var state) && state == "Error"))
                 {
                     outcome = Outcome.Failed;
                     error = new Error("CAx import returned an unsuccessful result. Inspect devices per log for partial changes.",

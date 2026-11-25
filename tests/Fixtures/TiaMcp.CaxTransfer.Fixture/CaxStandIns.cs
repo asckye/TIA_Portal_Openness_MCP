@@ -6,7 +6,7 @@ using TiaMcp.Adapters.Contracts;
 namespace Siemens.Engineering.Cax
 {
     public enum CaxImportOptions { RetainTiaDevice }
-    public enum TransferResultState { Warning, Error }
+    public enum TransferResultState { Warning, Error, Unknown }
     public sealed record TransferResultMessage(TransferResultState State, string Message, List<TransferResultMessage> Messages);
     public sealed record TransferResult(TransferResultState State, int ErrorCount, int WarningCount, List<TransferResultMessage> Messages);
 

@@ -86,6 +86,10 @@ internal static class CanonicalBatchTools
                 catch (RegexParseException error) { return Reject(new Error($"Invalid regular expression at offset {error.Offset} ({error.Error}).",
                     new InvalidArgumentDetails("regexName", Array.Empty<string>()))); }
             }
+            string? batchDigest = null;
+            bool childStarted = false;
+            bool mayHaveChanged = false;
+            JsonObject? plan = null;
             try
             {
                 var binding = identity();
@@ -95,7 +99,6 @@ internal static class CanonicalBatchTools
                 if (!dry && ((bool?)args["confirm"] != true || (string?)args["expectedProjectFile"] != project))
                     return Reject(new Error("Batch execution requires confirm=true and the preview's exact expectedProjectFile.",
                                 new InvalidArgumentDetails("expectedProjectFile", Array.Empty<string>())));
-                string? batchDigest = null;
                 if (!dry && tool.Name == "ExportTechnologyObjectsToDirectory")
                 {
                     batchDigest = UnsettledCalls.WriteDigest(tool.Name, args, project);
@@ -104,7 +107,7 @@ internal static class CanonicalBatchTools
                             new PreconditionFailedDetails("same-call-unsettled", previous.RequestId)));
                     LateCalls.IdentifyWrite(batchDigest);
                 }
-                var plan = await Preview(args, binding, request, filter, cancellationToken);
+                plan = await Preview(args, binding, request, filter, cancellationToken);
                 if (dry || !(bool)plan["canApply"]!) return Result(plan, false, id);
                 string hash = (string)plan["planHash"]!;
                 if ((string?)args["expectedPlanHash"] != hash)
@@ -142,6 +145,7 @@ internal static class CanonicalBatchTools
                         if (targetProperties.TryGetProperty("confirm", out _)) values["confirm"] = true;
                         if (targetProperties.TryGetProperty("expectedProjectFile", out _)) values["expectedProjectFile"] = project;
                         if (targetProperties.TryGetProperty("expectedPlanHash", out _)) values["expectedPlanHash"] = item["canonicalPlanHash"]!.DeepClone();
+                        bool previousWrite = mayHaveChanged;
                         try
                         {
                             if (item["sourceSha256"] is JsonValue sourceHash && sourceHash.GetValue<string>() != Convert
@@ -154,6 +158,8 @@ internal static class CanonicalBatchTools
                             }
                             using var itemApproval = GenerationStepApproval
                                 .EnterBatchItem(approved, item["index"]!.GetValue<int>(), (string)item["tool"]!, values);
+                            childStarted = true;
+                            mayHaveChanged = true;
                             var child = await Invoke(target, values, request, cancellationToken, ExportRoot(args));
                             item["result"] = Body(child); stopped = child.IsError == true || (bool?)item["result"]?["ok"] != true;
                             item["status"] = stopped ? "failed" : "completed";
@@ -163,6 +169,7 @@ internal static class CanonicalBatchTools
                             item["status"] = "failed"; item["result"] =
                                 Body(FoundationV4Result.Failure(release, (string)item["tool"]!, id, true, true, null, error)); stopped = true;
                         }
+                        if ((string?)item["result"]?["meta"]?["outcome"] == "rejected-before-operation") mayHaveChanged = previousWrite;
                     }
                     plan["executed"] = true;
                     final = Result(plan, true, id);
@@ -173,8 +180,15 @@ internal static class CanonicalBatchTools
                 }
                 finally { await CompleteApproval(approved, (string?)final?.StructuredContent?["meta"]?["outcome"] ?? "unknown"); }
             }
-            catch (Exception error) when (error is not OperationCanceledException)
-            { return FoundationV4Result.Failure(release, tool.Name, id, false, false, null, error); }
+            catch (Exception error) when (childStarted || error is not OperationCanceledException)
+            {
+                if (mayHaveChanged)
+                {
+                    error.Data["foundationPriorMutation"] = true;
+                    if (batchDigest != null) unsettled?.Record(id, tool.Name, batchDigest, DateTimeOffset.UtcNow, args);
+                }
+                return FoundationV4Result.Failure(release, tool.Name, id, mayHaveChanged, mayHaveChanged, plan, error);
+            }
 
             CallToolResult Reject(Error error) => FoundationV4Result.Reject(release, tool.Name, id, error, true);
         }

@@ -8,6 +8,9 @@ namespace TiaMcp.Adapters.Contracts
     {
         // Fingerprints contain detached scalar values only. A missing snapshot cannot prove a refusal.
         public static void Run(IDictionary<string, object?> meta, Func<object?[]?> fingerprint, Action call)
+            => Run(meta, fingerprint, call, null);
+
+        public static void Run(IDictionary<string, object?> meta, Func<object?[]?> fingerprint, Action call, Func<Exception, bool>? canProveRefusal)
         {
             object?[]? before = null;
             try { before = fingerprint(); }
@@ -23,7 +26,7 @@ namespace TiaMcp.Adapters.Contracts
             {
                 bool unchanged = false;
                 if (UncertainConnection(error)) meta["connectionUnavailable"] = true;
-                else if (before != null)
+                else if (before != null && (canProveRefusal == null || canProveRefusal(error)))
                 {
                     try { unchanged = fingerprint() is { } after && before.SequenceEqual(after); }
                     catch (Exception readError)
@@ -43,7 +46,7 @@ namespace TiaMcp.Adapters.Contracts
             }
         }
 
-        private static bool UncertainConnection(Exception error)
+        public static bool UncertainConnection(Exception error)
         {
             if (HmiReadPolicy.ConnectionUnavailable(error)) return true;
             for (Exception? cause = error; cause != null; cause = cause.InnerException)

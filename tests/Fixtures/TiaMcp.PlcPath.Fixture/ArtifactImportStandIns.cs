@@ -13,6 +13,7 @@ namespace Siemens.Engineering.SW
 {
     public class PlcSoftware
     {
+        public Units.PlcUnitProvider UnitProvider { get; } = new();
         public PlcBlockGroup BlockGroup { get; } = new();
         public PlcTypeGroup TypeGroup { get; } = new();
         public PlcTagTableGroup TagTableGroup { get; } = new();
@@ -24,6 +25,9 @@ namespace Siemens.Engineering.SW.Tags
     public sealed class PlcTagTable
     {
         public string Name { get; set; } = "";
+        public List<object> UserConstants { get; } = new();
+        public Action? OnDelete { get; set; }
+        public void Delete() => OnDelete!();
         public NamedList<CrossReference.ServiceProvider> Tags { get; } = new();
         public NamedList<CrossReference.ServiceProvider> SystemConstants { get; } = new();
     }

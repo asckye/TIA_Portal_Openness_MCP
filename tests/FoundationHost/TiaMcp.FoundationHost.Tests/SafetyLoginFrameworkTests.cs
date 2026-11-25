@@ -5,6 +5,62 @@ using Xunit;
 
 public sealed class SafetyLoginFrameworkTests
 {
+    [Fact]
+    public void A_returned_generation_diagnostic_retains_its_documented_rollback_on_net48()
+    {
+        var result = RunFixture("generate-source", "diagnostic")["generation"]!;
+        Assert.Equal("failed", (string?)result["Status"]);
+        Assert.False((bool?)result["OutcomeUnknown"]);
+    }
+
+    [Theory, InlineData("security"), InlineData("products"), InlineData("licence"), InlineData("multiuser")]
+    [InlineData("nested-detail"), InlineData("wrapped-security")]
+    public void Documented_generation_refusals_are_definite_on_net48(string scenario)
+    {
+        var result = RunFixture("generate-source", scenario)["generation"]!;
+        Assert.Equal("failed", (string?)result["Status"]);
+        Assert.False((bool?)result["OutcomeUnknown"]);
+    }
+
+    [Theory, InlineData("disposed"), InlineData("user-abort"), InlineData("connection"), InlineData("wrapped-abort"), InlineData("lost-stream")]
+    public void Interrupted_external_source_generation_is_unknown_on_net48(string scenario)
+    {
+        var result = RunFixture("generate-source", scenario)["generation"]!;
+        Assert.True((bool?)result["Attempted"]);
+        Assert.Equal("outcome-unknown", (string?)result["Status"]);
+        Assert.True((bool?)result["OutcomeUnknown"]);
+    }
+
+    [Theory, InlineData("settings"), InlineData("group"), InlineData("version")]
+    public void Restoring_a_scalar_does_not_settle_other_safety_writes(string scenario)
+    {
+        var row = RunFixture("safety-update", scenario);
+        Assert.Equal(scenario != "version", (bool?)row["attributeWritten"]);
+        Assert.Equal(0, (int?)row["cycle"]);
+        if (scenario == "version") Assert.Equal("V2", (string?)row["version"]);
+        Assert.True((bool?)row["reply"]?["OutcomeUnknown"]);
+        Assert.False((bool?)row["reply"]?["Meta"]?["rollbackCompleted"]);
+    }
+
+    [Fact]
+    public void Refused_safety_attribute_after_restored_scalar_is_definite_on_net48()
+    {
+        var row = RunFixture("safety-update", "refused");
+        Assert.False((bool?)row["attributeWritten"]);
+        Assert.Equal(0, (int?)row["cycle"]);
+        Assert.False((bool?)row["reply"]?["OutcomeUnknown"]);
+        Assert.True((bool?)row["reply"]?["Meta"]?["rollbackCompleted"]);
+    }
+
+    [Fact]
+    public void Offline_refusal_after_login_and_failed_cleanup_keeps_unknown_on_net48()
+    {
+        var row = RunFixture("foundation", "offline-refused-cleanup");
+        Assert.Equal(new[] { "precheck", "login", "logoff" }, Calls(row));
+        Assert.Equal(0, (int?)row["compileCalls"]);
+        Assert.Equal("Unknown", (string?)row["outcome"]);
+    }
+
     internal static JsonObject RunFixture(string caller, string scenario, JsonObject? request = null)
     {
         const string project = "TiaMcp.PlcWorker.FaultFixture";

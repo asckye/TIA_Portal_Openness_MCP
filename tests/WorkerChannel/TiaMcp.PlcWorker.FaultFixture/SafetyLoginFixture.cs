@@ -1,3 +1,4 @@
+extern alias nativewrites;
 using System;
 using System.Collections;
 using System.IO;
@@ -15,6 +16,13 @@ internal static class SafetyLoginFixture
 {
     internal static int Run(string caller, string scenario)
     {
+        if (caller == "native-writes")
+        {
+            var input = JsonNode.Parse(Console.ReadLine()!)!;
+            var probe = nativewrites::TiaMcp.Tests.NativeWrites.NativeWriteFixture.Run(scenario, (string)input["file"]!);
+            Console.WriteLine(WorkerJson.Serialize(new { framework = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName, probe }));
+            return 0;
+        }
         const string password = "fixture-login-password";
         Exception loginError = new UnauthorizedAccessException("private vendor login detail " + password);
         Exception loss = scenario.EndsWith("disposed", StringComparison.Ordinal) ? new ObjectDisposedException("fixture")
@@ -28,13 +36,55 @@ internal static class SafetyLoginFixture
         if (scenario.StartsWith("read-")) admin.OnReadback = () => throw loss;
         else if (scenario.StartsWith("unreadable")) admin.OnReadback = () => throw new IOException("private native read");
         var session = new SafetySession(admin);
+        if (scenario == "offline-refused-cleanup")
+        {
+            admin.LoginError = null;
+            admin.LoggedOnAfterLogin = true;
+        }
         if (scenario == "scope-unavailable")
         {
             var group = new Siemens.Engineering.SW.Blocks.PlcBlockGroup { Name = "Group/one" };
             group.Blocks.Add(new Siemens.Engineering.SW.Blocks.PlcBlock { Name = "Main" });
             session.GetSoftwareContainer("CPU").Software.BlockGroup.Groups.Add(group);
         }
+        if (caller == "safety-update")
+        {
+            session.TestWrite = scenario;
+            admin.Settings.RefuseAttribute = scenario == "refused";
+            admin.IsSafetyOfflineProgramPasswordSet = false;
+            var group = new RuntimeGroup();
+            admin.RuntimeGroups.Add(group);
+            var reply = new SafetyManagementAdapter(session).ManagePlcSafety("CPU", scenario == "group" ? "updateRuntimeGroup" : "updateSettings",
+                runtimeGroup: scenario == "group" ? "Group" : "", dryRun: false);
+            Console.WriteLine(WorkerJson.Serialize(new {
+                framework = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName, reply,
+                attributeWritten = group.AttributeWritten || admin.Settings.AttributeWritten,
+                cycle = scenario == "group" ? group.Cycle : admin.Settings.Cycle, version = admin.Settings.SafetySystemVersion?.Value }));
+            return 0;
+        }
         var engine = new PlcFoundationEngine(session, caller == "legacy-prior");
+        if (caller == "generate-source")
+        {
+            var source = session.GetSoftwareContainer("CPU").Software.Source;
+            source.Failure = scenario switch {
+                "security" => new Siemens.Engineering.EngineeringSecurityException(),
+                "products" => new Siemens.Engineering.MissingProductsException(),
+                "licence" => new Siemens.Engineering.LicenseNotFoundException(),
+                "multiuser" => new Siemens.Engineering.Multiuser.MultiuserException(),
+                "wrapped-abort" => new Siemens.Engineering.EngineeringTargetInvocationException(new Siemens.Engineering.EngineeringUserAbortException()),
+                "nested-detail" => new Siemens.Engineering.EngineeringTargetInvocationException(new ArgumentException("Generation diagnostic.")),
+                "wrapped-security" => new InvalidOperationException("Provider diagnostic.", new Siemens.Engineering.EngineeringSecurityException()),
+                "connection" => new Siemens.Engineering.NonRecoverableException(),
+                "lost-stream" => new Siemens.Engineering.EngineeringTargetInvocationException(new EndOfStreamException()),
+                "disposed" => new Siemens.Engineering.EngineeringObjectDisposedException(),
+                "user-abort" => new Siemens.Engineering.EngineeringUserAbortException(),
+                _ => new Siemens.Engineering.EngineeringTargetInvocationException()
+            };
+            var preview = engine.GenerateBlocksFromExternalSource("CPU", source.Name);
+            var generation = engine.GenerateBlocksFromExternalSource("CPU", source.Name, false, preview.PlanHash, true, preview.ProjectFile);
+            Console.WriteLine(WorkerJson.Serialize(new { framework = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName, generation }));
+            return 0;
+        }
         var row = new JsonObject { ["framework"] = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName };
         var dispatcher = new FoundationWorkerDispatcher(engine, error => {
             row["exception"] = error.GetType().Name;
@@ -45,7 +95,9 @@ internal static class SafetyLoginFixture
         });
         string method = caller switch { "foundation" => "CompileSoftware", "standalone" => "ManagePlcSafety",
             "legacy" or "legacy-prior" => "CompileLegacy", _ => throw new ArgumentException("Unknown fixture caller.") };
-        var arguments = new { softwarePath = "CPU", password, dryRun = false, confirm = true, expectedProjectFile = PlcFoundationEngine.ProjectPath };
+        engine.RefuseSecondOfflineCheck = scenario == "offline-refused-cleanup";
+        var arguments = new { softwarePath = "CPU", password,
+            dryRun = false, confirm = true, expectedProjectFile = PlcFoundationEngine.ProjectPath };
         string? request = Console.IsInputRedirected ? Console.ReadLine() : null;
         var response = dispatcher.Dispatch(new ChannelRequest(1, "adapter." + method,
             string.IsNullOrEmpty(request) ? WorkerJson.Serialize(arguments) : request!, (_, _) => { }));

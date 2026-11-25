@@ -105,7 +105,15 @@ namespace TiaMcp.Adapters
             try { RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); result=compiler!.Compile(); }
             catch(Exception ex)
             {
-                if(loggedOnHere) { try { admin!.LogoffFromSafetyOfflineProgram(); } catch /* swallow(teardown): preserve the original compile failure and attach the safety logoff failure as cleanup evidence */ { ex.Data["safetyCleanup"]="Safety logoff also failed; inspect the session manually."; } }
+                if (loggedOnHere)
+                {
+                    try { admin!.LogoffFromSafetyOfflineProgram(); }
+                    catch /* swallow(teardown): retain the compile failure and the unresolved session mutation */
+                    {
+                        ex.GetBaseException().Data["foundationPriorMutation"] = true;
+                        ex.Data["safetyCleanup"] = "Safety logoff also failed; inspect the session manually.";
+                    }
+                }
                 throw;
             }
             if(loggedOnHere) {
