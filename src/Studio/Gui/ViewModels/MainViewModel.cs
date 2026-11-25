@@ -32,12 +32,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable, IAsyncDisposa
         Activity = new WorkbenchActivity();
         Engineering = new EngineeringViewModel(client, dialogs, Activity);
         Session = new SessionViewModel(client, dialogs, Activity, LoadProjectAsync);
-        VersionControl = versionControl != null ? new VersionControlViewModel(versionControl, dialogs, Activity, () => Engineering.SelectedDevice?.Name)
+        VersionControl = versionControl != null ? new VersionControlViewModel(versionControl, dialogs, Activity,
+                () => Engineering.SelectedDevice?.Name, () => SelectedReleaseKey)
             : client is McpProjectClient vcProject
             ? new VersionControlViewModel(new McpVersionControlClient(vcProject), dialogs, Activity, () => null)
             : new VersionControlViewModel(client as IStudioClient ?? new StudioClient(), dialogs, Activity,
                 () => { if (!client.IsRunning) client.Start(false, SelectedReleaseKey); }, () => Engineering.SelectedDevice?.Id, legacyAccess
-                    : client is IStudioClient);
+                    : client is IStudioClient, releaseKey: () => SelectedReleaseKey);
         if (client is McpProjectClient project)
         {
             _mcp = project.Session;

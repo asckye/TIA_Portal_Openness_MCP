@@ -26,6 +26,8 @@ namespace TiaOpenness.Contracts.Rpc
                 if (type.Type.Name != nameof(MappedObjectInfo) && type.Type.Name != nameof(SyncItem)) return;
                 var refresh = type.Properties.FirstOrDefault(property => property.Name == nameof(MappedObjectInfo.RefreshMessage));
                 if (refresh != null) refresh.ShouldSerialize = (_, message) => message != null;
+                var notCompared = type.Properties.FirstOrDefault(property => property.Name == nameof(SyncItem.NotCompared));
+                if (notCompared != null) notCompared.ShouldSerialize = (_, names) => names != null;
             });
             var options = new JsonSerializerOptions
             {

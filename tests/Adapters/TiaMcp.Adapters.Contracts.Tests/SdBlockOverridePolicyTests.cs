@@ -116,6 +116,8 @@ public sealed class SdBlockOverridePolicyTests
     [InlineData("{ Attribute := \"FUNCTION_BLOCK\"; Type := \"Int\" }")]
     [InlineData("REGION Evaluate type of part\nEND_REGION")]
     [InlineData("REGION Bob's data\nEND_REGION")]
+    [InlineData("IF #run THEN REGION Bob's FUNCTION_BLOCK section\nEND_REGION\nEND_IF;")]
+    [InlineData("IF #run THEN #v := 1; ELSE (* note *) REGION Bob's section\nEND_REGION\nEND_IF;")]
     public void Member_names_qualified_operands_and_region_names_are_not_declarations(string body)
     {
         var header = SdBlockDeclaration.Scan("FUNCTION_BLOCK \"Real\"\n" + body + "\nEND_FUNCTION_BLOCK");
@@ -162,6 +164,11 @@ public sealed class SdBlockOverridePolicyTests
     [Theory]
     [InlineData("DATA_BLOCK \"MotorDB\"\n    \"MotorFB\"\nEND_DATA_BLOCK", "MotorFB")]
     [InlineData("DATA_BLOCK MotorDB MotorFB\nEND_DATA_BLOCK", "MotorFB")]
+    [InlineData("DATA_BLOCK MotorDB NON_RETAIN\nVAR_INPUT\n    Value : Int;\nEND_VAR\nEND_DATA_BLOCK", null)]
+    [InlineData("DATA_BLOCK MotorDB RETAIN\nVAR_STATIC\n    Value : Int;\nEND_VAR\nEND_DATA_BLOCK", null)]
+    [InlineData("DATA_BLOCK MotorDB\nVAR_TEMP\n    Value : Int;\nEND_VAR\nEND_DATA_BLOCK", null)]
+    [InlineData("DATA_BLOCK MotorDB\nRETAIN\nLibrary.Motion.\"Motor FB\"\nEND_DATA_BLOCK", "Library.Motion.Motor FB")]
+    [InlineData("DATA_BLOCK MotorDB : \"Library\".\"MotorFB\"\nEND_DATA_BLOCK", "Library.MotorFB")]
     [InlineData("DATA_BLOCK MotorDB\nVAR\n    Type : Int;\nEND_VAR\nEND_DATA_BLOCK", null)]
     public void Db_admission_distinguishes_an_instance_from_a_global(string text, string? expected)
     {
@@ -170,6 +177,32 @@ public sealed class SdBlockOverridePolicyTests
         Assert.Equal(expected, header.InstanceType);
         var global = new Dictionary<string, object?> { ["Type"] = "GlobalDB" };
         Assert.Equal(expected == null, SdBlockOverridePolicy.Refusal("MotorDB", "DATA_BLOCK", true, false, global, header.InstanceType) == null);
+        if (expected != null)
+            Assert.Contains("InstanceDB of " + expected, SdBlockOverridePolicy.Refusal("MotorDB", "DATA_BLOCK", true, false, global, header.InstanceType));
+    }
+
+    [Theory]
+    [InlineData("(*", "*)")]
+    [InlineData("/*", "*/")]
+    public void Only_different_declarations_under_the_two_comment_readings_block_admission(string start, string end)
+    {
+        string Prefix(string tail) => $"{start} outer {start} inner {end} {tail} {end}\nFUNCTION_BLOCK Real\nEND_FUNCTION_BLOCK";
+        Assert.Equal("FUNCTION_BLOCK", SdBlockDeclaration.Scan(Prefix("ordinary prose")).RequireBlock("Real"));
+        Assert.Equal("FUNCTION_BLOCK", SdBlockDeclaration.Scan(Prefix("'FUNCTION_BLOCK Hidden'")).RequireBlock("Real"));
+        Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan(Prefix("DATA_BLOCK Hidden\nEND_DATA_BLOCK")));
+        Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan(Prefix("FUNCTION_BLOCK Real\nEND_FUNCTION_BLOCK")));
+        // In the flat reading the line comment consumes the declaration that the nested reading admits.
+        Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan($"{start} {start} inner {end} // {end} FUNCTION FC1 : Void\nEND_FUNCTION"));
+    }
+
+    [Fact]
+    public void An_opaque_value_does_not_hide_a_missing_or_added_attribute()
+    {
+        var before = new Dictionary<string, object?> { ["Lost"] = "Vendor.Value", ["Both"] = "Vendor.Value" };
+        var after = new Dictionary<string, object?> { ["Added"] = "Vendor.Value", ["Both"] = 12 };
+        var opaque = new HashSet<string> { "Added", "Both", "Lost" };
+        var differences = SdBlockOverridePolicy.Compare(before, after, SdBlockDeclaration.Scan("FUNCTION F : Void\nEND_FUNCTION"), opaque);
+        Assert.Equal(new[] { "Added", "Lost" }, differences.Select(row => (string?)row["name"]));
     }
 
     [Fact]

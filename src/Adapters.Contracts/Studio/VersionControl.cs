@@ -87,6 +87,7 @@ namespace TiaMcp.Adapters.Contracts.Studio
 
     public class SyncItem
     {
+        public string[] NotCompared { get; set; }
         public string RefreshMessage { get; set; }
         public string Name { get; set; }
         public string Outcome { get; set; }

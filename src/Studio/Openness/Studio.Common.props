@@ -34,6 +34,16 @@
     <NativeApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering*.dll" />
     <Reference Include="@(NativeApi)"><Private>false</Private><SpecificVersion>true</SpecificVersion></Reference>
   </ItemGroup>
+  <ItemGroup Condition="'$(StudioReleaseKey)' == '20' Or '$(StudioReleaseKey)' == '21'">
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Studio/OpennessVersionControl.SdRestore.cs" Link="OpennessVersionControl.SdRestore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcSdBlockSnapshot.cs" Link="PlcSdBlockSnapshot.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcBatchImportRecovery.cs" Link="PlcBatchImportRecovery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcDocumentPrimitives.cs" Link="PlcDocumentPrimitives.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeExportPolicy.cs" Link="NativeExportPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeInputPolicy.cs" Link="NativeInputPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/BundleLayout.cs" Link="BundleLayout.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Shared/DataLocations.cs" Link="DataLocations.cs" />
+  </ItemGroup>
   <Target Name="RequireMatchingPublicApi" BeforeTargets="ResolveReferences">
     <Error Condition="'$(SiemensEngineeringDirectory)' == ''" Text="Supply the official matching PublicAPI directory with SiemensEngineeringDirectory." />
     <GetAssemblyIdentity AssemblyFiles="$(SiemensEngineeringDirectory)/$(StudioApiAssembly)"><Output TaskParameter="Assemblies" ItemName="ApiIdentity" /></GetAssemblyIdentity>

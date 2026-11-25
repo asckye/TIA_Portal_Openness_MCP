@@ -42,7 +42,12 @@ namespace Siemens.Engineering.SW.Blocks
     }
     internal sealed class GlobalDB : PlcBlock { }
     internal sealed class OB : PlcBlock { public string SecondaryType = "ProgramCycle"; }
-    internal sealed class PlcBlockGroup { public SdBlockComposition Blocks { get; } = new(); }
+    internal sealed class PlcBlockGroup
+    {
+        public PlcBlockGroup? Parent { get; set; }
+        public List<PlcBlockGroup> Groups { get; } = new();
+        public SdBlockComposition Blocks { get; } = new();
+    }
     internal sealed partial class SdBlockComposition : IEnumerable<PlcBlock>
     {
         private readonly Dictionary<string, PlcBlock> byName = new(StringComparer.OrdinalIgnoreCase);
@@ -69,11 +74,11 @@ namespace TiaMcp.Adapters.Native.Plc
             block.Number = value;
         }
     }
-    internal static class PlcBatchImportRunner
+    internal static class PlcBatchImportRecovery
     {
-        internal static string Directory = "";
-        internal static string SingleImportRecoveryDirectory() =>
-            System.IO.Directory.CreateDirectory(Path.Combine(Directory, Guid.NewGuid().ToString("N"))).FullName;
+        internal static string Root = "";
+        internal static string Directory() =>
+            System.IO.Directory.CreateDirectory(Path.Combine(Root, Guid.NewGuid().ToString("N"))).FullName;
     }
 }
 
@@ -109,7 +114,7 @@ namespace TiaMcp.Tests.NativeWrites
 
         internal static object Run(string scenario, string directory)
         {
-            PlcBatchImportRunner.Directory = directory;
+            PlcBatchImportRecovery.Root = directory;
             var group = new PlcBlockGroup();
             if (scenario == "sd-batch-refresh") return BatchRefresh(directory, group);
             var main = new OB { Name = "Main", Number = 1, IsConsistent = scenario != "sd-inconsistent", RefuseExport = scenario == "sd-backup-refusal" };

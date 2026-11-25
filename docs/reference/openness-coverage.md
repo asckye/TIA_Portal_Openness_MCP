@@ -472,6 +472,11 @@ mappings with `ExportObject` on V20/V21; its directory argument is relative to `
 preference (s7dcl, SimaticML, XML, then the first offered format). Actual returned format names and additional V18/V19 mappable kinds
 need native confirmation. The V16–V19 list remains limited to `PlcBlock`, `PlcType` and `PlcTagTable` until evidence supports more.
 
+For Workbench restore on V20/V21, `MappedObject.FileFormat`, `DirectoryPath` and `FileNameWithoutExtension` identify the SD input.
+`EngineeringObject` identifies the project block even when its name differs from the mapped filename. Preview and apply check its
+declaration and block properties. Apply backs up admitted consistent blocks and reads each block again in its group after synchronization.
+An unrestored difference is a failure. An unreadable post-write snapshot leaves the outcome unknown. These paths have offline fixture coverage.
+
 DCB extension-library import is available on V16–V20 through `ProjectLibrary.ImportDcbLibrary(string)` and on V21 through
 `DcbLibraryImporter.ImportDcbLibrary(string)`. The service moved in V21; import is not a V21 addition. Drive-library reads start at V18.
 Unified screen items have no documented master-copy instantiation API; the exact-signature allow-list is empty and the existing

@@ -26,6 +26,9 @@
   the error explains how to pass the exact `typeIdentifier`. Unsupported variants have a separate refusal. `CreateHardwareCatalogDevice` names its `keyword` field.
   An incompatible Unified panel version returns `PRECONDITION_FAILED` with the selected and required versions.
   `SetDeviceItemAttribute` names the read-only attribute and its access mode.
+  Workbench restore now applies the same check to mapped SD blocks. Preview identifies each refusal and its reason.
+  Restore reports a failure for verified property loss and an unknown outcome when the post-write read fails.
+  Attributes with unsupported value types appear in `notCompared`. Their presence leaves `propertiesPreserved` unset or null on success.
 
 ## [4.0.0-rc.6] - 2026-11-25
 

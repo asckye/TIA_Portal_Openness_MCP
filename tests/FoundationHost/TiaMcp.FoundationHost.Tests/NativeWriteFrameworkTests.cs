@@ -7,6 +7,65 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class NativeWriteFrameworkTests
 {
+    [Theory]
+    [InlineData("preview", "Startup", 0)]
+    [InlineData("refused", "Startup", 0)]
+    [InlineData("db", "DBAccessibleFromOPCUA", 0)]
+    [InlineData("mismatch", "MCP_RC_DBAttr", 0)]
+    [InlineData("missing", "Missing.s7dcl", 0)]
+    [InlineData("format", "file format", 0)]
+    [InlineData("target", "exact mapped PLC block", 0)]
+    [InlineData("aggregate", "exact mapped PLC block", 0)]
+    [InlineData("elsewhere", "another group", 0)]
+    [InlineData("changed", "changed after admission", 1)]
+    public void Workbench_refused_SD_mappings_never_synchronize(string scenario, string reason, int exports)
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-restore-" + scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal("refused", (string?)probe["item"]?["Outcome"]);
+        Assert.Contains(reason, (string?)probe["item"]?["Error"]);
+        Assert.Equal(0, (int?)probe["Calls"]);
+        Assert.Equal(exports, (int?)probe["Exports"]);
+        Assert.Empty(probe["Setters"]!.AsArray());
+    }
+
+    [Theory]
+    [InlineData("plan", "would sync WorkspaceToProject", 0)]
+    [InlineData("xml", null, 0)]
+    [InlineData("nonblock", null, 0)]
+    [InlineData("absolute", "synchronized", 1)]
+    [InlineData("restored", "synchronized", 1)]
+    [InlineData("opaque", "synchronized", 1)]
+    [InlineData("failure", "failed", 1)]
+    [InlineData("unknown", "unknown", 1)]
+    public void Workbench_verifies_the_mapped_block_after_one_SD_restore(string scenario, string? outcome, int calls)
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-restore-" + scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(outcome, (string?)probe["item"]?["Outcome"]);
+        Assert.Equal(calls, (int?)probe["Calls"]);
+        Assert.Equal(calls, (int?)probe["Exports"]);
+        if (outcome == "synchronized")
+        {
+            Assert.Equal(9810, (int?)probe["Number"]);
+            Assert.Equal(new[] { "AutoNumber=False", "Number=9810", "AutoNumber=True" }, probe["Setters"]!.AsArray().Select(n => (string?)n));
+        }
+        if (scenario == "opaque") Assert.Equal("VendorValue", (string?)Assert.Single(probe["item"]!["NotCompared"]!.AsArray()));
+        if (outcome == "failed") Assert.Contains("DBAccessibleFromOPCUA", (string?)probe["item"]?["Error"]);
+        if (outcome == "unknown") Assert.Contains("MemoryReserve is unreadable", (string?)probe["item"]?["Error"]);
+        if (outcome is "unknown" or "failed") Assert.Contains("Recovery:", (string?)probe["item"]?["Error"]);
+    }
+
+    [Fact]
+    public void Scoped_import_lists_opaque_attributes_without_claiming_preservation()
+    {
+        using var inputs = new Inputs();
+        var meta = Run("sd-scoped-optional", Path.GetDirectoryName(inputs.Nodes)!)["reply"]!["Meta"]!;
+        Assert.Equal("VendorValue", (string?)Assert.Single(meta["notCompared"]!.AsArray()));
+        Assert.Null(meta["propertiesPreserved"]);
+        Assert.Empty(meta["propertyDifferences"]!.AsArray());
+    }
+
     [Fact]
     public void Sd_preview_reports_a_blocking_reason_without_a_backup_or_native_import()
     {
@@ -195,6 +254,11 @@ public sealed class NativeWriteFrameworkTests
                 Assert.True((bool?)result["ok"]);
                 Assert.Equal(1, (int?)result["data"]?["importedBlock"]?["number"]);
                 Assert.Contains(result["meta"]!["warnings"]!.AsArray(), item => (string?)item?["message"] == warning);
+            }
+            else if (scenario == "sd-scoped-optional")
+            {
+                Assert.Null(meta["propertiesPreserved"]);
+                Assert.Contains("VendorValue", meta["notCompared"]!.ToJsonString());
             }
             else Assert.True((bool?)meta["propertiesPreserved"]);
             if (scenario == "sd-scoped-number") Assert.False((bool?)meta["importedBlock"]?["autoNumber"]);

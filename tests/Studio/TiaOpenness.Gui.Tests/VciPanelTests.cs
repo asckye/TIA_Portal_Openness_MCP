@@ -18,6 +18,40 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class VciPanelTests(WpfContext wpf)
 {
+    [Theory, InlineData("20"), InlineData("21")]
+    public void Direct_restore_shows_the_refused_object_and_reason_before_confirmation(string release)
+    {
+        wpf.Run(() =>
+        {
+            var client = new FakeProjectClient { AttachedProject = new ProjectInfo { Name = "Line", Path = @"D:\Line.ap" + release } };
+            client.StatusItems.Add(new MappedObjectInfo { Name = "MCP_RC_OBStart", FileFormat = "s7dcl", CompareState = VcCompareState.Unequal });
+            client.StatusItems.Add(new MappedObjectInfo { Name = "Main", FileFormat = "s7dcl", CompareState = VcCompareState.Unequal });
+            client.DifferingItems = 2;
+            client.SyncHandler = (direction, dryRun) => Task.FromResult(new SyncResult
+            {
+                Direction = direction, DryRun = dryRun, Synchronized = 1, Failed = 1,
+                Items = [new SyncItem { Name = "MCP_RC_OBStart", Outcome = "refused", Error = "SecondaryType = Startup" },
+                    new SyncItem { Name = "Main", Outcome = dryRun ? "would sync WorkspaceToProject" : "synchronized" }]
+            });
+            var dialogs = new FakeDialogService();
+            using var model = new MainViewModel(client, dialogs) { SelectedReleaseKey = release };
+            model.Session.Connect.Execute(null);
+            WpfContext.Complete(model.VersionControl.VcRefreshAsync());
+            model.VersionControl.VcDryRun = false;
+            model.VersionControl.VcPull.Execute(null);
+            WpfContext.Drain();
+            string confirmation = Assert.Single(dialogs.Messages, m => m.Caption == Loc.Current["Dialog.Pull.Caption"]).Text;
+            Assert.Contains("MCP_RC_OBStart", confirmation);
+            Assert.Contains("SecondaryType = Startup", confirmation);
+            Assert.Equal(true, Assert.Single(client.Calls, c => c.Name == "VcSync").Arguments[2]);
+            Assert.Contains(model.VersionControl.SyncRows, row => row.Name == "MCP_RC_OBStart" && row.Outcome == Loc.Current["Project.SyncRefused"]);
+            dialogs.Result = DialogResult.OK;
+            model.VersionControl.VcPull.Execute(null);
+            WpfContext.Drain();
+            Assert.Equal(new object?[] { true, false }, client.Calls.Where(c => c.Name == "VcSync").Select(c => c.Arguments[2]));
+        });
+    }
+
     [Theory]
     [InlineData("14sp1", "Vc.Unavailable")]
     [InlineData("15.1", "Vc.Unavailable")]

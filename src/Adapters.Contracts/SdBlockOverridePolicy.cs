@@ -25,12 +25,21 @@ namespace TiaMcp.Adapters.Contracts
             foreach (char c in text)
                 if (c is '\u2028' or '\u2029' || char.IsControl(c) && c is not ('\t' or '\r' or '\n'))
                     throw Invalid("Unsupported SD control character or line separator.");
+            bool nestedComment = false;
+            var result = ScanTokens(Tokens(text, true, () => nestedComment = true));
+            if (nestedComment && !CommentHeaders(Tokens(text, true)).SequenceEqual(CommentHeaders(Tokens(text, false))))
+                throw Invalid("Nested and non-nested SD comments expose different declarations.");
+            return result;
+        }
+
+        private static SdBlockDeclaration ScanTokens(IEnumerable<(Token Kind, string Value, int Line)> source)
+        {
             var result = new SdBlockDeclaration();
-            using var tokens = Tokens(text).GetEnumerator();
+            using var tokens = source.GetEnumerator();
             string? block = null;
             int braces = 0, previousLine = -1;
             bool previousQualifier = false, afterDeclarationName = false;
-            bool awaitingDbType = false, possibleNestedDeclaration = false;
+            bool awaitingDbType = false, possibleNestedDeclaration = false, afterTypeName = false;
             while (tokens.MoveNext())
             {
                 var (token, value, line) = tokens.Current;
@@ -44,8 +53,7 @@ namespace TiaMcp.Adapters.Contracts
                     throw Invalid("Ambiguous declaration inside " + block + " before its END_ keyword.");
                 possibleNestedDeclaration = false;
 
-                if (afterDeclarationName && token == Token.Symbol && value is not (":" or "{" or ";")
-                    && !(newLine && value is ("#" or "%")))
+                if (afterDeclarationName && !CanFollowName(token, value, newLine))
                     throw Invalid("The declared block name must be one exact identifier.");
                 afterDeclarationName = false;
                 if (token == Token.Region)
@@ -80,9 +88,27 @@ namespace TiaMcp.Adapters.Contracts
                 if (awaitingDbType)
                 {
                     if (token == Token.Symbol && value == ":") continue;
-                    if (token == Token.Identifier || token == Token.Word && word is not ("VAR" or "STRUCT" or "BEGIN" or "END_DATA_BLOCK"))
+                    if (word is "RETAIN" or "NON_RETAIN") continue;
+                    if (token == Token.Identifier || token == Token.Word && word is not ("VAR" or "STRUCT" or "BEGIN" or "END_DATA_BLOCK")
+                        && !word.StartsWith("VAR_", StringComparison.Ordinal))
+                    {
                         result.InstanceType = value;
+                        afterTypeName = true;
+                    }
                     awaitingDbType = false;
+                }
+                else if (afterTypeName)
+                {
+                    if (token == Token.Symbol && value == ".")
+                    {
+                        if (!tokens.MoveNext() || tokens.Current.Kind is not (Token.Identifier or Token.Word))
+                            throw Invalid("Missing identifier in qualified DB instance type.");
+                        result.InstanceType += "." + tokens.Current.Value;
+                        previousQualifier = false;
+                        previousLine = tokens.Current.Line;
+                        continue;
+                    }
+                    afterTypeName = false;
                 }
                 if (qualified || token != Token.Word) continue;
                 result.ExpandedLanguage |= word is "SCL" or "FBD";
@@ -124,9 +150,35 @@ namespace TiaMcp.Adapters.Contracts
 
         private enum Token { Word, Symbol, Identifier, String, Region }
 
-        private static IEnumerable<(Token Kind, string Value, int Line)> Tokens(string text)
+        private static bool CanFollowName(Token token, string value, bool newLine) =>
+            token != Token.Symbol || value is ":" or "{" or ";" || newLine && value is ("#" or "%");
+
+        // Compare viable header spellings independently of body syntax in the two readings.
+        // For example, "DATA_BLOCK X *)" is comment prose: '*' cannot follow a declaration name.
+        private static IEnumerable<(string Kind, string Name)> CommentHeaders(IEnumerable<(Token Kind, string Value, int Line)> tokens)
+        {
+            (Token Kind, string Value, int Line) previous = (Token.Symbol, "", -1);
+            string? keyword = null;
+            bool qualified = false;
+            int braces = 0;
+            foreach (var token in tokens.Concat(new[] { (Kind: Token.Symbol, Value: ";", Line: -1) }))
+            {
+                if (keyword != null && previous.Kind is Token.Word or Token.Identifier && CanFollowName(token.Kind, token.Value, previous.Line != token.Line))
+                    yield return (keyword, previous.Value);
+                keyword = null;
+                if (braces == 0 && !qualified && previous.Kind == Token.Word && BlockKeyword(previous.Value.ToUpperInvariant()))
+                    keyword = previous.Value.ToUpperInvariant();
+                qualified = previous.Line == token.Line && previous.Kind == Token.Symbol && previous.Value is ("#" or "." or "%");
+                if (token.Kind == Token.Symbol && token.Value == "{") braces++;
+                if (token.Kind == Token.Symbol && token.Value == "}" && braces > 0) braces--;
+                previous = token;
+            }
+        }
+
+        private static IEnumerable<(Token Kind, string Value, int Line)> Tokens(string text, bool nested, Action? sawNested = null)
         {
             int i = 0, lineOffset = 0, previousLine = -1;
+            bool afterBranch = false, afterQualifier = false;
             while (i < text.Length)
             {
                 char c = text[i++];
@@ -146,26 +198,38 @@ namespace TiaMcp.Adapters.Contracts
                     {
                         char next = text[i++];
                         if (next is '\r' or '\n') lineOffset = i;
-                        if (next == c && i < text.Length && text[i] == '*') { depth++; i++; }
+                        if (nested && next == c && i < text.Length && text[i] == '*') { sawNested?.Invoke(); depth++; i++; }
                         else if (next == '*' && i < text.Length && text[i] == end) { depth--; i++; }
                     }
-                    if (depth != 0) throw Invalid("Unclosed SD comment.");
+                    if (nested && depth != 0) throw Invalid("Unclosed SD comment.");
                     continue;
                 }
                 bool lineStart = previousLine != lineOffset;
+                bool regionStart = lineStart || afterBranch;
+                bool qualifiedWord = !lineStart && afterQualifier;
+                afterBranch = false;
+                afterQualifier = c is '#' or '.' or '%';
                 previousLine = lineOffset;
                 if (c is '"' or '\'')
                 {
                     var value = new StringBuilder();
                     while (true)
                     {
-                        if (i == text.Length || text[i] is '\r' or '\n') throw Invalid("Unclosed SD quoted token before end of line.");
+                        if (i == text.Length || text[i] is '\r' or '\n')
+                        {
+                            if (nested) throw Invalid("Unclosed SD quoted token before end of line.");
+                            break;
+                        }
                         char next = text[i++];
                         if (next == c && (i == text.Length || text[i] != c)) break;
                         if ((next == c || next == '$') && i < text.Length)
                         {
                             // Preserve the spelling. Escaped identifiers must never alias the inspected basename.
-                            if (text[i] is '\r' or '\n') throw Invalid("Unclosed SD escape before end of line.");
+                            if (text[i] is '\r' or '\n')
+                            {
+                                if (nested) throw Invalid("Unclosed SD escape before end of line.");
+                                break;
+                            }
                             value.Append(next);
                             next = text[i++];
                         }
@@ -180,7 +244,9 @@ namespace TiaMcp.Adapters.Contracts
                     int start = i - 1;
                     while (i < text.Length && (char.IsLetterOrDigit(text[i]) || text[i] == '_')) i++;
                     string word = text.Substring(start, i - start);
-                    if (word.Equals("REGION", StringComparison.OrdinalIgnoreCase) && lineStart)
+                    afterBranch = !qualifiedWord && (word.Equals("THEN", StringComparison.OrdinalIgnoreCase)
+                        || word.Equals("ELSE", StringComparison.OrdinalIgnoreCase));
+                    if (word.Equals("REGION", StringComparison.OrdinalIgnoreCase) && regionStart)
                     {
                         while (i < text.Length && text[i] is not ('\r' or '\n')) i++;
                         yield return (Token.Region, word, lineOffset);
@@ -248,6 +314,10 @@ namespace TiaMcp.Adapters.Contracts
 
         public static List<Dictionary<string, object?>> Compare(IReadOnlyDictionary<string, object?>? before,
             IReadOnlyDictionary<string, object?> after, SdBlockDeclaration declaration)
+            => Compare(before, after, declaration, null);
+
+        public static List<Dictionary<string, object?>> Compare(IReadOnlyDictionary<string, object?>? before,
+            IReadOnlyDictionary<string, object?> after, SdBlockDeclaration declaration, ISet<string>? notCompared)
         {
             var differences = new List<Dictionary<string, object?>>();
             IEnumerable<string> keys = before != null ? before.Keys.Union(after.Keys) :
@@ -259,6 +329,7 @@ namespace TiaMcp.Adapters.Contracts
                 object? old = null;
                 bool presentBefore = before?.TryGetValue(key, out old) == true;
                 bool presentAfter = after.TryGetValue(key, out var actual);
+                if (presentBefore && presentAfter && notCompared?.Contains(key) == true) continue;
                 if (key == "AutoNumber" && old is true && actual is false && declaration.Pragmas.ContainsKey("S7_BlockNumber")) continue;
                 object? expected = old;
                 if (key == "Number" && declaration.Pragmas.TryGetValue("S7_BlockNumber", out string? requested))

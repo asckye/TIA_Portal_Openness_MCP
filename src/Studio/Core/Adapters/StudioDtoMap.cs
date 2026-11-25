@@ -173,6 +173,7 @@ namespace TiaOpenness.Core.Adapters
 
         internal static SyncItem Map(A.SyncItem value) => value == null ? null : new SyncItem
         {
+            NotCompared = value.NotCompared,
             RefreshMessage = value.RefreshMessage,
             Name = value.Name,
             Outcome = value.Outcome,

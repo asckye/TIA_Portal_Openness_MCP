@@ -45,6 +45,7 @@ public sealed class VerifiedImportOutcomeTests
                 meta["operationSuccess"] = false;
                 meta["status"] = SdBlockOverridePolicy.Failure;
                 meta["propertyDifferences"] = new[] { new { name = "Number", before = 9810, after = 1, restored = false } };
+                meta["notCompared"] = new[] { "VendorValue" };
                 meta["recoveryDirectory"] = "recovery/plc-import";
                 if (scenario == "connection-lost") meta["connectionUnavailable"] = true;
                 return "Block properties changed.";
@@ -65,6 +66,7 @@ public sealed class VerifiedImportOutcomeTests
                 if (scenario == "different")
                 {
                     Assert.Contains("9810", body["error"]!["details"]!["evidence"]!["propertyDifferences"]!.ToJsonString());
+                    Assert.Equal("VendorValue", (string?)Assert.Single(body["error"]!["details"]!["evidence"]!["notCompared"]!.AsArray()));
                     Assert.Contains("propertyDifferences", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
                 }
             }

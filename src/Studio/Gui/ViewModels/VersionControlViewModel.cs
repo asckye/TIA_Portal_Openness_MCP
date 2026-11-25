@@ -28,14 +28,17 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     private string _vcDiffCaption = string.Empty;
     private string _newWorkspaceName = "git";
     private string _newWorkspaceFolder = string.Empty;
+    private readonly Func<string?>? _releaseKey;
 
     public VersionControlViewModel(IStudioClient client, IDialogService dialogs, WorkbenchActivity activity,
-        Action ensureBridge, Func<string?> selectedDeviceId, bool legacyAccess = true)
-        : this(new LegacyVersionControlClient(client, ensureBridge, legacyAccess), dialogs, activity, selectedDeviceId) { }
+        Action ensureBridge, Func<string?> selectedDeviceId, bool legacyAccess = true, Func<string?>? releaseKey = null)
+        : this(new LegacyVersionControlClient(client, ensureBridge, legacyAccess), dialogs, activity, selectedDeviceId, releaseKey) { }
 
-    public VersionControlViewModel(IVersionControlClient client, IDialogService dialogs, WorkbenchActivity activity, Func<string?> selectedDeviceId)
+    public VersionControlViewModel(IVersionControlClient client, IDialogService dialogs, WorkbenchActivity activity, Func<string?> selectedDeviceId,
+        Func<string?>? releaseKey = null)
     {
         _client = client;
+        _releaseKey = releaseKey;
         _dialogs = dialogs;
         _activity = activity;
         _selectedDeviceId = selectedDeviceId;
@@ -149,13 +152,18 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         public string RefreshNote => string.IsNullOrEmpty(RefreshMessage) ? "" : Loc.Current.T("Status.RefreshRefused", RefreshMessage);
     }
     public IEnumerable<SyncRow> SyncRows => SyncResult is { } result ? result.Items.Select(item =>
-        new SyncRow(item.Name, result.DryRun ? PreviewOutcome(item) : CompletedOutcome(item.Outcome), item.Error, item.Outcome)
+        new SyncRow(item.Name, result.DryRun ? PreviewOutcome(item) : CompletedOutcome(item.Outcome), SyncDetail(item), item.Outcome)
         { RefreshMessage = item.RefreshMessage }) : [];
+
+    private static string SyncDetail(SyncItem item) => item.NotCompared is { Length: > 0 } names
+        ? (item.Error + " " + Loc.Current.T("Project.SyncNotCompared", string.Join(", ", names))).Trim() : item.Error;
 
     private static string CompletedOutcome(string? outcome) => outcome?.ToLowerInvariant() switch
     {
         "completed" or "synchronized" => Loc.Current["Project.SyncCompleted"],
         "failed" => Loc.Current["Project.SyncFailed"],
+        "unknown" => Loc.Current["Project.SyncUnknown"],
+        "refused" => Loc.Current["Project.SyncRefused"],
         "equal" or "skip" or "skipped" or "skipped-equal" => Loc.Current["Project.SyncSkipped"],
         _ => Loc.Current["Project.SyncOther"],
     };
@@ -164,6 +172,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     {
         switch (item.Outcome?.ToLowerInvariant())
         {
+            case "refused": return Loc.Current["Project.SyncRefused"];
             case "create": case "created": case "would create": return "CREATE";
             case "update": case "updated": case "would update": return "UPDATE";
             case "skip": case "equal": case "skipped": case "skipped-equal": return "SKIP";
@@ -412,23 +421,36 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         _activity.AppendStatus();
     });
 
-    private async Task VcPushAsync() => await VcSyncAsync(SyncDirection.ProjectToWorkspace);
+    private Task VcPushAsync() => VcSyncAsync(SyncDirection.ProjectToWorkspace, VcDryRun);
     private async Task VcPullAsync()
     {
-        if (!VcDryRun && _dialogs.ShowMessage(
-                Loc.Current["Dialog.Pull.Text"], Loc.Current["Dialog.Pull.Caption"],
-                DialogButtons.OKCancel, DialogIcon.Warning, new(ConfirmationAction.OverwriteProject)) != DialogResult.OK)
-        {
-            return;
-        }
-        await VcSyncAsync(SyncDirection.WorkspaceToProject);
+        bool preview = VcDryRun;
+        if (!preview && !await ConfirmRestoreAsync(SelectedWorkspace)) return;
+        await VcSyncAsync(SyncDirection.WorkspaceToProject, preview);
     }
 
-    private async Task VcSyncAsync(SyncDirection direction)
+    private async Task<bool> ConfirmRestoreAsync(WorkspaceInfo? workspace)
+    {
+        const SyncDirection direction = SyncDirection.WorkspaceToProject;
+        var plan = SyncResult is { DryRun: true, Direction: direction } previous ? previous : null;
+        if (plan == null && (!HasStatus || MappedCount > 0) && _releaseKey?.Invoke() is ("20" or "21") && _client is not McpVersionControlClient)
+        {
+            await VcSyncAsync(direction, true);
+            if (SelectedWorkspace != workspace || SyncResult is not { DryRun: true, Direction: direction } refreshed) return false;
+            plan = refreshed;
+        }
+        var lines = new List<string> { Loc.Current["Dialog.Pull.Text"] };
+        if (plan != null)
+            lines.AddRange(plan.Items.Where(row => row.Outcome == "refused")
+                .Select(row => Loc.Current["Project.SyncRefused"] + " · " + row.Name + " — " + row.Error));
+        return _dialogs.ShowMessage(string.Join(Environment.NewLine, lines), Loc.Current["Dialog.Pull.Caption"], DialogButtons.OKCancel,
+            DialogIcon.Warning, new(ConfirmationAction.OverwriteProject)) == DialogResult.OK && SelectedWorkspace == workspace;
+    }
+
+    private async Task VcSyncAsync(SyncDirection direction, bool preview)
         => await _activity.Guarded("Status.Synchronizing", async () =>
     {
         var workspace = SelectedWorkspace;
-        bool preview = VcDryRun;
         SyncResult = null;
         Synchronizing = !preview;
         SyncResult result;
@@ -463,9 +485,10 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
         if (!result.DryRun)
         {
-            if (result.UnverifiedEqual == 0) _activity.Append(direction == SyncDirection.ProjectToWorkspace
-                ? Loc.Current.T("Log.CommitHint", result.RootPath)
-                : Loc.Current["Log.PullHint"]);
+            if (result.UnverifiedEqual == 0 && direction == SyncDirection.ProjectToWorkspace)
+                _activity.Append(Loc.Current.T("Log.CommitHint", result.RootPath));
+            if (result.UnverifiedEqual == 0 && result.Failed == 0 && direction == SyncDirection.WorkspaceToProject)
+                _activity.Append(Loc.Current["Log.PullHint"]);
             await CompareWorkspaceAsync(requested: false);
         }
     }, direction);

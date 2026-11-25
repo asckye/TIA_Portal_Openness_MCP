@@ -1,4 +1,5 @@
 #if PLC_DOCUMENT_EXPORT
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -63,7 +64,7 @@ namespace TiaMcp.Adapters.Native.Plc
     {
         private readonly SdBlockDeclaration declaration;
         private readonly string name;
-        private Dictionary<string, object?>? before;
+        private BlockAttributes? before;
         private readonly Func<PlcBlock?> find;
         private readonly Func<bool> elsewhere;
         private readonly bool replace;
@@ -91,12 +92,14 @@ namespace TiaMcp.Adapters.Native.Plc
             Existing = find();
             before = null;
             Evidence["existingBlock"] = null;
+            Evidence["notCompared"] = Array.Empty<string>();
             try
             {
                 if (Existing != null)
                 {
                     before = Read(Existing);
                     Evidence["existingBlock"] = BlockRow(before);
+                    Evidence["notCompared"] = before.NotCompared.ToArray();
                 }
                 Refusal = SdBlockOverridePolicy.Refusal(name, declaration.Declarations[0].Kind, replace,
                     replace && elsewhere(), before, declaration.InstanceType);
@@ -135,7 +138,8 @@ namespace TiaMcp.Adapters.Native.Plc
             Inspect();
             RequireAdmission();
             if (!replace || (before == null && admitted == null)) return;
-            if (Equals(previousTarget, Existing) && before != null && admitted != null && before.Count == admitted.Count &&
+            if (Equals(previousTarget, Existing) && before != null && admitted != null && before.NotCompared.Count == 0
+                && admitted.NotCompared.Count == 0 && before.Count == admitted.Count &&
                 before.All(pair => admitted.TryGetValue(pair.Key, out var value) && Equals(value, pair.Value))) return;
             if (Evidence.TryGetValue("recoveryDirectory", out var initial)) Evidence["initialRecoveryDirectory"] = initial;
             Evidence.Remove("recoveryDirectory");
@@ -155,16 +159,27 @@ namespace TiaMcp.Adapters.Native.Plc
             var target = new NativeExportPolicy.RecoveryTarget { Object = name,
                 InspectBlocker = () => NativeExportPolicy.ExportBlocker(existing.IsConsistent),
                 Export = file => existing.Export(file, ExportOptions.WithDefaults) };
-            var recovery = NativeExportPolicy.SingleImportRecovery(new[] { target }, PlcBatchImportRunner.SingleImportRecoveryDirectory,
+            var recovery = NativeExportPolicy.SingleImportRecovery(new[] { target }, PlcBatchImportRecovery.Directory,
                 DataLocations.Current.RecoveryAttemptedPath);
             Evidence["recoveryDirectory"] = recovery.Directory;
             if (recovery.Warning != null) Evidence["backupWarning"] = recovery.Warning;
             recovery.RequireExportableBackups();
         }
 
-        internal static Dictionary<string, object?> Read(PlcBlock block)
+        private sealed class BlockAttributes : Dictionary<string, object?>
         {
-            var attributes = new Dictionary<string, object?>();
+            internal SortedSet<string> NotCompared { get; } = new(StringComparer.Ordinal);
+
+            internal string RecordType(string name, object value)
+            {
+                NotCompared.Add(name);
+                return value.GetType().FullName!;
+            }
+        }
+
+        private static BlockAttributes Read(PlcBlock block)
+        {
+            var attributes = new BlockAttributes();
             string reading = "GetAttributeInfos";
             try
             {
@@ -179,7 +194,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         null or string or decimal or DateTime or TimeSpan or Guid => value,
                         Enum or Version => value.ToString(),
                         _ when value.GetType().IsPrimitive => value,
-                        _ when !SdBlockOverridePolicy.RequiredAttribute(reading, block.GetType().Name) => value.GetType().FullName,
+                        _ when !SdBlockOverridePolicy.RequiredAttribute(reading, block.GetType().Name) => attributes.RecordType(reading, value),
                         _ => throw new InvalidOperationException("Unsupported attribute value type " + value.GetType().FullName)
                     };
                 }
@@ -244,7 +259,10 @@ namespace TiaMcp.Adapters.Native.Plc
             Evidence["importedBlock"] = BlockRow(after);
             Evidence["numberRestored"] = restore && setterFailure == null && Equals(before!["Number"], after["Number"])
                 && Equals(before["AutoNumber"], after["AutoNumber"]);
-            var differences = SdBlockOverridePolicy.Compare(replace ? before : null, after, declaration);
+            var notCompared = new SortedSet<string>(after.NotCompared, StringComparer.Ordinal);
+            if (before != null) notCompared.UnionWith(before.NotCompared);
+            Evidence["notCompared"] = notCompared.ToArray();
+            var differences = SdBlockOverridePolicy.Compare(replace ? before : null, after, declaration, notCompared);
             if (before == null && differences.SingleOrDefault(item => Equals(item["name"], "Number")) is { } number)
             {
                 Evidence["warning"] = $"SD requested block number {number["expected"]}. TIA assigned {number["after"]} to new block '{name}'.";
@@ -262,7 +280,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 difference["restoreError"] = setterFailure;
             }
             Evidence["propertyDifferences"] = differences;
-            if (replace && before != null || differences.Count != 0) Evidence["propertiesPreserved"] = differences.Count == 0;
+            if (differences.Count != 0) Evidence["propertiesPreserved"] = false;
+            else if (replace && before != null) Evidence["propertiesPreserved"] = notCompared.Count == 0 ? true : (bool?)null;
             return differences.Count == 0;
         }
 

@@ -152,6 +152,23 @@ public sealed class DocumentImportSafetySources
     }
 
     [Fact]
+    public void Modern_Workbench_restore_handles_refusals_before_preview_or_native_dispatch()
+    {
+        var source = Read(Path.Combine(ROOT, "src/Adapters/Native/Studio/OpennessVersionControl.cs"));
+        int sync = Find(source, "public SyncResult Sync(");
+        int equal = Find(source, "result.SkippedEqual++;", sync);
+        int modern = Find(source, "#if STUDIO_VCI_MODERN", equal);
+        int restore = Find(source, "mode == SynchronizationMode.WorkspaceToProject && RestoreSdMapping(", modern);
+        int report = Find(source, "result.Items.Add(restore);", restore);
+        int stop = Find(source, "if (restore.Outcome is \"unknown\" or \"failed\") { result.Failed++; break; }", report);
+        int refuse = Find(source, "if (restore.Outcome == \"refused\") result.Failed++;", stop);
+        int next = Find(source, "continue;", refuse);
+        int endModern = Find(source, "#endif", restore);
+        int preview = Find(source, "if (dryRun)", endModern);
+        Assert.True(next < endModern && preview < Find(source, "Synchronize(mapped, mode);", preview));
+    }
+
+    [Fact]
     public void PostNativeReportingKeepsEvidence()
     {
         Assert.True(Find(MCP, "var failures = _domain.LastImportFromDocumentsFailures.ToList()") < Find(MCP, "block.Attributes?.Select"));

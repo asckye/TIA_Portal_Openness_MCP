@@ -814,6 +814,7 @@
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
+      "PLC_DOCUMENT_EXPORT",
       "PROJECT_IS_PRIMARY",
       "RELEASE",
       "STUDIO_VCI",
@@ -826,6 +827,8 @@
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
+      "PLC_BLOCK_WRITE_PROTECTION",
+      "PLC_DOCUMENT_EXPORT",
       "PROJECT_IS_PRIMARY",
       "RELEASE",
       "STUDIO_VCI",
@@ -860,6 +863,17 @@
       "JOURNAL_ADAPTER",
       "RELEASE",
       "TRACE"
+    ]
+  },
+  {
+    "project": "tests/Adapters/TiaMcp.VciExport.Net48.Tests/TiaMcp.VciExport.Net48.Tests.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "STUDIO_VCI",
+      "TRACE",
+      "VCI_SDK_EXCEPTIONS"
     ]
   },
   {
@@ -959,6 +973,7 @@
       "SECURITY_UMC_SERVER_SYNC",
       "SECURITY_WATCH_WEB",
       "STUDIO_VCI",
+      "STUDIO_VCI_MODERN",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TIA_NATIVE_ONLINE",
       "TRACE",

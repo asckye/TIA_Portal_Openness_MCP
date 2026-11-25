@@ -314,6 +314,16 @@ namespace TiaOpenness.Openness
                 var name = SafeObjectName(mapped);
                 if (progress != null) progress("vc-sync", i + 1, targets.Count, name);
 
+#if STUDIO_VCI_MODERN
+                if (mode == SynchronizationMode.WorkspaceToProject && RestoreSdMapping(mapped, result.RootPath, name, dryRun) is { } restore)
+                {
+                    result.Items.Add(restore);
+                    if (restore.Outcome is "unknown" or "failed") { result.Failed++; break; }
+                    if (restore.Outcome == "refused") result.Failed++;
+                    else result.Synchronized++;
+                    continue;
+                }
+#endif
                 if (dryRun)
                 {
                     result.Synchronized++;

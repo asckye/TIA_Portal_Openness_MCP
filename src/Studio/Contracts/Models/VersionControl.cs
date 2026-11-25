@@ -96,6 +96,8 @@ namespace TiaOpenness.Contracts.Models
     /// <summary>Outcome of synchronizing one mapped object.</summary>
     public class SyncItem
     {
+        public string[] NotCompared { get; set; }
+        public bool ShouldSerializeNotCompared() => NotCompared != null;
         public string RefreshMessage { get; set; }
         public bool ShouldSerializeRefreshMessage() => RefreshMessage != null;
         public string Name { get; set; }

@@ -221,7 +221,7 @@ namespace TiaMcp.Logic.V4
                     "recoveryDirectory", "candidateDirectory", "candidateDirectoryRelativeToTemp", "scriptCountAfterImport", "moduleExistsAfterImport",
                     "rollbackCompleted", "rollbackScope", "restoredChanges", "cleanupRequired",
                     "rollbackRefused", "rollbackReachable", "unrestoredWrite", "connectionUnavailable", "writeOutcomeUnknown",
-                    "status", "importReturned", "outputExists", "phase", "propertyDifferences", "writeReturned", "backupWarning"
+                    "status", "importReturned", "outputExists", "phase", "propertyDifferences", "notCompared", "writeReturned", "backupWarning"
             };
             var details = keys.Where(evidence.ContainsKey).ToDictionary(k => k, k => JsonSerializer.SerializeToElement(evidence[k]), StringComparer.Ordinal);
             if (!details.ContainsKey("nativeStateType") && EnumType(evidence, tool) is string type)

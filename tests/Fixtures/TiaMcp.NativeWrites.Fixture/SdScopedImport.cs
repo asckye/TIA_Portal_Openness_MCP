@@ -115,7 +115,7 @@ namespace TiaMcp.Tests.NativeWrites
 
         internal static object Run(string scenario, string directory)
         {
-            PlcBatchImportRunner.Directory = directory;
+            PlcBatchImportRecovery.Root = directory;
             var session = new ImportSession(null);
             var group = session.Root;
             bool startup = scenario == "sd-scoped-startup";
