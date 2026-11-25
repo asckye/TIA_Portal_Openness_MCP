@@ -16,6 +16,7 @@
   MCP and the Workbench qualify stored Equal results.
   `unverifiedEqual` counts them even when status rows are filtered. Post-edit freshness on V16–V19 awaits VM verification.
   If an edited object reads Equal, check the workspace file for the edit before treating it as exported.
+- When `GenerateBlocksFromExternalSource` fails on an invalid source, the error message includes the Siemens compiler diagnostic with sensitive details masked.
 - V20/V21 SIMATIC SD imports check the declared block and refuse replacements that would lose OB classification or DB protection settings.
   Consistent replacements retain a SimaticML backup. A verified property difference after import reports failure with recovery evidence.
   The GlobalDB document import tools now explain why they refuse overwrite.
