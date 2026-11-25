@@ -56,6 +56,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.7
 - 4.0 起的正式版生成 `TIA_MCP_v<版本>_<YYYYMMDD>.zip`，预发布沿用 `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip`。两者均附同名 `.sha256` 文件，检查和上传使用同一份 ZIP。
 - `candidate.json`：版本、提交、完整门禁的完成时间（`mergeCheck.utc`）与树哈希（`mergeCheck.tree`）、ZIP 路径、SHA-256、大小、文件数、检查名称和完成时间；上传成功后还含草稿与资产 ID。
 - 暂存包及 `logs/`。候选记录和日志留在本机，不提交 Git。
+- `version-audit/` 保存八版宿主的离线工具目录和生产 PLC worker 适配器的原生调用清单。`audit-version-tools` 用这些文件与同一套 SDK XML 复核覆盖表，命令见 [Openness 覆盖审计](../reference/openness-coverage.md)。
 
 交付文件按 `scripts/operations/delivery-files.json` 过滤，包括八版宿主、worker 和适配器、工作台、工具、用户文档、模板、插件及许可证。暂存阶段生成 `manifest/package-manifest.json`、`delivery.json`、`tools-list.json` 和文件清单 `multi-version-build.json`。旧构建收据不进入新包；`runtime/verification/`、源码、SDK 和私人数据不交付。
 

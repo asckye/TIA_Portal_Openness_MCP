@@ -10,6 +10,7 @@ namespace TiaMcp.ReleaseTool;
 
 internal static class CatalogAudits
 {
+    internal const string VersionAuditFolder = "version-audit";
     private const string Method = "Group actual release catalogs and compare official XML members with compiled native call sites.\n\nRead-only against Siemens SDKs; emits identifiers and hashes, never copies SDK files.\nDirect member-name references are evidence of compiled calls, not end-to-end tool coverage.\nOverloads are counted separately in domainSignatures and together in domainMemberNames.\n";
     private static readonly HashSet<string> Boiler = Set("Equals GetHashCode ToString GetEnumerator Any Contains IndexOf CopyTo GetAttribute GetAttributes GetAttributeInfos SetAttribute SetAttributes GetComposition GetCompositionInfos GetInvocationInfos GetCreationInfos GetService GetServiceInfos Invoke Find Count Parent Dispose Clone CompareTo GetType MemberwiseClone Finalize Item".Split(' '));
     internal static (HashSet<string> Signatures, HashSet<(string Kind, string Owner, string Member)> Members)
@@ -62,43 +63,51 @@ internal static class CatalogAudits
 
     internal static Dictionary<string, string> Version(string root, string apiRoot, string output, string? inputsRoot = null, bool legacyLineEndings = false)
     {
-        var input = inputsRoot ?? Path.Combine(root, "bin-build"); var full = Read(root, "manifest/tools-list.json");
+        var input = Path.Combine(inputsRoot ?? Path.Combine(root, "bin-build"), "prepared", ReleaseVersions.ReadVersionProps(root).Label, VersionAuditFolder);
+        Require(Directory.Exists(input), "Missing prepared audit inputs: " + input + ". Run prepare -BuildOnly for the current release.");
+        var full = Read(root, "manifest/tools-list.json");
         var policy = Source(root, "src/Logic/Siemens/ToolVersionPolicy.cs").Split("internal static string ToolProblem", 2)[0];
         var only21 = Set(Matches(policy, "\\[\"([^\"]+)\"\\]\\s*=")); var names = Set(full["tools"]!.AsArray().Select(t => Text(t!["name"]))); Require(only21.IsSubsetOf(names), "V21 admission policy names absent from built roster");
-        var families = PortedFamilies.Load(root, CatalogJson.Keys);
-        var catalogs = Keys.Take(6).ToDictionary(k => k, k => Set(Read(input, $"multi-version/tools-{k}.json")["tools"]!.AsArray().Select(t => Text(t!["name"]))));
-        catalogs["20"] = Set(names.Except(only21).Except(PortedFamilies.Withheld(families, "20")));
-        catalogs["21"] = Set(names.Except(PortedFamilies.Withheld(families, "21")));
-        var expected = new CatalogData(root).Rosters; foreach (var key in Keys) Require(catalogs[key].SetEquals(expected[key]), "Built/source catalog mismatch: " + key);
-        foreach (var key in new[] { "20", "21" })
-        {
-            var hostCatalog = Set(Read(input, $"multi-version/tools-{key}.json")["tools"]!.AsArray().Select(t => Text(t!["name"])));
-            Require(hostCatalog.SetEquals(expected[key]) && hostCatalog.SetEquals(catalogs[key]), "Host/source catalog mismatch: " + key);
-        }
+        var data = new CatalogData(root);
         var results = new Dictionary<string, string>(); var statistics = new JsonArray();
         foreach (var key in Keys)
         {
-            var relative = key switch { "14sp1" => "TIA_V14SP1_PublicAPI/V14 SP1", "15.1" => "TIA_V15.1_PublicAPI/V15.1", "21" => "TIA_V21_PublicAPI/V21/net48", _ => $"TIA_V{key}_PublicAPI/V{key}" };
-            var api = Path.Combine(apiRoot, relative); var xmlFiles = Directory.GetFiles(api, "Siemens.Engineering*.xml").Where(p => !Path.GetFileName(p).Contains(".AddIn", StringComparison.Ordinal)).Order(PythonStringComparer.Instance).ToArray(); Require(xmlFiles.Length > 0, "No XML: " + api);
+            var hostBytes = File.ReadAllBytes(Path.Combine(input, $"tools-{key}.json"));
+            var catalog = JsonNode.Parse(hostBytes)!;
+            Require(Text(catalog["releaseKey"]) == key, "Host catalog release mismatch: " + key);
+            var tools = catalog["tools"]!.AsArray();
+            var hostNames = Set(tools.Select(t => Text(t!["name"])));
+            Require(hostNames.Count == tools.Count && hostNames.SetEquals(data.Rosters[key]), "Built/source catalog mismatch: " + key);
+            if (key is "20" or "21")
+            {
+                var admitted = key == "20" ? names.Except(only21) : names;
+                Require(hostNames.SetEquals(admitted.Except(PortedFamilies.Withheld(data.Families, key))), "Host/manifest catalog mismatch: " + key);
+            }
+            var api = Path.Combine(apiRoot, ReleaseCommands.PlcWorkerApi(key).Directory);
+            var xmlFiles = Directory.GetFiles(api, "Siemens.Engineering*.xml")
+                .Where(p => !Path.GetFileName(p).Contains(".AddIn", StringComparison.Ordinal)).Order(PythonStringComparer.Instance).ToArray();
+            Require(xmlFiles.Length > 0, "No XML: " + api);
             var (signatures, members) = DocumentedMembers(xmlFiles);
-            string coverage;
-            // P8-04l: every release, V20/V21 included, compiles its calls into the PLC worker's adapter (the engine's woven
-            // inventory retired with the engine).
-            coverage = Path.Combine(input, $"multi-version/adapters/coverage-{key}.json");
-            var calls = CompiledMembers(Read("", coverage));
+            var inventory = File.ReadAllBytes(Path.Combine(input, $"coverage-{key}.json"));
+            var inventoryHash = Hash(inventory);
+            var calls = CompiledMembers(JsonNode.Parse(inventory)!);
             var observed = members.Intersect(calls).ToHashSet(); var candidates = members.Except(observed).ToArray();
             var byNamespace = candidates.GroupBy(p => p.Owner.Contains('.') ? p.Owner[..p.Owner.LastIndexOf('.')] : p.Owner).Select(g => (Name: g.Key, Count: g.Count())).OrderByDescending(p => p.Count).ThenBy(p => p.Name, PythonStringComparer.Instance).Take(8);
             var hashes = new JsonObject(); foreach (var path in xmlFiles) hashes[Path.GetFileName(path)] = Hash(File.ReadAllBytes(path));
-            statistics.Add(new JsonObject { ["releaseKey"] = key, ["mcpTools"] = catalogs[key].Count, ["xmlFiles"] = xmlFiles.Length, ["domainSignatures"] = signatures.Count, ["domainMemberNames"] = members.Count, ["compiledDirectMemberNames"] = observed.Count, ["withoutDirectMemberReference"] = candidates.Length,
-                ["topCandidateNamespaces"] = new JsonArray(byNamespace.Select(p => (JsonNode)new JsonArray(p.Name, p.Count)).ToArray()), ["sdkXmlSha256"] = hashes, ["compiledCallInventorySha256"] = Hash(File.ReadAllBytes(coverage)) });
+            var row = new JsonObject {
+                ["releaseKey"] = key, ["mcpTools"] = tools.Count, ["xmlFiles"] = xmlFiles.Length,
+                ["domainSignatures"] = signatures.Count, ["domainMemberNames"] = members.Count,
+                ["compiledDirectMemberNames"] = observed.Count, ["withoutDirectMemberReference"] = candidates.Length,
+                ["topCandidateNamespaces"] = new JsonArray(byNamespace.Select(p => (JsonNode)new JsonArray(p.Name, p.Count)).ToArray()),
+                ["sdkXmlSha256"] = hashes, ["compiledCallInventorySha256"] = inventoryHash
+            };
             if (key is "20" or "21")
             {
-                var plcCoverage = Path.Combine(input, $"multi-version/adapters/coverage-{key}.json");
-                var plcCalls = CompiledMembers(Read("", plcCoverage));
-                statistics[^1]!["plcCompiledDirectMemberNames"] = members.Intersect(plcCalls).Count();
-                statistics[^1]!["plcCompiledCallInventorySha256"] = Hash(File.ReadAllBytes(plcCoverage));
-                statistics[^1]!["hostCatalogSha256"] = Hash(File.ReadAllBytes(Path.Combine(input, $"multi-version/tools-{key}.json")));
+                row["plcCompiledDirectMemberNames"] = observed.Count;
+                row["plcCompiledCallInventorySha256"] = inventoryHash;
+                row["hostCatalogSha256"] = Hash(hostBytes);
             }
+            statistics.Add(row);
             results[Path.Combine(output, $"api-candidates-{key}.json")] = Encode(new JsonObject { ["releaseKey"] = key, ["caveat"] = "No exact owner/member-name direct call found. Dynamic calls, inherited/generic targets and unadvertised adapter code require manual review. This is not a missing-tool count.", ["members"] = new JsonArray(candidates.OrderBy(p => p.Kind, PythonStringComparer.Instance).ThenBy(p => p.Owner, PythonStringComparer.Instance).ThenBy(p => p.Member, PythonStringComparer.Instance).Select(p => (JsonNode?)JsonValue.Create($"{p.Kind}:{p.Owner}.{p.Member}")).ToArray()) });
         }
         results["manifest/version-api-audit.json"] = Encode(new JsonObject { ["method"] = Method, ["nativeTiaExecuted"] = false, ["versions"] = statistics });
@@ -116,13 +125,13 @@ internal static class CatalogAudits
             Require(receipts.All(r => r!["allSourceTextRetrievedAndHashChecked"]!.GetValue<bool>()), "Source text hash check required for every release");
             return UsageFromRecords(root, matrix, catalog, receipts);
         }
-        var records = OneReceiptPerRelease(Read(input, "multi-version/transport/tool-usage.json").AsArray());
+        var records = OneReceiptPerRelease(Read(input, "merge-check/transport/tool-usage.json").AsArray());
         // P8-04l: the V20/V21 receipts are the PLC usage jobs' (the engine resource-discovery receipts retired with the engine).
         // Their host/worker identity fields are proven by the jobs and are not part of manifest/tool-usage-coverage.json,
         // whose committed bytes check-all's PLC usage audit reproduces from the same receipts.
         foreach (var key in new[] { "20", "21" })
         {
-            var receipt = Read(input, $"multi-version/usage-v{key}-plc.json").AsArray().Single()!.DeepClone().AsObject();
+            var receipt = Read(input, $"merge-check/usage-v{key}-plc.json").AsArray().Single()!.DeepClone().AsObject();
             foreach (var field in new[] { "hostSha256", "sdkWorkerSha256", "runtimeSha256", "workerModel" }) receipt.Remove(field);
             records.Add(receipt);
         }

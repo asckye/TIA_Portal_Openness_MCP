@@ -83,7 +83,21 @@ five names unimplemented. It is only one migration list. The functional review c
 engineering workflows those names represent, existing runtime gates, and additional
 API families. See the [implementation order](version-tools.md#release-differences).
 
-Reproduce with `build-tools/release/CatalogAudits.cs --public-api-root <SDK-root>` after building all targets. [Machine-readable summary and SDK hashes](https://github.com/asckye/automation-engineering-workbench/blob/master/manifest/version-api-audit.json) identify the exact inputs. Detailed identifier-only candidate lists are written under `bin-build/multi-version/api-audit`.
+To reproduce the audit, start in a clean worktree on the build host with the [release prerequisites](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/release.md).
+Set `$sdk` to the parent of the eight PublicAPI directories. The commands below use the checkout's `sdk` directory.
+
+```powershell
+$sdk = (Resolve-Path .\sdk).Path
+$version = dotnet msbuild Version.props -nologo -getProperty:TiaMcpReleaseLabel
+dotnet run --project build-tools/release -- prepare -BuildOnly -Version $version -PublicApiRoot $sdk -MaxParallelism 1
+if ($LASTEXITCODE -ne 0) { throw 'Release build failed' }
+dotnet run --project build-tools/release -- audit-version-tools -PublicApiRoot $sdk
+```
+
+After a successful build, the audit reads `bin-build/prepared/<version>/version-audit/`.
+For each release, `tools-<key>.json` is the full offline FoundationHost catalog and `coverage-<key>.json` is the verified call inventory
+from the adapter copied into that release's production PLC worker. The audit writes the [summary and input hashes](https://github.com/asckye/automation-engineering-workbench/blob/master/manifest/version-api-audit.json)
+and eight identifier-only candidate lists under `bin-build/multi-version/api-audit/`. Use the resulting `versions` rows to refresh the table.
 
 The previous V21 lexical audit (2.7.42) is preserved in [Git history](https://github.com/asckye/automation-engineering-workbench/blob/6f3a5e1f2d4554f2adfefce883843c4bb8f5d6d2/docs/reference/openness-coverage.md). It does not describe the newly enabled version routes.
 

@@ -17,7 +17,9 @@ DES-PORT A updates the ten reviewed compatibility, batch and move signatures and
 
 Port batches update PortedFamilies' per-tool release table, add reviewed data rows where needed, regenerate catalogs and usage, build, then capture. The old-release registration rule remains: a tool is listed only when at least one action is available. Unparsed family rows and unknown overrides fail closed.
 
-`audit-version-tools -PublicApiRoot <SDK-root> [-InputsRoot <bin-build>] [-Output <candidate-directory>]` verifies the two owned catalog files and writes API audit evidence and candidate lists. `audit-tool-usage [-InputsRoot <bin-build>]` is the only writer of `manifest/tool-usage-coverage.json`; `-Records <json>` also accepts the eight distinct, source-hash-checked STDIO receipts from the remaining Python capturers. Capture those receipts under `bin-build`, then run this audit. They cannot run in build-free preflight: they require the same SDK XML, compiled inventories and eight release usage reports produced by the build/capture stages.
+`audit-version-tools -PublicApiRoot <SDK-root> [-InputsRoot <bin-build>] [-Output <candidate-directory>]` verifies the two owned catalog files and writes API audit evidence and candidate lists. The eight offline host catalogs and PLC worker inventories come from `prepared/<version>/version-audit/` under the input root. See the [reproduction commands](../../docs/reference/openness-coverage.md).
+
+`audit-tool-usage [-InputsRoot <bin-build>]` writes `manifest/tool-usage-coverage.json` from the transport and PLC usage receipts in `merge-check/` under the input root. A host `merge-check -All` produces all eight releases' receipts. The alternative `-Records <json>` accepts eight distinct, source-hash-checked STDIO receipts.
 
 `generate-release-migration` reads the frozen rename data and eight current contract baselines. Its output is frozen after the 4.0 release. `docs/archive/development/phase6-review.md` is an archive; its marker blocks are not generated or checked.
 

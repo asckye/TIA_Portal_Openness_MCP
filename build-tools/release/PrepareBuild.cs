@@ -12,6 +12,7 @@ internal sealed class PrepareBuild
     private readonly IDictionary<string, string?> environment;
     private readonly string[] properties;
     private readonly string dotnet = Environment.GetEnvironmentVariable("DOTNET_EXE") ?? "dotnet";
+    private string VersionAuditDirectory => Path.Combine(context.OutputDirectory, CatalogAudits.VersionAuditFolder);
 
     internal PrepareBuild(PrepareContext context, IDictionary<string, string?> environment)
     {
@@ -52,7 +53,8 @@ internal sealed class PrepareBuild
             BuildTable("adapters", table.Where(row => row.Kind == "Adapter"));
             BuildTable("workers", table.Where(row => row.Kind == "Worker"));
             foreach (var key in PlcWorkerFixtures.Keys)
-                VerifyAdapter(Path.Combine(context.Root, $"src/PlcWorker/bin/{key}/Release/net48/TiaMcp.Adapter.{key}.dll"), "copied-adapter-" + key);
+                VerifyAdapter(Path.Combine(context.Root, $"src/PlcWorker/bin/{key}/Release/net48/TiaMcp.Adapter.{key}.dll"), "copied-adapter-" + key,
+                    Path.Combine(VersionAuditDirectory, $"coverage-{key}.json"));
             BuildTable("studio-adapters", table.Where(row => row.Kind == "Studio"));
         });
         Prepare.Timed("host", Host);
@@ -155,6 +157,12 @@ internal sealed class PrepareBuild
             ReleaseCommands.InstallReleasePlcWorker(context.Root, key);
             var worker = Path.Combine(target, "worker", $"TiaMcp.PlcWorker.{key}.exe");
             RequireWorkerMetadata(WorkerAssemblyMetadata.Read(worker), key, fixture: false, policy: null, worker);
+            var catalog = ProcessRunner.Run(Path.Combine(target, "TiaMcp.FoundationHost.exe"),
+                ["--catalog", "--offline", "--profile", "full", "--release-key", key, "--bundle-root", context.Root], context.Root,
+                new Dictionary<string, string?>(environment) { ["TIA_MCP_DATA_DIRECTORY"] = Path.Combine(context.OutputDirectory, "catalog-data") },
+                standardOutputEncoding: Encoding.UTF8);
+            ProcessRunner.RequireSuccess(catalog, "Offline host catalog V" + key);
+            File.WriteAllText(Path.Combine(VersionAuditDirectory, $"tools-{key}.json"), catalog.StandardOutput, new UTF8Encoding(false));
         }
     }
 
@@ -264,8 +272,8 @@ internal sealed class PrepareBuild
             throw new ReleaseException("PlcWorker metadata differs from its build unit: " + worker);
     }
 
-    private void VerifyAdapter(string adapter, string log) => RunDotnet(log,
-        [Path.Combine(context.Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"), "verify", adapter]);
+    private void VerifyAdapter(string adapter, string log, params string[] report) => RunDotnet(log,
+        [Path.Combine(context.Root, "build-tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll"), "verify", adapter, .. report]);
 
     internal static void RequireNoPublicApi(string root)
     {

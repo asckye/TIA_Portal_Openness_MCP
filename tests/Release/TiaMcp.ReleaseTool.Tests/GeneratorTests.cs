@@ -611,15 +611,14 @@ public sealed class GeneratorTests
         Assert.ThrowsAny<Exception>(() => CatalogAudits.Usage(Root, Path.Combine(Root, "bin-build/missing-audit-inputs")));
         Assert.ThrowsAny<Exception>(() => CatalogAudits.Version(Root, Path.Combine(Root, "bin-build/missing-sdk"), "bin-build/test-api", Path.Combine(Root, "bin-build/missing-audit-inputs")));
     }
-    // The evidence folder the audit reads for the repository's current records (3.3.0 on master, 4.0.0-beta.1 during that release).
-    private static string RecordedReleaseFolder() => CatalogAudits.ReleaseDirectoryVersion(
-        (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "manifest/tools-list.json")))!["fileVersion"] ?? "", (string?)JsonNode.Parse(File.ReadAllText(Path.Combine(Root, "manifest/delivery.json")))!["release"]);
 
     [Fact]
     public void NativeAuditCountsXmlOverloadsPropertiesAndExactCompiledMembers()
     {
         var directory = Path.Combine(Root, "bin-build/refactor/audit-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
-        var input = Path.Combine(directory, "inputs"); var sdk = Path.Combine(directory, "sdk"); var data = new CatalogData(Root);
+        var input = Path.Combine(directory, "inputs"); var sdk = Path.Combine(directory, "sdk");
+        var version = ReleaseVersions.ReadLabel(Root);
+        var prepared = Path.Combine(input, "prepared", version, "version-audit");
         void Put(string path, string text) { Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, text, new UTF8Encoding(false)); }
         try
         {
@@ -628,10 +627,26 @@ public sealed class GeneratorTests
                 var relative = key switch { "14sp1" => "TIA_V14SP1_PublicAPI/V14 SP1", "15.1" => "TIA_V15.1_PublicAPI/V15.1", "21" => "TIA_V21_PublicAPI/V21/net48", _ => $"TIA_V{key}_PublicAPI/V{key}" };
                 Put(Path.Combine(sdk, relative, "Siemens.Engineering.xml"), "<doc><members><member name=\"M:Siemens.Engineering.Domain.Widget.Import(System.String)\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Import(System.Int32)\"/><member name=\"P:Siemens.Engineering.Domain.Widget.Name\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Export\"/><member name=\"M:Siemens.Engineering.Private.Secret.Invoke\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Dispose\"/></members></doc>");
                 Put(Path.Combine(sdk, relative, "Siemens.Engineering.AddIn.xml"), "<invalid/>");
-                var coverage = key is "20" or "21" ? $"releases/v{RecordedReleaseFolder()}/v{key}/native-call-coverage-v{key}.json" : $"multi-version/adapters/coverage-{key}.json";
-                Put(Path.Combine(input, coverage), "{\"sites\":[{\"member\":\"void Siemens.Engineering.Domain.Widget::Import(System.String)\"},{\"member\":\"string Siemens.Engineering.Domain.Widget::get_Name()\"},{\"member\":\"ignored\"}]}");
-                if (key is "20" or "21") Put(Path.Combine(input, $"multi-version/adapters/coverage-{key}.json"), File.ReadAllText(Path.Combine(input, coverage)));
-                Put(Path.Combine(input, $"multi-version/tools-{key}.json"), Encode(new JsonObject { ["tools"] = new JsonArray(data.Rosters[key].Select(n => (JsonNode)new JsonObject { ["name"] = n }).ToArray()) }));
+                if (key is "20" or "21")
+                    Put(Path.Combine(input, $"releases/v{version}/v{key}/native-call-coverage-v{key}.json"), """{"sites":[]}""");
+                var members = new[] { "System.Void Siemens.Engineering.Domain.Widget::Import(System.String)",
+                    "System.String Siemens.Engineering.Domain.Widget::get_Name()", "System.Void System.IDisposable::Dispose()" };
+                var sites = members.Select((member, offset) => new {
+                    id = offset.ToString("x20"), caller = $"System.Void Fixture.V{key}::Run()", offset, opcode = "callvirt", member,
+                    category = offset == 2 ? "interface" : "direct", wrapper = "Call_" + offset.ToString("x20")
+                });
+                Put(Path.Combine(prepared, $"coverage-{key}.json"), System.Text.Json.JsonSerializer.Serialize(new {
+                    schemaVersion = 1, instrumenter = "native-call-weaver/1", instrumenterSha256 = new string('a', 64),
+                    scope = "Fixture PLC worker adapter", count = members.Length, sites
+                }));
+                var baseline = Read(Root, $"manifest/contracts/v4/baseline/{key}.json");
+                var tools = baseline["tools"]!.AsArray().Select(t => (JsonNode)new JsonObject {
+                    ["name"] = Text(t!["name"]), ["inputSchema"] = t["inputSchema"]!.DeepClone()
+                });
+                Put(Path.Combine(prepared, $"tools-{key}.json"), new JsonObject {
+                    ["releaseKey"] = key, ["profile"] = "plc-foundation", ["behaviorCapabilities"] = baseline["behaviorCapabilities"]!.DeepClone(),
+                    ["callDiscipline"] = new JsonObject(), ["tools"] = new JsonArray(tools.ToArray())
+                }.ToJsonString());
             }
             var outputs = CatalogAudits.Version(Root, sdk, "candidates", input); var legacy = CatalogAudits.Version(Root, sdk, "candidates", input, legacyLineEndings: true);
             Assert.Equal(9, outputs.Count); Assert.DoesNotContain("manifest/version-tools.json", outputs.Keys); Assert.DoesNotContain("docs/reference/version-tool-catalog.md", outputs.Keys);
@@ -646,17 +661,23 @@ public sealed class GeneratorTests
                 Assert.Equal(2, row["plcCompiledDirectMemberNames"]!.GetValue<int>());
                 Assert.Equal(64, Text(row["hostCatalogSha256"]).Length);
                 Assert.Equal(64, Text(row["plcCompiledCallInventorySha256"]).Length);
-                var hostPath = Path.Combine(input, $"multi-version/tools-{key}.json");
+                var hostPath = Path.Combine(prepared, $"tools-{key}.json");
+                Assert.Equal(Hash(File.ReadAllBytes(hostPath)), Text(row["hostCatalogSha256"]));
                 var original = File.ReadAllText(hostPath);
-                Put(hostPath, "{\"tools\":[]}");
-                Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
+                Put(hostPath, new JsonObject { ["releaseKey"] = key, ["tools"] = new JsonArray() }.ToJsonString());
+                var mismatch = Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
+                Assert.Contains("Built/source catalog mismatch: " + key, mismatch.Message);
                 Put(hostPath, original);
-                var adapterPath = Path.Combine(input, $"multi-version/adapters/coverage-{key}.json");
+                var adapterPath = Path.Combine(prepared, $"coverage-{key}.json");
+                Assert.Equal(Hash(File.ReadAllBytes(adapterPath)), Text(row["compiledCallInventorySha256"]));
+                Assert.Equal(Text(row["compiledCallInventorySha256"]), Text(row["plcCompiledCallInventorySha256"]));
                 var adapter = File.ReadAllText(adapterPath); File.Delete(adapterPath);
                 Assert.ThrowsAny<Exception>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
                 Put(adapterPath, adapter);
             }
-            Put(Path.Combine(input, "multi-version/tools-19.json"), "{\"tools\":[]}"); Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
+            Put(Path.Combine(prepared, "tools-19.json"), """{"releaseKey":"19","tools":[]}""");
+            var legacyMismatch = Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
+            Assert.Contains("Built/source catalog mismatch: 19", legacyMismatch.Message);
         }
         finally { Directory.Delete(directory, true); }
     }
@@ -684,24 +705,24 @@ public sealed class GeneratorTests
         void Put(string relative, JsonNode value) { var path = Path.Combine(input, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, Encode(value), new UTF8Encoding(false)); }
         try
         {
-            Put("multi-version/transport/tool-usage.json", new JsonArray(Keys.Take(6).Select(key => (JsonNode)Receipt(key)).ToArray()));
+            Put("merge-check/transport/tool-usage.json", new JsonArray(Keys.Take(6).Select(key => (JsonNode)Receipt(key)).ToArray()));
             foreach (var key in new[] { "20", "21" })
             {
                 Put($"releases/v{release}/v{key}/tool-usage-v{key}.json", new JsonArray(new[] { ("full", "stdio"), ("full", "http"), ("lite", "stdio"), ("lite", "http") }.Select(row => (JsonNode)Receipt(key, row.Item1, row.Item2)).ToArray()));
                 var plc = Receipt(key); plc["workerModel"] = "foundation-host-plc-worker"; foreach (var field in new[] { "hostSha256", "runtimeSha256", "sdkWorkerSha256" }) plc[field] = new string('0', 64);
-                Put($"multi-version/usage-v{key}-plc.json", new JsonArray(plc));
+                Put($"merge-check/usage-v{key}-plc.json", new JsonArray(plc));
             }
             Put("receipts.json", new JsonArray(Keys.Select(key => (JsonNode)Receipt(key)).ToArray()));
             var audit = CatalogAudits.Usage(Root, input);
             Assert.Null(audit["plcReleases"]);
             Assert.Equal(Encode(CatalogAudits.Usage(Root, recordsPath: receipts)), Encode(audit));
             var unchecked21 = Receipt("21"); unchecked21["allSourceTextRetrievedAndHashChecked"] = false;
-            Put("multi-version/usage-v21-plc.json", new JsonArray(unchecked21));
+            Put("merge-check/usage-v21-plc.json", new JsonArray(unchecked21));
             Assert.Throws<ReleaseException>(() => CatalogAudits.Usage(Root, input));
             var foreign = Receipt("21"); foreign["checkedToolCount"] = 0;
-            Put("multi-version/usage-v21-plc.json", new JsonArray(foreign));
+            Put("merge-check/usage-v21-plc.json", new JsonArray(foreign));
             Assert.Throws<ReleaseException>(() => CatalogAudits.Usage(Root, input));
-            File.Delete(Path.Combine(input, "multi-version/usage-v21-plc.json"));
+            File.Delete(Path.Combine(input, "merge-check/usage-v21-plc.json"));
             Assert.ThrowsAny<Exception>(() => CatalogAudits.Usage(Root, input));
         }
         finally { Directory.Delete(input, true); }
@@ -719,18 +740,19 @@ public sealed class GeneratorTests
         try
         {
             var old = Keys.Take(6).ToArray();
-            Put("multi-version/transport/tool-usage.json", new JsonArray(old.Select(key => (JsonNode)Receipt(key)).Concat(old.SelectMany(key => new JsonNode[] { Receipt(key), Receipt(key) })).ToArray()));
+            var connections = old.Select(key => (JsonNode)Receipt(key)).Concat(old.SelectMany(key => new JsonNode[] { Receipt(key), Receipt(key) }));
+            Put("merge-check/transport/tool-usage.json", new JsonArray(connections.ToArray()));
             foreach (var key in new[] { "20", "21" })
             {
                 var plc = Receipt(key); plc["workerModel"] = "foundation-host-plc-worker"; foreach (var field in new[] { "hostSha256", "runtimeSha256", "sdkWorkerSha256" }) plc[field] = new string('0', 64);
-                Put($"multi-version/usage-v{key}-plc.json", new JsonArray(plc));
+                Put($"merge-check/usage-v{key}-plc.json", new JsonArray(plc));
             }
             Put("receipts.json", new JsonArray(Keys.Select(key => (JsonNode)Receipt(key)).ToArray()));
             Assert.Equal(Encode(CatalogAudits.Usage(Root, recordsPath: receipts)), Encode(CatalogAudits.Usage(Root, input)));
             var different = Receipt("16"); different["checkedToolCount"] = 1;
-            Put("multi-version/transport/tool-usage.json", new JsonArray(old.Select(key => (JsonNode)Receipt(key)).Append(different).ToArray()));
+            Put("merge-check/transport/tool-usage.json", new JsonArray(old.Select(key => (JsonNode)Receipt(key)).Append(different).ToArray()));
             Assert.Contains("same usage receipt: 16", Assert.Throws<ReleaseException>(() => CatalogAudits.Usage(Root, input)).Message);
-            Put("multi-version/transport/tool-usage.json", new JsonArray(old.Take(5).Select(key => (JsonNode)Receipt(key)).ToArray()));
+            Put("merge-check/transport/tool-usage.json", new JsonArray(old.Take(5).Select(key => (JsonNode)Receipt(key)).ToArray()));
             Assert.Throws<ReleaseException>(() => CatalogAudits.Usage(Root, input));
         }
         finally { Directory.Delete(input, true); }
