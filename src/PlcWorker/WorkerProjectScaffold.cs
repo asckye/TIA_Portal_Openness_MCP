@@ -70,8 +70,22 @@ internal sealed class WorkerProjectScaffold
     private JsonObject Documents(PlcB5Request request)
     {
         var arguments = new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request), ["dryRun"] = request.DryRun };
-        return RequireFamilyReply(request.DryRun
-            ? Call("plc-documents.ExecutePlcB5", arguments) : Write("plc-documents.ExecutePlcB5", arguments));
+        var reply = request.DryRun ? Call("plc-documents.ExecutePlcB5", arguments) : Write("plc-documents.ExecutePlcB5", arguments);
+        if (!request.DryRun && reply["Failure"] is JsonObject failure && (bool?)reply["OutcomeUnknown"] == false)
+        {
+            string message = (string)failure["Message"]!;
+            string? parameter = (string?)failure["Evidence"]?["parameter"];
+            if ((bool?)reply["MayHaveChanged"] == false)
+            {
+                if ((string?)failure["Code"] == "INVALID_ARGUMENT") throw new AdapterPreconditionException(message, parameter);
+                if ((string?)failure["Code"] == "PRECONDITION_FAILED")
+                    throw AdapterPreconditionException.Failed(message, (string?)failure["Evidence"]?["condition"] ?? "native-admission", parameter);
+            }
+            else if ((bool?)reply["MayHaveChanged"] == true && (string?)failure["Code"] == SdBlockOverridePolicy.Failure
+                && (bool?)failure["Evidence"]?["writeReturned"] == true && failure["Evidence"]?["propertyDifferences"] is JsonArray { Count: > 0 })
+                return reply;
+        }
+        return RequireFamilyReply(reply);
     }
 
     private JsonObject Unified(UnifiedHmiRequest request)
@@ -271,6 +285,12 @@ internal sealed class WorkerProjectScaffold
         var preflight = _documentPreflight(File.ReadAllText(Path.Combine(directory, name + ".s7dcl")));
         var reply = Documents(new PlcB5Request { Operation = "ImportPlcBlockDocuments", SoftwarePath = text[0], GroupPath = text[1],
             ImportPath = directory, FileNameWithoutExtension = name, ImportOption = "Override", DryRun = false });
+        if (reply["Failure"] is JsonObject failure)
+        {
+            var evidence = failure["Evidence"]!.DeepClone().AsObject();
+            evidence["success"] = false;
+            return Message((string)failure["Message"]!, evidence);
+        }
         if ((bool?)reply["Value"] != true) throw new InvalidOperationException($"Failed importing '{name}' from '{directory}'");
         bool verified = false;
         string detail;
@@ -285,6 +305,9 @@ internal sealed class WorkerProjectScaffold
         catch (Exception error) { detail = "readback skipped: " + error.Message; }
         var meta = Meta(); meta["verified"] = verified; meta["existsVerified"] = verified; meta["contentVerified"] = null;
         meta["verificationScope"] = "exact target group and native ImportedPlcBlocks names";
+        if (reply["Events"] is JsonArray events)
+            foreach (var field in events.OfType<JsonObject>().Where(e => (string?)e["Kind"] == "field"))
+                meta[(string)field["Stage"]!] = field["Value"]?.DeepClone();
         meta["formatPreflight"] = preflight; meta["verifyDetail"] = detail; meta["warnings"] = warnings;
         return Message($"Imported '{name}' from '{directory}'" + (verified ? " (verified)" : ""), meta);
     }

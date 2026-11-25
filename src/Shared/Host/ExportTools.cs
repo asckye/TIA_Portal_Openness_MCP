@@ -335,7 +335,10 @@ namespace TiaMcpServer.ModelContextProtocol
             if (observation.Changed || observation.Confirmed > 0) return Result(tool, data,
                 new Error("Confirmed effects remain, but result reporting did not complete.", new PartialFailureDetails(0, 0, 0)),
                 Outcome.Partial, Execution.Partial, Completeness.Partial, current: current, writes: write);
-            if (exception is TiaMcp.Adapters.Contracts.AdapterPreconditionException admission)
+            var admission = exception as TiaMcp.Adapters.Contracts.AdapterPreconditionException;
+            if (tool is "ImportPlcBlockDocuments" or "ImportPlcBlocksDocuments")
+                admission ??= TiaOpenness.Shared.HostFailurePolicy.Precondition(exception);
+            if (admission != null)
             {
                 var kind = TiaOpenness.Shared.HostFailurePolicy.Classify(admission, false, !write);
                 return Reject(tool, HostBehavior.FailureError(kind, admission.ParamName, Evidence(data),

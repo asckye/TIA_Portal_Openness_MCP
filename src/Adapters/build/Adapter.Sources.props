@@ -152,6 +152,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Alarms.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/AlarmWorkbookReadback.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Documents.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSdBlockSnapshot.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Dynamic.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5Evidence.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcB5OpcUa.cs" />

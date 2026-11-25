@@ -46,6 +46,27 @@ public sealed class WriteOutcomeContractTests
         Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot());
     }
 
+    [Theory, InlineData("ImportPlcBlockDocuments", true), InlineData("ImportPlcBlocksDocuments", true)]
+    [InlineData("ImportPlcBlockDocuments", false), InlineData("ImportPlcBlocksDocuments", false)]
+    public async Task Global_db_import_returns_the_overwrite_reason_before_dispatch(string name, bool dryRun)
+    {
+        using var worker = new ConnectWorker(0);
+        const string release = "21";
+        var definition = Foundation.FoundationTools.ForRelease(Foundation.FoundationTools.Definitions.Single(d => d.Name == name), release);
+        var tool = new Foundation.FoundationV4Tool(new Foundation.FoundationTool(definition, worker), release, () => new(false, 1));
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["groupPath"] = "", ["importPath"] = Path.GetTempPath(),
+            ["overwrite"] = true, ["dryRun"] = dryRun };
+        if (name == "ImportPlcBlockDocuments") args["fileNameWithoutExtension"] = "DB_Flags";
+        else args["fileNamesWithoutExtension"] = new JsonArray("DB_Flags");
+        var request = new RequestContext<CallToolRequestParams>(DispatchProxy.Create<IMcpServer, ApprovalPrecheckTests.ServerProxy>()) {
+            Params = new() { Name = name, Arguments = args.Deserialize<Dictionary<string, JsonElement>>() } };
+        var result = await tool.InvokeAsync(request);
+        Assert.Equal("rejected-before-operation", (string?)result.StructuredContent?["meta"]?["outcome"]);
+        Assert.Equal("INVALID_ARGUMENT", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Contains(TiaMcp.Adapters.Contracts.SdBlockOverridePolicy.RejectOverwrite, (string?)result.StructuredContent?["error"]?["message"]);
+        Assert.Equal(0, worker.Applies);
+    }
+
     private sealed class ConnectWorker(int mapped) : Foundation.IFoundationWorker
     {
         internal int Applies;

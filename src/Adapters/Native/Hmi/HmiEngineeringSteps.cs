@@ -54,6 +54,11 @@ namespace TiaMcp.Adapters
                     && !(meta.TryGetValue("portalLost", out var lost) && lost is true)
                     && (tool == "ImportDeviceAml" && meta.TryGetValue("apiCallSuccess", out var api) && api is true
                         && meta.TryGetValue("status", out var aml) && Equals(aml, "ImportFailed")
+                    || tool == "ManagePlcBlockDocuments" && meta.TryGetValue("status", out var sd) && Equals(sd, SdBlockOverridePolicy.Failure)
+                        && meta.TryGetValue("writeReturned", out var sdReturned) && sdReturned is true
+                        && meta.TryGetValue("nativeState", out var sdState) && Equals(sdState, "Success")
+                        && meta.TryGetValue("propertyDifferences", out var differences) && differences is System.Collections.ICollection { Count: > 0 }
+                        && !(meta.TryGetValue("cleanupRequired", out var cleanup) && cleanup is System.Collections.ICollection { Count: > 0 })
                     || tool == "ImportPlcBlockVerified" && meta.TryGetValue("importReturned", out var imported) && imported is true
                         && meta.TryGetValue("status", out var block) && (Equals(block, "DocumentReadbackMismatch")
                             || Equals(block, "CompileErrors") && meta.TryGetValue("compileReturned", out var compiled) && compiled is true));

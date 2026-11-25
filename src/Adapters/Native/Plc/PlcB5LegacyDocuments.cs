@@ -338,13 +338,20 @@ namespace TiaMcp.Adapters.Native.Plc
                         $"Group path '{groupPath}' not found under PLC '{softwarePath}'. Use GetSoftwareTree for exact group names, or pass an empty groupPath to import at the root.");
             }
 
-            // Preserve the existing Override-only number-restoration feature. These are additional
-            // writes, not transactional rollback or proof that the import preserved all attributes.
-            // Do not perform these writes for None or culture-only options.
-            var existing = Documents.FindBlock(Documents.Blocks(targetGroup), fileNameWithoutExtension);
-            int? prevNumber = null;
-            bool prevAutoNumber = false;
-            try { if ((option & ImportDocumentOptions.Override) != 0 && existing != null) { prevNumber = Documents.Number(existing); prevAutoNumber = Documents.AutoNumber(existing); } } catch { /* swallow(probe-optional): Unavailable previous numbering leaves the existing best-effort restoration disabled. */ }
+            using var files = new SdDeclarationFiles();
+            string text = files.Read(new FileInfo(Path.Combine(dir.FullName, fileNameWithoutExtension + ".s7dcl")));
+            var plan = new PlcSdBlockSnapshot(text, fileNameWithoutExtension,
+                () => Documents.FindBlock(Documents.Blocks(targetGroup), fileNameWithoutExtension), (option & ImportDocumentOptions.Override) != 0,
+                () => ExistsOutsideGroup(Documents.BlockGroup(plcSoftware), targetGroup, fileNameWithoutExtension));
+            if (request.DryRun)
+            {
+                foreach (var pair in plan.Evidence) exchange.Observe(pair.Key, pair.Value);
+                return true;
+            }
+            plan.RequireAdmission();
+            var existing = plan.Existing;
+            if ((option & ImportDocumentOptions.Override) != 0 && existing != null) plan.Backup();
+            foreach (var pair in plan.Evidence) exchange.Observe(pair.Key, pair.Value);
 
             DocumentImportResultForBlocks? result;
             try
@@ -383,6 +390,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         $"PlcBlockComposition.ImportFromDocuments returned state '{Documents.OptionalState(result)?.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically."
                             + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
                 }
+                VerifyDocumentProperties(plan, targetGroup, fileNameWithoutExtension);
                 try
                 {
                     LastImportedDocumentBlocks = Documents.ImportedBlocks(result) == null ? Array.Empty<string>() : PlcGroupOperations
@@ -395,30 +403,6 @@ namespace TiaMcp.Adapters.Native.Plc
                             + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result), null, ex);
                 }
 
-                // Legacy Override-only post-import writes; preservation is best-effort, not verified.
-                if (prevNumber.HasValue)
-                {
-                    var imported = Documents.FindBlock(Documents.Blocks(targetGroup), fileNameWithoutExtension);
-                    if (imported != null)
-                    {
-                        try
-                        {
-                            if (Documents.Number(imported) != prevNumber.Value)
-                            {
-                                Documents.SetAutoNumber(imported, false);
-                                Documents.SetNumber(imported, prevNumber.Value);
-                            }
-                            else
-                            {
-                                Documents.SetAutoNumber(imported, prevAutoNumber);
-                            }
-                        }
-                        catch (Exception ex)
-                        { /* swallow(native-fallback): Preserve the original best-effort block numbering restoration. */
-                            _session.LogEngineeringFailure(ex, "Document import numbering restoration failed.");
-                        }
-                    }
-                }
                 exchange.ConfirmWrite();
                 exchange.Observe("nativeImportedNames", LastImportedDocumentBlocks);
                 return true;
@@ -460,27 +444,19 @@ namespace TiaMcp.Adapters.Native.Plc
             catch { /* swallow(probe-optional): Unavailable native document messages must not replace the import result diagnostic. */ return ""; }
         }
 
-        /// <summary>Depth-first search for a block by exact name across all nested block groups.</summary>
-        private PlcBlock? FindBlockRecursive(PlcBlockGroup group, string blockName)
+        private void VerifyDocumentProperties(PlcSdBlockSnapshot plan, PlcBlockGroup group, string name)
         {
-            if (group == null)
+            bool preserved = plan.Verify(() => Documents.FindBlock(Documents.Blocks(group), name));
+            foreach (var pair in plan.Evidence) exchange.Observe(pair.Key, pair.Value);
+            if (!preserved)
             {
-                return null;
+                exchange.Observe("status", SdBlockOverridePolicy.Failure);
+                exchange.Observe("operationSuccess", false);
+                exchange.Observe("writeReturned", true);
+                exchange.Observe("mayHaveChanged", true);
+                throw new PortalException(SdBlockOverridePolicy.Failure, "SD import changed properties of block '" + name +
+                    "'. Inspect propertyDifferences and the recovery backup.");
             }
-            var here = Documents.FindBlock(Documents.Blocks(group), blockName);
-            if (here != null)
-            {
-                return here;
-            }
-            foreach (var sub in Documents.Enumerate(Documents.BlockGroups(group)))
-            {
-                var found = FindBlockRecursive(sub, blockName);
-                if (found != null)
-                {
-                    return found;
-                }
-            }
-            return null;
         }
 
         public IEnumerable<PlcBlock>
@@ -516,6 +492,17 @@ namespace TiaMcp.Adapters.Native.Plc
             LastImportFromDocumentsScanned = files.Length;
             var selected = files.Where(f => rx == null || rx.IsMatch(Path.GetFileNameWithoutExtension(f.Name))).ToArray();
             LastImportFromDocumentsSelected = selected.Length;
+            using var inputs = new SdDeclarationFiles();
+            var plans = PlcSdBlockSnapshot.PrepareBatch(selected, inputs, group, (option & ImportDocumentOptions.Override) != 0,
+                name => ExistsOutsideGroup(Documents.BlockGroup(plcSoftware), group, name), request.DryRun);
+            exchange.Observe("documentPlans", plans.ToDictionary(pair => pair.Key, pair => pair.Value.Evidence));
+            if (request.DryRun)
+            {
+                var reasons = plans.Values.Select(plan => plan.Refusal).Where(reason => reason != null).ToArray();
+                exchange.Observe("applyBlocked", reasons.Length != 0);
+                exchange.Observe("applyBlockedReasons", reasons);
+                return Array.Empty<PlcBlock>();
+            }
             var imported = new List<PlcBlock>();
             foreach (var file in selected)
             {
@@ -537,11 +524,18 @@ namespace TiaMcp.Adapters.Native.Plc
                         LastImportFromDocumentsStopped = true;
                         break;
                     }
+                    VerifyDocumentProperties(plans[name], group, name);
                     // Materialize before adding: failed result enumeration must not masquerade as success.
                     var blocks = PlcGroupOperations.Items(Documents.ImportedBlocks(result)).Cast<PlcBlock>().Where(block => block != null).ToArray();
                     imported.AddRange(blocks);
                     LastImportFromDocumentsSucceeded++;
                     exchange.ConfirmWrite();
+                }
+                catch (PlcSoftwareException error) when (error.Code == SdBlockOverridePolicy.Failure)
+                {
+                    LastImportFromDocumentsStopped = true;
+                    failures.Add(name + ": " + error.Message);
+                    throw;
                 }
                 catch (Exception ex)
                 {

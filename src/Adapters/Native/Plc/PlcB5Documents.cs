@@ -61,7 +61,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 var plc = _session.ExactPlcForEngineering(softwarePath, writing);
                 var unit = _session.OptionalUnit(plc, unitName, unitKind);
-                var group = (PlcBlockGroup)EngineeringGroupOperations.Group(_session.BlockRootOf(plc, unit), groupPath,
+                var root = (PlcBlockGroup)_session.BlockRootOf(plc, unit);
+                var group = (PlcBlockGroup)EngineeringGroupOperations.Group(root, groupPath,
                     pathParts: value => PlcObjectPath.Parts(value, true));
                 meta["unitName"] = unitName; meta["unitKind"] = unitName == "" ? "root" : unitKind; meta["groupPath"] = groupPath;
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
@@ -72,7 +73,7 @@ namespace TiaMcp.Adapters.Native.Plc
                             .Select(b => (object)new PlcB5Object { ["name"] = b.Name, ["isConsistent"] = b.IsConsistent }).ToArray());
                     return "Exact group blocks listed.";
                 }
-                var block = group.Blocks.Find(name);
+                var block = action == "import" ? null : group.Blocks.Find(name);
                 if (action != "import" && block == null) throw new PortalException("NotFound", "Exact block not found: " + name);
                 if (action == "read") { meta["block"] = EngineeringScalarProperties.Read(block!); return "Exact block properties read."; }
                 if (!Path.IsPathRooted(directoryPath) || !Directory.Exists(directoryPath))
@@ -95,9 +96,17 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 var declaration = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directoryPath, name + ".s7dcl")));
                 if (!declaration.Exists) throw new FileNotFoundException("SIMATIC SD declaration missing.", declaration.FullName);
-                meta["formatPreflight"] = DocumentPreflight(declaration.FullName);
+                using var files = new SdDeclarationFiles();
+                string text = files.Read(declaration);
                 var option = (ImportDocumentOptions)EngineeringScalarProperties.ConvertValue(PlcB5Scalar.Value(importOption), typeof(ImportDocumentOptions))!;
-                if (dryRun) return "Exact scope import preview; review formatPreflight before applying.";
+                bool replace = (option & ImportDocumentOptions.Override) != 0;
+                var plan = new PlcSdBlockSnapshot(text, name, () => group.Blocks.Find(name), replace, () => ExistsOutsideGroup(root, group, name));
+                foreach (var pair in plan.Evidence) meta[pair.Key] = pair.Value;
+                meta["formatPreflight"] = (engine.PlcB5DocumentPreflight ?? throw new InvalidOperationException("Missing document preflight."))(text);
+                if (dryRun) return plan.Refusal ?? "Exact scope import preview; review formatPreflight before applying.";
+                plan.RequireAdmission();
+                plan.Backup();
+                foreach (var pair in plan.Evidence) meta[pair.Key] = pair.Value;
                 meta["mayHaveChanged"] = true;
                 var result = InvocationJournal.Native("ScopedBlock.ImportFromDocuments", () => group.Blocks.ImportFromDocuments(directory, name, option));
                 meta["writeReturned"] = true;
@@ -110,13 +119,20 @@ namespace TiaMcp.Adapters.Native.Plc
                     throw new PortalException("ImportFailed",
                         "Document import did not return Success; may have changed, inspect the native messages before retrying.");
                 }
+                bool preserved = plan.Verify(() => group.Blocks.Find(name));
+                foreach (var pair in plan.Evidence) meta[pair.Key] = pair.Value;
+                if (!preserved)
+                {
+                    meta["operationSuccess"] = false;
+                    meta["status"] = SdBlockOverridePolicy.Failure;
+                    return "Import changed block properties. Review propertyDifferences and the recovery backup before further edits.";
+                }
                 if (!ReadbackStep.TryRead(meta, "importedBlocks", () => DocumentImportRow(result, Names(result.ImportedPlcBlocks)), out var row))
                     return ReadbackStep.Message;
                 meta["nativeMessages"] = row["messages"]; meta["result"] = row;
                 var imported = ((PlcB5Array)row["imported"]!).Cast<string>().ToArray();
                 if (!PlcDocumentReadback.VerifyPresence(meta, () => ExactNamesPresent(imported,
                     EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>().Select(b => b.Name)))) return ReadbackStep.Message;
-                meta["contentVerified"] = null;
                 if (verifyDocumentReadback)
                 {
                     if (imported.Length != 1)
@@ -143,11 +159,13 @@ namespace TiaMcp.Adapters.Native.Plc
                         comparisons.Add(new PlcB5Object { ["extension"] = extension, ["matches"] = match }); equal &= match;
                     }
                     meta["documentComparison"] = comparisons; meta["sdDocumentsMatch"] = equal;
-                    meta["comparisonScope"] =
-                        "Exact text after line-ending normalization; excludes properties not represented by SIMATIC SD. Readback files retained for review.";
                 }
                 return "Block documents imported into the exact root/unit group; existence verified; project not saved or compiled.";
             });
+        private static bool ExistsOutsideGroup(PlcBlockGroup root, PlcBlockGroup target, string name) =>
+            ScopedObjects(root, "Blocks").Select(item => (PlcBlock)item.Value)
+                .Any(block => string.Equals(block.Name, name, StringComparison.OrdinalIgnoreCase) && !Equals(block.Parent, target));
+
         private static string NormalizeDocument(string text) => text.Replace("\r\n", "\n").Replace("\r", "\n");
 #endif
     }

@@ -182,8 +182,6 @@ namespace TiaMcp.Adapters.Native.Plc
             };
         private static PlcB5Object DocumentImportRow(DocumentImportResult result, PlcB5Array names)
             => new PlcB5Object { ["state"] = result.State.ToString(), ["imported"] = names, ["messages"] = DocumentMessages(result.Messages) };
-        private object DocumentPreflight(string file) =>
-            (engine.PlcB5DocumentPreflight ?? throw new InvalidOperationException("Missing document preflight."))(File.ReadAllText(file));
         private LibraryType ExactLibraryType(object library, string path)
         {
             var parts = PlcGroupOperations.Parts(path); var folder = PlcGroupOperations.Get(library, "TypeFolder");

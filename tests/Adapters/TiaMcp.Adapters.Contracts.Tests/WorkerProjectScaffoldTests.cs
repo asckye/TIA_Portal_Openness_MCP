@@ -75,6 +75,76 @@ public sealed class WorkerProjectScaffoldTests
         finally { Directory.Delete(directory, true); }
     }
 
+    [Theory, InlineData("Main", "ProgramCycle"), InlineData("MCP_RC_OBStart", "Startup"), InlineData("MCP_RC_OBCyc", "CyclicInterrupt")]
+    public void Lad_scaffold_keeps_the_actual_admission_reason_and_skips_native_import_for_ineligible_OBs(string name, string secondary)
+    {
+        var directory = Directory.CreateTempSubdirectory("scaffold-ob-");
+        try
+        {
+            string text = "ORGANIZATION_BLOCK \"" + name + "\"\nEND_ORGANIZATION_BLOCK";
+            File.WriteAllText(Path.Combine(directory.FullName, name + ".s7dcl"), text);
+            int imports = 0;
+            var worker = new WorkerProjectScaffold("21", (operation, args) => {
+                if (operation == "ReadState") return new JsonObject { ["ProjectFile"] = "fixture.ap21" };
+                Assert.Equal("plc-documents.ExecutePlcB5", operation);
+                if ((string?)args["request"]?["Action"] == "verify") return new JsonObject { ["Value"] = true };
+                Assert.Equal("Override", (string?)args["request"]?["ImportOption"]);
+                string kind = SdBlockDeclaration.Scan(text).RequireBlock(name);
+                string? refusal = SdBlockOverridePolicy.Refusal(name, kind, true, false, new Dictionary<string, object?> {
+                    ["Type"] = "OB", ["SecondaryType"] = secondary, ["ProgrammingLanguage"] = "LAD"
+                });
+                if (refusal != null) return new JsonObject { ["OutcomeUnknown"] = false, ["MayHaveChanged"] = false,
+                    ["Failure"] = new JsonObject { ["Code"] = "PRECONDITION_FAILED", ["Message"] = refusal,
+                        ["Evidence"] = new JsonObject { ["condition"] = "sd-override-not-preserved", ["parameter"] = "name" } } };
+                imports++;
+                return new JsonObject { ["Value"] = true, ["ImportedNames"] = new JsonArray(name) };
+            }, _ => new JsonObject());
+            var request = new ProjectScaffoldPrimitive { Kind = "lad", Text = new[] { "PLC", "", directory.FullName, name } };
+            if (secondary == "ProgramCycle")
+            {
+                Assert.True((bool?)Assert.IsType<JsonObject>(worker.Execute(request))["Meta"]?["success"]);
+                Assert.Equal(1, imports);
+            }
+            else
+            {
+                var refusal = Assert.Throws<AdapterPreconditionException>(() => worker.Execute(request));
+                Assert.Equal("sd-override-not-preserved", refusal.Condition);
+                Assert.Contains(secondary, refusal.Message);
+                Assert.Equal(0, imports);
+            }
+        }
+        finally { directory.Delete(true); }
+    }
+
+    [Fact]
+    public void Lad_scaffold_returns_confirmed_property_differences_without_another_import()
+    {
+        var directory = Directory.CreateTempSubdirectory("scaffold-difference-");
+        try
+        {
+            File.WriteAllText(Path.Combine(directory.FullName, "Main.s7dcl"), "ORGANIZATION_BLOCK \"Main\"\nEND_ORGANIZATION_BLOCK");
+            int calls = 0;
+            var worker = new WorkerProjectScaffold("21", (operation, args) => {
+                if (operation == "ReadState") return new JsonObject { ["ProjectFile"] = "fixture.ap21" };
+                Assert.Equal("plc-documents.ExecutePlcB5", operation);
+                Assert.Equal("ImportPlcBlockDocuments", (string?)args["request"]?["Operation"]);
+                calls++;
+                return new JsonObject { ["MayHaveChanged"] = true, ["OutcomeUnknown"] = false, ["Failure"] = new JsonObject {
+                    ["Message"] = "Block properties changed.", ["Code"] = SdBlockOverridePolicy.Failure, ["Evidence"] = new JsonObject {
+                        ["status"] = SdBlockOverridePolicy.Failure, ["writeReturned"] = true, ["mayHaveChanged"] = true,
+                        ["propertyDifferences"] = new JsonArray(new JsonObject { ["name"] = "Number", ["before"] = 1, ["after"] = 123 }),
+                        ["recoveryDirectory"] = "retained-backup" } } };
+            }, _ => new JsonObject());
+            var request = new ProjectScaffoldPrimitive { Kind = "lad", Text = new[] { "PLC", "", directory.FullName, "Main" } };
+            var meta = Assert.IsType<JsonObject>(worker.Execute(request))["Meta"]!;
+            Assert.False((bool?)meta["success"]);
+            Assert.Equal("Number", (string?)meta["propertyDifferences"]?[0]?["name"]);
+            Assert.Equal("retained-backup", (string?)meta["recoveryDirectory"]);
+            Assert.Equal(1, calls);
+        }
+        finally { directory.Delete(true); }
+    }
+
     [Theory, InlineData("20"), InlineData("21")]
     public void Worker_registration_uses_the_same_implementation(string release)
     {

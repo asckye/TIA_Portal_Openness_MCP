@@ -232,10 +232,10 @@ installed or that a native operation has passed acceptance.
 | V4 tool | Release scope | Current boundary |
 |---|---|---|
 | `GetOpennessCompatibility` | V20/V21 | Reports loaded Siemens assembly identity, server build identity, cross-reference policy, and known issue links. Installed update/hotfix state remains unknown unless directly supplied. |
-| `InspectSimaticSdCompatibility` | V20/V21 | Offline checks `.s7dcl` for known language and format risks. It is not a complete parser; no warning does not establish import compatibility. |
+| `InspectSimaticSdCompatibility` | V20/V21 | Offline scans block declarations and header pragmas in `.s7dcl` for known language and format risks. It is not a complete parser; no warning does not establish import compatibility. |
 | `GetNativeInvocationLog` | V20/V21 | Reads bounded native-call diagnostics. It records call stages, not every native path, and omits credentials and engineering payloads. |
 | `GetPlcBlockScopes` | All eight releases | Enumerates root PLC blocks and, where supported by the release, blocks in software units and safety units. Partial enumeration is not reported as a complete empty result. |
-| `ManagePlcBlockDocuments` | V20/V21 | Lists, reads, exports, or imports documents in explicit user block groups. SIMATIC SD import requires an offline project; system groups are not import targets. |
+| `ManagePlcBlockDocuments` | V20/V21 | Lists, reads, exports, or imports documents in explicit user block groups. System groups are read-only. Offline SD import checks the exact declared name, refuses new OBs and unsafe replacements, backs up consistent targets as SimaticML and checks block properties after import. Inspect property differences and the recovery directory on failure. SD omits alarms, supervisions, SiVArc and member attributes. |
 | `ManageSinumerikArchive` | V16–V20 | Uses the SINUMERIK archive provider for archive/retrieve/address-archive operations. Output checks do not validate every restored engineering property. |
 | `ImportSinumerikAlarmTexts` | V18–V20 | Imports the selected TS/CSV alarm text files through the NCU alarm text provider. Existing DB2 text can be replaced; returned success is not per-row content verification. |
 | `ManageSinumerikSafetyMode` | V16–V20 | Reads or sets NCU safety mode with an explicit dry-run/confirmation contract and readback. This does not replace safety engineering acceptance. |

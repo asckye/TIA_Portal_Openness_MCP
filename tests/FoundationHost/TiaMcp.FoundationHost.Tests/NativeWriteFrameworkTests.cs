@@ -6,6 +6,97 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 
 public sealed class NativeWriteFrameworkTests
 {
+    [Fact]
+    public void Sd_preview_reports_a_blocking_reason_without_a_backup_or_native_import()
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-preview", Path.GetDirectoryName(inputs.Nodes)!);
+        var evidence = probe["evidence"]!;
+        Assert.True((bool?)evidence["applyBlocked"]);
+        Assert.Contains("Startup", (string?)Assert.Single(evidence["applyBlockedReasons"]!.AsArray()));
+        Assert.Equal("Startup", (string?)evidence["existingBlock"]?["kind"]);
+        Assert.Equal(0, (int?)probe["imports"]);
+        Assert.Equal(0, (int?)probe["postReads"]);
+        Assert.Equal(0, (int?)probe["exports"]);
+    }
+
+    [Theory]
+    [InlineData("sd-new")]
+    [InlineData("sd-backup-refusal")]
+    public void Sd_creation_reads_actual_properties_once_and_a_failed_backup_prevents_import(string scenario)
+    {
+        using var inputs = new Inputs();
+        var probe = Run(scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        var evidence = probe["evidence"]!;
+        if (scenario == "sd-new")
+        {
+            Assert.Equal(1, (int?)probe["imports"]);
+            Assert.Equal(1, (int?)probe["postReads"]);
+            Assert.Equal(0, (int?)probe["exports"]);
+            Assert.True((bool?)evidence["operationSuccess"]);
+            Assert.Null(evidence["existingBlock"]);
+            Assert.Equal("GlobalDB", (string?)evidence["importedBlock"]?["kind"]);
+            Assert.Equal(1, (int?)evidence["importedBlock"]?["number"]);
+        }
+        else
+        {
+            Assert.Equal(0, (int?)probe["imports"]);
+            Assert.Equal(0, (int?)probe["postReads"]);
+            Assert.Equal(1, (int?)probe["exports"]);
+            Assert.False((bool?)evidence["operationSuccess"]);
+            Assert.Equal("backup-unavailable", (string?)evidence["condition"]);
+        }
+        Assert.Empty(probe["Setters"]!.AsArray());
+    }
+
+    [Theory]
+    [InlineData("sd-restored", 1, 1, true)]
+    [InlineData("sd-inconsistent", 1, 0, true)]
+    [InlineData("sd-setter", 1, 1, false)]
+    [InlineData("sd-before-unreadable", 0, 0, false)]
+    [InlineData("sd-after-unreadable", 1, 1, false)]
+    [InlineData("sd-batch", 0, 0, false)]
+    public void Sd_import_verifies_the_fresh_number_and_refuses_the_entire_batch_before_backup(string scenario, int imports, int exports, bool ok)
+    {
+        using var inputs = new Inputs();
+        var probe = Run(scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(imports, (int?)probe["imports"]);
+        Assert.Equal(exports, (int?)probe["exports"]);
+        var evidence = probe["evidence"]!;
+        Assert.Equal(ok, (bool?)evidence["operationSuccess"]);
+        if (imports == 0)
+        {
+            Assert.Equal("sd-override-not-preserved", (string?)evidence["condition"]);
+            Assert.Contains(scenario == "sd-batch" ? "Startup" : "IsIECCheckEnabled", (string?)evidence["error"]);
+            Assert.Empty(probe["Setters"]!.AsArray());
+        }
+        else if (scenario == "sd-after-unreadable")
+        {
+            Assert.Contains("unreadable", (string?)evidence["error"]);
+            Assert.Null(evidence["propertiesPreserved"]);
+            Assert.Empty(probe["Setters"]!.AsArray());
+        }
+        else
+        {
+            Assert.Equal(new[] { "AutoNumber=False", "Number=1", "AutoNumber=True" }, probe["Setters"]!.AsArray().Select(v => (string?)v));
+            Assert.True((bool?)probe["AutoNumber"]);
+            Assert.Equal(ok, (bool?)evidence["numberRestored"]);
+            Assert.Equal(ok, (bool?)evidence["propertiesPreserved"]);
+            Assert.Equal(ok ? 1 : 123, (int?)evidence["importedBlock"]?["number"]);
+            if (exports == 0) Assert.Contains("inconsistent", (string?)evidence["backupWarning"]);
+            else Assert.True(File.Exists(Path.Combine((string)evidence["recoveryDirectory"]!, "000.xml")));
+            if (!ok)
+            {
+                Assert.Equal("BlockPropertiesNotPreserved", (string?)evidence["status"]);
+                var difference = Assert.Single(evidence["propertyDifferences"]!.AsArray())!;
+                Assert.Equal("Number", (string?)difference["name"]);
+                Assert.Equal(1, (int?)difference["before"]);
+                Assert.Equal(123, (int?)difference["after"]);
+                Assert.Equal("Number setter refused.", (string?)difference["restoreError"]);
+            }
+        }
+    }
+
     [Theory]
     [InlineData("opc-cleaned", false, 0)]
     [InlineData("opc-retained", true, 1)]

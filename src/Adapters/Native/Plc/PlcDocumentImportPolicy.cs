@@ -31,7 +31,7 @@ namespace TiaMcp.Adapters
             if(!OpennessApi.PlcDocuments.Includes(r.Release)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Document import requires exact release 20 or 21.","export-plan",false);
             if(r.Overwrite) throw new TiaMcp.Adapters.Contracts
-                .AdapterPreconditionException("Only documented reject-existing ImportDocumentOptions.None is admitted.","export-plan",false);
+                .AdapterPreconditionException(SdBlockOverridePolicy.RejectOverwrite,"export-plan",false);
             PlcDocumentExportPolicy.Name(r.Name);
             if(r.Name.Length>128 || !PlcDocumentDeclaration.BlockIdentifier(r.Name)) throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Basename must be one identifier, 1..128 characters.");

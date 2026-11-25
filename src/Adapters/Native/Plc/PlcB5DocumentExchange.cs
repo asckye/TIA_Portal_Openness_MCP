@@ -52,7 +52,8 @@ namespace TiaMcp.Adapters.Native.Plc
         {
             if (engine.PlcB5AutoOffline != null) return engine.PlcB5AutoOffline(request.SoftwarePath, operation);
             try { return operation(); }
-            catch (Exception error) when (OnlineModeError(error))
+            catch (Exception error) when (OnlineModeError(error) && (request.Operation != "ImportPlcBlockDocuments" ||
+                error is not AdapterPreconditionException && !exchange.Events.Any(e => e.Kind == "start")))
             {
                 try { GoOfflineForDocuments(); } catch { /* swallow(native-fallback): Preserve the existing one retry and its failure. */ }
                 return operation();
@@ -138,11 +139,13 @@ namespace TiaMcp.Adapters.Native.Plc
                         if (request.Action == "verify") {
                             LastImportedDocumentBlocks = request.ImportedNames; reply.Value = VerifyLastDocumentImport(request.SoftwarePath, request.GroupPath);
                         }
-                        else reply.Value =
-                            AutoOffline(() =>
-                                ImportFromDocuments(request.SoftwarePath, request.GroupPath, request.ImportPath, request.FileNameWithoutExtension,
-                                    (Siemens.Engineering.SW.ImportDocumentOptions)Enum
-                                    .Parse(typeof(Siemens.Engineering.SW.ImportDocumentOptions), request.ImportOption)));
+                        else
+                        {
+                            bool Import() => ImportFromDocuments(request.SoftwarePath, request.GroupPath, request.ImportPath,
+                                request.FileNameWithoutExtension, (Siemens.Engineering.SW.ImportDocumentOptions)Enum
+                                    .Parse(typeof(Siemens.Engineering.SW.ImportDocumentOptions), request.ImportOption));
+                            reply.Value = request.DryRun ? Import() : AutoOffline(Import);
+                        }
                         break;
                     case "ImportPlcBlocksDocuments": reply.Blocks =
                         ImportBlocksFromDocuments(request.SoftwarePath, request.GroupPath, request.ImportPath, request.RegexName,
@@ -154,7 +157,15 @@ namespace TiaMcp.Adapters.Native.Plc
             catch (Exception error)
             {
                 reply.Failure = new PlcSoftwareFailure {
-                    Code = error is PlcSoftwareException failure ? failure.Code : error.GetType().Name, Message = error.Message };
+                    Code = error is PlcSoftwareException failure ? failure.Code : error is AdapterPreconditionException ?
+                        MutationEvidence.FailureCode(error) : error.GetType().Name, Message = error.Message };
+                if (error is AdapterPreconditionException admission)
+                {
+                    reply.Failure.Evidence["parameter"] = admission.ParamName;
+                    reply.Failure.Evidence["condition"] = admission.Condition;
+                }
+                if (reply.Failure.Code == SdBlockOverridePolicy.Failure)
+                    foreach (var field in exchange.Events.Where(e => e.Kind == "field")) reply.Failure.Evidence[field.Stage] = field.Value;
             }
             reply.Events = exchange.Events; reply.ExportFailures = LastExportAsDocumentsFailures.ToArray(); reply.ImportFailures =
                 LastImportFromDocumentsFailures.ToArray();
@@ -162,7 +173,7 @@ namespace TiaMcp.Adapters.Native.Plc
             reply.Attempted = LastImportFromDocumentsAttempted; reply.Succeeded = LastImportFromDocumentsSucceeded; reply.Stopped =
                 LastImportFromDocumentsStopped;
             reply.MayHaveChanged = exchange.Events.Any(e => e.Kind == "start"); reply.OutcomeUnknown = reply.MayHaveChanged
-                && (reply.Failure != null || reply.Stopped);
+                && (reply.Failure != null || reply.Stopped) && reply.Failure?.Code != SdBlockOverridePolicy.Failure;
             return reply;
         }
 #endif

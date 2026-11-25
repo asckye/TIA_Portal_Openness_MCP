@@ -297,7 +297,10 @@
       "profile": "full-engine"
     },
     "ManagePlcBlockDocuments": {
-      "result": "Read the V4 envelope first, then inspect data.result state, imported object names and native messages. Compare the requested names with the returned set, then inspect the target group and compile; an empty imported set does not prove the requested content was imported.",
+      "result": "Preview lists existingBlock, notCarried and applyBlockedReasons. Apply requires one declaration matching the basename and exact group. Inspect importedBlock, numberRestored and propertiesPreserved. BlockPropertiesNotPreserved reports a completed write with propertyDifferences and recoveryDirectory. sdDocumentsMatch compares text only. Supervisions, alarms, SiVArc and member attributes can still be lost.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
       "profile": "full-engine",
       "resultReading": "Read ok, error, meta.outcome, meta.execution and meta.completeness; independent quality and native evidence remain in data."
     },

@@ -12,6 +12,7 @@ public static class NativeWriteFixture
 {
     public static object Run(string scenario, string input)
     {
+        if (scenario.StartsWith("sd-", StringComparison.Ordinal)) return SdImports.Run(scenario, input);
         if (scenario.StartsWith("mapping-", StringComparison.Ordinal) || scenario == "target-refused") return Mapping(scenario);
         if (scenario.StartsWith("dyn-", StringComparison.Ordinal)) return Dynamization(scenario);
         var parts = scenario.Split('/');

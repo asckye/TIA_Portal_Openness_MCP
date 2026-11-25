@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TiaFeatureProfile>Adapter</TiaFeatureProfile>
     <TiaReleaseKey>19</TiaReleaseKey>
-    <DefineConstants>$(DefineConstants);TIA_ADAPTER_INTERNAL_VERSIONING</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLC_DOCUMENT_EXPORT;TIA_ADAPTER_INTERNAL_VERSIONING</DefineConstants>
   </PropertyGroup>
   <Import Project="../../../src/Shared/TiaFeatures.props" />
   <ItemGroup>
@@ -17,6 +17,8 @@
     <Compile Include="../../../src/Adapters/Native/Session/PortalSessionGuards.Refusals.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Adapter.Imports.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Evidence.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSdBlockSnapshot.cs" />
+    <Compile Include="../../../src/Shared/NativeExportPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetwork.MappingRules.cs" />
     <Compile Include="../../../src/Adapters/Native/Hmi/UnifiedUiModelAdapter.Dynamization.cs" />

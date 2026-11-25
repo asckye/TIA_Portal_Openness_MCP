@@ -53,6 +53,17 @@ namespace TiaMcpServer.Siemens.Services
                 if (request.Operation == "GenerateOpcUaModelledInterface" && writes
                     && ((bool?)reply["MayHaveChanged"] != false || (bool?)reply["OutcomeUnknown"] != false))
                     throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure(message, reply);
+                if (request.Operation is "ImportPlcBlockDocuments" or "ImportPlcBlocksDocuments" && (bool?)reply["OutcomeUnknown"] == false)
+                {
+                    if ((bool?)reply["MayHaveChanged"] == true && code == SdBlockOverridePolicy.Failure)
+                        throw new InvalidOperationException(message);
+                    if ((bool?)reply["MayHaveChanged"] == false && code is ("INVALID_ARGUMENT" or "PRECONDITION_FAILED"))
+                    {
+                        string? parameter = (string?)error["Evidence"]?["parameter"];
+                        if (code == "INVALID_ARGUMENT") throw new AdapterPreconditionException(message, parameter);
+                        throw AdapterPreconditionException.Failed(message, (string?)error["Evidence"]?["condition"] ?? "native-admission", parameter);
+                    }
+                }
                 if ((bool?)reply["MayHaveChanged"] == true || writes && (bool?)reply["OutcomeUnknown"] == true)
                 {
                     var uncertain = new InvalidOperationException(message);

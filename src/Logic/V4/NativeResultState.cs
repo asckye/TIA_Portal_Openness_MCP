@@ -129,6 +129,16 @@ namespace TiaMcp.Logic.V4
                         ["complete"] = false });
                     if (error != null) { outcome = Outcome.Failed; return true; }
                 }
+                if (tool is ("ManagePlcBlockDocuments" or "ImportPlcBlockDocuments" or "ImportPlcBlocksDocuments")
+                    && (string?)evidence["status"] == SdBlockOverridePolicy.Failure
+                    && Flag("mayHaveChanged") && Flag("writeReturned") && Flag("nativeResultReturned") && Succeeded(evidence, tool)
+                    && !cleanup && evidence["propertyDifferences"] is JsonArray { Count: > 0 })
+                {
+                    outcome = Outcome.Failed;
+                    error = new Error("The SD import returned with changed block properties. Inspect the differences and retained recovery evidence.",
+                        new NativeOperationFailedDetails(null, null, Evidence(evidence, tool)));
+                    return true;
+                }
                 if (tool == "ImportDeviceAml" && (string?)evidence["status"] == "ImportFailed" && Flag("apiCallSuccess") && Flag("mayHaveChanged")
                     && evidence["nativeResult"] is JsonValue verdict && (verdict.TryGetValue<bool>(out var ok) && !ok
                         || verdict.TryGetValue<string>(out var state) && state == "Error"))
@@ -211,7 +221,7 @@ namespace TiaMcp.Logic.V4
                     "recoveryDirectory", "candidateDirectory", "candidateDirectoryRelativeToTemp", "scriptCountAfterImport", "moduleExistsAfterImport",
                     "rollbackCompleted", "rollbackScope", "restoredChanges", "cleanupRequired",
                     "rollbackRefused", "rollbackReachable", "unrestoredWrite", "connectionUnavailable", "writeOutcomeUnknown",
-                    "status", "importReturned", "outputExists", "phase"
+                    "status", "importReturned", "outputExists", "phase", "propertyDifferences", "writeReturned", "backupWarning"
             };
             var details = keys.Where(evidence.ContainsKey).ToDictionary(k => k, k => JsonSerializer.SerializeToElement(evidence[k]), StringComparer.Ordinal);
             if (!details.ContainsKey("nativeStateType") && EnumType(evidence, tool) is string type)

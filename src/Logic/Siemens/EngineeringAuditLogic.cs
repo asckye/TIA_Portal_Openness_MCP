@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.Siemens
 {
@@ -20,9 +19,7 @@ namespace TiaMcpServer.Siemens
 
         internal static JsonObject DocumentPreflight(string text, int major, int? installedUpdate)
         {
-            bool textual = Regex.IsMatch(text, @"\bS7_(?:TextualInterface|Textual)\b", RegexOptions.IgnoreCase)
-                || text.IndexOf("TextualInterface", StringComparison.OrdinalIgnoreCase) >= 0;
-            bool expandedLanguage = Regex.IsMatch(text, @"\b(SCL|FBD)\b", RegexOptions.IgnoreCase);
+            var header = TiaMcp.Adapters.Contracts.SdBlockDeclaration.Scan(text);
             var warnings = new JsonArray();
             if (major == 20 && (installedUpdate == null || installedUpdate < 4))
                 warnings
@@ -33,13 +30,21 @@ namespace TiaMcpServer.Siemens
                     .Add("Siemens documents possible data loss for V20 SCL textual interfaces. This lexical scan cannot rule out that interface form. Use a " +
                     "table interface and compare an exported readback before accepting the import.");
             warnings
-                .Add("SIMATIC SD is not a lossless project backup: OB classification, supervisions/alarms, SiVArc and certain attributes are not preserved " +
-                "by the format.");
-            return new JsonObject { ["major"] = major, ["installedUpdate"] = installedUpdate,
-                ["expandedLanguageDetected"] = expandedLanguage, ["textualInterfaceDetected"] = textual,
+                .Add("SIMATIC SD can change OB classification, numbering and DB attributes. Block property readback cannot verify " +
+                    string.Join(", ", TiaMcp.Adapters.Contracts.SdBlockOverridePolicy.NotCarried) + ".");
+            var declarations = new JsonArray();
+            foreach (var entry in header.Declarations) declarations.Add(new JsonObject { ["kind"] = entry.Kind, ["name"] = entry.Name });
+            var pragmas = new JsonObject();
+            foreach (var entry in header.Pragmas) pragmas[entry.Key] = entry.Value;
+            return new JsonObject { ["declarations"] = declarations, ["pragmas"] = pragmas, ["major"] = major, ["installedUpdate"] = installedUpdate,
+                ["expandedLanguageDetected"] = header.ExpandedLanguage, ["textualInterfaceDetected"] = header.TextualInterface,
                 ["patchSupportKnown"] = major > 20 || major == 20 && installedUpdate >= 4,
                 ["losslessRoundTrip"] = false, ["warnings"] = warnings,
-                ["source"] = "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/improvements-in-step-7/improvements-in-update-4" };
+                ["source"] = "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/" +
+                    "exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/" +
+                    "exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2",
+                ["updateSource"] = "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/" +
+                    "improvements-in-step-7/improvements-in-update-4" };
         }
         internal static bool ExactNamesPresent(IEnumerable<string> imported, IEnumerable<string> actual)
         {

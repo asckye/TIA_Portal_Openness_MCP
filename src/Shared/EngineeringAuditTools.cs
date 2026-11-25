@@ -40,10 +40,11 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ManagePlcBlockDocuments"),
                 Description("[L2][PLC-Software][WRITE] Exact scoped PLC block list/read/export/import using SIMATIC SD. unitName empty selects root; " +
                 "otherwise unitKind unit/safety. groupPath is relative to that scope; name is a single block/document basename. Existing output files are " +
-                "refused. Default dryRun=true. Actual import requires an Offline PLC. Import result distinguishes exact existence verification from unknown " +
-                "content completeness; verifyDocumentReadback exports one imported block to a fresh retained subdirectory and compares .s7dcl/.s7res text " +
-                "after line-ending normalization (sdDocumentsMatch). SIMATIC SD excludes some original properties; comparison is not proof of a lossless " +
-                "project round trip. No automatic save, compile or download. Native behaviorPolicy remains current; V4 native acceptance is pending.")]
+                "refused. Default dryRun=true. Import requires an offline PLC and one matching declaration. Preview reports applyBlockedReasons. " +
+                "New OBs, non-cycle OBs, other groups, protected/safety blocks and non-preservable attributes are refused. Override backs up consistent " +
+                "targets in SimaticML and verifies block properties and numbering. Review importedBlock, propertyDifferences and recoveryDirectory. " +
+                "verifyDocumentReadback compares .s7dcl/.s7res text only (sdDocumentsMatch). Alarms, supervisions, SiVArc and member attributes " +
+                "can still be lost. No automatic save, compile or download. Native behaviorPolicy remains current; V4 native acceptance is pending.")]
         public CallToolResult ManagePlcBlockDocumentsV4(
             [Description("Exact PLC software name/path; empty selects project only where documented.")] string softwarePath,
             [Description("list | read | export | import. Operation name from the supported actions in the tool description.")] string action,

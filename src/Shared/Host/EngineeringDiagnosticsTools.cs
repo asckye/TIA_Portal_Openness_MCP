@@ -20,7 +20,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         [McpServerTool(Name = "InspectSimaticSdCompatibility"),
                 Description("[L2][Diagnostics][READ] Offline SIMATIC SD format/patch preflight of one .s7dcl on the server (maximum 20 MiB). Reports V20 " +
-                "Update 4 language requirements, textual-interface data-loss warning and non-lossless format limits. installedUpdate=-1 means unknown; a " +
+                "Update 4 language requirements, block declarations, header pragmas and format loss warnings. installedUpdate=-1 means unknown; a " +
                 "supplied value is a caller assertion, never derived from SDK versions. Does not parse/compile or modify a project; not a syntax validator.")]
         public CallToolResult InspectSimaticSdCompatibilityV4([Description("Absolute input/output path on the MCP server, with the documented " +
             "extension.")] string filePath,

@@ -1,6 +1,6 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "a01add18cfa6129711b5132828cb8ab9b61ec7768cb9a85e09f30ca08ff04419",
+  "catalogSha256": "57180fe6b4f70572f4737d652d44ee092e81192f906c4174d4c5b85a61ecf711",
   "uniqueTools": 523,
   "documents": 89,
   "versionToolPairs": 3243,
@@ -7876,8 +7876,8 @@
             },
             {
               "operation": "createReceiver",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageTransferArea.createReceiver is unavailable on TIA V15.1. Multicast transfer area mutations require V19. Minimum release for this request is V19."
             }
           ]
         },
@@ -11475,13 +11475,13 @@
             },
             {
               "operation": "setActive",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageDeviceUsers.setActive is unavailable on TIA V16. Simple web users require V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "rename",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageDeviceUsers.rename is unavailable on TIA V16. Simple web users require V18 or later. Minimum release for this request is V18."
             }
           ]
         },
@@ -13041,8 +13041,8 @@
             },
             {
               "operation": "createReceiver",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageTransferArea.createReceiver is unavailable on TIA V16. Multicast transfer area mutations require V19. Minimum release for this request is V19."
             }
           ]
         },
@@ -16903,13 +16903,13 @@
             },
             {
               "operation": "setActive",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageDeviceUsers.setActive is unavailable on TIA V17. Simple web users require V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "rename",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageDeviceUsers.rename is unavailable on TIA V17. Simple web users require V18 or later. Minimum release for this request is V18."
             }
           ]
         },
@@ -18776,8 +18776,8 @@
             },
             {
               "operation": "createReceiver",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageTransferArea.createReceiver is unavailable on TIA V17. Multicast transfer area mutations require V19. Minimum release for this request is V19."
             }
           ]
         },
@@ -18798,13 +18798,13 @@
             },
             {
               "operation": "checkConsistency",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageUmcUsers.checkConsistency is unavailable on TIA V17. UMC consistency/synchronization requires V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "synchronize",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageUmcUsers.synchronize is unavailable on TIA V17. UMC consistency/synchronization requires V18 or later. Minimum release for this request is V18."
             },
             {
               "operation": "createOffline",
@@ -25256,8 +25256,8 @@
             },
             {
               "operation": "createReceiver",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageTransferArea.createReceiver is unavailable on TIA V18. Multicast transfer area mutations require V19. Minimum release for this request is V19."
             }
           ]
         },
@@ -31999,8 +31999,8 @@
             },
             {
               "operation": "create",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageSyslogServers.create is unavailable on TIA V19. Project-global SyslogServerProvider.Servers requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "update",
@@ -32009,18 +32009,18 @@
             },
             {
               "operation": "delete",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageSyslogServers.delete is unavailable on TIA V19. Project-global SyslogServerProvider.Servers requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "assignModule",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageSyslogServers.assignModule is unavailable on TIA V19. Project-global SyslogServerProvider.Servers requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "unassignModule",
-              "exampleKind": "parameterized-call-example",
-              "releaseProblem": null
+              "exampleKind": "unavailable",
+              "releaseProblem": "ManageSyslogServers.unassignModule is unavailable on TIA V19. Project-global SyslogServerProvider.Servers requires V20 or later. Minimum release for this request is V20."
             },
             {
               "operation": "createServer",
@@ -41315,9 +41315,9 @@
           "operations": []
         }
       ],
-      "hostSha256": "3ad82606864752e18ba80fab4d9f7238fba6ea60456bd541839991c128ab6443",
-      "sdkWorkerSha256": "9d576f55a8dde9d6d2cb1d8cfe8760e6d9427adad194ed252d44e59bd065d505",
-      "runtimeSha256": "9d576f55a8dde9d6d2cb1d8cfe8760e6d9427adad194ed252d44e59bd065d505",
+      "hostSha256": "03d0d68bb2b4f856901dcade2d19a728875421b3ec1eabd1320c721b24f5147b",
+      "sdkWorkerSha256": "5b9d2389635467e253619dc881af77b877ca2350025a64466a4ef44f02cfb8d7",
+      "runtimeSha256": "5b9d2389635467e253619dc881af77b877ca2350025a64466a4ef44f02cfb8d7",
       "workerModel": "foundation-host-plc-worker"
     },
     "21": {
@@ -49477,9 +49477,9 @@
           "operations": []
         }
       ],
-      "hostSha256": "3ad82606864752e18ba80fab4d9f7238fba6ea60456bd541839991c128ab6443",
-      "sdkWorkerSha256": "c14ab9aa1761f584e1a591f6dc15c6851726904a0dc8840a6aaff5b685bbd440",
-      "runtimeSha256": "c14ab9aa1761f584e1a591f6dc15c6851726904a0dc8840a6aaff5b685bbd440",
+      "hostSha256": "03d0d68bb2b4f856901dcade2d19a728875421b3ec1eabd1320c721b24f5147b",
+      "sdkWorkerSha256": "5ac0605d5ec6b9d574fb33ad640a85baf94d2133da9eef05876410832bfc37b6",
+      "runtimeSha256": "5ac0605d5ec6b9d574fb33ad640a85baf94d2133da9eef05876410832bfc37b6",
       "workerModel": "foundation-host-plc-worker"
     }
   }

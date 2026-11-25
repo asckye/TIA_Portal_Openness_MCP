@@ -204,6 +204,14 @@ namespace TiaMcpServer.ModelContextProtocol
             bool unknown = writes && Flag(evidence, "writeOutcomeUnknown") == true
                 || Flag(evidence, "timedOut") == true && writes
                 || writes && Flag(evidence, "dispatchStarted") == true && Flag(evidence, "executed") != true;
+            if (tool == "ManagePlcBlockDocuments" && success == false && !unknown)
+            {
+                if (NativeResultState.TryRollback(evidence, writes, out var outcome, out var error, tool))
+                    return Result(tool, data, error, outcome, outcome == Outcome.Unknown ? Completeness.Unknown : Completeness.Complete, current, writes);
+                if (!mayWrite && (HostBehavior.DocumentedRefusal(evidence) ??
+                    HostBehavior.KnownRefusalWithMessage(evidence, success, McpServer.ReleaseKey, tool, response.Message)) is Error refusal)
+                    return Result(tool, data, refusal, Outcome.RejectedBeforeOperation, Completeness.None, current);
+            }
             if (!unknown && success == true && failed == 0)
                 return Result(tool, data, null, Outcome.Succeeded, incomplete ? Completeness.Partial : Completeness.Complete, current, writes, paging);
             if (unknown || writes && success != true && (succeeded == 0 && mayWrite || response is ResponsePlcProgramImport && succeeded == 0))

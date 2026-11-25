@@ -21,6 +21,75 @@ using Xunit;
 
 public sealed class VerifiedImportOutcomeTests
 {
+    [Theory, InlineData("20"), InlineData("21")]
+    public void Sd_refusal_and_post_import_outcomes_reach_the_public_result(string release)
+    {
+        const string tool = "ManagePlcBlockDocuments";
+        int nativeCalls = 0;
+        foreach (string scenario in new[] { "refused", "different", "unreadable", "connection-lost" })
+        {
+            nativeCalls = 0;
+            var step = Fixture.RunStep(release, tool, meta => {
+                if (scenario == "refused")
+                {
+                    string reason = SdBlockOverridePolicy.Refusal("MCP_RC_OBStart", "ORGANIZATION_BLOCK", true, false,
+                        new Dictionary<string, object?> { ["Type"] = "OB", ["SecondaryType"] = "Startup" })!;
+                    throw AdapterPreconditionException.Failed(reason, "sd-override-not-preserved", "name");
+                }
+                meta["mayHaveChanged"] = true;
+                nativeCalls++;
+                meta["writeReturned"] = true;
+                meta["nativeState"] = "Success";
+                meta["nativeResultReturned"] = true;
+                if (scenario == "unreadable") throw new InvalidOperationException("Cannot read post-import block attributes.");
+                meta["operationSuccess"] = false;
+                meta["status"] = SdBlockOverridePolicy.Failure;
+                meta["propertyDifferences"] = new[] { new { name = "Number", before = 9810, after = 1, restored = false } };
+                meta["recoveryDirectory"] = "recovery/plc-import";
+                if (scenario == "connection-lost") meta["connectionUnavailable"] = true;
+                return "Block properties changed.";
+            });
+            Assert.Equal(scenario == "refused" ? 0 : 1, nativeCalls);
+            Assert.Equal(scenario != "refused", step.Meta["mayHaveChanged"]);
+            Assert.Equal(scenario is "unreadable" or "connection-lost", step.OutcomeUnknown);
+            var response = new Host.ResponseMessage { Message = step.Message, Meta = JsonSerializer.SerializeToNode(step.Meta)!.AsObject() };
+            foreach (var result in new[] { Host.OfflineContracts.Map(tool, response, true, true), Host.EngineeringToolContract.Map(tool, response, true) })
+            {
+                var body = result.StructuredContent!;
+                Assert.False((bool?)body["ok"]);
+                string outcome = scenario switch { "refused" => "rejected-before-operation", "different" => "failed", _ => "unknown" };
+                Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
+                Assert.Equal(scenario switch { "refused" => "PRECONDITION_FAILED", "different" => "NATIVE_OPERATION_FAILED", _ => "OUTCOME_UNKNOWN" },
+                    (string?)body["error"]?["code"]);
+                if (scenario == "refused") Assert.Equal("sd-override-not-preserved", (string?)body["error"]?["details"]?["condition"]);
+                if (scenario == "different")
+                {
+                    Assert.Contains("9810", body["error"]!["details"]!["evidence"]!["propertyDifferences"]!.ToJsonString());
+                    Assert.Contains("propertyDifferences", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+                }
+            }
+        }
+    }
+
+    [Theory, InlineData(20), InlineData(21)]
+    public void Sd_preflight_returns_the_real_lad_header_and_ignores_declarations_in_comments_and_strings(int major)
+    {
+        string root = TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        string lad = File.ReadAllText(Path.Combine(root, "plugin/skill/lad-cookbook/MCPVerify_FB_LAD_v3.s7dcl"));
+        string decoys = "// SCL TextualInterface FUNCTION Bad\n(* FUNCTION_BLOCK Bad *)\n";
+        var result = TiaMcpServer.Siemens.EngineeringAuditLogic.DocumentPreflight(decoys + lad + "\n'ORGANIZATION_BLOCK Bad'", major, 4);
+        var declaration = Assert.Single(result["declarations"]!.AsArray())!;
+        Assert.Equal("FUNCTION_BLOCK", (string?)declaration["kind"]);
+        Assert.Equal("MCPVerify_FB_LAD_v3", (string?)declaration["name"]);
+        Assert.Equal("59989", (string?)result["pragmas"]?["S7_BlockNumber"]);
+        Assert.Equal("0.1", (string?)result["pragmas"]?["S7_Version"]);
+        Assert.Equal("TRUE", (string?)result["pragmas"]?["S7_Optimized"]);
+        Assert.False((bool?)result["expandedLanguageDetected"]);
+        Assert.False((bool?)result["textualInterfaceDetected"]);
+        Assert.Equal(major == 20 ? 2 : 1, result["warnings"]!.AsArray().Count);
+        Assert.Contains("/v21/", (string?)result["source"]);
+    }
+
     private sealed class FixtureNonRecoverableException : Exception { }
 
     [Theory, InlineData(false, false), InlineData(false, true), InlineData(true, false), InlineData(true, true)]

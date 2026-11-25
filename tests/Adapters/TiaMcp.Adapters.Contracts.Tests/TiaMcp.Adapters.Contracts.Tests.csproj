@@ -10,6 +10,8 @@
     <DefineConstants>$(DefineConstants);HMI_UNIFIED</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Fixtures/SdBlockOverride.json" LogicalName="SdBlockOverride.json" />
+    <EmbeddedResource Include="../../../plugin/skill/lad-cookbook/MCPVerify_FB_LAD_v3.s7dcl" LogicalName="LadFb.s7dcl" />
     <ProjectReference Include="../../Fixtures/TiaMcp.CaxTransfer.Fixture/TiaMcp.CaxTransfer.Fixture.csproj" Aliases="caxfixture" PrivateAssets="compile" />
     <ProjectReference Include="../../Fixtures/TiaMcp.CaxLegacy.Fixture/TiaMcp.CaxLegacy.Fixture.csproj" Aliases="legacycax" PrivateAssets="compile" />
     <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />

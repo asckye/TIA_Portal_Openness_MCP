@@ -24,6 +24,8 @@ public sealed class DocumentImportSafetySources
     private static readonly string V4_MCP = Sources.Member("ImportBlocksFromDocumentsV4", tool: true);
     private static readonly string PRIMITIVES = Read(Path.Combine(ROOT, "src/Adapters/Native/Plc/PlcDocumentPrimitives.cs"));
 
+    private static readonly string SNAPSHOT = Read(Path.Combine(ROOT, "src/Adapters/Native/Plc/PlcSdBlockSnapshot.cs"));
+
     [Fact]
     public void V4BoundaryKeepsTheExistingNativeAndReportingPath()
     {
@@ -40,8 +42,10 @@ public sealed class DocumentImportSafetySources
         }
         Assert.Equal(1, Count(PRIMITIVES, ".ImportFromDocuments("));
         Assert.Contains("Documents.Import(Documents.Blocks(targetGroup), dir, fileNameWithoutExtension, option)", SINGLE, StringComparison.Ordinal);
-        Assert.Contains("Documents.SetAutoNumber(imported, false);", SINGLE, StringComparison.Ordinal);
-        Assert.True(Find(SINGLE, "Documents.SetAutoNumber(imported, false);") < Find(SINGLE, "Documents.SetNumber(imported, prevNumber.Value);"));
+        Assert.Contains("VerifyDocumentProperties(plan, targetGroup, fileNameWithoutExtension)", SINGLE, StringComparison.Ordinal);
+        Assert.True(Find(SNAPSHOT, "Documents.SetAutoNumber(imported, false);") < Find(SNAPSHOT, "Documents.SetNumber(imported, number);"));
+        Assert.True(Find(SNAPSHOT, "Documents.SetNumber(imported, number);")
+            < Find(SNAPSHOT, "finally { if (reachable) Documents.SetAutoNumber(imported, autoNumber);"));
     }
 
     [Fact]
@@ -115,6 +119,22 @@ public sealed class DocumentImportSafetySources
     {
         Assert.Contains(".OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ThenBy(f => f.Name, StringComparer.Ordinal)", BATCH, StringComparison.Ordinal);
         Assert.True(Find(BATCH, "var selected =") < Find(BATCH, "LastImportFromDocumentsAttempted++;"));
+        Assert.True(Find(BATCH, "PlcSdBlockSnapshot.PrepareBatch(selected") < Find(BATCH, "exchange.StartWrite("));
+        Assert.True(Find(SINGLE, "plan.RequireAdmission();") < Find(SINGLE, "exchange.StartWrite("));
+        Assert.True(Find(SINGLE, "if (request.DryRun)") < Find(SINGLE, "plan.Backup();"));
+        Assert.True(Find(BATCH, "if (request.DryRun)") < Find(BATCH, "LastImportFromDocumentsAttempted++;"));
+    }
+
+    [Fact]
+    public void Scoped_import_checks_properties_before_any_optional_readback()
+    {
+        var source = Read(Path.Combine(ROOT, "src/Adapters/Native/Plc/PlcB5Documents.cs"));
+        var preview = Find(source, "if (dryRun) return plan.Refusal");
+        var backup = Find(source, "plan.Backup();");
+        var import = Find(source, "group.Blocks.ImportFromDocuments(directory, name, option)");
+        var verify = Find(source, "plan.Verify(() => group.Blocks.Find(name))");
+        Assert.True(preview < backup && backup < import && import < verify);
+        Assert.True(verify < Find(source, "ReadbackStep.TryRead("));
     }
 
     [Fact]
@@ -132,8 +152,11 @@ public sealed class DocumentImportSafetySources
     public void OverrideFeaturePreservedButNotNone()
     {
         Assert.Contains("(option & ImportDocumentOptions.Override) != 0 && existing != null", SINGLE, StringComparison.Ordinal);
-        Assert.Contains("if (prevNumber.HasValue)", SINGLE, StringComparison.Ordinal);
-        Assert.Contains("Documents.SetNumber(imported, prevNumber.Value)", SINGLE, StringComparison.Ordinal);
-        Assert.Contains("Documents.SetAutoNumber(imported, prevAutoNumber)", SINGLE, StringComparison.Ordinal);
+        Assert.Contains("bool restore = replace && before != null && !declaration.Pragmas.ContainsKey", SNAPSHOT, StringComparison.Ordinal);
+        Assert.True(Find(SNAPSHOT, "RestoreNumber(imported, (int)before!") < Find(SNAPSHOT, "after = Read(Find());"));
+        Assert.Contains("difference[\"restoreError\"] = setterFailure;", SNAPSHOT, StringComparison.Ordinal);
+        Assert.Contains("return differences.Count == 0;", SNAPSHOT, StringComparison.Ordinal);
+        Assert.Contains("throw new PortalException(SdBlockOverridePolicy.Failure", Read(Path.Combine(ROOT, "src/Adapters/Native/Plc/PlcB5LegacyDocuments.cs")),
+            StringComparison.Ordinal);
     }
 }

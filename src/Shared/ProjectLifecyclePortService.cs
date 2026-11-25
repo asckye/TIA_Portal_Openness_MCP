@@ -87,8 +87,13 @@ internal sealed class ProjectLifecyclePortService
         Invoke<T>("ExecuteProjectScaffoldPrimitive", new JsonObject { ["request"] = JsonSerializer.SerializeToNode(request) });
     internal ResponseDeviceProbe AddDeviceWithFallback(string mlfb, string version, string name, string family) =>
         Primitive<ResponseDeviceProbe>("addDevice", mlfb, version, name, family);
-    internal void ImportFromDocuments(string plc, string folder, string directory, string name) =>
-        Primitive<ResponseMessage>("lad", plc, folder, directory, name);
+    internal void ImportFromDocuments(string plc, string folder, string directory, string name)
+    {
+        var reply = Primitive<ResponseMessage>("lad", plc, folder, directory, name);
+        if (reply.Meta?["success"]?.GetValue<bool>() == false)
+            throw new InvalidOperationException(reply.Message + " Differences: " + reply.Meta["propertyDifferences"] +
+                ". Recovery: " + (reply.Meta["recoveryDirectory"] ?? reply.Meta["backupWarning"]));
+    }
     internal void ImportPlcExternalSource(string plc, string folder, string path) => Primitive<ResponseMessage>("sclImport", plc, folder, path);
     internal void GenerateBlocksFromExternalSource(string plc, string name) => Primitive<ResponseMessage>("sclGenerate", plc, name);
     internal ResponseCompileDiagnose CompileAndDiagnosePlc(string plc) => Primitive<ResponseCompileDiagnose>("compile", plc);

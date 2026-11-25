@@ -43,6 +43,22 @@ public sealed class WorkerScaffoldCompositionTests
         });
     }
 
+    [Fact]
+    public void Lad_step_exposes_a_confirmed_property_difference_and_the_recovery_location()
+    {
+        var service = new ProjectLifecyclePortService((operation, args) => {
+            Assert.Equal("project-lifecycle.ExecuteProjectScaffoldPrimitive", operation);
+            Assert.Equal("lad", (string?)args["request"]?["Kind"]);
+            return new JsonObject { ["Message"] = "Block properties changed.", ["Meta"] = new JsonObject {
+                ["success"] = false, ["propertyDifferences"] = new JsonArray(new JsonObject { ["name"] = "Number", ["before"] = 1, ["after"] = 123 }),
+                ["recoveryDirectory"] = "retained-backup" } };
+        }, () => true, () => "fixture.ap21", "21");
+        var error = Assert.Throws<InvalidOperationException>(() => service.ImportFromDocuments("PLC", "", "documents", "Main"));
+        Assert.Contains("Number", error.Message);
+        Assert.Contains("123", error.Message);
+        Assert.Contains("retained-backup", error.Message);
+    }
+
     [Theory, InlineData("20"), InlineData("21")]
     public void Element_failure_is_reported_and_later_steps_keep_their_order(string release)
     {
