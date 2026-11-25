@@ -474,14 +474,21 @@ Name comparisons ignore case. V20 capture beta5-v20/raw-D/314 records `SimaticML
 beta6-full-v21/raw-E/328 and 339 record `SimaticML` and `liblink`, including `liblink` for MCP_B6F_DSrc. `SimaticSd` is the SDK
 name for SD. The V16–V19 list remains limited to `PlcBlock`, `PlcType` and `PlcTagTable` until evidence supports more.
 
-Workbench restore on V20/V21 first reads `MappedObject.EngineeringObject`. An unresolved target is refused. Non-block targets bypass SD admission. For a `PlcBlock`,
-only the exact formats `SimaticML`, `xml` and `liblink` bypass it (case-insensitive). Every other value, including an empty or unknown
-format, requires a readable `.s7dcl` at the mapped `DirectoryPath` and `FileNameWithoutExtension`. Preview and apply match the declaration
-to the project block name and check its properties. A pre-dispatch connection loss stops the run before subsequent mappings are attempted.
-Apply backs up admitted consistent blocks, synchronizes once, and verifies properties in the original group. An unrestored difference fails.
-After property readback, `MappedObject.GetStatus().CompareState` must be `Equal` for a synchronized result. A readable non-Equal state
-fails verification. An unreadable mapping status leaves the outcome unknown. Any observed property differences remain in the diagnostic.
-SD admission and post-write outcomes have offline fixture coverage.
+Workbench restore on V20/V21 first reads `MappedObject.EngineeringObject`. An unresolved target is refused. PLC data types, tag tables,
+their groups and HMI mappings bypass SD admission. For other resolved targets, the exact formats `SimaticML`, `xml` and `liblink`
+bypass it (case-insensitive). With any other format, including an empty one, a block group, PLC software, software unit, device, device
+item or unrecognized container is refused before synchronization. An individual PLC block requires a readable `.s7dcl` at its mapped
+`DirectoryPath` and `FileNameWithoutExtension`. Preview and apply check the declaration name and the block properties. A disposed mapping
+proxy reports an unknown discovery state and other rows are still inspected. A lost session stops the run.
+
+Apply backs up admitted consistent blocks, synchronizes once, verifies properties in the original group, then reads
+`MappedObject.GetStatus().CompareState`. Offline fixtures cover the following outcomes.
+
+| Block properties after restore | Equal | Unequal or WorkspaceFileMissing | Unknown or unreadable status |
+| --- | --- | --- | --- |
+| Match | Synchronized | Failed | Unknown |
+| Proven difference | Failed | Failed | Failed |
+| Unreadable | Unknown | Unknown | Unknown |
 
 DCB extension-library import is available on V16–V20 through `ProjectLibrary.ImportDcbLibrary(string)` and on V21 through
 `DcbLibraryImporter.ImportDcbLibrary(string)`. The service moved in V21; import is not a V21 addition. Drive-library reads start at V18.

@@ -1,12 +1,15 @@
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.VersionControl;
 using TiaMcp.Adapters.Native.Plc;
-using TiaMcp.Adapters.Native.Vci;
 using TiaOpenness.Openness;
 
-namespace Siemens.Engineering.SW.Tags { internal sealed class PlcTagTable { } }
-namespace Siemens.Engineering.SW.Types { internal sealed class PlcType { } }
+namespace Siemens.Engineering.SW.Tags { internal sealed class PlcTagTable { } internal class PlcTagTableGroup { } }
+namespace Siemens.Engineering.SW.Types { internal sealed class PlcType { } internal class PlcTypeGroup { } }
+namespace Siemens.Engineering.SW { internal sealed class PlcSoftware { } }
+namespace Siemens.Engineering.SW.Units { internal sealed class PlcUnit { } }
+namespace Siemens.Engineering.HW { internal sealed class Device { } }
 namespace Siemens.Engineering.Hmi { internal sealed class HmiTarget { } }
+namespace Siemens.Engineering.HmiUnified.UI { internal sealed class HmiScreen { } }
 
 namespace Siemens.Engineering.VersionControl
 {
@@ -59,8 +62,37 @@ namespace TiaMcp.Tests.NativeWrites
 {
     internal static class SdRestore
     {
+        private sealed class UnknownContainer { public PlcBlockGroup Blocks { get; } = new(); }
+
+        private static object Discover(string scenario)
+        {
+            Exception fault = scenario switch
+            {
+                "sd-restore-discovery-disposed" => new ObjectDisposedException(nameof(MappedObject)),
+                "sd-restore-discovery-qualified" => new ObjectDisposedException(typeof(MappedObject).FullName),
+                "sd-restore-discovery-session" => new ObjectDisposedException("TiaPortal"),
+                _ => new EndOfStreamException("Session disconnected")
+            };
+            var first = new MappedObject { Status = () => throw fault };
+            var second = new MappedObject { Status = () => CompareState.Unequal };
+            var states = new List<string>();
+            var errors = new List<string?>();
+            string? stopped = null;
+            try
+            {
+                foreach (var row in new[] { first, second })
+                {
+                    states.Add(OpennessVersionControl.ReadMappedState(row, out var error).ToString());
+                    errors.Add(error);
+                }
+            }
+            catch (Exception error) when (TiaMcp.Adapters.Contracts.NativeRefusalProbe.UncertainConnection(error)) { stopped = error.GetType().Name; }
+            return new { states, errors, stopped, firstReads = first.StatusReads, secondReads = second.StatusReads };
+        }
+
         internal static object Run(string scenario, string directory)
         {
+            if (scenario.StartsWith("sd-restore-discovery-", StringComparison.Ordinal)) return Discover(scenario);
             PlcBatchImportRecovery.Root = directory;
             var group = new PlcBlockGroup();
             const string startupPrefix = "sd-restore-startup-";
@@ -97,11 +129,29 @@ namespace TiaMcp.Tests.NativeWrites
                 mapping.EngineeringObject = new Siemens.Engineering.SW.Types.PlcType();
                 mapping.FileFormat = "UnrecognizedFormat";
             }
-            if (scenario == "sd-restore-aggregate") mapping.EngineeringObject = group;
+            if (scenario.StartsWith("sd-restore-aggregate", StringComparison.Ordinal))
+            {
+                mapping.EngineeringObject = group;
+                if (scenario == "sd-restore-aggregate-known") mapping.FileFormat = "SimaticML";
+                if (scenario == "sd-restore-aggregate-near-match") mapping.FileFormat = "SimaticML2";
+            }
+            if (scenario == "sd-restore-software") mapping.EngineeringObject = new Siemens.Engineering.SW.PlcSoftware();
+            if (scenario == "sd-restore-unit") mapping.EngineeringObject = new Siemens.Engineering.SW.Units.PlcUnit();
+            if (scenario == "sd-restore-device") mapping.EngineeringObject = new Siemens.Engineering.HW.Device();
+            if (scenario == "sd-restore-device-item") mapping.EngineeringObject = new Siemens.Engineering.HW.DeviceItem();
+            if (scenario == "sd-restore-container") { mapping.EngineeringObject = new UnknownContainer(); mapping.FileFormat = ""; }
+            if (scenario == "sd-restore-type-group") { mapping.EngineeringObject = new Siemens.Engineering.SW.Types.PlcTypeGroup(); mapping.FileFormat = ""; }
+            if (scenario == "sd-restore-tag-group") { mapping.EngineeringObject = new Siemens.Engineering.SW.Tags.PlcTagTableGroup(); mapping.FileFormat = ""; }
             if (scenario == "sd-restore-tags") { mapping.EngineeringObject = new Siemens.Engineering.SW.Tags.PlcTagTable(); mapping.FileFormat = ""; }
             if (scenario == "sd-restore-hmi") { mapping.EngineeringObject = new Siemens.Engineering.Hmi.HmiTarget(); mapping.FileFormat = ""; }
+            if (scenario == "sd-restore-hmi-unified")
+            {
+                mapping.EngineeringObject = new Siemens.Engineering.HmiUnified.UI.HmiScreen();
+                mapping.FileFormat = "";
+            }
             if (scenario == "sd-restore-liblink") mapping.FileFormat = "liblink";
-            if (scenario == "sd-restore-format-loss") mapping.FormatError = new ObjectDisposedException("MappedObject");
+            if (scenario == "sd-restore-format-loss") mapping.FormatError = new ObjectDisposedException("TiaPortal");
+            if (scenario == "sd-restore-format-disposed") mapping.FormatError = new ObjectDisposedException(nameof(MappedObject));
             if (scenario == "sd-restore-backup-loss") block.AfterExport = () => throw new InvalidOperationException("Export lost", new EndOfStreamException());
             if (scenario == "sd-restore-db") block.Attributes["DBAccessibleFromOPCUA"] = false;
             if (scenario == "sd-restore-changed") block.AfterExport = () => File.AppendAllText(path, "// changed");
@@ -113,11 +163,15 @@ namespace TiaMcp.Tests.NativeWrites
                 group.Groups.Add(sibling);
                 sibling.Blocks.Add(block.Name, new GlobalDB { Name = block.Name, Parent = sibling });
             }
+            const string statusPrefix = "sd-restore-status-";
+            var statusCase = scenario.StartsWith(statusPrefix, StringComparison.Ordinal)
+                ? scenario.Substring(statusPrefix.Length).Split('-') : Array.Empty<string>();
+            string? properties = statusCase.ElementAtOrDefault(1);
             mapping.OnSync = () =>
             {
                 using var input = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
-                if (scenario == "sd-restore-unknown") { block.Unreadable = true; block.Attributes["MemoryReserve"] = 100; }
-                else if (scenario is "sd-restore-failure" or "sd-restore-status-unreadable-difference") block.Attributes["DBAccessibleFromOPCUA"] = true;
+                if (scenario == "sd-restore-unknown" || properties == "unverified") { block.Unreadable = true; block.Attributes["MemoryReserve"] = 100; }
+                else if (scenario == "sd-restore-failure" || properties == "difference") block.Attributes["DBAccessibleFromOPCUA"] = true;
                 else if (scenario == "sd-restore-to-null") block.Attributes["VendorValue"] = null;
                 else if (scenario == "sd-restore-from-null") block.Attributes["VendorValue"] = new object();
                 else block.Number = 1;
@@ -126,17 +180,17 @@ namespace TiaMcp.Tests.NativeWrites
             mapping.Status = () =>
             {
                 numberAtStatus = block.Number;
-                return scenario switch
+                return statusCase.FirstOrDefault() switch
                 {
-                    "sd-restore-status-unequal" => CompareState.Unequal,
-                    "sd-restore-status-missing" => CompareState.WorkspaceFileMissing,
-                    "sd-restore-status-unknown" => CompareState.Unknown,
-                    "sd-restore-status-unreadable" or "sd-restore-status-unreadable-difference" => throw new IOException("GetStatus unavailable"),
+                    "unequal" => CompareState.Unequal,
+                    "missing" => CompareState.WorkspaceFileMissing,
+                    "unknown" => CompareState.Unknown,
+                    "unreadable" => throw new IOException("GetStatus unavailable"),
                     _ => CompareState.Equal
                 };
             };
             var item = OpennessVersionControl.RestoreSdMapping(mapping, directory, mapping.FileNameWithoutExtension,
-                scenario is "sd-restore-preview" or "sd-restore-plan", out bool connectionLost);
+                scenario is "sd-restore-preview" or "sd-restore-plan" or "sd-restore-aggregate-preview", out bool connectionLost);
             return new { item, mapping.Calls, mapping.FormatReads, mapping.StatusReads, numberAtStatus, connectionLost,
                 block.Number, block.Exports, block.Setters };
         }

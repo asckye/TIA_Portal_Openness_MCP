@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Tags;
+using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.VersionControl;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
@@ -28,9 +30,9 @@ internal sealed partial class OpennessVersionControl
         try
         {
             var target = mapped.EngineeringObject ?? throw new InvalidOperationException("Cannot establish the exact mapped PLC block or other target.");
-            if (target is not PlcBlock block) return null;
+            if (target is PlcType or PlcTypeGroup or PlcTagTable or PlcTagTableGroup || IsHmiObject(target)) return null;
             if (VciExportPolicy.IsKnownNonSd(VersionControlPrimitives.Format(mapped))) return null;
-            if (block.Parent is not PlcBlockGroup group)
+            if (target is not PlcBlock block || block.Parent is not PlcBlockGroup group)
                 throw new InvalidOperationException("Cannot establish the exact mapped PLC block and group for SIMATIC SD restore.");
 
             string name = block.Name;
@@ -52,11 +54,41 @@ internal sealed partial class OpennessVersionControl
         }
         catch (Exception error)
         {
-            connectionLost = NativeRefusalProbe.UncertainConnection(error);
+            connectionLost = NativeRefusalProbe.UncertainConnection(error) && !IsDisposedMapping(mapped, error);
             item.Outcome = dispatched ? "unknown" : "refused";
             item.Error = (dispatched ? "Restore may have changed the project. " : "") + error.Message + RecoveryNote(plan);
         }
         return item;
+    }
+
+    private static bool IsHmiObject(object target)
+    {
+        for (var type = target.GetType(); type != null; type = type.BaseType)
+        {
+            var name = type.FullName;
+            if (name != null && (name.StartsWith("Siemens.Engineering.Hmi.", StringComparison.Ordinal)
+                || name.StartsWith("Siemens.Engineering.HmiUnified.", StringComparison.Ordinal))) return true;
+        }
+        return false;
+    }
+
+    private static bool IsDisposedMapping(MappedObject mapped, Exception error)
+    {
+        if (error is not ObjectDisposedException disposed || string.IsNullOrEmpty(disposed.ObjectName)) return false;
+        if (disposed.ObjectName == nameof(MappedObject) || disposed.ObjectName == typeof(MappedObject).FullName) return true;
+        var type = mapped.GetType();
+        return disposed.ObjectName == type.Name || disposed.ObjectName == type.FullName;
+    }
+
+    internal static CompareState ReadMappedState(MappedObject mapped, out string? error)
+    {
+        error = null;
+        try { return VersionControlPrimitives.State(VersionControlPrimitives.ReadStatus(mapped)); }
+        catch (ObjectDisposedException disposed) when (IsDisposedMapping(mapped, disposed))
+        {
+            error = NativeFailureText.BoundedDiagnostic(disposed);
+            return CompareState.Unknown;
+        }
     }
 
     private static void VerifyRestore(MappedObject mapped, PlcSdBlockSnapshot plan, Func<PlcBlock?> find, SyncItem item)
@@ -84,13 +116,15 @@ internal sealed partial class OpennessVersionControl
         {
             var state = VersionControlPrimitives.State(VersionControlPrimitives.ReadStatus(mapped));
             if (state == CompareState.Equal) return;
-            item.Outcome = "failed";
+            // VCI can only determine the outcome if the block properties were successfully verified.
+            if (item.Outcome == "synchronized")
+                item.Outcome = state is CompareState.Unequal or CompareState.WorkspaceFileMissing ? "failed" : "unknown";
             diagnostic = $"Restore not-verified: mapped object state is {state} after synchronization.";
         }
         catch (Exception error)
         {
-            item.Outcome = "unknown";
-            diagnostic = "Cannot read mapping status after synchronization: " + error.Message;
+            if (item.Outcome != "failed") item.Outcome = "unknown";
+            diagnostic = "Restore not-verified: cannot read mapping status after synchronization: " + error.Message;
         }
         item.Error = item.Error == null ? diagnostic : item.Error + " " + diagnostic;
     }

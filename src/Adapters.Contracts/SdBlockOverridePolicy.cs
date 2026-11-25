@@ -30,8 +30,14 @@ namespace TiaMcp.Adapters.Contracts
             {
                 bool sawNested = false, unclosed = false;
                 var headers = CommentHeaders(Tokens(text, true, () => sawNested = true, () => unclosed = true)).ToArray();
-                if (sawNested && !headers.SequenceEqual(CommentHeaders(Tokens(text, false))))
-                    throw Invalid("Nested and non-nested SD comments expose different declarations.");
+                if (sawNested)
+                {
+                    bool flatUnclosed = false;
+                    if (!headers.SequenceEqual(CommentHeaders(Tokens(text, false, unclosedComment: () => flatUnclosed = true))))
+                        throw Invalid("Nested and non-nested SD comments expose different declarations.");
+                    if (flatUnclosed) throw Invalid("Unclosed SD comment.");
+                }
+                else if (unclosed) throw Invalid("Unclosed SD comment.");
                 // If the nested reading ended inside the comment, read the rest of the matching header in flat mode.
                 useNested = !unclosed;
             }

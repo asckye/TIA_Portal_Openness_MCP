@@ -340,7 +340,7 @@ namespace TiaOpenness.Openness
         {
 #if STUDIO_VCI_MODERN
             try { return VersionControlPrimitives.FileName(mapped) ?? "?"; }
-            catch (Exception error) when (!stopOnConnectionLoss || !NativeRefusalProbe.UncertainConnection(error))
+            catch (Exception error) when (!stopOnConnectionLoss || IsDisposedMapping(mapped, error) || !NativeRefusalProbe.UncertainConnection(error))
             { /* swallow(native-fallback): unreadable mapping names use a placeholder in status and sync progress */ return "?"; }
 #else
             return Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath);

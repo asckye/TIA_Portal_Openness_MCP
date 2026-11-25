@@ -379,7 +379,11 @@ namespace TiaOpenness.Openness
             refreshMessage = null;
             try
             {
+#if STUDIO_VCI_MODERN
+                var state = ReadMappedState(mapped, out error).ToString();
+#else
                 var state = VersionControlPrimitives.State(ReadStatus(mapped, out refreshMessage)).ToString();
+#endif
                 VcCompareState parsed;
                 if (Enum.TryParse(state, true, out parsed)) return parsed;
 

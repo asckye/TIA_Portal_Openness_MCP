@@ -16,6 +16,15 @@ public sealed class NativeWriteFrameworkTests
     [InlineData("unreadable-format", "file format", 0)]
     [InlineData("target", "exact mapped PLC block", 0)]
     [InlineData("orphan", "exact mapped PLC block", 0)]
+    [InlineData("aggregate", "exact mapped PLC block", 0)]
+    [InlineData("aggregate-preview", "exact mapped PLC block", 0)]
+    [InlineData("aggregate-near-match", "exact mapped PLC block", 0)]
+    [InlineData("software", "exact mapped PLC block", 0)]
+    [InlineData("unit", "exact mapped PLC block", 0)]
+    [InlineData("device", "exact mapped PLC block", 0)]
+    [InlineData("device-item", "exact mapped PLC block", 0)]
+    [InlineData("container", "exact mapped PLC block", 0)]
+    [InlineData("format-disposed", "MappedObject", 0)]
     [InlineData("startup-SimaticSD", "Startup", 0)]
     [InlineData("startup-SimaticSd", "Startup", 0)]
     [InlineData("startup-s7dcl", "Startup", 0)]
@@ -35,6 +44,7 @@ public sealed class NativeWriteFrameworkTests
         var probe = Run("sd-restore-" + scenario, Path.GetDirectoryName(inputs.Nodes)!);
         Assert.Equal("refused", (string?)probe["item"]?["Outcome"]);
         Assert.Contains(reason, (string?)probe["item"]?["Error"]);
+        Assert.Equal(scenario == "target" ? 0 : 1, (int?)probe["FormatReads"]);
         Assert.Equal(0, (int?)probe["Calls"]);
         Assert.Equal(0, (int?)probe["StatusReads"]);
         Assert.False((bool?)probe["connectionLost"]);
@@ -46,9 +56,12 @@ public sealed class NativeWriteFrameworkTests
     [InlineData("plan", "would sync WorkspaceToProject", 0)]
     [InlineData("xml", null, 0)]
     [InlineData("nonblock", null, 0)]
-    [InlineData("aggregate", null, 0)]
+    [InlineData("aggregate-known", null, 0)]
     [InlineData("tags", null, 0)]
+    [InlineData("type-group", null, 0)]
+    [InlineData("tag-group", null, 0)]
     [InlineData("hmi", null, 0)]
+    [InlineData("hmi-unified", null, 0)]
     [InlineData("startup-SimaticML", null, 0)]
     [InlineData("startup-sIMAtiCmL", null, 0)]
     [InlineData("startup-XML", null, 0)]
@@ -68,7 +81,7 @@ public sealed class NativeWriteFrameworkTests
         Assert.Equal(calls, (int?)probe["Calls"]);
         Assert.Equal(calls, (int?)probe["Exports"]);
         Assert.Equal(calls, (int?)probe["StatusReads"]);
-        Assert.Equal(scenario is "nonblock" or "aggregate" or "tags" or "hmi" ? 0 : 1, (int?)probe["FormatReads"]);
+        Assert.Equal(scenario is "nonblock" or "tags" or "type-group" or "tag-group" or "hmi" or "hmi-unified" ? 0 : 1, (int?)probe["FormatReads"]);
         if (outcome == null) Assert.Empty(probe["Setters"]!.AsArray());
         if (outcome == "synchronized")
         {
@@ -79,6 +92,26 @@ public sealed class NativeWriteFrameworkTests
         if (outcome == "failed") Assert.Contains("DBAccessibleFromOPCUA", (string?)probe["item"]?["Error"]);
         if (outcome == "unknown") Assert.Contains("MemoryReserve is unreadable", (string?)probe["item"]?["Error"]);
         if (outcome is "unknown" or "failed") Assert.Contains("Recovery:", (string?)probe["item"]?["Error"]);
+    }
+
+    [Theory]
+    [InlineData("disposed", null)]
+    [InlineData("qualified", null)]
+    [InlineData("session", "ObjectDisposedException")]
+    [InlineData("disconnected", "EndOfStreamException")]
+    public void Discovery_continues_after_a_disposed_mapping_and_stops_on_session_loss(string scenario, string? failure)
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-restore-discovery-" + scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(failure, (string?)probe["stopped"]);
+        Assert.Equal(1, (int?)probe["firstReads"]);
+        Assert.Equal(failure == null ? 1 : 0, (int?)probe["secondReads"]);
+        Assert.Equal(failure == null ? new[] { "Unknown", "Unequal" } : Array.Empty<string>(), probe["states"]!.AsArray().Select(x => (string?)x));
+        if (failure == null)
+        {
+            Assert.Contains("MappedObject", (string?)probe["errors"]![0]);
+            Assert.Null(probe["errors"]![1]);
+        }
     }
 
     [Theory]
@@ -98,9 +131,16 @@ public sealed class NativeWriteFrameworkTests
     [Theory]
     [InlineData("unequal", "failed", "Unequal")]
     [InlineData("missing", "failed", "WorkspaceFileMissing")]
-    [InlineData("unknown", "failed", "Unknown")]
+    [InlineData("unknown", "unknown", "Unknown")]
     [InlineData("unreadable", "unknown", "GetStatus unavailable")]
-    [InlineData("unreadable-difference", "unknown", "GetStatus unavailable")]
+    [InlineData("unreadable-difference", "failed", "GetStatus unavailable")]
+    [InlineData("unequal-difference", "failed", "Unequal")]
+    [InlineData("missing-difference", "failed", "WorkspaceFileMissing")]
+    [InlineData("unknown-difference", "failed", "Unknown")]
+    [InlineData("unequal-unverified", "unknown", "Unequal")]
+    [InlineData("missing-unverified", "unknown", "WorkspaceFileMissing")]
+    [InlineData("unknown-unverified", "unknown", "Unknown")]
+    [InlineData("unreadable-unverified", "unknown", "GetStatus unavailable")]
     public void Workbench_requires_an_Equal_post_sync_status(string scenario, string outcome, string diagnostic)
     {
         using var inputs = new Inputs();
@@ -114,7 +154,8 @@ public sealed class NativeWriteFrameworkTests
         Assert.Contains(diagnostic, error);
         Assert.Contains("Recovery:", error);
         if (outcome == "failed") Assert.Contains("not-verified", error);
-        if (scenario == "unreadable-difference") Assert.Contains("DBAccessibleFromOPCUA", error);
+        if (scenario.EndsWith("-difference", StringComparison.Ordinal)) Assert.Contains("DBAccessibleFromOPCUA", error);
+        if (scenario.EndsWith("-unverified", StringComparison.Ordinal)) Assert.Contains("MemoryReserve is unreadable", error);
     }
 
     [Theory]

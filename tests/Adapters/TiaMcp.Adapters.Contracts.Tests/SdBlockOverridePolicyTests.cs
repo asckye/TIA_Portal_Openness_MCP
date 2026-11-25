@@ -213,14 +213,16 @@ public sealed class SdBlockOverridePolicyTests
         string text = $"DATA_BLOCK MotorDB\n{open} outer {open} inner {close} ";
         Assert.Equal("DATA_BLOCK", SdBlockDeclaration.Scan(text + "END_DATA_BLOCK").RequireBlock("MotorDB"));
         Assert.Equal("MotorFB", SdBlockDeclaration.Scan(text + "MotorFB\nEND_DATA_BLOCK").InstanceType);
-        Assert.Equal("FUNCTION", SdBlockDeclaration.Scan($"FUNCTION Real : Void\nEND_FUNCTION\n{open} trailing prose").RequireBlock("Real"));
+        Assert.Contains("Unclosed SD comment", Assert.Throws<AdapterPreconditionException>(
+            () => SdBlockDeclaration.Scan($"FUNCTION Real : Void\nEND_FUNCTION\n{open} trailing prose")).Message);
         string pragma = $"{{ S7_BlockNumber := \"17\" {open} outer {open} inner {close} }}\n";
         // Both readings see the block when the incomplete comment is in an attribute list after its declaration.
         Assert.Equal("FUNCTION", SdBlockDeclaration.Scan("FUNCTION Real : Void\n" + pragma + "END_FUNCTION").RequireBlock("Real"));
         Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan(text + "END_DATA_BLOCK\nFUNCTION Hidden : Void\nEND_FUNCTION"));
         string otherOpen = open == "(*" ? "/*" : "(*";
         string flatUnclosed = $"FUNCTION Real : Void\nEND_FUNCTION\n{open} {open} inner {close} {otherOpen} {close}";
-        Assert.Equal("FUNCTION", SdBlockDeclaration.Scan(flatUnclosed).RequireBlock("Real"));
+        Assert.Contains("Unclosed SD comment", Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan(flatUnclosed)).Message);
+        Assert.Contains("Unclosed SD comment", Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan(text + otherOpen)).Message);
         Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan(flatUnclosed + "\nFUNCTION Hidden : Void\nEND_FUNCTION"));
     }
 
