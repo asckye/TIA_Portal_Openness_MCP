@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <TiaMcpRelease>4.0.0</TiaMcpRelease>
-    <TiaMcpPrerelease>rc.6</TiaMcpPrerelease>
+    <TiaMcpPrerelease>rc.7</TiaMcpPrerelease>
     <TiaMcpReleaseLabel>$(TiaMcpRelease)</TiaMcpReleaseLabel>
     <TiaMcpReleaseLabel Condition="'$(TiaMcpPrerelease)' != ''">$(TiaMcpRelease)-$(TiaMcpPrerelease)</TiaMcpReleaseLabel>
     <Version>$(TiaMcpReleaseLabel)</Version>

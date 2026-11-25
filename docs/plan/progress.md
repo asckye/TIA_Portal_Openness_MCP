@@ -1,12 +1,13 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-25，master `e85fa9910`；v4.0.0-rc.6 已发布（2026-11-25，预发布）
+状态：现行 · 最后核对：2026-11-25，master `e7343a592`；v4.0.0-rc.6 已发布（2026-11-25，预发布）；v4.0.0-rc.7 准备中
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
-- **v4.0.0-rc.6 已于 2026-11-25 发布（`e85fa9910`，GitHub 预发布，不设为 latest）。** rc.5 真机复验的修复（VMFIX-31 至 VMFIX-33）和工作台应用图标（UI-APPICON）已合并到 master `41efb7fe3`。工具名称和输入没有变化，`SetDeviceAddress.startAddress` 的说明改变，部分结果和错误码改变。代码改动尚未在真机上运行。任务见[开发计划](plan.md#400-rc6)。
+- **v4.0.0-rc.7 准备中。** rc.6 真机复验的修复已合并到 master `e7343a592`：V20/V21 SIMATIC SD 覆盖导入的核对（SD-OVERRIDE，修复 rc.6 的 HIGH）与工作台 SD 还原检查（SD-RESTORE）、V16–V19 版本控制状态刷新与拒绝原因（VCI-STATUS）、存储 Equal 以内容证明后才跳过（VCI-PROOF）、V16/V17 先写文件再建映射（VCI-EXPORT）、空元素两种写法（VMFIX-34）、工具返回与写保护钩子的凭据遮蔽（S9）、生成失败的编译器文字（LOW-GENERR）、设备创建与只读属性的拒绝原因（LOW-DEVREASON），另在 4.1 计划中加入十个候选项。工具名称和输入没有变化，V16–V21 的版本控制工具和 V20/V21 的 SD 文档工具说明改变，`CreateDevice` 面板版本不兼容的错误码改变。代码改动尚未在真机上运行。任务见[开发计划](plan.md#400-rc7)。
+- **v4.0.0-rc.6 已于 2026-11-25 发布（`e85fa9910`，GitHub 预发布，不设为 latest）。** rc.5 真机复验的修复（VMFIX-31 至 VMFIX-33）和工作台应用图标（UI-APPICON）已合并到 master `41efb7fe3`。工具名称和输入没有变化，`SetDeviceAddress.startAddress` 的说明改变，部分结果和错误码改变。2026-11-25 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc6)。
 - **v4.0.0-rc.5 已于 2026-11-25 发布（`9862ec67c`，GitHub 预发布，不设为 latest）。** rc.4 真机复验的修复（VMFIX-26 至 VMFIX-30）、工具示例（EXAMPLES-RC4）和结果判定更正（UNK-B、UNK-A）已合并到 master `991b3c334`。工具名称和输入没有变化，只有 `ManageMultiuserSession` 的 `port` 说明和两个工具的示例注解改变。2026-11-25 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc5)。
 - **v4.0.0-rc.4 已于 2026-11-24 发布（`960883603`，GitHub 预发布，不设为 latest）。** 按最终设计稿改版的工作台已合并到 master `372453e06`：UI-FINAL（外壳与七个页面）、UI-AIHINT（AI 通知卡片）、
   UI-CFGFIX、UI-RAILFIX（模态框关闭后恢复原有可用状态）和 UI-LOWS（审查发现的修复）。MCP 对外接口与 rc.3 相同。2026-11-24 已在八个版本的真机上定向复验，工作台尚未逐页手动走查。
@@ -24,7 +25,7 @@
 - **2026-11-23 维护者按建议批准全面审查的决定**：MCP 连接继续不设密码或访问密钥（[ADR 0038](../standards/decisions/0038-keyless-http-transport.md)）；
   工具参数中的密码与更新包不签名是 4.0 接受的风险（[ADR 0042](../standards/decisions/0042-accepted-risks-for-4-0.md)）；审批开关范围不变；
   带安全密码的编译须审批。详见[开发计划](plan.md#待维护者决定)。
-- **4.0 正式版之前还剩**：见[开发计划](plan.md#400-rc6)；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
+- **4.0 正式版之前还剩**：见[开发计划](plan.md#400-rc7)；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
 - **RC 代码已全部合并（2026-11-19 至 11-21）。**
   - UNIFY-1 全部完成：A–D1（beta.6）以及 B2、C2、D2、E。八版共用一个工具包装、一条就绪规则、一个版本目录和一张官方 API 能力表，
     新出现的按版本号分支由 `ReleaseKeyedSitesTests` 拦下。U3 线程模型（MTA-1）、U6 实机保护、U7 V21 builder 输出按 2026-11-04 决定保留。
@@ -125,8 +126,16 @@
 | rc.5，V19 VM，2026-11-25，定向复验 | 174 行：通过 137、按设计拒绝 24、失败 11、未跑 2；HIGH 1、MEDIUM 9、LOW 5；无崩溃。5 个未改动的块匹配 | VMFIX-31 至 VMFIX-33 已合并，待 rc.6 复验；VCI 状态与同步、TP700 拒绝和 HMI AML 导出未解决 |
 | rc.5，V20 VM，2026-11-25，定向复验 | 175 行：通过 140、按设计拒绝 28、失败 6、未跑 1；HIGH 1、MEDIUM 5、LOW 6；无崩溃。工作区全部拒绝报确定失败确认修复 | VMFIX-31 至 VMFIX-33 已合并，待 rc.6 复验；TP700 拒绝和 HMI AML 导出未解决；TIA 拒绝的验证导入没有跑 |
 | rc.5，V21 VM，2026-11-25，定向复验 | 174 行：通过 143、按设计拒绝 23、失败 8；HIGH 1、MEDIUM 6、LOW 9；无崩溃。5 个未改动的块匹配 | VMFIX-31 至 VMFIX-33 已合并，待 rc.6 复验；HMI AML 导出未解决 |
+| rc.6（`e85fa9910`），V14 SP1 VM，2026-11-25，定向复验 | 149 行：通过 137、失败 7、派发前拒绝 5（会话传参错误）；会话定级 HIGH 1、LOW 5，复核后该行记 MEDIUM；无崩溃。rc.5 的 HIGH 确认修复，VMFIX-31 九项中八项通过 | 空元素写法误报由 VMFIX-34 修复，待 rc.7 复验 |
+| rc.6，V15.1 VM，2026-11-25，定向复验 | 147 行：通过 132、按设计拒绝 15、失败 0；HIGH 0、MEDIUM 0、LOW 1；无崩溃。TIA 拒绝的验证导入有证明 | 只读属性原因只在 `data.evidence` 中由 LOW-DEVREASON 修复，待 rc.7 复验 |
+| rc.6，V16 VM，2026-11-25，定向复验 | 143 行：通过 125、按设计拒绝 17、失败 1；HIGH 0、MEDIUM 1（已知）、LOW 1；无崩溃。拒绝后导出与导入前相同 | VCI 首次导出由 VCI-EXPORT 修复，待 rc.7 复验 |
+| rc.6，V17 VM，2026-11-25，定向复验 | 主批 142 行：通过 122、按设计拒绝 18、失败 2；HIGH 0、MEDIUM 2（已知）、LOW 2；另有 VCI 45 行，MEDIUM 2，结束时未决 1；无崩溃 | VCI 状态总是未知由 VCI-STATUS，首次导出由 VCI-EXPORT 修复，待 rc.7 复验 |
+| rc.6，V18 VM，2026-11-25，定向复验 | 144 行：通过 121、按设计拒绝 18、失败 4、未完成 1；HIGH 0、MEDIUM 4（rc.5 已有）、LOW 2；无崩溃 | VCI 状态全部未知由 VCI-STATUS，TP700 拒绝无原因由 LOW-DEVREASON 修复，待 rc.7 复验 |
+| rc.6，V19 VM，2026-11-25，定向复验 | 140 行：通过 117、按设计拒绝 17、失败 5、未跑 1；会话定级 HIGH 1（复核后记 MEDIUM）、MEDIUM 3、LOW 3；无崩溃 | 空元素写法误报由 VMFIX-34，VCI 状态由 VCI-STATUS，TP700 原因由 LOW-DEVREASON 修复，待 rc.7 复验 |
+| rc.6，V20 VM，2026-11-25，定向复验 | 148 行：通过 120、按设计拒绝 22、失败 5、未跑 1；HIGH 2（SD 覆盖导入）、MEDIUM 2（已知）、LOW 4；无崩溃 | SD 覆盖导入由 SD-OVERRIDE 修复，待 rc.7 复验；SD 新建导入没有跑 |
+| rc.6，V21 VM，2026-11-25，定向复验 | 148 行：通过 120、按设计拒绝 21、失败 7；HIGH 3（同一缺陷：SD 覆盖导入改动 OB 和 DB 编号与属性却报成功）、MEDIUM 2（已知）、LOW 4；无崩溃 | SD-OVERRIDE 已合并，待 rc.7 复验；SD 新建导入和 `ImportPlcBlocksDocuments` 没有跑 |
 
-原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，rc.4 复验在 `rc4-verify-<版本>/`，rc.5 复验在 `rc5-verify-<版本>/`，每批一份汇总。rc.5 各行的数字按各份汇总原样抄录，各复验会话的计数方式不同，不宜跨版本比较。
+原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，rc.4 复验在 `rc4-verify-<版本>/`，rc.5 复验在 `rc5-verify-<版本>/`，rc.6 复验在 `rc6-verify-<版本>/`，每批一份汇总。rc.5、rc.6 各行的数字按各份汇总原样抄录，各复验会话的计数方式不同，不宜跨版本比较。
 RC 回归中在线写入、下载和仿真执行只预览（VM 无 PLC，PLCSIM 无实例）。beta.4 回归的缺陷原因尚未逐条验证。未测的正常流程：`OpenProject`、`CloseProject`（自有工程）、`CreateProject`、`RetrieveProjectArchive`、`ConnectIsolatedPortal`、`PublishGenerationRecord`；在线、下载、上传、强制和仿真只读取或预览。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
 
 ## 测试者反馈
