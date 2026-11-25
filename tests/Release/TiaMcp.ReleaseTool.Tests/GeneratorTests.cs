@@ -612,75 +612,138 @@ public sealed class GeneratorTests
         Assert.ThrowsAny<Exception>(() => CatalogAudits.Version(Root, Path.Combine(Root, "bin-build/missing-sdk"), "bin-build/test-api", Path.Combine(Root, "bin-build/missing-audit-inputs")));
     }
 
+    private static (string Input, string Sdk, string Prepared) WriteNativeAuditInputs(StaticTree tree)
+    {
+        var input = Path.Combine(tree.Root, "inputs");
+        var sdk = Path.Combine(tree.Root, "sdk");
+        var prepared = Path.Combine(input, "prepared", ReleaseVersions.ReadLabel(Root), "version-audit");
+        foreach (var key in Keys)
+        {
+            var relative = key switch {
+                "14sp1" => "TIA_V14SP1_PublicAPI/V14 SP1", "15.1" => "TIA_V15.1_PublicAPI/V15.1",
+                "21" => "TIA_V21_PublicAPI/V21/net48", _ => $"TIA_V{key}_PublicAPI/V{key}"
+            };
+            tree.Write(Path.Combine(sdk, relative, "Siemens.Engineering.xml"), """
+                <doc><members>
+                  <member name="M:Siemens.Engineering.Domain.Widget.Import(System.String)"/>
+                  <member name="M:Siemens.Engineering.Domain.Widget.Import(System.Int32)"/>
+                  <member name="P:Siemens.Engineering.Domain.Widget.Name"/>
+                  <member name="M:Siemens.Engineering.Domain.Widget.Export"/>
+                  <member name="M:Siemens.Engineering.Private.Secret.Invoke"/>
+                  <member name="M:Siemens.Engineering.Domain.Widget.Dispose"/>
+                </members></doc>
+                """);
+            tree.Write(Path.Combine(sdk, relative, "Siemens.Engineering.AddIn.xml"), "<invalid/>");
+            var members = new[] { "System.Void Siemens.Engineering.Domain.Widget::Import(System.String)",
+                "System.String Siemens.Engineering.Domain.Widget::get_Name()", "System.Void System.IDisposable::Dispose()" };
+            var sites = members.Select((member, offset) => new {
+                id = offset.ToString("x20"), caller = $"System.Void Fixture.V{key}::Run()", offset, opcode = "callvirt", member,
+                category = offset == 2 ? "interface" : "direct", wrapper = "Call_" + offset.ToString("x20")
+            });
+            tree.Write(Path.Combine(prepared, $"coverage-{key}.json"), System.Text.Json.JsonSerializer.Serialize(new {
+                schemaVersion = 1, instrumenter = "native-call-weaver/1", instrumenterSha256 = new string('a', 64),
+                scope = "Fixture PLC worker adapter", count = members.Length, sites
+            }));
+            var baseline = Read(Root, $"manifest/contracts/v4/baseline/{key}.json");
+            var tools = baseline["tools"]!.AsArray().Select(t => (JsonNode)new JsonObject {
+                ["name"] = Text(t!["name"]), ["inputSchema"] = t["inputSchema"]!.DeepClone()
+            });
+            tree.Write(Path.Combine(prepared, $"tools-{key}.json"), new JsonObject {
+                ["releaseKey"] = key, ["profile"] = "plc-foundation", ["behaviorCapabilities"] = baseline["behaviorCapabilities"]!.DeepClone(),
+                ["callDiscipline"] = new JsonObject(), ["tools"] = new JsonArray(tools.ToArray())
+            }.ToJsonString());
+        }
+        return (input, sdk, prepared);
+    }
+
     [Fact]
     public void NativeAuditCountsXmlOverloadsPropertiesAndExactCompiledMembers()
     {
-        var directory = Path.Combine(Root, "bin-build/refactor/audit-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
-        var input = Path.Combine(directory, "inputs"); var sdk = Path.Combine(directory, "sdk");
-        var version = ReleaseVersions.ReadLabel(Root);
-        var prepared = Path.Combine(input, "prepared", version, "version-audit");
-        void Put(string path, string text) { Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, text, new UTF8Encoding(false)); }
-        try
+        using var tree = new StaticTree();
+        var (input, sdk, prepared) = WriteNativeAuditInputs(tree);
+        var outputs = CatalogAudits.Version(Root, sdk, "candidates", input);
+        var legacy = CatalogAudits.Version(Root, sdk, "candidates", input, legacyLineEndings: true);
+        Assert.Equal(9, outputs.Count);
+        Assert.DoesNotContain("manifest/version-tools.json", outputs.Keys);
+        Assert.DoesNotContain("docs/reference/version-tool-catalog.md", outputs.Keys);
+        foreach (var p in outputs) Assert.Equal(p.Value.Replace("\n", "\r\n", StringComparison.Ordinal), legacy[p.Key]);
+        var statistics = JsonNode.Parse(outputs["manifest/version-api-audit.json"])!["versions"]!.AsArray();
+        Assert.Equal(8, statistics.Count);
+        foreach (var row in statistics)
         {
-            foreach (var key in Keys)
-            {
-                var relative = key switch { "14sp1" => "TIA_V14SP1_PublicAPI/V14 SP1", "15.1" => "TIA_V15.1_PublicAPI/V15.1", "21" => "TIA_V21_PublicAPI/V21/net48", _ => $"TIA_V{key}_PublicAPI/V{key}" };
-                Put(Path.Combine(sdk, relative, "Siemens.Engineering.xml"), "<doc><members><member name=\"M:Siemens.Engineering.Domain.Widget.Import(System.String)\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Import(System.Int32)\"/><member name=\"P:Siemens.Engineering.Domain.Widget.Name\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Export\"/><member name=\"M:Siemens.Engineering.Private.Secret.Invoke\"/><member name=\"M:Siemens.Engineering.Domain.Widget.Dispose\"/></members></doc>");
-                Put(Path.Combine(sdk, relative, "Siemens.Engineering.AddIn.xml"), "<invalid/>");
-                if (key is "20" or "21")
-                    Put(Path.Combine(input, $"releases/v{version}/v{key}/native-call-coverage-v{key}.json"), """{"sites":[]}""");
-                var members = new[] { "System.Void Siemens.Engineering.Domain.Widget::Import(System.String)",
-                    "System.String Siemens.Engineering.Domain.Widget::get_Name()", "System.Void System.IDisposable::Dispose()" };
-                var sites = members.Select((member, offset) => new {
-                    id = offset.ToString("x20"), caller = $"System.Void Fixture.V{key}::Run()", offset, opcode = "callvirt", member,
-                    category = offset == 2 ? "interface" : "direct", wrapper = "Call_" + offset.ToString("x20")
-                });
-                Put(Path.Combine(prepared, $"coverage-{key}.json"), System.Text.Json.JsonSerializer.Serialize(new {
-                    schemaVersion = 1, instrumenter = "native-call-weaver/1", instrumenterSha256 = new string('a', 64),
-                    scope = "Fixture PLC worker adapter", count = members.Length, sites
-                }));
-                var baseline = Read(Root, $"manifest/contracts/v4/baseline/{key}.json");
-                var tools = baseline["tools"]!.AsArray().Select(t => (JsonNode)new JsonObject {
-                    ["name"] = Text(t!["name"]), ["inputSchema"] = t["inputSchema"]!.DeepClone()
-                });
-                Put(Path.Combine(prepared, $"tools-{key}.json"), new JsonObject {
-                    ["releaseKey"] = key, ["profile"] = "plc-foundation", ["behaviorCapabilities"] = baseline["behaviorCapabilities"]!.DeepClone(),
-                    ["callDiscipline"] = new JsonObject(), ["tools"] = new JsonArray(tools.ToArray())
-                }.ToJsonString());
-            }
-            var outputs = CatalogAudits.Version(Root, sdk, "candidates", input); var legacy = CatalogAudits.Version(Root, sdk, "candidates", input, legacyLineEndings: true);
-            Assert.Equal(9, outputs.Count); Assert.DoesNotContain("manifest/version-tools.json", outputs.Keys); Assert.DoesNotContain("docs/reference/version-tool-catalog.md", outputs.Keys);
-            foreach (var p in outputs) Assert.Equal(p.Value.Replace("\n", "\r\n", StringComparison.Ordinal), legacy[p.Key]);
-            var statistics = JsonNode.Parse(outputs["manifest/version-api-audit.json"])!["versions"]!.AsArray();
-            Assert.Equal(8, statistics.Count);
-            foreach (var row in statistics) { Assert.Equal(4, row!["domainSignatures"]!.GetValue<int>()); Assert.Equal(3, row["domainMemberNames"]!.GetValue<int>()); Assert.Equal(2, row["compiledDirectMemberNames"]!.GetValue<int>()); Assert.Equal(1, row["withoutDirectMemberReference"]!.GetValue<int>()); Assert.Equal(1, row["xmlFiles"]!.GetValue<int>()); }
-            foreach (var key in Keys) Assert.Equal("M:Siemens.Engineering.Domain.Widget.Export", Text(JsonNode.Parse(outputs[Path.Combine("candidates", $"api-candidates-{key}.json")])!["members"]![0]));
-            foreach (var key in new[] { "20", "21" })
-            {
-                var row = statistics.Single(row => Text(row!["releaseKey"]) == key)!;
-                Assert.Equal(2, row["plcCompiledDirectMemberNames"]!.GetValue<int>());
-                Assert.Equal(64, Text(row["hostCatalogSha256"]).Length);
-                Assert.Equal(64, Text(row["plcCompiledCallInventorySha256"]).Length);
-                var hostPath = Path.Combine(prepared, $"tools-{key}.json");
-                Assert.Equal(Hash(File.ReadAllBytes(hostPath)), Text(row["hostCatalogSha256"]));
-                var original = File.ReadAllText(hostPath);
-                Put(hostPath, new JsonObject { ["releaseKey"] = key, ["tools"] = new JsonArray() }.ToJsonString());
-                var mismatch = Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
-                Assert.Contains("Built/source catalog mismatch: " + key, mismatch.Message);
-                Put(hostPath, original);
-                var adapterPath = Path.Combine(prepared, $"coverage-{key}.json");
-                Assert.Equal(Hash(File.ReadAllBytes(adapterPath)), Text(row["compiledCallInventorySha256"]));
-                Assert.Equal(Text(row["compiledCallInventorySha256"]), Text(row["plcCompiledCallInventorySha256"]));
-                var adapter = File.ReadAllText(adapterPath); File.Delete(adapterPath);
-                Assert.ThrowsAny<Exception>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
-                Put(adapterPath, adapter);
-            }
-            Put(Path.Combine(prepared, "tools-19.json"), """{"releaseKey":"19","tools":[]}""");
-            var legacyMismatch = Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
-            Assert.Contains("Built/source catalog mismatch: 19", legacyMismatch.Message);
+            Assert.Equal(4, row!["domainSignatures"]!.GetValue<int>());
+            Assert.Equal(3, row["domainMemberNames"]!.GetValue<int>());
+            Assert.Equal(2, row["compiledDirectMemberNames"]!.GetValue<int>());
+            Assert.Equal(1, row["withoutDirectMemberReference"]!.GetValue<int>());
+            Assert.Equal(1, row["xmlFiles"]!.GetValue<int>());
         }
-        finally { Directory.Delete(directory, true); }
+        foreach (var key in Keys)
+        {
+            var candidates = JsonNode.Parse(outputs[Path.Combine("candidates", $"api-candidates-{key}.json")])!;
+            Assert.Equal("M:Siemens.Engineering.Domain.Widget.Export", Text(candidates["members"]![0]));
+        }
+        foreach (var key in new[] { "20", "21" })
+        {
+            var row = statistics.Single(row => Text(row!["releaseKey"]) == key)!;
+            Assert.Equal(2, row["plcCompiledDirectMemberNames"]!.GetValue<int>());
+            Assert.Equal(64, Text(row["hostCatalogSha256"]).Length);
+            Assert.Equal(64, Text(row["plcCompiledCallInventorySha256"]).Length);
+            var hostPath = Path.Combine(prepared, $"tools-{key}.json");
+            Assert.Equal(Hash(File.ReadAllBytes(hostPath)), Text(row["hostCatalogSha256"]));
+            var original = File.ReadAllText(hostPath);
+            tree.Write(hostPath, new JsonObject { ["releaseKey"] = key, ["tools"] = new JsonArray() }.ToJsonString());
+            var mismatch = Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
+            Assert.Contains("Built/source catalog mismatch: " + key, mismatch.Message);
+            tree.Write(hostPath, original);
+            var adapterPath = Path.Combine(prepared, $"coverage-{key}.json");
+            Assert.Equal(Hash(File.ReadAllBytes(adapterPath)), Text(row["compiledCallInventorySha256"]));
+            Assert.Equal(Text(row["compiledCallInventorySha256"]), Text(row["plcCompiledCallInventorySha256"]));
+            var adapter = File.ReadAllText(adapterPath); File.Delete(adapterPath);
+            Assert.ThrowsAny<Exception>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
+            tree.Write(adapterPath, adapter);
+        }
+        tree.Write(Path.Combine(prepared, "tools-19.json"), """{"releaseKey":"19","tools":[]}""");
+        var legacyMismatch = Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
+        Assert.Contains("Built/source catalog mismatch: 19", legacyMismatch.Message);
     }
+
+    [Fact]
+    public void NativeAuditRejectsCatalogWithAnotherReleaseKey()
+    {
+        using var tree = new StaticTree();
+        var (input, sdk, prepared) = WriteNativeAuditInputs(tree);
+        var path = Path.Combine(prepared, "tools-21.json");
+        var catalog = Read(prepared, "tools-21.json");
+        catalog["releaseKey"] = "20";
+        tree.Write(path, catalog.ToJsonString());
+
+        var error = Assert.Throws<ReleaseException>(() => CatalogAudits.Version(Root, sdk, "candidates", input));
+        Assert.Equal("Host catalog release mismatch: 21", error.Message);
+    }
+
+    [Theory]
+    [InlineData("20", "GetToolUsage")]
+    [InlineData("21", "BuildClassicHmiTagTable")]
+    public void NativeAuditRejectsManifestMissingAnAdmittedHostTool(string key, string tool)
+    {
+        using var tree = new StaticTree();
+        var (input, sdk, _) = WriteNativeAuditInputs(tree);
+        foreach (var file in Repository.GitFiles(Root, "Version.props", "src/FoundationHost/*.cs", "src/Adapters.Contracts/PortedFamilies.cs",
+            "src/Logic/Siemens/ToolVersionPolicy.cs", "src/Logic/ModelContextProtocol/ToolMetadata.Classifications.cs", "src/Shared/PlcOfflineTools.cs",
+            "src/ToolPipeline/SharedToolCatalog.cs", "reference/tool-catalog/*.json", "manifest/history/contracts-v3/baseline/*.json"))
+            tree.Copy(file);
+
+        const string manifestPath = "manifest/tools-list.json";
+        var manifest = Read(Root, manifestPath);
+        var tools = manifest["tools"]!.AsArray();
+        tools.Remove(tools.Single(row => Text(row!["name"]) == tool));
+        manifest["toolCount"] = tools.Count;
+        tree.Write(manifestPath, manifest.ToJsonString());
+
+        var error = Assert.Throws<ReleaseException>(() => CatalogAudits.Version(tree.Root, sdk, "candidates", input));
+        Assert.Equal("Host/manifest catalog mismatch: " + key, error.Message);
+    }
+
     [Fact]
     public void UsageAuditRequiresEveryToolReleaseAndNoNativeExampleCalls()
     {

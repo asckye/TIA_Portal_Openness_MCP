@@ -58,6 +58,14 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.7
 - 暂存包及 `logs/`。候选记录和日志留在本机，不提交 Git。
 - `version-audit/` 保存八版宿主的离线工具目录和生产 PLC worker 适配器的原生调用清单。`audit-version-tools` 用这些文件与同一套 SDK XML 复核覆盖表，命令见 [Openness 覆盖审计](../reference/openness-coverage.md)。
 
+复核覆盖表时，请在单独的干净 worktree 中运行构建和审计。`prepare`（含 `-BuildOnly`）在构建前清空当前 worktree 的 `bin-build/prepared/<版本>/`，同版本的候选 ZIP、记录和日志也会被清除。
+
+审计输入增加八次串行的离线宿主启动。4.0.0-rc.6 的本机 Debug 宿主实测生成八份 `tools-*.json` 共约 19 秒、57.9 MiB。构建还在原有适配器验证时各写出一份 `coverage-*.json`，这八份文件的写入时间和大小另计。构建后可在 PowerShell 中用下式查看全部 16 份输入的总字节数，其中 `$version` 为构建标签。
+
+```powershell
+(Get-ChildItem "bin-build/prepared/$version/version-audit" -File | Measure-Object Length -Sum).Sum
+```
+
 交付文件按 `scripts/operations/delivery-files.json` 过滤，包括八版宿主、worker 和适配器、工作台、工具、用户文档、模板、插件及许可证。暂存阶段生成 `manifest/package-manifest.json`、`delivery.json`、`tools-list.json` 和文件清单 `multi-version-build.json`。旧构建收据不进入新包；`runtime/verification/`、源码、SDK 和私人数据不交付。
 
 ## 重试草稿上传

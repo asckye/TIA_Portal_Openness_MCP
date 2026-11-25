@@ -83,7 +83,9 @@ five names unimplemented. It is only one migration list. The functional review c
 engineering workflows those names represent, existing runtime gates, and additional
 API families. See the [implementation order](version-tools.md#release-differences).
 
-To reproduce the audit, start in a clean worktree on the build host with the [release prerequisites](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/release.md).
+Run the audit build in a separate clean worktree on the build host. Before building, `prepare` (including `-BuildOnly`) clears
+`bin-build/prepared/<label>/` in the current worktree, including any candidate ZIP, record and logs for that label.
+Set up the [release prerequisites](https://github.com/asckye/automation-engineering-workbench/blob/master/docs/manuals/release.md) in the audit worktree.
 Set `$sdk` to the parent of the eight PublicAPI directories. The commands below use the checkout's `sdk` directory.
 
 ```powershell
