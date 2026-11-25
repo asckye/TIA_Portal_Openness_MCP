@@ -12,6 +12,9 @@ using Engine = toolpipeline::TiaMcp.FoundationHost;
 public sealed class DeviceCreationEnvelopeTests
 {
     private const string Tp700 = "6AV2 124-0GC01-0AX0";
+    private const string Tp700Version = "17.0.0.0";
+    private const string Landscape = "OrderNumber:" + Tp700 + "/" + Tp700Version;
+    private const string Portrait = Landscape + "/Portrait";
     private const string Unified = "6AV2 128-3QB06-0AX1";
     private const string Project = "C:/Fixture/P.ap21";
     private const string Item = "MCP_RC_PLC/MCP_RC_PLC";
@@ -28,14 +31,16 @@ public sealed class DeviceCreationEnvelopeTests
         using var fixture = new Fixture(release);
         string article = tool == "CreateDevice" ? "orderNumber" : "preferredMlfb";
         string version = tool == "CreateDevice" ? "version" : "preferredVersion";
-        bool tp700 = release == "18" && viaBridge;
-        var args = new JsonObject { [article] = tp700 ? Tp700 : "6ES7 513-9XX99-0XX0", [version] = tp700 ? "17.0.0.0" : "V9.9",
-            ["deviceName"] = tp700 ? "MCP_RC_HMI2" : "PLC_2" };
-        var preview = await fixture.Call(tool, args, viaBridge);
-        Assert.True((bool?)preview["ok"], preview.ToJsonString());
         foreach (int count in new[] { 0, 2 })
         {
-            fixture.Worker.MatchingRows = count;
+            bool tp700 = count == 2 || release == "18" && viaBridge;
+            string number = tp700 ? Tp700 : "6ES7 513-9XX99-0XX0";
+            string firmware = tp700 ? Tp700Version : "V9.9";
+            var args = new JsonObject { [article] = number, [version] = firmware, ["deviceName"] = tp700 ? "MCP_RC_HMI2" : "PLC_2" };
+            fixture.Worker.Rows = [Row(number, firmware)];
+            var preview = await fixture.Call(tool, args, viaBridge);
+            Assert.True((bool?)preview["ok"], preview.ToJsonString());
+            fixture.Worker.Rows = count == 0 ? [] : RecordedTp700Rows();
             foreach (bool apply in new[] { false, true })
             {
                 var input = args.DeepClone().AsObject();
@@ -50,9 +55,78 @@ public sealed class DeviceCreationEnvelopeTests
                 Assert.Contains("SearchHardwareCatalog", message);
                 Assert.Contains("same row", message);
                 Assert.DoesNotContain("preferredMlfb/preferredVersion", message);
+                if (count == 2)
+                {
+                    Assert.Contains("exact typeIdentifier", message);
+                    Assert.Contains(article, message);
+                    Assert.Contains("empty " + version, message);
+                    Assert.DoesNotContain("copy the article number and version", message);
+                }
+                else Assert.Equal("No catalog row matches the selection. Run SearchHardwareCatalog and copy the article number and version "
+                    + "from the same row, preserving spaces.", message);
             }
         }
     }
+
+    public static IEnumerable<object[]> ExactIdentifierCases =>
+        from release in new[] { "18", "19", "20", "21" }
+        from tool in new[] { "CreateDevice", "CreateHardwareDevice", "CreateHardwareCatalogDevice" }
+        from viaBridge in new[] { false, true }
+        select new object[] { release, tool, viaBridge };
+
+    [Theory, MemberData(nameof(ExactIdentifierCases))]
+    public async Task Full_identifier_selects_landscape_and_explains_an_unsupported_variant(string release, string tool, bool viaBridge)
+    {
+        using var fixture = new Fixture(release);
+        fixture.Worker.Rows = RecordedTp700Rows();
+        string field = tool switch { "CreateDevice" => "orderNumber", "CreateHardwareDevice" => "preferredMlfb", _ => "keyword" };
+        var args = new JsonObject { [field] = Landscape, ["deviceName"] = "MCP_RC_HMI2" };
+        if (tool != "CreateHardwareCatalogDevice") args[tool == "CreateDevice" ? "version" : "preferredVersion"] = "";
+        var plan = await fixture.Call(tool, args, viaBridge);
+        Assert.True((bool?)plan["ok"], plan.ToJsonString());
+        Assert.Equal(Landscape, (string?)plan["data"]?["typeIdentifier"]);
+
+        args[field] = Portrait;
+        var body = await fixture.Call(tool, args, viaBridge);
+        Refused(body, "INVALID_ARGUMENT");
+        string message = (string)body["error"]!["message"]!;
+        Assert.Contains("Exact creation does not support this catalog variant", message);
+        Assert.DoesNotContain("SearchHardwareCatalog", message);
+        Assert.Equal("/" + field, (string?)body["error"]?["details"]?["parameter"]);
+        if (tool == "CreateHardwareCatalogDevice")
+            Assert.Equal(new[] { "/keyword" }, body["error"]!["details"]!["parameters"]!.AsArray().Select(p => (string)p!));
+    }
+
+    [Theory]
+    [InlineData("18", false), InlineData("18", true), InlineData("19", false), InlineData("19", true)]
+    [InlineData("20", false), InlineData("20", true), InlineData("21", false), InlineData("21", true)]
+    public async Task Catalog_keyword_refusal_names_only_the_declared_selection_field(string release, bool viaBridge)
+    {
+        const string tool = "CreateHardwareCatalogDevice";
+        using var fixture = new Fixture(release);
+        fixture.Worker.Rows = RecordedTp700Rows();
+        var args = new JsonObject { ["keyword"] = Landscape, ["deviceName"] = "MCP_RC_HMI2" };
+        var plan = await fixture.Call(tool, args, viaBridge);
+        Assert.True((bool?)plan["ok"], plan.ToJsonString());
+        fixture.Worker.Rows = [];
+        foreach (bool apply in new[] { false, true })
+        {
+            if (apply) Confirm(args, plan);
+            var missing = await fixture.Call(tool, args, viaBridge);
+            Refused(missing, "INVALID_ARGUMENT");
+            Assert.Equal("/keyword", (string?)missing["error"]?["details"]?["parameter"]);
+            Assert.Equal(new[] { "/keyword" }, missing["error"]!["details"]!["parameters"]!.AsArray().Select(p => (string)p!));
+            Assert.Contains("SearchHardwareCatalog", (string?)missing["error"]?["message"]);
+            Assert.Contains("exact typeIdentifier", (string?)missing["error"]?["message"]);
+            Assert.Contains("keyword", (string?)missing["error"]?["message"]);
+        }
+    }
+
+    private static PlcHardwareCatalogCandidate Row(string number, string version, string suffix = "") =>
+        new() { ArticleNumber = number, Version = version, TypeIdentifier = "OrderNumber:" + number + "/" + version + suffix };
+
+    // V18 rc-full raw-A2/119_SearchHardwareCatalog.json, TP700 Comfort and TP700 Comfort Portrait.
+    private static PlcHardwareCatalogCandidate[] RecordedTp700Rows() => [Row(Tp700, Tp700Version), Row(Tp700, Tp700Version, "/Portrait")];
 
     [Theory]
     [InlineData("14sp1", 14), InlineData("15.1", 15), InlineData("16", 16), InlineData("17", 17)]
@@ -72,13 +146,13 @@ public sealed class DeviceCreationEnvelopeTests
             }
             else
             {
-                PanelRefusal(preview);
+                PanelRefusal(preview, major);
                 args["dryRun"] = false;
                 args["confirm"] = true;
                 args["expectedProjectFile"] = Project;
                 args["expectedPlanHash"] = new string('a', 64);
             }
-            PanelRefusal(await fixture.Call(tool, args, true));
+            PanelRefusal(await fixture.Call(tool, args, true), major);
         }
     }
 
@@ -112,11 +186,25 @@ public sealed class DeviceCreationEnvelopeTests
         Assert.False((bool?)refused["data"]?["dryRun"]);
     }
 
-    private static void PanelRefusal(JsonNode body)
+    private static void PanelRefusal(JsonNode body, int major)
     {
         Refused(body, "PRECONDITION_FAILED");
         Assert.Contains("panel version", (string?)body["error"]?["message"]);
         Assert.Contains("release", (string?)body["error"]?["message"]);
+        Assert.Contains("13.0.0.0", (string?)body["error"]?["message"]);
+        Assert.Contains(major + ".0.0.0", (string?)body["error"]?["message"]);
+    }
+
+    [Fact]
+    public void Panel_refusal_only_discloses_the_selected_numeric_version()
+    {
+        var refusal = Assert.Throws<AdapterPreconditionException>(() =>
+            DeviceCreationRules.RequireUnifiedPanelVersion(Unified, "V17.2.3.4/private-marker", 18));
+        Assert.False(refusal.IsArgument);
+        Assert.Contains("17.2.3.4", refusal.Message);
+        Assert.Contains("18.0.0.0", refusal.Message);
+        Assert.DoesNotContain("private-marker", refusal.Message);
+        Assert.DoesNotContain(Unified, refusal.Message);
     }
 
     private static void Refused(JsonNode body, string code)
@@ -173,7 +261,7 @@ public sealed class DeviceCreationEnvelopeTests
 
     private sealed class CatalogWorker(string release) : IFoundationWorker
     {
-        internal int MatchingRows = 1;
+        internal PlcHardwareCatalogCandidate[] Rows = [Row(Unified, "13.0.0.0")];
         internal JsonObject? AttributeEvidence;
 
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
@@ -200,9 +288,7 @@ public sealed class DeviceCreationEnvelopeTests
                     PreferredMlfb = (string)args["preferredMlfb"]!, PreferredVersion = (string)args["preferredVersion"]!,
                     Name = (string)args["deviceName"]!, DryRun = (bool)args["dryRun"]!, Confirm = (bool?)args["confirm"] == true,
                     ExpectedProject = (string?)args["expectedProjectFile"] ?? "", ExpectedHash = (string?)args["expectedPlanHash"] ?? "" };
-                var row = new PlcHardwareCatalogCandidate { ArticleNumber = request.PreferredMlfb, Version = request.PreferredVersion,
-                    TypeIdentifier = "OrderNumber:" + request.PreferredMlfb + "/" + request.PreferredVersion };
-                var result = PlcDeviceAddPolicy.Run(request, () => Enumerable.Repeat(row, MatchingRows), () => Array.Empty<PlcDeviceAddItem>(),
+                var result = PlcDeviceAddPolicy.Run(request, () => Rows, () => Array.Empty<PlcDeviceAddItem>(),
                     () => { }, (_, _) => throw new InvalidOperationException("Unexpected native create."));
                 return Task.FromResult(JsonSerializer.SerializeToNode(result));
             }

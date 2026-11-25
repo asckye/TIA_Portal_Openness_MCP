@@ -13,6 +13,12 @@ namespace TiaMcp.Adapters.Contracts;
 public static class DeviceCreationRules
 {
     public const int CandidateListLimit = 12;
+    public const string NoCatalogRow = "No catalog row matches the selection. Run SearchHardwareCatalog and copy the article number and version "
+        + "from the same row, preserving spaces.";
+
+    public static string AmbiguousCatalogRows(string identifierParameter, string? versionParameter)
+        => "Several catalog rows match the selection. Choose the desired variant in SearchHardwareCatalog and pass the exact typeIdentifier "
+            + "from that same row in " + identifierParameter + (versionParameter == null ? "." : " with an empty " + versionParameter + ".");
 
     // Worker catalog replies are arrays. The count on a returned row describes the full deduplicated search.
     public sealed class GsdMatch : HardwareGsdCandidate
@@ -35,17 +41,19 @@ public static class DeviceCreationRules
     {
         var text = (identifier ?? "") + "/" + (version ?? "");
         if (text.Replace(" ", "").IndexOf("6AV2128-", StringComparison.OrdinalIgnoreCase) < 0) return;
-        var match = Regex.Match(text, @"/V?(\d+)\.(\d+)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+        // Only the catalog's version token is safe to include in the refusal. The identifier can carry unrelated suffixes.
+        var match = Regex.Match(text, @"/(V?(\d+)\.\d+)(?:\.\d+){0,2}", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
         if (!match.Success) return;
-        if (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) == portalMajor) return;
+        if (int.TryParse(match.Groups[2].Value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture,
+            out var selectedMajor) && selectedMajor == portalMajor) return;
         if (reportTypeIdentifier)
-            throw new AdapterPreconditionException("WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + portalMajor
+            throw new AdapterPreconditionException("WinCC Unified panel version " + match.Groups[1].Value + " does not match TIA Portal V" + portalMajor
                 + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the " +
                     "catalog entry ending in /"
                     + portalMajor + ".0.0.0 (SearchHardwareCatalog); no create attempted.", "typeIdentifier");
-        throw new AdapterPreconditionException("The selected Unified panel version does not match this TIA Portal release. "
-            + (portalMajor >= 18 ? "Run SearchHardwareCatalog and copy the article number and version from the same row for this release."
-                : "Choose the panel version for this release in the installed hardware catalog."), isArgument: false);
+        throw new AdapterPreconditionException("The selected Unified panel version " + match.Value.Substring(1) + " does not match this TIA Portal release. "
+            + "Select version " + portalMajor + ".0.0.0 in " + (portalMajor >= 18 ? "SearchHardwareCatalog." : "the installed hardware catalog."),
+            isArgument: false);
     }
 
     public static bool IsFullTypeIdentifier(string value)

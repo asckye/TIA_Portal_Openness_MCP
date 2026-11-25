@@ -10,13 +10,14 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Logic.V4.Inputs;
 using TiaMcp.Logic.V4;
 using TiaOpenness.Shared;
 
 namespace TiaMcp.FoundationHost;
 
-// Compatibility names dispatch the already wrapped canonical tool. They own no native calls, approval or result mapping.
+// Compatibility names dispatch the already wrapped canonical tool. Device aliases translate catalog refusals back to their declared fields.
 internal static class CompatibilityTools
 {
     internal static readonly IReadOnlyDictionary<string, string> PreviewParameterDescriptions = new Dictionary<string, string> {
@@ -59,7 +60,37 @@ internal static class CompatibilityTools
             if (source.ProtocolTool.Name == "CreateDevice" && release is "14sp1" or "15.1" or "16" or "17") continue;
             if (!roster.TryGetValue(mapping.Target, out var target))
                 throw new InvalidDataException("Missing canonical implementation for " + source.ProtocolTool.Name + ": " + mapping.Target);
-            tools[index] = new AuditCallTool(new VersionPolicyTool(new Forwarder(source.ProtocolTool, target, mapping, release, identity)));
+            McpServerTool forwarded = new Forwarder(source.ProtocolTool, target, mapping, release, identity);
+            if (source.ProtocolTool.Name is "CreateDevice" or "CreateHardwareCatalogDevice") forwarded = new DeviceCatalogResultTool(forwarded);
+            tools[index] = new AuditCallTool(new VersionPolicyTool(forwarded));
+        }
+    }
+
+    // Project the canonical catalog refusal before the compatibility call completes its audit.
+    private sealed class DeviceCatalogResultTool(McpServerTool inner) : DelegatingMcpServerTool(inner)
+    {
+        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await base.InvokeAsync(request, cancellationToken);
+            if (result.StructuredContent is not JsonObject body || (string?)body["meta"]?["tool"] != "CreateHardwareDevice"
+                || (string?)body["error"]?["code"] != "INVALID_ARGUMENT" || body["error"]?["details"]?["parameters"] is not JsonArray { Count: 2 } fields
+                || (string?)fields[0] != "/preferredMlfb" || (string?)fields[1] != "/preferredVersion") return result;
+
+            bool catalog = ProtocolTool.Name == "CreateHardwareCatalogDevice";
+            string identifier = catalog ? "keyword" : "orderNumber";
+            var projected = body.DeepClone().AsObject();
+            var error = projected["error"]!;
+            var details = error["details"]!;
+            details["parameter"] = "/" + identifier;
+            details["parameters"] = catalog ? new JsonArray("/keyword") : new JsonArray("/orderNumber", "/version");
+            string? message = (string?)error["message"];
+            if (message == DeviceCreationRules.AmbiguousCatalogRows("preferredMlfb", "preferredVersion"))
+                error["message"] = DeviceCreationRules.AmbiguousCatalogRows(identifier, catalog ? null : "version");
+            else if (catalog && message == DeviceCreationRules.NoCatalogRow)
+                error["message"] = "No catalog row matches the selection. Run SearchHardwareCatalog and pass the exact typeIdentifier in keyword.";
+            return new CallToolResult { IsError = result.IsError, StructuredContent = projected, Meta = result.Meta,
+                Content = new[] { new TextContentBlock { Text = projected.ToJsonString() } } };
         }
     }
 

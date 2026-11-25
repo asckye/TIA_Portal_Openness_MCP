@@ -22,6 +22,10 @@
   The GlobalDB document import tools now explain why they refuse overwrite.
 - `CreateDevice` and `CreateHardwareDevice` identify their catalog fields in `INVALID_ARGUMENT` errors for missing or ambiguous rows.
   An incompatible Unified panel version now returns `PRECONDITION_FAILED`. `SetDeviceItemAttribute` names the read-only attribute and its access mode.
+- `CreateDevice` and `CreateHardwareDevice` identify their catalog fields in `INVALID_ARGUMENT` errors. When rows share an article number and version,
+  the error explains how to pass the exact `typeIdentifier`. Unsupported variants have a separate refusal. `CreateHardwareCatalogDevice` names its `keyword` field.
+  An incompatible Unified panel version returns `PRECONDITION_FAILED` with the selected and required versions.
+  `SetDeviceItemAttribute` names the read-only attribute and its access mode.
 
 ## [4.0.0-rc.6] - 2026-11-25
 
