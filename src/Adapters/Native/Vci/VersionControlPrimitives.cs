@@ -50,7 +50,18 @@ namespace TiaOpenness.Openness
             return mapped.GetStatus();
 #else
             var service = mapped.GetService<IndividualObjectSynchronizationStatus>();
-            service.UpdateStatus();
+            try { service.UpdateStatus(); }
+            catch (EngineeringException refreshError) when (TiaMcp.Adapters.Contracts.NativeRefusalProbe.AllowsRefusalProof(refreshError))
+            {
+                // V17–V19 can refuse the refresh when the mapping already holds a known state.
+                try
+                {
+                    var stored = service.GetStatus();
+                    if (stored.CompareState != CompareState.Unknown) return stored;
+                }
+                catch (System.Exception) { /* swallow(probe-optional): An unreadable stored state leaves the original refresh refusal as the diagnostic. */ }
+                throw;
+            }
             return service.GetStatus();
 #endif
         }

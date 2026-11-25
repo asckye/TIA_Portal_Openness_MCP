@@ -8,7 +8,7 @@ using TiaMcp.Adapters.Native.Vci;
 
 internal static class VciWorkerRuntimeTests
 {
-    private static int Main()
+    private static int Main(string[] args)
     {
         var workspace = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "vci-" + Guid.NewGuid().ToString("N")));
         try
@@ -16,6 +16,14 @@ internal static class VciWorkerRuntimeTests
             string runtime = RuntimeInformation.FrameworkDescription;
             if (!runtime.StartsWith(".NET Framework 4.8", StringComparison.Ordinal))
                 throw new InvalidOperationException("Expected .NET Framework 4.8, got " + runtime);
+            if (args.Length == 1 && args[0] == "--status-replies")
+            {
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new {
+                    v16 = VciStatusFixture.Run(workspace, refreshesKnownState: true),
+                    v17To19 = VciStatusFixture.Run(workspace, refreshesKnownState: false)
+                }));
+                return 0;
+            }
             Console.WriteLine(runtime);
             string file = Path.Combine(workspace.FullName, "Motor.s7dcl");
             File.Copy(Path.Combine(AppContext.BaseDirectory, "FC_Add_SD.s7dcl"), file);

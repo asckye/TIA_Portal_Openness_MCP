@@ -193,7 +193,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 && evidence["limit"] is JsonValue limit && limit.TryGetValue<int>(out var size)
                 && (evidence["total"] ?? evidence["totalCount"] ?? evidence["expectedCount"]) is JsonValue total && total.TryGetValue<int>(out var count)
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
-            Clean(data);
+            var legacyStatusRows = tool == "GetVersionControlStatus" && HardwareContract.ReleaseKey is "16" or "17" or "18" or "19"
+                ? evidence["objects"] as JsonArray : null;
+            Clean(data, legacyStatusRows);
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)) {
                 outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
                     ? Completeness.Partial : Completeness.Complete;
@@ -202,10 +204,20 @@ namespace TiaMcpServer.ModelContextProtocol
             if (data["items"] is JsonArray lines)
                 for (int i = 0; i < lines.Count; i++)
                     if (lines[i] is JsonValue line && line.TryGetValue<string>(out var text))
+                    {
+                        if (legacyStatusRows != null && i < legacyStatusRows.Count && legacyStatusRows[i] is JsonObject row
+                            && row["compareState"]?.ToString() == "Unknown" && row["error"] is JsonValue diagnostic
+                            && diagnostic.TryGetValue<string>(out var statusError))
+                        {
+                            string format = row["fileFormat"]?.ToString() ?? "";
+                            lines[i] = $"{row["name"]} | Unknown({statusError}) | file={row["filePath"]}" + (format.Length == 0 ? "" : " | format=" + format);
+                            continue;
+                        }
                         lines[i] = Regex.Replace(text, @"(\| FAILED:|\| could not enumerate children:|Unknown\()(.*)$", match =>
                             tool == "ConnectProjectToWorkspace" && match.Groups[1].Value == "| FAILED:"
                                 && HostBehavior.SafeDiagnostic(match.Groups[2].Value.TrimStart()) is string reason
                                 ? "| FAILED: " + reason : "| Native observation or operation failed.", RegexOptions.Singleline);
+                    }
             return Result(tool, data, error, outcome, completeness, writes, paging, current);
         }
         private static bool Incomplete(JsonNode? node)
@@ -220,9 +232,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 || MissingRows("groupCount", "groups") || MissingRows("folderCount", "folders") || MissingRows("ruleCount", "rules")
                 || obj.Any(p => p.Key.EndsWith("Error", StringComparison.Ordinal) && p.Value != null || Incomplete(p.Value));
         }
-        private static void Clean(JsonNode? node, bool diagnostic = false)
+        private static void Clean(JsonNode? node, JsonArray? legacyStatusRows, bool diagnostic = false)
         {
-            if (node is JsonArray array) { foreach (var item in array) Clean(item, diagnostic); return; }
+            if (node is JsonArray array) { foreach (var item in array) Clean(item, legacyStatusRows, diagnostic); return; }
             if (!(node is JsonObject obj)) return;
             foreach (var pair in obj.ToArray())
             {
@@ -232,10 +244,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 else if (diagnostic && (pair.Key == "text" || pair.Key == "detailText") && pair.Value is JsonValue text &&
                     text.TryGetValue<string>(out var detail))
                     obj[pair.Key] = HostBehavior.SafeDiagnostic(detail);
+                else if (legacyStatusRows != null && obj.Parent == legacyStatusRows && pair.Key == "error" && obj["compareState"]?.ToString() == "Unknown"
+                    && pair.Value is JsonValue failure && failure.TryGetValue<string>(out var message))
+                    obj[pair.Key] = HostBehavior.SafeDiagnostic(message);
                 else if ((pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) && pair.Value != null) obj[pair.Key] =
                     "Native diagnostic details are retained in the server log.";
                 else if (pair.Key == "nativeMessage") obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());
-                else Clean(pair.Value, diagnostic || pair.Key is "messageData" or "detailMessageData");
+                else Clean(pair.Value, legacyStatusRows, diagnostic || pair.Key is "messageData" or "detailMessageData");
             }
         }
         private static Error NativeFailure(string? nativeMessage = null) =>

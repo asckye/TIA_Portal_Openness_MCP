@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
-using TiaMcp.Adapters.Native.Plc;
 #if !STUDIO_VCI_MODERN
 using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
 #endif
@@ -184,19 +183,23 @@ namespace TiaMcp.Adapters.Native.Vci
                 foreach (var mo in PortVci.Enumerate(Keep(PortVci.MappedObjects(ws))))
                 {
                     total++;
-                    string status;
+                    CompareState state;
+                    string? error = null;
                     // GetStatus() returns an IndividualObjectCompareResult; ToString() on it yields the type
                     // name, not the verdict. The verdict is CompareState (Equal / Unequal / WorkspaceFileMissing).
-                    try { status = PortVci.State(PortVci.ReadStatus(mo)).ToString(); }
-                    catch (Exception ex) { status = "Unknown(" + ex.Message + ")"; }
-                    bool inSync = string.Equals(status, "Equal", StringComparison.OrdinalIgnoreCase);
-                    if (status.StartsWith("Unknown", StringComparison.Ordinal)) unknown++;
-                    else if (!inSync) differing++;
-                    if (changedOnly && inSync) continue;
+                    try { state = PortVci.State(PortVci.ReadStatus(mo)); }
+                    catch (Exception ex)
+                    {
+                        state = CompareState.Unknown;
+                        error = NativeFailureText.Compose(ex.Message, null, Array.Empty<string>());
+                    }
+                    if (state == CompareState.Unknown) unknown++;
+                    else if (state != CompareState.Equal) differing++;
+                    if (changedOnly && state == CompareState.Equal) continue;
                     lines.Add(string.Format("{0} | {1} | file={2}{3}",
-                        SafeName(mo), status, SafeFile(mo), SafeFormat(mo)));
-                    entries.Add(new HmiObject { ["name"] = SafeName(mo), ["compareState"] = status.StartsWith("Unknown") ? "Unknown" : status,
-                        ["error"] = status.StartsWith("Unknown(") ? status : null, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo)
+                        SafeName(mo), error == null ? state.ToString() : "Unknown(" + error + ")", SafeFile(mo), SafeFormat(mo)));
+                    entries.Add(new HmiObject { ["name"] = SafeName(mo), ["compareState"] = state.ToString(),
+                        ["error"] = error, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo)
                             .Replace(" | format=", "") });
                 }
 
