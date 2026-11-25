@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 using Xunit;
@@ -60,6 +61,7 @@ public sealed partial class VerifiedExportStyleTests
     [InlineData("18-T3", "false")]
     [InlineData("19-T3", "false")]
     [InlineData("20-T3", "false")]
+    [InlineData("21-T3", "false")]
     public void Staged_LAD_network_matches_on_the_full_export(string file, string? setEno)
     {
         string candidate = Staged(file);
@@ -89,6 +91,7 @@ public sealed partial class VerifiedExportStyleTests
     [InlineData("17-T1", "8", true)]
     [InlineData("18-T1", "8", true)]
     [InlineData("19-T1", "8", true)]
+    [InlineData("21-T1", "8", true)]
     public void Staged_partial_instance_keeps_its_only_override(string file, string previousSpeed, bool nested)
     {
         string candidate = Staged(file);
@@ -126,6 +129,7 @@ public sealed partial class VerifiedExportStyleTests
     [InlineData("19-T2a", "MCP_RC_UDT", true)]
     [InlineData("19-T2b", "MCP_RC_UDT", false)]
     [InlineData("20-MCP_RC_DB5", "MCP_RC_UDTD", false)]
+    [InlineData("21-T2a", "MCP_RC_UDT", false)]
     public void Staged_unexpanded_instance_with_a_declared_default_matches_on_None(string file, string type, bool addNamespace)
     {
         string candidate = Staged(file);
@@ -159,6 +163,8 @@ public sealed partial class VerifiedExportStyleTests
     [InlineData("duplicateFull")]
     [InlineData("duplicateNone")]
     [InlineData("nestedValue")]
+    [InlineData("otherNamespace")]
+    [InlineData("differentCase")]
     [InlineData("extraAttribute")]
     [InlineData("candidateStated")]
     [InlineData("memberAttribute")]
@@ -181,6 +187,12 @@ public sealed partial class VerifiedExportStyleTests
             case "duplicateFull": Attributes(after).Add(new XElement(reserve)); break;
             case "duplicateNone": reserve.AddAfterSelf(new XElement(reserve)); break;
             case "nestedValue": reserve.ReplaceNodes(new XElement("Value", "100")); break;
+            case "otherNamespace": reserve.Name = XName.Get("MemoryReserve", "urn:extension"); break;
+            case "differentCase":
+                Attributes(before).Add(new XElement("HeaderFamily", "Motion"));
+                Attributes(after).Add(new XElement("HeaderFamily", "Motion"));
+                Attributes(none).Add(new XElement("HeaderFamily", "motion"));
+                break;
             case "extraAttribute": reserve.SetAttributeValue("Unit", "bytes"); break;
             case "candidateStated": Attributes(candidate).Add(new XElement("MemoryReserve", "10")); break;
             case "memberAttribute":
@@ -198,27 +210,38 @@ public sealed partial class VerifiedExportStyleTests
     [Theory]
     [InlineData("exact", true)]
     [InlineData("nestedOverride", false)]
+    [InlineData("unexpandedZero", false)]
+    [InlineData("declaredFive", true)]
     [InlineData("explicitZero", false)]
     public void None_must_leave_each_unexpanded_instance_free_of_overrides(string change, bool matches)
     {
         const string type = "MCP_RC_UDT";
-        string candidate = Staged("17-T2b");
-        var none = DbNone(candidate);
+        var candidate = XDocument.Parse(Staged("17-T2b"));
+        XNamespace ns = Member(candidate, "B").Name.Namespace;
+        bool stated = change is "declaredFive" or "explicitZero";
+        if (stated) Member(candidate, "B").Add(Section(ns, "<Member Name='Speed' Datatype='Int'><StartValue>5</StartValue></Member>"));
+        var none = DbNone(candidate.ToString());
         var before = WithComputed(none, false);
-        var after = WithComputed(none, true);
-        XNamespace ns = Member(none, "B").Name.Namespace;
+        var after = new XDocument(none);
         var declared = Section(ns, UdtMembers(type));
+        if (stated) Member(after, "B").Element(ns + "Sections")!.Remove();
         foreach (string name in new[] { "A", "B" }) Member(after, name).Add(new XElement(declared));
-        // Materialized declaration matches. A full-export-only setting forces the same fallback for all three cases.
-        Attributes(after).Add(new XElement("HeaderAuthor", "Commissioning"));
+        if (!stated) Attributes(after).Add(new XElement("HeaderAuthor", "Commissioning"));
         if (change == "nestedOverride")
             Member(none, "B").Add(Section(ns, "<Member Name='In' Datatype='&quot;MCP_RC_UDTI&quot;'><Sections><Section Name='None'>" +
                 "<Member Name='Lim' Datatype='Int'><StartValue>4</StartValue></Member></Section></Sections></Member>"));
-        if (change == "explicitZero")
+        if (change == "unexpandedZero")
             Member(none, "B").Add(Section(ns, "<Member Name='Speed' Datatype='Int'><StartValue>0</StartValue></Member>"));
-        var meta = Apply(candidate, before.ToString(), after.ToString(), none.ToString(), true, declaration: Declaration(type, declared),
-            declarationName: type);
+        if (change == "explicitZero")
+        {
+            Member(Member(after, "B"), "Speed").Element(ns + "StartValue")!.Value = "0";
+            Member(none, "Speed").Element(ns + "StartValue")!.Value = "0";
+        }
+        string? changed = change == "explicitZero" ? "Static/B/Speed: startValue" : null;
+        var meta = Apply(candidate.ToString(), before.ToString(), WithComputed(after, true).ToString(), none.ToString(), true,
+            declaration: Declaration(type, declared), declarationName: type, expectedDifference: changed);
         Assert.Equal(matches, (bool?)meta["verificationSuccess"]);
+        if (stated) Assert.Equal(changed, (string?)meta["comparison"]!["noneDifference"]);
     }
 
     [Theory]
@@ -226,6 +249,7 @@ public sealed partial class VerifiedExportStyleTests
     [InlineData("nonemptyTitle", false)]
     [InlineData("whitespaceTitle", false)]
     [InlineData("nonemptyComment", false)]
+    [InlineData("secondCulture", false)]
     [InlineData("duplicateTitle", false)]
     [InlineData("wrongNetwork", false)]
     [InlineData("twoNetworks", true)]
@@ -254,6 +278,13 @@ public sealed partial class VerifiedExportStyleTests
             case "nonemptyTitle": list.Descendants("Text").Last().Value = "Network"; break;
             case "whitespaceTitle": list.Descendants("Text").Last().Value = " "; break;
             case "nonemptyComment": list.Descendants("Text").First().Value = "Note"; break;
+            case "secondCulture":
+                var item = new XElement(list.Descendants("MultilingualTextItem").First());
+                item.SetAttributeValue("ID", 10);
+                item.Descendants("Culture").Single().Value = "en-US";
+                item.Descendants("Text").Single().Value = "Note";
+                list.Descendants("MultilingualTextItem").First().AddAfterSelf(item);
+                break;
             case "duplicateTitle": list.Add(TextField("Title", 6)); break;
             case "twoNetworks": PlcDocumentEditing.Networks(none).Last().Add(new XElement("ObjectList", TextField("Title", 6))); break;
             case "wrongNetwork":
@@ -297,7 +328,126 @@ public sealed partial class VerifiedExportStyleTests
         var full = new XDocument(before);
         Member(full, "Speed").Elements().Single().Value = "1.234568";
         Member(full, "Level").Elements().Single().Value = "8";
-        var meta = Apply(candidate.ToString(), WithComputed(before, false).ToString(), WithComputed(full, true).ToString(), none.ToString(), true);
+        var meta = Apply(candidate.ToString(), WithComputed(before, false).ToString(), WithComputed(full, true).ToString(), none.ToString(), true,
+            expectedDifference: "Static/Motor/Speed: startValue");
         Assert.False((bool?)meta["verificationSuccess"]);
+        Assert.Equal("Static/Motor/Speed: startValue", (string?)meta["comparison"]!["noneDifference"]);
+    }
+
+    [Fact]
+    public void Restored_empty_namespace_must_be_present_in_the_full_export()
+    {
+        string candidate = Staged("19-T2a");
+        var none = DbNone(candidate, addNamespace: true);
+        var before = WithComputed(none, false);
+        var after = WithComputed(none, true);
+        Attributes(after).Element("Namespace")!.Remove();
+        var meta = Apply(candidate, before.ToString(), after.ToString(), none.ToString(), true);
+        Assert.False((bool?)meta["verificationSuccess"]);
+        Assert.Equal("Restored attribute differs in after.xml: Namespace", (string?)meta["comparison"]!["reason"]);
+    }
+
+    [Fact]
+    public void V17_T5_reports_the_rounded_Val_after_declaration_normalization()
+    {
+        string candidate = Staged("17-T5");
+        var none = DbNone(candidate);
+        Member(none, "Val").Elements().Single().Value = "1.5";
+        var full = new XDocument(none);
+        var motor = Member(full, "Motor");
+        const string type = "MCP_RC_UDT";
+        var declared = Section(motor.Name.Namespace, UdtMembers(type));
+        var expansion = new XElement(declared);
+        Member(expansion, "Speed").Elements().Remove();
+        Member(expansion, "In").Add(Section(motor.Name.Namespace, NestedMembers));
+        motor.Add(expansion);
+        var meta = Apply(candidate, WithComputed(full, false).ToString(), WithComputed(full, true).ToString(), none.ToString(), true,
+            declaration: Declaration(type, declared), declarationName: type, expectedDifference: "Static/Val: startValue");
+        Assert.False((bool?)meta["verificationSuccess"]);
+        Assert.Equal("Static/Val: startValue", (string?)meta["comparison"]!["noneDifference"]);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Declaration_match_requires_None_to_verify_the_reset_of_a_nested_override(bool kept)
+    {
+        string candidate = Staged("17-T2b");
+        var none = DbNone(candidate);
+        XNamespace ns = Member(none, "B").Name.Namespace;
+        const string type = "MCP_RC_UDT";
+        var declared = Section(ns, UdtMembers(type));
+        var full = new XDocument(none);
+        foreach (string name in new[] { "A", "B" })
+        {
+            Member(full, name).Add(new XElement(declared));
+            Member(Member(full, name), "In").Add(Section(ns, NestedMembers));
+        }
+        var oldLimit = Member(Member(full, "B"), "Lim");
+        oldLimit.Add(new XElement(ns + "StartValue", "4"));
+        var before = WithComputed(full, false);
+        if (kept)
+            Member(none, "B").Add(Section(ns, "<Member Name='In' Datatype='&quot;MCP_RC_UDTI&quot;'><Sections><Section Name='None'>" +
+                "<Member Name='Lim' Datatype='Int'><StartValue>4</StartValue></Member></Section></Sections></Member>"));
+        else oldLimit.Elements().Remove();
+        var meta = Apply(candidate, before.ToString(), WithComputed(full, true).ToString(), none.ToString(), true,
+            declaration: Declaration(type, declared), declarationName: type, expectedDifference: kept ? "Static/B: structure" : null);
+        Assert.Equal(!kept, (bool?)meta["verificationSuccess"]);
+        Assert.Equal((string?)meta["plannedFingerprint"], (string?)meta["actualFingerprint"]);
+    }
+
+    [Theory, InlineData("fullSetting"), InlineData("missing"), InlineData("duplicate"), InlineData("type"), InlineData("moved"),
+        InlineData("io"), InlineData("cancel"), InlineData("lost")]
+    public void Supplemental_proof_checks_the_instance_in_a_full_style_candidate(string change)
+    {
+        const string type = "MCP_RC_UDT";
+        var candidate = XDocument.Parse(Staged("17-T2a"));
+        // The full export verifies this setting. Its omission in None cannot establish or refute a UDT reset.
+        Attributes(candidate).Add(new XElement("HeaderAuthor", "Motion"));
+        var none = DbNone(candidate.ToString());
+        var full = new XDocument(none);
+        var motor = Member(full, "Motor");
+        var declared = Section(motor.Name.Namespace, UdtMembers(type));
+        motor.Add(new XElement(declared));
+        Attributes(none).Element("HeaderAuthor")!.Remove();
+        if (change == "missing") Member(none, "Motor").Remove();
+        if (change == "duplicate") Member(none, "Motor").AddAfterSelf(new XElement(Member(none, "Motor")));
+        if (change == "type") Member(none, "Motor").SetAttributeValue("Datatype", "\"OtherType\"");
+        if (change == "moved") Member(none, "Motor").ReplaceWith(new XElement(motor.Name, new XAttribute("Name", "Group"),
+            new XAttribute("Datatype", "Struct"), new XElement(Member(none, "Motor"))));
+        Exception? failure = change switch {
+            "io" => new IOException("Cannot read supplemental export."), "cancel" => new OperationCanceledException(),
+            "lost" => new ObjectDisposedException("Session"), _ => null };
+        string? difference = change switch {
+            "io" => "Same-style verification failed: Cannot read supplemental export.",
+            "missing" or "duplicate" or "moved" => "Static/Motor: structure", "type" => "Static/Motor: type", _ => null };
+        JsonObject Run() => Apply(candidate.ToString(), WithComputed(full, false).ToString(), WithComputed(full, true).ToString(),
+            none.ToString(), true, declaration: Declaration(type, declared), declarationName: type, exportFailure: failure, expectedDifference: difference);
+        if (change == "cancel") Assert.Same(failure, Assert.Throws<OperationCanceledException>(() => Run()));
+        else if (change == "lost") Assert.Same(failure, Assert.Throws<ObjectDisposedException>(() => Run()));
+        else Assert.Equal(change == "fullSetting", (bool?)Run()["verificationSuccess"]);
+    }
+
+    [Theory, InlineData(false), InlineData(true)]
+    public void None_difference_is_evidence_when_the_full_difference_keeps_precedence(bool extraOutsideUdt)
+    {
+        var candidate = XDocument.Parse(Db("9", null, 1, false));
+        var none = XDocument.Parse(Db("4", null, 1, false));
+        string full = Db("4", null, 1, true);
+        var after = XDocument.Parse(FullExport(full, true));
+        if (extraOutsideUdt)
+        {
+            var group = Member(after, "Group0");
+            group.AddBeforeSelf(new XElement(group.Name, new XAttribute("Name", "Extra"), new XAttribute("Datatype", "Int")));
+        }
+        else
+        {
+            foreach (var doc in new[] { candidate, none })
+                Member(doc, "Group0").AddFirst(new XElement(XName.Get("AttributeList", Interface)));
+        }
+        var meta = Apply(candidate.ToString(), FullExport(full, false), after.ToString(), none.ToString(), true);
+        Assert.False((bool?)meta["verificationSuccess"]);
+        Assert.Equal("Static/Group0/Motor/Speed: startValue", (string?)meta["comparison"]!["noneDifference"]);
+        Assert.Equal(extraOutsideUdt ? "Static/Extra: extraMember" : "Static/Group0/Motor/Ready: extraMember", (string?)meta["readbackDifference"]);
     }
 }

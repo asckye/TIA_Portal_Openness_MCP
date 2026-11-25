@@ -105,7 +105,8 @@ public sealed partial class VerifiedExportStyleTests
 
     // Exercise the same validation, preview token, apply and metadata conversion as the worker.
     private static JsonObject Apply(string candidate, string before, string after, string none, bool compile, bool extra = true,
-        Exception? exportFailure = null, string? declaration = null, Exception? readbackFailure = null, string declarationName = "MotorType")
+        Exception? exportFailure = null, string? declaration = null, Exception? readbackFailure = null, string declarationName = "MotorType",
+        string? expectedDifference = null)
     {
         string directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "verified-style-" + Guid.NewGuid().ToString("N"))).FullName;
         try
@@ -174,7 +175,7 @@ public sealed partial class VerifiedExportStyleTests
                 Assert.NotNull(meta["cleanupRequired"]);
                 string planned = File.ReadAllText(Path.Combine(evidence, "planned.xml"));
                 string Canon(string xml) => PlcDocumentEditing.Canonical(PlcDocumentEditing.Parse(xml));
-                Assert.Equal(PlcDocumentEditing.ReadbackDifference(Canon(planned), Canon(after)), (string?)meta["readbackDifference"]);
+                Assert.Equal(expectedDifference ?? PlcDocumentEditing.ReadbackDifference(Canon(planned), Canon(after)), (string?)meta["readbackDifference"]);
                 Assert.False((bool?)meta["writeOutcomeUnknown"] ?? false);
             }
             return meta;
@@ -205,7 +206,7 @@ public sealed partial class VerifiedExportStyleTests
     }
 
     [Fact]
-    public void Compiled_readback_matching_the_existing_declaration_stops_before_the_None_export()
+    public void Compiled_readback_matching_the_existing_declaration_compares_the_None_export()
     {
         string declaration = $"""
             <Document><Engineering version="V19"/><SW.Types.PlcStruct ID="0"><AttributeList><Name>MotorType</Name>
@@ -213,7 +214,7 @@ public sealed partial class VerifiedExportStyleTests
             </Section></Sections></Interface></AttributeList></SW.Types.PlcStruct></Document>
             """;
         string candidate = Db(null, null, 0, false);
-        var meta = Apply(candidate, FullExport(candidate, false), FullExport(Db(null, null, 0, true), true), "", true, extra: false, declaration: declaration);
+        var meta = Apply(candidate, FullExport(candidate, false), FullExport(Db(null, null, 0, true), true), candidate, true, declaration: declaration);
         Assert.True((bool?)meta["verificationSuccess"]);
     }
 
@@ -260,7 +261,10 @@ public sealed partial class VerifiedExportStyleTests
     public void Unapplied_removed_or_swapped_DB_values_remain_mismatches(string? want, string? want2, string? kept, string? kept2)
     {
         string full = Db(kept, kept2, 1, true);
-        var meta = Apply(Db(want, want2, 1, false), FullExport(full, false), FullExport(full, true), Db(kept, kept2, 1, false), true);
+        string changed = want == null ? "Static/Group0/Motor: structure" : "Static/Group0/Motor/Speed: startValue";
+        var meta = Apply(Db(want, want2, 1, false), FullExport(full, false), FullExport(full, true), Db(kept, kept2, 1, false), true,
+            expectedDifference: changed);
+        Assert.Equal(changed, (string?)meta["comparison"]!["noneDifference"]);
         Assert.False((bool?)meta["verificationSuccess"]);
     }
 

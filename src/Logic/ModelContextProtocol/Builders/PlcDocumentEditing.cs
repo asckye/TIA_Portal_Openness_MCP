@@ -243,6 +243,38 @@ namespace TiaMcpServer.ModelContextProtocol
         private static bool Unexpanded(XElement member) => member.Element(member.Name.Namespace + "Sections") == null
             && member.Element(member.Name.Namespace + "Member") == null;
 
+        internal static Func<XElement, XElement, XElement?> IndexReadbackAttributes(XDocument readback)
+        {
+            var attributes = Child(Block(readback), "AttributeList");
+            var children = attributes.Elements().Concat(Child(attributes, "Interface").Descendants())
+                .ToLookup(e => (e.Parent, e.Name, (string?)e.Attribute("Name"), (string?)e.Attribute("Path")));
+            return (wanted, root) =>
+            {
+                // Follow individual Name/Path values. The reported labels can contain unescaped slashes.
+                var actual = attributes;
+                foreach (var step in wanted.AncestorsAndSelf().TakeWhile(e => e != root).Reverse())
+                {
+                    var matches = children[(actual, step.Name, (string?)step.Attribute("Name"), (string?)step.Attribute("Path"))];
+                    if (matches.Count() != 1) return null;
+                    actual = matches.First();
+                }
+                return actual;
+            };
+        }
+
+        internal static string? UnexpandedReadbackDifference(XDocument candidate, XDocument none)
+        {
+            var input = Child(Block(candidate), "AttributeList");
+            var find = IndexReadbackAttributes(none);
+            foreach (var member in Child(input, "Interface").Descendants().Where(m => IsInterfaceMember(m) && ReferencedType(m) != null && Unexpanded(m)))
+            {
+                var actual = find(member, input);
+                if (actual == null || !Unexpanded(actual)) return MemberLocation(member) + ": structure";
+                if (ReferencedType(actual) != ReferencedType(member)) return MemberLocation(member) + ": type";
+            }
+            return null;
+        }
+
         public static IEnumerable<string> UnexpandedTypes(string planned) => DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace))
             .Where(Unexpanded).Select(ReferencedType).OfType<string>().Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal);
 
@@ -270,14 +302,18 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static string NormalizeCompiledReadback(string readback, string planned, IReadOnlyDictionary<string, XElement> declarations,
             out string? difference)
+            => NormalizeCompiledReadback(readback, planned, declarations, out difference, out _);
+
+        internal static string NormalizeCompiledReadback(string readback, string planned, IReadOnlyDictionary<string, XElement> declarations,
+            out string? difference, out bool removed)
         {
             difference = null;
+            removed = false;
             if (declarations.Count == 0) return readback;
             var block = XElement.Parse(readback, LoadOptions.PreserveWhitespace);
             var shapes = declarations.ToDictionary(pair => pair.Key, pair => DeclarationShape(pair.Value), StringComparer.Ordinal);
             var unexpanded = DbMembers(XElement.Parse(planned, LoadOptions.PreserveWhitespace)).Where(Unexpanded)
                 .ToLookup(m => (m.Name, MemberLocation(m), ReferencedType(m)));
-            bool removed = false;
             foreach (var member in DbMembers(block))
             {
                 string? type = ReferencedType(member);
@@ -291,7 +327,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var actual = DeclarationShape(section);
                 RemoveReadbackOnlyTypeExpansions(expected, actual);
                 if (XNode.DeepEquals(expected, actual)) { expansion.Remove(); removed = true; }
-                else difference ??= DescribeDifference(expected, actual, path);
+                else difference ??= DescribeDifference(expected, actual, path).Label;
             }
             // IDs on a derived member can shift the canonical IDs of later block objects.
             return removed ? Canonical(new XDocument(new XElement("Document", block))) : readback;
@@ -350,12 +386,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 start.Remove();
         }
 
-        public static string ReadbackDifference(string planned, string readback) => DescribeDifference(
+        public static string ReadbackDifference(string planned, string readback) => ReadbackDetail(planned, readback).Label;
+
+        internal static (string Label, bool ExtraInUdt, bool NamesMember) ReadbackDetail(string planned, string readback) => DescribeDifference(
             XElement.Parse(planned, LoadOptions.PreserveWhitespace), XElement.Parse(readback, LoadOptions.PreserveWhitespace), "");
 
-        private static string DescribeDifference(XElement expected, XElement actual, string prefix)
+        private static (string Label, bool ExtraInUdt, bool NamesMember) DescribeDifference(XElement expected, XElement actual, string prefix)
         {
-            string At(XElement node, string aspect)
+            (string, bool, bool) At(XElement node, string aspect)
             {
                 string path = MemberLocation(node);
                 if (prefix.Length > 0) path = path.Length == 0 ? prefix : prefix + "/" + path;
@@ -365,10 +403,16 @@ namespace TiaMcpServer.ModelContextProtocol
                     var text = first?.AncestorsAndSelf("MultilingualText").FirstOrDefault();
                     if (text?.Parent?.Name == "ObjectList" && text.Parent.Parent?.Parent == null
                         && (string?)text.Attribute("CompositionName") is "Comment" or "Title")
-                        return (string?)text.Attribute("CompositionName") + ": blockAttribute";
+                        return ((string?)text.Attribute("CompositionName") + ": blockAttribute", false, false);
                     path = node.Name.LocalName;
                 }
-                return (path.Length <= 200 ? path : "..." + path.Substring(path.Length - 197)) + ": " + aspect;
+                string label = (path.Length <= 200 ? path : "..." + path.Substring(path.Length - 197)) + ": " + aspect;
+                var ns = node.Name.Namespace;
+                bool extraInUdt = aspect == "extraMember" && IsInterfaceMember(node) && node.Ancestors(ns + "Sections")
+                    .Any(s => s.Parent is XElement owner && IsInterfaceMember(owner) && ReferencedType(owner) != null);
+                bool namesMember = IsInterfaceMember(node) || node.Name.LocalName is "StartValue" or "Sections"
+                    && node.Parent is XElement member && member.Name.Namespace == ns && IsInterfaceMember(member);
+                return (label, extraInUdt, namesMember);
             }
             while (true)
             {
