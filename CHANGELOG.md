@@ -20,6 +20,8 @@
 - V20/V21 SIMATIC SD imports check the declared block and refuse replacements that would lose OB classification or DB protection settings.
   Consistent replacements retain a SimaticML backup. A verified property difference after import reports failure with recovery evidence.
   The GlobalDB document import tools now explain why they refuse overwrite.
+- `CreateDevice` and `CreateHardwareDevice` identify their catalog fields in `INVALID_ARGUMENT` errors for missing or ambiguous rows.
+  An incompatible Unified panel version now returns `PRECONDITION_FAILED`. `SetDeviceItemAttribute` names the read-only attribute and its access mode.
 
 ## [4.0.0-rc.6] - 2026-11-25
 

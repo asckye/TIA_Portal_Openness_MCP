@@ -29,7 +29,7 @@ namespace TiaMcp.Adapters
             var local = this.project as Project ?? throw new HardwareAddressingException("InvalidState", "Current project is not a local Project instance");
             // HMI stations have a read-only device name. The requested name still identifies the head item.
             DeviceCreationRules.RequireFreeName(ProjectDeviceWalk.OccupiedNames(project!.Devices, project.DeviceGroups, project.UngroupedDevicesGroup), deviceName);
-            GuardUnifiedPanelVersion(typeIdentifier, "");
+            GuardUnifiedPanelVersion(typeIdentifier, parameter);
             var before = HardwareDeviceInventory();
             Device? created;
             try

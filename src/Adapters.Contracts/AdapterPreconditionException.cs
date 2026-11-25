@@ -21,6 +21,10 @@ namespace TiaMcp.Adapters.Contracts
         public static AdapterPreconditionException Failed(string message, string condition, string? parameter)
             => new AdapterPreconditionException(message, condition: condition, innerException: null) { ParamName = parameter };
 
+        // A selection can involve multiple public fields. Keep the worker's field list out of the user-facing message.
+        public static AdapterPreconditionException InvalidArguments(string message, string parameters)
+            => new AdapterPreconditionException(message) { ParamName = parameters };
+
         public AdapterPreconditionException(string message, string? parameter = null, bool isArgument = true, Exception? innerException = null)
             : base(new ArgumentException(message, parameter).Message, innerException)
         {

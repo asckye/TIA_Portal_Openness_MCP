@@ -104,8 +104,8 @@ namespace TiaMcp.Adapters
         // TIA V21 project (2026-09-20; docs/reference/real-machine-ledger.md, crash ⑧): Devices.CreateWithItem("OrderNumber:6AV2 128-3GB06-0AXx/20.0.0.0", ...) - a WinCC Unified
         // Comfort panel of the PREVIOUS device version - made TIA Portal V21 exit; the same panel with /21.0.0.0 was created normally.
         // The device version of a Unified panel has to match the Portal major version.
-        private void GuardUnifiedPanelVersion(string orderNumber, string version)
-            => DeviceCreationRules.RequireUnifiedPanelVersion(orderNumber, version, HardwareMajorVersion);
+        private void GuardUnifiedPanelVersion(string identifier, string parameter)
+            => DeviceCreationRules.RequireUnifiedPanelVersion(identifier, "", HardwareMajorVersion, parameter != "orderNumber/version");
 
         internal static string NormalizeOrderNumber(string s)
         {

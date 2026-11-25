@@ -62,8 +62,9 @@ namespace TiaMcp.Adapters
                 ? x.TypeIdentifier==r.PreferredMlfb
                 : x.ArticleNumber==r.PreferredMlfb && x.Version==r.PreferredVersion).ToArray();
             if(matched.Length!=1)
-                throw new AdapterPreconditionException("preferredMlfb/preferredVersion must select exactly one catalog row. Run SearchHardwareCatalog and " +
-                "copy articleNumber and version from the same row, preserving spaces.",
+                throw AdapterPreconditionException.InvalidArguments(
+                    (matched.Length == 0 ? "No catalog row matches the selection." : "Several catalog rows match the selection.")
+                    + " Run SearchHardwareCatalog and copy the article number and version from the same row, preserving spaces.",
                     "preferredMlfb/preferredVersion");
             var chosen=matched[0];
             if(!chosen.TypeIdentifier!.StartsWith("OrderNumber:",StringComparison.Ordinal))
@@ -71,8 +72,8 @@ namespace TiaMcp.Adapters
             Text(chosen.ArticleNumber!,256,"Selected article number required."); Text(chosen.Version!,64,"Selected version required.");
             if(chosen.TypeIdentifier!="OrderNumber:"+chosen.ArticleNumber+"/"+chosen.Version || chosen.ArticleNumber!
                     .Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c)) || chosen.Version!.Any(c=>c=='*'||c=='?'||c=='/'||char.IsControl(c)))
-                throw new AdapterPreconditionException("An exact OrderNumber:<articleNumber>/<version> catalog identifier is required.",
-                    "preferredMlfb/preferredVersion", true);
+                throw AdapterPreconditionException.InvalidArguments("The selected catalog row does not have an exact OrderNumber identifier. "
+                    + "Run SearchHardwareCatalog and copy the article number and version from the same row.", "preferredMlfb/preferredVersion");
             DeviceCreationRules.RequireUnifiedPanelVersion(chosen.TypeIdentifier!, "", int.Parse(r.Release, System.Globalization.CultureInfo.InvariantCulture));
             return chosen;
         }

@@ -512,7 +512,7 @@ public sealed class PortedPortalAdmissionTests
         }
     }
 
-    private sealed class DisabledApproval : IDisposable
+    internal sealed class DisabledApproval : IDisposable
     {
         private readonly TiaOpenness.Shared.ApprovalSettings previous = TiaOpenness.Shared.ApprovalSettings
             .Load(TiaOpenness.Shared.ApprovalSettings.SettingsPath);

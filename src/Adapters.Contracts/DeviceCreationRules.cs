@@ -29,16 +29,23 @@ public static class DeviceCreationRules
     }
 
     public static void RequireUnifiedPanelVersion(string identifier, string version, int portalMajor)
+        => RequireUnifiedPanelVersion(identifier, version, portalMajor, reportTypeIdentifier: false);
+
+    public static void RequireUnifiedPanelVersion(string identifier, string version, int portalMajor, bool reportTypeIdentifier)
     {
         var text = (identifier ?? "") + "/" + (version ?? "");
         if (text.Replace(" ", "").IndexOf("6AV2128-", StringComparison.OrdinalIgnoreCase) < 0) return;
         var match = Regex.Match(text, @"/V?(\d+)\.(\d+)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
         if (!match.Success) return;
-        if (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) != portalMajor)
+        if (int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) == portalMajor) return;
+        if (reportTypeIdentifier)
             throw new AdapterPreconditionException("WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + portalMajor
                 + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the " +
                     "catalog entry ending in /"
                     + portalMajor + ".0.0.0 (SearchHardwareCatalog); no create attempted.", "typeIdentifier");
+        throw new AdapterPreconditionException("The selected Unified panel version does not match this TIA Portal release. "
+            + (portalMajor >= 18 ? "Run SearchHardwareCatalog and copy the article number and version from the same row for this release."
+                : "Choose the panel version for this release in the installed hardware catalog."), isArgument: false);
     }
 
     public static bool IsFullTypeIdentifier(string value)

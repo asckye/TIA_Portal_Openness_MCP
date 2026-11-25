@@ -10,7 +10,9 @@ using System.IO;
 using System.Diagnostics;
 using System.Security.Principal;
 using Microsoft.Win32;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcp.Adapters.Contracts;
 using TiaMcp.Versioning;
 using TiaMcp.PlcWorker;
 
@@ -306,6 +308,27 @@ internal static class FoundationPassiveDiagnostics
 
 internal static class LegacyHostToolRegistry
 {
+    // The compatibility call has already run the canonical tool and its input guard. Report the catalog pair in the caller's schema.
+    private sealed class CreateDeviceResultTool(McpServerTool inner) : DelegatingMcpServerTool(inner)
+    {
+        public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await base.InvokeAsync(request, cancellationToken);
+            if (result.StructuredContent is not JsonObject body || (string?)body["meta"]?["tool"] != "CreateHardwareDevice"
+                || (string?)body["error"]?["code"] != "INVALID_ARGUMENT" || body["error"]?["details"] is not JsonObject details
+                || details["parameters"] is not JsonArray { Count: 2 } fields
+                || (string?)fields[0] != "/preferredMlfb" || (string?)fields[1] != "/preferredVersion") return result;
+
+            var projected = body.DeepClone().AsObject();
+            var publicDetails = projected["error"]!["details"]!;
+            publicDetails["parameter"] = "/orderNumber";
+            publicDetails["parameters"] = new JsonArray("/orderNumber", "/version");
+            return new CallToolResult { IsError = result.IsError, StructuredContent = projected, Meta = result.Meta,
+                Content = new[] { new TextContentBlock { Text = projected.ToJsonString() } } };
+        }
+    }
+
     internal static IReadOnlyList<McpServerTool> Create(IFoundationWorker worker, string releaseKey, bool nativeSessionConfigured,
         string? apiDirectory = null, string? apiDirectorySource = null, Func<JsonObject>? readinessProvider = null,
         Func<IReadOnlyList<McpServerTool>>? usageRoster = null, Func<string, string>? exampleProfile = null, bool hostPorts = true,
@@ -335,6 +358,9 @@ internal static class LegacyHostToolRegistry
         });
         tools.Clear(); tools.AddRange(wrapped);
         CompatibilityTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity);
+        int createDevice = tools.FindIndex(tool => tool.ProtocolTool.Name == "CreateDevice");
+        if (createDevice >= 0 && OpennessApi.HardwareCatalog.Includes(releaseKey))
+            tools[createDevice] = new CreateDeviceResultTool(tools[createDevice]);
         CanonicalBatchTools.Apply(tools, releaseKey, () => SharedSessionState.For(worker).Identity, SharedSessionState.For(worker).Unsettled);
         presets ??= TiaMcp.Logic.V4.ParameterPresets.Empty;
         for (int i = 0; i < tools.Count; i++)
