@@ -16,10 +16,8 @@ namespace TiaOpenness.Core.Mock
     /// compares project content against what is on disk. That is enough to build and exercise
     /// the whole Git round-trip — map, status, sync, commit — without TIA Portal.
     ///
-    /// It deliberately reproduces two rules the real API enforces, because code written against
-    /// a more permissive fake breaks on contact with V21:
-    /// objects whose state is <see cref="VcCompareState.Equal"/> cannot be synchronized, and an
-    /// object must be mapped before it has any state at all.
+    /// Only mapped objects have a comparison state. Here <see cref="VcCompareState.Equal"/>
+    /// always represents a fresh comparison of the two contents.
     /// </summary>
     internal sealed class MockVersionControl : IVersionControl
     {
@@ -204,8 +202,7 @@ namespace TiaOpenness.Core.Mock
                 DryRun = dryRun,
             };
 
-            // TIA refuses to synchronize a mapping whose state is Equal, so "sync everything"
-            // is not an option that exists; equal objects are always skipped.
+            // The mock compares current content directly, so its Equal state needs no stored-status verification.
             var targets = new List<MockMapping>();
             foreach (var mapping in workspace.Mappings.Values.OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase))
             {

@@ -434,24 +434,21 @@ namespace TiaOpenness.Openness
 #else
             bool stopped = (dryRun || mode == SynchronizationMode.ProjectToWorkspace) && VciStoredEqual.PrepareAll(stored, dryRun);
 #endif
-            for (var i = 0; i < targets.Count; i++)
+            int nextTarget = 0;
+            while (!stopped && nextTarget < targets.Count)
             {
-                var (mapped, name, refreshMessage) = targets[i];
-                if (stopped)
-                {
-                    AddNotAttempted(result, name);
-                    continue;
-                }
-                if (progress != null) progress("vc-sync", i + 1, targets.Count, name);
+                var (mapped, name, refreshMessage) = targets[nextTarget++];
+                if (progress != null) progress("vc-sync", nextTarget, targets.Count, name);
 
 #if STUDIO_VCI_MODERN
                 if (mode == SynchronizationMode.WorkspaceToProject && RestoreSdMapping(mapped, result.RootPath, name, dryRun,
                     out var connectionLost) is { } restore)
                 {
                     result.Items.Add(restore);
-                    if (restore.Outcome is "unknown" or "failed" or "refused") result.Failed++;
+                    if (restore.Outcome is "unknown" or "failed") { result.Failed++; break; }
+                    if (restore.Outcome == "refused") result.Failed++;
                     else result.Synchronized++;
-                    stopped = connectionLost || restore.Outcome is "unknown" or "failed";
+                    if (connectionLost) break;
                     continue;
                 }
 #endif
@@ -483,6 +480,7 @@ namespace TiaOpenness.Openness
                     stopped = true;
                 }
             }
+            foreach (var target in targets.Skip(nextTarget)) AddNotAttempted(result, target.Name);
 #if !STUDIO_VCI_MODERN
             for (int i = 0; i < stored.Count; i++)
             {
@@ -507,14 +505,19 @@ namespace TiaOpenness.Openness
                         else result.Synchronized++;
                     }
                 }
-                result.Items.Add(new SyncItem { Name = proof.Path.Stem, Outcome = proof.Outcome, FilePath = proof.Proof.File?.FullName,
+                var item = new SyncItem { Name = proof.Path.Stem, Outcome = proof.Outcome, FilePath = proof.Proof.File?.FullName,
                     WorkspaceFileSha256 = proof.InitialHash, StateBefore = "Equal", RefreshMessage = proof.RefreshMessage, FileChanged = proof.FileChanged,
-                    Verification = proof.Verification, NativeMessage = proof.Message, Error = proof.Outcome == "not-verified" ? proof.Message : null });
+                    Verification = proof.Verification, NativeMessage = proof.Message, Error = proof.Outcome == "not-verified" ? proof.Message : null };
+                result.Items.Add(item);
                 if (proof.Unconfirmed)
                 {
                     var pending = stored.Skip(i + 1).Select(row => row.Path.Stem).ToArray();
                     string remaining = pending.Length == 0 ? "" : " | not-attempted (" + pending.Length + "): " + string.Join(", ", pending);
-                    throw new InvalidOperationException("The synchronization outcome is unknown. " + proof.Message + remaining);
+                    item.Outcome = "unknown";
+                    item.Error = "The synchronization outcome is unknown. " + proof.Message + remaining;
+                    foreach (var name in pending) AddNotAttempted(result, name);
+                    stopped = true;
+                    break;
                 }
                 stopped |= proof.Interrupted;
             }

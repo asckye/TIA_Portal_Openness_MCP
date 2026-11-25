@@ -493,6 +493,8 @@ namespace TiaMcp.Logic.V4
                     "notVerified", "unverifiedEqual", "notAttempted" })
                     if (source[key] is JsonValue value && value.TryGetValue<int>(out var count)) retained[key] = count;
                 if (source["dataComplete"] is JsonValue complete && complete.TryGetValue<bool>(out var flag)) retained["dataComplete"] = flag;
+                if (source["notAttemptedKind"] is JsonValue kind && kind.TryGetValue<string>(out var unit) && unit == "walk-nodes")
+                    retained["notAttemptedKind"] = unit;
                 if (source["notAttemptedNames"] is JsonArray pending)
                     retained["notAttemptedNames"] = JsonSerializer.SerializeToNode(TiaMcp.Adapters.Contracts.NativeFailureText.BoundedLines(
                         pending.OfType<JsonValue>().Select(name => name.ToString()), Diagnostic));

@@ -32,7 +32,7 @@
 - V16/V17 connect writes missing XML before creating a mapping and reuses an existing file only after an official export matches its contents.
   Disconnected mappings carry a recovery warning and leave the batch incomplete.
 - V16–V19 verify a stored Equal after a refused refresh. Status and preview identify the pending files. Apply compares official SimaticML exports,
-  rechecks the workspace hash before a native write and reports each unverified object as a failure. Workbench also reports unknown comparisons.
+  rechecks the workspace hash before a native write and records the comparison result separately when TIA writes a changed, stable file. Workbench also reports unknown comparisons.
 
 ## [4.0.0-rc.6] - 2026-11-25
 

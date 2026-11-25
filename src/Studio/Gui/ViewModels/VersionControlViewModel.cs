@@ -176,6 +176,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     {
         switch (item.Outcome?.ToLowerInvariant())
         {
+            case "not-attempted": return Loc.Current["Vc.NotAttempted"];
             case "refused": return Loc.Current["Project.SyncRefused"];
             case "unknown": return Loc.Current["Project.SyncUnknown"];
             case "skipped-disconnected": return Loc.Current["Vc.SkippedDisconnected"];

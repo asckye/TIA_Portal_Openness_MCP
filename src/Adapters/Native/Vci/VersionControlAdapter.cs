@@ -25,7 +25,7 @@ using PortVci = TiaMcp.Adapters.Native.Vci.LegacyVciPortPrimitives;
 
 namespace TiaMcp.Adapters.Native.Vci
 {
-    // TIA Portal V21's Version Control Interface (VCI), reached from Openness rather than the UI.
+    // TIA Portal's Version Control Interface (VCI) is available through Openness starting with V16.
     //
     // A TIA project is a binary blob that Git cannot diff. VCI fixes that: a *workspace* is a
     // plain folder holding one text file per mapped object (.s7dcl / .xml), which IS diffable and

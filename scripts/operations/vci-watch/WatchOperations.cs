@@ -30,6 +30,17 @@ public static class WatchOperations
             .Select(parts => parts[0].Trim()).ToArray();
     }
 
+    public static (string Message, string[] Entries)? PlanCommit(string porcelain, IReadOnlyCollection<string> synchronized)
+    {
+        // The change record alone is not a workspace change.
+        if (!porcelain.Split('\n').Any(line => !string.IsNullOrWhiteSpace(line) && !line.TrimEnd('\r').EndsWith("CHANGELOG.md", StringComparison.Ordinal)))
+            return null;
+        if (synchronized.Count == 0)
+            return ("auto: 工作区文件变更", ["- 工作区文件有变更，本轮未同步对象。"]);
+        return ($"auto: {synchronized.Count} 个对象变更 —— " + string.Join('、', synchronized.Take(6)),
+            synchronized.Select(name => "- `" + name + "` — 已从工程同步").ToArray());
+    }
+
     private static bool NeedsCompile(string line) => line.Contains("inconsistent", StringComparison.OrdinalIgnoreCase)
         || line.Contains("not consistent", StringComparison.OrdinalIgnoreCase);
 
@@ -155,13 +166,15 @@ public static class WatchOperations
             var attached = Call("AttachOpenProject");
             if (!(bool)attached["ok"]!) { Log("没有已打开的工程可附着：" + attached["error"]); return 0; }
             var status = McpResults.Successful(Call("GetVersionControlStatus", new JsonObject { ["changedOnly"] = true, ["workspaceName"] = workspaceName }));
+            var changed = new HashSet<string>(StringComparer.Ordinal);
             if (Items(status).Length == 0) return 0;
             didSomething = true;
             Log(McpSession.ApprovalNotice);
-            JsonObject Sync() => Call("SynchronizeVersionControlWorkspace", new JsonObject { ["direction"] = "ProjectToWorkspace", ["dryRun"] = false, ["workspaceName"] = workspaceName });
+            JsonObject Sync() => Call("SynchronizeVersionControlWorkspace", new JsonObject {
+                ["direction"] = "ProjectToWorkspace", ["dryRun"] = false, ["workspaceName"] = workspaceName });
             var sync = Sync();
             if (McpSession.ResetRequired(sync)) throw new InvalidOperationException(sync["error"]?.ToString());
-            var changed = new HashSet<string>(SynchronizedNames(sync), StringComparer.Ordinal);
+            changed.UnionWith(SynchronizedNames(sync));
             var needCompile = FailedItems(sync).Where(NeedsCompile).ToArray();
             if (needCompile.Length > 0)
             {
@@ -172,30 +185,34 @@ public static class WatchOperations
                     foreach (var sw in config["compileSoftwarePaths"] as JsonArray ?? [])
                     {
                         var compiled = Call("CompilePlcSoftware", new JsonObject { ["softwarePath"] = sw!.DeepClone() });
-                        Log("  编译 " + sw + " → " + (compiled["data"]?["summary"]?.ToString() ?? compiled["error"]?.ToString())); McpResults.Successful(compiled);
+                        Log("  编译 " + sw + " → " + (compiled["data"]?["summary"]?.ToString() ?? compiled["error"]?.ToString()));
+                        McpResults.Successful(compiled);
                     }
                     sync = McpResults.Successful(Sync());
                     changed.UnionWith(SynchronizedNames(sync));
                 }
-                else { pending = names; pendingUntil = Now() + Number("pendingCompileCooldownMinutes", 30) * 60; Log($"{needCompile.Length} 个块尚未编译，VCI 导不出：{names}；请在博途编译，冷却后重试"); }
+                else
+                {
+                    pending = names;
+                    pendingUntil = Now() + Number("pendingCompileCooldownMinutes", 30) * 60;
+                    Log($"{needCompile.Length} 个块尚未编译，VCI 导不出：{names}；请在博途编译，冷却后重试");
+                }
             }
             Log("导出：" + (sync["data"]?["summary"]?.ToString() ?? sync["error"]?.ToString()));
             if (!CanContinueAfterSync(sync, Log)) { Log("本轮不提交，留给人看"); return 1; }
-            if (changed.Count == 0) return 0;
-            Log($"已同步 {changed.Count} 个对象：" + string.Join('、', changed.Take(8)));
+            if (changed.Count > 0) Log($"已同步 {changed.Count} 个对象：" + string.Join('、', changed.Take(8)));
             var git = Shell("git", ["status", "--porcelain"], workspace); Require(git);
-            var real = git.Out.Split('\n').Where(l => !string.IsNullOrWhiteSpace(l) && !l.EndsWith("CHANGELOG.md", StringComparison.Ordinal)).ToArray();
-            if (real.Length == 0) { Log("导出后文本无实际差异，不提交"); return 0; }
+            if (PlanCommit(git.Out, changed) is not { } plan) { Log("工作区无变更，不提交"); return 0; }
             var changelog = Path.Combine(workspace, "CHANGELOG.md");
-            var head = File.Exists(changelog) ? "" : "# 博途程序变更记录\n\n由 TIA VCI 看门狗自动生成：每次检测到工程里的块与文本文件不一致，\n就把它导出并记在这里。**不含硬件组态**（VCI 不支持）。\n";
+            var head = File.Exists(changelog) ? "" : "# 博途程序变更记录\n\n由 TIA VCI 看门狗记录工作区文件变更及本轮已同步的对象。**不含硬件组态**（VCI 不支持）。\n";
             var body = new List<string> { "", "## " + DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture), "" };
-            foreach (var name in changed) body.Add("- `" + name + "` — 已从工程同步");
+            body.AddRange(plan.Entries);
             body.Add(""); File.AppendAllText(changelog, head + string.Join('\n', body), new UTF8Encoding(false));
             var author = (string?)config["gitAuthor"] ?? "tia-vci-watch <watch@local>"; var split = author.IndexOf('<');
             if (split < 1 || !author.EndsWith('>')) throw new ArgumentException("gitAuthor must be Name <email>");
             Require(Shell("git", ["add", "-A"], workspace));
             var commit = Shell("git", ["-c", "user.name=" + author[..split].Trim(), "-c", "user.email=" + author[(split + 1)..^1],
-                "commit", "-m", $"auto: {changed.Count} 个对象变更 —— " + string.Join('、', changed.Take(6))], workspace);
+                "commit", "-m", plan.Message], workspace);
             Log(commit.Code == 0 ? "已提交：" + commit.Out.Split('\n')[0] : "git commit 未成功：" + Campaign.Trim(commit.Out + commit.Error, 400)); return 0;
         }
         catch (Exception ex) { Log("本轮失败：" + ex.Message); return 1; }

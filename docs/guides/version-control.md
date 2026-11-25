@@ -30,9 +30,9 @@ VCI 将受支持的工程对象与本地文本文件对应，Git 再管理这些
 
 刷新被拒的 `Equal` 在状态查询中标记为 `verified:false`，即使 `changedOnly=true` 也会列出。查询和预览都不导出对象。同步预览以 `verify-before-export` 列出文件名、路径、状态和可读取文件的 SHA-256。预览中的 `planHash` 供核对使用；工作台审批绑定调用参数和工程身份，未绑定这些预览行。执行时会重新读取文件。
 
-两种 `changedOnly` 设置均验证这些对象。工具先将对象正式导出到临时目录，依次比较 `None` 和必要时的 `WithDefaults` SimaticML。内容匹配计为 `verifiedEqual`，并计入 `skippedEqual`。若不匹配，且文件自比较以来仍可读、哈希未变，工程到工作区方向允许 TIA 同步一次，可能覆盖工作区的编辑。同步返回后，工具重新导出并比较内容。只有文件哈希稳定且内容匹配，才报告已同步或已验证一致。不能证明一致时报告 `not-verified`，计入 `failed`。请单独导出该块、数据类型或变量表并比较，备份后移走过时文件，再同步。更换文件后的恢复效果仍待实机验证。
+两种 `changedOnly` 设置均验证这些对象。工具先将对象正式导出到临时目录，依次比较 `None` 和必要时的 `WithDefaults` SimaticML。内容匹配计为 `verifiedEqual`，并计入 `skippedEqual`。若不匹配，且文件自比较以来仍可读、哈希未变，工程到工作区方向允许 TIA 同步一次，可能覆盖工作区的编辑。同步返回后，工具重新导出并比较内容。如果同步改变了文件，且比较期间文件可读、哈希稳定，就报告 `synchronized`。TIA 写出的格式可能与比较导出不同，`verification` 分别记录 `content-match`、`no-match` 或 `not-comparable`。文件未变时，只有内容匹配才计为 `verifiedEqual`。同步返回后文件不可读或在复核期间再次变化时，写入结果仍不确定。其余未能验证的对象报告 `not-verified`，计入 `failed`。请单独导出该块、数据类型或变量表并比较，备份后移走过时文件，再同步。更换文件后的恢复效果仍待实机验证。
 
-同步结果中，`wouldVerify` 是待验证数，`unverifiedEqual` 是预览待定或执行后仍未证明的数目。此时 `dataComplete=false`。部分对象已写入而其他对象验证失败时返回 `PARTIAL_FAILURE`；若写入结果不确定，请先检查文件。断开的映射列入 `skippedDisconnected`，提示中列出文件和重新连接方法。仅有断开映射时同步成功，完整性仍为 false。批次中止时，已选中但尚未尝试的对象列入 `notAttemptedNames`，数量见 `notAttempted`。
+同步结果中，`wouldVerify` 是待验证数，`unverifiedEqual` 是预览待定或执行后仍未证明的数目。此时 `dataComplete=false`。部分对象已写入而其他对象验证失败时返回 `PARTIAL_FAILURE`；若写入结果不确定，请先检查文件。断开的映射列入 `skippedDisconnected`，提示中列出文件和重新连接方法。仅有断开映射时同步成功，完整性仍为 false。批次中止时，已选中但尚未尝试的对象列入 `notAttemptedNames`，数量见 `notAttempted`。在 `ConnectProjectToWorkspace` 中，`notAttemptedKind=walk-nodes` 表示这两个字段记录中止时待遍历的节点名称和数量。节点可以是文件夹，其尚未展开的子对象不计入数量。
 
 默认设置跳过状态未知且没有可确认文件差异的对象；`changedOnly=false` 会尝试同步未知对象。经 MCP 同步（包括工作台的 MCP 会话）只开放 `ProjectToWorkspace`。请求 `WorkspaceToProject`（包括预览）会返回 `UNSUPPORTED_CAPABILITY`。使用 Studio 原生接口恢复时，V16–V19 在其他对象导入后重新比较刷新被拒的 Equal，未验证的行不会导入工程。V20/V21 在同步 SIMATIC SD 块前检查准入条件，返回每个拒绝、失败或结果未知的对象及原因。
 
@@ -42,4 +42,4 @@ VCI 对可映射对象逐项报告结果。块、变量表、数据类型等程�
 
 若提示块不一致，先编译该块；若提示访问保护，按工程的保护设置处理。V16、V17 的实机记录中，已建立映射的对象也可能报 `The file is deleted`。请核对工作区内的实际文件，并保留每个未导出对象的错误记录。
 
-自动导出和提交的可选工具见 [vci-watch](https://github.com/asckye/automation-engineering-workbench/blob/master/scripts/operations/vci-watch/README.md)。先完成一次手动基线，再配置自动化和提交范围。变更日志和提交说明只列出实际同步的对象。
+自动导出和提交的可选工具见 [vci-watch](https://github.com/asckye/automation-engineering-workbench/blob/master/scripts/operations/vci-watch/README.md)。先完成一次手动基线，再配置自动化和提交范围。变更日志和提交说明只列出本轮实际同步的对象。本轮没有同步对象时，若 Git 工作区已有变更，工具以“工作区文件变更”提交。

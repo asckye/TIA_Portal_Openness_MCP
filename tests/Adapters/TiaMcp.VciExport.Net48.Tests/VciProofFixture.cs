@@ -41,7 +41,8 @@ internal static class VciProofFixture
         string xml = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "MCP_RC_FC.xml"));
         string changed = xml.Replace("<Name>MCP_RC_FC</Name>", "<Name>Changed</Name>");
         var cases = new Dictionary<string, object>();
-        foreach (var key in new[] { "import", "disposed", "wrong-write", "studio-unknown", "cleanup", "stop", "inconsistent" })
+        foreach (var key in new[] { "import", "disposed", "wrong-write", "invalid-output", "changed-again", "final-proxy",
+            "studio-unknown", "missing-output", "cleanup", "stop", "inconsistent" })
         {
             var root = parent.CreateSubdirectory("proof-sequence-" + key);
             var ws = new Workspace(root);
@@ -59,6 +60,7 @@ internal static class VciProofFixture
 
             FileStream? locked = null;
             DirectoryInfo? scratch = null;
+            bool afterSync = false;
             var first = Add("Motor", (file, _) =>
             {
                 if (key == "disposed") throw new EngineeringObjectDisposedException("Disposed PLC block");
@@ -68,11 +70,20 @@ internal static class VciProofFixture
                     scratch = file.Directory;
                     throw new EngineeringUserAbortException("Original abort");
                 }
-                File.WriteAllText(file.FullName, key is "wrong-write" or "studio-unknown" or "inconsistent" ? changed : projectXml);
+                if (afterSync && key == "changed-again") File.WriteAllText(Path.Combine(root.FullName, "Motor.xml"), xml);
+                if (afterSync && key == "final-proxy") throw new EngineeringObjectDisposedException("Final export proxy disposed");
+                File.WriteAllText(file.FullName, key is "wrong-write" or "invalid-output" or "changed-again" or "final-proxy"
+                    or "studio-unknown" or "missing-output" or "inconsistent" ? changed : projectXml);
             });
             first.Status.AcceptEqual = true;
-            if (key == "wrong-write")
-                first.Status.OnSynchronized = () => File.WriteAllText(Path.Combine(root.FullName, "Motor.xml"), xml.Replace("MCP_RC_FC", "Other"));
+            if (key is "wrong-write" or "invalid-output" or "changed-again" or "final-proxy")
+                first.Status.OnSynchronized = () =>
+                {
+                    afterSync = true;
+                    File.WriteAllText(Path.Combine(root.FullName, "Motor.xml"), key == "invalid-output" ? "TIA file form" : xml.Replace("MCP_RC_FC", "Other"));
+                };
+            if (key == "missing-output")
+                first.Status.OnSynchronized = () => File.Delete(Path.Combine(root.FullName, "Motor.xml"));
             if (key == "studio-unknown")
                 first.Status.OnSynchronized = () => throw new EngineeringUserAbortException("Unconfirmed write");
             if (key == "inconsistent")
@@ -91,8 +102,11 @@ internal static class VciProofFixture
                     cases[key] = new OpennessVersionControl(() => project).Sync("", SyncDirection.WorkspaceToProject, false, null);
                 else if (key == "studio-unknown")
                 {
-                    try { cases[key] = new OpennessVersionControl(() => project).Sync("", SyncDirection.ProjectToWorkspace, false, null); }
-                    catch (InvalidOperationException error) { cases[key] = error.Message; }
+                    var done = Add("Done", (file, _) => File.WriteAllText(file.FullName, xml));
+                    done.Status.State = CompareState.Unequal;
+                    var result = new OpennessVersionControl(() => project).Sync("", SyncDirection.ProjectToWorkspace, false, null);
+                    cases[key] = result.Items.Single(row => row.Outcome == "unknown").Error;
+                    cases["studio-rows"] = result;
                 }
                 else
                     cases[key] = new VersionControlAdapter(() => project).SyncVersionControlWorkspace(dryRun: false);

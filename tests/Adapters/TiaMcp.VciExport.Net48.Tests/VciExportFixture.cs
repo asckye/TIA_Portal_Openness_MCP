@@ -36,6 +36,7 @@ internal static class VciExportFixture
             project.Vci.WorkspaceGroup.Workspaces.Add(workspace);
             var adapter = new VersionControlAdapter(() => project);
             var device = new Device { Name = "MCP_RC_PLC" };
+            if (scenario == "lookupRefused") project.Devices.Add(new Device { Name = "PendingDevice" });
             project.Devices.Add(device);
             var item = new DeviceItem { Name = device.Name };
             device.DeviceItems.Add(item);

@@ -22,7 +22,7 @@ Enable-ScheduledTask TiaVciWatch
 
 看门狗启动 `runtime/v<releaseKey>/TiaMcp.FoundationHost.exe --bundle-root <bundleRoot> --release-key <releaseKey> --transport stdio --profile full --logging 0`，宿主解析同包的 worker。P/Invoke 使用 Toolhelp 进程快照和 `NtQueryInformationProcess(ProcessCommandLineInformation)` 查询命令行，.NET `Process` 负责优先级、内存与终止，无新增 NuGet 包。查询失败时不把进程视为用户 GUI，也不据未知命令行终止进程。
 
-一个周期检测 GUI 工程，依次探测 `ListPortalProcessProjects`、`ConnectPortal`、`AttachOpenProject`，读取 VCI 状态并执行 `ProjectToWorkspace`。不调用 `OpenProject`、`WorkspaceToProject` 或 `SaveProject`。无实际 Git 差异时不创建提交；非“待编译”导出失败时不提交。`autoCompile=true` 对明确列出的 `compileSoftwarePaths` 调用编译，会改变工程状态；此选项不保存工程。调用可能需要 Workbench 审批，应保持工作台打开或在 MCP 菜单关闭审批；客户端不会绕过审批。
+一个周期检测 GUI 工程，依次探测 `ListPortalProcessProjects`、`ConnectPortal`、`AttachOpenProject`，读取 VCI 状态并执行 `ProjectToWorkspace`。不调用 `OpenProject`、`WorkspaceToProject` 或 `SaveProject`。没有需要处理的映射对象时不同步也不提交。同步后 Git 工作区有变更（不计变更日志本身）时创建提交。变更日志只列出本轮同步成功的对象；本轮没有同步对象时，提交说明为“工作区文件变更”。非“待编译”导出失败时不提交。`autoCompile=true` 对明确列出的 `compileSoftwarePaths` 调用编译，会改变工程状态；此选项不保存工程。调用可能需要 Workbench 审批，应保持工作台打开或在 MCP 菜单关闭审批；客户端不会绕过审批。
 
 配置目录的 `log/watch-YYYYMMDD.log` 与 `watch.state.json` 保存日志、周期、冷却和进程信息。工程目录变化信号跳过 Vci，完整检查间隔、未编译冷却、锁和单轮超时各按配置生效。超时会终止本轮宿主及 worker，已导出的文件不会回滚。记录的宿主 PID 必须同时匹配启动时间和命令行归属；清理仅针对当前进程树的 Openness 无头 Portal，用户 GUI 不属于清理目标。多实例和异常恢复仍须在指定测试环境验收。
 

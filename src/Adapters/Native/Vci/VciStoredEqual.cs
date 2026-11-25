@@ -171,21 +171,34 @@ internal sealed class VciStoredEqual
             FileChanged = written == null ? (bool?)null : written != beforeHash;
             if (written != null)
             {
-                Proof.Compare(() => NativeVci.Exporter(acquire().LinkedProjectObject), NativeVci.Ordinary);
+                Message = null;
+                try { Proof.Compare(() => NativeVci.Exporter(acquire().LinkedProjectObject), NativeVci.Ordinary); }
+                catch (Exception error) when (FileChanged == true)
+                {
+                    invalidated = true;
+                    Message = NativeFailureText.BoundedDiagnostic(error);
+                    Interrupted = !NativeVci.Ordinary(error) && !LocalDisposal(error);
+                }
                 string finalHash = Proof.CurrentHash();
                 if (Proof.Sha256 != written || finalHash != written)
                 {
                     invalidated = true;
+                    Unconfirmed = true;
                     FileChanged = finalHash == null ? (bool?)null : finalHash != beforeHash;
                     Message = "The workspace file changed or became unreadable during the final comparison.";
                 }
+                else if (FileChanged == true)
+                {
+                    // TIA can synchronize to a file form different from either comparison export.
+                    Outcome = "synchronized";
+                    Message ??= Proof.Message;
+                }
                 else if (Proof.Matches)
                 {
-                    Outcome = FileChanged == true ? "synchronized" : "verified-equal";
+                    Outcome = "verified-equal";
                     Message = null;
                 }
                 else Message = Proof.Message ?? "Synchronize returned without writing matching content.";
-                Unconfirmed = FileChanged != false && Outcome != "synchronized";
             }
             else { Interrupted = true; Unconfirmed = true; Message = "Cannot verify the workspace file after synchronization."; }
         }

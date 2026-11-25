@@ -34,6 +34,11 @@ public sealed class VciPanelTests(WpfContext wpf)
                 var result = new SyncResult { Direction = direction, DryRun = preview, Failed = preview ? 2 : 4 };
                 result.Items.Add(new() { Name = "Start", Outcome = "refused" });
                 result.Items.Add(new() { Name = "Cycle", Outcome = "refused" });
+                if (preview)
+                {
+                    result.NotAttempted = 1;
+                    result.Items.Add(new() { Name = "Pending", Outcome = "not-attempted" });
+                }
                 if (!preview)
                 {
                     result.Items.Add(new() { Name = "DB", Outcome = "failed" });
@@ -51,6 +56,7 @@ public sealed class VciPanelTests(WpfContext wpf)
             vc.VcPull.Execute(null);
             WpfContext.Drain();
             Assert.Contains(refused, Assert.Single(warnings));
+            Assert.Equal(Loc.Current["Vc.NotAttempted"], Assert.Single(vc.SyncRows, row => row.Name == "Pending").Outcome);
             Assert.Contains(refused, vc.SyncCounts);
             vc.VcDryRun = false;
             vc.VcPull.Execute(null);

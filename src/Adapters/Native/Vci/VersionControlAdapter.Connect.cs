@@ -26,7 +26,7 @@ using PortVci = TiaMcp.Adapters.Native.Vci.LegacyVciPortPrimitives;
 
 namespace TiaMcp.Adapters.Native.Vci
 {
-    // TIA Portal V21's Version Control Interface (VCI), reached from Openness rather than the UI.
+    // TIA Portal's Version Control Interface (VCI) is available through Openness starting with V16.
     //
     // A TIA project is a binary blob that Git cannot diff. VCI fixes that: a *workspace* is a
     // plain folder holding one text file per mapped object (.s7dcl / .xml), which IS diffable and
@@ -208,9 +208,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 string wsName = PortVci.Name(ws);
                 string wsRootPath = SafeRoot(ws);
 
-                // An Openness call that throws DISPOSES the objects involved: after one
-                // "The Object is not supported" the Workspace handle itself is dead. Since asking about an
-                // unsupported object is a normal part of the sweep, re-acquire the handle after every failure.
+                // A native refusal can invalidate the workspace handle. Reacquire it for the next probe.
                 Workspace ReAcquire() => ReAcquireWorkspace(wsName);
 
                 int already = 0, unsupported = 0, visited = 0;
@@ -418,9 +416,11 @@ namespace TiaMcp.Adapters.Native.Vci
                 if (attempts.MappingProbeFailed && stack.Count > 0)
                 {
                     result.Meta["notAttempted"] = stack.Count;
+                    result.Meta["notAttemptedKind"] = "walk-nodes";
+                    result.Message += " " + stack.Count + " pending walk node(s) were not visited.";
                     var names = stack.Select(node => node.Label).ToArray();
                     result.Meta["notAttemptedNames"] = names;
-                    lines.AddRange(names.Select(name => name + " | not-attempted"));
+                    lines.AddRange(names.Select(name => name + " | not-attempted | pending walk node"));
                 }
                 attempts.AddFileEvidence(result.Meta);
                 if (attempts.MappingProbeFailed) result.Meta["dataComplete"] = false;

@@ -84,6 +84,19 @@ public sealed class ScriptClientTests
     }
 
     [Fact]
+    public void Watcher_commits_dirty_files_without_claiming_unrelated_objects_were_synchronized()
+    {
+        Assert.Null(WatchOperations.PlanCommit("", ["Motor"]));
+        Assert.Null(WatchOperations.PlanCommit(" M CHANGELOG.md\n", ["Motor"]));
+        var pending = WatchOperations.PlanCommit(" M Blocks/Offline.xml", [])!.Value;
+        Assert.Equal("auto: 工作区文件变更", pending.Message);
+        Assert.Equal("- 工作区文件有变更，本轮未同步对象。", Assert.Single(pending.Entries));
+        var synced = WatchOperations.PlanCommit(" M Blocks/Offline.xml", ["Motor"])!.Value;
+        Assert.Contains("Motor", synced.Message);
+        Assert.Equal("- `Motor` — 已从工程同步", Assert.Single(synced.Entries));
+    }
+
+    [Fact]
     public void SweepAndWatcherDecodeTheSameV4Fixtures()
     {
         var response = Reply(Value()); var client = new FixtureRpc((_, _) => response);

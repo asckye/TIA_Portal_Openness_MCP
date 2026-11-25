@@ -427,10 +427,24 @@ public sealed class VciExportFrameworkTests
         Assert.Equal(1, (int?)disposed["verifiedEqual"]);
         Assert.Equal(1, (int?)disposed["notVerified"]);
         Assert.Equal(0, (int?)disposed["exportsIssued"]);
-        var written = cases["wrong-write"]!["Meta"]!;
-        Assert.Equal(0, (int?)written["synchronized"]);
-        Assert.Equal(1, (int?)written["notVerified"]);
-        Assert.Equal(1, (int?)written["unconfirmed"]);
+        foreach (var (scenario, verification) in new[] { ("wrong-write", "no-match"), ("invalid-output", "not-comparable"), ("final-proxy", "not-comparable") })
+        {
+            var written = cases[scenario]!["Meta"]!;
+            Assert.Equal(1, (int?)written["synchronized"]);
+            Assert.Equal(0, (int?)written["notVerified"]);
+            Assert.Equal(0, (int?)written["unconfirmed"]);
+            var row = Assert.Single(written["items"]!.AsArray(), item => (string?)item!["name"] == "Motor");
+            Assert.Equal("synchronized", (string?)row!["outcome"]);
+            Assert.Equal(verification, (string?)row["verification"]);
+            Assert.True((bool?)row["fileChanged"]);
+        }
+        foreach (var scenario in new[] { "changed-again", "missing-output" })
+        {
+            var unstable = cases[scenario]!["Meta"]!;
+            Assert.Equal(0, (int?)unstable["synchronized"]);
+            Assert.Equal(1, (int?)unstable["unconfirmed"]);
+            Assert.Equal(1, (int?)unstable["notVerified"]);
+        }
         Assert.Contains("Original abort", (string?)cases["cleanup"]!["Meta"]!["nativeMessage"]);
         var sync = Tools(new JsonObject { ["reply"] = cases["inconsistent"]!.DeepClone() }).SynchronizeVersionControlWorkspaceV4(dryRun: false);
         var line = Assert.Single(Strings(sync.StructuredContent!["data"]!["items"]), item => item.Contains(" | FAILED:"));
@@ -438,6 +452,13 @@ public sealed class VciExportFrameworkTests
         Assert.DoesNotContain("fixture-password", line);
         Assert.Contains("Unconfirmed write", (string?)cases["studio-unknown"]);
         Assert.Contains("not-attempted (1): Next", (string?)cases["studio-unknown"]);
+        var partial = cases["studio-rows"]!;
+        Assert.False((bool?)partial["DataComplete"]);
+        Assert.Equal(1, (int?)partial["Synchronized"]);
+        Assert.Equal(1, (int?)partial["Failed"]);
+        Assert.Equal(1, (int?)partial["NotAttempted"]);
+        Assert.Equal(new[] { "Done:synchronized", "Motor:unknown", "Next:not-attempted" },
+            partial["Items"]!.AsArray().Select(row => (string?)row!["Name"] + ":" + (string?)row["Outcome"]));
         var stopped = cases["stop"]!;
         Assert.Equal(1, (int?)stopped["Meta"]!["notAttempted"]);
         Assert.Contains("Next | not-attempted", Strings(stopped["Items"]));
@@ -686,6 +707,9 @@ public sealed class VciExportFrameworkTests
         var evidence = body["error"]!["details"]!["evidence"]!;
         Assert.Equal(1, (int?)evidence["filesWritten"]);
         Assert.Equal("MCP_RC_PLC_MCP_RC_FC.xml", (string?)evidence["writtenFilesAfterFailure"]![0]!["fileName"]);
+        Assert.Equal(1, (int?)evidence["notAttempted"]);
+        Assert.Equal("walk-nodes", (string?)evidence["notAttemptedKind"]);
+        Assert.Equal("Project/PendingDevice", Assert.Single(Strings(evidence["notAttemptedNames"])));
         Assert.Equal("unknown", (string?)evidence["writtenFilesAfterFailure"]![0]!["mappingState"]);
         Assert.Equal(1, (int?)evidence["writtenFilesAfterFailureTotal"]);
     }
