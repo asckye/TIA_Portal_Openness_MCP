@@ -487,7 +487,7 @@ internal static class FoundationV4Result
             outcome = Outcome.Failed;
         if (outcome == Outcome.Unknown) error = Unknown();
         else if (outcome == Outcome.Failed && definition.Operation == "GenerateBlocksFromExternalSource" && Text(data, "error") is string compilerError)
-            error = NativeFailure(data, NativeFailureText.BoundedMessage(NativeFailureDiagnostics.RedactSecrets(compilerError), HostBehavior.SafeDiagnostic));
+            error = GenerationFailure(data, compilerError, NativeFailureDiagnostics.RedactSecrets);
         else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = definition.ResponseMember == "Compile" ? CompileResultMapping
             .Errors(data) ?? NativeFailure(data) : NativeFailure(data);
         if (definition.ResponseMember is "DocumentExport" or "BatchDocumentExport" && data["nativeResult"] is JsonObject native)
@@ -607,6 +607,13 @@ internal static class FoundationV4Result
 
     private static Error Unknown() => new("The operation outcome is unknown. Do not repeat this call. Read GetCallResult(requestId).",
         new OutcomeUnknownDetails("worker", Empty));
+    internal static Error GenerationFailure(JsonObject data, string compilerError, Func<string, string> redactSecrets)
+    {
+        string? diagnostic = null;
+        try { diagnostic = NativeFailureText.BoundedMessage(redactSecrets(compilerError), HostBehavior.SafeDiagnostic); }
+        catch (RegexMatchTimeoutException) /* swallow(privacy): use the generic failure when request-secret redaction times out */ { }
+        return NativeFailure(data, diagnostic);
+    }
     private static Error NativeFailure(JsonObject data)
     {
         string? syntax = data["messages"] is JsonArray messages

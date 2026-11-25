@@ -39,6 +39,26 @@ public sealed class NativeFailureTextTests
     }
 
     [Fact]
+    public void A_single_digit_credential_preserves_digits_inside_compiler_locations()
+        => Assert.Equal("Line 000011: MonKey=••••; operand DB1_1", NativeFailureText.Compose(
+            "Line 000011: MonKey=1; operand DB1_1", null, Array.Empty<string>()));
+
+    [Theory]
+    [InlineData("x")]
+    [InlineData("🔑")]
+    public void Single_character_secrets_are_masked_at_each_word_boundary(string secret)
+    {
+        string message = $"{secret}; password='{secret}'; ({secret}), Bearer {secret}; ID_{secret}2; {secret}";
+        Assert.Equal($"••••; password='••••'; (••••), Bearer ••••; ID_{secret}2; ••••",
+            NativeFailureText.Compose(message, null, Array.Empty<string>()));
+    }
+
+    [Fact]
+    public void A_repeated_password_is_masked_literally_before_and_after_its_assignment()
+        => Assert.Equal("Refused ••••; password='••••'; retry (••••); code V3x17", NativeFailureText.Compose(
+            "Refused V3.17; password='V3.17'; retry (V3.17); code V3x17", null, Array.Empty<string>()));
+
+    [Fact]
     public void Private_key_is_masked_before_stack_lines_are_cut()
     {
         string text = NativeFailureText.Compose("Failure", "Reason -----BEGIN PRIVATE KEY-----\nkey-body-secret\n-----END PRIVATE KEY-----\n"

@@ -76,14 +76,24 @@ public static class NativeFailureText
         string value = text.Substring(prefix.Length);
         value = Regex.Replace(value, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", "••••",
             RegexOptions.CultureInvariant, timeout);
-        const string pairs = @"(?i)\b([\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*[=:]\s*)"
+        const string pairs = @"(?i)\b([\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*(?::=|[=:])\s*)"
             + @"(?:""([^""]*)""?|'([^']*)'?|([^\s&;,""'<>]+))";
         const string authorization = @"(?i)\b(?:Bearer|Basic)\s+([^\s""'<>\\,;]+)";
         var secrets = Regex.Matches(value, pairs, RegexOptions.CultureInvariant, timeout).Cast<Match>()
             .SelectMany(match => match.Groups.Cast<Group>().Skip(2).Where(group => group.Success && group.Length != 0).Select(group => group.Value))
             .Concat(Regex.Matches(value, authorization, RegexOptions.CultureInvariant, timeout).Cast<Match>().Select(match => match.Groups[1].Value))
             .Distinct(StringComparer.Ordinal).OrderByDescending(secret => secret.Length).ToArray();
-        foreach (string secret in secrets) value = value.Replace(secret, "••••");
+        if (secrets.Length > 0)
+        {
+            // The assignment and authorization patterns delimit each captured value. A single scalar may also occur inside a compiler symbol.
+            static string Pattern(string secret)
+            {
+                string literal = Regex.Escape(secret);
+                bool single = secret.Length == 1 || secret.Length == 2 && char.IsSurrogatePair(secret, 0);
+                return single ? @"(?<![\p{L}\p{N}_])" + literal + @"(?![\p{L}\p{N}_])" : literal;
+            }
+            value = Regex.Replace(value, string.Join("|", secrets.Select(Pattern)), "••••", RegexOptions.CultureInvariant, timeout);
+        }
         value = Regex.Replace(value, @"(?i)(https?://)[^/\s@]+@", "$1••••@", RegexOptions.CultureInvariant, timeout);
         return prefix.Value + value;
     }

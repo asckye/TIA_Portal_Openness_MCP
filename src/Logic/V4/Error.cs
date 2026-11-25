@@ -129,7 +129,8 @@ namespace TiaMcp.Logic.V4
         }
 
         private const string CredentialPair =
-            @"(?i)\b(?<name>[\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*)\s*[=:]\s*(?<value>""[^""]*""|'[^']*'|[^\s&;,""'<>]+)";
+            @"(?i)\b(?<name>[\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*)\s*(?::=|[=:])\s*"
+            + @"(?<value>""[^""]*""|'[^']*'|[^\s&;,""'<>]+)";
         private static readonly JsonSerializerOptions DiagnosticJson = new JsonSerializerOptions {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 

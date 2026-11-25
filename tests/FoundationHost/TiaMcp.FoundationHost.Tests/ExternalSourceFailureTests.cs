@@ -1,7 +1,10 @@
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using ModelContextProtocol.Protocol;
 using TiaMcp.Engine.Tests.Shared;
 using TiaMcp.FoundationHost;
+using TiaMcp.Logic.V4;
 using Xunit;
 
 public sealed class ExternalSourceFailureTests
@@ -30,7 +33,9 @@ public sealed class ExternalSourceFailureTests
         return raw;
     }
 
-    private static JsonNode Envelope(JsonNode raw)
+    private static JsonNode Envelope(JsonNode raw) => Response(raw).StructuredContent!;
+
+    private static CallToolResult Response(JsonNode raw)
     {
         var args = new JsonObject {
             ["externalSourceName"] = raw["SourceName"]!.DeepClone(), ["softwarePath"] = raw["SoftwarePath"]!.DeepClone(),
@@ -38,7 +43,7 @@ public sealed class ExternalSourceFailureTests
             ["dryRun"] = false, ["confirm"] = true };
         WorkerProtocol.ValidateExchangeResult(Tool, args, raw);
         var definition = FoundationTools.Definitions.Single(item => item.Name == Tool);
-        return FoundationV4Result.Worker((string)raw["Release"]!, definition, "generation-failure", args, raw, raw).StructuredContent!;
+        return FoundationV4Result.Worker((string)raw["Release"]!, definition, "generation-failure", args, raw, raw);
     }
 
     private static void AssertRecordedFailure(JsonNode envelope, string recorded)
@@ -78,6 +83,29 @@ public sealed class ExternalSourceFailureTests
         var input = new JsonObject { ["message"] = recorded[prefix.Length..] };
         var raw = SafetyLoginFrameworkTests.RunFixture("generate-source", "compiler-message", input)["generation"]!;
         AssertRecordedFailure(Envelope(raw), recorded);
+    }
+
+    [Fact]
+    public void Compiler_line_numbers_and_symbols_survive_a_single_digit_assignment()
+    {
+        const string raw = "Line 000011: #MonKey := 1; invalid expression in FC11, operand #A_1.";
+        const string expected = "Line 000011: #MonKey := ••••; invalid expression in FC11, operand #A_1.";
+        var result = Response(FailedReply("21", raw));
+        var envelope = result.StructuredContent!;
+        Assert.Equal(expected, (string?)envelope["error"]!["message"]);
+        Assert.Equal(expected, (string?)envelope["error"]!["details"]!["nativeMessage"]);
+        Assert.Equal(raw, (string?)envelope["data"]!["error"]);
+        string text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.True(JsonNode.DeepEquals(envelope, JsonNode.Parse(text)));
+    }
+
+    [Fact]
+    public void Request_secret_redaction_timeout_returns_the_generic_generation_error()
+    {
+        var error = FoundationV4Result.GenerationFailure(new JsonObject(), "unsanitized compiler text", _ => throw new RegexMatchTimeoutException());
+        Assert.Equal(ErrorCode.NativeOperationFailed, error.Code);
+        Assert.Equal("The operation did not establish success; inspect the returned result.", error.Message);
+        Assert.Null(Assert.IsType<NativeOperationFailedDetails>(error.Details).NativeMessage);
     }
 
     [Fact]
