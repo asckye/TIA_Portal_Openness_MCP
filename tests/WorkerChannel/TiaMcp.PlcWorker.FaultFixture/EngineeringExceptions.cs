@@ -5,11 +5,13 @@ namespace Siemens.Engineering
     public class EngineeringException : Exception
     {
         public EngineeringException() { }
+        protected EngineeringException(string message) : base(message) { }
         public EngineeringException(Exception cause) : base("Native diagnostic.", cause) { }
     }
     public class EngineeringTargetInvocationException : EngineeringException
     {
         public EngineeringTargetInvocationException() { }
+        public EngineeringTargetInvocationException(string message) : base(message) { }
         public EngineeringTargetInvocationException(Exception cause) : base(cause) { }
     }
     public class EngineeringUserAbortException : EngineeringTargetInvocationException { }

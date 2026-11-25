@@ -486,6 +486,8 @@ internal static class FoundationV4Result
                 == TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected)
             outcome = Outcome.Failed;
         if (outcome == Outcome.Unknown) error = Unknown();
+        else if (outcome == Outcome.Failed && definition.Operation == "GenerateBlocksFromExternalSource" && Text(data, "error") is string compilerError)
+            error = NativeFailure(data, NativeFailureText.BoundedMessage(NativeFailureDiagnostics.RedactSecrets(compilerError), HostBehavior.SafeDiagnostic));
         else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = definition.ResponseMember == "Compile" ? CompileResultMapping
             .Errors(data) ?? NativeFailure(data) : NativeFailure(data);
         if (definition.ResponseMember is "DocumentExport" or "BatchDocumentExport" && data["nativeResult"] is JsonObject native)
@@ -612,9 +614,11 @@ internal static class FoundationV4Result
                 .Where(message => message?.StartsWith("Line number ", StringComparison.Ordinal) == true).Take(3)) : null;
         string? summary = Text(data, "summary");
         string? diagnostic = HostBehavior.SafeDiagnostic(string.IsNullOrWhiteSpace(summary) ? syntax : summary);
-        return new Error(diagnostic ?? "The operation did not establish success; inspect the returned result.",
-            new NativeOperationFailedDetails(null, diagnostic, data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
+        return NativeFailure(data, diagnostic);
     }
+    private static Error NativeFailure(JsonObject data, string? diagnostic)
+        => new(string.IsNullOrWhiteSpace(diagnostic) ? "The operation did not establish success; inspect the returned result." : diagnostic,
+            new NativeOperationFailedDetails(null, diagnostic, data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value))));
     private static Execution Execute(Outcome outcome, bool mutation) => HostBehavior.ExecutionOf(outcome, mutation);
     private static bool? Flag(JsonObject? data, string key) => data?[key] is JsonValue v && v.TryGetValue<bool>(out var b) ? b : null;
     private static string? Text(JsonObject data, string key) => data[key] is JsonValue v && v.TryGetValue<string>(out var s) ? s : null;

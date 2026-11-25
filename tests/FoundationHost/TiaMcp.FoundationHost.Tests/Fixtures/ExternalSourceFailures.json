@@ -1,0 +1,42 @@
+{
+  "14sp1": {
+    "record": "rc.5 V14sp1 172",
+    "sourceName": "RC-14sp1-V-Bad.scl",
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-14sp1-V-Bad.scl 正在生成块 \"MCP_RC_FCbad\"... 2: 表达式 ':= #A' 无效。  2: 缺少表达式。   2 个错误、0 个警告：导入 RC-14sp1-V-Bad.scl 失败。请检查助记符设置。     行 000005: 块“ MCP_RC_FCbad” 将创建为具有“优化的块访问”属性。  "
+  },
+  "15.1": {
+    "record": "rc.5 V15.1 33",
+    "sourceName": "RC-15.1-V-bad.scl",
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-15.1-V-bad.scl 正在生成块 \"MCP_RC_R5BAD\"... Interface: 数据类型 \"NoSuchType_X\" 未知.  2: 表达式“:= #a”无效。  2: 缺少表达式。   3 个错误、1 个警告：导入 RC-15.1-V-bad.scl 失败。请检查助记符设置。     行 000006: 块“ MCP_RC_R5BAD” 将创建为具有“优化的块访问”属性。  "
+  },
+  "16": {
+    "record": "rc.5 V16 219, rc.6 V16 118",
+    "sourceName": "RC-16-V-bad.scl",
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-16-V-bad.scl 正在生成块 \"MCP_RC_FCBAD\"... Interface: 数据类型 \"NoSuchType\" 未知。  2: 表达式缺失。  2: 数据类型无效。   3 个错误，1 个警告：导入“RC-16-V-bad.scl”完成，但存在错误。     行 000005: 块“ MCP_RC_FCBAD” 将创建为具有“优化的块访问”属性。  "
+  },
+  "17": {
+    "record": "rc.5 V17 161",
+    "sourceName": "RC-17-V-bad.scl",
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-17-V-bad.scl 正在生成块 \"MCP_RC_FCBAD\"... Interface: 数据类型 \"NoSuchType\" 未知。   1 个错误，1 个警告：导入“RC-17-V-bad.scl”完成，但存在错误。     行 000005: 块“ MCP_RC_FCBAD” 将创建为具有“优化的块访问”属性。  "
+  },
+  "18": {
+    "record": "rc.5 V18 157",
+    "sourceName": "RC-18-V-bad.scl",
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-18-V-bad.scl 正在生成块 \"MCP_RC_FCBAD\"... Interface: 数据类型 \"NoSuchType\" 未知。   1 个错误，1 个警告：导入“RC-18-V-bad.scl”完成，但存在错误。     行 000005: 块“ MCP_RC_FCBAD” 将创建为具有“优化的块访问”属性。  "
+  },
+  "19": {
+    "record": "rc.5 V19 164",
+    "sourceName": "RC-19-V-bad.scl",
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-19-V-bad.scl 正在生成块 \"MCP_RC_FCBAD\"... Interface: 数据类型 NoSuchType 未知。   1 个错误，1 个警告：导入“RC-19-V-bad.scl”完成，但存在错误。     行 000004: 块“ MCP_RC_FCBAD” 将创建为具有“优化的块访问”属性。  "
+  },
+  "20": {
+    "record": "rc.5 V20 147",
+    "sourceName": "RC-20-V-bad.scl",
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-20-V-bad.scl 正在生成块 \"MCP_RC_FCBAD\"... Interface: 数据类型 NoSuchType 未知。   1 个错误，1 个警告：导入“RC-20-V-bad.scl”完成，但存在错误。     行 000004: 块“ MCP_RC_FCBAD” 将创建为具有“优化的块访问”属性。  "
+  },
+  "21": {
+    "record": "rc.5 V21 156",
+    "sourceName": "RC-21-V-bad.scl",
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-21-V-bad.scl 正在生成块 \"MCP_RC_FCBAD\"... Interface: 数据类型 NoSuchType 未知。   1 个错误，1 个警告：导入“RC-21-V-bad.scl”完成，但存在错误。     行 000004: 块“ MCP_RC_FCBAD” 将创建为具有“优化的块访问”属性。  "
+  }
+}

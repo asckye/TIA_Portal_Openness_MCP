@@ -100,6 +100,7 @@ internal static class SafetyLoginFixture
         {
             var source = session.GetSoftwareContainer("CPU").Software.Source;
             source.Failure = scenario switch {
+                "compiler-message" => new Siemens.Engineering.EngineeringTargetInvocationException((string)JsonNode.Parse(Console.ReadLine()!)!["message"]!),
                 "security" => new Siemens.Engineering.EngineeringSecurityException(),
                 "products" => new Siemens.Engineering.MissingProductsException(),
                 "licence" => new Siemens.Engineering.LicenseNotFoundException(),

@@ -49,6 +49,25 @@ public static class NativeFailureText
         return result;
     }
 
+    public static string BoundedMessage(string message, Func<string, string?> sanitizeLine)
+    {
+        // A quoted credential or private key can span several compiler lines. Mask it before splitting.
+        IEnumerable<string> Lines()
+        {
+            foreach (string raw in Redact(message).Split(new[] { '\r', '\n', '\u0085', '\u2028', '\u2029' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string line = raw.Trim();
+                if (IsStackBoundary(line) || line.Contains("-----BEGIN")) yield break;
+                if (line.Length == 0 || sanitizeLine(line) is not string safe) continue;
+                yield return safe;
+                // A masked structured fragment may continue on subsequent lines.
+                if (safe == "••••" || safe.EndsWith("••••", StringComparison.Ordinal) && (line.Contains("{") || line.IndexOf('[', 1) >= 0)) yield break;
+            }
+        }
+        try { return string.Join(" ", BoundedLines(Lines(), WithoutLocalPaths)); }
+        catch (RegexMatchTimeoutException) { /* swallow(privacy): use the host's generic failure if sanitizing the diagnostic times out */ return ""; }
+    }
+
     private static string Redact(string text)
     {
         var timeout = TimeSpan.FromSeconds(1);
