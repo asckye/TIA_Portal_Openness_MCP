@@ -4,7 +4,7 @@
 - 日期：2026-11-21
 - 决策者：维护者
 - 置信度：高
-- 相关：按 [ADR 0012](0012-old-release-tool-registration.md)、[ADR 0014](0014-tool-counts-follow-official-api.md) 的注册规则；修改待补写决定 B13（[ADR 索引](README.md)）；任务 LOW-A
+- 相关：按 [ADR 0012](0012-old-release-tool-registration.md)、[ADR 0014](0014-tool-counts-follow-official-api.md) 的注册规则；修改[ADR 0046](0046-native-crash-guards.md)（待补写编号 B13）；任务 LOW-A
 
 ## 背景
 

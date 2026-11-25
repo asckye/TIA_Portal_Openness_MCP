@@ -818,12 +818,12 @@ stdout 只输出一份信封 JSON，诊断写 stderr；用户要求的人类可�
 
 | 规则 | 依据 |
 |---|---|
-| MUST：标准包是“目录 + JSON 清单与分部文件”，分发时整个目录无损打成 zip；包清单与分部只用 JSON，按 [`reference/schemas/standards/v1`](../../reference/schemas/standards/v1/README.md) 的 JSON Schema 2020-12 校验，并做静态交叉引用检查。包用 SemVer，格式用整数 `schemaVersion` | ADR 待补写 B22 |
-| MUST：规则只用声明式结构（`forEach`、`when`、命名模板）和受限占位符（字段路径与白名单函数）；不执行包内代码，不用正则替换链、任意表达式或网络访问；包可以带 SCL、库文件等资源，但不运行它们。复杂逻辑放在包的 SCL 源或库类型中 | ADR 待补写 B22；SEC-08 |
+| MUST：标准包是“目录 + JSON 清单与分部文件”，分发时整个目录无损打成 zip；包清单与分部只用 JSON，按 [`reference/schemas/standards/v1`](../../reference/schemas/standards/v1/README.md) 的 JSON Schema 2020-12 校验，并做静态交叉引用检查。包用 SemVer，格式用整数 `schemaVersion` | [ADR 0049](decisions/0049-standard-packages-and-machine-description.md) |
+| MUST：规则只用声明式结构（`forEach`、`when`、命名模板）和受限占位符（字段路径与白名单函数）；不执行包内代码，不用正则替换链、任意表达式或网络访问；包可以带 SCL、库文件等资源，但不运行它们。复杂逻辑放在包的 SCL 源或库类型中 | [ADR 0049](decisions/0049-standard-packages-and-machine-description.md)；SEC-08 |
 | MUST：`extends` 与 `dependsOn` 用包 id 加版本范围；派生包按条目 id 整条替换，不做深层合并；`parts.rules` 是精确文件路径列表，不展开 glob | `src/Logic/Generation/` |
 | MUST：加载限制默认 1,024 个文件、2,048 个条目、单文件 16 MiB、总量 64 MiB、压缩 zip 32 MiB；路径最多 240 个 UTF-16 单元、16 段，NFC、正斜杠，拒绝越界、链接、Windows 保留名、大小写重复和文件与目录冲突；JSON 是无 BOM 的严格 UTF-8，拒绝重复键和非法 Unicode，深度最多 64；zip 只在内存中读取，不解压 | SEC-08 |
 | MUST：哈希用精确十进制的规范 JSON（键按 ordinal UTF-16 排序；有意不采用浮点 RFC 8785）；包哈希包含清单及全部文件的排序摘要；计划哈希只排除根 `planHash`；布局换行不影响哈希，字符串和 SCL 中的换行属于内容 | `src/Logic/Generation/CanonicalJson.cs` |
-| MUST：机器描述 `tiamcp.machine/1` 是唯一的生成输入；由包导出的 xlsx/CSV 模板和工作台表单都只是同一份 JSON 的来源或编辑器；`type` 必须是所选包的设备类型，`params` 按该类型的 schema 校验，IO 与 IP 可写 `auto` 由包的分配规则确定 | ADR 待补写 B22 |
+| MUST：机器描述 `tiamcp.machine/1` 是唯一的生成输入；由包导出的 xlsx/CSV 模板和工作台表单都只是同一份 JSON 的来源或编辑器；`type` 必须是所选包的设备类型，`params` 按该类型的 schema 校验，IO 与 IP 可写 `auto` 由包的分配规则确定 | [ADR 0049](decisions/0049-standard-packages-and-machine-description.md) |
 | MUST：内置包放在 `templates/standards/<id>/`，用户导入的包放在 `<数据根>/standards/<id>/<版本>/`。仓库只放自有内容和开放许可内容；SAF、LGF、LPMLV30、VASS、SICAR 等专有标准不入库，只能由用户自备后作为外部引用或私有包；ISA、IEC、VDI 和 OPC 规范只按公开信息自写实现，不转载原文 | ADR 待补写 B23 |
 
 首批包是中性的 `tiamcp.basic`（八版通用的 SCL 源）和按 ISA-88/PackML 公开状态模型自写的状态模型包（不声明认证）。维护者自用编程规范是否作为第一个企业包试点尚未决定（ADR 待补写 B27）。

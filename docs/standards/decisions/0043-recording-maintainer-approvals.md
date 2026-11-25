@@ -4,7 +4,7 @@
 - 日期：2026-11-23
 - 决策者：维护者
 - 置信度：高
-- 相关：[ADR 0016](0016-architecture-decision-records.md)；待补写决定 B36（不放宽检查）；`build-tools/release/baselines/approved-check-changes.json`；[AGENTS.md](../../../AGENTS.md)
+- 相关：[ADR 0016](0016-architecture-decision-records.md)；[ADR 0054](0054-no-check-loosening-without-approval.md)（不放宽检查，待补写编号 B36）；`build-tools/release/baselines/approved-check-changes.json`；[AGENTS.md](../../../AGENTS.md)
 
 ## 背景
 
