@@ -64,18 +64,18 @@ Native follow-up is recorded in the [API audit VM checklist](https://github.com/
 
 | Release | Domain signatures | Unique member names | Compiled direct references | Names requiring further review |
 |---|---:|---:|---:|---:|
-| 14sp1 | 847 | 825 | 98 | 727 |
-| 15.1 | 1209 | 1161 | 107 | 1054 |
-| 16 | 1476 | 1420 | 109 | 1311 |
-| 17 | 1797 | 1719 | 117 | 1602 |
-| 18 | 2215 | 2113 | 117 | 1996 |
-| 19 | 3714 | 3586 | 128 | 3458 |
-| 20 | 4016 | 3860 | 1577 | 2283 |
-| 21 | 4480 | 4323 | 1719 | 2604 |
+| 14sp1 | 847 | 825 | 458 | 367 |
+| 15.1 | 1209 | 1161 | 579 | 582 |
+| 16 | 1476 | 1420 | 687 | 733 |
+| 17 | 1797 | 1719 | 886 | 833 |
+| 18 | 2215 | 2113 | 1046 | 1067 |
+| 19 | 3714 | 3586 | 1108 | 2478 |
+| 20 | 4016 | 3860 | 1633 | 2227 |
+| 21 | 4480 | 4323 | 1768 | 2555 |
 
 Counts exclude AddIn assemblies, constructors, explicit interfaces, private API and common collection/engineering boilerplate. Signature counts retain overloads; member-name counts combine overloads of one owner/name. Direct references match compiled IL call-site owners and method/property names; comments and inactive source branches are not counted.
 
-The six legacy columns use the selected PLC adapter; the V20/V21 columns were measured on the compiled V20/V21 engines before the engine was removed (P8-04j2) and have not been re-measured on the PLC worker. A referenced member may be in an unadvertised adapter path, inherited/generic calls can require manual mapping, and reflection can reach some unreferenced members. Therefore these are review candidates, not missing-tool counts, a coverage percentage or proof of native behavior.
+All eight rows were measured on 2026-11-25 (master `6a58d5cf5`, 4.0.0-rc.7) on the production PLC worker adapter of each release; the V20/V21 rows no longer come from the removed engine. Earlier tables counted only the selected legacy adapter paths for V14 SP1–V19, so their direct-reference counts were lower. A referenced member may be in an unadvertised adapter path, inherited/generic calls can require manual mapping, and reflection can reach some unreferenced members. Therefore these are review candidates, not missing-tool counts, a coverage percentage or proof of native behavior.
 
 The historical PLC migration backlog contained seven pending tool names at baseline
 `c5379c1`; this batch adds scoped external-source creation and generation, leaving

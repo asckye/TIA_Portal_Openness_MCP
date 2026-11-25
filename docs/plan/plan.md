@@ -101,7 +101,7 @@ beta.3 之后已合并：CI-FIX（`67ca6816`）、PREP-SLIM（`ccc8f7aa`、`d1a7
 | TRANSPORT-FAST、TRANSPORT-KEEP | 传输检查 `full` 档，独立调用默认最多并行 4 个版本，合并门最多 8 个并支持 10055 回退。测试客户端复用连接，不再耗尽主机端口 | 已合并（`efc58105`） | 2026-11-04 |
 | GUI-SPACE | 工作台测试窗口放到屏幕外，真实鼠标点不到；按空格的测试等鼠标松开 | 已合并（`7a8ba945`） | 2026-11-04 |
 | CI-FIX4 | 会话导出句柄隔离、worker 重启清理，版本策略使用请求的发布键，GUI 输入测试识别与调度 | 已集成（`1d8eb834`、`327c3d82`、`6e4cc3a0`） | 2026-11-05 |
-| COV-V21 | 更正 [Openness 覆盖](../reference/openness-coverage.md)中的 V21 数字（直接引用 1,748，待复核 2,575）和复现命令（`prepare -BuildOnly` 后运行 `audit-version-tools`） | 未完成（2026-11-25 核对），见 4.0 正式版表 | 2026-11-02 |
+| COV-V21 | 更正 [Openness 覆盖](../reference/openness-coverage.md)中的 V21 数字（直接引用 1,748，待复核 2,575）和复现命令（`prepare -BuildOnly` 后运行 `audit-version-tools`） | 已完成（2026-11-25）：审计输入由 `prepare` 生成（`6a58d5cf5`），八版在各自 PLC worker 上重测，V21 直接引用 1768、待复核 2555 | 2026-11-02 |
 | STD-REF | 改为引用已发布的《工程开发规范》2.0（tag `v2.0`），删除本仓库的 HTML 副本；`mcp/` 草案待采纳（[ADR 0032](../standards/decisions/0032-published-engineering-standards.md)） | 已合并 | 2026-11-05 |
 
 ### 2026-11-04、2026-11-05 实施决定
@@ -206,7 +206,7 @@ RC 代码已合并（2026-11-19 至 11-21），八版 RC 候选全量真机回�
 | C2 | wire DTO 从契约派生并核对故障边界 | 部分完成（2026-11-25 核对）。读失败污染会话已由取消会话锁解决（`a8aca1f68`，[ADR 0034](../standards/decisions/0034-no-session-lock.md)）。UNIFY-1 提交中的“C2”是 UNIFY-1 的子任务，不是本项。DTO 派生未做：`HardwareFamilyWire.cs` 仍手写成员清单，漂移由 `FamilyReplyApiMetadataChecks` 用真实返回类型核对发现。余项估计 2 小时 余下部分移到 4.1（维护者 2026-11-25），不再是 4.0 条件 | 2026-11-04 |
 | S4 | 发布令牌权限与生命周期，多数是 GitHub 设置，由维护者操作 | 待核对。仓库内可见：4 个工作流都只有 `contents: read`，发布令牌按 `-Token`、`GITHUB_TOKEN`、Git Credential Manager 取得（[发布手册](../manuals/release.md)）。缺：令牌类型、权限与有效期，账户两步验证，分支与标签规则；须维护者在 GitHub 设置中核对，约 30 分钟 | 2026-11-04 |
 | S9 | 统一调用日志、写入守卫和错误映射的脱敏规则 | 未完成（2026-11-25 核对）。`WriteGuard/Program.cs:33`、`:198` 仍用自己的窄规则（不含 `apiKey`、`authorization`、`pwd`），多个契约的清理和 `HostBehavior.cs:318` 只删除恰好名为 `password` 的字段。审批卡过度遮蔽的部分已由 4.1“审批摘要绑定真实值”承接。余项估计 2 小时 4.0 前只修两处漏遮（写入守卫日志和工具返回），审批摘要与卡片的过度遮蔽留在 4.1（维护者 2026-11-25）。两处漏遮已合并（`ee67d7eba`、`75d8bc9c0`），随 rc.7 | 2026-11-04 |
-| COV-V21 | 更正 Openness 覆盖中的 V21 数字和复现命令 | 未完成（2026-11-25 核对）。[Openness 覆盖](../reference/openness-coverage.md)的 V21 行仍为 1719 / 2604，并写明在已删除的引擎上测得、未在 PLC worker 上重测；复现命令仍指向 `CatalogAudits.cs`。须在主机构建八版后运行 `audit-version-tools` 取得数字，约 1 小时 | 2026-11-02 |
+| COV-V21 | 更正 Openness 覆盖中的 V21 数字和复现命令 | 已完成（2026-11-25）：审计输入由 `prepare` 生成（`6a58d5cf5`），八版在各自 PLC worker 上重测，V21 直接引用 1768、待复核 2555 | 2026-11-02 |
 | ADR 补写 | [ADR 索引](../standards/decisions/README.md)“待补写的决定”中“4.0 前”为“是”的 11 条（B02、B03、B13、B17、B18、B22、B24、B25、B26、B29、B36） | 已写成 ADR 0044–0054，维护者 2026-11-25 同意按“已采纳（回溯）”写入 | 2026-11-01 |
 
 ## 4.0.0-rc.2
@@ -319,7 +319,7 @@ rc.7 的代码改动尚未在真机上运行。rc.7 之后、4.0.0 之前还剩�
 
 - 在全部八个版本的真机上复验 rc.7，重点是 V20/V21 的 SD 覆盖导入和工作台 SD 还原（包括块编号的恢复）、V16–V19 存储 Equal 的内容证明和编辑后的状态、V16/V17 的首次导出。
 - 维护者逐页手动走查工作台（包括新图标），并核对 S4。
-- COV-V21 另行修复。
+- COV-V21 已完成（`6a58d5cf5`，数字见 Openness 覆盖）。
 
 ## 4.1
 
