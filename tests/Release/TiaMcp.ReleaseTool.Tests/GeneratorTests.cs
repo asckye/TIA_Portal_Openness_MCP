@@ -677,7 +677,9 @@ public sealed class GeneratorTests
             Assert.Equal(1, row["withoutDirectMemberReference"]!.GetValue<int>());
             Assert.Equal(1, row["xmlFiles"]!.GetValue<int>());
         }
-        foreach (var key in Keys) Assert.Equal("M:Siemens.Engineering.Domain.Widget.Export", Text(JsonNode.Parse(outputs[Path.Combine("candidates", $"api-candidates-{key}.json")])!["members"]![0]));
+        foreach (var key in Keys)
+            Assert.Equal("M:Siemens.Engineering.Domain.Widget.Export",
+                Text(JsonNode.Parse(outputs[Path.Combine("candidates", $"api-candidates-{key}.json")])!["members"]![0]));
         foreach (var key in new[] { "20", "21" })
         {
             var row = statistics.Single(row => Text(row!["releaseKey"]) == key)!;
