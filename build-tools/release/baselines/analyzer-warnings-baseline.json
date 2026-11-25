@@ -1272,24 +1272,6 @@
     {
       "rule": "CA2208",
       "path": "src/FoundationHost/FoundationTools.cs",
-      "line": 252,
-      "column": 131,
-      "endLine": 252,
-      "endColumn": 224,
-      "message": "Method ReadArguments passes \u0027overwrite\u0027 as the paramName argument to a ArgumentException constructor. Replace this argument with one of the method\u0027s parameter names. Note that the provided parameter name should have the exact casing as declared on the method.",
-      "member": "TiaMcp . FoundationHost/FoundationTool/ReadArguments( IReadOnlyDictionary \u003C string , JsonElement \u003E ? arguments , JsonObject values )",
-      "anchor": "new ArgumentException ( \u0022Document import supports native None only, no overwrite.\u0022 , \u0022overwrite\u0022 ) ",
-      "fingerprint": "b2c79c6b95fba83fe4d5201e39611cb875584f793c087973650537b1778c4243",
-      "reason": "json-field-name",
-      "retirement": "",
-      "contexts": [
-        "ordinary|src/FoundationHost/TiaMcp.FoundationHost.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TRACE",
-        "ordinary|tests/FoundationHost/TiaMcp.FoundationHost.Tests/TiaMcp.FoundationHost.Tests.csproj|net10.0|NET,NET10_0,NET10_0_OR_GREATER,NET5_0_OR_GREATER,NET6_0_OR_GREATER,NET7_0_OR_GREATER,NET8_0_OR_GREATER,NET9_0_OR_GREATER,NETCOREAPP,NETCOREAPP1_0_OR_GREATER,NETCOREAPP1_1_OR_GREATER,NETCOREAPP2_0_OR_GREATER,NETCOREAPP2_1_OR_GREATER,NETCOREAPP2_2_OR_GREATER,NETCOREAPP3_0_OR_GREATER,NETCOREAPP3_1_OR_GREATER,RELEASE,TIA_FOUNDATION_TEST_HOST,TRACE"
-      ]
-    },
-    {
-      "rule": "CA2208",
-      "path": "src/FoundationHost/FoundationTools.cs",
       "line": 251,
       "column": 270,
       "endLine": 251,
