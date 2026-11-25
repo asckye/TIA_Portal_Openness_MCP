@@ -9,6 +9,12 @@
 - The Workbench, its launchers and the updater share a cobalt application icon. Approval notifications use it in the tray and retain their warning balloon.
 ### Fixed
 
+- Immediately before a verified PLC block import, apply now reads the target group's block names once under the existing exclusive access.
+  If the native import throws, a binding check, matching group names and a full export matching the original block (including dates)
+  let the same session report the Siemens refusal as a completed failure. An unreadable inventory leaves the refusal unknown.
+- Expanded UDT members, including inherited members, now keep their owning section and full path. Even one expanded instance changes the
+  paths in `ComparePlcBlockDocuments` and the document diff in `RenderPlcVisualDiff`, the per-section counts in `ExtractPlcBlockMetrics`,
+  and the interface tables in `RenderPlcBlockDocument`, `GeneratePlcDocumentation` and the Studio block document view.
 - Verified PLC block imports with a returned compiler error now report `COMPILE_ERRORS`, retain the original backup and identify the target for cleanup.
 - `ComparePlcBlockDocuments` now compares expanded instances of the same UDT by their full member paths. The rc.5 limitation also affected
   V14 SP1, V15.1 and V16. A duplicate within one instance identifies the ambiguous member and the affected document.

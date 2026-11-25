@@ -68,8 +68,19 @@ namespace TiaMcp.Adapters.Native.Plc
                         var blocks = PlcBlockPrimitives.Blocks(group);
                         var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
                         System.Collections.Generic.IList<PlcBlock> result;
+                        string[]? beforeNames = null;
+                        try { beforeNames = blocks.Select(b => PlcBlockPrimitives.Name(b)).ToArray(); }
+                        catch (Exception error) when (NativeRefusalProbe.AllowsRefusalProof(error)
+                            && !TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(error))
+                        { /* swallow(probe-optional): an unreadable inventory leaves a later refusal unproven. */ }
+                        catch (Exception error) { error.Data["verifiedInventoryInterrupted"] = true; throw; }
                         try { result = PlcBlockPrimitives.Import(blocks, file, ImportOptions.Override); }
-                        catch (EngineeringException error) { error.Data["nativeImportThrew"] = true; throw; }
+                        catch (EngineeringException error)
+                        {
+                            error.Data["nativeImportThrew"] = true;
+                            if (beforeNames != null) error.Data["verifiedGroupNamesBeforeImport"] = beforeNames;
+                            throw;
+                        }
                         if (result == null || result.Count != 1)
                             throw new InvalidOperationException("Import did not return exactly one block; inspect retained evidence.");
                     }

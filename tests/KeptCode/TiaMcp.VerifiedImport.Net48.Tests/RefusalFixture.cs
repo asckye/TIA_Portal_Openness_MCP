@@ -52,7 +52,7 @@ internal static class RefusalFixture
                 return parts[0] == "SetDeviceItemAttribute" ? hardware.HardwareLegacySetDeviceItemAttribute("PLC/IO", "Value", "8")
                     : hardware.HardwareLegacySetCpuCommonSettings("PLC/IO", new() { ["Value"] = new HardwareScalar { Kind = "number", Text = "8" } });
             case "verified-compile": return VerifiedCompileTests.Run(parts[1]);
-            case "verified-refusal": return VerifiedRefusalTests.Run(parts[1]);
+            case "verified-refusal": return VerifiedRefusalTests.Run(parts[1], parts.Length > 2 ? parts[2] : "17");
             case "CreatePlcTag":
             case "CreatePlcTagTable":
             case "CreatePlcUserConstant":

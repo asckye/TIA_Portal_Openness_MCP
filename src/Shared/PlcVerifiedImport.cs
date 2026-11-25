@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static string Execute(string candidateXml, string binding, string evidenceRoot, bool dryRun, string expectedToken,
             Action<string> export, Action<string> import, Action verifyBinding, JsonObject meta, Action? compile = null,
             Func<string, string, bool>? exportType = null, Action<string>? exportNone = null,
-            string[]? groupNamesBeforeImport = null, Func<string[]?>? readRefusalGroupNames = null)
+            Func<string[]?>? readRefusalGroupNames = null)
         {
             meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["operationSuccess"] = false;
             meta["verificationSuccess"] = false; meta["automaticRollback"] = false; meta["compileRequested"] = compile != null;
@@ -125,14 +125,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["action"] =
                     "Compare the exact block with the retained original backup and restore it manually if needed; do not replay an unconfirmed import." });
             try { import(plannedPath); }
-            catch (Exception error) when (error.Data["nativeImportThrew"] is true && groupNamesBeforeImport != null && readRefusalGroupNames != null
+            catch (Exception error) when (error.Data["verifiedInventoryInterrupted"] is true)
+            {
+                meta["phase"] = "readGroupNames"; meta["mayHaveChanged"] = false; meta.Remove("cleanupRequired");
+                throw;
+            }
+            catch (Exception error) when (error.Data["nativeImportThrew"] is true && error.Data["verifiedGroupNamesBeforeImport"] is string[] beforeNames
+                && readRefusalGroupNames != null
                 && NativeRefusalProbe.AllowsRefusalProof(error) && TiaOpenness.Shared.ProcessLossPolicy.Reason(error) == null)
             {
-                if (RefusalVerified(before, folder, meta, verifyBinding, groupNamesBeforeImport!, readRefusalGroupNames!, export))
+                if (RefusalVerified(before, folder, meta, verifyBinding, beforeNames, readRefusalGroupNames!, export))
                 {
                     meta["mayHaveChanged"] = false; meta["apiCallSuccess"] = false;
                     meta.Remove("cleanupRequired");
-                    meta["refusalProof"] = "Full target block including dates, and target group block names, under the original exclusive binding. "
+                    meta["refusalProof"] = "The same session read back the full target block including dates and the target group block names "
+                        + "under the original exclusive binding. "
                         + "Other objects, UDTs and libraries were outside the comparison.";
                     error.Data["foundationKnownNoMutation"] = true;
                 }

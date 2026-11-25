@@ -18,6 +18,56 @@ public sealed class OfflineDocumentOutcomeTests
         </Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>
         """;
 
+    // SW.InterfaceSections_v5 Section_T contains the inherited Sections followed by the declared members.
+    private const string InheritedInterface = """
+        <Document><Engineering version="V17"/><SW.Blocks.GlobalDB ID="0"><AttributeList><Name>DriveDB</Name>
+        <ProgrammingLanguage>DB</ProgrammingLanguage><Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+        <Section Name="Static"><Member Name="Pump" Datatype="&quot;Drive&quot;"><Sections>
+        <Section Name="Base"><Sections Datatype="&quot;BaseDrive&quot;"><Section Name="None"><Member Name="Speed" Datatype="Int"/>
+        </Section></Sections></Section><Section Name="None"><Member Name="Speed" Datatype="Real"/></Section>
+        </Sections></Member></Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>
+        """;
+
+    [Theory, MemberData(nameof(VerifiedImportOutcomeTests.Releases), MemberType = typeof(VerifiedImportOutcomeTests))]
+    public async Task Inherited_and_declared_members_with_the_same_name_keep_distinct_paths(string release)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        using var session = fixture.EnterSession();
+        string leftFilePath = Path.Combine(fixture.Root, "left.xml"), rightFilePath = Path.Combine(fixture.Root, "right.xml");
+        File.WriteAllText(leftFilePath, InheritedInterface);
+        File.WriteAllText(rightFilePath, InheritedInterface);
+        async Task<JsonNode> Compare() => (await fixture.Call("ComparePlcBlockDocuments", new { leftFilePath, rightFilePath })).StructuredContent!;
+        var equal = await Compare();
+        Assert.True((bool?)equal["data"]?["identicalAfterNormalization"], equal.ToJsonString());
+        File.WriteAllText(rightFilePath, InheritedInterface.Replace("Datatype=\"Int\"", "Datatype=\"DInt\""));
+        var changed = await Compare();
+        Assert.False((bool?)changed["data"]?["identicalAfterNormalization"], changed.ToJsonString());
+        var difference = Assert.Single(changed["data"]!["structural"]!["interface"]!["typeChanged"]!.AsArray());
+        Assert.Equal("Static", (string?)difference!["section"]);
+        Assert.Equal("Pump.Base.Speed", (string?)difference["path"]);
+    }
+
+    [Fact]
+    public async Task Metrics_and_documentation_include_inherited_members_of_one_expanded_instance()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("17");
+        using var session = fixture.EnterSession();
+        string directory = Directory.CreateDirectory(Path.Combine(fixture.Root, "exports")).FullName;
+        string path = Path.Combine(directory, "DriveDB.xml"), outputPath = Path.Combine(fixture.Root, "handbook.md");
+        File.WriteAllText(path, InheritedInterface);
+        var metrics = (await fixture.Call("ExtractPlcBlockMetrics", new { path })).StructuredContent!;
+        Assert.True((bool?)metrics["ok"], metrics.ToJsonString());
+        var counts = Assert.Single(metrics["data"]!["rows"]!.AsArray())!["interfaceMembers"]!;
+        Assert.Equal(3, (int?)counts["Static"]);
+        Assert.Equal(3, (int?)counts["total"]);
+        Assert.Null(counts["None"]);
+        var handbook = (await fixture.Call("GeneratePlcDocumentation", new { directory, outputPath })).StructuredContent!;
+        Assert.True((bool?)handbook["ok"], handbook.ToJsonString());
+        var markdown = File.ReadAllText(outputPath);
+        Assert.Contains("| Static | `Pump.Base.Speed` | Int |", markdown);
+        Assert.Contains("| Static | `Pump.Speed` | Real |", markdown);
+    }
+
     [Theory]
     [InlineData("2.5", true)]
     [InlineData("stale", false)]

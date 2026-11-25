@@ -225,9 +225,24 @@ namespace TiaMcpServer.ModelContextProtocol
             doc.Members.Add(new InterfaceMember {
                 Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(member)
             });
-            foreach (var child in member.Elements().Where(e => Local(e) == "Member")) AddXmlMember(section, path, child, doc);
-            foreach (var child in member.Elements().Where(e => Local(e) == "Sections").Elements().Where(e => Local(e) == "Section")
-                .Elements().Where(e => Local(e) == "Member")) AddXmlMember(section, path, child, doc);
+            AddChildren(member, path);
+
+            void AddChildren(XElement owner, string ownerPath)
+            {
+                foreach (var child in owner.Elements())
+                {
+                    if (Local(child) == "Member")
+                    {
+                        if (owner == member || Local(owner) == "Section") AddXmlMember(section, ownerPath, child, doc);
+                        continue;
+                    }
+                    // Section/Sections describes an inherited interface in the Siemens schema.
+                    bool baseSection = Local(child) == "Section" && ((string?)child.Attribute("Name") == "Base"
+                        || Local(owner) == "Sections" && owner.Parent is XElement enclosing && Local(enclosing) == "Section"
+                            && (string?)enclosing.Attribute("Name") != "Base");
+                    AddChildren(child, baseSection ? ownerPath + ".Base" : ownerPath);
+                }
+            }
         }
 
         private static string MemberTraits(XElement member)

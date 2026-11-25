@@ -20,7 +20,7 @@ public sealed class VerifiedRefusalTests
     private sealed class EngineeringUserAbortException() : NativeException("Import aborted") { }
     private sealed class EngineeringObjectDisposedException() : NativeException("Block disposed") { }
 
-    internal static PlcSoftwareReply Run(string scenario)
+    internal static PlcSoftwareReply Run(string scenario, string release = "17")
     {
         var directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "refusal-" + Guid.NewGuid().ToString("N")));
         try
@@ -30,7 +30,7 @@ public sealed class VerifiedRefusalTests
             string xml = reader.ReadToEnd();
             string before = xml.Replace("Ghost", "Speed").Replace("<MemoryLayout>", "<CodeModifiedDate>2026-11-25</CodeModifiedDate><MemoryLayout>");
             var stepEngine = new TiaMcp.Adapters.PlcFoundationEngine();
-            var engine = new Boundary("17") { Step = (tool, run) => stepEngine.RunHmiStep(tool, run, requiresProject: false) };
+            var engine = new Boundary(release) { Step = (tool, run) => stepEngine.RunHmiStep(tool, run, requiresProject: false) };
             var group = engine.Plc.BlockGroup;
             var target = new Block { Name = "MCP_RC_DB2", Language = "DB", Parent = group };
             group.Blocks.Add(target);
@@ -48,8 +48,10 @@ public sealed class VerifiedRefusalTests
             var refused = new NativeException(Message);
             bool issued = false;
             int checksAfterImport = 0;
-            engine.ReadBindingIdentity = () => issued && scenario == "binding" ? "another-project" : "17:fixture";
-            target.OnNameRead = () => { if (issued && scenario == "unreadable-group") throw new IOException("Group unreadable"); };
+            engine.ReadBindingIdentity = () => issued && scenario == "binding" ? "another-project" : release + ":fixture";
+            target.OnNameRead = () => {
+                if ((!issued && scenario == "no-inventory") || (issued && scenario == "unreadable-group")) throw new IOException("Group unreadable");
+            };
             group.OnCall = _ => {
                 issued = true;
                 if (scenario == "returned-empty") return;
@@ -66,7 +68,6 @@ public sealed class VerifiedRefusalTests
             File.WriteAllText(request.FilePath, xml);
             var candidate = PlcVerifiedImportBridge.Validate(request);
             HardwareAddressingReply Apply() => engine.VerifiedImport(request, candidate, execution => {
-                if (scenario != "no-inventory") execution.GroupNamesBeforeImport = group.Blocks.Select(b => b.Name).ToArray();
                 if (scenario == "unmarked") execution.Import = _ => throw new NativeException(Message);
                 var verify = execution.VerifyBinding;
                 execution.VerifyBinding = () => {
@@ -87,6 +88,61 @@ public sealed class VerifiedRefusalTests
             Assert.Equal(scenario is "unchanged" or "reordered", refused.Data["foundationKnownNoMutation"] is true);
             return new PlcSoftwareReply { Meta = reply.Meta, Message = reply.Message,
                 MayHaveChanged = reply.MayHaveChanged, OutcomeUnknown = reply.OutcomeUnknown };
+        }
+        finally { directory.Delete(true); }
+    }
+
+    [Theory, InlineData("success"), InlineData("unreadable"), InlineData("connection-lost")]
+    public void Apply_reads_names_once_immediately_before_import(string scenario)
+    {
+        using var stream = typeof(VerifiedRefusalTests).Assembly.GetManifestResourceStream("VerifiedImport.17-T4.xml");
+        using var reader = new StreamReader(stream!);
+        string xml = reader.ReadToEnd().Replace("MCP_RC_DB2", "DB1").Replace("Ghost", "Speed");
+        var directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString("N")));
+        try
+        {
+            var steps = new TiaMcp.Adapters.PlcFoundationEngine();
+            var engine = new Boundary("17") { Step = (tool, run) => steps.RunHmiStep(tool, run, requiresProject: false) };
+            var group = engine.Plc.BlockGroup;
+            var calls = new List<string>();
+            var target = new Block { Name = "DB1", Language = "DB", Parent = group, OnNameRead = () => calls.Add("name DB1") };
+            group.Blocks.Add(target);
+            group.Blocks.Add(new Block { Name = "DB2", Parent = group, OnNameRead = () => {
+                calls.Add("name DB2");
+                if (scenario == "connection-lost") throw new COMException();
+                if (scenario == "unreadable") throw new IOException();
+            } });
+            group.AfterBlockExport = file => { calls.Add(file.Name); File.WriteAllText(file.FullName, xml); };
+            group.OnCall = _ => calls.Add("import");
+            group.AfterImport = _ => group.Blocks.Remove(target);
+            var request = new PlcSoftwareRequest { FilePath = Path.Combine(directory.FullName, "candidate.xml"), SoftwarePath = "PLC", Path = "DB1",
+                EvidenceDirectory = directory.FullName, DryRun = true };
+            File.WriteAllText(request.FilePath, xml);
+            var candidate = PlcVerifiedImportBridge.Validate(request);
+            HardwareAddressingReply Apply() => engine.VerifiedImport(request, candidate, execution => {
+                var verify = execution.VerifyBinding;
+                execution.VerifyBinding = () => { calls.Add("bind"); verify(); };
+                return PlcVerifiedImportBridge.Execute(execution);
+            });
+            var preview = Apply();
+            Assert.True(preview.Meta.ContainsKey("token"), preview.Meta.TryGetValue("error", out var failure) ? failure?.ToString() : preview.Message);
+            request.ExpectedToken = Assert.IsType<string>(preview.Meta["token"]);
+            Assert.Equal(new[] { "bind", "before.xml" }, calls);
+            calls.Clear();
+            request.DryRun = false;
+            var reply = Apply();
+            if (scenario == "connection-lost")
+            {
+                Assert.Equal(new[] { "bind", "before.xml", "bind", "name DB1", "name DB2" }, calls);
+                Assert.Equal(false, reply.Meta["mayHaveChanged"]);
+                Assert.True(reply.Meta["connectionUnavailable"] is true);
+                Assert.False(reply.Meta.ContainsKey("cleanupRequired"));
+            }
+            else
+            {
+                Assert.Equal(new[] { "bind", "before.xml", "bind", "name DB1", "name DB2", "import", "bind", "after.xml" }, calls);
+                Assert.Equal("DocumentReadbackMatched", reply.Meta["status"]);
+            }
         }
         finally { directory.Delete(true); }
     }

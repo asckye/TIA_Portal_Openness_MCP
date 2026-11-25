@@ -25,6 +25,7 @@ public sealed class NativeRefusalEnvelopeTests
 
     public static IEnumerable<object[]> VerifiedFailures => from row in VerifiedImportOutcomeTests.Releases()
         from scenario in new[] { "verified-compile/error", "verified-compile/recorded", "verified-compile/count", "verified-compile/messages-unavailable",
+            "verified-compile/state-only",
             "verified-compile/thrown", "verified-refusal/unchanged", "verified-refusal/date", "verified-refusal/unmarked", "verified-refusal/prior-change" }
         select new object[] { row[0], scenario };
 
@@ -35,7 +36,7 @@ public sealed class NativeRefusalEnvelopeTests
         bool compile = scenario.StartsWith("verified-compile/", StringComparison.Ordinal);
         bool priorChange = scenario == "verified-refusal/prior-change";
         bool unknown = priorChange || scenario is "verified-refusal/date" or "verified-refusal/unmarked" or "verified-compile/thrown";
-        var wire = await Reply(priorChange ? "verified-refusal/unchanged" : scenario);
+        var wire = await Reply(compile ? scenario : (priorChange ? "verified-refusal/unchanged" : scenario) + "/" + release);
         if (priorChange) wire["MayHaveChanged"] = true;
         var channel = new WorkerReplyFixture();
         using var worker = new DirectoryImportRegressionTests.Worker((operation, input) => {
@@ -68,7 +69,12 @@ public sealed class NativeRefusalEnvelopeTests
         Assert.NotNull(evidence["backup"]);
         if (compile)
         {
-            Assert.Equal(1, (int?)body["error"]?["details"]?["errorCount"]);
+            if (scenario == "verified-compile/state-only")
+            {
+                Assert.Equal(0, (int?)body["error"]?["details"]?["errorCount"]);
+                Assert.Equal(0, (int?)evidence["compileErrorCount"]);
+            }
+            else Assert.Equal(1, (int?)body["error"]?["details"]?["errorCount"]);
             Assert.Equal(recorded ? 0 : 2, (int?)body["error"]?["details"]?["warningCount"]);
             if (scenario == "verified-compile/error" || recorded) Assert.Contains("Data type NoSuchType_XYZ is unknown.", (string?)body["error"]?["message"]);
             Assert.Single(evidence["cleanupRequired"]!.AsArray());
@@ -78,6 +84,7 @@ public sealed class NativeRefusalEnvelopeTests
         {
             Assert.Contains("Ghost", (string?)body["error"]?["message"]);
             Assert.NotNull(evidence["refusalProof"]);
+            Assert.Contains("same session", (string?)evidence["refusalProof"]);
             Assert.Null(evidence["cleanupRequired"]);
         }
         Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot());
