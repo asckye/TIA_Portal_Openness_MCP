@@ -27,6 +27,49 @@ public sealed class NativeFailureDiagnosticsTests
         Assert.DoesNotContain("private-value", data.ToJsonString());
     }
 
+    [Theory]
+    [InlineData("[Error] 正在导出", "[Error] 正在导出")]
+    [InlineData("[Error] device MCP_RC_HMI 的执行将跳过。所需属性 TypeIdentifier 无效或缺失。", "[Error] device MCP_RC_HMI 的执行将跳过。所需属性 TypeIdentifier 无效或缺失。")]
+    [InlineData("[Error] CAx 数据导出已完成（错误：1，警告：0）", "[Error] CAx 数据导出已完成（错误：1，警告：0）")]
+    [InlineData("[Error] {\"password\":\"x\"}", "[Error] {\"password\":\"••••\"}")]
+    [InlineData("[Error] token=abc", "[Error] token=••••")]
+    [InlineData("[Info]\u00a0[Warning] token=abc", "[Info]\u00a0[Warning] token=••••")]
+    [InlineData("[Warning] [Info] [Error] token=abc", "[Warning] [Info] [Error] token=••••")]
+    [InlineData("[Information] [Success] [broken", "[Information] [Success] ••••")]
+    [InlineData("[Error] export failed {password is private", "[Error] ••••")]
+    [InlineData("[Error] export failed [token is private", "[Error] ••••")]
+    [InlineData("""[Error] payload "{\"password\":\"private\"}" """, "[Error] ••••")]
+    [InlineData("""[Error] {"detail":"{\"user\":\"private\"}"}""", """[Error] {"detail":"••••"}""")]
+    [InlineData("""[Error] {"detail":"password is private"}""", """[Error] {"detail":"••••"}""")]
+    [InlineData("[Warning] [Error] password is private", "[Warning] [Error] ••••")]
+    [InlineData("[Warning] the API key was private", "[Warning] ••••")]
+    [InlineData("[broken", "••••")]
+    public void Aml_severity_and_sanitized_message_reach_error_evidence(string message, string expected)
+    {
+        using var release = Host.HardwareContract.UseRelease("19");
+        var response = new Host.ResponseExportDeviceAml { Messages = new[] { message }, State = "Error", Meta = new JsonObject {
+            ["success"] = false, ["nativeStateType"] = "Siemens.Engineering.Cax.TransferResultState", ["nativeResultReturned"] = true,
+            ["nativeState"] = "Error", ["mayHaveChanged"] = false, ["nativeMessages"] = new JsonArray(message) } };
+        var body = Host.HardwareContract.Map("ExportDeviceAml", response, true, true).StructuredContent!;
+        Assert.Equal(expected, (string?)body["error"]?["details"]?["evidence"]?["nativeMessages"]?[0]);
+        Assert.Equal(expected, (string?)body["data"]?["messages"]?[0]);
+        Assert.Equal(expected, (string?)body["data"]?["evidence"]?["nativeMessages"]?[0]);
+    }
+
+    [Fact]
+    public void Successful_aml_export_preserves_the_native_messages()
+    {
+        using var release = Host.HardwareContract.UseRelease("19");
+        const string message = "[Success] Wrote [CPU]\nSecond line";
+        var response = new Host.ResponseExportDeviceAml { Success = true, State = "Success", Messages = new[] { message }, Meta = new JsonObject {
+            ["success"] = true, ["nativeStateType"] = "Siemens.Engineering.Cax.TransferResultState", ["nativeResultReturned"] = true,
+            ["nativeState"] = "Success", ["nativeMessages"] = new JsonArray(message) } };
+        var body = Host.HardwareContract.Map("ExportDeviceAml", response, true, true).StructuredContent!;
+        Assert.Equal("succeeded", (string?)body["meta"]?["outcome"]);
+        Assert.Equal(message, (string?)body["data"]?["messages"]?[0]);
+        Assert.Equal(message, (string?)body["data"]?["evidence"]?["nativeMessages"]?[0]);
+    }
+
     [Fact]
     public void Diagnostic_and_journal_credential_names_agree()
     {

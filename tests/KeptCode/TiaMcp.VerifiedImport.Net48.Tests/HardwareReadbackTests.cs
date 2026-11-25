@@ -43,7 +43,7 @@ namespace TiaMcp.Adapters
         private bool HardwareProjectMissing() => !Bound;
         private void Check() { }
         private DeviceItem? HardwareResolveItem(string path) => HardwareLegacyItem(path);
-        private static Dictionary<string, object?> HardwareStepMeta(DateTime time, bool success) => new() { ["success"] = success };
+        internal static Dictionary<string, object?> HardwareStepMeta(DateTime? time, bool success) => new() { ["success"] = success };
         private static List<object?> HardwareToArray(IEnumerable<string> values) => values.Cast<object?>().ToList();
         private static string HardwareAttributeTypes(AttributeInfo info) => "System.Int32";
         private static bool HardwareAttributeWritable(AttributeInfo info) => info.AccessMode == "ReadWrite";

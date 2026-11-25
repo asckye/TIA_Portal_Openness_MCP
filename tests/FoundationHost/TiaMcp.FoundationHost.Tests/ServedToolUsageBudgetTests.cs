@@ -31,6 +31,44 @@ public sealed class ServedToolUsageBudgetTests
         }
     }
 
+    [Theory, MemberData(nameof(B3HostPortsTests.Releases), MemberType = typeof(B3HostPortsTests))]
+    public async Task Address_example_selects_the_current_offset_and_supplies_a_new_one(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var address = (await fixture.Call("GetToolUsage", new { toolName = "SetDeviceAddress" }))["data"]!;
+        var args = address["example"]!["request"]!["params"]!["arguments"]!;
+        Assert.Equal("Input", (string?)args["ioType"]);
+        Assert.Equal(1, (int?)args["startAddress"]);
+        Assert.Equal(2, (int?)args["properties"]?["StartAddress"]);
+        Assert.NotEqual((int?)args["startAddress"], (int?)args["properties"]?["StartAddress"]);
+        Assert.Contains("current", (string?)address["inputSchema"]?["properties"]?["startAddress"]?["description"]);
+    }
+
+    [Theory, MemberData(nameof(B3HostPortsTests.Releases), MemberType = typeof(B3HostPortsTests))]
+    public async Task Directory_import_example_includes_import_order(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var batch = (await fixture.Call("GetToolUsage", new { toolName = "ImportPlcBlocksFromDirectory" }))["data"]!;
+        Assert.NotNull(batch["example"]?["request"]?["params"]?["arguments"]?["importOrder"]);
+    }
+
+    [Theory, InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Block_import_note_shows_the_required_namespace_element(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var block = (await fixture.Call("GetToolUsage", new { toolName = "ImportPlcBlock" }))["data"]!;
+        Assert.Contains("<Namespace />", (string?)block["example"]?["note"]);
+    }
+
+    [Theory, InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Instance_db_example_uses_the_supported_fb_kind(string release)
+    {
+        using var fixture = new DiscoveryFixture(release);
+        var instance = (await fixture.Call("GetToolUsage", new { toolName = "CreatePlcInstanceDb" }))["data"]!;
+        string fb = (string)instance["example"]!["request"]!["params"]!["arguments"]!["fbPath"]!;
+        Assert.Equal(release is "15.1" or "16", fb.Contains("ProDiag", StringComparison.Ordinal));
+    }
+
     [Theory]
     [InlineData("14sp1")] [InlineData("15.1")] [InlineData("16")] [InlineData("17")]
     [InlineData("18")] [InlineData("19")] [InlineData("20")] [InlineData("21")]

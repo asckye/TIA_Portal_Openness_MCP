@@ -13,6 +13,10 @@
 - Verified import no longer reports a match when an unexpanded UDT member keeps old non-default values in a nested UDT, the false match listed
   in the 4.0.0-rc.5 limitations. After a compile that removed a UDT expansion, it makes one additional standard export and compares the members.
 - A verified import mismatch names the changed member instead of a neighbouring UDT member when the standard export shows it.
+### Fixed
+
+- Hardware setter failures retain the Siemens reason, and AML export failures preserve severity labels while masking sensitive details.
+  Creating a duplicate PLC software unit or renaming a device group to an existing name reports a precondition failure.
 
 ## [4.0.0-rc.5] - 2026-11-25
 

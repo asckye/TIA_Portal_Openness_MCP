@@ -3,10 +3,14 @@ using System.Xml.Linq;
 namespace Siemens.Engineering
 {
     public enum ImportOptions { None, Override }
-    public sealed class MessageDataEntry { public string Text => "Import failed"; public string DetailText => "Siemens rejected the symbol declaration."; }
+    public sealed class MessageDataEntry
+    {
+        public string Text { get; set; } = "Import failed";
+        public string DetailText { get; set; } = "Siemens rejected the symbol declaration.";
+    }
     public class EngineeringException : Exception
     {
-        public MessageDataEntry MessageData => new();
+        public MessageDataEntry MessageData { get; } = new();
         public MessageDataEntry[] DetailMessageData => Array.Empty<MessageDataEntry>();
     }
     public class EngineeringTargetInvocationException : EngineeringException { }

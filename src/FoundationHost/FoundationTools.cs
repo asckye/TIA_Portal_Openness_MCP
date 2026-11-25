@@ -280,7 +280,7 @@ internal sealed partial class FoundationTool : McpServerTool
             try { TiaMcp.Adapters.Contracts.Paging.PlcBlockPaging.Validate(values["limit"]!.GetValue<int>(), values["cursor"]!.GetValue<string>()); }
             catch (ArgumentException error) when (error.ParamName == "limit")
             {
-                throw new AdapterPreconditionException(error.Message, error.ParamName);
+                throw new AdapterPreconditionException(error.Message, innerException: error);
             }
         }
         if (definition.Name == "ExportPlcTypes")

@@ -179,7 +179,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 if (action == "create" || action == "createFromMasterCopy")
                 {
-                    if (units.Find(name) != null) throw new InvalidOperationException("Unit already exists: " + name);
+                    if (units.Find(name) != null) throw AdapterPreconditionException.Failed("Unit already exists: " + name, "unit-exists", "name");
                     MasterCopy? source = null; MasterCopyMode? mode = null;
                     if (action == "createFromMasterCopy")
                     {

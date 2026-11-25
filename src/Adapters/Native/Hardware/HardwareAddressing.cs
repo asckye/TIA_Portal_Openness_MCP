@@ -10,8 +10,9 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
-        private static IoAddressWriteReply IoWrite(bool ok, string message, IoAddressInfo? before, IoAddressInfo? after, bool verifiedRefusal = false)
-            => new IoAddressWriteReply { Ok = ok, Message = message, Before = before, After = after,
+        private static IoAddressWriteReply IoWrite(bool ok, string message, IoAddressInfo? before, IoAddressInfo? after, bool verifiedRefusal = false,
+            string? nativeMessage = null)
+            => new IoAddressWriteReply { Ok = ok, Message = message, NativeMessage = nativeMessage, Before = before, After = after,
                 OutcomeUnknown = before != null && after == null, MayHaveChanged = before != null && !verifiedRefusal };
         public IReadOnlyList<IoAddressInfo>? ReadHardwareIoAddresses(string deviceItemPath)
         {
@@ -181,6 +182,7 @@ namespace TiaMcp.Adapters
             }
             catch (Exception ex)
             {
+                string? reason = HardwareSiemensReason(ex);
                 IoAddressInfo? verified = null;
                 if (completeBefore && NativeRefusalProbe.ProvesUnchanged(ex, () => {
                     var rows = ReadAddresses(item, out bool completeAfter);
@@ -188,10 +190,11 @@ namespace TiaMcp.Adapters
                         && (verified = rows.FirstOrDefault(row => AddressFields(row) == AddressFields(before))) != null;
                 }))
                     return IoWrite(false, $"Writing the start address failed: {ex.Message}. All module address rows are unchanged.",
-                        before, verified, verifiedRefusal: true);
+                        before, verified, verifiedRefusal: true, nativeMessage: reason);
 
                 return IoWrite(false, $"Writing the start address failed: {ex.Message} "
-                             + "(common causes: overlap with another module address range, or the module address cannot be modified).", before, null);
+                             + "(common causes: overlap with another module address range, or the module address cannot be modified).", before, null,
+                    nativeMessage: reason);
             }
 
             // 写完必须重新取一次再比对。设了不报错 ≠ 真的生效。

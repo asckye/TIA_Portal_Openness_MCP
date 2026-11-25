@@ -168,6 +168,7 @@ public sealed class OfflineDocumentOutcomeTests
         AssertRefused(body);
         Assert.Equal("/limit", (string?)body["error"]!["details"]!["parameter"]);
         Assert.Contains("1..100", (string)body["error"]!["message"]!);
+        Assert.Equal("limit must be 1..100. (Parameter 'limit')", (string?)body["error"]!["message"]);
     }
 
     [Theory]

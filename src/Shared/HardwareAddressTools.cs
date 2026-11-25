@@ -240,6 +240,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["verified"] = reply.Ok && after != null
                 };
 
+                if (reply.NativeMessage != null) meta["nativeMessage"] = reply.NativeMessage;
                 if (after != null && reply.MayHaveChanged)
                 {
                     meta["nextActions"] = new JsonArray
@@ -300,7 +301,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string[] devicePath,
             string[] itemPath,
             [Description("ioType: None | Input | Output | Substitute | Diagnosis.")] string ioType,
-            [Description("startAddress: new start address (byte).")] int startAddress,
+            [Description("startAddress: current byte offset of the address to edit. Set properties.StartAddress to the new offset.")] int startAddress,
             AttributeMap<Scalar>? properties = null,
             AttributeMap<Scalar>? attributes = null,
             string softwarePath="",
@@ -324,7 +325,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string devicePathJson,
             string itemPathJson,
             [Description("ioType: None | Input | Output | Substitute | Diagnosis.")] string ioType,
-            [Description("startAddress: new start address (byte).")] int startAddress,
+            [Description("startAddress: current byte offset of the address to edit. Set properties.StartAddress to the new offset.")] int startAddress,
             string propertiesJson="{}",
             string attributesJson="{}",
             string softwarePath="",

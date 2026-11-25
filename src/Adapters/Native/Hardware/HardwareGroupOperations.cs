@@ -102,7 +102,7 @@ namespace TiaMcp.Adapters.Hardware
                 if (Parts(newName).Length != 1) throw new ArgumentException("newName must be one path segment.");
                 var conflict = Find(siblings, newName);
                 if (conflict != null && !string.Equals(parts.Last(), newName, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Destination group exists: " + newName);
+                    throw AdapterPreconditionException.Failed("Destination group exists: " + newName, "destination-exists", "newName");
                 var property = target.GetType().GetProperty("Name");
                 bool dynamicName = property?.CanWrite != true;
                 if (dynamicName && !target.GetType().GetInterfaces().Any(i => i.FullName == "Siemens.Engineering.IEngineeringObject"))

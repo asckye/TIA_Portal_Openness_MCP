@@ -37,6 +37,7 @@ namespace TiaMcp.Adapters.Contracts
     {
         public bool Ok { get; set; }
         public string Message { get; set; } = "";
+        public string? NativeMessage { get; set; }
         public IoAddressInfo? Before { get; set; }
         public IoAddressInfo? After { get; set; }
         public bool OutcomeUnknown { get; set; }

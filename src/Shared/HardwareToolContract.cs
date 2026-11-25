@@ -163,6 +163,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (NativeResultState.State(evidence) != null && NativeResultState.EnumType(evidence, tool) != null)
                 verdict = NativeResultState.Succeeded(evidence, tool) && verdict != false;
+            // Boolean CAx exports return the operator's log path. TransferResult exports return native diagnostic text.
+            if (tool == "ExportDeviceAml" && verdict != true && !Bool(evidence, "nativeBooleanResult").HasValue)
+            {
+                HostBehavior.SanitizeEvidence(body["messages"], diagnostic: true);
+                HostBehavior.SanitizeEvidence(evidence["nativeMessages"], diagnostic: true);
+            }
             bool unknown = write
                 && (Bool(evidence, "writeOutcomeUnknown") == true || Bool(evidence, "verified") == false && Bool(evidence, "mayHaveChanged") != false
                     && Bool(evidence, "postStateKnown") != true
@@ -177,6 +183,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
             // Legacy exceptions contain stack traces. Keep domain evidence, never their diagnostic rendering.
             Sanitize(body); Sanitize(evidence);
+            if (tool is "SetDeviceItemIoAddress" or "SetDeviceItemAttribute" or "SetPlcCpuSettings" && evidence["nativeMessage"] is JsonValue reason)
+            {
+                evidence["nativeMessage"] = HostBehavior.SafeDiagnostic(reason.GetValue<string>());
+                if (evidence["rejected"] is JsonArray rejectedSettings)
+                    foreach (var row in rejectedSettings.OfType<JsonObject>())
+                        if (row["reason"] is JsonValue detail) row["reason"] = HostBehavior.SafeDiagnostic(detail.GetValue<string>());
+            }
             body.Remove("message"); body.Remove("ok"); body.Remove("success");
             body["summary"] = verdict == true && !unknown ? response.Message : "Hardware operation did not establish a complete successful result.";
             evidence.Remove("timestamp"); evidence.Remove("tool");
@@ -295,6 +308,14 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult Result(string tool, JsonObject? data, Error? error, Outcome outcome, bool current,
             bool write = false, Completeness? completeness = null, Paging? paging = null, bool incomplete = false, bool candidate = false)
         {
+            if (tool is "SetDeviceItemIoAddress" or "SetDeviceItemAttribute" or "SetPlcCpuSettings"
+                && data?["evidence"]?["nativeMessage"] is JsonValue diagnostic && diagnostic.TryGetValue<string>(out var reason))
+            {
+                if (error?.Details is NativeOperationFailedDetails failure)
+                    error = new Error(reason, new NativeOperationFailedDetails(failure.NativeCode, reason, failure.Evidence));
+                else if (error != null && outcome is Outcome.Unknown or Outcome.Partial)
+                    error = new Error(reason + " " + error.Message, error.Details, error.Innererror);
+            }
             var warnings = new List<Warning>();
             var empty = new Dictionary<string, JsonElement>();
             var policy = current ? BehaviorCapabilities.EntryPolicy(typeof(HardwareContract).Assembly, ReleaseKey, tool, BehaviorPolicy.Current)

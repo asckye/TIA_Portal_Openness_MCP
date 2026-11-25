@@ -12,6 +12,12 @@
   },
   "scope": "Examples for every registered tool in both profiles. Target-dependent bindings and operation parameters accompany the call. A sample value is not evidence that an object exists or an API operation is supported by that device. Ported examples are offered only for tools registered on the selected release, using PortedFamilies.ToolReleases; partial tools keep their action and format refusals.",
   "releaseArguments": {
+    "CreatePlcInstanceDb": [
+      {
+        "releases": ["15.1", "16"],
+        "arguments": { "fbPath": "FB_ProDiag" }
+      }
+    ],
     "BuildProjectScaffold": [
       {
         "releases": [
@@ -2545,7 +2551,7 @@
           "20": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures.",
           "21": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures."
         },
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result. The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" After replacement read GetPlcBlockInfo and run real approved CompilePlcSoftware; preview does not compile. See sequence/foundation-block-round-trip.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result. The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" After replacement read GetPlcBlockInfo and run real approved CompilePlcSoftware; preview does not compile. See sequence/foundation-block-round-trip. In V18 and later block XML, include <Namespace /> in the block AttributeList for the global namespace. Preserve the exported value for a named namespace.",
         "notes": [
           "overwrite:true XML import can detach library type instances and break their callers. The preview warns; the XML recovery backup cannot restore a library type link. Preview recoveryStatus=not-attempted-preview; apply reports backup-ready or not-needed on success and refuses an incomplete backup."
         ],
@@ -2561,7 +2567,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "parameters": {
           "softwarePath": {
@@ -2591,7 +2598,7 @@
           },
           "importOrder": {
             "exampleValue": [],
-            "meaning": "Supply every preview RelativePath exactly once, in the reviewed dependency order."
+            "meaning": "Leave importOrder empty for preview. On apply, supply every preview RelativePath exactly once, in the reviewed dependency order."
           },
           "expectedPlanHash": {
             "exampleValue": "<planHash from this same preview>",
@@ -3848,8 +3855,11 @@
           "itemPath": [
             "<exact device item from GetProjectTree>"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "parameters": {
@@ -3857,6 +3867,10 @@
             "requiresBinding": true
           },
           "itemPath": {
+            "requiresBinding": true
+          },
+          "startAddress": {
+            "meaning": "Select the current byte offset of the Input row returned by GetDeviceAddressing.",
             "requiresBinding": true
           },
           "properties": {
@@ -8697,6 +8711,10 @@
           "dryRun": true
         },
         "parameters": {
+          "fbPath": {
+            "meaning": "Select an existing FB. On V15.1 and V16 select a ProDiag FB from GetSoftwareTree.",
+            "requiresBinding": true
+          },
           "groupPath": {
             "exampleValue": "Examples"
           },
@@ -24394,6 +24412,10 @@
           "dryRun": true
         },
         "parameters": {
+          "fbPath": {
+            "meaning": "Select an existing FB. On V15.1 and V16 select a ProDiag FB from GetSoftwareTree.",
+            "requiresBinding": true
+          },
           "groupPath": {
             "exampleValue": "Examples"
           },
@@ -28523,7 +28545,7 @@
           "20": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures.",
           "21": "Standard software-unit scope/publication available; native acceptance NOT RUN. IgnoreStructuralChanges / IgnoreMissingReferencedObjects available for blocks/types; IgnoreUnitAttributes available. Choose SkipInactiveCultures OR ActivateInactiveCultures."
         },
-        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result. The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" After replacement read GetPlcBlockInfo and run real approved CompilePlcSoftware; preview does not compile. See sequence/foundation-block-round-trip.",
+        "note": "For MCP calls classified WRITE or ONLINE-WRITE, Workbench approval is enabled by default and happens before dispatch; read-only calls do not queue. Denial, timeout (120 seconds by default; configurable) or unavailable Workbench returns CONFIRMATION_REQUIRED with rejected-before-operation/not-started. Approval is one-time for the pending request and its plan hash or argument summary. Audit events are written to data/logs/audit and can be checked with the Workbench audit view or `tia audit verify`; the hash chain detects changes within retained records but cannot prove that the complete log was retained. Previews (dryRun:true) do not queue Workbench approval. When approval is enabled, a real write first runs this tool's own preview in the same session. Invalid writes return without approval: meta.outcome=rejected-before-operation, meta.execution=not-started, and meta.warnings contains code=APPROVAL_PRECHECK_REFUSED with details.stage=approval-precheck. A successful preview is followed by exactly one Workbench decision; native preconditions run again after approval. Denial returns error.code=CONFIRMATION_REQUIRED and error.details.reason=denied. Approval disabled skips this precheck and preserves APPROVAL_DISABLED warnings. Tools without a preview keep their existing approval gate. After OUTCOME_UNKNOWN, only that call is unknown. Inspect the target before repeating it; never replay it automatically. GetSessionState lists unsettled request IDs. With overwrite:false, an existing logical object is refused before the native import: error.code=INVALID_ARGUMENT, error.details.parameter=overwrite, message \"Object '<name>' already exists; overwrite=false refuses replacement.\", meta.outcome=rejected-before-operation and meta.execution=not-started. With approval enabled the approval-precheck makes no Workbench request; no approval click is needed. To replace deliberately, preview this same file/target with overwrite:true, then use dryRun:false, confirm:true and the exact expectedProjectFile; wait for approval and inspect the result. The XML file must exist on the TIA machine. Forward slashes (C:/Examples/exports/Tags.xml) and back slashes (C:\\Examples\\exports\\Tags.xml) address the same file; Foundation passes the normalized full path to Openness. A missing file returns INVALID_ARGUMENT, error.details.parameter=importPath and message \"An existing Openness XML file is required.\" After replacement read GetPlcBlockInfo and run real approved CompilePlcSoftware; preview does not compile. See sequence/foundation-block-round-trip. In V18 and later block XML, include <Namespace /> in the block AttributeList for the global namespace. Preserve the exported value for a named namespace.",
         "notes": [
           "overwrite:true XML import can detach library type instances and break their callers. The preview warns; the XML recovery backup cannot restore a library type link. Preview recoveryStatus=not-attempted-preview; apply reports backup-ready or not-needed on success and refuses an incomplete backup."
         ],
@@ -28565,7 +28587,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "parameters": {
           "softwarePath": {
@@ -28595,7 +28618,7 @@
           },
           "importOrder": {
             "exampleValue": [],
-            "meaning": "Supply every preview RelativePath exactly once, in the reviewed dependency order."
+            "meaning": "Leave importOrder empty for preview. On apply, supply every preview RelativePath exactly once, in the reviewed dependency order."
           },
           "expectedPlanHash": {
             "exampleValue": "<planHash from this same preview>",
@@ -40767,8 +40790,11 @@
           "itemPath": [
             "<exact device item from GetProjectTree>"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "parameters": {
@@ -40776,6 +40802,10 @@
             "requiresBinding": true
           },
           "itemPath": {
+            "requiresBinding": true
+          },
+          "startAddress": {
+            "meaning": "Select the current byte offset of the Input row returned by GetDeviceAddressing.",
             "requiresBinding": true
           },
           "properties": {

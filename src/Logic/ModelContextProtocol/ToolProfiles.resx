@@ -8654,8 +8654,11 @@
         "itemPath": [
           "&lt;exact device item from GetProjectTree&gt;"
         ],
-        "ioType": "None",
+        "ioType": "Input",
         "startAddress": 1,
+        "properties": {
+          "StartAddress": 2
+        },
         "dryRun": true
       }
     },
@@ -11360,8 +11363,11 @@
         "itemPath": [
           "&lt;exact device item from GetProjectTree&gt;"
         ],
-        "ioType": "None",
+        "ioType": "Input",
         "startAddress": 1,
+        "properties": {
+          "StartAddress": 2
+        },
         "dryRun": true
       }
     },
@@ -14380,8 +14386,11 @@
         "itemPath": [
           "&lt;exact device item from GetProjectTree&gt;"
         ],
-        "ioType": "None",
+        "ioType": "Input",
         "startAddress": 1,
+        "properties": {
+          "StartAddress": 2
+        },
         "dryRun": true
       }
     },
@@ -17637,8 +17646,11 @@
         "itemPath": [
           "&lt;exact device item from GetProjectTree&gt;"
         ],
-        "ioType": "None",
+        "ioType": "Input",
         "startAddress": 1,
+        "properties": {
+          "StartAddress": 2
+        },
         "dryRun": true
       }
     },
@@ -21223,8 +21235,11 @@
         "itemPath": [
           "&lt;exact device item from GetProjectTree&gt;"
         ],
-        "ioType": "None",
+        "ioType": "Input",
         "startAddress": 1,
+        "properties": {
+          "StartAddress": 2
+        },
         "dryRun": true
       }
     },
@@ -25947,8 +25962,11 @@
         "itemPath": [
           "&lt;exact device item from GetProjectTree&gt;"
         ],
-        "ioType": "None",
+        "ioType": "Input",
         "startAddress": 1,
+        "properties": {
+          "StartAddress": 2
+        },
         "dryRun": true
       }
     },
@@ -30897,8 +30915,11 @@
         "itemPath": [
           "&lt;exact device item from GetProjectTree&gt;"
         ],
-        "ioType": "None",
+        "ioType": "Input",
         "startAddress": 1,
+        "properties": {
+          "StartAddress": 2
+        },
         "dryRun": true
       }
     },
@@ -36092,8 +36113,11 @@
         "itemPath": [
           "&lt;exact device item from GetProjectTree&gt;"
         ],
-        "ioType": "None",
+        "ioType": "Input",
         "startAddress": 1,
+        "properties": {
+          "StartAddress": 2
+        },
         "dryRun": true
       }
     },
@@ -36470,7 +36494,8 @@
         "dryRun": true,
         "confirm": false,
         "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "importOrder": []
       }
     },
     {
@@ -36971,7 +36996,8 @@
         "dryRun": true,
         "confirm": false,
         "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "importOrder": []
       }
     },
     {
@@ -37480,7 +37506,8 @@
         "dryRun": true,
         "confirm": false,
         "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "importOrder": []
       }
     },
     {
@@ -37989,7 +38016,8 @@
         "dryRun": true,
         "confirm": false,
         "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "importOrder": []
       }
     },
     {
@@ -38511,7 +38539,8 @@
         "dryRun": true,
         "confirm": false,
         "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "importOrder": []
       }
     },
     {
@@ -39041,7 +39070,8 @@
         "dryRun": true,
         "confirm": false,
         "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "importOrder": []
       }
     },
     {
@@ -39624,7 +39654,8 @@
         "dryRun": true,
         "confirm": false,
         "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "importOrder": []
       }
     },
     {
@@ -40207,7 +40238,8 @@
         "dryRun": true,
         "confirm": false,
         "regexName": "^Main\\.xml$",
-        "overwrite": false
+        "overwrite": false,
+        "importOrder": []
       }
     },
     {
@@ -44930,7 +44962,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -49037,8 +49070,11 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -54615,7 +54651,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -58916,8 +58953,11 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -62320,7 +62360,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -64795,8 +64836,11 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -68081,7 +68125,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -70885,8 +70930,11 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -74357,7 +74405,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -77459,8 +77508,11 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -81155,7 +81207,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -84420,8 +84473,11 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -88308,7 +88364,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -91867,8 +91924,11 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -96719,7 +96779,8 @@
           "dryRun": true,
           "confirm": false,
           "regexName": "^Main\\.xml$",
-          "overwrite": false
+          "overwrite": false,
+          "importOrder": []
         },
         "envelopeVersion": 4,
         "exampleSource": "plc-foundation"
@@ -100712,8 +100773,11 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
+          "properties": {
+            "StartAddress": 2
+          },
           "dryRun": true
         },
         "envelopeVersion": 4,
@@ -107958,7 +108022,7 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
           "dryRun": true
         },
@@ -115446,7 +115510,7 @@
           "itemPath": [
             "&lt;exact device item from GetProjectTree&gt;"
           ],
-          "ioType": "None",
+          "ioType": "Input",
           "startAddress": 1,
           "dryRun": true
         },

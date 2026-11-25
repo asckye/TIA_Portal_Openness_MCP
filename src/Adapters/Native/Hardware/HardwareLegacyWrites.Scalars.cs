@@ -9,6 +9,13 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
+        private static string? HardwareSiemensReason(Exception error)
+        {
+            if (error is not Siemens.Engineering.EngineeringException native) return null;
+            RecordSiemensReason(native);
+            return native.Data["nativeMessage"] as string;
+        }
+
         public HardwareAddressingReply HardwareLegacySetDeviceItemAttribute(string deviceItemPath, string attributeName, string value)
         {
             // envelope: legacy-multiple-dynamic-fields
@@ -93,6 +100,7 @@ namespace TiaMcp.Adapters
             }
             catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
             {
+                if (HardwareSiemensReason(ex) is string reason) meta["nativeMessage"] = reason;
                 meta["error"] = HardwareExceptionDetail(ex);
                 return new HardwareAddressingReply { Message = $"Failed setting device item attribute '{attributeName}'", Meta = meta };
             }
@@ -202,10 +210,12 @@ namespace TiaMcp.Adapters
                         EngineeringWriteJournal.ObserveFailure(ex);
                         if (writeIssued && !HardwareAddressingPolicy.ScalarUnchanged(ex, hadOldValue, oldValue, () => di.GetAttribute(info.Name)))
                             meta["writeOutcomeUnknown"] = true;
+                        string? reason = HardwareSiemensReason(ex);
+                        if (reason != null) meta["nativeMessage"] = reason;
                         rejected.Add(new Dictionary<string, object?>
                         {
                             ["attribute"] = info.Name,
-                            ["reason"] = ex.GetType().Name,
+                            ["reason"] = reason ?? ex.GetType().Name,
                             ["writeIssued"] = writeIssued
                         });
                     }
@@ -227,6 +237,7 @@ namespace TiaMcp.Adapters
             catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
             {
                 EngineeringWriteJournal.ObserveFailure(ex);
+                if (HardwareSiemensReason(ex) is string reason) meta["nativeMessage"] = reason;
                 meta["error"] = HardwareExceptionDetail(ex);
                 return new HardwareAddressingReply { Message = "Failed setting CPU common settings", Meta = meta };
             }

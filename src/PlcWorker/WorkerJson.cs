@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
 using TiaMcp.Adapters.Contracts;
 
@@ -20,8 +21,15 @@ namespace TiaMcp.PlcWorker
 
         private static JsonSerializerOptions CreateOptions()
         {
+            var resolver = new DefaultJsonTypeInfoResolver();
+            resolver.Modifiers.Add(type =>
+            {
+                if (type.Type == typeof(IoAddressWriteReply))
+                    type.Properties.Single(p => p.Name == nameof(IoAddressWriteReply.NativeMessage)).ShouldSerialize = (_, reason) => reason != null;
+            });
             var options = new JsonSerializerOptions
             {
+                TypeInfoResolver = resolver,
                 PropertyNamingPolicy = null,
                 DictionaryKeyPolicy = null,
                 DefaultIgnoreCondition = JsonIgnoreCondition.Never,

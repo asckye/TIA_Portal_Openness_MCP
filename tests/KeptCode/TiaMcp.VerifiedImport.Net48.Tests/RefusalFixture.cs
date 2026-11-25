@@ -1,3 +1,4 @@
+extern alias plcpathfixture;
 using Siemens.Engineering;
 using Siemens.Engineering.Connection;
 using Siemens.Engineering.SW.Blocks;
@@ -17,6 +18,39 @@ internal static class RefusalFixture
         var parts = scenario.Split('/');
         switch (parts[0])
         {
+            case "ManagePlcSoftwareUnit":
+                var session = new plcpathfixture::TiaMcp.Adapters.PlcFoundationEngine("17");
+                var steps = new TiaMcp.Adapters.PlcFoundationEngine();
+                session.Step = (tool, operation) => steps.RunHmiStep(tool, operation, true, writing: false);
+                session.Plc.UnitProvider.UnitGroup.Units.Add(new() { Name = "Existing" });
+                return session.Artifacts.ManagePlcSoftwareUnit("PLC", "create", "Existing", "", "", new(), true, "unit", [], "", "", "", "");
+            case "ManageDeviceUserGroup":
+                return new TiaMcp.Adapters.PlcFoundationEngine().RunHmiStep(scenario, meta => {
+                    var root = new { DeviceGroups = new[] { new { Name = "Source" }, new { Name = "Existing" } } };
+                    TiaMcp.Adapters.Hardware.HardwareGroupOperations.Manage(root, "Source", "rename", "Existing", true, "Devices", "DeviceGroups", meta);
+                    return "Renamed";
+                }, true, writing: false);
+            case "SetDeviceItemIoAddress":
+            case "SetDeviceItemAttribute":
+            case "SetPlcCpuSettings":
+                var hardware = new TiaMcp.Adapters.PlcFoundationEngine();
+                var setterError = new EngineeringException();
+                setterError.MessageData.Text = "Setter refused";
+                setterError.MessageData.DetailText = parts[0] == "SetDeviceItemIoAddress"
+                    ? "The start address is outside the CPU address range." : "The selected attribute is read-only.";
+                if (parts[0] == "SetDeviceItemIoAddress")
+                {
+                    var address = new Siemens.Engineering.HW.Address { IoType = Siemens.Engineering.HW.AddressIoType.Input, StartAddress = 2, Length = 1 };
+                    hardware.Module.Addresses.Add(address);
+                    address.OnSet = () => {
+                        if (parts.Length > 1) hardware.Module.Addresses.Clear();
+                        throw setterError;
+                    };
+                    return hardware.SetHardwareIoAddress("PLC/IO", "Input", 8);
+                }
+                hardware.Module.SetValue = _ => throw setterError;
+                return parts[0] == "SetDeviceItemAttribute" ? hardware.HardwareLegacySetDeviceItemAttribute("PLC/IO", "Value", "8")
+                    : hardware.HardwareLegacySetCpuCommonSettings("PLC/IO", new() { ["Value"] = new HardwareScalar { Kind = "number", Text = "8" } });
             case "CreatePlcTag":
             case "CreatePlcTagTable":
             case "CreatePlcUserConstant":

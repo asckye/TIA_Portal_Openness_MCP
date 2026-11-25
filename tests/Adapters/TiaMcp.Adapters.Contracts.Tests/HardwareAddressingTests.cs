@@ -9,6 +9,15 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class HardwareAddressingTests
 {
     [Fact]
+    public void Io_write_native_reason_survives_the_worker_round_trip()
+    {
+        const string reason = "The address lies outside the module range.";
+        var reply = new IoAddressWriteReply { NativeMessage = reason };
+        var restored = JsonSerializer.Deserialize<IoAddressWriteReply>(WorkerJson.Serialize(reply));
+        Assert.Equal(reason, restored!.NativeMessage);
+    }
+
+    [Fact]
     public void Failed_set_with_unchanged_readback_is_unchanged()
     {
         Assert.True(HardwareAddressingPolicy.UnchangedAfterFailedSet(true, 3, () => 3));

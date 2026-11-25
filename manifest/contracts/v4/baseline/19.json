@@ -36663,7 +36663,7 @@
             "type": "string"
           },
           "startAddress": {
-            "description": "startAddress: new start address (byte).",
+            "description": "startAddress: current byte offset of the address to edit. Set properties.StartAddress to the new offset.",
             "type": "integer"
           }
         },

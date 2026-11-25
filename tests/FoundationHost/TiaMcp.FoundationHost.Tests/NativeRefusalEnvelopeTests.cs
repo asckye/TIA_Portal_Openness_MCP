@@ -54,6 +54,48 @@ public sealed class NativeRefusalEnvelopeTests
         Assert.Equal(outcome, (string?)body["meta"]?["outcome"]);
     }
 
+    [Theory]
+    [InlineData("SetDeviceItemIoAddress", false)]
+    [InlineData("SetDeviceItemIoAddress", true)]
+    [InlineData("SetDeviceItemAttribute", false)]
+    [InlineData("SetPlcCpuSettings", false)]
+    public async Task Hardware_setter_preserves_Siemens_detail(string tool, bool unknown)
+    {
+        using var release = Host.HardwareContract.UseRelease("20");
+        var wire = await Reply(tool + (unknown ? "/changed" : ""));
+        var service = new Services.HardwareDevicesService((_, _) => wire, () => true, () => "Fixture.ap20");
+        var address = new Host.AddressesTools(new Host.HardwareAddressingService((_, _) => wire, () => true, () => "Fixture.ap20"));
+        var response = tool switch {
+            "SetDeviceItemIoAddress" => address.SetDeviceItemIoAddress("PLC/IO", "Input", 8, false),
+            "SetDeviceItemAttribute" => service.SetDeviceItemAttribute("PLC/IO", "Value", "8"),
+            _ => service.SetCpuCommonSettings("PLC/IO", """{"exactAttributes":{"Value":8}}""")
+        };
+        var body = Host.HardwareContract.Map(tool, response, true, false).StructuredContent!;
+        string reason = tool == "SetDeviceItemIoAddress" ? "The start address is outside the CPU address range." : "The selected attribute is read-only.";
+        Assert.Equal(unknown ? "unknown" : "completed", (string?)body["meta"]?["execution"]);
+        Assert.Contains(reason, (string?)body["data"]?["evidence"]?["nativeMessage"]);
+        Assert.Contains(reason, (string?)body["error"]?["message"]);
+        if (!unknown)
+        {
+            Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+            Assert.Contains(reason, (string?)body["error"]?["details"]?["nativeMessage"]);
+        }
+    }
+
+    [Theory, InlineData("ManagePlcSoftwareUnit", "name"), InlineData("ManageDeviceUserGroup", "newName")]
+    public async Task Name_collisions_are_preconditions(string tool, string parameter)
+    {
+        using var release = Host.HardwareContract.UseRelease("17");
+        var wire = await Reply(tool);
+        var response = new Host.ResponseMessage { Message = (string)wire["Message"]!, Meta = wire["Meta"]!.AsObject() };
+        var body = (tool == "ManageDeviceUserGroup" ? Host.HardwareToolContract.MapResult(tool, response, true, true)
+            : Host.PlcToolContract.Map(tool, response, false, true)).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.Equal(parameter, (string?)body["error"]?["details"]?["parameter"]);
+        Assert.Contains("Existing", (string?)body["error"]?["message"]);
+    }
+
     public static IEnumerable<object[]> Symbols => from tool in new[] { "CreatePlcTag", "CreatePlcUserConstant", "CreatePlcTagTable", "ImportPlcTagTable" }
         from state in new[] { "unchanged", "changed", "unreadable" } select new object[] { tool, state };
 

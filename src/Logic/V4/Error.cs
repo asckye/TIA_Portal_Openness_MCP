@@ -212,7 +212,7 @@ namespace TiaMcp.Logic.V4
 
         public static string? Text(string? text) => Text(text, 0, Array.Empty<string>());
 
-        private static string? Text(string? text, int depth, IEnumerable<string> collected)
+        private static string? Text(string? text, int depth, IEnumerable<string> collected, bool labelled = false)
         {
             if (string.IsNullOrWhiteSpace(text)) return null;
             try
@@ -221,22 +221,39 @@ namespace TiaMcp.Logic.V4
                 if (Current.Value is { } scope) secrets.UnionWith(scope.Secrets);
                 text = text.TrimStart('\uFEFF');
                 var jsonPrefix = ExceptionPrefix(text);
-                if (jsonPrefix.Success)
+                if (jsonPrefix.Success && !labelled)
                 {
                     string remainder = text.Substring(jsonPrefix.Length);
                     if (remainder.TrimStart().StartsWith("{", StringComparison.Ordinal)
                         || remainder.TrimStart().StartsWith("[", StringComparison.Ordinal))
                         text = jsonPrefix.Value + (Text(remainder, depth + 1, secrets) ?? "••••");
                 }
-                if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
+                var severity = Regex.Match(text, @"^\[(?:Error|Warning|Information|Info|Success)\]\s+",
+                    RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                if (severity.Success)
+                {
+                    if (depth >= 16) return "••••";
+                    text = severity.Value + (Text(text.Substring(severity.Length), depth + 1, secrets, labelled: true) ?? "••••");
+                }
+                else if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
                 {
                     if (depth >= 16) return "••••";
                     JsonNode? embedded;
                     try { embedded = JsonNode.Parse(text); }
                     catch (JsonException) /* swallow(privacy): malformed embedded JSON is hidden at the diagnostic boundary */ { return "••••"; }
                     Collect(JsonSerializer.SerializeToElement(embedded), secrets, false);
-                    Scrub(embedded, depth + 1, secrets);
+                    Scrub(embedded, depth + 1, secrets, labelled);
                     text = embedded?.ToJsonString(DiagnosticJson) ?? "null";
+                }
+                else if (labelled)
+                {
+                    // Only a complete JSON payload can be scrubbed structurally. Prose may contain a fragment or a quoted JSON string.
+                    if (text.IndexOfAny(new[] { '{', '[' }) >= 0 || text.Contains("\\\"") || text.TrimStart().StartsWith("\"", StringComparison.Ordinal))
+                        return "••••";
+                    // The ordinary text scrubber handles explicit credential assignments. Other mentions have no reliable value boundary.
+                    string prose = Regex.Replace(text, CredentialPair, " ", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                    if (Regex.Matches(prose, @"[\w.-]+", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)).Cast<Match>().Any(m => Credential(m.Value)))
+                        return "••••";
                 }
                 text = Regex.Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", "••••",
                     RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
@@ -319,8 +336,10 @@ namespace TiaMcp.Logic.V4
             }
         }
 
-        private static void Scrub(JsonNode? node, int depth, IEnumerable<string> secrets)
+        private static void Scrub(JsonNode? node, int depth, IEnumerable<string> secrets, bool labelled = false)
         {
+            string? ScrubString(string value) => labelled && value.IndexOfAny(new[] { '{', '[' }) >= 0
+                ? "••••" : Text(value, depth, secrets, labelled);
             if (node is JsonObject obj)
             {
                 bool named = obj.Any(p => (p.Key.Equals("name", StringComparison.OrdinalIgnoreCase)
@@ -332,16 +351,16 @@ namespace TiaMcp.Logic.V4
                     else if (Credential(pair.Key) || named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase))
                         obj[pair.Key] = "••••";
                     else if (pair.Value is JsonValue scalar && scalar.TryGetValue<string>(out var text))
-                        obj[pair.Key] = Text(text, depth, secrets);
+                        obj[pair.Key] = ScrubString(text);
                     else if (depth >= 16) obj[pair.Key] = "••••";
-                    else Scrub(pair.Value, depth + 1, secrets);
+                    else Scrub(pair.Value, depth + 1, secrets, labelled);
                 }
             }
             else if (node is JsonArray array)
                 for (int index = 0; index < array.Count; index++)
-                    if (array[index] is JsonValue scalar && scalar.TryGetValue<string>(out var text)) array[index] = Text(text, depth, secrets);
+                    if (array[index] is JsonValue scalar && scalar.TryGetValue<string>(out var text)) array[index] = ScrubString(text);
                     else if (depth >= 16) array[index] = "••••";
-                    else Scrub(array[index], depth + 1, secrets);
+                    else Scrub(array[index], depth + 1, secrets, labelled);
         }
     }
 
