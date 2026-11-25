@@ -13,6 +13,9 @@ namespace TiaOpenness.Gui.Localization;
 /// </summary>
 internal static partial class Strings
 {
+    private const string StoredEqualEn = "{0} reported Equal from the status TIA stored. TIA refused the refresh. "
+        + "Check the workspace files if an object was edited.";
+    private const string StoredEqualZh = "{0} 个对象报告了 TIA 保存的 Equal 状态。TIA 拒绝了刷新。如果编辑过对象，请核对工作区文件。";
     /// <summary>key, English, Chinese.</summary>
     internal static (string Key, string En, string Zh)[] Catalogue =>
         [.. CommonCatalogue, .. ProjectPagesCatalogue, .. EngineCatalogue, .. SessionCatalogue, .. LayoutCatalogue, .. OverlaysCatalogue, .. SafetyCatalogue];
@@ -452,6 +455,14 @@ internal static partial class Strings
         ("Primer.No", "No", "否"),
         ("Primer.Protected", "Protected", "受保护"),
         ("Primer.Identical", "Identical", "一致"),
+        ("Primer.StoredEqual", "TIA stored Equal (refresh refused)", "TIA 保存的 Equal（刷新被拒）"),
+        ("Status.StoredEqual", StoredEqualEn, StoredEqualZh),
+        ("Status.RefreshRefused", "Refresh refused: {0}", "刷新被拒：{0}"),
+        ("Status.VcStoredStatus", "{1} mapped, {2} differ. " + StoredEqualEn, "映射 {1} 个，有差异 {2} 个。" + StoredEqualZh),
+        ("Status.VcStoredPreview", "Dry run: {1} would sync, {2} skipped as Equal. " + StoredEqualEn,
+            "预演：将同步 {1} 个，按 Equal 跳过 {2} 个。" + StoredEqualZh),
+        ("Status.VcStoredApplied", "{1} synchronized, {2} failed, {3} skipped as Equal. " + StoredEqualEn,
+            "已同步 {1} 个，失败 {2} 个，按 Equal 跳过 {3} 个。" + StoredEqualZh),
         ("Primer.Differs", "Differs", "有差异"),
         ("Primer.Unknown", "Unknown", "未知"),
         ("Primer.RuleNaming", "Naming", "命名"),

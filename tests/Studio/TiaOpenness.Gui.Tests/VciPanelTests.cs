@@ -195,6 +195,49 @@ public sealed class VciPanelTests(WpfContext wpf)
                 foreach (string tool in new[] { "CreateVersionControlWorkspace", "ConnectProjectToWorkspace", "SynchronizeVersionControlWorkspace" })
                     yield return [release, candidate, tool];
     }
+
+    [Fact]
+    public async Task Workbench_qualifies_stored_equal_in_status_and_sync()
+    {
+        const string refusal = "The file is deleted";
+        await using var host = new McpOperatorFixture("17") { VciRefreshMessage = refusal };
+        host.BindProject();
+        await using var client = host.Client();
+        await client.AttachAsync(Assert.Single(await client.DiscoverAsync("17")));
+        wpf.Run(() =>
+        {
+            using var project = new McpProjectClient(client);
+            using var model = new MainViewModel(project, new FakeDialogService());
+            WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+            var vc = model.VersionControl;
+            WpfContext.Complete(vc.VcRefreshAsync());
+            Assert.True(vc.HasStoredEqual);
+            Assert.Empty(vc.VcStatusItems);
+            vc.VcShowAll = true;
+            WpfContext.Complete(vc.VcRefreshAsync());
+            var row = Assert.Single(vc.VcStatusItems);
+            Assert.Equal(VcCompareState.Equal, row.CompareState);
+            Assert.Equal(refusal, row.RefreshMessage);
+            Assert.Contains(refusal, TiaOpenness.Contracts.Rpc.BridgeJson.Serialize(row));
+            Assert.DoesNotContain("RefreshMessage", TiaOpenness.Contracts.Rpc.BridgeJson.Serialize(new MappedObjectInfo()));
+            Assert.DoesNotContain("RefreshMessage", TiaOpenness.Contracts.Rpc.BridgeJson.Serialize(new SyncItem()));
+            Assert.True(vc.HasStoredEqual);
+            Assert.Equal(Loc.Current.T("Status.StoredEqual", 1), vc.StoredEqualNotice);
+            var converter = new Controls.DisplayValueConverter();
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            Assert.Equal(Loc.Current["Primer.StoredEqual"], converter.Convert(row, typeof(string), "compare", culture));
+            Assert.Equal(vc.StoredEqualNotice + " " + refusal, converter.Convert(row, typeof(string), "compareDetail", culture));
+
+            var finished = new TaskCompletionSource();
+            vc.PropertyChanged += (_, _) => { if (vc.SyncResult != null) finished.TrySetResult(); };
+            vc.VcDryRun = true;
+            vc.VcPush.Execute(null);
+            WpfContext.Complete(finished.Task.WaitAsync(TestDeadlines.Hang));
+            Assert.Contains(vc.StoredEqualNotice, vc.SyncCounts);
+            Assert.Equal(1, vc.SyncResult!.UnverifiedEqual);
+            Assert.Equal(refusal, Assert.Single(vc.SyncRows).RefreshMessage);
+        });
+    }
     [Theory, MemberData(nameof(Writes))]
     public async Task Every_engine_write_previews_and_waits_for_normal_workbench_approval(string release, bool candidate, string tool)
     {

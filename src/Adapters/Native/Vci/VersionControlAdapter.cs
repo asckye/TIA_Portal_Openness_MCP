@@ -179,28 +179,31 @@ namespace TiaMcp.Adapters.Native.Vci
 
                 var lines = new List<string>();
                 var entries = new HmiArray();
-                int total = 0, differing = 0, unknown = 0;
+                int total = 0, differing = 0, unknown = 0, unverifiedEqual = 0;
                 foreach (var mo in PortVci.Enumerate(Keep(PortVci.MappedObjects(ws))))
                 {
                     total++;
                     CompareState state;
                     string? error = null;
+                    string? refreshMessage = null;
                     // GetStatus() returns an IndividualObjectCompareResult; ToString() on it yields the type
                     // name, not the verdict. The verdict is CompareState (Equal / Unequal / WorkspaceFileMissing).
-                    try { state = PortVci.State(PortVci.ReadStatus(mo)); }
+                    try { state = PortVci.State(PortVci.ReadStatus(mo, out refreshMessage)); }
                     catch (Exception ex)
                     {
                         state = CompareState.Unknown;
-                        error = NativeFailureText.Compose(ex.Message, null, Array.Empty<string>());
+                        error = NativeFailureText.BoundedDiagnostic(ex);
                     }
                     if (state == CompareState.Unknown) unknown++;
                     else if (state != CompareState.Equal) differing++;
+                    else if (refreshMessage != null) unverifiedEqual++;
                     if (changedOnly && state == CompareState.Equal) continue;
-                    lines.Add(string.Format("{0} | {1} | file={2}{3}",
-                        SafeName(mo), error == null ? state.ToString() : "Unknown(" + error + ")", SafeFile(mo), SafeFormat(mo)));
-                    entries.Add(new HmiObject { ["name"] = SafeName(mo), ["compareState"] = state.ToString(),
-                        ["error"] = error, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo)
-                            .Replace(" | format=", "") });
+                    var status = error == null ? state.ToString() : "Unknown(" + error + ")";
+                    var line = $"{SafeName(mo)} | {status} | file={SafeFile(mo)}{SafeFormat(mo)}";
+                    var row = new HmiObject { ["name"] = SafeName(mo), ["compareState"] = state.ToString(),
+                        ["error"] = error, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo).Replace(" | format=", "") };
+                    lines.Add(line + RefreshNote(row, refreshMessage));
+                    entries.Add(row);
                 }
 
                 return new VersionControlResult
@@ -210,15 +213,17 @@ namespace TiaMcp.Adapters.Native.Vci
                         PortVci.Name(ws), total, differing,
                         unknown > 0 ? " " + unknown + " comparison(s) are unknown. Inspect the individual status before export."
                         : total == 0 ? " Use ConnectProjectToWorkspace to map objects."
+                        : differing == 0 && unverifiedEqual > 0 ? ""
                         : differing == 0
                             ? " Project and workspace are in sync — nothing to commit."
-                            : " Call SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit."),
+                            : " Call SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit.")
+                        + VersionControlResult.StoredEqualSummary(unverifiedEqual),
                     Items = lines,
                     // envelope: legacy-multiple-dynamic-fields
                     Meta = new HmiObject {
                         ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
                             ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["unknown"] = unknown,
-                            ["dataComplete"] = unknown == 0, ["objects"] = entries
+                            ["dataComplete"] = unknown == 0, ["unverifiedEqual"] = unverifiedEqual, ["objects"] = entries
                     },
                 };
             }
@@ -230,6 +235,13 @@ namespace TiaMcp.Adapters.Native.Vci
                     Meta = FailureEvidence(ex),
                 };
             }
+        }
+
+        private static string RefreshNote(HmiObject row, string? refreshMessage)
+        {
+            if (refreshMessage == null) return "";
+            row["refreshMessage"] = refreshMessage;
+            return VersionControlResult.RefreshSeparator + refreshMessage;
         }
 
         private static string SafeName(MappedObject mo)
@@ -263,6 +275,9 @@ namespace TiaMcp.Adapters.Native.Vci
             var attempts = new VciSyncAttempts(LegacyXmlExport);
             var selection = new VciSyncSelection();
             var lines = new List<string>();
+            var rows = new HmiArray();
+            var failures = new HmiArray();
+            bool hasStoredStatus = false;
             int failed = 0;
             try
             {
@@ -300,20 +315,35 @@ namespace TiaMcp.Adapters.Native.Vci
                 // equal"), so "force every object" is not a thing that exists — asking for it just
                 // produced one failure per object. Equal is always skipped; changedOnly only decides
                 // whether objects whose status could not be determined are attempted anyway.
-                string ReadStatus(MappedObject mo) => PortVci.State(PortVci.ReadStatus(mo)).ToString();
+                string ReadStatus(MappedObject mo, out string? refreshMessage) => PortVci.State(PortVci.ReadStatus(mo, out refreshMessage)).ToString();
                 string ReadDirectory(MappedObject mo) => PortVci.Directory(mo)?.ToString() ?? "";
                 string wsName = PortVci.Name(ws);
                 string wsRoot = SafeRoot(ws);
-                var targets = new List<(MappedObject Object, bool ProbeFailed)>();
+                var targets = new List<(MappedObject Object, bool ProbeFailed, string State, string? RefreshMessage)>();
                 foreach (var mo in WorkspaceMappings(ws))
-                    if (selection.Include(() => ReadStatus(mo), changedOnly, out bool probeFailed))
-                        targets.Add((mo, probeFailed));
+                {
+                    string state = "Unknown";
+                    string? refreshMessage = null;
+                    bool include = selection.Include(() => state = ReadStatus(mo, out refreshMessage), changedOnly, out bool probeFailed);
+                    hasStoredStatus |= refreshMessage != null;
+                    if (include)
+                        targets.Add((mo, probeFailed, state, refreshMessage));
+                    else if (refreshMessage != null)
+                    {
+                        selection.CountStoredEqual();
+                        var name = SafeName(mo);
+                        var row = new HmiObject { ["name"] = name, ["stateBefore"] = state, ["outcome"] = "skipped-equal" };
+                        lines.Add(name + " | skipped (TIA stored Equal)" + RefreshNote(row, refreshMessage));
+                        rows.Add(row);
+                    }
+                }
 
                 HmiObject Evidence()
                 {
                     var meta = selection.Evidence(dryRun, attempts.Synchronized, failed);
                     meta["workspaceName"] = wsName;
                     meta["rootPath"] = wsRoot;
+                    if (hasStoredStatus) meta["items"] = rows;
                     attempts.AddEvidence(meta);
                     return meta;
                 }
@@ -322,12 +352,20 @@ namespace TiaMcp.Adapters.Native.Vci
                     return new VersionControlResult
                     {
                         Message = selection.Summary("Workspace '" + wsName + "': nothing selected to synchronize.", noTargets: true),
+                        Items = lines,
                         Meta = Evidence(),
                     };
 
                 if (dryRun)
                 {
-                    foreach (var target in targets) lines.Add(SafeName(target.Object) + " | would sync " + mode);
+                    foreach (var target in targets)
+                    {
+                        var name = SafeName(target.Object);
+                        var outcome = "would sync " + mode;
+                        var row = new HmiObject { ["name"] = name, ["stateBefore"] = target.State, ["outcome"] = outcome };
+                        lines.Add(name + " | " + outcome + RefreshNote(row, target.RefreshMessage));
+                        rows.Add(row);
+                    }
                     string message = string.Format(
                         "DRY RUN — nothing was written. {0} object(s) would be synchronized {1} in workspace '{2}'. Call again with dryRun=false to do it.",
                         targets.Count, mode, wsName);
@@ -337,9 +375,8 @@ namespace TiaMcp.Adapters.Native.Vci
                     return new VersionControlResult { Message = message, Items = lines, Meta = meta };
                 }
 
-                var failures = new HmiArray();
                 // If one export disposes the workspace, the other selected mappings may also need fresh handles.
-                var prepared = targets.Select(t => (t.Object, t.ProbeFailed,
+                var prepared = targets.Select(t => (t.Object, t.ProbeFailed, t.State, t.RefreshMessage,
                     Path: VciSyncTarget.Capture(SafeName(t.Object), () => ReadDirectory(t.Object)))).ToArray();
                 Workspace? current = ws;
                 MappedObject FindCurrent(VciSyncTarget path) => path.Find(
@@ -347,26 +384,41 @@ namespace TiaMcp.Adapters.Native.Vci
                 foreach (var target in prepared)
                 {
                     var mo = failed == 0 ? target.Object : attempts.FindNext(() => FindCurrent(target.Path));
+                    string? readbackMessage = null;
                     string? failure = attempts.Synchronize(wsRoot, target.Path, () => PortVci.Synchronize(mo, mode),
-                        () => { current = null; return FindCurrent(target.Path); }, ReadStatus, target.ProbeFailed, out var statusAfter, mode.ToString());
+                        () => { current = null; return FindCurrent(target.Path); }, fresh => ReadStatus(fresh, out readbackMessage),
+                        target.ProbeFailed, out var statusAfter, mode.ToString());
                     string name = target.Path.Stem;
+                    var row = new HmiObject { ["name"] = name, ["stateBefore"] = target.State, ["outcome"] = failure == null ? "synchronized" : "failed" };
+                    string note = RefreshNote(row, target.RefreshMessage);
+                    rows.Add(row);
                     if (failure == null)
                     {
-                        lines.Add(name + " | synchronized");
+                        lines.Add(name + " | synchronized" + note);
                     }
                     else
                     {
                         if (statusAfter == null) current = null;
                         failed++;
-                        lines.Add(name + " | FAILED: " + failure);
-                        failures.Add(new HmiObject { ["name"] = name, ["statusAfter"] = statusAfter ?? "Unknown" });
+                        var failedRow = new HmiObject { ["name"] = name, ["statusAfter"] = statusAfter ?? "Unknown" };
+                        string readbackNote = RefreshNote(failedRow, readbackMessage);
+                        if (readbackMessage != null)
+                        {
+                            hasStoredStatus = true;
+                            row["statusAfter"] = statusAfter;
+                            if (target.RefreshMessage == null) row["refreshMessage"] = readbackMessage;
+                            if (statusAfter == "Equal") selection.CountStoredEqual();
+                        }
+                        lines.Add(name + " | FAILED: " + failure + note + (readbackMessage == target.RefreshMessage ? "" : readbackNote));
+                        failures.Add(failedRow);
                     }
                 }
 
                 string summary = string.Format(
-                    "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {4} already equal (skipped).",
+                    selection.UnverifiedEqual == 0 ? "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {4} already equal (skipped)."
+                        : "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {4} skipped with status Equal.",
                     wsName, mode, attempts.Synchronized, failed, selection.SkippedEqual);
-                if (failed == 0) summary += " The text files are updated — `git add -A && git commit` from that folder.";
+                if (failed == 0 && selection.UnverifiedEqual == 0) summary += " The text files are updated — `git add -A && git commit` from that folder.";
                 summary = selection.Summary(summary) + " Folder: " + wsRoot;
                 var resultMeta = Evidence();
                 resultMeta["failures"] = failures;
@@ -374,11 +426,18 @@ namespace TiaMcp.Adapters.Native.Vci
             }
             catch (Exception ex)
             {
+                var meta = attempts.Interrupted(ex);
+                meta["unverifiedEqual"] = selection.UnverifiedEqual;
+                if (hasStoredStatus)
+                {
+                    meta["items"] = rows;
+                    if (failures.Count > 0) meta["failures"] = failures;
+                }
                 return new VersionControlResult
                 {
-                    Message = "SynchronizeVersionControlWorkspace failed: " + ex.Message,
+                    Message = "SynchronizeVersionControlWorkspace failed: " + ex.Message + VersionControlResult.StoredEqualSummary(selection.UnverifiedEqual),
                     Items = lines,
-                    Meta = attempts.Interrupted(ex),
+                    Meta = meta,
                 };
             }
         }

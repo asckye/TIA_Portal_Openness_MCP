@@ -377,8 +377,8 @@ namespace TiaOpenness.Openness
             return workspace.Mappings;
 #endif
         }
-        private static IndividualObjectCompareResult ReadStatus(MappedObject mapped)
-            => VersionControlPrimitives.ReadStatus(mapped);
+        private static IndividualObjectCompareResult ReadStatus(MappedObject mapped, out string refreshMessage)
+            => VersionControlPrimitives.ReadStatus(mapped, out refreshMessage);
         private static void Synchronize(MappedObject mapped, SynchronizationMode mode)
             => VersionControlPrimitives.Synchronize(mapped, mode);
 

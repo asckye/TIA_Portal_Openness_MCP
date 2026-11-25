@@ -38,7 +38,12 @@ public sealed class DisplayValueConverter : IValueConverter, IMultiValueConverte
             "export" => (bool)value ? Loc.Current["Pages.ExportSource"] : Loc.Current["Pages.ExportXml"],
             "consistent" => (bool)value ? Loc.Current["Primer.Yes"] : Loc.Current["Primer.No"],
             "protected" => (bool)value ? Loc.Current["Primer.Protected"] : "—",
-            "compare" => (VcCompareState)value switch
+            "compareDetail" when value is MappedObjectInfo { RefreshMessage: { Length: > 0 } } item =>
+                item.CompareState == VcCompareState.Equal ? Loc.Current.T("Status.StoredEqual", 1) + " " + item.RefreshMessage : item.RefreshMessage,
+            "compareDetail" => Loc.Current["Col.State"],
+            "compare" when value is MappedObjectInfo { CompareState: VcCompareState.Equal, RefreshMessage: { Length: > 0 } } =>
+                Loc.Current["Primer.StoredEqual"],
+            "compare" => (value is MappedObjectInfo row ? row.CompareState : (VcCompareState)value) switch
             {
                 VcCompareState.Equal => Loc.Current["Primer.Identical"],
                 VcCompareState.Unequal => Loc.Current["Primer.Differs"],
@@ -259,6 +264,8 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
                     SyncSummary = Loc.Current.T("Primer.SyncPreview", Arg(0), Arg(2));
                     break;
                 case "Status.VcSyncApplied":
+                case "Status.VcStoredPreview":
+                case "Status.VcStoredApplied":
                     SyncSummary = Loc.Current.T(entry.Key, entry.Arguments);
                     break;
             }

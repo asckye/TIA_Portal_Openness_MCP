@@ -23,7 +23,8 @@ internal static class LegacyVciPortPrimitives
     internal static string Name(Workspace workspace) => NativeVci.Name(workspace);
     internal static DirectoryInfo Root(Workspace workspace) => NativeVci.Root(workspace);
     internal static CompareState State(IndividualObjectCompareResult result) => NativeVci.State(result);
-    internal static IndividualObjectCompareResult ReadStatus(WorkspaceMapping mapped) => NativeVci.ReadStatus(mapped);
+    internal static IndividualObjectCompareResult ReadStatus(WorkspaceMapping mapped, out string? refreshMessage) =>
+        NativeVci.ReadStatus(mapped, out refreshMessage);
     internal static void Synchronize(WorkspaceMapping mapped, SynchronizationMode mode) => NativeVci.Synchronize(mapped, mode);
     internal static IEnumerable<T> Enumerate<T>(IEnumerable<T> values) => values;
     internal static WorkspaceMappingComposition MappedObjects(Workspace workspace) => workspace.Mappings;

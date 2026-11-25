@@ -14,7 +14,7 @@ namespace TiaMcp.Adapters.Contracts.Studio
 
     public enum VcCompareState
     {
-        /// <summary>Project and file agree; nothing to synchronize.</summary>
+        /// <summary>TIA reports no difference.</summary>
         Equal = 0,
         /// <summary>They differ. This is the thing worth committing.</summary>
         Unequal = 1,
@@ -41,6 +41,7 @@ namespace TiaMcp.Adapters.Contracts.Studio
         /// <summary>The VCI file format, e.g. "s7dcl" or a SimaticML flavour.</summary>
         public string FileFormat { get; set; }
         public VcCompareState CompareState { get; set; }
+        public string RefreshMessage { get; set; }
         /// <summary>Present when the state could not be determined.</summary>
         public string Error { get; set; }
     }
@@ -52,8 +53,9 @@ namespace TiaMcp.Adapters.Contracts.Studio
         public int Total { get; set; }
         /// <summary>Objects whose state is not <see cref="VcCompareState.Equal"/>.</summary>
         public int Differing { get; set; }
+        public int UnverifiedEqual { get; set; }
         public List<MappedObjectInfo> Items { get; set; } = new List<MappedObjectInfo>();
-        public bool InSync { get { return Differing == 0; } }
+        public bool InSync { get { return Differing == 0 && UnverifiedEqual == 0; } }
     }
 
     public class MappingItem
@@ -85,6 +87,7 @@ namespace TiaMcp.Adapters.Contracts.Studio
 
     public class SyncItem
     {
+        public string RefreshMessage { get; set; }
         public string Name { get; set; }
         public string Outcome { get; set; }
         public string Error { get; set; }
@@ -98,8 +101,9 @@ namespace TiaMcp.Adapters.Contracts.Studio
         public bool DryRun { get; set; }
         public int Synchronized { get; set; }
         public int Failed { get; set; }
-        /// <summary>Objects already in sync. TIA refuses to synchronize these, so they are skipped.</summary>
+        /// <summary>Objects TIA reports as Equal. Synchronization skips these mappings.</summary>
         public int SkippedEqual { get; set; }
+        public int UnverifiedEqual { get; set; }
         public List<SyncItem> Items { get; set; } = new List<SyncItem>();
     }
 }

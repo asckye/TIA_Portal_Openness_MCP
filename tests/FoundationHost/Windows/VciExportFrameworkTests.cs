@@ -106,6 +106,136 @@ public sealed class VciExportFrameworkTests
     }
 
     [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
+    public async Task Stored_equal_keeps_the_refusal_in_status_and_sync_without_changing_selection(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var replies = await StatusReplies(release);
+        var freshStatus = Tools(replies["freshStatus"]!).GetVersionControlStatusV4(changedOnly: false).StructuredContent!;
+        var freshPreview = Tools(replies["freshPreview"]!).SynchronizeVersionControlWorkspaceV4(dryRun: true).StructuredContent!;
+        var freshApply = Tools(replies["freshApply"]!).SynchronizeVersionControlWorkspaceV4(dryRun: false, changedOnly: false).StructuredContent!;
+        foreach (var fresh in new[] { freshStatus, freshPreview, freshApply })
+        {
+            Assert.Equal(0, (int?)fresh["data"]!["evidence"]!["unverifiedEqual"]);
+            Assert.DoesNotContain("refreshMessage", fresh.ToJsonString());
+        }
+        string? expectedMessage = null;
+        foreach (var key in new[] { "storedStatus", "storedFiltered", "storedPreview", "storedApply", "mixedPreview", "mixedApply" })
+        {
+            var scenario = replies[key]!;
+            bool status = key is "storedStatus" or "storedFiltered";
+            var tools = Tools(scenario);
+            var body = (status ? tools.GetVersionControlStatusV4(changedOnly: key == "storedFiltered")
+                : tools.SynchronizeVersionControlWorkspaceV4(dryRun: key.EndsWith("Preview"), changedOnly: key.EndsWith("Preview"))).StructuredContent!;
+            var data = body["data"]!;
+            var evidence = data["evidence"]!;
+            var fresh = status ? freshStatus : key.EndsWith("Preview") ? freshPreview : freshApply;
+            Assert.Equal((string)fresh["meta"]!["completeness"]!, (string?)body["meta"]!["completeness"]);
+            Assert.True((bool?)body["ok"]);
+            Assert.Equal(1, (int?)evidence["unverifiedEqual"]);
+            Assert.True((bool?)evidence["dataComplete"]);
+            string summary = (string)data["summary"]!;
+            Assert.Contains("1 object(s) reported Equal from the status TIA stored", summary);
+            Assert.Contains("refused the refresh", summary);
+            Assert.Contains("Check the workspace files if an object was edited", summary);
+            Assert.DoesNotContain("in sync", summary);
+            Assert.DoesNotContain("nothing to commit", summary);
+            Assert.DoesNotContain("already equal", summary);
+            Assert.DoesNotContain("fixture-password", body.ToJsonString());
+            Calls(scenario, "Stored", "UpdateStatus", "GetStatus");
+            var rows = evidence[status ? "objects" : "items"]!.AsArray();
+            if (status)
+            {
+                Assert.Equal(0, (int?)evidence["differing"]);
+                Assert.Equal(0, (int?)evidence["unknown"]);
+            }
+            else
+            {
+                Assert.Equal(1, (int?)evidence["skippedEqual"]);
+                Assert.Equal(key == "mixedApply" ? 1 : 0, (int?)evidence["exportsIssued"]);
+            }
+            if (key == "storedFiltered")
+            {
+                Assert.Empty(rows);
+                Assert.Empty(data["items"]!.AsArray());
+                continue;
+            }
+            var row = rows.Single(r => (string?)r!["name"] == "Stored")!;
+            Assert.Equal("Equal", (string?)row[status ? "compareState" : "stateBefore"]);
+            Assert.Null(row["error"]);
+            string message = (string)row["refreshMessage"]!;
+            Assert.Contains("The file is deleted", message);
+            expectedMessage ??= message;
+            Assert.Equal(expectedMessage, message);
+            Assert.Contains(data["items"]!.AsArray(), item => ((string)item!).EndsWith(message, StringComparison.Ordinal));
+        }
+        var statusRows = Tools(replies["status"]!).GetVersionControlStatusV4(changedOnly: false).StructuredContent!["data"]!["evidence"]!["objects"]!;
+        Assert.False(statusRows.AsArray().Single(row => (string?)row!["name"] == "Refreshed")!.AsObject().ContainsKey("refreshMessage"));
+        var longRow = Tools(replies["longRefusal"]!).GetVersionControlStatusV4(changedOnly: false).StructuredContent!["data"]!["evidence"]!["objects"]![0]!;
+        string bounded = (string)longRow["refreshMessage"]!;
+        Assert.StartsWith("The file is deleted", bounded);
+        Assert.InRange(System.Text.Encoding.UTF8.GetByteCount(bounded), 1, 4096);
+        var equal = Tools(replies["equalPreview"]!).SynchronizeVersionControlWorkspaceV4(dryRun: true, changedOnly: false).StructuredContent!["data"]!;
+        Assert.Equal(release == "16" ? 0 : 1, (int?)equal["evidence"]!["unverifiedEqual"]);
+        if (release == "16")
+        {
+            Assert.Contains("are in sync", (string?)equal["summary"]);
+            Assert.DoesNotContain("refreshMessage", equal.ToJsonString());
+        }
+    }
+
+    [Fact]
+    public async Task A_failed_sync_keeps_its_stored_readback_and_does_not_confirm_the_write()
+    {
+        using var selected = Host.HardwareContract.UseRelease("17");
+        var scenario = (await StatusReplies("17"))["storedReadback"]!;
+        var data = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: false, changedOnly: false).StructuredContent!["data"]!;
+        var evidence = data["evidence"]!;
+        Assert.Equal(0, (int?)evidence["skippedEqual"]);
+        Assert.Equal(1, (int?)evidence["unverifiedEqual"]);
+        Assert.Equal(1, (int?)evidence["exportsIssued"]);
+        Assert.True((bool?)evidence["writeOutcomeUnknown"]);
+        var attempt = evidence["items"]![0]!;
+        var readback = evidence["failures"]![0]!;
+        Assert.Equal("Unequal", (string?)attempt["stateBefore"]);
+        Assert.Equal("Equal", (string?)readback["statusAfter"]);
+        Assert.Contains("The file is deleted", (string?)readback["refreshMessage"]);
+        Assert.Equal((string)attempt["refreshMessage"]!, (string?)readback["refreshMessage"]);
+        Assert.Contains("The file is deleted", (string?)data["items"]![0]);
+        Assert.Contains("Check the workspace files", (string?)data["summary"]);
+
+        var distinct = (await StatusReplies("17"))["distinctReadback"]!;
+        var result = Tools(distinct).SynchronizeVersionControlWorkspaceV4(dryRun: false, changedOnly: false).StructuredContent!["data"]!;
+        var selection = (string)result["evidence"]!["items"]![0]!["refreshMessage"]!;
+        var after = (string)result["evidence"]!["failures"]![0]!["refreshMessage"]!;
+        Assert.Contains("Selection refresh refused", selection);
+        Assert.Contains("The file is deleted", after);
+        Assert.Contains(selection, (string?)result["items"]![0]);
+        Assert.Contains(after, (string?)result["items"]![0]);
+        Assert.DoesNotContain("fixture-password", result.ToJsonString());
+    }
+
+    [Fact]
+    public async Task Fatal_fallback_errors_replace_the_refresh_refusal_on_their_own_mapping()
+    {
+        using var selected = Host.HardwareContract.UseRelease("17");
+        var replies = await StatusReplies("17");
+        var scenario = replies["probeFailures"]!;
+        var body = Tools(scenario).GetVersionControlStatusV4(changedOnly: false).StructuredContent!;
+        var rows = body["data"]!["evidence"]!["objects"]!.AsArray().ToDictionary(row => (string)row!["name"]!);
+        foreach (var kind in new[] { "Disposed", "Aborted", "Disconnected", "Nonrecoverable" })
+        {
+            var fallback = rows["Fallback" + kind]!;
+            Assert.Equal("Unknown", (string?)fallback["compareState"]);
+            Assert.Equal((string?)rows[kind]!["error"], (string?)fallback["error"]);
+            Assert.DoesNotContain("The file is deleted", (string?)fallback["error"]);
+            Assert.False(fallback.AsObject().ContainsKey("refreshMessage"));
+            Calls(scenario, "Fallback" + kind, "UpdateStatus", "GetStatus");
+        }
+        var sync = Tools(replies["probePreview"]!).SynchronizeVersionControlWorkspaceV4(dryRun: true).StructuredContent!;
+        Assert.Equal((string)rows["BothRefused"]!["error"]!, (string?)sync["data"]!["evidence"]!["statusProbe"]!["nativeMessage"]);
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
     public async Task Sync_reports_equal_without_a_write_and_keeps_unknown_selection_and_file_proof(string release)
     {
         using var selected = Host.HardwareContract.UseRelease(release);

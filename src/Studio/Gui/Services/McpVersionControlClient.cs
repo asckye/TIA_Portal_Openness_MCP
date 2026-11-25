@@ -161,7 +161,10 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
             Name = (string?)row["name"] ?? (string?)row["object"] ?? "",
             Outcome = (string?)row["outcome"] ?? (string?)row["execution"] ?? "",
             Error = (string?)row["error"] ?? "",
+            RefreshMessage = (string?)row["refreshMessage"],
         }).ToList();
+        if (dryRun && result.UnverifiedEqual > 0 && data["wouldSynchronize"] is JsonValue planned)
+            result.Synchronized = (int)planned;
         if (data["synchronized"] == null)
         {
             result.Synchronized = result.Items.Count(i => i.Outcome == "completed");

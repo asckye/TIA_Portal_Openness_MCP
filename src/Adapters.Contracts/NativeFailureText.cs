@@ -8,6 +8,12 @@ namespace TiaMcp.Adapters.Contracts;
 
 public static class NativeFailureText
 {
+    public static string BoundedDiagnostic(Exception error)
+    {
+        var message = Compose(error.Message, null, Array.Empty<string>());
+        return BoundedLines(new[] { message.Length > 0 ? message : error.GetType().Name }, WithoutLocalPaths)[0];
+    }
+
     public static string Compose(string? message, string? detailText, IEnumerable<string?> detailTexts)
         => string.Join("; ", new[] { message, detailText }.Concat(detailTexts)
             .Where(text => !string.IsNullOrWhiteSpace(text))

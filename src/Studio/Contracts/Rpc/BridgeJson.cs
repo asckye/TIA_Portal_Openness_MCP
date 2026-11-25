@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using TiaOpenness.Contracts.Models;
 
 namespace TiaOpenness.Contracts.Rpc
 {
@@ -17,8 +19,17 @@ namespace TiaOpenness.Contracts.Rpc
 
         private static JsonSerializerOptions CreateOptions(bool clientDates = false, bool indented = false)
         {
+            // The Studio and SDK-independent adapter DTOs share this bridge wire format.
+            var resolver = new DefaultJsonTypeInfoResolver();
+            resolver.Modifiers.Add(type =>
+            {
+                if (type.Type.Name != nameof(MappedObjectInfo) && type.Type.Name != nameof(SyncItem)) return;
+                var refresh = type.Properties.FirstOrDefault(property => property.Name == nameof(MappedObjectInfo.RefreshMessage));
+                if (refresh != null) refresh.ShouldSerialize = (_, message) => message != null;
+            });
             var options = new JsonSerializerOptions
             {
+                TypeInfoResolver = resolver,
                 PropertyNamingPolicy = null,
                 DictionaryKeyPolicy = null,
                 PropertyNameCaseInsensitive = true,

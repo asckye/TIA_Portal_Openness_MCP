@@ -15,7 +15,7 @@ namespace TiaOpenness.Contracts.Models
     /// <summary>How a mapped object compares against its file on disk.</summary>
     public enum VcCompareState
     {
-        /// <summary>Project and file agree; nothing to synchronize.</summary>
+        /// <summary>TIA reports no difference.</summary>
         Equal = 0,
         /// <summary>They differ. This is the thing worth committing.</summary>
         Unequal = 1,
@@ -44,6 +44,9 @@ namespace TiaOpenness.Contracts.Models
         /// <summary>The VCI file format, e.g. "s7dcl" or a SimaticML flavour.</summary>
         public string FileFormat { get; set; }
         public VcCompareState CompareState { get; set; }
+        public string RefreshMessage { get; set; }
+        // The legacy bridge codec uses the ShouldSerialize convention.
+        public bool ShouldSerializeRefreshMessage() => RefreshMessage != null;
         /// <summary>Present when the state could not be determined.</summary>
         public string Error { get; set; }
     }
@@ -56,8 +59,9 @@ namespace TiaOpenness.Contracts.Models
         public int Total { get; set; }
         /// <summary>Objects whose state is not <see cref="VcCompareState.Equal"/>.</summary>
         public int Differing { get; set; }
+        public int UnverifiedEqual { get; set; }
         public List<MappedObjectInfo> Items { get; set; } = new List<MappedObjectInfo>();
-        public bool InSync { get { return Differing == 0; } }
+        public bool InSync { get { return Differing == 0 && UnverifiedEqual == 0; } }
     }
 
     /// <summary>Outcome of mapping one project object into a workspace.</summary>
@@ -92,6 +96,8 @@ namespace TiaOpenness.Contracts.Models
     /// <summary>Outcome of synchronizing one mapped object.</summary>
     public class SyncItem
     {
+        public string RefreshMessage { get; set; }
+        public bool ShouldSerializeRefreshMessage() => RefreshMessage != null;
         public string Name { get; set; }
         public string Outcome { get; set; }
         public string Error { get; set; }
@@ -146,8 +152,9 @@ namespace TiaOpenness.Contracts.Models
         public bool DryRun { get; set; }
         public int Synchronized { get; set; }
         public int Failed { get; set; }
-        /// <summary>Objects already in sync. TIA refuses to synchronize these, so they are skipped.</summary>
+        /// <summary>Objects TIA reports as Equal. Synchronization skips these mappings.</summary>
         public int SkippedEqual { get; set; }
+        public int UnverifiedEqual { get; set; }
         public List<SyncItem> Items { get; set; } = new List<SyncItem>();
     }
 }

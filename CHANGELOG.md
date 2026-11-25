@@ -12,7 +12,9 @@
   Preview tokens belong to the running worker session. Run a fresh preview after upgrading.
 - The write guard emits denials before masking audit arguments and bounds free-text scans. Tool responses remove password and key values while preserving HMI authorization settings and PLC protection metadata.
 - V16–V19 VCI status reads refresh the mapping first. When V17–V19 refuse a refresh, the tools can now report TIA's stored comparison and skip an Equal mapping.
-  An inconclusive fallback retains the refresh diagnostic for that object. V17–V19 status freshness after an edit awaits VM verification.
+  Status and sync rows retain the refusal in `refreshMessage` when TIA supplies a known state. An inconclusive fallback keeps the refresh diagnostic unless the read fails fatally.
+  MCP and the Workbench qualify stored Equal results.
+  `unverifiedEqual` counts them even when status rows are filtered. Post-edit freshness on V16–V19 awaits VM verification.
   If an edited object reads Equal, check the workspace file for the edit before treating it as exported.
 
 ## [4.0.0-rc.6] - 2026-11-25

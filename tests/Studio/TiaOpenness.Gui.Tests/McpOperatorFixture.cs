@@ -33,6 +33,7 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     internal bool HoldApproval, RejectPreview, RejectApply;
     internal IReadOnlyDictionary<string, string> Presets = new Dictionary<string, string>();
     internal bool CandidatePolicies;
+    internal string? VciRefreshMessage;
     internal bool GenerationRunActive;
     internal bool MissingCreationPlanHash;
     private readonly Dictionary<string, JsonObject> schemas = [];
@@ -181,9 +182,15 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             "CompilePlcSoftware" => new() { ["state"] = "Success", ["errorCount"] = 0, ["warningCount"] = 0 },
             "ListVersionControlWorkspaces" => new() { ["evidence"] = new JsonObject { ["workspaces"] = new JsonArray(new JsonObject {
                 ["name"] = "git", ["rootPath"] = Root, ["mappedObjectCount"] = 1, ["language"] = "en-US" }) } },
+            "GetVersionControlStatus" when VciRefreshMessage != null => new() { ["evidence"] = new JsonObject { ["total"] = 1, ["differing"] = 0,
+                ["unverifiedEqual"] = 1, ["objects"] = (bool?)arguments["changedOnly"] == true ? new JsonArray() : new JsonArray(new JsonObject {
+                    ["name"] = "Main", ["filePath"] = "Main.xml", ["compareState"] = "Equal", ["refreshMessage"] = VciRefreshMessage }) } },
             "GetVersionControlStatus" => new() { ["evidence"] = new JsonObject { ["workspaceName"] = "git", ["rootPath"] = Root,
                 ["total"] = 1, ["differing"] = 1, ["objects"] = new JsonArray(new JsonObject { ["name"] = "Main", ["filePath"] = "Main.xml", ["compareState"] = "Unequal" }) } },
             "ConnectProjectToWorkspace" => new() { ["evidence"] = new JsonObject { ["mapped"] = 1, ["visited"] = 1 } },
+            "SynchronizeVersionControlWorkspace" when VciRefreshMessage != null => new() { ["evidence"] = new JsonObject {
+                ["synchronized"] = 0, ["skippedEqual"] = 1, ["unverifiedEqual"] = 1, ["items"] = new JsonArray(new JsonObject {
+                    ["name"] = "Main", ["stateBefore"] = "Equal", ["outcome"] = "skipped-equal", ["refreshMessage"] = VciRefreshMessage }) } },
             "SynchronizeVersionControlWorkspace" => new() { ["evidence"] = new JsonObject { ["synchronized"] = 1, ["rootPath"] = Root } },
             _ => new() { ["executed"] = apply }
         };

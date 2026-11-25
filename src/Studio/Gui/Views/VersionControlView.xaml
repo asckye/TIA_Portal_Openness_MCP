@@ -78,13 +78,14 @@
             Visibility="{Binding VersionControl.ShowSyncResult,Converter={StaticResource BoolToVisibility}}">
             <StackPanel>
               <TextBlock Text="{Binding VersionControl.SyncTitle}" Style="{StaticResource Primer.ContainerTitle}"/>
-              <TextBlock Text="{Binding VersionControl.SyncCounts}" Style="{StaticResource Project.Caption}"/>
+              <TextBlock Text="{Binding VersionControl.SyncCounts}" Style="{StaticResource Project.Caption}" TextWrapping="Wrap"/>
               <TextBlock Text="{Binding VersionControl.ElapsedLabel}" Style="{StaticResource Project.Caption}"/>
               <Border Style="{StaticResource Primer.CodeBlock}" Padding="14" Margin="0,12">
                 <ItemsControl ItemsSource="{Binding VersionControl.SyncRows}">
                   <ItemsControl.ItemTemplate><DataTemplate>
                     <TextBlock ToolTip="{Binding RawOutcome}" Style="{StaticResource Primer.Mono}" TextWrapping="Wrap" Margin="0,3">
                     <Run Text="{Binding Outcome,Mode=OneWay}"/>  <Run Text="{Binding Name,Mode=OneWay}"/>  <Run Text="{Binding Error,Mode=OneWay}"/>
+                    <Run Text="{Binding RefreshNote,Mode=OneWay}"/>
                   </TextBlock></DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>
               </Border>
@@ -101,12 +102,16 @@
             Visibility="{Binding VersionControl.ShowWorkspace,Converter={StaticResource BoolToVisibility}}">
             <DockPanel>
               <Border x:Name="VciStatusCard" DockPanel.Dock="Top" Style="{StaticResource Primer.ProjectFileBar}">
-                <DockPanel VerticalAlignment="Center">
-                  <TextBlock DockPanel.Dock="Right" x:Name="MappedMeta" Text="{Binding Tag.MappedMeta,ElementName=PageRoot}"
-                    Visibility="{Binding VersionControl.HasStatus,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Project.Caption}"/>
-                  <TextBlock Text="{Binding VersionControl.WorkspaceRootDisplay}" ToolTip="{Binding VersionControl.WorkspaceRootDisplay}"
-                    TextTrimming="CharacterEllipsis" Style="{StaticResource Primer.Mono}"/>
-                </DockPanel>
+                <StackPanel>
+                  <DockPanel VerticalAlignment="Center">
+                    <TextBlock DockPanel.Dock="Right" x:Name="MappedMeta" Text="{Binding Tag.MappedMeta,ElementName=PageRoot}"
+                      Visibility="{Binding VersionControl.HasStatus,Converter={StaticResource BoolToVisibility}}" Style="{StaticResource Project.Caption}"/>
+                    <TextBlock Text="{Binding VersionControl.WorkspaceRootDisplay}" ToolTip="{Binding VersionControl.WorkspaceRootDisplay}"
+                      TextTrimming="CharacterEllipsis" Style="{StaticResource Primer.Mono}"/>
+                  </DockPanel>
+                  <TextBlock Text="{Binding VersionControl.StoredEqualNotice}" TextWrapping="Wrap" Style="{StaticResource Project.Caption}"
+                    Visibility="{Binding VersionControl.HasStoredEqual,Converter={StaticResource BoolToVisibility}}"/>
+                </StackPanel>
               </Border>
               <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition/></Grid.ColumnDefinitions>
@@ -120,10 +125,15 @@
                         <DataTemplate>
                           <DockPanel ToolTip="{Binding Name}">
                             <TextBlock DockPanel.Dock="Left" Style="{StaticResource Project.FileMark}" Margin="0,0,8,0"/>
-                            <TextBlock DockPanel.Dock="Right" ToolTip="{l:Tr Col.State}" Style="{StaticResource Primer.MappingState}">
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource Primer.MappingState}">
+                              <TextBlock.ToolTip>
+                                <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="compareDetail">
+                                  <Binding/><Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
+                                </MultiBinding>
+                              </TextBlock.ToolTip>
                               <TextBlock.Text>
                                 <MultiBinding Converter="{StaticResource Primer.Value}" ConverterParameter="compare">
-                                  <Binding Path="CompareState"/>
+                                  <Binding/>
                                   <Binding Source="{x:Static l:Loc.Current}" Path="Language"/>
                                 </MultiBinding>
                               </TextBlock.Text>

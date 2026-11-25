@@ -94,7 +94,17 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     }
 
     private bool _hasStatus;
-    public bool HasStatus { get => _hasStatus; private set => Set(ref _hasStatus, value); }
+    private int _unverifiedEqual;
+    public bool HasStoredEqual => HasStatus && _unverifiedEqual > 0;
+    public string StoredEqualNotice => HasStoredEqual ? Loc.Current.T("Status.StoredEqual", _unverifiedEqual) : "";
+    public bool HasStatus
+    {
+        get => _hasStatus;
+        private set
+        {
+            if (Set(ref _hasStatus, value)) { Raise(nameof(HasStoredEqual)); Raise(nameof(StoredEqualNotice)); }
+        }
+    }
     public int ModifiedCount => VcStatusItems.Count(item => item.CompareState == VcCompareState.Unequal);
     public string ModifiedLabel => !HasStatus ? "" : ModifiedCount == 1
         ? Loc.Current["Project.OneModified"] : Loc.Current.T("Project.ModifiedCount", ModifiedCount);
@@ -133,9 +143,14 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     private TimeSpan _syncElapsed;
     public string ElapsedLabel => SyncResult is { DryRun: false } ? Loc.Current.T("Project.SyncElapsed", _syncElapsed.TotalSeconds) : "";
-    public sealed record SyncRow(string Name, string Outcome, string Error, string? RawOutcome);
+    public sealed record SyncRow(string Name, string Outcome, string Error, string? RawOutcome)
+    {
+        public string? RefreshMessage { get; init; }
+        public string RefreshNote => string.IsNullOrEmpty(RefreshMessage) ? "" : Loc.Current.T("Status.RefreshRefused", RefreshMessage);
+    }
     public IEnumerable<SyncRow> SyncRows => SyncResult is { } result ? result.Items.Select(item =>
-        new SyncRow(item.Name, result.DryRun ? PreviewOutcome(item) : CompletedOutcome(item.Outcome), item.Error, item.Outcome)) : [];
+        new SyncRow(item.Name, result.DryRun ? PreviewOutcome(item) : CompletedOutcome(item.Outcome), item.Error, item.Outcome)
+        { RefreshMessage = item.RefreshMessage }) : [];
 
     private static string CompletedOutcome(string? outcome) => outcome?.ToLowerInvariant() switch
     {
@@ -174,13 +189,13 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         : SyncResult?.DryRun == true ? Loc.Current["Project.SyncPreview"] + " · "
             + (SyncResult.Direction == SyncDirection.ProjectToWorkspace ? Loc.Current["Primer.ToWorkspace"] : Loc.Current["Primer.ToProject"])
             : Loc.Current["Project.Synced"];
-    public string SyncCounts => SyncResult switch
+    public string SyncCounts => (SyncResult switch
     {
         { DryRun: true, Failed: > 0 } r => Loc.Current.T("Project.SyncPreviewErrors", r.Synchronized, r.SkippedEqual, r.Failed),
         { DryRun: true } r => Loc.Current.T("Project.SyncPreviewCounts", r.Synchronized, r.SkippedEqual),
         { } r => Loc.Current.T("Project.SyncCounts", r.Synchronized, r.SkippedEqual, r.Failed),
         _ => "",
-    };
+    }) + (SyncResult is { UnverifiedEqual: > 0 } stored ? " " + Loc.Current.T("Status.StoredEqual", stored.UnverifiedEqual) : "");
     internal void CloseSyncResult() => SyncResult = null;
     private void RefreshSyncState()
     {
@@ -340,6 +355,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         var report = await _client.VcStatusAsync(workspace?.Name, changedOnly: !VcShowAll);
         if (workspace != SelectedWorkspace) return;
         _reportedTotal = report.Total;
+        _unverifiedEqual = report.UnverifiedEqual;
         Raise(nameof(MappedCount)); Raise(nameof(AllMappingsLabel));
         HasStatus = true;
 
@@ -350,7 +366,9 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         // changed", and answering it should not need a second click.
         SelectedVcItem = VcStatusItems.FirstOrDefault();
 
-        if (report.InSync) _activity.SetStatus("Status.VcInSync", requested ? ToastKind.Info : null, report.Total);
+        if (report.UnverifiedEqual > 0)
+            _activity.SetStatus("Status.VcStoredStatus", requested ? ToastKind.Warning : null, report.UnverifiedEqual, report.Total, report.Differing);
+        else if (report.InSync) _activity.SetStatus("Status.VcInSync", requested ? ToastKind.Info : null, report.Total);
         else _activity.SetStatus("Status.VcDiffer", requested ? ToastKind.Info : null, report.Total, report.Differing);
     }
 
@@ -421,12 +439,17 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         _syncElapsed = Stopwatch.GetElapsedTime(start);
         SyncResult = result;
 
-        foreach (var item in result.Items.Where(i => i.Error is not null))
+        foreach (var item in result.Items.Where(i => !string.IsNullOrEmpty(i.Error)))
         {
             _activity.AppendLocalized("Log.Failed", item.Name, item.Error);
         }
 
-        if (result.DryRun)
+        if (result.UnverifiedEqual > 0 && result.DryRun)
+            _activity.SetStatus("Status.VcStoredPreview", ToastKind.Warning, result.UnverifiedEqual, result.Synchronized, result.SkippedEqual);
+        else if (result.UnverifiedEqual > 0)
+            _activity.SetStatus("Status.VcStoredApplied", result.Failed > 0 ? ToastKind.Error : ToastKind.Warning,
+                result.UnverifiedEqual, result.Synchronized, result.Failed, result.SkippedEqual);
+        else if (result.DryRun)
         {
             _activity.SetStatus("Status.VcSyncDry", result.Synchronized, direction, result.SkippedEqual);
         }
@@ -440,7 +463,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
         if (!result.DryRun)
         {
-            _activity.Append(direction == SyncDirection.ProjectToWorkspace
+            if (result.UnverifiedEqual == 0) _activity.Append(direction == SyncDirection.ProjectToWorkspace
                 ? Loc.Current.T("Log.CommitHint", result.RootPath)
                 : Loc.Current["Log.PullHint"]);
             await CompareWorkspaceAsync(requested: false);
@@ -467,7 +490,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
-        Raise(nameof(DiffHint)); Raise(nameof(AllMappingsLabel)); Raise(nameof(AccessNotice));
+        Raise(nameof(DiffHint)); Raise(nameof(AllMappingsLabel)); Raise(nameof(AccessNotice)); Raise(nameof(StoredEqualNotice));
         Raise(nameof(WorkspaceRootDisplay)); Raise(nameof(ModifiedLabel)); RefreshSyncState();
     }
 

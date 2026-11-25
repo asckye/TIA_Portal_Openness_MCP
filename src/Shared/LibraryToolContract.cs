@@ -18,6 +18,7 @@ using System.Xml.Linq;
 using TiaMcpServer.Siemens;
 using System.ComponentModel;
 using ModelContextProtocol.Server;
+using VciResult = TiaMcp.Adapters.Contracts.VersionControlResult;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -200,7 +201,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
                     ? Completeness.Partial : Completeness.Complete;
             }
-            if (outcome != Outcome.Succeeded) data.Remove("summary");
+            if (outcome != Outcome.Succeeded)
+            {
+                if (tool == "SynchronizeVersionControlWorkspace" && Count(evidence, "unverifiedEqual") > 0)
+                    data["summary"] = VciResult.StoredEqualSummary(Count(evidence, "unverifiedEqual")).TrimStart();
+                else data.Remove("summary");
+            }
+            var vciRows = legacyStatusRows ?? (tool == "SynchronizeVersionControlWorkspace" ? evidence["items"] as JsonArray : null);
+            var readbacks = tool == "SynchronizeVersionControlWorkspace" ? evidence["failures"] as JsonArray : null;
+            int failedRow = 0;
             if (data["items"] is JsonArray lines)
                 for (int i = 0; i < lines.Count; i++)
                     if (lines[i] is JsonValue line && line.TryGetValue<string>(out var text))
@@ -213,10 +222,22 @@ namespace TiaMcpServer.ModelContextProtocol
                             lines[i] = $"{row["name"]} | Unknown({statusError}) | file={row["filePath"]}" + (format.Length == 0 ? "" : " | format=" + format);
                             continue;
                         }
+                        string note = "";
+                        var observed = vciRows != null && i < vciRows.Count ? vciRows[i] as JsonObject : null;
+                        var readback = observed?["outcome"]?.ToString() == "failed" && readbacks != null && failedRow < readbacks.Count
+                            ? (string?)readbacks[failedRow++]?["refreshMessage"] : null;
+                        if (observed?.ContainsKey("refreshMessage") == true)
+                        {
+                            int separator = text.IndexOf(VciResult.RefreshSeparator, StringComparison.Ordinal);
+                            if (separator >= 0) text = text.Substring(0, separator);
+                            var refresh = (string?)observed["refreshMessage"];
+                            if (refresh != null) note = VciResult.RefreshSeparator + refresh;
+                            if (readback != null && readback != refresh) note += VciResult.RefreshSeparator + readback;
+                        }
                         lines[i] = Regex.Replace(text, @"(\| FAILED:|\| could not enumerate children:|Unknown\()(.*)$", match =>
                             tool == "ConnectProjectToWorkspace" && match.Groups[1].Value == "| FAILED:"
                                 && HostBehavior.SafeDiagnostic(match.Groups[2].Value.TrimStart()) is string reason
-                                ? "| FAILED: " + reason : "| Native observation or operation failed.", RegexOptions.Singleline);
+                                ? "| FAILED: " + reason : "| Native observation or operation failed.", RegexOptions.Singleline) + note;
                     }
             return Result(tool, data, error, outcome, completeness, writes, paging, current);
         }
@@ -249,7 +270,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     obj[pair.Key] = HostBehavior.SafeDiagnostic(message);
                 else if ((pair.Key == "error" || pair.Key.EndsWith("Error", StringComparison.Ordinal)) && pair.Value != null) obj[pair.Key] =
                     "Native diagnostic details are retained in the server log.";
-                else if (pair.Key == "nativeMessage") obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());
+                else if (pair.Key is "nativeMessage" or "refreshMessage")
+                    obj[pair.Key] = HostBehavior.SafeDiagnostic(pair.Value?.ToString());
                 else Clean(pair.Value, legacyStatusRows, diagnostic || pair.Key is "messageData" or "detailMessageData");
             }
         }

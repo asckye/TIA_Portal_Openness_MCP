@@ -134,6 +134,7 @@ namespace TiaOpenness.Core.Adapters
             FilePath = value.FilePath,
             FileFormat = value.FileFormat,
             CompareState = (VcCompareState)value.CompareState,
+            RefreshMessage = value.RefreshMessage,
             Error = value.Error,
         };
 
@@ -143,6 +144,7 @@ namespace TiaOpenness.Core.Adapters
             RootPath = value.RootPath,
             Total = value.Total,
             Differing = value.Differing,
+            UnverifiedEqual = value.UnverifiedEqual,
             Items = MapList(value.Items, Map),
         };
 
@@ -171,6 +173,7 @@ namespace TiaOpenness.Core.Adapters
 
         internal static SyncItem Map(A.SyncItem value) => value == null ? null : new SyncItem
         {
+            RefreshMessage = value.RefreshMessage,
             Name = value.Name,
             Outcome = value.Outcome,
             Error = value.Error,
@@ -185,6 +188,7 @@ namespace TiaOpenness.Core.Adapters
             Synchronized = value.Synchronized,
             Failed = value.Failed,
             SkippedEqual = value.SkippedEqual,
+            UnverifiedEqual = value.UnverifiedEqual,
             Items = MapList(value.Items, Map),
         };
     }

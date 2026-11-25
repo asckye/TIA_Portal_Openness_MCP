@@ -49,6 +49,8 @@ namespace Siemens.Engineering.VersionControl
         internal const string NativeType = "'Siemens.Engineering.VersionControl.IndividualObjectSynchronizationStatus'.";
         internal CompareState State;
         internal CompareState? Refreshed;
+        internal CompareState? StateAfterRefusedSync;
+        internal Exception? RefreshErrorAfterRefusedSync;
         internal bool RefreshesKnownState;
         internal Exception? RefreshError, ReadError;
         internal List<string> Calls { get; } = new();
@@ -75,7 +77,11 @@ namespace Siemens.Engineering.VersionControl
                 throw new EngineeringTargetInvocationException("Error when calling method 'Synchronize' of type " + NativeType
                     + " Synchronize cannot be called on a workspace mapping that has a compare status of equal.");
             if (RefreshError != null)
+            {
+                State = StateAfterRefusedSync ?? State;
+                RefreshError = RefreshErrorAfterRefusedSync ?? RefreshError;
                 throw new EngineeringTargetInvocationException("Error when calling method 'Synchronize' of type " + NativeType + " The file is deleted");
+            }
             State = CompareState.Equal;
         }
     }

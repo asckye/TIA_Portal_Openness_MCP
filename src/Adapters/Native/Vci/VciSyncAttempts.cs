@@ -8,6 +8,7 @@ namespace TiaMcp.Adapters.Native.Vci;
 internal sealed class VciSyncSelection
 {
     internal int SkippedEqual { get; private set; }
+    internal int UnverifiedEqual { get; private set; }
     private int skippedUnknown;
     private string? statusProbeMessage;
 
@@ -20,7 +21,7 @@ internal sealed class VciSyncSelection
         {
             probeFailed = true;
             status = "Unknown";
-            statusProbeMessage ??= VciSyncAttempts.Diagnostic(error);
+            statusProbeMessage ??= NativeFailureText.BoundedDiagnostic(error);
         }
         if (string.Equals(status, "Equal", StringComparison.OrdinalIgnoreCase)) SkippedEqual++;
         else if (changedOnly && string.Equals(status, "Unknown", StringComparison.OrdinalIgnoreCase)) skippedUnknown++;
@@ -28,18 +29,21 @@ internal sealed class VciSyncSelection
         return false;
     }
 
+    internal void CountStoredEqual() => UnverifiedEqual++;
+
     internal string Summary(string message, bool noTargets = false)
     {
+        message += VersionControlResult.StoredEqualSummary(UnverifiedEqual);
         if (skippedUnknown > 0)
             return message + " " + skippedUnknown + " object(s) have Unknown status. Pass changedOnly=false to attempt them.";
-        if (!noTargets) return message;
+        if (!noTargets || UnverifiedEqual > 0) return message;
         return message + (SkippedEqual > 0 ? " All " + SkippedEqual + " mapped object(s) reported Equal and are in sync." : " No objects are mapped.");
     }
 
     internal HmiObject Evidence(bool dryRun, int synchronized = 0, int failed = 0)
     {
         var meta = HmiMeta.Basic(failed == 0, ("dryRun", dryRun), ("synchronized", synchronized), ("failed", failed),
-            ("skippedEqual", SkippedEqual), ("skippedUnknown", skippedUnknown), ("dataComplete", skippedUnknown == 0));
+            ("skippedEqual", SkippedEqual), ("unverifiedEqual", UnverifiedEqual), ("skippedUnknown", skippedUnknown), ("dataComplete", skippedUnknown == 0));
         if (statusProbeMessage != null) meta["statusProbe"] = new HmiObject { ["nativeMessage"] = statusProbeMessage };
         return meta;
     }
@@ -55,7 +59,7 @@ internal sealed class VciSyncAttempts
 
     internal VciSyncAttempts(bool legacyXml = false) => this.legacyXml = legacyXml;
 
-    internal static string Diagnostic(Exception error) =>
+    private static string WriteDiagnostic(Exception error) =>
         NativeFailureText.Compose(error.GetBaseException().Message, null, Array.Empty<string>());
 
     internal string? Synchronize<T>(string workspaceRoot, VciSyncTarget target, Action write, Func<T> reacquireMapping, Func<T, string> readStatus,
@@ -69,7 +73,7 @@ internal sealed class VciSyncAttempts
         try { write(); Synchronized++; unconfirmed--; return null; }
         catch (Exception error)
         {
-            string failure = Diagnostic(error);
+            string failure = WriteDiagnostic(error);
             nativeMessage ??= failure;
             if (!NativeRefusalProbe.AllowsRefusalProof(error)) return failure;
             var after = target.Snapshot(workspaceRoot, legacyExport);
@@ -109,7 +113,7 @@ internal sealed class VciSyncAttempts
         meta["unconfirmed"] = unconfirmed;
         meta["writeOutcomeUnknown"] = unconfirmed > 0 || interrupted != null && issued > 0
             && (!NativeRefusalProbe.AllowsRefusalProof(interrupted) || Synchronized > 0 && !resolvingNext);
-        meta["nativeMessage"] = nativeMessage ?? (interrupted == null ? null : Diagnostic(interrupted));
+        meta["nativeMessage"] = nativeMessage ?? (interrupted == null ? null : WriteDiagnostic(interrupted));
     }
 
     internal HmiObject Interrupted(Exception error)

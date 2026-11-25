@@ -63,8 +63,8 @@ namespace TiaMcpServer.ModelContextProtocol
             "[L1][VersionControl] Per-object status of a VCI workspace: which mapped objects differ between the " +
             "TIA project and the text files on disk. This is the input for a change log — it names exactly what " +
             "changed before you commit. Read-only, changes nothing. Hierarchical child status and InitializeStatus are not exposed. " +
-            "Status values: Equal (in sync), Unequal (project and file differ), WorkspaceFileMissing (never exported), Unknown. Current native policy; V4 " +
-                "native acceptance is pending."
+            "Status values: Equal (TIA reports no difference), Unequal (project and file differ), WorkspaceFileMissing (never exported), Unknown. " +
+            "Current native policy; V4 native acceptance is pending."
                 + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GetVersionControlStatusV4(
             [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",

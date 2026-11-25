@@ -17,6 +17,10 @@ public sealed class VersionControlRequest
 
 public sealed class VersionControlResult : IWorkerOperationReply
 {
+    public const string RefreshSeparator = " | refresh refused: ";
+    public static string StoredEqualSummary(int count) => count == 0 ? "" :
+        $" {count} object(s) reported Equal from the status TIA stored. TIA refused the refresh. Check the workspace files if an object was edited.";
+
     public string Message { get; set; } = "";
     public IEnumerable<string>? Items { get; set; } = System.Array.Empty<string>();
     public Dictionary<string, object?> Meta { get; set; } = new Dictionary<string, object?>();

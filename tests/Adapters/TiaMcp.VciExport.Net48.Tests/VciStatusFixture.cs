@@ -82,7 +82,49 @@ internal static class VciStatusFixture
         Add("StreamClosed", CompareState.Equal).Status.RefreshError = new EndOfStreamException("The worker connection closed.");
         Add("Nonrecoverable", CompareState.Equal).Status.RefreshError = new NonRecoverableException("Nonrecoverable failure");
         Add("Unexpected", CompareState.Equal).Status.RefreshError = new InvalidOperationException("Unexpected error");
+        foreach (var kind in new[] { "Disposed", "Aborted", "Disconnected", "Nonrecoverable" })
+        {
+            var fallback = Add("Fallback" + kind, CompareState.Unknown).Status;
+            fallback.RefreshError = deleted.Status.RefreshError;
+            fallback.ReadError = workspace.Mappings.Single(m => m.RelativeWorkspacePath == kind + ".xml").Status.RefreshError;
+        }
         Record("probeFailures", adapter.GetVersionControlStatus(changedOnly: false));
+        Record("probePreview", Sync(true, true));
+
+        workspace.Mappings.Clear();
+        var fresh = Add("Fresh", CompareState.Unknown, CompareState.Equal).Status;
+        Record("freshStatus", adapter.GetVersionControlStatus(changedOnly: false));
+        fresh.State = CompareState.Unknown;
+        fresh.Refreshed = CompareState.Equal;
+        Record("freshPreview", Sync(true, true));
+        fresh.State = CompareState.Unknown;
+        fresh.Refreshed = CompareState.Equal;
+        Record("freshApply", Sync(false, false));
+
+        workspace.Mappings.Clear();
+        Add("Stored", CompareState.Equal).Status.RefreshError = deleted.Status.RefreshError;
+        Record("storedStatus", adapter.GetVersionControlStatus(changedOnly: false));
+        Record("storedFiltered", adapter.GetVersionControlStatus(changedOnly: true));
+        Record("storedPreview", Sync(true, true));
+        Record("storedApply", Sync(false, false));
+        Add("Changed", CompareState.Unknown, CompareState.Unequal);
+        Record("mixedPreview", Sync(true, true));
+        Record("mixedApply", Sync(false, false));
+
+        workspace.Mappings.Clear();
+        var refusedWrite = Add("Changed", CompareState.Unequal).Status;
+        refusedWrite.RefreshError = deleted.Status.RefreshError;
+        refusedWrite.StateAfterRefusedSync = CompareState.Equal;
+        Record("storedReadback", Sync(false, false));
+
+        refusedWrite.State = CompareState.Unequal;
+        refusedWrite.RefreshError = new EngineeringTargetInvocationException("Selection refresh refused");
+        refusedWrite.RefreshErrorAfterRefusedSync = deleted.Status.RefreshError;
+        Record("distinctReadback", Sync(false, false));
+
+        workspace.Mappings.Clear();
+        Add("Long", CompareState.Equal).Status.RefreshError = new EngineeringException("The file is deleted " + new string('界', 1600));
+        Record("longRefusal", adapter.GetVersionControlStatus(changedOnly: false));
         return replies;
     }
 }

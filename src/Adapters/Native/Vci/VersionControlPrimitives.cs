@@ -44,8 +44,11 @@ namespace TiaOpenness.Openness
         public static Workspace Create(WorkspaceComposition workspaces, string name, DirectoryInfo directory) => workspaces.Create(name, directory);
 #endif
 
-        public static IndividualObjectCompareResult ReadStatus(MappedObject mapped)
+        public static IndividualObjectCompareResult ReadStatus(MappedObject mapped) => ReadStatus(mapped, out _);
+
+        public static IndividualObjectCompareResult ReadStatus(MappedObject mapped, out string refreshMessage)
         {
+            refreshMessage = null;
 #if STUDIO_VCI_MODERN
             return mapped.GetStatus();
 #else
@@ -57,9 +60,14 @@ namespace TiaOpenness.Openness
                 try
                 {
                     var stored = service.GetStatus();
-                    if (stored.CompareState != CompareState.Unknown) return stored;
+                    if (stored.CompareState != CompareState.Unknown)
+                    {
+                        refreshMessage = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(refreshError);
+                        return stored;
+                    }
                 }
-                catch (System.Exception) { /* swallow(probe-optional): An unreadable stored state leaves the original refresh refusal as the diagnostic. */ }
+                catch (System.Exception readError) when (TiaMcp.Adapters.Contracts.NativeRefusalProbe.AllowsRefusalProof(readError))
+                { /* swallow(probe-optional): An ordinary failed read retains the original refresh refusal. */ }
                 throw;
             }
             return service.GetStatus();

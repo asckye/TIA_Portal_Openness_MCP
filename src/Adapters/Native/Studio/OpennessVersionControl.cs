@@ -257,8 +257,9 @@ namespace TiaOpenness.Openness
                 report.Total++;
 
                 string error;
-                var state = StateOf(mapped, out error);
+                var state = StateOf(mapped, out error, out var refreshMessage);
                 if (state != VcCompareState.Equal) report.Differing++;
+                else if (refreshMessage != null) report.UnverifiedEqual++;
                 if (changedOnly && state == VcCompareState.Equal) continue;
 
                 report.Items.Add(new MappedObjectInfo
@@ -267,6 +268,7 @@ namespace TiaOpenness.Openness
                     FilePath = SafeFile(mapped),
                     FileFormat = SafeFormat(mapped),
                     CompareState = state,
+                    RefreshMessage = refreshMessage,
                     Error = error,
                 });
             }
@@ -289,25 +291,33 @@ namespace TiaOpenness.Openness
                 DryRun = dryRun,
             };
 
-            var targets = new List<MappedObject>();
+            var targets = new List<(MappedObject Object, string RefreshMessage)>();
             foreach (var mapped in Mappings(workspace).ToList())
             {
                 Keep(mapped);
-                string ignored;
-                if (StateOf(mapped, out ignored) == VcCompareState.Equal) { result.SkippedEqual++; continue; }
-                targets.Add(mapped);
+                if (StateOf(mapped, out _, out var refreshMessage) == VcCompareState.Equal)
+                {
+                    result.SkippedEqual++;
+                    if (refreshMessage != null)
+                    {
+                        result.UnverifiedEqual++;
+                        result.Items.Add(new SyncItem { Name = SafeObjectName(mapped), Outcome = "skipped-equal", RefreshMessage = refreshMessage });
+                    }
+                    continue;
+                }
+                targets.Add((mapped, refreshMessage));
             }
 
             for (var i = 0; i < targets.Count; i++)
             {
-                var mapped = targets[i];
+                var (mapped, refreshMessage) = targets[i];
                 var name = SafeObjectName(mapped);
                 if (progress != null) progress("vc-sync", i + 1, targets.Count, name);
 
                 if (dryRun)
                 {
                     result.Synchronized++;
-                    result.Items.Add(new SyncItem { Name = name, Outcome = "would sync " + direction });
+                    result.Items.Add(new SyncItem { Name = name, Outcome = "would sync " + direction, RefreshMessage = refreshMessage });
                     continue;
                 }
 
@@ -315,12 +325,12 @@ namespace TiaOpenness.Openness
                 {
                     Synchronize(mapped, mode);
                     result.Synchronized++;
-                    result.Items.Add(new SyncItem { Name = name, Outcome = "synchronized" });
+                    result.Items.Add(new SyncItem { Name = name, Outcome = "synchronized", RefreshMessage = refreshMessage });
                 }
                 catch (Exception ex)
                 {
                     result.Failed++;
-                    result.Items.Add(new SyncItem { Name = name, Outcome = "failed", Error = Flatten(ex) });
+                    result.Items.Add(new SyncItem { Name = name, Outcome = "failed", Error = Flatten(ex), RefreshMessage = refreshMessage });
                     break;
                 }
             }
@@ -332,12 +342,13 @@ namespace TiaOpenness.Openness
         /// <c>GetStatus()</c> returns a result object whose <c>ToString()</c> is the type name,
         /// not the verdict; the verdict is its <c>CompareState</c>.
         /// </summary>
-        private static VcCompareState StateOf(MappedObject mapped, out string error)
+        private static VcCompareState StateOf(MappedObject mapped, out string error, out string refreshMessage)
         {
             error = null;
+            refreshMessage = null;
             try
             {
-                var state = VersionControlPrimitives.State(ReadStatus(mapped)).ToString();
+                var state = VersionControlPrimitives.State(ReadStatus(mapped, out refreshMessage)).ToString();
                 VcCompareState parsed;
                 if (Enum.TryParse(state, true, out parsed)) return parsed;
 
@@ -346,7 +357,7 @@ namespace TiaOpenness.Openness
             }
             catch (Exception ex)
             {
-                error = Flatten(ex);
+                error = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(ex);
                 return VcCompareState.Unknown;
             }
         }
