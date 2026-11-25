@@ -5,7 +5,7 @@
 An MCP server and Windows desktop Workbench for Siemens TIA Portal Openness across eight exact releases: **V14 SP1, V15.1, and V16–V21**. Connect AI coding agents or work directly in the Workbench to browse projects, author PLC/HMI artifacts, compile, test, and diagnose—backed by preview-first write approvals, hash-chained audit logs, and isolated per-session Openness workers.
 
 > [!NOTE]
-> **Name and release status:** Formerly **TIA Portal Openness MCP**. Executables (`TiaOpenness.exe`), the Claude Code plugin ID `tia-portal-openness-mcp`, and the MCP server name `tia-portal` keep their original names so existing configurations continue to work. GitHub redirects old repository links. This page documents the unreleased 4.0 source (current pre-release: [v4.0.0-rc.5](docs/releases/v4.0.0-rc.5.md)); GitHub **Latest** remains stable 3.3. For a downloaded release, use the documentation bundled inside its archive.
+> **Name and release status:** Formerly **TIA Portal Openness MCP**. Executables (`TiaOpenness.exe`), the Claude Code plugin ID `tia-portal-openness-mcp`, and the MCP server name `tia-portal` keep their original names so existing configurations continue to work. GitHub redirects old repository links. This page documents the unreleased 4.0 source (current pre-release: [v4.0.0-rc.6](docs/releases/v4.0.0-rc.6.md)); GitHub **Latest** remains stable 3.3. For a downloaded release, use the documentation bundled inside its archive.
 
 ![AI MCP clients and the Workbench Project page share a FoundationHost session with an isolated version-matched PLC worker](docs/assets/architecture.svg)
 
@@ -81,10 +81,10 @@ Some cells use records from an older candidate, marked ᵒ in the full table.
 
 ## Development
 
-`master` is the maintained branch, and runtime binaries are distributed as release assets rather than tracked Git files. From a clean checkout with the documented SDK layout and pinned companion Python environment, build and package all eight releases using the version in `Version.props` (currently `4.0.0-rc.5`):
+`master` is the maintained branch, and runtime binaries are distributed as release assets rather than tracked Git files. From a clean checkout with the documented SDK layout and pinned companion Python environment, build and package all eight releases using the version in `Version.props` (currently `4.0.0-rc.6`):
 
 ```powershell
-dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.5 -BuildOnly -PublicApiRoot <SDK-root> -Python <python.exe>
+dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.6 -BuildOnly -PublicApiRoot <SDK-root> -Python <python.exe>
 ```
 
 `-BuildOnly` compiles and packages all eight versions without running the full validation gates or creating a publishable candidate.

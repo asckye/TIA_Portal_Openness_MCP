@@ -4,9 +4,14 @@
 
 ## [Unreleased]
 
+## [4.0.0-rc.6] - 2026-11-25
+
 ### Changed
 
 - The Workbench, its launchers and the updater share a cobalt application icon. Approval notifications use it in the tray and retain their warning balloon.
+- The `SetDeviceAddress` description of `startAddress` says that it selects the current start address. Examples for `SetDeviceAddress`,
+  `ImportPlcBlocksFromDirectory` and `CreatePlcInstanceDb` follow the recorded calls.
+
 ### Fixed
 
 - Immediately before a verified PLC block import, apply now reads the target group's block names once under the existing exclusive access.
@@ -22,8 +27,7 @@
 - Verified import no longer reports a match when an unexpanded UDT member keeps old non-default values in a nested UDT, the false match listed
   in the 4.0.0-rc.5 limitations. After a compile that removed a UDT expansion, it makes one additional standard export and compares the members.
 - A verified import mismatch names the changed member instead of a neighbouring UDT member when the standard export shows it.
-### Fixed
-
+- `ListPlcBlocks` no longer repeats the parameter name in the page-size error, and labelled diagnostics that contain credentials are masked.
 - Hardware setter failures retain the Siemens reason, and AML export failures preserve severity labels while masking sensitive details.
   Creating a duplicate PLC software unit or renaming a device group to an existing name reports a precondition failure.
 

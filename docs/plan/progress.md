@@ -1,12 +1,13 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-25，master `9862ec67c`；v4.0.0-rc.5 已发布（2026-11-25，预发布）
+状态：现行 · 最后核对：2026-11-25，master `41efb7fe3`；v4.0.0-rc.5 已发布（2026-11-25，预发布）；v4.0.0-rc.6 准备中
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
-- **v4.0.0-rc.5 已于 2026-11-25 发布（`9862ec67c`，GitHub 预发布，不设为 latest）。** rc.4 真机复验的修复（VMFIX-26 至 VMFIX-30）、工具示例（EXAMPLES-RC4）和结果判定更正（UNK-B、UNK-A）已合并到 master `991b3c334`。工具名称和输入没有变化，只有 `ManageMultiuserSession` 的 `port` 说明和两个工具的示例注解改变。代码改动尚未在真机上运行。任务见[开发计划](plan.md#400-rc5)。
+- **v4.0.0-rc.6 准备中。** rc.5 真机复验的修复（VMFIX-31 至 VMFIX-33）和工作台应用图标（UI-APPICON）已合并到 master `41efb7fe3`。工具名称和输入没有变化，`SetDeviceAddress.startAddress` 的说明改变，部分结果和错误码改变。代码改动尚未在真机上运行。任务见[开发计划](plan.md#400-rc6)。
+- **v4.0.0-rc.5 已于 2026-11-25 发布（`9862ec67c`，GitHub 预发布，不设为 latest）。** rc.4 真机复验的修复（VMFIX-26 至 VMFIX-30）、工具示例（EXAMPLES-RC4）和结果判定更正（UNK-B、UNK-A）已合并到 master `991b3c334`。工具名称和输入没有变化，只有 `ManageMultiuserSession` 的 `port` 说明和两个工具的示例注解改变。2026-11-25 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc5)。
 - **v4.0.0-rc.4 已于 2026-11-24 发布（`960883603`，GitHub 预发布，不设为 latest）。** 按最终设计稿改版的工作台已合并到 master `372453e06`：UI-FINAL（外壳与七个页面）、UI-AIHINT（AI 通知卡片）、
   UI-CFGFIX、UI-RAILFIX（模态框关闭后恢复原有可用状态）和 UI-LOWS（审查发现的修复）。MCP 对外接口与 rc.3 相同。2026-11-24 已在八个版本的真机上定向复验，工作台尚未逐页手动走查。
   任务见[开发计划](plan.md#400-rc4)。
@@ -23,7 +24,7 @@
 - **2026-11-23 维护者按建议批准全面审查的决定**：MCP 连接继续不设密码或访问密钥（[ADR 0038](../standards/decisions/0038-keyless-http-transport.md)）；
   工具参数中的密码与更新包不签名是 4.0 接受的风险（[ADR 0042](../standards/decisions/0042-accepted-risks-for-4-0.md)）；审批开关范围不变；
   带安全密码的编译须审批。详见[开发计划](plan.md#待维护者决定)。
-- **4.0 正式版之前还剩**：见[开发计划](plan.md#400-rc5)；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
+- **4.0 正式版之前还剩**：见[开发计划](plan.md#400-rc6)；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
 - **RC 代码已全部合并（2026-11-19 至 11-21）。**
   - UNIFY-1 全部完成：A–D1（beta.6）以及 B2、C2、D2、E。八版共用一个工具包装、一条就绪规则、一个版本目录和一张官方 API 能力表，
     新出现的按版本号分支由 `ReleaseKeyedSitesTests` 拦下。U3 线程模型（MTA-1）、U6 实机保护、U7 V21 builder 输出按 2026-11-04 决定保留。
@@ -116,8 +117,16 @@
 | rc.4，V19 VM，2026-11-24，定向复验 | 162 次调用：通过 109、按设计拒绝 27、HIGH 6（4 个缺陷）、MEDIUM 6、LOW 14；无崩溃 | VMFIX-26、VMFIX-27、VMFIX-29 已合并，待 rc.5 复验；VCI 状态与同步、TP700 拒绝和 HMI AML 导出未解决 |
 | rc.4，V20 VM，2026-11-24，定向复验 | 177 次调用：通过 117、按设计拒绝 38、HIGH 8（3 个缺陷）、MEDIUM 10、LOW 4；无崩溃 | VMFIX-27、VMFIX-29、VMFIX-30 已合并，待 rc.5 复验；两个相同 UDT 实例的比较、TP700 拒绝和 HMI AML 导出未解决 |
 | rc.4，V21 VM，2026-11-24，定向复验 | 169 次调用：通过 116、按设计拒绝 27、HIGH 7（2 个缺陷）、MEDIUM 6、LOW 13；无崩溃。syslog 崩溃确认修复 | VMFIX-27、VMFIX-29 已合并，待 rc.5 复验；两个相同 UDT 实例的比较和 HMI AML 导出未解决 |
+| rc.5（`9862ec67c`），V14 SP1 VM，2026-11-25，定向复验 | 205 行：通过 173、按设计拒绝 21（其中 9 行是会话传参错误）、HIGH 1、MEDIUM 2、LOW 8；无崩溃。未改动的块和 DB 全部匹配，没有误判一致 | 编译报错报未知由 VMFIX-32 修复；最小 LAD FC 和部分展开 DB 的误报由 VMFIX-31 修复；待 rc.6 复验 |
+| rc.5，V15.1 VM，2026-11-25，定向复验 | 241 行：通过 191、按设计拒绝 44（其中 22 行是会话传参错误）、失败 6；HIGH 0、MEDIUM 5 行（4 个问题，另 1 个已知）、LOW 5；无崩溃。6 个未改动的块匹配 | 点错成员和最小 LAD FC 由 VMFIX-31，拒绝的导入报未知和同 UDT 实例比较由 VMFIX-32 修复，待 rc.6 复验 |
+| rc.5，V16 VM，2026-11-25，定向复验 | 242 行：通过 200、按设计拒绝 33、失败 8、未运行 1；HIGH 0、MEDIUM 3、LOW 6；无崩溃。5 个未改动的块匹配 | 最小 LAD FC 由 VMFIX-31，拒绝的导入报未知由 VMFIX-32，IO 地址原因和重名单元由 VMFIX-33 修复，待 rc.6 复验；VCI 原生导出未解决 |
+| rc.5，V17 VM，2026-11-25，定向复验 | 170 行：通过 136、按设计拒绝 22、失败 12；HIGH 1、MEDIUM 8、LOW 3，另有 5 行按设计拒绝带 LOW；无崩溃。假密码编译的两个工具确认修复 | 编译报错报未知由 VMFIX-32，UDT 声明默认值误报由 VMFIX-31 修复，待 rc.6 复验；同步报未知受会话干扰，待复查 |
+| rc.5，V18 VM，2026-11-25，定向复验 | 173 行：通过 139、按设计拒绝 26、失败 8；HIGH 1、MEDIUM 6、LOW 5；无崩溃。5 个未改动的块匹配；`CompilePlcDiagnostics` 的假密码编译没有跑 | VMFIX-31 至 VMFIX-33 已合并，待 rc.6 复验；VCI 状态全部未知未解决 |
+| rc.5，V19 VM，2026-11-25，定向复验 | 174 行：通过 137、按设计拒绝 24、失败 11、未跑 2；HIGH 1、MEDIUM 9、LOW 5；无崩溃。5 个未改动的块匹配 | VMFIX-31 至 VMFIX-33 已合并，待 rc.6 复验；VCI 状态与同步、TP700 拒绝和 HMI AML 导出未解决 |
+| rc.5，V20 VM，2026-11-25，定向复验 | 175 行：通过 140、按设计拒绝 28、失败 6、未跑 1；HIGH 1、MEDIUM 5、LOW 6；无崩溃。工作区全部拒绝报确定失败确认修复 | VMFIX-31 至 VMFIX-33 已合并，待 rc.6 复验；TP700 拒绝和 HMI AML 导出未解决；TIA 拒绝的验证导入没有跑 |
+| rc.5，V21 VM，2026-11-25，定向复验 | 174 行：通过 143、按设计拒绝 23、失败 8；HIGH 1、MEDIUM 6、LOW 9；无崩溃。5 个未改动的块匹配 | VMFIX-31 至 VMFIX-33 已合并，待 rc.6 复验；HMI AML 导出未解决 |
 
-原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，rc.4 复验在 `rc4-verify-<版本>/`，每批一份汇总。
+原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，rc.4 复验在 `rc4-verify-<版本>/`，rc.5 复验在 `rc5-verify-<版本>/`，每批一份汇总。rc.5 各行的数字按各份汇总原样抄录，各复验会话的计数方式不同，不宜跨版本比较。
 RC 回归中在线写入、下载和仿真执行只预览（VM 无 PLC，PLCSIM 无实例）。beta.4 回归的缺陷原因尚未逐条验证。未测的正常流程：`OpenProject`、`CloseProject`（自有工程）、`CreateProject`、`RetrieveProjectArchive`、`ConnectIsolatedPortal`、`PublishGenerationRecord`；在线、下载、上传、强制和仿真只读取或预览。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
 
 ## 测试者反馈
