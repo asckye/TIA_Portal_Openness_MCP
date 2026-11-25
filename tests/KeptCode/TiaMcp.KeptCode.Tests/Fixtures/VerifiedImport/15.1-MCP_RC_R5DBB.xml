@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V15.1" />
+  <SW.Blocks.GlobalDB ID="0">
+    <AttributeList>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v3">
+  <Section Name="Static">
+<Member Name="Motor" Datatype="&quot;MCP_RC_R5UDT&quot;"><Sections><Section Name="None"><Member Name="Run" Datatype="Bool" /><Member Name="Speed" Datatype="Real"><StartValue>2.5</StartValue></Member><Member Name="Count" Datatype="Int" /></Section></Sections></Member>
+    <Member Name="Level" Datatype="Int"><StartValue>7</StartValue></Member>
+  </Section>
+</Sections></Interface>
+      <MemoryLayout>Optimized</MemoryLayout>
+      <Name>MCP_RC_R5DBB</Name>
+      <Number>9831</Number>
+      <ProgrammingLanguage>DB</ProgrammingLanguage>
+    </AttributeList>
+  </SW.Blocks.GlobalDB>
+</Document>

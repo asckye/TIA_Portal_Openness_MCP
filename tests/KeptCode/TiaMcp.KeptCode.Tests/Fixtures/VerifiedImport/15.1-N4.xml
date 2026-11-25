@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V15.1" />
+  <SW.Blocks.FC ID="0">
+    <AttributeList>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v3">
+  <Section Name="Input"><Member Name="a" Datatype="Bool" /><Member Name="b" Datatype="Int" /></Section>
+  <Section Name="Output" /><Section Name="InOut" /><Section Name="Temp" /><Section Name="Constant" />
+  <Section Name="Return"><Member Name="Ret_Val" Datatype="Void" /></Section>
+</Sections></Interface>
+      <MemoryLayout>Optimized</MemoryLayout>
+      <Name>MCP_RC_R5FCM</Name>
+      <Number>9834</Number>
+      <ProgrammingLanguage>LAD</ProgrammingLanguage>
+    </AttributeList>
+    <ObjectList>
+      <SW.Blocks.CompileUnit ID="1" CompositionName="CompileUnits"><AttributeList><NetworkSource /><ProgrammingLanguage>LAD</ProgrammingLanguage></AttributeList></SW.Blocks.CompileUnit>
+    </ObjectList>
+  </SW.Blocks.FC>
+</Document>

@@ -12,7 +12,7 @@ using Xunit;
 
 namespace TiaMcp.Engine.Tests;
 
-public sealed class VerifiedExportStyleTests
+public sealed partial class VerifiedExportStyleTests
 {
     private const string Interface = "http://www.siemens.com/automation/Openness/SW/Interface/v5";
     private const string Scl = "http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4";
@@ -105,7 +105,7 @@ public sealed class VerifiedExportStyleTests
 
     // Exercise the same validation, preview token, apply and metadata conversion as the worker.
     private static JsonObject Apply(string candidate, string before, string after, string none, bool compile, bool extra = true,
-        Exception? exportFailure = null, string? declaration = null, Exception? readbackFailure = null)
+        Exception? exportFailure = null, string? declaration = null, Exception? readbackFailure = null, string declarationName = "MotorType")
     {
         string directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "verified-style-" + Guid.NewGuid().ToString("N"))).FullName;
         try
@@ -137,7 +137,7 @@ public sealed class VerifiedExportStyleTests
             };
             PlcVerifiedImportBridge.Execute(execution);
             var beforeCalls = new List<string> { "bind", "before.xml" };
-            if (declaration != null) beforeCalls.Add("type MotorType");
+            if (declaration != null) beforeCalls.Add("type " + declarationName);
             Assert.Equal(beforeCalls, calls);
             request.ExpectedToken = Assert.IsType<string>(execution.Meta["token"]);
             request.DryRun = false;

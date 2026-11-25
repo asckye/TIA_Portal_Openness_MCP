@@ -70,7 +70,9 @@ namespace TiaMcpServer.ModelContextProtocol
         // Preserve namespaces, program strings and wiring while normalizing identifiers and AttributeList ordering.
         public static string Canonical(XDocument document) => Canonical(document, null);
 
-        public static string Canonical(XDocument document, XDocument? verificationPlan)
+        public static string Canonical(XDocument document, XDocument? verificationPlan) => Canonical(document, verificationPlan, null);
+
+        internal static string Canonical(XDocument document, XDocument? verificationPlan, IReadOnlyList<XElement>? restored)
         {
             var block = new XElement(Block(document));
             // TIA emits schema order, while PrepareImport appends omitted attributes. Sort before assigning object IDs.
@@ -87,7 +89,12 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             var ids = ObjectIds(block);
             // Validate all IDs first. Removing TIA-added objects can shift the canonical IDs of retained objects.
-            if (verificationPlan != null && RemoveAddedBlockText(block, Block(verificationPlan))) ids = ObjectIds(block);
+            if (verificationPlan != null)
+            {
+                var plan = Block(verificationPlan);
+                if (restored != null) RemoveRestoredScalars(block, plan, restored);
+                if (RemoveAddedBlockText(block, plan, restored == null)) ids = ObjectIds(block);
+            }
             foreach (var a in block.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName == "ID" || a.Name.LocalName == "RefId"))
                 if (ids.TryGetValue(a.Value, out var replacement)) a.Value = replacement;
             foreach (var network in block.Descendants().Where(e => e.Name.LocalName == "SW.Blocks.CompileUnit"))
@@ -128,10 +135,38 @@ namespace TiaMcpServer.ModelContextProtocol
             return ids;
         }
 
-        private static bool RemoveAddedBlockText(XElement block, XElement plan)
+        private static void RemoveRestoredScalars(XElement block, XElement candidate, IReadOnlyList<XElement> restored)
         {
-            var list = block.Element("ObjectList");
-            if (list == null || block.Elements("ObjectList").Skip(1).Any()) return false;
+            if (restored.Count == 0) return;
+            var planned = Child(Block(restored[0].Document!), "AttributeList");
+            var input = Child(candidate, "AttributeList");
+            var exported = Child(block, "AttributeList").Elements().ToLookup(e => e.Name);
+            foreach (var group in restored.Where(e => e.Parent == planned).GroupBy(e => e.Name))
+            {
+                if (input.Element(group.Key) != null || group.Count() != 1 || exported[group.Key].Count() != 1) continue;
+                var original = group.First();
+                var actual = exported[group.Key].First();
+                // Only plain scalar text can disappear. Keep attributes, child markup and ambiguous values in the comparison.
+                if (!original.HasAttributes && !actual.HasAttributes && original.Nodes().All(n => n is XText) && actual.Nodes().All(n => n is XText)
+                    && string.Equals(actual.Value, original.Value, StringComparison.Ordinal)) actual.Remove();
+            }
+        }
+
+        private static bool RemoveAddedBlockText(XElement block, XElement plan, bool normalizeEmptyBlockList)
+        {
+            var changed = RemoveAddedText(block, plan, normalizeEmptyBlockList);
+            if (block.Elements("ObjectList").Skip(1).Any() || plan.Elements("ObjectList").Skip(1).Any()) return changed;
+            var units = block.Elements("ObjectList").Elements("SW.Blocks.CompileUnit").ToArray();
+            var plannedUnits = plan.Elements("ObjectList").Elements("SW.Blocks.CompileUnit").ToArray();
+            if (units.Length == plannedUnits.Length)
+                for (int i = 0; i < units.Length; i++) changed |= RemoveAddedText(units[i], plannedUnits[i], false);
+            return changed;
+        }
+
+        private static bool RemoveAddedText(XElement owner, XElement plan, bool normalizeEmptyList)
+        {
+            var list = owner.Element("ObjectList");
+            if (list == null || owner.Elements("ObjectList").Skip(1).Any()) return false;
             bool changed = false;
             foreach (string field in new[] { "Title", "Comment" })
             {
@@ -140,7 +175,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 var added = list.Elements("MultilingualText").Where(HasField).Take(2).ToArray();
                 if (added.Length == 1 && EmptyBlockText(added[0])) { added[0].Remove(); changed = true; }
             }
-            if (!list.HasAttributes && !list.HasElements && OnlyChildElements(list)) { list.Remove(); changed = true; }
+            // The full-style comparison already normalizes empty block ObjectLists. Elsewhere remove only the wrapper for added text.
+            if ((normalizeEmptyList || changed && plan.Element("ObjectList") == null) && !list.HasAttributes && !list.HasElements && OnlyChildElements(list))
+            { list.Remove(); changed = true; }
             return changed;
         }
 
@@ -149,7 +186,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static bool OnlyObjectAttributes(XElement element) => element.Attributes().All(a => a.Name == "ID" || a.Name == "CompositionName");
 
-        // Recognize the block-level multilingual wrapper and its culture records. Preserve extensions and all nonempty Text.
+        // Block and network text share the same multilingual wrapper. Preserve extensions and all nonempty Text.
         private static bool EmptyBlockText(XElement text)
         {
             if (!OnlyObjectAttributes(text) || !OnlyChildElements(text)) return false;

@@ -170,7 +170,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 exportNone(path);
                 var candidate = PlcDocumentEditing.Parse(candidateXml);
                 var none = PlcDocumentEditing.Parse(PlcDocumentEditing.Read(path));
-                if (PlcDocumentEditing.Canonical(candidate) != PlcDocumentEditing.Canonical(none)) return "Candidate differs from after-none.xml.";
+                if (PlcDocumentEditing.Canonical(candidate) != PlcDocumentEditing.Canonical(none, candidate, restored))
+                    return "Candidate differs from after-none.xml.";
                 if (PlcDocumentEditing.Block(candidate).Name != PlcDocumentEditing.Block(readback).Name
                     || PlcDocumentEditing.Name(candidate) != PlcDocumentEditing.Name(readback)) return "Readbacks identify different blocks.";
                 return FullReadbackDifference(candidate, readback, restored, preserved);
