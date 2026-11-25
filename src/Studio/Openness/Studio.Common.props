@@ -41,6 +41,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Plc/PlcDocumentPrimitives.cs" Link="PlcDocumentPrimitives.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeExportPolicy.cs" Link="NativeExportPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/NativeInputPolicy.cs" Link="NativeInputPolicy.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(DefineConstants.Contains('STUDIO_VCI')) and !$(DefineConstants.Contains('STUDIO_VCI_MODERN'))">
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VciSyncTarget.cs" Link="VciSyncTarget.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VciContentProof.cs" Link="VciContentProof.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../Adapters/Native/Vci/VciStoredEqual.cs" Link="VciStoredEqual.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(DefineConstants.Contains('STUDIO_VCI'))">
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/BundleLayout.cs" Link="BundleLayout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../../Shared/DataLocations.cs" Link="DataLocations.cs" />
   </ItemGroup>

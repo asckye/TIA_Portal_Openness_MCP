@@ -116,6 +116,7 @@
     <Compile Include="../../../src/Adapters/Native/Libraries/LibraryArchive.cs" />
     <Compile Include="../../../src/Adapters/Native/Security/ProjectUsers.cs" />
     <Compile Include="../../../src/Adapters/Native/Security/DeviceUsersAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VciExportPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Vci/VciExportAttempts.cs" />
     <Compile Include="../../../src/Adapters/Native/Vci/VciSyncAttempts.cs" />
     <Compile Include="../../../src/Adapters/Native/Vci/VciSyncTarget.cs" />

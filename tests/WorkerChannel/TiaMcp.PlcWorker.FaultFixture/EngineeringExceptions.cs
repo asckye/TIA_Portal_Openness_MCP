@@ -6,6 +6,7 @@ namespace Siemens.Engineering
     {
         public EngineeringException() { }
         protected EngineeringException(string message) : base(message) { }
+        protected EngineeringException(string message, Exception cause) : base(message, cause) { }
         public EngineeringException(Exception cause) : base("Native diagnostic.", cause) { }
     }
     public class EngineeringTargetInvocationException : EngineeringException
@@ -22,7 +23,12 @@ namespace Siemens.Engineering
     }
     public class MissingProductsException : EngineeringTargetInvocationException { }
     public class LicenseNotFoundException : EngineeringTargetInvocationException { }
-    public class EngineeringObjectDisposedException : EngineeringException { }
+    public class EngineeringObjectDisposedException : EngineeringException
+    {
+        public EngineeringObjectDisposedException() { }
+        public EngineeringObjectDisposedException(string message) : base(message) { }
+        public EngineeringObjectDisposedException(string message, Exception cause) : base(message, cause) { }
+    }
     public class NonRecoverableException : Exception { }
 }
 

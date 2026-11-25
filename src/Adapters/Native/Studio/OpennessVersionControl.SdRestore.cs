@@ -74,17 +74,21 @@ internal sealed partial class OpennessVersionControl
 
     private static bool IsDisposedMapping(MappedObject mapped, Exception error)
     {
-        if (error is not ObjectDisposedException disposed || string.IsNullOrEmpty(disposed.ObjectName)) return false;
-        if (disposed.ObjectName == nameof(MappedObject) || disposed.ObjectName == typeof(MappedObject).FullName) return true;
         var type = mapped.GetType();
-        return disposed.ObjectName == type.Name || disposed.ObjectName == type.FullName;
+        if (error.InnerException != null && NativeRefusalProbe.UncertainConnection(error.InnerException)) return false;
+        if (error is ObjectDisposedException disposed)
+            return disposed.ObjectName == nameof(MappedObject) || disposed.ObjectName == typeof(MappedObject).FullName
+                || disposed.ObjectName == type.Name || disposed.ObjectName == type.FullName;
+        if (!HmiReadPolicy.DisposedObjectOnly(error)) return false;
+        return new[] { typeof(MappedObject).FullName, type.FullName, type.Name, nameof(MappedObject) }
+            .Any(name => error.Message.IndexOf("disposed object of type '" + name + "'", StringComparison.OrdinalIgnoreCase) >= 0);
     }
 
     internal static CompareState ReadMappedState(MappedObject mapped, out string? error)
     {
         error = null;
         try { return VersionControlPrimitives.State(VersionControlPrimitives.ReadStatus(mapped)); }
-        catch (ObjectDisposedException disposed) when (IsDisposedMapping(mapped, disposed))
+        catch (Exception disposed) when (IsDisposedMapping(mapped, disposed))
         {
             error = NativeFailureText.BoundedDiagnostic(disposed);
             return CompareState.Unknown;

@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);STUDIO_VCI_INITIAL</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../TiaMcp.VciExport.Net48.Tests/*.cs" />
+  </ItemGroup>
+  <Import Project="../TiaMcp.VciExport.Net48.Tests/TiaMcp.VciExport.Net48.Tests.csproj" />
+</Project>

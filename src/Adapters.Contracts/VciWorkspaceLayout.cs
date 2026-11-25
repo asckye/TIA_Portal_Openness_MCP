@@ -13,13 +13,27 @@ public static class VciWorkspaceLayout
 {
     public const string UngroupedFolder = "UngroupedDevices";
 
-    internal static DirectoryInfo LegacyMappingDirectory(string root, string relativeWorkspacePath)
+    internal static DirectoryInfo LegacyMappingDirectory(string root, string relativeWorkspacePath) =>
+        new DirectoryInfo(Path.Combine(root, Path.GetDirectoryName(LegacyRelativePath(relativeWorkspacePath)) ?? ""));
+
+    private static string LegacyRelativePath(string relativeWorkspacePath)
     {
         // V16 can prefix a mapping with a single separator to denote the workspace root.
         string path = relativeWorkspacePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
         if (path.StartsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal)) path = path.Substring(1);
         if (Path.IsPathRooted(path)) throw new ArgumentException("Expected a workspace-relative mapping path.");
-        return new DirectoryInfo(Path.Combine(root, Path.GetDirectoryName(path) ?? ""));
+        return path;
+    }
+
+    public static FileInfo LegacyMappingFile(string root, string relativeWorkspacePath)
+    {
+        if (!Path.IsPathRooted(root)) throw new IOException("The workspace root is unavailable.");
+        var file = new FileInfo(Path.Combine(root, LegacyRelativePath(relativeWorkspacePath)));
+        string prefix = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!file.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(file.Extension, ".xml", StringComparison.OrdinalIgnoreCase))
+            throw new IOException("Expected an XML file inside the workspace.");
+        return file;
     }
 
     public static DirectoryInfo CreationDirectory(string workspaceName, string folderPath, Func<string, string> fullPath)

@@ -10,11 +10,21 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.VersionControl;
+
+namespace TiaOpenness.Shared
+{
+    internal sealed class DataLocations
+    {
+        internal static DataLocations Current { get; } = new();
+        internal string TempDirectory => Path.GetTempPath();
+    }
+}
 
 namespace TiaMcp.Adapters.Native.Hmi
 {
@@ -52,6 +62,8 @@ namespace Siemens.Engineering.VersionControl
         internal CompareState? StateAfterRefusedSync;
         internal Exception? RefreshErrorAfterRefusedSync;
         internal bool RefreshesKnownState;
+        internal bool AcceptEqual;
+        internal Action? OnSynchronized;
         internal Exception? RefreshError, ReadError;
         internal List<string> Calls { get; } = new();
         public IndividualObjectCompareResult GetStatus()
@@ -73,7 +85,7 @@ namespace Siemens.Engineering.VersionControl
         public void Synchronize(SynchronizationMode mode)
         {
             Calls.Add("Synchronize:" + mode);
-            if (State == CompareState.Equal)
+            if (State == CompareState.Equal && !AcceptEqual)
                 throw new EngineeringTargetInvocationException("Error when calling method 'Synchronize' of type " + NativeType
                     + " Synchronize cannot be called on a workspace mapping that has a compare status of equal.");
             if (RefreshError != null)
@@ -82,6 +94,7 @@ namespace Siemens.Engineering.VersionControl
                 RefreshError = RefreshErrorAfterRefusedSync ?? RefreshError;
                 throw new EngineeringTargetInvocationException("Error when calling method 'Synchronize' of type " + NativeType + " The file is deleted");
             }
+            OnSynchronized?.Invoke();
             State = CompareState.Equal;
         }
     }
@@ -89,26 +102,83 @@ namespace Siemens.Engineering.VersionControl
     public sealed class WorkspaceMapping : IEngineeringServiceProvider
     {
         public Workspace Parent { get; }
+        public IEngineeringObject LinkedProjectObject { get; }
         public string RelativeWorkspacePath { get; }
         internal IndividualObjectSynchronizationStatus Status { get; } = new();
-        internal WorkspaceMapping(Workspace workspace, string path) { Parent = workspace; RelativeWorkspacePath = path; }
+        internal WorkspaceMapping(Workspace workspace, string path, IEngineeringObject? target = null)
+        { Parent = workspace; RelativeWorkspacePath = path; LinkedProjectObject = target!; }
         public T GetService<T>() where T : class => (Status as T) ?? throw new NotSupportedException();
     }
     public sealed class WorkspaceMappingComposition : List<WorkspaceMapping>
     {
-        public WorkspaceMapping Find(IEngineeringObject target) => throw new NotSupportedException();
-        public WorkspaceMapping Create(string path, IEngineeringObject target) => throw new NotSupportedException();
+        private readonly Workspace owner;
+        internal CompareState InitialState = CompareState.Equal;
+        internal bool RefuseInitialStatus, RefuseCreate, RefuseSync, RefuseLookupAfterCreate, RefreshesKnownState;
+        internal Action<FileInfo>? WriteOnSync;
+        internal WorkspaceMappingComposition(Workspace owner) => this.owner = owner;
+        public WorkspaceMapping? Find(IEngineeringObject target)
+        {
+            if (RefuseLookupAfterCreate && owner.Calls.Any(call => call.StartsWith("Create:", StringComparison.Ordinal)))
+                throw new EngineeringTargetInvocationException("Mapping lookup unavailable");
+            return this.FirstOrDefault(m => m.LinkedProjectObject == target);
+        }
+        public WorkspaceMapping Create(string path, IEngineeringObject target)
+        {
+            owner.Calls.Add("Create:" + path);
+            if (RefuseCreate) throw new EngineeringTargetInvocationException("Linked object is not supported");
+            var mapping = new WorkspaceMapping(owner, path, target);
+            mapping.Status.State = InitialState;
+            if (RefuseInitialStatus) mapping.Status.ReadError = new EngineeringTargetInvocationException("Cannot read new status");
+            mapping.Status.RefreshesKnownState = RefreshesKnownState;
+            var file = new FileInfo(Path.Combine(owner.RootPath.FullName, path));
+            mapping.Status.OnSynchronized = () => WriteOnSync?.Invoke(file);
+            mapping.Status.RefreshError = RefuseSync || WriteOnSync == null && !file.Exists
+                ? new EngineeringTargetInvocationException("The file is deleted") : null;
+            Add(mapping);
+            return mapping;
+        }
     }
+#if STUDIO_VCI_MODERN
+    public sealed class MappedObject
+    {
+        internal Exportable Target = null!;
+        internal IndividualObjectSynchronizationStatus Status { get; } = new();
+        public string FileNameWithoutExtension { get; set; } = "";
+        public DirectoryInfo DirectoryPath { get; set; } = null!;
+        public string FileFormat => "xml";
+        public IndividualObjectCompareResult GetStatus() => Status.GetStatus();
+        public void Synchronize(SynchronizationMode direction) => Status.Synchronize(direction);
+    }
+    public sealed class MappedObjectComposition : List<MappedObject>
+    {
+        public MappedObject? Find(IEngineeringObject target) => this.FirstOrDefault(m => m.Target == target);
+    }
+#endif
     public sealed class Workspace
     {
+#if STUDIO_VCI_MODERN
+        public MappedObjectComposition MappedObjects { get; } = new();
+        public IEnumerable<string> GetSupportedFileFormats(IEngineeringObject target) =>
+            target is Exportable ? new[] { "xml" } : Array.Empty<string>();
+        public MappedObject ExportObject(IEngineeringObject target, DirectoryInfo directory, string name, string format)
+        {
+            Calls.Add("Workspace.ExportObject:" + name + ":" + format);
+            var mapping = new MappedObject { Target = (Exportable)target, DirectoryPath = RootPath, FileNameWithoutExtension = name };
+            MappedObjects.Add(mapping);
+            mapping.Status.State = CompareState.Equal;
+            return mapping;
+        }
+#endif
         public string Name => "MCP_RC_WS";
-        public DirectoryInfo RootPath { get; }
+        public DirectoryInfo RootPath { get; set; }
         public CultureInfo WorkspaceLanguage => CultureInfo.InvariantCulture;
-        public WorkspaceMappingComposition Mappings { get; } = new();
-        internal Workspace(DirectoryInfo root) => RootPath = root;
+        internal List<string> Calls { get; } = new();
+        public WorkspaceMappingComposition Mappings { get; }
+        internal Workspace(DirectoryInfo root) { RootPath = root; Mappings = new(this); }
     }
     public sealed class WorkspaceComposition : List<Workspace>
     {
+        public Workspace Create(string name) => throw new NotSupportedException();
         public Workspace Create(string name, DirectoryInfo dir) => throw new NotSupportedException();
     }
     public class WorkspaceGroup
@@ -138,70 +208,102 @@ namespace Siemens.Engineering
 #endif
     public interface IEngineeringObject { public object GetAttribute(string name); }
     public interface IEngineeringServiceProvider { public T GetService<T>() where T : class; }
-    public sealed class Project : IEngineeringServiceProvider
+    public enum ExportOptions { None, WithDefaults }
+    public class NamedObject : IEngineeringObject
+    {
+        public string Name { get; set; } = "";
+        public object GetAttribute(string name) => Name;
+    }
+    public sealed class Project : ProjectBase { }
+    public abstract class Exportable : NamedObject
+    {
+        internal Action<FileInfo, ExportOptions> Write = (_, _) => throw new NotSupportedException();
+        public void Export(FileInfo file, ExportOptions options) => Write(file, options);
+    }
+    public class ProjectBase : NamedObject, IEngineeringServiceProvider
     {
         internal VersionControlInterface Vci { get; } = new();
         public T GetService<T>() where T : class => (Vci as T) ?? throw new NotSupportedException();
-        public DeviceComposition Devices => throw new NotSupportedException();
-        public DeviceUserGroupComposition DeviceGroups => throw new NotSupportedException();
-        public DeviceSystemGroup UngroupedDevicesGroup => throw new NotSupportedException();
+        public DeviceComposition Devices { get; } = new();
+        public DeviceUserGroupComposition DeviceGroups { get; } = new();
+        public DeviceSystemGroup UngroupedDevicesGroup { get; } = new();
     }
 }
 namespace Siemens.Engineering.HW
 {
-    public class DeviceComposition { }
-    public class DeviceUserGroupComposition { }
-    public class DeviceItemComposition { }
+    public class DeviceComposition : List<Device> { }
+    public class DeviceUserGroupComposition : List<DeviceUserGroup> { }
+    public class DeviceItemComposition : List<DeviceItem> { }
     public class DeviceSystemGroup : DeviceGroup { }
-    public class DeviceGroup { public DeviceComposition Devices => throw new NotSupportedException(); }
-    public class DeviceUserGroup : DeviceGroup { public DeviceUserGroupComposition Groups => throw new NotSupportedException(); }
-    public class HardwareObject { public DeviceItemComposition DeviceItems => throw new NotSupportedException(); }
-    public class DeviceItem : HardwareObject { public T GetService<T>() => throw new NotSupportedException(); }
-    namespace Features { public class SoftwareContainer { public SW.Software Software => throw new NotSupportedException(); } }
+    public class DeviceGroup : NamedObject { public DeviceComposition Devices { get; } = new(); }
+    public class DeviceUserGroup : DeviceGroup { public DeviceUserGroupComposition Groups { get; } = new(); }
+    public class HardwareObject : NamedObject { public DeviceItemComposition DeviceItems { get; } = new(); }
+    public class Device : HardwareObject { }
+    public class DeviceItem : HardwareObject
+    {
+        public Features.SoftwareContainer Container { get; } = new();
+        public T GetService<T>() where T : class => (Container as T)!;
+    }
+    namespace Features { public class SoftwareContainer { public SW.Software Software { get; set; } = new SW.PlcSoftware(); } }
 }
 namespace Siemens.Engineering.SW
 {
-    public class Software { }
+    public class Software : NamedObject { }
     public class PlcSoftware : Software
     {
-        public PlcBlockSystemGroup BlockGroup => throw new NotSupportedException();
-        public PlcTagTableSystemGroup TagTableGroup => throw new NotSupportedException();
-        public PlcTypeSystemGroup TypeGroup => throw new NotSupportedException();
+        public PlcBlockSystemGroup BlockGroup { get; } = new();
+        public PlcTagTableSystemGroup TagTableGroup { get; } = new();
+        public PlcTypeSystemGroup TypeGroup { get; } = new();
     }
 }
 namespace Siemens.Engineering.SW.Blocks
 {
-    public abstract class PlcBlock : IEngineeringObject { public abstract object GetAttribute(string name); }
-    public class PlcBlockComposition { }
-    public class PlcBlockUserGroupComposition { }
+    public class PlcBlock : Exportable { }
+    public class PlcBlockComposition : List<PlcBlock> { }
+    public class PlcBlockUserGroup : PlcBlockGroup { }
+    public class PlcBlockUserGroupComposition : List<PlcBlockUserGroup> { }
     public class PlcBlockSystemGroup : PlcBlockGroup { }
-    public class PlcBlockGroup
+    public class PlcBlockGroup : NamedObject
     {
-        public PlcBlockComposition Blocks => throw new NotSupportedException();
-        public PlcBlockUserGroupComposition Groups => throw new NotSupportedException();
+        public PlcBlockComposition Blocks { get; } = new();
+        public PlcBlockUserGroupComposition Groups { get; } = new();
     }
 }
 namespace Siemens.Engineering.SW.Tags
 {
-    public abstract class PlcTagTable : IEngineeringObject { public abstract object GetAttribute(string name); }
-    public class PlcTagTableComposition { }
-    public class PlcTagTableUserGroupComposition { }
+    public class PlcTagTable : Exportable { }
+    public class PlcTagTableComposition : List<PlcTagTable> { }
+    public class PlcTagTableUserGroup : PlcTagTableGroup { }
+    public class PlcTagTableUserGroupComposition : List<PlcTagTableUserGroup> { }
     public class PlcTagTableSystemGroup : PlcTagTableGroup { }
-    public class PlcTagTableGroup
+    public class PlcTagTableGroup : NamedObject
     {
-        public PlcTagTableComposition TagTables => throw new NotSupportedException();
-        public PlcTagTableUserGroupComposition Groups => throw new NotSupportedException();
+        public PlcTagTableComposition TagTables { get; } = new();
+        public PlcTagTableUserGroupComposition Groups { get; } = new();
     }
 }
 namespace Siemens.Engineering.SW.Types
 {
-    public abstract class PlcType : IEngineeringObject { public abstract object GetAttribute(string name); }
-    public class PlcTypeComposition { }
-    public class PlcTypeUserGroupComposition { }
+    public class PlcType : Exportable { }
+    public class PlcTypeComposition : List<PlcType> { }
+    public class PlcTypeUserGroup : PlcTypeGroup { }
+    public class PlcTypeUserGroupComposition : List<PlcTypeUserGroup> { }
     public class PlcTypeSystemGroup : PlcTypeGroup { }
-    public class PlcTypeGroup
+    public class PlcTypeGroup : NamedObject
     {
-        public PlcTypeComposition Types => throw new NotSupportedException();
-        public PlcTypeUserGroupComposition Groups => throw new NotSupportedException();
+        public PlcTypeComposition Types { get; } = new();
+        public PlcTypeUserGroupComposition Groups { get; } = new();
     }
 }
+
+#if !STUDIO_VCI_MODERN
+namespace TiaOpenness.Openness
+{
+    internal static class PlcNavigator
+    {
+        internal static IEnumerable<Device> AllDevices(Siemens.Engineering.Project project) => project.Devices;
+        internal static Siemens.Engineering.SW.PlcSoftware FindPlcSoftware(Device device) =>
+            (Siemens.Engineering.SW.PlcSoftware)device.DeviceItems.Single().Container.Software;
+    }
+}
+#endif

@@ -17,9 +17,17 @@ public sealed class VersionControlRequest
 
 public sealed class VersionControlResult : IWorkerOperationReply
 {
+    public const string Reconnect = "Compare the file, back it up, move or delete it, and connect again.";
     public const string RefreshSeparator = " | refresh refused: ";
     public static string StoredEqualSummary(int count) => count == 0 ? "" :
         $" {count} object(s) reported Equal from the status TIA stored. TIA refused the refresh. Check the workspace files if an object was edited.";
+
+    public static string DisconnectedSummary(IReadOnlyCollection<string> names) => names.Count == 0 ? "" :
+        " " + names.Count + " disconnected mapping(s) skipped: " + string.Join(", ", names) + ". " + Reconnect;
+
+    public static string NotVerifiedSummary(IReadOnlyCollection<string> names) => names.Count == 0 ? "" :
+        " Not verified: " + string.Join(", ", names) + ". Export the block, type or tag table separately and compare it with the workspace file. "
+        + "After a backup, remove the stale workspace file and synchronize again.";
 
     public string Message { get; set; } = "";
     public IEnumerable<string>? Items { get; set; } = System.Array.Empty<string>();

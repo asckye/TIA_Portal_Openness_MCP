@@ -19,6 +19,37 @@ public sealed class VciWorkspaceLayoutTests
     }
 
     [Fact]
+    public void A_mapped_file_under_a_junction_can_sync_but_a_missing_XML_cannot_be_seeded_through_it()
+    {
+        var root = Directory.CreateTempSubdirectory("vci-mapping-");
+        string link = Path.Combine(root.FullName, "Link");
+        try
+        {
+            var target = root.CreateSubdirectory("Target");
+            if (OperatingSystem.IsWindows())
+            {
+                var start = new System.Diagnostics.ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"), "/d /c mklink /J Link Target")
+                    { WorkingDirectory = root.FullName, UseShellExecute = false, CreateNoWindow = true };
+                using var process = System.Diagnostics.Process.Start(start)!;
+                process.WaitForExit();
+                Assert.Equal(0, process.ExitCode);
+            }
+            else Directory.CreateSymbolicLink(link, target.FullName);
+
+            File.WriteAllText(Path.Combine(target.FullName, "Motor.xml"), "<Document/>");
+            Assert.True(VciExportPolicy.TargetExists(VciWorkspaceLayout.LegacyMappingFile(root.FullName, @"\Link\Motor.xml")));
+            var missing = VciWorkspaceLayout.LegacyMappingFile(root.FullName, @"\Link\Missing.xml");
+            Assert.Throws<IOException>(() => VciExportPolicy.TargetExists(missing));
+            Assert.False(missing.Exists);
+        }
+        finally
+        {
+            if (Directory.Exists(link)) Directory.Delete(link);
+            root.Delete(true);
+        }
+    }
+
+    [Fact]
     public void The_ungrouped_folder_is_fixed_and_language_independent()
         => Assert.Equal("UngroupedDevices", VciWorkspaceLayout.UngroupedFolder);
 

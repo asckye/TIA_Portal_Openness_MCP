@@ -297,6 +297,32 @@ public sealed class VciSyncTests
     }
 
     [Fact]
+    public void Probe_and_partial_file_evidence_bound_rows_but_keep_the_full_totals()
+    {
+        var selection = new VciSyncSelection();
+        var attempts = new VciSyncAttempts();
+        var path = VciSyncTarget.Capture("Motor", () => ".");
+        for (int i = 0; i < 43; i++)
+        {
+            selection.Include(() => throw new IOException("Unreadable"), true, out _);
+            attempts.Synchronize(".", path, () => throw new InvalidOperationException("Unexpected synchronize"), () => "", _ => "", false, out _,
+                repairFile: issued =>
+                {
+                    issued();
+                    attempts.RecordFile(new FileInfo("Motor.xml"));
+                    throw new IOException("Refused after writing");
+                });
+        }
+        var meta = selection.Evidence(false, failed: 43);
+        attempts.AddEvidence(meta);
+        var probes = Assert.IsAssignableFrom<IDictionary<string, object?>>(meta["statusProbe"]);
+        Assert.Equal(43, probes["total"]);
+        Assert.Equal(40, Assert.IsAssignableFrom<System.Collections.IList>(probes["objects"]).Count);
+        Assert.Equal(43, meta["writtenFilesAfterFailureTotal"]);
+        Assert.Equal(40, Assert.IsAssignableFrom<System.Collections.IList>(meta["writtenFilesAfterFailure"]).Count);
+    }
+
+    [Fact]
     public void Changed_only_distinguishes_equal_unknown_and_differing_objects()
     {
         var reply = SkippedUnknown(true);

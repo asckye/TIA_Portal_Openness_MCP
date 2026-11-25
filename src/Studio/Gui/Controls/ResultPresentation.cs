@@ -39,10 +39,14 @@ public sealed class DisplayValueConverter : IValueConverter, IMultiValueConverte
             "consistent" => (bool)value ? Loc.Current["Primer.Yes"] : Loc.Current["Primer.No"],
             "protected" => (bool)value ? Loc.Current["Primer.Protected"] : "—",
             "compareDetail" when value is MappedObjectInfo { RefreshMessage: { Length: > 0 } } item =>
-                item.CompareState == VcCompareState.Equal ? Loc.Current.T("Status.StoredEqual", 1) + " " + item.RefreshMessage : item.RefreshMessage,
+                item.CompareState == VcCompareState.Equal ? Loc.Current.T("Status.StoredEqual", 1) + " " + item.RefreshMessage
+                    : Loc.Current.T("Status.RefreshRefused", item.RefreshMessage),
             "compareDetail" => Loc.Current["Col.State"],
             "compare" when value is MappedObjectInfo { CompareState: VcCompareState.Equal, RefreshMessage: { Length: > 0 } } =>
                 Loc.Current["Primer.StoredEqual"],
+            "compare" when value is MappedObjectInfo { RefreshMessage: { Length: > 0 },
+                CompareState: VcCompareState.Unequal or VcCompareState.WorkspaceFileMissing } stored =>
+                Loc.Current.T("Status.RefreshRefused", Loc.Current[stored.CompareState == VcCompareState.Unequal ? "Primer.Differs" : "Primer.Missing"]),
             "compare" => (value is MappedObjectInfo row ? row.CompareState : (VcCompareState)value) switch
             {
                 VcCompareState.Equal => Loc.Current["Primer.Identical"],
@@ -103,7 +107,7 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public bool CanConnect => !model.Busy;
     public string MappedMeta => Loc.Current
         .T("Pages.MappedMeta", model.VersionControl.MappedCount, model.VersionControl.VcStatusItems
-            .Count(i => i.CompareState != VcCompareState.Equal));
+            .Count(i => i.CompareState is VcCompareState.Unequal or VcCompareState.WorkspaceFileMissing));
     public bool CanOperate => HasProject && !model.Busy;
     public double OperationOpacity => HasProject ? 1 : .5;
     public bool HasSelection => CanOperate && model.Engineering.Blocks.Any(b => b.Selected);
@@ -150,7 +154,8 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
     public string MissingLabel => FilterLabel("Primer.Missing", VcCompareState.WorkspaceFileMissing);
     public string WorkspaceSummary => model.VersionControl.SelectedWorkspace is null ? model.VersionControl.WorkspaceRootDisplay
         : Loc.Current.T("Primer.WorkspaceSummary", model.VersionControl.WorkspaceRootDisplay,
-            model.VersionControl.SelectedWorkspace.MappedObjectCount, model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal));
+            model.VersionControl.SelectedWorkspace.MappedObjectCount,
+                model.VersionControl.VcStatusItems.Count(i => i.CompareState is VcCompareState.Unequal or VcCompareState.WorkspaceFileMissing));
     public string Errors { get; private set; } = "—";
     public string Warnings { get; private set; } = "—";
     public string CompileState { get; private set; } = "";

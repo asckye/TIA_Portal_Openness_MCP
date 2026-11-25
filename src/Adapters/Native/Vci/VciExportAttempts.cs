@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Hmi;
 
 namespace TiaMcp.Adapters.Native.Vci;
 
@@ -12,6 +14,24 @@ internal sealed class VciExportAttempts
     internal int Unconfirmed { get; private set; }
     internal bool MappingProbeFailed { get; private set; }
     internal int MappedAfterFailure { get; private set; }
+    internal int FilesWritten { get; private set; }
+    private readonly HmiArray writtenAfterFailure = new();
+    private int writtenFailureCount;
+    private void RecordFailureFile(FileInfo file, string state)
+    {
+        if (++writtenFailureCount <= 40)
+            writtenAfterFailure.Add(new HmiObject { ["fileName"] = file.Name, ["mappingState"] = state });
+    }
+
+    internal void AddFileEvidence(IDictionary<string, object?> meta)
+    {
+        if (FilesWritten > 0) meta["filesWritten"] = FilesWritten;
+        if (writtenFailureCount > 0)
+        {
+            meta["writtenFilesAfterFailure"] = writtenAfterFailure;
+            meta["writtenFilesAfterFailureTotal"] = writtenFailureCount;
+        }
+    }
     internal int UnsupportedContainers { get; private set; }
     internal int QueryRefusals { get; private set; }
     internal string? NativeMessage { get; private set; }
@@ -36,11 +56,65 @@ internal sealed class VciExportAttempts
         }
     }
 
+    internal bool ExportFileFirst(FileInfo file, Action seed, Action connect, Func<bool> freshMapping, Action<string> report,
+        Func<bool>? matchesExisting = null)
+    {
+        bool issuedSeed = false;
+        try
+        {
+            if (VciExportPolicy.TargetExists(file))
+            {
+                if (matchesExisting?.Invoke() != true) throw new IOException(VciExportPolicy.ExistingFile(file.Name));
+            }
+            else
+            {
+                issuedSeed = true;
+                Issued++;
+                seed();
+                FilesWritten++;
+            }
+        }
+        catch (Exception error)
+        {
+            if (!NativeRefusalProbe.AllowsRefusalProof(error))
+            {
+                if (issuedSeed) Unconfirmed++;
+                MappingProbeFailed = true;
+            }
+            NativeMessage = NativeFailureText.BoundedDiagnostic(error);
+            report("FAILED: " + NativeMessage);
+            if (issuedSeed && File.Exists(file.FullName))
+            {
+                FilesWritten++;
+                report("file present after refused export: " + file.Name);
+                RecordFailureFile(file, "absent");
+            }
+            report("no mapping created");
+            return false;
+        }
+        string mappingState = "unknown";
+        bool Lookup()
+        {
+            bool present = freshMapping();
+            mappingState = present ? "present" : "absent";
+            return present;
+        }
+        bool mapped = Export(connect, Lookup, report,
+            () => VciSyncTarget.ConnectSnapshot(file.DirectoryName!, Path.GetFileNameWithoutExtension(file.Name)), stopOnUncertainWrite: true);
+        if (!mapped)
+        {
+            if (issuedSeed) RecordFailureFile(file, mappingState);
+            if (mappingState == "absent") report("mapping absent after failed export");
+            if (issuedSeed) report("file written: " + file.Name);
+        }
+        return mapped;
+    }
+
     internal bool ExportToWorkspace(string root, string stem, Action write, Func<bool> freshMapping, Action<string> report)
         => Export(write, freshMapping, report, () => VciSyncTarget.ConnectSnapshot(root, stem));
 
     internal bool Export(Action write, Func<bool> freshMapping, Action<string> report,
-        Func<(string Name, long Length, DateTime Modified)[]?>? snapshot = null)
+        Func<(string Name, long Length, DateTime Modified)[]?>? snapshot = null, bool stopOnUncertainWrite = false)
     {
         var before = snapshot?.Invoke();
         Issued++;
@@ -50,6 +124,11 @@ internal sealed class VciExportAttempts
         {
             NativeMessage = Diagnostic(error);
             report("FAILED: " + NativeMessage);
+            if (stopOnUncertainWrite && !NativeRefusalProbe.AllowsRefusalProof(error))
+            {
+                MappingProbeFailed = true;
+                return false;
+            }
             bool mapped;
             try { mapped = freshMapping(); }
             catch (Exception probeError)

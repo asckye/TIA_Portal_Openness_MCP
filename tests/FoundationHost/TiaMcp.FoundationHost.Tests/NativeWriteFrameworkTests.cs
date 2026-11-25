@@ -97,6 +97,9 @@ public sealed class NativeWriteFrameworkTests
     [Theory]
     [InlineData("disposed", null)]
     [InlineData("qualified", null)]
+    [InlineData("native", null)]
+    [InlineData("native-session", "EngineeringObjectDisposedException")]
+    [InlineData("native-channel", "EngineeringObjectDisposedException")]
     [InlineData("session", "ObjectDisposedException")]
     [InlineData("disconnected", "EndOfStreamException")]
     public void Discovery_continues_after_a_disposed_mapping_and_stops_on_session_loss(string scenario, string? failure)

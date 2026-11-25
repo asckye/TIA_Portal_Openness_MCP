@@ -62,9 +62,35 @@ public sealed class VciExportFrameworkTests
         Assert.Equal(false, (bool?)evidence["dataComplete"]);
         foreach (string name in objects.Keys) Calls(status, name, "UpdateStatus", "GetStatus");
         var changed = Tools(replies["changedStatus"]!).GetVersionControlStatusV4().StructuredContent!;
-        Assert.Equal(new[] { "Motor", "Missing", "Pending", "Deleted" },
-            changed["data"]!["evidence"]!["objects"]!.AsArray().Select(row => (string?)row!["name"]));
-        Assert.Contains("Deleted | Unknown(" + error + ")", (string?)changed["data"]!["items"]![3]);
+        // Equal rows whose refresh was refused are not proven and stay listed.
+        string[] unproven = release == "16" ? Array.Empty<string>() : new[] { "Refreshed", "Next" };
+        var changedNames = changed["data"]!["evidence"]!["objects"]!.AsArray().Select(row => (string)row!["name"]!).ToArray();
+        Assert.Equal(new[] { "Motor", "Missing", "Pending", "Deleted" }, changedNames.Except(unproven));
+        Assert.Equal(unproven, changedNames.Intersect(unproven));
+        int deleted = Array.IndexOf(changedNames, "Deleted");
+        Assert.Contains("Deleted | Unknown(" + error + ")", (string?)changed["data"]!["items"]![deleted]);
+    }
+
+    [Fact]
+    public async Task Status_diagnostics_follow_the_mapping_path_when_two_rows_have_the_same_name()
+    {
+        using var selected = Host.HardwareContract.UseRelease("17");
+        var scenario = (await StatusReplies("17"))["status"]!.DeepClone();
+        var reply = scenario["reply"]!;
+        var rows = new JsonArray();
+        var lines = new JsonArray();
+        foreach (string folder in new[] { "Blocks", "Types" })
+        {
+            string path = folder + "/Shared.xml";
+            rows.Add(new JsonObject { ["name"] = "Shared", ["filePath"] = path, ["fileFormat"] = "xml", ["compareState"] = "Unknown",
+                ["error"] = folder + " status unavailable" });
+            lines.Insert(0, JsonValue.Create("Shared | Unknown(raw error) | file=" + path + " | format=xml"));
+        }
+        reply["Meta"]!["objects"] = rows;
+        reply["Items"] = lines;
+        var data = Tools(scenario).GetVersionControlStatusV4(changedOnly: false).StructuredContent!["data"]!;
+        Assert.Equal(new[] { "Shared | Unknown(Types status unavailable) | file=Types/Shared.xml | format=xml",
+            "Shared | Unknown(Blocks status unavailable) | file=Blocks/Shared.xml | format=xml" }, Strings(data["items"]));
     }
 
     [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
@@ -106,7 +132,7 @@ public sealed class VciExportFrameworkTests
     }
 
     [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
-    public async Task Stored_equal_keeps_the_refusal_in_status_and_sync_without_changing_selection(string release)
+    public async Task Stored_equal_requires_proof_and_keeps_the_refresh_refusal(string release)
     {
         using var selected = Host.HardwareContract.UseRelease(release);
         var replies = await StatusReplies(release);
@@ -128,11 +154,12 @@ public sealed class VciExportFrameworkTests
                 : tools.SynchronizeVersionControlWorkspaceV4(dryRun: key.EndsWith("Preview"), changedOnly: key.EndsWith("Preview"))).StructuredContent!;
             var data = body["data"]!;
             var evidence = data["evidence"]!;
-            var fresh = status ? freshStatus : key.EndsWith("Preview") ? freshPreview : freshApply;
-            Assert.Equal((string)fresh["meta"]!["completeness"]!, (string?)body["meta"]!["completeness"]);
-            Assert.True((bool?)body["ok"]);
+            bool apply = key.EndsWith("Apply");
+            Assert.Equal("partial", (string?)body["meta"]!["completeness"]);
+            Assert.Equal(!apply, (bool?)body["ok"]);
+            if (apply) Assert.Equal(key == "mixedApply" ? "PARTIAL_FAILURE" : "NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
             Assert.Equal(1, (int?)evidence["unverifiedEqual"]);
-            Assert.True((bool?)evidence["dataComplete"]);
+            Assert.False((bool?)evidence["dataComplete"]);
             string summary = (string)data["summary"]!;
             Assert.Contains("1 object(s) reported Equal from the status TIA stored", summary);
             Assert.Contains("refused the refresh", summary);
@@ -150,14 +177,16 @@ public sealed class VciExportFrameworkTests
             }
             else
             {
-                Assert.Equal(1, (int?)evidence["skippedEqual"]);
+                Assert.Equal(0, (int?)evidence["skippedEqual"]);
+                Assert.Equal(apply ? 1 : 0, (int?)evidence["notVerified"]);
+                Assert.Equal(apply ? 0 : 1, (int?)evidence["wouldVerify"]);
                 Assert.Equal(key == "mixedApply" ? 1 : 0, (int?)evidence["exportsIssued"]);
             }
             if (key == "storedFiltered")
             {
-                Assert.Empty(rows);
-                Assert.Empty(data["items"]!.AsArray());
-                continue;
+                Assert.Single(rows);
+                Assert.Single(data["items"]!.AsArray());
+                Assert.False((bool?)rows[0]!["verified"]);
             }
             var row = rows.Single(r => (string?)r!["name"] == "Stored")!;
             Assert.Equal("Equal", (string?)row[status ? "compareState" : "stateBefore"]);
@@ -245,18 +274,21 @@ public sealed class VciExportFrameworkTests
             var scenario = replies[preview ? "equalPreview" : "equalApply"]!;
             var body = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: preview, changedOnly: false).StructuredContent!;
             var evidence = body["data"]!["evidence"]!;
-            Assert.True((bool?)body["ok"]);
+            bool pending = release != "16";
+            Assert.Equal(!pending || preview, (bool?)body["ok"]);
             Assert.Contains("reported Equal", (string?)body["data"]!["summary"]);
-            Assert.Equal(1, (int?)evidence["skippedEqual"]);
+            Assert.Equal(pending ? 0 : 1, (int?)evidence["skippedEqual"]);
+            Assert.Equal(pending && !preview ? 1 : 0, (int?)evidence["notVerified"]);
             Assert.Equal(0, (int?)evidence["exportsIssued"]);
-            Assert.Equal(0, (int?)evidence["failed"]);
+            Assert.Equal(pending && !preview ? 1 : 0, (int?)evidence["failed"]);
             Assert.False((bool?)evidence["mayHaveChanged"]);
             Calls(scenario, "Motor", "UpdateStatus", "GetStatus");
         }
         var changed = replies["changedSync"]!;
         var changedBody = Tools(changed).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
         var counts = changedBody["data"]!["evidence"]!;
-        Assert.Equal(2, (int?)counts["skippedEqual"]);
+        Assert.Equal(release == "16" ? 2 : 0, (int?)counts["skippedEqual"]);
+        Assert.Equal(release == "16" ? 0 : 2, (int?)counts["notVerified"]);
         Assert.Equal(2, (int?)counts["skippedUnknown"]);
         Assert.Equal(2, (int?)counts["synchronized"]);
         Calls(changed, "Motor", "UpdateStatus", "GetStatus", "Synchronize:ProjectToWorkspace");
@@ -266,14 +298,417 @@ public sealed class VciExportFrameworkTests
         var allBody = Tools(all).SynchronizeVersionControlWorkspaceV4(dryRun: false, changedOnly: false).StructuredContent!;
         var result = allBody["data"]!["evidence"]!;
         Assert.Equal("PARTIAL_FAILURE", (string?)allBody["error"]!["code"]);
-        Assert.Equal(4, (int?)result["skippedEqual"]);
+        Assert.Equal(release == "16" ? 4 : 0, (int?)result["skippedEqual"]);
+        Assert.Equal(release == "16" ? 0 : 4, (int?)result["notVerified"]);
         Assert.Equal(2, (int?)result["exportsIssued"]);
         Assert.Equal(1, (int?)result["synchronized"]);
-        Assert.Equal(1, (int?)result["failed"]);
+        Assert.Equal(release == "16" ? 1 : 5, (int?)result["failed"]);
         Assert.Equal(0, (int?)result["unconfirmed"]);
         Assert.False((bool?)result["writeOutcomeUnknown"]);
         Assert.Equal("Unknown", (string?)result["failures"]![0]!["statusAfter"]);
         Calls(all, "Deleted", "UpdateStatus", "GetStatus", "Synchronize:ProjectToWorkspace", "UpdateStatus", "GetStatus");
+    }
+
+    private static async Task<JsonNode> ExportReplies(string release)
+    {
+        var (folder, name) = release switch
+        {
+            "16" or "17" => ("vci-initial-net48", "TiaMcp.VciInitial.Net48.Tests.exe"),
+            "18" or "19" => ("vci-net48", "TiaMcp.VciExport.Net48.Tests.exe"),
+            _ => ("vci-modern-net48", "TiaMcp.VciModern.Net48.Tests.exe")
+        };
+        using var process = Process.Start(new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory, folder, name), "--export-replies " + release) {
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            StandardOutputEncoding = System.Text.Encoding.UTF8
+        })!;
+        var output = process.StandardOutput.ReadToEndAsync();
+        var errors = process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
+        Assert.True(process.ExitCode == 0, await errors);
+        return JsonNode.Parse(await output)!;
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
+    public async Task Stored_equal_requires_content_proof_and_preserves_uncertain_writes(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = (await ExportReplies(release))["proof"]!;
+        foreach (var (key, scenario) in cases.AsObject())
+        {
+            if (key is "pull" or "push")
+            {
+                var result = scenario!["result"]!;
+                Assert.Equal(key == "pull" ? 1 : 0, (int?)result["NotVerified"]);
+                Assert.Equal(key == "push" ? 1 : 0, (int?)result["Synchronized"]);
+                Assert.Equal(1, (int?)result["VerifiedEqual"]);
+                Assert.Equal(2, result["Items"]!.AsArray().Count);
+                Assert.DoesNotContain(Strings(scenario["nextCalls"]), call => call.StartsWith("Synchronize:"));
+                Assert.DoesNotContain(Strings(scenario["calls"]), call => call == "Synchronize:WorkspaceToProject");
+                continue;
+            }
+            var evidence = Tools(scenario!).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
+            var data = evidence["data"]!["evidence"]!;
+            var preview = Tools(new JsonObject { ["reply"] = scenario!["preview"]!.DeepClone() })
+                .SynchronizeVersionControlWorkspaceV4().StructuredContent!["data"]!;
+            Assert.Empty(Strings(scenario["previewEvents"]));
+            Assert.True((bool?)scenario["cleaned"]);
+            var row = data["items"]!.AsArray().Single(r => (string?)r!["name"] == "Motor")!;
+            if (key == "disconnected")
+            {
+                Assert.True((bool?)evidence["ok"]);
+                Assert.Equal(0, (int?)data["failed"]);
+                Assert.Equal(1, (int?)data["skippedDisconnected"]);
+                Assert.False((bool?)preview["evidence"]!["dataComplete"]);
+                Assert.False((bool?)data["dataComplete"]);
+                Assert.Contains("Motor.xml", (string?)row["reason"]);
+                continue;
+            }
+            var pending = preview["evidence"]!["items"]!.AsArray().Single(r => (string?)r!["name"] == "Motor")!;
+            Assert.Equal("verify-before-export", (string?)pending["outcome"]);
+            Assert.EndsWith("Motor.xml", (string?)pending["filePath"]);
+            Assert.Equal("Equal", (string?)pending["stateBefore"]);
+            if (key is not ("missing" or "oversize")) Assert.Matches("^[a-f0-9]{64}$", (string)pending["workspaceFileSha256"]!);
+            Assert.Equal(key == "compare-aborted" ? 2 : 1, (int?)preview["evidence"]!["wouldVerify"]);
+            if (key == "none")
+            {
+                var changed = scenario["preview"]!.DeepClone();
+                changed["Meta"]!["items"]![0]!["workspaceFileSha256"] = new string('f', 64);
+                var other = Tools(new JsonObject { ["reply"] = changed }).SynchronizeVersionControlWorkspaceV4().StructuredContent!["data"]!;
+                Assert.NotNull(preview["planHash"]);
+                Assert.NotEqual((string?)preview["planHash"], (string?)other["planHash"]);
+            }
+            Assert.Equal(0, (int?)preview["evidence"]!["skippedEqual"]);
+            Assert.False((bool?)scenario["status"]!["Meta"]!["objects"]![0]!["verified"]);
+            bool proven = key is "none" or "defaults" or "new-match";
+            bool wrote = key is "stale" or "external";
+            bool uncertain = key is "disposed" or "abort" or "connection" or "nonrecoverable" or "changed-throw";
+            Assert.Equal(proven || wrote, (bool?)evidence["ok"]);
+            Assert.Equal(proven ? 1 : 0, (int?)data["verifiedEqual"]);
+            Assert.Equal(proven ? 1 : 0, (int?)data["skippedEqual"]);
+            Assert.Equal(proven || wrote ? 0 : key == "compare-aborted" ? 2 : 1, (int?)data["notVerified"]);
+            Assert.Equal(uncertain ? 1 : 0, (int?)data["unconfirmed"]);
+            Assert.Equal(proven ? "verified-equal" : wrote ? "synchronized" : "not-verified", (string?)row["outcome"]);
+            if (wrote) Assert.True((bool?)row["fileChanged"]);
+            if (proven) Assert.Equal("content-match", (string?)row["verification"]);
+            if (key is "mixed" or "race")
+            {
+                Assert.Equal("PARTIAL_FAILURE", (string?)evidence["error"]!["code"]);
+                Assert.Equal(1, (int?)data["synchronized"]);
+                Assert.Equal(new[] { "export:None", "export:WithDefaults", "sync:First" }, Strings(scenario["events"]));
+            }
+            else if (!proven && !wrote)
+            {
+                Assert.Equal(uncertain ? "OUTCOME_UNKNOWN" : "NATIVE_OPERATION_FAILED", (string?)evidence["error"]!["code"]);
+                Assert.Equal(uncertain, (bool?)data["mayHaveChanged"]);
+            }
+            if (key == "compare-aborted")
+            {
+                Assert.Equal(new[] { "export:None" }, Strings(scenario["events"]));
+                Assert.All(data["items"]!.AsArray(), item => Assert.Equal("not-verified", (string?)item!["outcome"]));
+                Assert.Equal(0, (int?)data["exportsIssued"]);
+            }
+            if (key == "race") Assert.True((bool?)scenario["externalPreserved"]);
+            var calls = Strings(scenario["calls"]).Count(c => c.StartsWith("Synchronize:"));
+            Assert.Equal(key is "none" or "defaults" or "missing" or "oversize" or "compare-aborted" or "race" ? 0 : 1, calls);
+            if (key == "none") Assert.Equal(new[] { "export:None" }, Strings(scenario["events"]));
+            if (key == "defaults") Assert.Equal(new[] { "export:None", "export:WithDefaults" }, Strings(scenario["events"]));
+            if (key == "no-write") Assert.Equal(4, Strings(scenario["events"]).Count(e => e.StartsWith("export:")));
+        }
+    }
+
+    [Fact]
+    public async Task Legacy_proofs_read_final_content_and_isolate_a_dead_proxy()
+    {
+        using var selected = Host.HardwareContract.UseRelease("17");
+        var cases = (await ExportReplies("17"))["sequences"]!;
+        Assert.Equal(1, (int?)cases["import"]!["NotVerified"]);
+        Assert.Equal(0, (int?)cases["import"]!["VerifiedEqual"]);
+        var disposed = cases["disposed"]!["Meta"]!;
+        Assert.Equal(1, (int?)disposed["verifiedEqual"]);
+        Assert.Equal(1, (int?)disposed["notVerified"]);
+        Assert.Equal(0, (int?)disposed["exportsIssued"]);
+        var written = cases["wrong-write"]!["Meta"]!;
+        Assert.Equal(0, (int?)written["synchronized"]);
+        Assert.Equal(1, (int?)written["notVerified"]);
+        Assert.Equal(1, (int?)written["unconfirmed"]);
+        Assert.Contains("Original abort", (string?)cases["cleanup"]!["Meta"]!["nativeMessage"]);
+        var sync = Tools(new JsonObject { ["reply"] = cases["inconsistent"]!.DeepClone() }).SynchronizeVersionControlWorkspaceV4(dryRun: false);
+        var line = Assert.Single(Strings(sync.StructuredContent!["data"]!["items"]), item => item.Contains(" | FAILED:"));
+        Assert.Contains("Motor is not consistent", line);
+        Assert.DoesNotContain("fixture-password", line);
+        Assert.Contains("Unconfirmed write", (string?)cases["studio-unknown"]);
+        Assert.Contains("not-attempted (1): Next", (string?)cases["studio-unknown"]);
+        var stopped = cases["stop"]!;
+        Assert.Equal(1, (int?)stopped["Meta"]!["notAttempted"]);
+        Assert.Contains("Next | not-attempted", Strings(stopped["Items"]));
+    }
+
+    [Fact]
+    public async Task V20_disposed_synchronize_reacquires_and_attempts_the_second_target()
+    {
+        var scenario = (await ExportReplies("20"))["seedDisposed"]!;
+        var evidence = scenario["reply"]!["Meta"]!;
+        Assert.Equal(1, (int?)evidence["unconfirmed"]);
+        Assert.Equal(2, (int?)evidence["exportsIssued"]);
+        Assert.Equal(1, (int?)evidence["synchronized"]);
+        Assert.Equal(new[] { "GetStatus", "Synchronize:ProjectToWorkspace" }, Strings(scenario["states"]![1]));
+    }
+
+    private static string[] Strings(JsonNode? node) => node!.AsArray().Select(item => (string)item!).ToArray();
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task First_export_follows_the_native_workspace_capability(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var replies = await ExportReplies(release);
+        const string stem = "MCP_RC_PLC_MCP_RC_FC";
+        const string file = stem + ".xml";
+        foreach (string state in new[] { "equal", "unknown", "unequal" })
+        {
+            var scenario = replies[state]!;
+            Assert.Empty(Strings(scenario["before"]));
+            var body = Tools(scenario).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+            var evidence = body["data"]!["evidence"]!;
+            if (release is "20" or "21")
+            {
+                Assert.Equal(new[] { "Workspace.ExportObject:" + stem + ":xml" }, Strings(scenario["Calls"]));
+                Assert.True((bool?)body["ok"]);
+                Assert.Null(evidence["filesWritten"]);
+            }
+            else if (release is "18" or "19")
+            {
+                Assert.Equal(new[] { "Create:" + file }, Strings(scenario["Calls"]));
+                Assert.Equal(new[] { "Synchronize:ProjectToWorkspace" }, Strings(scenario["states"]![0]));
+                Assert.Equal(1, (int?)evidence["mappedAfterFailure"]);
+            }
+            else
+            {
+                Assert.True((bool?)body["ok"]);
+                Assert.Equal(1, (int?)evidence["mapped"]);
+                Assert.Equal(new[] { "Export:" + file + ":None", "Create:" + file }, Strings(scenario["Calls"]));
+                var expected = new List<string> { "UpdateStatus", "GetStatus" };
+                if (state != "equal") expected.Add("Synchronize:ProjectToWorkspace");
+                Assert.Equal(expected, Strings(scenario["states"]![0]));
+                Assert.Contains("<Name>MCP_RC_FC</Name>", (string?)scenario["contents"]);
+            }
+        }
+    }
+
+    [Theory, InlineData("16"), InlineData("17")]
+    public async Task Existing_targets_and_each_native_stage_have_definite_object_evidence(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var replies = await ExportReplies(release);
+        var collision = replies["collision"]!;
+        JsonNode Preview(string key) => Tools(new JsonObject { ["reply"] = collision[key]!.DeepClone() })
+            .ConnectProjectToWorkspaceV4().StructuredContent!["data"]!;
+        var absent = Preview("absent");
+        var occupied = Preview("preview");
+        Assert.False((bool?)absent["evidence"]!["plannedFiles"]![0]!["fileExists"]);
+        Assert.True((bool?)occupied["evidence"]!["plannedFiles"]![0]!["fileExists"]);
+        Assert.Matches("^[0-9a-f]{64}$", (string)absent["planHash"]!);
+        Assert.NotEqual((string?)absent["planHash"], (string?)occupied["planHash"]);
+        Assert.Empty(Strings(collision["Calls"]));
+        Assert.Equal("existing contents", (string?)collision["contents"]);
+        foreach (var key in new[] { "collision", "exportRefused", "createRefused", "syncRefused" })
+        {
+            var scenario = replies[key]!;
+            var body = Tools(scenario).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+            var evidence = body["data"]!["evidence"]!;
+            Assert.Equal(0, (int?)evidence["mapped"]);
+            Assert.Equal(1, (int?)evidence["failed"]);
+            Assert.Equal(0, (int?)evidence["unconfirmed"]);
+            Assert.False((bool?)evidence["writeOutcomeUnknown"]);
+            Assert.Equal(key == "collision" ? 0 : key == "exportRefused" ? 1 : 2, (int?)evidence["exportsIssued"]);
+            bool written = key is "createRefused" or "syncRefused";
+            Assert.Equal(written, (bool?)evidence["mayHaveChanged"]);
+            Assert.Equal(written ? "PARTIAL_FAILURE" : "NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
+            if (written)
+            {
+                Assert.Equal(1, (int?)evidence["filesWritten"]);
+                Assert.Equal(key == "syncRefused" ? 1 : 0, (int?)evidence["mappedAfterFailure"]);
+                Assert.Contains(Strings(body["data"]!["items"]), line => line.Contains("file written: MCP_RC_PLC_MCP_RC_FC.xml"));
+                Assert.Contains(Strings(body["data"]!["items"]), line => line.Contains(key == "syncRefused" ? "mapping present" : "mapping absent"));
+            }
+            if (key == "exportRefused")
+            {
+                Assert.Null(scenario["contents"]);
+                Assert.Single(Strings(scenario["Calls"]));
+                Assert.Contains("object(s) is not consistent", (string?)evidence["nativeMessage"]);
+            }
+        }
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Sync_probes_are_bound_to_their_mapping_and_repair_preserves_existing_files(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var scenario = (await ExportReplies(release))["repair"]!;
+        var preview = Tools(new JsonObject { ["reply"] = scenario["preview"]!.DeepClone() })
+            .SynchronizeVersionControlWorkspaceV4(changedOnly: false).StructuredContent!["data"]!;
+        var body = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: false, changedOnly: false).StructuredContent!;
+        foreach (var data in new[] { preview, body["data"]! })
+        {
+            Assert.DoesNotContain("fixture-password", data.ToJsonString());
+            var probes = data["evidence"]!["statusProbe"]!["objects"]!.AsArray().ToDictionary(row => (string)row!["name"]!);
+            if (release is "20" or "21")
+            {
+                Assert.Contains("First status unavailable", (string?)probes["Motor"]!["nativeMessage"]);
+                Assert.Contains("Second status unavailable", (string?)probes["Speed"]!["nativeMessage"]);
+                Assert.Null(data["evidence"]!["skippedDisconnected"]);
+                continue;
+            }
+            Assert.Contains("The object is no longer available", (string?)probes["MCP_RC_PLC_MCP_RC_A"]!["nativeMessage"]);
+            string deleted = (string)probes["MCP_RC_PLC_MCP_RC_B"]!["nativeMessage"]!;
+            Assert.Contains("The file is deleted", deleted);
+            Assert.InRange(System.Text.Encoding.UTF8.GetByteCount(deleted), 1, 4096);
+            Assert.Equal(1, (int?)data["evidence"]!["skippedDisconnected"]);
+            Assert.Contains(Strings(data["items"]), line => line.Contains("MCP_RC_PLC_MCP_RC_A | mapping no longer connected to an existing object"));
+        }
+        var evidence = body["data"]!["evidence"]!;
+        Assert.False((bool?)evidence["writeOutcomeUnknown"]);
+        if (release is "20" or "21")
+        {
+            Assert.True((bool?)body["ok"]);
+            Assert.Equal(new[] { "GetStatus", "GetStatus", "Synchronize:ProjectToWorkspace" }, Strings(scenario["states"]![0]));
+            return;
+        }
+        Assert.Empty(Strings(scenario["previewCalls"]));
+        Assert.Equal(Enumerable.Repeat("UpdateStatus", 4), Strings(scenario["states"]![0]));
+        Assert.Equal(1, (int?)evidence["unverifiedEqual"]);
+        Assert.False((bool?)scenario["storedFileExists"]);
+        Assert.Equal(Enumerable.Repeat(new[] { "UpdateStatus", "GetStatus" }, 4).SelectMany(calls => calls), Strings(scenario["states"]![3]));
+        var changed = Tools(new JsonObject { ["reply"] = scenario["changedPreview"]!.DeepClone() })
+            .SynchronizeVersionControlWorkspaceV4().StructuredContent!["data"]!["evidence"]!;
+        Assert.Equal(release is "16" or "17" ? 2 : 1, (int?)changed["wouldSynchronize"]);
+        Assert.Equal("existing contents", (string?)scenario["original"]);
+        Assert.Equal("PARTIAL_FAILURE", (string?)body["error"]!["code"]);
+        if (release is "16" or "17")
+        {
+            Assert.Equal(new[] { "Export:MCP_RC_PLC_MCP_RC_B.xml:None" }, Strings(scenario["Calls"]));
+            Assert.True((bool?)scenario["repaired"]);
+            Assert.Equal(1, (int?)evidence["filesWritten"]);
+            Assert.Equal(2, (int?)evidence["synchronized"]);
+            Assert.Equal(1, (int?)evidence["failed"]);
+            var files = preview["evidence"]!["plannedFiles"]!.AsArray();
+            Assert.EndsWith(@"\Types\MCP_RC_PLC_MCP_RC_B.xml", (string?)files[0]!["filePath"]);
+            Assert.False((bool?)files[0]!["fileExists"]);
+            Assert.True((bool?)files[1]!["fileExists"]);
+            var present = Tools(new JsonObject { ["reply"] = scenario["presentPreview"]!.DeepClone() })
+                .SynchronizeVersionControlWorkspaceV4(changedOnly: false).StructuredContent!["data"]!;
+            Assert.True((bool?)present["evidence"]!["plannedFiles"]![0]!["fileExists"]);
+            Assert.NotEqual((string?)preview["planHash"], (string?)present["planHash"]);
+        }
+        else Assert.Empty(Strings(scenario["Calls"]));
+    }
+
+    [Theory, InlineData("16"), InlineData("17")]
+    public async Task Initial_mapping_reuses_matching_files_and_preserves_uncertain_exports(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release);
+        foreach (string key in new[] { "invalidPaths", "unreadableRoot" })
+        {
+            var paths = cases[key]!;
+            Assert.Equal(3, (int?)paths["preview"]!["Meta"]!["wouldSynchronize"]);
+            Assert.Equal(3, (int?)paths["reply"]!["Meta"]!["synchronized"]);
+            Assert.Equal(3, (int?)paths["unknown"]!["Meta"]!["skippedUnknown"]);
+            Assert.Equal(new[] { "Legacy.txt", @"MissingFolder\Table.xml", "Next.xml" }, Strings(paths["events"]));
+        }
+        var reuse = cases["reuse"]!;
+        Assert.True((bool?)Tools(reuse).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!["ok"]);
+        Assert.Equal(new[] { "Export:object.xml:None", "Create:MCP_RC_PLC_MCP_RC_FC.xml" }, Strings(reuse["Calls"]));
+        Assert.Contains(Strings(reuse["preview"]!["Items"]), line => line.Contains("will be compared"));
+        Assert.Contains(Strings(cases["sameName"]!["preview"]!["Items"]), line => line.Contains("duplicate planned target"));
+        var different = cases["differentXml"]!;
+        Assert.False((bool?)Tools(different).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!["ok"]);
+        Assert.Contains("<Name>Other</Name>", (string?)different["contents"]);
+        Assert.Equal(new[] { "Export:object.xml:None", "Export:defaults.xml:WithDefaults" }, Strings(different["Calls"]));
+        Assert.Equal(0, (int?)different["reply"]!["Meta"]!["exportsIssued"]);
+        var afterRead = cases["newStatusRefused"]!;
+        Assert.True((bool?)Tools(afterRead).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!["ok"]);
+        Assert.Equal(new[] { "UpdateStatus", "GetStatus", "Synchronize:ProjectToWorkspace" }, Strings(afterRead["states"]![0]));
+        foreach (string key in new[] { "seedDisposed", "seedAbort", "seedConnection", "seedNonrecoverable" })
+        {
+            var scenario = cases[key]!;
+            Assert.True((bool?)scenario["reply"]!["OutcomeUnknown"]);
+            Assert.Equal(1, (int?)scenario["reply"]!["Meta"]!["unconfirmed"]);
+            Assert.Equal(new[] { "Export:MCP_RC_PLC_MCP_RC_FC.xml:None" }, Strings(scenario["Calls"]));
+        }
+    }
+
+    [Theory, InlineData("18"), InlineData("19")]
+    public async Task Legacy_native_sync_can_export_without_an_initial_file(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var scenario = (await ExportReplies(release))["nativeSuccess"]!;
+        var body = Tools(scenario).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.True((bool?)body["ok"]);
+        Assert.Equal(new[] { "Create:MCP_RC_PLC_MCP_RC_FC.xml" }, Strings(scenario["Calls"]));
+        Assert.Equal(new[] { "Synchronize:ProjectToWorkspace" }, Strings(scenario["states"]![0]));
+        Assert.Equal(1, (int?)body["data"]!["evidence"]!["mapped"]);
+        Assert.Contains("<Name>MCP_RC_FC</Name>", (string?)scenario["contents"]);
+    }
+
+    [Fact]
+    public async Task A_repaired_file_survives_a_proven_native_sync_refusal()
+    {
+        using var selected = Host.HardwareContract.UseRelease("17");
+        var scenario = (await ExportReplies("17"))["repairRefused"]!;
+        var body = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
+        var evidence = body["data"]!["evidence"]!;
+        Assert.Equal("PARTIAL_FAILURE", (string?)body["error"]!["code"]);
+        Assert.Equal(0, (int?)evidence["unconfirmed"]);
+        Assert.Equal(1, (int?)evidence["filesWritten"]);
+        Assert.Equal("present", (string?)evidence["writtenFilesAfterFailure"]![0]!["mappingState"]);
+        Assert.Equal("MCP_RC_PLC_MCP_RC_FC.xml", (string?)evidence["writtenFilesAfterFailure"]![0]!["fileName"]);
+        Assert.Contains("<Name>MCP_RC_FC</Name>", (string?)scenario["contents"]);
+        Assert.Contains("Synchronize:ProjectToWorkspace", Strings(scenario["states"]));
+    }
+
+    private sealed class WorkerFailure(JsonNode reply) : Exception("Worker outcome unknown"), TiaMcp.Adapters.Contracts.IWorkerFailureEvidence
+    {
+        public string EvidenceJson => reply.ToJsonString();
+    }
+
+    [Fact]
+    public async Task An_unreadable_mapping_after_create_retains_the_written_file_in_the_worker_error()
+    {
+        using var selected = Host.HardwareContract.UseRelease("17");
+        var fixture = (await ExportReplies("17"))["lookupRefused"]!;
+        var reply = fixture["reply"]!;
+        Assert.True((bool?)reply["OutcomeUnknown"]);
+        Assert.Equal(1, (int?)reply["Meta"]!["unconfirmed"]);
+        Assert.Contains("<Name>MCP_RC_FC</Name>", (string?)fixture["contents"]);
+        var tools = new Host.VersionControlTools(new Services.VersionControlPortService((_, _) => throw new WorkerFailure(reply), () => "Line.ap17"));
+        var body = tools.ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]!["code"]);
+        var evidence = body["error"]!["details"]!["evidence"]!;
+        Assert.Equal(1, (int?)evidence["filesWritten"]);
+        Assert.Equal("MCP_RC_PLC_MCP_RC_FC.xml", (string?)evidence["writtenFilesAfterFailure"]![0]!["fileName"]);
+        Assert.Equal("unknown", (string?)evidence["writtenFilesAfterFailure"]![0]!["mappingState"]);
+        Assert.Equal(1, (int?)evidence["writtenFilesAfterFailureTotal"]);
+    }
+
+    [Fact]
+    public async Task Studio_uses_its_hashed_mapping_name_on_first_export_and_repair()
+    {
+        var studio = (await ExportReplies("17"))["studio"]!;
+        var digest = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("MCP_RC_PLC\n默认变量表"));
+        var file = "MCP_RC_PLC_默认变量表_" + Convert.ToHexStringLower(digest.AsSpan(0, 4)) + ".xml";
+        Assert.Empty(Strings(studio["previewWrites"]));
+        Assert.Equal(new[] { "Export:" + file + ":None", "Create:" + file }, Strings(studio["firstCalls"]));
+        Assert.Equal(new[] { "UpdateStatus", "GetStatus" }, Strings(studio["status"]));
+        Assert.Equal(1, (int?)studio["restored"]!["Synchronized"]);
+        Assert.Equal(0, (int?)studio["collision"]!["Failed"]);
+        Assert.Equal(1, (int?)studio["collision"]!["Mapped"]);
+        Assert.Equal(0, (int?)studio["stale"]!["Failed"]);
+        Assert.Equal(1, (int?)studio["stale"]!["SkippedDisconnected"]);
+        Assert.Contains("mapping no longer connected", (string?)studio["stale"]!["Items"]![0]!["Error"]);
+        Assert.Equal(new[] { "UpdateStatus" }, Strings(studio["staleCalls"]));
+        Assert.Equal(new[] { "Export:" + file + ":None", "Create:" + file, "Export:" + file + ":None", "Export:object.xml:None", "Create:" + file },
+            Strings(studio["Calls"]));
+        Assert.Contains("<Name>默认变量表</Name>", (string?)studio["contents"]);
     }
 
     [Fact]

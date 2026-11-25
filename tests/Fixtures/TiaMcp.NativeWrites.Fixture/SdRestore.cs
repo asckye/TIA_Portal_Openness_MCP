@@ -1,3 +1,4 @@
+using Siemens.Engineering;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.VersionControl;
 using TiaMcp.Adapters.Native.Plc;
@@ -70,6 +71,11 @@ namespace TiaMcp.Tests.NativeWrites
             {
                 "sd-restore-discovery-disposed" => new ObjectDisposedException(nameof(MappedObject)),
                 "sd-restore-discovery-qualified" => new ObjectDisposedException(typeof(MappedObject).FullName),
+                "sd-restore-discovery-native" =>
+                    new EngineeringObjectDisposedException("Access to a disposed object of type '" + typeof(MappedObject).FullName + "'"),
+                "sd-restore-discovery-native-session" => new EngineeringObjectDisposedException("Access to a disposed object of type 'TiaPortal'"),
+                "sd-restore-discovery-native-channel" => new EngineeringObjectDisposedException("Access to a disposed object of type 'MappedObject'",
+                    new EndOfStreamException("Session disconnected")),
                 "sd-restore-discovery-session" => new ObjectDisposedException("TiaPortal"),
                 _ => new EndOfStreamException("Session disconnected")
             };

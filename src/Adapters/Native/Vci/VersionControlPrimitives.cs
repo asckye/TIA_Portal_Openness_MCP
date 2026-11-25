@@ -1,6 +1,9 @@
 #nullable disable
 #if STUDIO_VCI
 using System.Collections.Generic;
+using System;
+using TiaMcp.Adapters.Native.Vci;
+using TiaMcp.Adapters.Contracts;
 using System.IO;
 using global::Siemens.Engineering;
 using global::Siemens.Engineering.HW;
@@ -44,6 +47,74 @@ namespace TiaOpenness.Openness
         public static Workspace Create(WorkspaceComposition workspaces, string name, DirectoryInfo directory) => workspaces.Create(name, directory);
 #endif
 
+        public static void ExportObject(IEngineeringObject target, FileInfo file, ExportOptions options)
+        {
+            switch (target)
+            {
+                case PlcBlock block: block.Export(file, options); break;
+                case PlcType type: type.Export(file, options); break;
+                case PlcTagTable table: table.Export(file, options); break;
+                default: throw new System.NotSupportedException("VCI XML export requires a PLC block, type or tag table.");
+            }
+        }
+
+#if !STUDIO_VCI_MODERN
+        internal static FileInfo MappingFile(string root, MappedObject mapped) =>
+            TiaMcp.Adapters.Contracts.VciWorkspaceLayout.LegacyMappingFile(root, mapped.RelativeWorkspacePath);
+
+        internal static FileInfo TryMappingFile(string root, MappedObject mapped)
+        {
+            try { return MappingFile(root, mapped); }
+            catch (Exception error) when (Ordinary(error)) { return null; }
+        }
+
+        internal static bool Ordinary(Exception error) => NativeRefusalProbe.AllowsRefusalProof(error) && !DisposedStatus(error);
+
+        internal static Action<FileInfo, bool> Exporter(IEngineeringObject target) =>
+            (file, defaults) => ExportObject(target, file, defaults ? ExportOptions.WithDefaults : ExportOptions.None);
+
+        internal static bool MatchesExisting(string root, FileInfo file, IEngineeringObject target)
+        {
+            var proof = new VciContentProof(root, file);
+            proof.Compare(() => Exporter(target), Ordinary);
+            return proof.Matches && proof.Sha256 == proof.CurrentHash();
+        }
+
+#endif
+
+#if STUDIO_VCI_INITIAL
+        internal static bool RepairMissingFile(string root, MappedObject mapped, System.Action<FileInfo> written, Action issued = null)
+        {
+            var file = TryMappingFile(root, mapped);
+            if (VciExportPolicy.FileExists(file) != false) return false;
+            var target = mapped.LinkedProjectObject;
+            issued?.Invoke();
+            try { ExportObject(target, file, ExportOptions.None); }
+            catch
+            {
+                if (File.Exists(file.FullName)) written(file);
+                throw;
+            }
+            written(file);
+            return NewMappingState(mapped) == CompareState.Equal;
+        }
+
+        private static CompareState NewMappingState(MappedObject mapping)
+        {
+            try { return State(ReadStatus(mapping)); }
+            catch (Exception error) when (Ordinary(error)) { return CompareState.Unknown; }
+        }
+
+        internal static void SynchronizeNewMapping(MappedObject mapping)
+        {
+            var state = NewMappingState(mapping);
+            if (state == CompareState.Equal) return;
+            if (state != CompareState.Unknown && state != CompareState.Unequal)
+                throw new System.InvalidOperationException("New mapping has comparison state " + state + ".");
+            Synchronize(mapping, SynchronizationMode.ProjectToWorkspace);
+        }
+#endif
+
         public static IndividualObjectCompareResult ReadStatus(MappedObject mapped) => ReadStatus(mapped, out _);
 
         public static IndividualObjectCompareResult ReadStatus(MappedObject mapped, out string refreshMessage)
@@ -54,7 +125,8 @@ namespace TiaOpenness.Openness
 #else
             var service = mapped.GetService<IndividualObjectSynchronizationStatus>();
             try { service.UpdateStatus(); }
-            catch (EngineeringException refreshError) when (TiaMcp.Adapters.Contracts.NativeRefusalProbe.AllowsRefusalProof(refreshError))
+            catch (EngineeringException refreshError) when (TiaMcp.Adapters.Contracts.NativeRefusalProbe.AllowsRefusalProof(refreshError)
+                && !DisposedStatus(refreshError))
             {
                 // V17–V19 can refuse the refresh when the mapping already holds a known state.
                 try
@@ -66,13 +138,27 @@ namespace TiaOpenness.Openness
                         return stored;
                     }
                 }
-                catch (System.Exception readError) when (TiaMcp.Adapters.Contracts.NativeRefusalProbe.AllowsRefusalProof(readError))
+                catch (System.Exception readError) when (TiaMcp.Adapters.Contracts.NativeRefusalProbe.AllowsRefusalProof(readError)
+                    && !DisposedStatus(readError))
                 { /* swallow(probe-optional): An ordinary failed read retains the original refresh refusal. */ }
                 throw;
             }
             return service.GetStatus();
 #endif
         }
+
+#if !STUDIO_VCI_MODERN
+        internal const string DisconnectedMapping = "mapping no longer connected to an existing object";
+
+        internal static bool DisposedStatus(System.Exception error)
+        {
+            if (error.InnerException != null && TiaMcp.Adapters.Contracts.NativeRefusalProbe.UncertainConnection(error.InnerException)) return false;
+            const string disposed = "Access to a disposed object of type 'Siemens.Engineering.VersionControl.IndividualObjectSynchronizationStatus'";
+            return error is EngineeringException && (error is EngineeringObjectDisposedException
+                || TiaMcp.Adapters.Contracts.NativeRefusalProbe.AllowsRefusalProof(error))
+                && error.Message.IndexOf(disposed, System.StringComparison.Ordinal) >= 0;
+        }
+#endif
 
         public static void Synchronize(MappedObject mapped, SynchronizationMode mode)
         {

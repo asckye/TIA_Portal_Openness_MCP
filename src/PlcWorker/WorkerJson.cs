@@ -24,6 +24,10 @@ namespace TiaMcp.PlcWorker
             var resolver = new DefaultJsonTypeInfoResolver();
             resolver.Modifiers.Add(type =>
             {
+                if (type.Type == typeof(TiaMcp.Adapters.Contracts.Studio.MappedObjectInfo) || type.Type == typeof(TiaMcp.Adapters.Contracts.Studio.SyncItem))
+                    type.Properties.Single(p => p.Name == "RefreshMessage").ShouldSerialize = (_, message) => message != null;
+                if (type.Type == typeof(TiaMcp.Adapters.Contracts.Studio.SyncItem))
+                    type.Properties.Single(p => p.Name == "NotCompared").ShouldSerialize = (_, names) => names != null;
                 if (type.Type == typeof(IoAddressWriteReply))
                     type.Properties.Single(p => p.Name == nameof(IoAddressWriteReply.NativeMessage)).ShouldSerialize = (_, reason) => reason != null;
             });

@@ -64,6 +64,8 @@ public sealed partial class McpProjectClient : IProjectClient
                 throw new CompilerErrors(envelope);
             var failure = new InvalidOperationException(code + ": " + EngineResultText.Error(code) + " " + (string?)envelope["error"]?["message"]);
             failure.Data["McpErrorCode"] = code;
+            if (tool == "SynchronizeVersionControlWorkspace" && phase == "apply" && code is "NATIVE_OPERATION_FAILED" or "PARTIAL_FAILURE")
+                failure.Data["VciResult"] = envelope["data"];
             throw failure;
         }
         return envelope;

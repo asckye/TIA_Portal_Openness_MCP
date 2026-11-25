@@ -294,7 +294,7 @@ public sealed class VciPanelTests(WpfContext wpf)
             var vc = model.VersionControl;
             WpfContext.Complete(vc.VcRefreshAsync());
             Assert.True(vc.HasStoredEqual);
-            Assert.Empty(vc.VcStatusItems);
+            Assert.Equal("Main", Assert.Single(vc.VcStatusItems).Name);
             vc.VcShowAll = true;
             WpfContext.Complete(vc.VcRefreshAsync());
             var row = Assert.Single(vc.VcStatusItems);
@@ -310,6 +310,12 @@ public sealed class VciPanelTests(WpfContext wpf)
             Assert.Equal(Loc.Current["Primer.StoredEqual"], converter.Convert(row, typeof(string), "compare", culture));
             Assert.Equal(vc.StoredEqualNotice + " " + refusal, converter.Convert(row, typeof(string), "compareDetail", culture));
 
+            foreach (var (state, key) in new[] { (VcCompareState.Unequal, "Primer.Differs"), (VcCompareState.WorkspaceFileMissing, "Primer.Missing") })
+            {
+                var difference = new MappedObjectInfo { CompareState = state, RefreshMessage = refusal };
+                Assert.Equal(Loc.Current.T("Status.RefreshRefused", refusal), converter.Convert(difference, typeof(string), "compareDetail", culture));
+                Assert.Equal(Loc.Current.T("Status.RefreshRefused", Loc.Current[key]), converter.Convert(difference, typeof(string), "compare", culture));
+            }
             var finished = new TaskCompletionSource();
             vc.PropertyChanged += (_, _) => { if (vc.SyncResult != null) finished.TrySetResult(); };
             vc.VcDryRun = true;
@@ -318,8 +324,70 @@ public sealed class VciPanelTests(WpfContext wpf)
             Assert.Contains(vc.StoredEqualNotice, vc.SyncCounts);
             Assert.Equal(1, vc.SyncResult!.UnverifiedEqual);
             Assert.Equal(refusal, Assert.Single(vc.SyncRows).RefreshMessage);
+            Assert.Equal(1, vc.SyncResult.WouldVerify);
+            Assert.Contains(Loc.Current.T("Vc.WouldVerifyCount", 1), vc.SyncCounts);
+            Assert.Equal("verify-before-export", Assert.Single(vc.SyncRows).RawOutcome);
+            Assert.Equal("Main.xml", Assert.Single(vc.SyncRows).Name);
+            int statusReads = host.Calls.Count(call => call.Name == "GetVersionControlStatus");
+            var feedback = new List<ToastKind>();
+            model.Activity.Feedback += (_, notice) => feedback.Add(notice.Kind);
+            var completed = new TaskCompletionSource();
+            vc.VcPush.CanExecuteChanged += (_, _) => { if (!vc.VcPush.IsRunning) completed.TrySetResult(); };
+            vc.VcDryRun = false;
+            Assert.True(vc.VcPush.CanExecute(null));
+            vc.VcPush.Execute(null);
+            WpfContext.Complete(completed.Task.WaitAsync(TestDeadlines.Hang));
+            Assert.True(vc.SyncResult is { DryRun: false }, model.Activity.Status);
+            var applied = vc.SyncResult!;
+            Assert.Contains(ToastKind.Error, feedback);
+            Assert.DoesNotContain(ToastKind.Success, feedback);
+            Assert.DoesNotContain(Loc.Current.T("Log.CommitHint", applied.RootPath), model.Activity.Log);
+            Assert.Equal(Loc.Current["Vc.NotVerified"], Assert.Single(vc.SyncRows).Outcome);
+            Assert.Equal(1, applied.Failed);
+            Assert.Equal(1, applied.NotVerified);
+            Assert.True(host.Calls.Count(call => call.Name == "GetVersionControlStatus") > statusReads);
+            Assert.Contains(Loc.Current.T("Vc.NotVerifiedCount", 1), vc.SyncCounts);
+            Assert.Equal("not-verified", Assert.Single(applied.Items).Outcome);
         });
     }
+    [Fact]
+    public async Task Older_host_with_fourteen_unknown_comparisons_reports_incomplete_status()
+    {
+        await using var host = new McpOperatorFixture("18") { VciUnknownRows = true };
+        host.BindProject();
+        await using var client = host.Client();
+        await client.AttachAsync(Assert.Single(await client.DiscoverAsync("18")));
+        using var project = new McpProjectClient(client);
+        using var vci = new McpVersionControlClient(project);
+        var report = await vci.VcStatusAsync("git", true);
+        Assert.Equal(14, report.Unknown);
+        Assert.Equal(0, report.Differing);
+        Assert.False(report.DataComplete);
+        Assert.False(report.InSync);
+        wpf.Run(() =>
+        {
+            using var model = new MainViewModel(project, new FakeDialogService());
+            WpfContext.Complete(model.Session.ApplySharedStateAsync(host.Snapshot()));
+            WpfContext.Complete(model.VersionControl.VcRefreshAsync());
+            Assert.Equal(14, model.VersionControl.VcStatusItems.Count);
+            Assert.Equal(Loc.Current.T("Status.VcDifferUnknown", 14, 0, 14), model.Activity.Status);
+        });
+    }
+
+    [Fact]
+    public async Task Sync_preview_uses_the_planned_count_without_stored_equal()
+    {
+        await using var host = new McpOperatorFixture("18");
+        host.BindProject();
+        await using var client = host.Client();
+        await client.AttachAsync(Assert.Single(await client.DiscoverAsync("18")));
+        using var project = new McpProjectClient(client);
+        using var vci = new McpVersionControlClient(project);
+        var preview = await vci.VcSyncAsync("git", SyncDirection.ProjectToWorkspace, true);
+        Assert.Equal(0, preview.UnverifiedEqual);
+        Assert.Equal(1, preview.Synchronized);
+    }
+
     [Theory, MemberData(nameof(Writes))]
     public async Task Every_engine_write_previews_and_waits_for_normal_workbench_approval(string release, bool candidate, string tool)
     {

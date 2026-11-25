@@ -54,6 +54,36 @@ public sealed class ScriptClientTests
         Assert.Throws<ArgumentException>(() => Campaign.Classify(new JsonObject { ["message"] = "success", ["meta"] = new JsonObject { ["success"] = true } }));
     }
     [Fact]
+    public void Watcher_can_continue_after_a_disconnected_mapping_warning()
+    {
+        var data = new JsonObject { ["items"] = new JsonArray("Motor | mapping no longer connected to an existing object"),
+            ["evidence"] = new JsonObject { ["skippedDisconnected"] = 1, ["failed"] = 0, ["dataComplete"] = false } };
+        var client = new FixtureRpc((_, _) => Reply(Value(true, data)));
+        var sync = McpSession.Call("SynchronizeVersionControlWorkspace", client, new JsonObject { ["dryRun"] = false });
+        Assert.False(McpSession.ResetRequired(sync));
+        Assert.True((bool)McpResults.Successful(sync)["ok"]!);
+        Assert.DoesNotContain("FAILED", (string)sync["data"]!["items"]![0]!);
+        var diagnostics = new List<string>();
+        Assert.True(WatchOperations.CanContinueAfterSync(sync, diagnostics.Add));
+        Assert.Empty(diagnostics);
+        data["items"]!.AsArray().Add("Next | FAILED: native failure");
+        Assert.False(WatchOperations.CanContinueAfterSync(Value(true, (JsonObject)data.DeepClone()), diagnostics.Add));
+        Assert.Contains("Next", Assert.Single(diagnostics));
+    }
+
+    [Fact]
+    public void Watcher_names_only_objects_synchronized_by_apply()
+    {
+        var data = new JsonObject { ["items"] = new JsonArray("Motor | synchronized | file=Motor.xml",
+            "Idle | verified-equal", "Next | FAILED: block is not consistent") };
+        Assert.Equal(new[] { "Motor" }, WatchOperations.SynchronizedNames(Value(data: data)));
+        data["evidence"] = new JsonObject { ["items"] = new JsonArray(
+            new JsonObject { ["name"] = "Idle", ["stateBefore"] = "Equal", ["outcome"] = "verified-equal" },
+            new JsonObject { ["name"] = "Changed", ["stateBefore"] = "Equal", ["outcome"] = "synchronized" }) };
+        Assert.Equal(new[] { "Changed" }, WatchOperations.SynchronizedNames(Value(data: (JsonObject)data.DeepClone())));
+    }
+
+    [Fact]
     public void SweepAndWatcherDecodeTheSameV4Fixtures()
     {
         var response = Reply(Value()); var client = new FixtureRpc((_, _) => response);

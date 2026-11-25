@@ -41,7 +41,9 @@ namespace TiaMcp.Adapters.Contracts.Studio
         /// <summary>The VCI file format, e.g. "s7dcl" or a SimaticML flavour.</summary>
         public string FileFormat { get; set; }
         public VcCompareState CompareState { get; set; }
+        public bool? Verified { get; set; }
         public string RefreshMessage { get; set; }
+        public bool ShouldSerializeRefreshMessage() => RefreshMessage != null;
         /// <summary>Present when the state could not be determined.</summary>
         public string Error { get; set; }
     }
@@ -51,11 +53,13 @@ namespace TiaMcp.Adapters.Contracts.Studio
         public string WorkspaceName { get; set; }
         public string RootPath { get; set; }
         public int Total { get; set; }
-        /// <summary>Objects whose state is not <see cref="VcCompareState.Equal"/>.</summary>
+        /// <summary>Objects with a known difference, including missing workspace files.</summary>
         public int Differing { get; set; }
+        public int Unknown { get; set; }
         public int UnverifiedEqual { get; set; }
         public List<MappedObjectInfo> Items { get; set; } = new List<MappedObjectInfo>();
-        public bool InSync { get { return Differing == 0 && UnverifiedEqual == 0; } }
+        public bool DataComplete => Unknown == 0 && UnverifiedEqual == 0;
+        public bool InSync { get { return Differing == 0 && Unknown == 0 && UnverifiedEqual == 0; } }
     }
 
     public class MappingItem
@@ -88,7 +92,15 @@ namespace TiaMcp.Adapters.Contracts.Studio
     public class SyncItem
     {
         public string[] NotCompared { get; set; }
+        public bool ShouldSerializeNotCompared() => NotCompared != null;
+        public string FilePath { get; set; }
+        public string StateBefore { get; set; }
+        public string WorkspaceFileSha256 { get; set; }
+        public string Verification { get; set; }
+        public string NativeMessage { get; set; }
+        public bool? FileChanged { get; set; }
         public string RefreshMessage { get; set; }
+        public bool ShouldSerializeRefreshMessage() => RefreshMessage != null;
         public string Name { get; set; }
         public string Outcome { get; set; }
         public string Error { get; set; }
@@ -102,8 +114,14 @@ namespace TiaMcp.Adapters.Contracts.Studio
         public bool DryRun { get; set; }
         public int Synchronized { get; set; }
         public int Failed { get; set; }
-        /// <summary>Objects TIA reports as Equal. Synchronization skips these mappings.</summary>
+        /// <summary>Mappings skipped after an accepted Equal status or a matching content comparison.</summary>
         public int SkippedEqual { get; set; }
+        public int VerifiedEqual { get; set; }
+        public int NotVerified { get; set; }
+        public int WouldVerify { get; set; }
+        public int NotAttempted { get; set; }
+        public int SkippedDisconnected { get; set; }
+        public bool DataComplete { get; set; } = true;
         public int UnverifiedEqual { get; set; }
         public List<SyncItem> Items { get; set; } = new List<SyncItem>();
     }

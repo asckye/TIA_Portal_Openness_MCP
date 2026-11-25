@@ -14,7 +14,7 @@ using System.IO;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
-using TiaMcp.Adapters.Native.Plc;
+using NativeVci = TiaOpenness.Openness.VersionControlPrimitives;
 #if !STUDIO_VCI_MODERN
 using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
 #endif
@@ -35,7 +35,8 @@ namespace TiaMcp.Adapters.Native.Vci
     //
     // ExportObject writes new workspace files and creates their mappings (V20+).
     // ConnectObject is for existing files and is not exposed by these tools. Older releases use
-    // WorkspaceMapping.Create followed by ProjectToWorkspace synchronization.
+    // WorkspaceMapping.Create. V16/V17 first export missing XML or verify an existing file,
+    // then synchronize the new mapping if needed. V18/V19 synchronize immediately after Create.
     internal sealed partial class VersionControlAdapter
     {
         // ----------------------------------------------------------- whole-project auto mapping
@@ -191,8 +192,13 @@ namespace TiaMcp.Adapters.Native.Vci
         {
             var attempts = new VciExportAttempts();
             int mapped = 0, failed = 0;
-            bool MayHaveChanged() => (!dryRun && mapped > 0) || attempts.MappedAfterFailure > 0 || attempts.Unconfirmed > 0;
+            bool MayHaveChanged() => (!dryRun && mapped > 0) || attempts.FilesWritten > 0 || attempts.MappedAfterFailure > 0 || attempts.Unconfirmed > 0;
             var lines = new List<string>();
+#if STUDIO_VCI_INITIAL
+            var plannedFiles = new HmiArray();
+            var plannedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int wouldRefuse = 0;
+#endif
             try
             {
                 var project = VciProject;
@@ -284,18 +290,50 @@ namespace TiaMcp.Adapters.Native.Vci
                         }
 
                         Note(node);
+#if STUDIO_VCI_INITIAL
+                        FileInfo file;
+                        bool collision;
+                        try
+                        {
+                            file = VciWorkspaceLayout.LegacyMappingFile(wsRootPath, flatName + ".xml");
+                            collision = dryRun && VciExportPolicy.TargetExists(file);
+                        }
+                        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
+                        {
+                            failed++;
+                            lines.Add(node.Label + " | FAILED: " + NativeFailureText.BoundedDiagnostic(error));
+                            continue;
+                        }
+                        if (dryRun) plannedFiles.Add(new HmiObject { ["filePath"] = file.FullName, ["fileExists"] = collision, ["target"] = node.Label });
+                        if (dryRun && !plannedPaths.Add(file.FullName))
+                        {
+                            wouldRefuse++;
+                            lines.Add(node.Label + " | duplicate planned target | " + file.FullName);
+                            continue;
+                        }
+#endif
                         if (dryRun)
                         {
                             mapped++;
                             lines.Add(node.Label + " | would map | format=" + fmt +
+#if STUDIO_VCI_INITIAL
+                                      " | file=" + file.FullName + (collision ? " | existing file will be compared" : ""));
+#else
                                       " | dir=<root> | file=" + flatName);
+#endif
                         }
                         else
                         {
-                            if (attempts.ExportToWorkspace(wsRootPath, flatName,
-                                () => PortVci.Export(ws, node.Obj, VciExportPolicy.RootDirectory(), flatName, fmt),
-                                () => { ws = ReAcquire(); return PortVci.Find(PortVci.MappedObjects(ws), node.Obj) != null; },
-                                detail => lines.Add(node.Label + " | " + detail)))
+                            void Connect() => PortVci.Export(ws, node.Obj, VciExportPolicy.RootDirectory(), flatName, fmt);
+                            bool Lookup() { ws = ReAcquire(); return PortVci.Find(PortVci.MappedObjects(ws), node.Obj) != null; }
+                            void Report(string detail) => lines.Add(node.Label + " | " + detail);
+#if STUDIO_VCI_INITIAL
+                            bool exported = attempts.ExportFileFirst(file, () => NativeVci.ExportObject(node.Obj, file, ExportOptions.None), Connect,
+                                Lookup, Report, () => NativeVci.MatchesExisting(wsRootPath, file, node.Obj));
+#else
+                            bool exported = attempts.ExportToWorkspace(wsRootPath, flatName, Connect, Lookup, Report);
+#endif
+                            if (exported)
                             {
                                 mapped++;
                                 lines.Add(node.Label + " | mapped | format=" + fmt + " | dir=<root> | file=" + flatName);
@@ -369,6 +407,22 @@ namespace TiaMcp.Adapters.Native.Vci
                             ["mayHaveChanged"] = MayHaveChanged(), ["writeOutcomeUnknown"] = attempts.Unconfirmed > 0
                     },
                 };
+#if STUDIO_VCI_INITIAL
+                if (dryRun)
+                {
+                    result.Meta["plannedFiles"] = plannedFiles;
+                    result.Meta["wouldRefuse"] = wouldRefuse;
+                    if (wouldRefuse > 0) result.Message += " " + wouldRefuse + " duplicate planned target(s).";
+                }
+#endif
+                if (attempts.MappingProbeFailed && stack.Count > 0)
+                {
+                    result.Meta["notAttempted"] = stack.Count;
+                    var names = stack.Select(node => node.Label).ToArray();
+                    result.Meta["notAttemptedNames"] = names;
+                    lines.AddRange(names.Select(name => name + " | not-attempted"));
+                }
+                attempts.AddFileEvidence(result.Meta);
                 if (attempts.MappingProbeFailed) result.Meta["dataComplete"] = false;
                 return result;
             }
@@ -376,6 +430,7 @@ namespace TiaMcp.Adapters.Native.Vci
             {
                 var meta = FailureEvidence(ex, attempts.Issued > 0);
                 meta["mayHaveChanged"] = MayHaveChanged();
+                attempts.AddFileEvidence(meta);
                 meta["unconfirmed"] = attempts.Unconfirmed;
                 meta["exportsIssued"] = attempts.Issued; meta["mapped"] = mapped; meta["mappedAfterFailure"] = attempts.MappedAfterFailure;
                 meta["queryRefusals"] = attempts.QueryRefusals; meta["failed"] = failed + attempts.QueryRefusals + 1;

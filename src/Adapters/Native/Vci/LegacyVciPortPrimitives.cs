@@ -61,7 +61,11 @@ internal static class LegacyVciPortPrimitives
     internal static WorkspaceMapping Export(Workspace workspace, IEngineeringObject target, DirectoryInfo directory, string name, string format)
     {
         var mapped = workspace.Mappings.Create(name + ".xml", target);
+#if STUDIO_VCI_INITIAL
+        NativeVci.SynchronizeNewMapping(mapped);
+#else
         NativeVci.Synchronize(mapped, SynchronizationMode.ProjectToWorkspace);
+#endif
         return mapped;
     }
 

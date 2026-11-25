@@ -11,7 +11,7 @@
   Explicit empty end tags can change document fingerprints, declaration fingerprints and the derived preview token compared with rc.6.
   Preview tokens belong to the running worker session. Run a fresh preview after upgrading.
 - The write guard emits denials before masking audit arguments and bounds free-text scans. Tool responses remove password and key values while preserving HMI authorization settings and PLC protection metadata.
-- V16–V19 VCI status reads refresh the mapping first. When V17–V19 refuse a refresh, the tools can now report TIA's stored comparison and skip an Equal mapping.
+- V16–V19 VCI status reads refresh the mapping first. When V17–V19 refuse a refresh, the tools report TIA's stored comparison. Apply skips a stored Equal only after a matching SimaticML export.
   Status and sync rows retain the refusal in `refreshMessage` when TIA supplies a known state. An inconclusive fallback keeps the refresh diagnostic unless the read fails fatally.
   MCP and the Workbench qualify stored Equal results.
   `unverifiedEqual` counts them even when status rows are filtered. Post-edit freshness on V16–V19 awaits VM verification.
@@ -26,9 +26,13 @@
   the error explains how to pass the exact `typeIdentifier`. Unsupported variants have a separate refusal. `CreateHardwareCatalogDevice` names its `keyword` field.
   An incompatible Unified panel version returns `PRECONDITION_FAILED` with the selected and required versions.
   `SetDeviceItemAttribute` names the read-only attribute and its access mode.
-  Workbench restore now applies the same check to mapped SD blocks. Preview identifies each refusal and its reason.
+- Workbench restore now applies the same check to mapped SD blocks. Preview identifies each refusal and its reason.
   Restore reports a failure for verified property loss and an unknown outcome when the post-write read fails.
   Attributes with unsupported value types appear in `notCompared`. Their presence leaves `propertiesPreserved` unset or null on success.
+- V16/V17 connect writes missing XML before creating a mapping and reuses an existing file only after an official export matches its contents.
+  Disconnected mappings carry a recovery warning and leave the batch incomplete.
+- V16–V19 verify a stored Equal after a refused refresh. Status and preview identify the pending files. Apply compares official SimaticML exports,
+  rechecks the workspace hash before a native write and reports each unverified object as a failure. Workbench also reports unknown comparisons.
 
 ## [4.0.0-rc.6] - 2026-11-25
 

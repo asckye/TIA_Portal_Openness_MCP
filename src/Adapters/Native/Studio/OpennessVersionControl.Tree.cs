@@ -31,32 +31,6 @@ using TiaOpenness.Core.Abstractions;
 
 namespace TiaOpenness.Openness
 {
-    /// <summary>
-    /// TIA Portal's Version Control Interface over Openness.
-    ///
-    /// Three things about this API are not obvious and cost a lot of time if rediscovered:
-    ///
-    /// <list type="number">
-    /// <item>
-    /// <b>Lifetime.</b> Openness hands out COM-backed proxies whose lifetime is tied to the
-    /// parent they came from. Let the service, or an intermediate group, be collected and every
-    /// object reached through it dies with it: "Access to a disposed object of type Workspace".
-    /// So the service is cached for the life of the project and every intermediate is rooted in
-    /// <see cref="_keepAlive"/>. Lazy iterators are avoided for the same reason - a yield-return
-    /// walk lets a group be collected between MoveNext calls.
-    /// </item>
-    /// <item>
-    /// <b>Mapping is <c>ExportObject</c>, not <c>ConnectObject</c>.</b> Despite the names,
-    /// <c>ExportObject</c> is what creates a mapping: it writes the text file and registers the
-    /// object. <c>ConnectObject</c> only binds an object to files that already exist.
-    /// </item>
-    /// <item>
-    /// <b>Equal objects cannot be synchronized.</b> TIA refuses with "Synchronize cannot be
-    /// called on a workspace mapping that has a compare status of equal", so "force everything"
-    /// is not an option that exists; equal objects are skipped, never attempted.
-    /// </item>
-    /// </list>
-    /// </summary>
     internal sealed partial class OpennessVersionControl : IVersionControl
     {
         public IReadOnlyList<WorkspaceInfo> ListWorkspaces()
@@ -343,12 +317,14 @@ namespace TiaOpenness.Openness
             catch (Exception error) when (!stopOnConnectionLoss || IsDisposedMapping(mapped, error) || !NativeRefusalProbe.UncertainConnection(error))
             { /* swallow(native-fallback): unreadable mapping names use a placeholder in status and sync progress */ return "?"; }
 #else
-            return Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath);
+            try { return Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath) ?? "?"; }
+            catch (Exception error) when (VersionControlPrimitives.Ordinary(error))
+            { /* swallow(probe-optional): An unavailable legacy name leaves a diagnostic placeholder. */ return "?"; }
 #endif
         }
 
 #if STUDIO_VCI_MODERN
-        private static string SafeFile(MappedObject mapped)
+        private static string SafeFile(MappedObject mapped, string root)
         {
             try
             {
@@ -369,11 +345,8 @@ namespace TiaOpenness.Openness
         }
 
 #else
-        private static string SafeFile(MappedObject mapped)
-        {
-            var workspace = (Workspace)mapped.Parent;
-            return Path.Combine(VersionControlPrimitives.Root(workspace).FullName, mapped.RelativeWorkspacePath);
-        }
+        private static string SafeFile(MappedObject mapped, string root)
+            => VersionControlPrimitives.TryMappingFile(root, mapped)?.FullName ?? SafeObjectName(mapped);
         private static string SafeFormat(MappedObject mapped) { return "xml"; }
 #endif
         private static IEnumerable<MappedObject> Mappings(Workspace workspace)

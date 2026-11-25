@@ -152,7 +152,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         public string RefreshNote => string.IsNullOrEmpty(RefreshMessage) ? "" : Loc.Current.T("Status.RefreshRefused", RefreshMessage);
     }
     public IEnumerable<SyncRow> SyncRows => SyncResult is { } result ? result.Items.Select(item =>
-        new SyncRow(item.Name, result.DryRun ? PreviewOutcome(item) : CompletedOutcome(item.Outcome), SyncDetail(item), item.Outcome)
+        new SyncRow(item.FilePath ?? item.Name, result.DryRun ? PreviewOutcome(item) : CompletedOutcome(item.Outcome), SyncDetail(item), item.Outcome)
         { RefreshMessage = item.RefreshMessage }) : [];
 
     private static string SyncDetail(SyncItem item) => item.NotCompared is { Length: > 0 } names
@@ -161,6 +161,10 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     private static string CompletedOutcome(string? outcome) => outcome?.ToLowerInvariant() switch
     {
         "completed" or "synchronized" => Loc.Current["Project.SyncCompleted"],
+        "not-attempted" => Loc.Current["Vc.NotAttempted"],
+        "not-verified" => Loc.Current["Vc.NotVerified"],
+        "verified-equal" => Loc.Current["Vc.VerifiedEqual"],
+        "skipped-disconnected" => Loc.Current["Vc.SkippedDisconnected"],
         "failed" => Loc.Current["Project.SyncFailed"],
         "unknown" => Loc.Current["Project.SyncUnknown"],
         "refused" => Loc.Current["Project.SyncRefused"],
@@ -174,6 +178,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         {
             case "refused": return Loc.Current["Project.SyncRefused"];
             case "unknown": return Loc.Current["Project.SyncUnknown"];
+            case "skipped-disconnected": return Loc.Current["Vc.SkippedDisconnected"];
+            case "verify-before-export": return Loc.Current["Vc.VerifyPreview"];
             case "create": case "created": case "would create": return "CREATE";
             case "update": case "updated": case "would update": return "UPDATE";
             case "skip": case "equal": case "skipped": case "skipped-equal": return "SKIP";
@@ -198,7 +204,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     public string SyncTitle => Synchronizing ? Loc.Current["Project.Syncing"]
         : SyncResult?.DryRun == true ? Loc.Current["Project.SyncPreview"] + " · "
             + (SyncResult.Direction == SyncDirection.ProjectToWorkspace ? Loc.Current["Primer.ToWorkspace"] : Loc.Current["Primer.ToProject"])
-            : Loc.Current["Project.Synced"];
+            : SyncResult is { Failed: > 0 } ? Loc.Current["Project.SyncFailed"] : Loc.Current["Project.Synced"];
     public string SyncCounts => SyncResult is { } result ? SyncCountText(result).Resolve() : "";
 
     private bool ModernRestorePreview(SyncResult result) => result.DryRun && result.Direction == SyncDirection.WorkspaceToProject
@@ -217,7 +223,14 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             _ => "Project.SyncCounts",
         };
         var counts = LocalizedText.Key(key, result.Synchronized, result.SkippedEqual, result.Failed - refused - unknown, refused, unknown);
-        return result.UnverifiedEqual > 0 ? LocalizedText.Lines(counts, LocalizedText.Key("Status.StoredEqual", result.UnverifiedEqual)) : counts;
+        var lines = new List<LocalizedText> { counts };
+        if (result.WouldVerify > 0) lines.Add(LocalizedText.Key("Vc.WouldVerifyCount", result.WouldVerify));
+        if (result.VerifiedEqual > 0) lines.Add(LocalizedText.Key("Vc.VerifiedCount", result.VerifiedEqual));
+        if (result.NotAttempted > 0) lines.Add(LocalizedText.Key("Vc.NotAttemptedCount", result.NotAttempted));
+        if (result.NotVerified > 0) lines.Add(LocalizedText.Key("Vc.NotVerifiedCount", result.NotVerified));
+        if (result.UnverifiedEqual > 0) lines.Add(LocalizedText.Key("Status.StoredEqual", result.UnverifiedEqual));
+        if (result.SkippedDisconnected > 0) lines.Add(LocalizedText.Key("Status.VcDisconnected", result.SkippedDisconnected));
+        return LocalizedText.Lines(lines.ToArray());
     }
     internal void CloseSyncResult() => SyncResult = null;
     private void RefreshSyncState()
@@ -390,8 +403,11 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         SelectedVcItem = VcStatusItems.FirstOrDefault();
 
         if (report.UnverifiedEqual > 0)
-            _activity.SetStatus("Status.VcStoredStatus", requested ? ToastKind.Warning : null, report.UnverifiedEqual, report.Total, report.Differing);
+            _activity.SetStatus("Status.VcStoredStatus", requested ? ToastKind.Warning : null,
+                report.UnverifiedEqual, report.Total, report.Differing, report.Unknown);
         else if (report.InSync) _activity.SetStatus("Status.VcInSync", requested ? ToastKind.Info : null, report.Total);
+        else if (report.Unknown > 0)
+            _activity.SetStatus("Status.VcDifferUnknown", requested ? ToastKind.Warning : null, report.Total, report.Differing, report.Unknown);
         else _activity.SetStatus("Status.VcDiffer", requested ? ToastKind.Info : null, report.Total, report.Differing);
     }
 
@@ -470,6 +486,11 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         SyncResult result;
         long start = Stopwatch.GetTimestamp();
         try { result = await _client.VcSyncAsync(workspace?.Name, direction, preview); }
+        catch when (!preview && SelectedWorkspace == workspace)
+        {
+            await CompareWorkspaceAsync(requested: false);
+            throw;
+        }
         finally { Synchronizing = false; }
         if (SelectedWorkspace != workspace) return;
         _syncElapsed = Stopwatch.GetElapsedTime(start);
@@ -477,7 +498,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
         foreach (var item in result.Items.Where(i => !string.IsNullOrEmpty(i.Error)))
         {
-            _activity.AppendLocalized("Log.Failed", item.Name, item.Error);
+            if (item.Outcome == "skipped-disconnected") _activity.Append(item.Name + " — " + item.Error);
+            else _activity.AppendLocalized("Log.Failed", item.Name, item.Error);
         }
 
         if (ModernRestorePreview(result) || result.Items.Any(row => row.Outcome is "refused" or "unknown"))
@@ -491,6 +513,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         else if (result.UnverifiedEqual > 0)
             _activity.SetStatus("Status.VcStoredApplied", result.Failed > 0 ? ToastKind.Error : ToastKind.Warning,
                 result.UnverifiedEqual, result.Synchronized, result.Failed, result.SkippedEqual);
+        else if (result.SkippedDisconnected > 0 && result.Failed == 0)
+            _activity.SetStatus("Status.VcDisconnected", ToastKind.Warning, result.SkippedDisconnected);
         else if (result.DryRun)
         {
             _activity.SetStatus("Status.VcSyncDry", result.Synchronized, direction, result.SkippedEqual);
@@ -505,10 +529,9 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
 
         if (!result.DryRun)
         {
-            if (result.UnverifiedEqual == 0 && direction == SyncDirection.ProjectToWorkspace)
-                _activity.Append(Loc.Current.T("Log.CommitHint", result.RootPath));
-            if (result.UnverifiedEqual == 0 && result.Failed == 0 && direction == SyncDirection.WorkspaceToProject)
-                _activity.Append(Loc.Current["Log.PullHint"]);
+            if (result.DataComplete && result.Failed == 0 && result.UnverifiedEqual == 0 && result.SkippedDisconnected == 0)
+                _activity.Append(direction == SyncDirection.ProjectToWorkspace
+                    ? Loc.Current.T("Log.CommitHint", result.RootPath) : Loc.Current["Log.PullHint"]);
             await CompareWorkspaceAsync(requested: false);
         }
     }, direction);

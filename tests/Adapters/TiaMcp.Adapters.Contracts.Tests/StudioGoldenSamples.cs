@@ -46,6 +46,7 @@ internal static class StudioGoldenSamples
         var nullable = Nullable.GetUnderlyingType(type);
         if (nullable != null) return populated ? Create(nullable, true, depth) : null;
         if (type == typeof(string)) return populated ? "PLC/温度\"\\\n<sample>" : null;
+        if (type == typeof(string[])) return populated ? new[] { "VendorValue" } : null;
         if (type == typeof(bool)) return populated;
         if (type == typeof(int)) return populated ? 42 : 0;
         if (type == typeof(DateTimeOffset)) return populated ? new DateTimeOffset(2024, 5, 17, 12, 30, 45, TimeSpan.FromHours(8)) : default(DateTimeOffset);

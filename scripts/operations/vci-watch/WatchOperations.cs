@@ -18,6 +18,28 @@ public static class WatchOperations
         }
         catch (Exception) { return false; } // Probe failure never permits a connection.
     }
+    private static string[] Items(JsonObject value) => (value["data"]?["items"] as JsonArray ?? []).Select(i => (string)i!).ToArray();
+    private static IEnumerable<string> FailedItems(JsonObject sync) => Items(sync).Where(i => i.Contains("FAILED", StringComparison.Ordinal));
+
+    public static string[] SynchronizedNames(JsonObject sync)
+    {
+        if (sync["data"]?["evidence"]?["items"] is JsonArray rows)
+            return rows.OfType<JsonObject>().Where(row => (string?)row["outcome"] == "synchronized")
+                .Select(row => (string?)row["name"]).OfType<string>().ToArray();
+        return Items(sync).Select(line => line.Split('|')).Where(parts => parts.Length >= 2 && parts[1].Trim() == "synchronized")
+            .Select(parts => parts[0].Trim()).ToArray();
+    }
+
+    private static bool NeedsCompile(string line) => line.Contains("inconsistent", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("not consistent", StringComparison.OrdinalIgnoreCase);
+
+    public static bool CanContinueAfterSync(JsonObject sync, Action<string> log)
+    {
+        var hard = FailedItems(sync).Where(i => !NeedsCompile(i)).ToArray();
+        foreach (var failure in hard) log("  失败明细：" + failure.Replace('\r', ' ').Replace('\n', ' '));
+        return hard.Length == 0 && (bool)sync["ok"]!;
+    }
+
     public static string[] BlockNames(IEnumerable<string> items) => items.Select(it => { var name = it.Split('|')[0].Trim(); return name.Split('_').LastOrDefault() is { Length: > 0 } block ? block : name; }).ToArray();
     public static double? ProjectSignal(string? folder)
     {
@@ -133,15 +155,14 @@ public static class WatchOperations
             var attached = Call("AttachOpenProject");
             if (!(bool)attached["ok"]!) { Log("没有已打开的工程可附着：" + attached["error"]); return 0; }
             var status = McpResults.Successful(Call("GetVersionControlStatus", new JsonObject { ["changedOnly"] = true, ["workspaceName"] = workspaceName }));
-            string[] Items(JsonObject value) => (value["data"]?["items"] as JsonArray ?? []).Select(i => (string)i!).ToArray();
-            var items = Items(status); if (items.Length == 0) return 0;
-            didSomething = true; Log($"检测到 {items.Length} 个对象有变更：" + string.Join('、', BlockNames(items).Take(8)));
+            if (Items(status).Length == 0) return 0;
+            didSomething = true;
             Log(McpSession.ApprovalNotice);
             JsonObject Sync() => Call("SynchronizeVersionControlWorkspace", new JsonObject { ["direction"] = "ProjectToWorkspace", ["dryRun"] = false, ["workspaceName"] = workspaceName });
             var sync = Sync();
             if (McpSession.ResetRequired(sync)) throw new InvalidOperationException(sync["error"]?.ToString());
-            var failures = Items(sync).Where(i => i.Contains("FAILED", StringComparison.Ordinal)).ToArray();
-            var needCompile = failures.Where(i => i.Contains("inconsistent", StringComparison.Ordinal)).ToArray();
+            var changed = new HashSet<string>(SynchronizedNames(sync), StringComparer.Ordinal);
+            var needCompile = FailedItems(sync).Where(NeedsCompile).ToArray();
             if (needCompile.Length > 0)
             {
                 var names = string.Join('、', BlockNames(needCompile).Take(8));
@@ -153,26 +174,28 @@ public static class WatchOperations
                         var compiled = Call("CompilePlcSoftware", new JsonObject { ["softwarePath"] = sw!.DeepClone() });
                         Log("  编译 " + sw + " → " + (compiled["data"]?["summary"]?.ToString() ?? compiled["error"]?.ToString())); McpResults.Successful(compiled);
                     }
-                    sync = McpResults.Successful(Sync()); failures = Items(sync).Where(i => i.Contains("FAILED", StringComparison.Ordinal)).ToArray();
+                    sync = McpResults.Successful(Sync());
+                    changed.UnionWith(SynchronizedNames(sync));
                 }
                 else { pending = names; pendingUntil = Now() + Number("pendingCompileCooldownMinutes", 30) * 60; Log($"{needCompile.Length} 个块尚未编译，VCI 导不出：{names}；请在博途编译，冷却后重试"); }
             }
             Log("导出：" + (sync["data"]?["summary"]?.ToString() ?? sync["error"]?.ToString()));
-            var hard = failures.Where(i => !i.Contains("inconsistent", StringComparison.Ordinal)).ToArray();
-            foreach (var failure in hard) Log("  失败明细：" + failure.Replace('\r', ' ').Replace('\n', ' '));
-            if (hard.Length > 0 || !(bool)sync["ok"]!) { Log("本轮不提交，留给人看"); return 1; }
+            if (!CanContinueAfterSync(sync, Log)) { Log("本轮不提交，留给人看"); return 1; }
+            if (changed.Count == 0) return 0;
+            Log($"已同步 {changed.Count} 个对象：" + string.Join('、', changed.Take(8)));
             var git = Shell("git", ["status", "--porcelain"], workspace); Require(git);
             var real = git.Out.Split('\n').Where(l => !string.IsNullOrWhiteSpace(l) && !l.EndsWith("CHANGELOG.md", StringComparison.Ordinal)).ToArray();
             if (real.Length == 0) { Log("导出后文本无实际差异，不提交"); return 0; }
             var changelog = Path.Combine(workspace, "CHANGELOG.md");
             var head = File.Exists(changelog) ? "" : "# 博途程序变更记录\n\n由 TIA VCI 看门狗自动生成：每次检测到工程里的块与文本文件不一致，\n就把它导出并记在这里。**不含硬件组态**（VCI 不支持）。\n";
             var body = new List<string> { "", "## " + DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture), "" };
-            foreach (var item in items) { var parts = item.Split('|').Select(p => p.Trim()).ToArray(); body.Add("- `" + parts[0] + "` — " + (parts.ElementAtOrDefault(1) == "Unequal" ? "工程侧有改动" : parts.ElementAtOrDefault(1) ?? "?")); }
+            foreach (var name in changed) body.Add("- `" + name + "` — 已从工程同步");
             body.Add(""); File.AppendAllText(changelog, head + string.Join('\n', body), new UTF8Encoding(false));
             var author = (string?)config["gitAuthor"] ?? "tia-vci-watch <watch@local>"; var split = author.IndexOf('<');
             if (split < 1 || !author.EndsWith('>')) throw new ArgumentException("gitAuthor must be Name <email>");
             Require(Shell("git", ["add", "-A"], workspace));
-            var commit = Shell("git", ["-c", "user.name=" + author[..split].Trim(), "-c", "user.email=" + author[(split + 1)..^1], "commit", "-m", $"auto: {real.Length} 个对象变更 —— " + string.Join('、', BlockNames(items).Take(6))], workspace);
+            var commit = Shell("git", ["-c", "user.name=" + author[..split].Trim(), "-c", "user.email=" + author[(split + 1)..^1],
+                "commit", "-m", $"auto: {changed.Count} 个对象变更 —— " + string.Join('、', changed.Take(6))], workspace);
             Log(commit.Code == 0 ? "已提交：" + commit.Out.Split('\n')[0] : "git commit 未成功：" + Campaign.Trim(commit.Out + commit.Error, 400)); return 0;
         }
         catch (Exception ex) { Log("本轮失败：" + ex.Message); return 1; }

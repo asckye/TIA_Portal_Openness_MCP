@@ -2,6 +2,12 @@
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="DefineConstants">
   <Import Project="../../Shared/Xunit.props" />
   <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <ProjectReference Include="../../Adapters/TiaMcp.VciInitial.Net48.Tests/TiaMcp.VciInitial.Net48.Tests.csproj"
+                      ReferenceOutputAssembly="false" OutputItemType="VciInitialExe" SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;TargetFrameworks;DefineConstants" />
+    <ProjectReference Include="../../Adapters/TiaMcp.VciModern.Net48.Tests/TiaMcp.VciModern.Net48.Tests.csproj"
+                      ReferenceOutputAssembly="false" OutputItemType="VciModernExe" SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;TargetFrameworks;DefineConstants" />
     <Compile Include="../Windows/VciExportFrameworkTests.cs" Link="VciExportFrameworkTests.cs" />
     <ProjectReference Include="../../Adapters/TiaMcp.VciExport.Net48.Tests/TiaMcp.VciExport.Net48.Tests.csproj"
                       ReferenceOutputAssembly="false" OutputItemType="VciFixtureExe" SkipGetTargetFrameworkProperties="true"
@@ -197,6 +203,16 @@
   </Target>
   <Target Name="CopyVciExportFixture" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
     <Error Condition="'@(VciFixtureExe->Count())' != '1' or !Exists('@(VciFixtureExe)')" Text="Missing VCI export fixture from this build." />
+    <Error Condition="'@(VciInitialExe->Count())' != '1' or !Exists('@(VciInitialExe)')" Text="Missing initial VCI export fixture from this build." />
+    <ItemGroup><VciInitialFiles Include="%(VciInitialExe.RootDir)%(VciInitialExe.Directory)*" /></ItemGroup>
+    <Copy SourceFiles="@(VciInitialFiles)" DestinationFolder="$(TargetDir)vci-initial-net48" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+    <Error Condition="'@(VciModernExe->Count())' != '1' or !Exists('@(VciModernExe)')" Text="Missing modern VCI export fixture from this build." />
+    <ItemGroup><VciModernFiles Include="%(VciModernExe.RootDir)%(VciModernExe.Directory)*" /></ItemGroup>
+    <Copy SourceFiles="@(VciModernFiles)" DestinationFolder="$(TargetDir)vci-modern-net48" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
     <ItemGroup><VciFixtureFiles Include="%(VciFixtureExe.RootDir)%(VciFixtureExe.Directory)*" /></ItemGroup>
     <Copy SourceFiles="@(VciFixtureFiles)" DestinationFolder="$(TargetDir)vci-net48" SkipUnchangedFiles="true">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />

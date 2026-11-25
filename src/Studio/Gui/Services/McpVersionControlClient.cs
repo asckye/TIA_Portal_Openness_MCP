@@ -138,7 +138,9 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
         }).ToList();
         report.WorkspaceName ??= name ?? "";
         if (data["total"] == null) report.Total = report.Items.Count;
-        if (data["differing"] == null) report.Differing = report.Items.Count(i => i.CompareState != VcCompareState.Equal);
+        if (data["unknown"] == null) report.Unknown = report.Items.Count(i => i.CompareState == VcCompareState.Unknown);
+        if (data["differing"] == null)
+            report.Differing = report.Items.Count(i => i.CompareState is VcCompareState.Unequal or VcCompareState.WorkspaceFileMissing);
         return report;
     }
     public async Task<WorkspaceDiff> VcDiffAsync(string? name, string? file)
@@ -151,26 +153,30 @@ internal sealed class McpVersionControlClient(McpProjectClient project, IVersion
     {
         const string tool = "SynchronizeVersionControlWorkspace";
         var arguments = Target(tool, name); arguments["direction"] = direction.ToString();
-        var data = Evidence(await Write(tool, arguments, dryRun));
+        JsonObject data;
+        try { data = Evidence(await Write(tool, arguments, dryRun)); }
+        catch (InvalidOperationException error) when (error.Data["VciResult"] is JsonObject reply && (int?)Evidence(reply)["failed"] > 0)
+        { data = Evidence((JsonObject)error.Data["VciResult"]!); }
         var summary = (JsonObject)data.DeepClone(); summary.Remove("items");
         var result = Model<SyncResult>(summary);
         result.Direction = direction; result.DryRun = dryRun;
         result.WorkspaceName ??= name ?? "";
-        result.Items = (data["items"] as JsonArray ?? new()).OfType<JsonObject>().Select(row => new SyncItem
+        result.Items = (data["items"] as JsonArray ?? new()).OfType<JsonObject>().Select(row =>
         {
-            Name = (string?)row["name"] ?? (string?)row["object"] ?? "",
-            Outcome = (string?)row["outcome"] ?? (string?)row["execution"] ?? "",
-            Error = (string?)row["error"] ?? "",
-            RefreshMessage = (string?)row["refreshMessage"],
+            var item = Model<SyncItem>(row);
+            item.Name ??= (string?)row["object"] ?? "";
+            item.Outcome ??= (string?)row["execution"] ?? "";
+            item.Error ??= (string?)row["reason"] ?? (item.Outcome is "failed" or "not-verified" ? item.NativeMessage : null);
+            return item;
         }).ToList();
-        if (dryRun && result.UnverifiedEqual > 0 && data["wouldSynchronize"] is JsonValue planned)
-            result.Synchronized = (int)planned;
         if (data["synchronized"] == null)
         {
             result.Synchronized = result.Items.Count(i => i.Outcome == "completed");
-            result.Failed = result.Items.Count(i => i.Outcome is "failed" or "unknown");
-            result.SkippedEqual = (data["items"] as JsonArray ?? new()).OfType<JsonObject>().Count(i => (string?)i["stateBefore"] == "Equal");
+            result.Failed = result.Items.Count(i => i.Outcome is "failed" or "unknown" or "not-verified");
+            result.SkippedEqual = result.Items.Count(i => i.Outcome == "verified-equal" || i.StateBefore == "Equal"
+                && i.RefreshMessage == null && i.Outcome is not ("verify-before-export" or "not-verified" or "failed"));
         }
+        if (dryRun && data["wouldSynchronize"] is JsonValue planned) result.Synchronized = (int)planned;
         return result;
     }
     internal bool CancelRead() => bridge is ReadOnlyVciBridge fallback && fallback.CancelPending();

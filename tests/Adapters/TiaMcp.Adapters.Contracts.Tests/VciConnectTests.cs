@@ -91,6 +91,41 @@ public sealed class VciConnectTests
         finally { workspace.Delete(true); }
     }
 
+    [Fact]
+    public void Disposed_file_first_mapping_stops_before_lookup()
+    {
+        var root = Directory.CreateTempSubdirectory();
+        try
+        {
+            var file = new FileInfo(Path.Combine(root.FullName, "Motor.xml"));
+            var attempts = new VciExportAttempts();
+            int lookups = 0;
+            Assert.False(attempts.ExportFileFirst(file, () => File.WriteAllText(file.FullName, "<Document/>"),
+                () => throw new ObjectDisposedException("Motor"), () => { lookups++; return true; }, _ => { }));
+            Assert.Equal(0, lookups);
+            Assert.True(attempts.MappingProbeFailed);
+            Assert.Equal(1, attempts.Unconfirmed);
+            Assert.Equal(1, attempts.FilesWritten);
+        }
+        finally { root.Delete(true); }
+    }
+
+    [Fact]
+    public void Disposed_export_still_looks_up_the_mapping_after_an_ordinary_target()
+    {
+        var root = Directory.CreateTempSubdirectory();
+        try
+        {
+            var attempts = new VciExportAttempts();
+            var lines = new List<string>();
+            Assert.False(attempts.ExportToWorkspace(root.FullName, "Motor", () => throw new ObjectDisposedException("Motor"), () => true, lines.Add));
+            Assert.Equal(1, attempts.MappedAfterFailure);
+            Assert.False(attempts.MappingProbeFailed);
+            Assert.Equal(0, attempts.Unconfirmed);
+        }
+        finally { root.Delete(true); }
+    }
+
     [Theory, InlineData(false), InlineData(true)]
     public void Missing_legacy_xml_checks_the_whole_workspace(bool wroteElsewhere)
     {

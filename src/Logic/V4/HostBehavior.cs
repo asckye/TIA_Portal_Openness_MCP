@@ -487,6 +487,34 @@ namespace TiaMcp.Logic.V4
                     else if (scalar.TryGetValue<long>(out var count)) retained[key] = count;
                     else if (scalar.TryGetValue<int>(out var number)) retained[key] = number;
                 }
+            if (source["exportsIssued"] != null)
+            {
+                foreach (var key in new[] { "filesWritten", "writtenFilesAfterFailureTotal", "skippedDisconnected", "verifiedEqual",
+                    "notVerified", "unverifiedEqual", "notAttempted" })
+                    if (source[key] is JsonValue value && value.TryGetValue<int>(out var count)) retained[key] = count;
+                if (source["dataComplete"] is JsonValue complete && complete.TryGetValue<bool>(out var flag)) retained["dataComplete"] = flag;
+                if (source["notAttemptedNames"] is JsonArray pending)
+                    retained["notAttemptedNames"] = JsonSerializer.SerializeToNode(TiaMcp.Adapters.Contracts.NativeFailureText.BoundedLines(
+                        pending.OfType<JsonValue>().Select(name => name.ToString()), Diagnostic));
+                if (source["writtenFilesAfterFailure"] is JsonArray files)
+                {
+                    var rows = new JsonArray();
+                    foreach (var file in files.OfType<JsonObject>().Take(40))
+                        if (file["mappingState"] is JsonValue state && state.TryGetValue<string>(out var mapping)
+                            && mapping is "present" or "absent" or "unknown" && file["fileName"] is JsonValue name && name.TryGetValue<string>(out var text))
+                            rows.Add(new JsonObject { ["fileName"] = Diagnostic(text), ["mappingState"] = mapping });
+                    retained["writtenFilesAfterFailure"] = rows;
+                }
+                if (source["statusProbe"] is JsonObject probe && probe["objects"] is JsonArray probes)
+                {
+                    var rows = new JsonArray();
+                    foreach (var row in probes.OfType<JsonObject>())
+                        if (row["name"] is JsonValue name && name.TryGetValue<string>(out var text)
+                            && row["nativeMessage"] is JsonValue message && message.TryGetValue<string>(out var reason))
+                            rows.Add(new JsonObject { ["name"] = Diagnostic(text), ["nativeMessage"] = Diagnostic(reason) });
+                    retained["statusProbe"] = new JsonObject { ["objects"] = rows, ["nativeMessage"] = rows.FirstOrDefault()?["nativeMessage"]?.DeepClone() };
+                }
+            }
             if (source["messages"] is JsonArray messages)
                 retained["messages"] = new JsonArray(messages.OfType<JsonValue>().Where(v => v.TryGetValue<string>(out _))
                     .Take(16).Select(v => (JsonNode?)JsonValue.Create(Diagnostic(v.GetValue<string>()))).ToArray());

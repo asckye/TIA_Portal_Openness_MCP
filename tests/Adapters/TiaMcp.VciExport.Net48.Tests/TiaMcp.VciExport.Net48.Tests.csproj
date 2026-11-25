@@ -6,14 +6,26 @@
     <OutputType>Exe</OutputType>
     <PlatformTarget>x64</PlatformTarget>
     <DefineConstants>$(DefineConstants);STUDIO_VCI</DefineConstants>
+    <DefineConstants Condition="!$(DefineConstants.Contains('STUDIO_VCI_MODERN'))">$(DefineConstants);TIA_ADAPTER_INTERNAL_VERSIONING</DefineConstants>
     <TiaPublicApiRoot Condition="'$(TiaPublicApiRoot)' == ''">$(MSBuildThisFileDirectory)../../../sdk</TiaPublicApiRoot>
     <VciExceptionSdkDir>$(TiaPublicApiRoot)/TIA_V17_PublicAPI/V17</VciExceptionSdkDir>
     <VciExceptionSdkDir Condition="Exists('$(SiemensEngineeringDirectory)/Siemens.Engineering.dll')">$(SiemensEngineeringDirectory)</VciExceptionSdkDir>
     <VciExceptionSdk>$(VciExceptionSdkDir)/Siemens.Engineering.dll</VciExceptionSdk>
-    <DefineConstants Condition="Exists('$(VciExceptionSdk)')">$(DefineConstants);VCI_SDK_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
+  <!-- Only the fixture compiler needs to distinguish real SDK exceptions from the stand-ins. -->
+  <Target Name="SelectVciExceptionTypes" BeforeTargets="CoreCompile" Condition="Exists('$(VciExceptionSdk)')">
+    <PropertyGroup><DefineConstants>$(DefineConstants);VCI_SDK_EXCEPTIONS</DefineConstants></PropertyGroup>
+  </Target>
   <ItemGroup Condition="Exists('$(VciExceptionSdk)')">
     <Reference Include="Siemens.Engineering" HintPath="$(VciExceptionSdk)" Aliases="vciSdk" Private="true" />
+  </ItemGroup>
+  <ItemGroup Condition="$(DefineConstants.Contains('TIA_ADAPTER_INTERNAL_VERSIONING'))">
+    <Compile Include="../../../src/Adapters/Native/Studio/OpennessVersionControl*.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/Studio/Dto.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/Studio/Enums.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/Studio/VersionControl.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/StudioInterfaces.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
@@ -22,6 +34,16 @@
     <Compile Include="../../../src/Adapters/Native/Vci/VersionControlPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Native/Vci/LegacyVciPortPrimitives.cs" />
     <Compile Include="../../../src/Adapters/Native/Vci/VersionControlAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VersionControlAdapter.Connect.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VciExportPolicy.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/CandidateImportFiles.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/CandidateObservations.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/CandidateContracts.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/PlcImportOptionPolicy.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/OpennessApi.cs" />
+    <Compile Include="../../../src/Adapters.Contracts/ReleaseRange.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VciContentProof.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VciStoredEqual.cs" />
     <Compile Include="../../../src/Adapters/Native/Vci/VersionControlAdapter.Policy.cs" />
     <Compile Include="../../../src/Adapters/Native/Vci/VciSyncAttempts.cs" />
     <Compile Include="../../../src/Adapters/Native/Vci/VciExportAttempts.cs" />
@@ -36,6 +58,7 @@
     <Compile Include="../../../src/Adapters.Contracts/LegacyResponseMetadata.cs" />
     <Compile Include="../../../src/Adapters.Contracts/PortalErrorCode.cs" />
     <Compile Include="../../../src/Adapters.Contracts/PortalException.cs" />
+    <None Include="../../FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/SimaticMl/17/MCP_RC_FC.xml" Link="MCP_RC_FC.xml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../../reference/tool-examples/languages/FC_Add_SD.s7dcl" Link="FC_Add_SD.s7dcl" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

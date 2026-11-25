@@ -34,6 +34,7 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
     internal IReadOnlyDictionary<string, string> Presets = new Dictionary<string, string>();
     internal bool CandidatePolicies;
     internal string? VciRefreshMessage;
+    internal bool VciUnknownRows;
     internal bool GenerationRunActive;
     internal bool MissingCreationPlanHash;
     private readonly Dictionary<string, JsonObject> schemas = [];
@@ -182,16 +183,22 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             "CompilePlcSoftware" => new() { ["state"] = "Success", ["errorCount"] = 0, ["warningCount"] = 0 },
             "ListVersionControlWorkspaces" => new() { ["evidence"] = new JsonObject { ["workspaces"] = new JsonArray(new JsonObject {
                 ["name"] = "git", ["rootPath"] = Root, ["mappedObjectCount"] = 1, ["language"] = "en-US" }) } },
+            "GetVersionControlStatus" when VciUnknownRows => new() { ["evidence"] = new JsonObject { ["total"] = 14, ["differing"] = 0,
+                ["objects"] = new JsonArray(Enumerable.Range(1, 14).Select(i => (JsonNode)new JsonObject { ["name"] = "Table" + i,
+                    ["compareState"] = "Unknown" }).ToArray()) } },
             "GetVersionControlStatus" when VciRefreshMessage != null => new() { ["evidence"] = new JsonObject { ["total"] = 1, ["differing"] = 0,
-                ["unverifiedEqual"] = 1, ["objects"] = (bool?)arguments["changedOnly"] == true ? new JsonArray() : new JsonArray(new JsonObject {
+                ["unverifiedEqual"] = 1, ["objects"] = new JsonArray(new JsonObject {
                     ["name"] = "Main", ["filePath"] = "Main.xml", ["compareState"] = "Equal", ["refreshMessage"] = VciRefreshMessage }) } },
             "GetVersionControlStatus" => new() { ["evidence"] = new JsonObject { ["workspaceName"] = "git", ["rootPath"] = Root,
                 ["total"] = 1, ["differing"] = 1, ["objects"] = new JsonArray(new JsonObject { ["name"] = "Main", ["filePath"] = "Main.xml", ["compareState"] = "Unequal" }) } },
             "ConnectProjectToWorkspace" => new() { ["evidence"] = new JsonObject { ["mapped"] = 1, ["visited"] = 1 } },
             "SynchronizeVersionControlWorkspace" when VciRefreshMessage != null => new() { ["evidence"] = new JsonObject {
-                ["synchronized"] = 0, ["skippedEqual"] = 1, ["unverifiedEqual"] = 1, ["items"] = new JsonArray(new JsonObject {
-                    ["name"] = "Main", ["stateBefore"] = "Equal", ["outcome"] = "skipped-equal", ["refreshMessage"] = VciRefreshMessage }) } },
-            "SynchronizeVersionControlWorkspace" => new() { ["evidence"] = new JsonObject { ["synchronized"] = 1, ["rootPath"] = Root } },
+                ["synchronized"] = 0, ["skippedEqual"] = 0, ["unverifiedEqual"] = 1, ["dataComplete"] = false,
+                ["failed"] = apply ? 1 : 0, ["notVerified"] = apply ? 1 : 0, ["wouldVerify"] = apply ? 0 : 1, ["items"] = new JsonArray(new JsonObject {
+                    ["name"] = "Main", ["stateBefore"] = "Equal", ["outcome"] = apply ? "not-verified" : "verify-before-export",
+                        ["filePath"] = "Main.xml", ["refreshMessage"] = VciRefreshMessage }) } },
+            "SynchronizeVersionControlWorkspace" => new() { ["evidence"] = new JsonObject {
+                ["synchronized"] = apply ? 1 : 0, ["wouldSynchronize"] = apply ? null : 1, ["rootPath"] = Root } },
             _ => new() { ["executed"] = apply }
         };
         if (name == "ExportPlcBlock")
@@ -232,6 +239,7 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
             paged.Content = [new TextContentBlock { Text = paged.StructuredContent.ToJsonString() }];
             return paged;
         }
+        if (name == "SynchronizeVersionControlWorkspace" && apply && VciRefreshMessage != null) return Envelope(name, data, "NATIVE_OPERATION_FAILED");
         return Envelope(name, data);
     }
     private static JsonObject Block() => new() { ["name"] = "Main", ["typeName"] = "OB", ["programmingLanguage"] = "LAD", ["isConsistent"] = true,
@@ -245,6 +253,14 @@ internal sealed class McpOperatorFixture : IAsyncDisposable
                 ["requestId"] = Guid.NewGuid().ToString("N"), ["outcome"] = code == null ? "succeeded" : "rejected-before-operation",
                 ["execution"] = code == null ? "read-only" : "not-started", ["behaviorPolicy"] = "not-applicable",
                 ["completeness"] = "complete", ["paging"] = null, ["warnings"] = new JsonArray() } };
+        if (code == "NATIVE_OPERATION_FAILED")
+        {
+            envelope["error"]!["details"] = new JsonObject { ["nativeCode"] = null, ["nativeMessage"] = "Synchronization refused",
+                ["evidence"] = new JsonObject() };
+            envelope["meta"]!["outcome"] = "failed";
+            envelope["meta"]!["execution"] = "completed";
+            envelope["meta"]!["completeness"] = "partial";
+        }
         return new() { IsError = code != null, StructuredContent = envelope, Content = [new TextContentBlock { Text = envelope.ToJsonString() }] };
     }
     private sealed class FixtureTool(Tool tool, McpOperatorFixture fixture) : McpServerTool

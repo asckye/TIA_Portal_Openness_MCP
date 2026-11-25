@@ -12931,7 +12931,7 @@
         "properties": {
           "changedOnly": {
             "default": true,
-            "description": "changedOnly: default true — list only objects that are NOT in sync. false lists every mapped object.",
+            "description": "changedOnly: default true lists differing, unknown and refused-refresh Equal rows. false lists every mapped object.",
             "type": "boolean"
           },
           "workspaceName": {
@@ -25970,7 +25970,7 @@
         "properties": {
           "changedOnly": {
             "default": true,
-            "description": "changedOnly: true selects known differences. False also attempts Unknown objects. Equal objects are skipped in both modes.",
+            "description": "changedOnly: true selects known differences. False also attempts Unknown objects. A refused refresh on Equal requires content verification in both modes.",
             "type": "boolean"
           },
           "direction": {

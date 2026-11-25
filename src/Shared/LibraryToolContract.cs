@@ -148,6 +148,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     outcome = Outcome.Partial;
                     error = new Error(("Workspace mappings exist but the initial export failed. " + diagnostic).TrimEnd(), new PartialFailureDetails(0, 0, 0));
                 }
+                else if (Count(evidence, "filesWritten") > 0)
+                {
+                    outcome = Outcome.Partial;
+                    error = new Error(("Workspace XML was written before the operation failed. " + diagnostic).TrimEnd(),
+                        new PartialFailureDetails(0, 0, 0));
+                }
                 else { outcome = Outcome.Failed; error = NativeFailure(diagnostic); }
             }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success))
@@ -197,24 +203,49 @@ namespace TiaMcpServer.ModelContextProtocol
             var legacyStatusRows = tool == "GetVersionControlStatus" && HardwareContract.ReleaseKey is "16" or "17" or "18" or "19"
                 ? evidence["objects"] as JsonArray : null;
             Clean(data, legacyStatusRows);
+            var proofRows = (evidence["items"] as JsonArray)?.OfType<JsonObject>().Where(r => (string?)r["outcome"] == "verify-before-export").ToArray();
+            if (!writes && tool is ("ConnectProjectToWorkspace" or "SynchronizeVersionControlWorkspace")
+                && (evidence["plannedFiles"] is JsonArray || proofRows?.Length > 0))
+            {
+                var plan = new JsonObject { ["release"] = HardwareContract.ReleaseKey, ["tool"] = tool,
+                    ["workspace"] = evidence["workspaceName"]?.DeepClone(), ["root"] = evidence["rootPath"]?.DeepClone(),
+                    ["files"] = evidence["plannedFiles"]?.DeepClone(), ["items"] = data["items"]?.DeepClone() };
+                if (proofRows?.Length > 0) plan["verifyBeforeExport"] = new JsonArray(proofRows.Select(r => r.DeepClone()).ToArray());
+                data["planHash"] = TiaOpenness.Shared.PendingApproval.Hash(TiaOpenness.Shared.PendingApproval.Canonical(plan));
+            }
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)) {
                 outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
                     ? Completeness.Partial : Completeness.Complete;
             }
             if (outcome != Outcome.Succeeded)
             {
-                if (tool == "SynchronizeVersionControlWorkspace" && Count(evidence, "unverifiedEqual") > 0)
-                    data["summary"] = VciResult.StoredEqualSummary(Count(evidence, "unverifiedEqual")).TrimStart();
+                if (tool == "SynchronizeVersionControlWorkspace" && (Count(evidence, "unverifiedEqual") > 0 || Count(evidence, "skippedDisconnected") > 0))
+                {
+                    string[] Names(string result) => (evidence["items"] as JsonArray ?? new()).OfType<JsonObject>()
+                        .Where(row => (string?)row["outcome"] == result).Select(row => (string?)row["name"] ?? "?").ToArray();
+                    data["summary"] = (VciResult.StoredEqualSummary(Count(evidence, "unverifiedEqual"))
+                        + VciResult.NotVerifiedSummary(Names("not-verified")) + VciResult.DisconnectedSummary(Names("skipped-disconnected"))).TrimStart();
+                }
                 else data.Remove("summary");
             }
             var vciRows = legacyStatusRows ?? (tool == "SynchronizeVersionControlWorkspace" ? evidence["items"] as JsonArray : null);
             var readbacks = tool == "SynchronizeVersionControlWorkspace" ? evidence["failures"] as JsonArray : null;
-            int failedRow = 0;
+            var rowsByName = vciRows?.OfType<JsonObject>().ToLookup(r => (string?)r["name"] ?? "");
+            var failuresByName = readbacks?.OfType<JsonObject>().ToLookup(r => (string?)r["name"] ?? "");
             if (data["items"] is JsonArray lines)
                 for (int i = 0; i < lines.Count; i++)
                     if (lines[i] is JsonValue line && line.TryGetValue<string>(out var text))
                     {
-                        if (legacyStatusRows != null && i < legacyStatusRows.Count && legacyStatusRows[i] is JsonObject row
+                        int endName = text.IndexOf(" | ", StringComparison.Ordinal);
+                        string name = endName < 0 ? text : text.Substring(0, endName);
+                        JsonObject? Match(ILookup<string, JsonObject>? lookup)
+                        {
+                            var matches = lookup?[name].ToArray();
+                            if (matches?.Length == 1) return matches[0];
+                            return matches?.FirstOrDefault(r => r["filePath"] is JsonValue path && (text + " | ").Contains(" | file=" + path + " | "));
+                        }
+                        var observed = Match(rowsByName);
+                        if (legacyStatusRows != null && observed is JsonObject row
                             && row["compareState"]?.ToString() == "Unknown" && row["error"] is JsonValue diagnostic
                             && diagnostic.TryGetValue<string>(out var statusError))
                         {
@@ -223,19 +254,18 @@ namespace TiaMcpServer.ModelContextProtocol
                             continue;
                         }
                         string note = "";
-                        var observed = vciRows != null && i < vciRows.Count ? vciRows[i] as JsonObject : null;
-                        var readback = observed?["outcome"]?.ToString() == "failed" && readbacks != null && failedRow < readbacks.Count
-                            ? (string?)readbacks[failedRow++]?["refreshMessage"] : null;
+                        var readback = observed?["outcome"]?.ToString() == "failed" ? (string?)Match(failuresByName)?["refreshMessage"] : null;
+                        int cut = text.IndexOf(VciResult.RefreshSeparator, StringComparison.Ordinal);
+                        if (rowsByName != null && cut >= 0)
+                            text = text.Substring(0, cut);
                         if (observed?.ContainsKey("refreshMessage") == true)
                         {
-                            int separator = text.IndexOf(VciResult.RefreshSeparator, StringComparison.Ordinal);
-                            if (separator >= 0) text = text.Substring(0, separator);
                             var refresh = (string?)observed["refreshMessage"];
                             if (refresh != null) note = VciResult.RefreshSeparator + refresh;
                             if (readback != null && readback != refresh) note += VciResult.RefreshSeparator + readback;
                         }
                         lines[i] = Regex.Replace(text, @"(\| FAILED:|\| could not enumerate children:|Unknown\()(.*)$", match =>
-                            tool == "ConnectProjectToWorkspace" && match.Groups[1].Value == "| FAILED:"
+                            tool is ("ConnectProjectToWorkspace" or "SynchronizeVersionControlWorkspace") && match.Groups[1].Value == "| FAILED:"
                                 && HostBehavior.SafeDiagnostic(match.Groups[2].Value.TrimStart()) is string reason
                                 ? "| FAILED: " + reason : "| Native observation or operation failed.", RegexOptions.Singleline) + note;
                     }

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
+using NativeVci = TiaOpenness.Openness.VersionControlPrimitives;
 #if !STUDIO_VCI_MODERN
 using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
 #endif
@@ -32,8 +33,7 @@ namespace TiaMcp.Adapters.Native.Vci
     // ProjectToWorkspace only and refuses WorkspaceToProject, including previews.
     //
     // ExportObject writes new workspace files and creates their mappings (V20+).
-    // ConnectObject is for existing files and is not exposed by these tools. Older releases use
-    // WorkspaceMapping.Create followed by ProjectToWorkspace synchronization.
+    // V16/V17 export or verify the XML before creating the mapping. V18/V19 create the mapping then synchronize.
     internal sealed partial class VersionControlAdapter
     {
         private readonly Func<IEngineeringServiceProvider?> project;
@@ -193,15 +193,19 @@ namespace TiaMcp.Adapters.Native.Vci
                     {
                         state = CompareState.Unknown;
                         error = NativeFailureText.BoundedDiagnostic(ex);
+#if !STUDIO_VCI_MODERN
+                        if (NativeVci.DisposedStatus(ex)) error = NativeVci.DisconnectedMapping + ": " + error;
+#endif
                     }
                     if (state == CompareState.Unknown) unknown++;
                     else if (state != CompareState.Equal) differing++;
                     else if (refreshMessage != null) unverifiedEqual++;
-                    if (changedOnly && state == CompareState.Equal) continue;
+                    if (changedOnly && state == CompareState.Equal && refreshMessage == null) continue;
                     var status = error == null ? state.ToString() : "Unknown(" + error + ")";
                     var line = $"{SafeName(mo)} | {status} | file={SafeFile(mo)}{SafeFormat(mo)}";
                     var row = new HmiObject { ["name"] = SafeName(mo), ["compareState"] = state.ToString(),
                         ["error"] = error, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo).Replace(" | format=", "") };
+                    if (state == CompareState.Equal && refreshMessage != null) row["verified"] = false;
                     lines.Add(line + RefreshNote(row, refreshMessage));
                     entries.Add(row);
                 }
@@ -223,7 +227,7 @@ namespace TiaMcp.Adapters.Native.Vci
                     Meta = new HmiObject {
                         ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
                             ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["unknown"] = unknown,
-                            ["dataComplete"] = unknown == 0, ["unverifiedEqual"] = unverifiedEqual, ["objects"] = entries
+                            ["dataComplete"] = unknown == 0 && unverifiedEqual == 0, ["unverifiedEqual"] = unverifiedEqual, ["objects"] = entries
                     },
                 };
             }
@@ -277,7 +281,12 @@ namespace TiaMcp.Adapters.Native.Vci
             var lines = new List<string>();
             var rows = new HmiArray();
             var failures = new HmiArray();
-            bool hasStoredStatus = false;
+#if STUDIO_VCI_INITIAL
+            var plannedFiles = new HmiArray();
+#endif
+            var unprovenNames = new List<string>();
+            bool reportRows = false;
+            var notAttempted = new List<string>();
             int failed = 0;
             try
             {
@@ -310,32 +319,50 @@ namespace TiaMcp.Adapters.Native.Vci
                 var vci = RequireVci();
                 var ws = FindWorkspace(vci, workspaceName);
 
-                // Openness REFUSES to synchronize a mapping whose compare status is Equal
-                // ("Synchronize cannot be called on a workspace mapping that has a compare status of
-                // equal"), so "force every object" is not a thing that exists — asking for it just
-                // produced one failure per object. Equal is always skipped; changedOnly only decides
-                // whether objects whose status could not be determined are attempted anyway.
                 string ReadStatus(MappedObject mo, out string? refreshMessage) => PortVci.State(PortVci.ReadStatus(mo, out refreshMessage)).ToString();
                 string ReadDirectory(MappedObject mo) => PortVci.Directory(mo)?.ToString() ?? "";
                 string wsName = PortVci.Name(ws);
                 string wsRoot = SafeRoot(ws);
                 var targets = new List<(MappedObject Object, bool ProbeFailed, string State, string? RefreshMessage)>();
+#if STUDIO_VCI_MODERN
+                Func<Exception, bool>? isDisconnected = null;
+#else
+                var stored = new List<VciStoredEqual>();
+                Func<Exception, bool> isDisconnected = NativeVci.DisposedStatus;
+#endif
                 foreach (var mo in WorkspaceMappings(ws))
                 {
                     string state = "Unknown";
                     string? refreshMessage = null;
-                    bool include = selection.Include(() => state = ReadStatus(mo, out refreshMessage), changedOnly, out bool probeFailed);
-                    hasStoredStatus |= refreshMessage != null;
+#if STUDIO_VCI_INITIAL
+                    Func<bool> fileMissing = () => VciExportPolicy.FileExists(NativeVci.TryMappingFile(wsRoot, mo)) == false;
+#else
+                    Func<bool>? fileMissing = null;
+#endif
+                    bool include = selection.Include(() => state = ReadStatus(mo, out refreshMessage), changedOnly, out bool probeFailed,
+                        () => SafeName(mo), isDisconnected, out bool disconnected, fileMissing);
+                    reportRows |= refreshMessage != null || disconnected;
+#if !STUDIO_VCI_MODERN
+                    if (disconnected)
+                    {
+                        var mappingName = SafeName(mo);
+                        string file = NativeVci.TryMappingFile(wsRoot, mo)?.FullName ?? mappingName;
+                        string reason = NativeVci.DisconnectedMapping + ": " + file + ". " + TiaMcp.Adapters.Contracts.VersionControlResult.Reconnect;
+                        lines.Add(mappingName + " | " + reason);
+                        rows.Add(new HmiObject { ["name"] = mappingName, ["stateBefore"] = state, ["outcome"] = "skipped-disconnected",
+                            ["reason"] = reason, ["filePath"] = file });
+                        continue;
+                    }
+#endif
                     if (include)
                         targets.Add((mo, probeFailed, state, refreshMessage));
-                    else if (refreshMessage != null)
+#if !STUDIO_VCI_MODERN
+                    else if (state == "Equal" && refreshMessage != null)
                     {
-                        selection.CountStoredEqual();
-                        var name = SafeName(mo);
-                        var row = new HmiObject { ["name"] = name, ["stateBefore"] = state, ["outcome"] = "skipped-equal" };
-                        lines.Add(name + " | skipped (TIA stored Equal)" + RefreshNote(row, refreshMessage));
-                        rows.Add(row);
+                        selection.SelectStored(dryRun);
+                        stored.Add(new VciStoredEqual(wsRoot, mo, SafeName(mo), refreshMessage));
                     }
+#endif
                 }
 
                 HmiObject Evidence()
@@ -343,15 +370,47 @@ namespace TiaMcp.Adapters.Native.Vci
                     var meta = selection.Evidence(dryRun, attempts.Synchronized, failed);
                     meta["workspaceName"] = wsName;
                     meta["rootPath"] = wsRoot;
-                    if (hasStoredStatus) meta["items"] = rows;
+#if STUDIO_VCI_INITIAL
+                    if (dryRun) meta["plannedFiles"] = plannedFiles;
+#endif
+                    if (reportRows) meta["items"] = rows;
+                    AddNotAttempted(meta);
                     attempts.AddEvidence(meta);
                     return meta;
                 }
 
-                if (targets.Count == 0)
+#if !STUDIO_VCI_MODERN
+                void ReportProof(VciStoredEqual proof)
+                {
+                    string name = proof.Path.Stem;
+                    var row = new HmiObject { ["name"] = name, ["filePath"] = proof.Proof.File?.FullName, ["stateBefore"] = "Equal",
+                        ["workspaceFileSha256"] = proof.InitialHash, ["outcome"] = proof.Outcome, ["verification"] = proof.Verification,
+                        ["fileChanged"] = proof.FileChanged, ["nativeMessage"] = proof.Message };
+                    string description = dryRun ? "verify-before-export (TIA content is written if they differ)" : proof.Outcome;
+                    if (proof.Outcome == "not-verified" && proof.Message != null) description += " | FAILED: " + proof.Message;
+                    if (proof.NotAttempted) { description += " | not-attempted"; notAttempted.Add(name); row["notAttempted"] = true; }
+                    lines.Add(name + " | " + description + " | file=" + row["filePath"] + RefreshNote(row, proof.RefreshMessage));
+                    rows.Add(row);
+                    if (dryRun) return;
+                    selection.FinishStored(proof.Outcome);
+                    attempts.RecordProof(proof.Issued, proof.Outcome, proof.Unconfirmed, proof.Message);
+                    if (proof.Outcome == "not-verified")
+                    {
+                        failed++;
+                        unprovenNames.Add(name);
+                        failures.Add(row);
+                    }
+                }
+                if (dryRun)
+                {
+                    VciStoredEqual.PrepareAll(stored, true);
+                    foreach (var proof in stored) ReportProof(proof);
+                }
+#endif
+                if (targets.Count == 0 && selection.UnverifiedEqual == 0)
                     return new VersionControlResult
                     {
-                        Message = selection.Summary("Workspace '" + wsName + "': nothing selected to synchronize.", noTargets: true),
+                        Message = selection.Summary("Workspace '" + wsName + "': nothing selected to synchronize.", noTargets: true) + " Folder: " + wsRoot,
                         Items = lines,
                         Meta = Evidence(),
                     };
@@ -363,7 +422,18 @@ namespace TiaMcp.Adapters.Native.Vci
                         var name = SafeName(target.Object);
                         var outcome = "would sync " + mode;
                         var row = new HmiObject { ["name"] = name, ["stateBefore"] = target.State, ["outcome"] = outcome };
-                        lines.Add(name + " | " + outcome + RefreshNote(row, target.RefreshMessage));
+#if STUDIO_VCI_INITIAL
+                        var file = NativeVci.TryMappingFile(wsRoot, target.Object);
+                        row["filePath"] = file?.FullName;
+                        row["fileExists"] = VciExportPolicy.FileExists(file);
+                        plannedFiles.Add(new HmiObject { ["filePath"] = row["filePath"], ["fileExists"] = row["fileExists"] });
+                        reportRows = true;
+#endif
+#if !STUDIO_VCI_INITIAL && !STUDIO_VCI_MODERN
+                        if (target.RefreshMessage != null) row["filePath"] = NativeVci.TryMappingFile(wsRoot, target.Object)?.FullName;
+#endif
+                        string fileNote = target.RefreshMessage != null && row.TryGetValue("filePath", out var path) ? " | file=" + path : "";
+                        lines.Add(name + " | " + outcome + fileNote + RefreshNote(row, target.RefreshMessage));
                         rows.Add(row);
                     }
                     string message = string.Format(
@@ -377,65 +447,146 @@ namespace TiaMcp.Adapters.Native.Vci
 
                 // If one export disposes the workspace, the other selected mappings may also need fresh handles.
                 var prepared = targets.Select(t => (t.Object, t.ProbeFailed, t.State, t.RefreshMessage,
+#if !STUDIO_VCI_MODERN
+                    File: t.RefreshMessage == null ? null : NativeVci.TryMappingFile(wsRoot, t.Object)?.FullName,
+#else
+                    File: (string?)null,
+#endif
                     Path: VciSyncTarget.Capture(SafeName(t.Object), () => ReadDirectory(t.Object)))).ToArray();
+#if !STUDIO_VCI_MODERN
+                bool stopped = VciStoredEqual.PrepareAll(stored, false);
+#else
+                bool stopped = false;
+#endif
                 Workspace? current = ws;
                 MappedObject FindCurrent(VciSyncTarget path) => path.Find(
                     WorkspaceMappings(current ??= ReAcquireWorkspace(wsName)), PortVci.FileName, ReadDirectory);
+                Exception? lookupFailure = null;
+                bool reacquireNext = false;
                 foreach (var target in prepared)
                 {
-                    var mo = failed == 0 ? target.Object : attempts.FindNext(() => FindCurrent(target.Path));
+                    if (stopped)
+                    {
+                        RecordNotAttempted(target.Path.Stem, target.State);
+                        continue;
+                    }
+                    var mo = target.Object;
+                    if (reacquireNext)
+                    {
+                        try { mo = attempts.FindNext(() => FindCurrent(target.Path)); }
+                        catch (Exception error)
+                        {
+                            lookupFailure = error;
+                            stopped = true;
+                            RecordNotAttempted(target.Path.Stem, target.State);
+                            continue;
+                        }
+                    }
                     string? readbackMessage = null;
+#if STUDIO_VCI_INITIAL
+                    Func<Action, bool> repair = issued => NativeVci.RepairMissingFile(wsRoot, mo, attempts.RecordFile, issued);
+#else
+                    Func<Action, bool>? repair = null;
+#endif
                     string? failure = attempts.Synchronize(wsRoot, target.Path, () => PortVci.Synchronize(mo, mode),
                         () => { current = null; return FindCurrent(target.Path); }, fresh => ReadStatus(fresh, out readbackMessage),
-                        target.ProbeFailed, out var statusAfter, mode.ToString());
+                        target.ProbeFailed, out var statusAfter, mode.ToString(), repair);
                     string name = target.Path.Stem;
                     var row = new HmiObject { ["name"] = name, ["stateBefore"] = target.State, ["outcome"] = failure == null ? "synchronized" : "failed" };
+                    if (attempts.WrittenFile != null)
+                    {
+                        row["fileWritten"] = true;
+                        row["filePath"] = attempts.WrittenFile;
+                        reportRows = true;
+                    }
+                    string fileNote = "";
+                    if (target.File is string path)
+                    {
+                        row["filePath"] = path;
+                        fileNote = " | file=" + path;
+                    }
                     string note = RefreshNote(row, target.RefreshMessage);
                     rows.Add(row);
                     if (failure == null)
                     {
-                        lines.Add(name + " | synchronized" + note);
+                        lines.Add(name + " | synchronized" + fileNote + note);
                     }
                     else
                     {
+                        reacquireNext = true;
                         if (statusAfter == null) current = null;
                         failed++;
                         var failedRow = new HmiObject { ["name"] = name, ["statusAfter"] = statusAfter ?? "Unknown" };
+                        failedRow["nativeMessage"] = failure;
+                        if (row.TryGetValue("filePath", out var filePath)) failedRow["filePath"] = filePath;
                         string readbackNote = RefreshNote(failedRow, readbackMessage);
                         if (readbackMessage != null)
                         {
-                            hasStoredStatus = true;
+                            reportRows = true;
                             row["statusAfter"] = statusAfter;
                             if (target.RefreshMessage == null) row["refreshMessage"] = readbackMessage;
                             if (statusAfter == "Equal") selection.CountStoredEqual();
                         }
-                        lines.Add(name + " | FAILED: " + failure + note + (readbackMessage == target.RefreshMessage ? "" : readbackNote));
+                        lines.Add(name + " | FAILED: " + failure + fileNote + note + (readbackMessage == target.RefreshMessage ? "" : readbackNote));
                         failures.Add(failedRow);
+                        row["nativeMessage"] = failure;
+                        stopped = attempts.InterruptedBatch;
                     }
                 }
 
+#if !STUDIO_VCI_MODERN
+                foreach (var proof in stored)
+                {
+                    proof.Finish(() => { current = null; return FindCurrent(proof.Path); }, mode, stopped);
+                    ReportProof(proof);
+                    stopped |= proof.Interrupted;
+                }
+#endif
+                if (lookupFailure != null) return Interrupted(lookupFailure);
                 string summary = string.Format(
                     selection.UnverifiedEqual == 0 ? "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {4} already equal (skipped)."
                         : "Workspace '{0}' ({1}): {2} synchronized, {3} failed, {4} skipped with status Equal.",
                     wsName, mode, attempts.Synchronized, failed, selection.SkippedEqual);
-                if (failed == 0 && selection.UnverifiedEqual == 0) summary += " The text files are updated — `git add -A && git commit` from that folder.";
+                if (failed == 0 && selection.Complete && !stopped) summary += " The text files are updated — `git add -A && git commit` from that folder.";
                 summary = selection.Summary(summary) + " Folder: " + wsRoot;
+                summary += VersionControlResult.NotVerifiedSummary(unprovenNames);
                 var resultMeta = Evidence();
                 resultMeta["failures"] = failures;
                 return new VersionControlResult { Message = summary, Items = lines, Meta = resultMeta };
             }
-            catch (Exception ex)
+            catch (Exception ex) { return Interrupted(ex); }
+
+            void AddNotAttempted(HmiObject meta)
+            {
+                if (notAttempted.Count == 0) return;
+                meta["notAttempted"] = notAttempted.Count;
+                meta["notAttemptedNames"] = notAttempted.ToArray();
+            }
+
+            void RecordNotAttempted(string name, string state)
+            {
+                notAttempted.Add(name);
+                reportRows = true;
+                lines.Add(name + " | not-attempted");
+                rows.Add(new HmiObject { ["name"] = name, ["stateBefore"] = state, ["outcome"] = "not-attempted" });
+            }
+
+            VersionControlResult Interrupted(Exception ex)
             {
                 var meta = attempts.Interrupted(ex);
-                meta["unverifiedEqual"] = selection.UnverifiedEqual;
-                if (hasStoredStatus)
+                AddNotAttempted(meta);
+                if (unprovenNames.Count > 0 && meta.TryGetValue("failed", out var previous) && previous is int count)
+                    meta["failed"] = count + unprovenNames.Count;
+                selection.AddProbeEvidence(meta);
+                if (reportRows)
                 {
                     meta["items"] = rows;
                     if (failures.Count > 0) meta["failures"] = failures;
                 }
                 return new VersionControlResult
                 {
-                    Message = "SynchronizeVersionControlWorkspace failed: " + ex.Message + VersionControlResult.StoredEqualSummary(selection.UnverifiedEqual),
+                    Message = selection.Summary("SynchronizeVersionControlWorkspace failed: " + ex.Message)
+                        + VersionControlResult.NotVerifiedSummary(unprovenNames),
                     Items = lines,
                     Meta = meta,
                 };

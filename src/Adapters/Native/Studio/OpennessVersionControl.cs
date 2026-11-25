@@ -12,6 +12,7 @@ using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.VersionControl;
+using TiaMcp.Adapters.Native.Vci;
 #if !STUDIO_VCI_MODERN
 using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
 #endif
@@ -46,14 +47,12 @@ namespace TiaOpenness.Openness
     /// walk lets a group be collected between MoveNext calls.
     /// </item>
     /// <item>
-    /// <b>Mapping is <c>ExportObject</c>, not <c>ConnectObject</c>.</b> Despite the names,
-    /// <c>ExportObject</c> is what creates a mapping: it writes the text file and registers the
-    /// object. <c>ConnectObject</c> only binds an object to files that already exist.
+    /// <b>Mapping.</b> V20/V21 use <c>ExportObject</c> to write and register the object.
+    /// V16/V17 export or verify the XML before creating the mapping. V18/V19 create it and synchronize.
     /// </item>
     /// <item>
-    /// <b>Equal objects cannot be synchronized.</b> TIA refuses with "Synchronize cannot be
-    /// called on a workspace mapping that has a compare status of equal", so "force everything"
-    /// is not an option that exists; equal objects are skipped, never attempted.
+    /// <b>Stored comparison states.</b> When a legacy status refresh is refused, a stored Equal
+    /// requires a content comparison. Only ProjectToWorkspace may then attempt a native write.
     /// </item>
     /// </list>
     /// </summary>
@@ -131,6 +130,7 @@ namespace TiaOpenness.Openness
                 DryRun = dryRun,
             };
 
+            var plannedFiles = dryRun ? new HashSet<string>(StringComparer.OrdinalIgnoreCase) : null;
             var pending = new Stack<VcNode>();
             pending.Push(new VcNode { Object = _project(), Label = "<project>", RelativeDirectory = "", Descendable = true });
 
@@ -166,40 +166,82 @@ namespace TiaOpenness.Openness
 
                 // Coarse-first: an object VCI can map as a unit owns its children, so do not
                 // descend into it. That is what turns "map hundreds of blocks" into one call.
-                MapOne(ref workspace, node, formats, rootPath, dryRun, result);
-                if (result.Failed > 0) break;
+                if (!MapOne(ref workspace, node, formats, rootPath, dryRun, result, plannedFiles)) break;
             }
 
             return result;
         }
 
-        private void MapOne(ref Workspace workspace, VcNode node, IList<string> formats, string rootPath,
-            bool dryRun, MappingResult result)
+        private bool MapOne(ref Workspace workspace, VcNode node, IList<string> formats, string rootPath,
+            bool dryRun, MappingResult result, HashSet<string> plannedFiles)
         {
             if (Existing(ref workspace, node.Object) != null)
             {
                 result.AlreadyMapped++;
                 result.Items.Add(new MappingItem { Target = node.Label, Outcome = "already mapped" });
-                return;
+                return true;
             }
 
             var format = PreferredFormat(formats);
+#if STUDIO_VCI_INITIAL
+            bool reuse = false;
+            FileInfo file;
+            try
+            {
+                file = TiaMcp.Adapters.Contracts.VciWorkspaceLayout.LegacyMappingFile(rootPath, MappingName(node) + ".xml");
+                if (dryRun && !plannedFiles.Add(file.FullName))
+                    throw new IOException("Another selected object maps to the same file: " + file.Name);
+                if (!dryRun && VciExportPolicy.TargetExists(file))
+                {
+                    if (!VersionControlPrimitives.MatchesExisting(rootPath, file, node.Object)) throw new IOException(VciExportPolicy.ExistingFile(file.Name));
+                    reuse = true;
+                }
+            }
+            catch (Exception error) when (VersionControlPrimitives.Ordinary(error)
+                && (error is IOException || error is UnauthorizedAccessException || error is ArgumentException))
+            {
+                result.Failed++;
+                result.Items.Add(new MappingItem { Target = node.Label, Outcome = "failed",
+                    Error = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(error) });
+                return true;
+            }
+#endif
             if (dryRun)
             {
                 result.Mapped++;
                 result.Items.Add(new MappingItem
                 {
                     Target = node.Label,
+#if STUDIO_VCI_INITIAL
+                    Outcome = VciExportPolicy.FileExists(file) == true ? "existing file will be compared" : "would map",
+#else
                     Outcome = "would map",
+#endif
                     FileFormat = format,
                     Directory = string.Empty,
                 });
-                return;
+                return true;
             }
 
+#if STUDIO_VCI_INITIAL
+            bool fileWritten = false;
+            bool createIssued = false;
+#endif
             try
             {
-                var directory = WriteMapping(ref workspace, node, format, rootPath);
+#if STUDIO_VCI_INITIAL
+                if (!reuse)
+                {
+                    VersionControlPrimitives.ExportObject(node.Object, file, ExportOptions.None);
+                    fileWritten = true;
+                }
+                createIssued = true;
+                var mapping = Keep(Keep(workspace.Mappings).Create(file.Name, node.Object));
+                VersionControlPrimitives.SynchronizeNewMapping(mapping);
+                string directory = string.Empty;
+#else
+                var directory = WriteMapping(ref workspace, node, format);
+#endif
                 result.Mapped++;
                 result.Items.Add(new MappingItem
                 {
@@ -211,19 +253,40 @@ namespace TiaOpenness.Openness
             }
             catch (Exception ex)
             {
+                var reason = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(ex);
+#if STUDIO_VCI_INITIAL
+                if (!VersionControlPrimitives.Ordinary(ex))
+                    throw new InvalidOperationException("The mapping outcome is unknown. " + reason, ex);
+                if (createIssued)
+                {
+                    if (fileWritten) reason += " | file written: " + file.Name;
+                    try
+                    {
+                        Reset();
+                        workspace = FindWorkspace(result.WorkspaceName);
+                        reason += Existing(ref workspace, node.Object) == null ? " | mapping absent" : " | mapping present";
+                    }
+                    catch (Exception lookup) { reason += " | mapping lookup failed: " + TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(lookup); }
+                }
+                else
+                {
+                    reason += " | no mapping created";
+                    if (File.Exists(file.FullName)) reason += " | file present after refused export: " + file.Name;
+                }
+#endif
                 result.Failed++;
                 result.Items.Add(new MappingItem
                 {
                     Target = node.Label,
                     Outcome = "failed",
-                    Error = Flatten(ex),
+                    Error = FileDiagnostic(reason),
                 });
-                // The caller sees the partial result; stop the map batch after this failure.
+                return false;
             }
+            return true;
         }
 
-        /// <summary>Map once at the workspace root; an API failure is never replayed with another path.</summary>
-        private string WriteMapping(ref Workspace workspace, VcNode node, string format, string rootPath)
+        private static string MappingName(VcNode node)
         {
             var flat = Sanitize((node.RelativeDirectory ?? "").Replace(Path.DirectorySeparatorChar, '_') + "_" + node.Name);
             using (var hash = System.Security.Cryptography.SHA256.Create())
@@ -231,6 +294,13 @@ namespace TiaOpenness.Openness
                 var digest = hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(node.RelativeDirectory + "\n" + node.Name));
                 flat += "_" + BitConverter.ToString(digest, 0, 4).Replace("-", "").ToLowerInvariant();
             }
+            return flat;
+        }
+
+#if !STUDIO_VCI_INITIAL
+        private string WriteMapping(ref Workspace workspace, VcNode node, string format)
+        {
+            string flat = MappingName(node);
 #if STUDIO_VCI_MODERN
             VersionControlPrimitives.Export(workspace, node.Object, TiaMcp.Adapters.Native.Vci.VciExportPolicy.RootDirectory(), flat, format);
 #else
@@ -240,6 +310,8 @@ namespace TiaOpenness.Openness
 #endif
             return string.Empty;
         }
+
+#endif
 
         // ---- status and sync -----------------------------------------------
 
@@ -258,17 +330,19 @@ namespace TiaOpenness.Openness
                 report.Total++;
 
                 string error;
-                var state = StateOf(mapped, out error, out var refreshMessage);
-                if (state != VcCompareState.Equal) report.Differing++;
+                var state = StateOf(mapped, out error, out var refreshMessage, out _);
+                if (state == VcCompareState.Unknown) report.Unknown++;
+                else if (state != VcCompareState.Equal) report.Differing++;
                 else if (refreshMessage != null) report.UnverifiedEqual++;
-                if (changedOnly && state == VcCompareState.Equal) continue;
+                if (changedOnly && state == VcCompareState.Equal && refreshMessage == null) continue;
 
                 report.Items.Add(new MappedObjectInfo
                 {
                     Name = SafeObjectName(mapped),
-                    FilePath = SafeFile(mapped),
+                    FilePath = SafeFile(mapped, report.RootPath),
                     FileFormat = SafeFormat(mapped),
                     CompareState = state,
+                    Verified = state == VcCompareState.Equal && refreshMessage != null ? (bool?)false : null,
                     RefreshMessage = refreshMessage,
                     Error = error,
                 });
@@ -303,6 +377,7 @@ namespace TiaOpenness.Openness
                 // Discovery or the row label failed before dispatch. Do not probe the lost session for a name.
                 result.Items.Add(new SyncItem { Name = "?", Outcome = "refused", Error = Flatten(error) });
                 result.Failed++;
+                result.DataComplete = false;
             }
             return result;
         }
@@ -311,28 +386,62 @@ namespace TiaOpenness.Openness
         {
             var direction = result.Direction;
             bool dryRun = result.DryRun;
-            var targets = new List<(MappedObject Object, string RefreshMessage)>();
-            foreach (var mapped in Mappings(workspace).ToList())
+#if !STUDIO_VCI_MODERN
+            var stored = new List<VciStoredEqual>();
+#endif
+            var targets = new List<(MappedObject Object, string Name, string RefreshMessage)>();
+            try
             {
-                Keep(mapped);
-                if (StateOf(mapped, out _, out var refreshMessage, stopOnConnectionLoss) == VcCompareState.Equal)
+                foreach (var mapped in Mappings(workspace).ToList())
                 {
-                    result.SkippedEqual++;
-                    if (refreshMessage != null)
+                    Keep(mapped);
+                    var state = StateOf(mapped, out var error, out var refreshMessage, out var disconnected, stopOnConnectionLoss);
+#if !STUDIO_VCI_MODERN
+                    if (disconnected)
                     {
-                        result.UnverifiedEqual++;
-                        result.Items.Add(new SyncItem { Name = SafeObjectName(mapped, stopOnConnectionLoss), Outcome = "skipped-equal",
-                            RefreshMessage = refreshMessage });
+                        result.SkippedDisconnected++;
+                        result.DataComplete = false;
+                        string file = VersionControlPrimitives.TryMappingFile(result.RootPath, mapped)?.FullName;
+                        result.Items.Add(new SyncItem { Name = SafeObjectName(mapped), FilePath = file, Outcome = "skipped-disconnected",
+                            Error = FileDiagnostic(error + " " + Path.GetFileName(file) + ". " + TiaMcp.Adapters.Contracts.VersionControlResult.Reconnect) });
+                        continue;
                     }
-                    continue;
+#endif
+                    if (state == VcCompareState.Equal)
+                    {
+#if !STUDIO_VCI_MODERN
+                        if (refreshMessage != null)
+                        {
+                            stored.Add(new VciStoredEqual(result.RootPath, mapped, SafeObjectName(mapped), refreshMessage));
+                            result.UnverifiedEqual++;
+                        }
+                        else
+#endif
+                            result.SkippedEqual++;
+                        continue;
+                    }
+                    targets.Add((mapped, SafeObjectName(mapped, stopOnConnectionLoss), refreshMessage));
                 }
-                targets.Add((mapped, refreshMessage));
+            }
+            catch (Exception error) when (stopOnConnectionLoss && NativeRefusalProbe.UncertainConnection(error))
+            {
+                foreach (var target in targets) AddNotAttempted(result, target.Name);
+                throw;
             }
 
+#if STUDIO_VCI_MODERN
+            bool stopped = false;
+#else
+            bool stopped = (dryRun || mode == SynchronizationMode.ProjectToWorkspace) && VciStoredEqual.PrepareAll(stored, dryRun);
+#endif
             for (var i = 0; i < targets.Count; i++)
             {
-                var (mapped, refreshMessage) = targets[i];
-                var name = SafeObjectName(mapped, stopOnConnectionLoss);
+                var (mapped, name, refreshMessage) = targets[i];
+                if (stopped)
+                {
+                    AddNotAttempted(result, name);
+                    continue;
+                }
                 if (progress != null) progress("vc-sync", i + 1, targets.Count, name);
 
 #if STUDIO_VCI_MODERN
@@ -340,10 +449,9 @@ namespace TiaOpenness.Openness
                     out var connectionLost) is { } restore)
                 {
                     result.Items.Add(restore);
-                    if (restore.Outcome is "unknown" or "failed") { result.Failed++; break; }
-                    if (restore.Outcome == "refused") result.Failed++;
+                    if (restore.Outcome is "unknown" or "failed" or "refused") result.Failed++;
                     else result.Synchronized++;
-                    if (connectionLost) break;
+                    stopped = connectionLost || restore.Outcome is "unknown" or "failed";
                     continue;
                 }
 #endif
@@ -354,27 +462,81 @@ namespace TiaOpenness.Openness
                     continue;
                 }
 
+                string writtenFile = null;
                 try
                 {
-                    Synchronize(mapped, mode);
+#if STUDIO_VCI_INITIAL
+                    bool repairedEqual = mode == SynchronizationMode.ProjectToWorkspace &&
+                        VersionControlPrimitives.RepairMissingFile(result.RootPath, mapped, file => writtenFile = file.Name);
+                    if (!repairedEqual)
+#endif
+                        Synchronize(mapped, mode);
                     result.Synchronized++;
                     result.Items.Add(new SyncItem { Name = name, Outcome = "synchronized", RefreshMessage = refreshMessage });
                 }
                 catch (Exception ex)
                 {
                     result.Failed++;
-                    result.Items.Add(new SyncItem { Name = name, Outcome = "failed", Error = Flatten(ex), RefreshMessage = refreshMessage });
-                    break;
+                    var reason = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(ex);
+                    if (writtenFile != null) reason += " | file written: " + writtenFile;
+                    result.Items.Add(new SyncItem { Name = name, Outcome = "failed", Error = FileDiagnostic(reason), RefreshMessage = refreshMessage });
+                    stopped = true;
                 }
             }
+#if !STUDIO_VCI_MODERN
+            for (int i = 0; i < stored.Count; i++)
+            {
+                var proof = stored[i];
+                MappedObject Acquire()
+                {
+                    Reset();
+                    return proof.Path.Find(Mappings(FindWorkspace(result.WorkspaceName)), m => SafeObjectName(m),
+                        m => VersionControlPrimitives.TryMappingFile(result.RootPath, m)?.DirectoryName);
+                }
+                if (dryRun) result.WouldVerify++;
+                else
+                {
+                    if (mode == SynchronizationMode.WorkspaceToProject) proof.CompareAfterImports(Acquire, stopped);
+                    proof.Finish(Acquire, mode, stopped);
+                    if (proof.NotAttempted) result.NotAttempted++;
+                    if (proof.Outcome == "not-verified") { result.NotVerified++; result.Failed++; }
+                    else
+                    {
+                        result.UnverifiedEqual--;
+                        if (proof.Outcome == "verified-equal") { result.VerifiedEqual++; result.SkippedEqual++; }
+                        else result.Synchronized++;
+                    }
+                }
+                result.Items.Add(new SyncItem { Name = proof.Path.Stem, Outcome = proof.Outcome, FilePath = proof.Proof.File?.FullName,
+                    WorkspaceFileSha256 = proof.InitialHash, StateBefore = "Equal", RefreshMessage = proof.RefreshMessage, FileChanged = proof.FileChanged,
+                    Verification = proof.Verification, NativeMessage = proof.Message, Error = proof.Outcome == "not-verified" ? proof.Message : null });
+                if (proof.Unconfirmed)
+                {
+                    var pending = stored.Skip(i + 1).Select(row => row.Path.Stem).ToArray();
+                    string remaining = pending.Length == 0 ? "" : " | not-attempted (" + pending.Length + "): " + string.Join(", ", pending);
+                    throw new InvalidOperationException("The synchronization outcome is unknown. " + proof.Message + remaining);
+                }
+                stopped |= proof.Interrupted;
+            }
+#endif
+            result.DataComplete &= result.UnverifiedEqual == 0 && result.Failed == 0 && !stopped;
         }
 
-        /// <summary>
-        /// <c>GetStatus()</c> returns a result object whose <c>ToString()</c> is the type name,
-        /// not the verdict; the verdict is its <c>CompareState</c>.
-        /// </summary>
-        private static VcCompareState StateOf(MappedObject mapped, out string error, out string refreshMessage, bool stopOnConnectionLoss = false)
+        private static void AddNotAttempted(SyncResult result, string name)
         {
+            result.NotAttempted++;
+            result.Items.Add(new SyncItem { Name = name, Outcome = "not-attempted" });
+        }
+
+        private static string FileDiagnostic(string text, string detail = null) => TiaMcp.Adapters.Contracts.NativeFailureText.BoundedLines(
+            new[] { TiaMcp.Adapters.Contracts.NativeFailureText.Compose(text, detail, Array.Empty<string>()) },
+            TiaMcp.Adapters.Contracts.NativeFailureText.WithoutLocalPaths)[0];
+
+        // GetStatus returns a comparison object. Its CompareState property contains the verdict.
+        private static VcCompareState StateOf(MappedObject mapped, out string error, out string refreshMessage,
+            out bool disconnected, bool stopOnConnectionLoss = false)
+        {
+            disconnected = false;
             error = null;
             refreshMessage = null;
             try
@@ -392,7 +554,11 @@ namespace TiaOpenness.Openness
             }
             catch (Exception ex) when (!stopOnConnectionLoss || !NativeRefusalProbe.UncertainConnection(ex))
             {
-                error = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(ex);
+                error = FileDiagnostic(ex.Message, ex.InnerException?.Message);
+#if !STUDIO_VCI_MODERN
+                disconnected = VersionControlPrimitives.DisposedStatus(ex);
+                if (disconnected) error = VersionControlPrimitives.DisconnectedMapping + ": " + error;
+#endif
                 return VcCompareState.Unknown;
             }
         }

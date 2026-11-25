@@ -68,7 +68,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 + " Native behaviorPolicy=current; V4 native acceptance is pending.")]
         public CallToolResult GetVersionControlStatusV4(
             [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",
-            [Description("changedOnly: default true — list only objects that are NOT in sync. false lists every mapped object.")] bool changedOnly = true)
+            [Description("changedOnly: default true lists differing, unknown and refused-refresh Equal rows. false lists every mapped object.")]
+                bool changedOnly = true)
             => LibraryToolContract.Run("GetVersionControlStatus", false, true, () =>
             {
                 return GetVersionControlStatus(workspaceName, changedOnly);
@@ -88,8 +89,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("direction: 'ProjectToWorkspace' exports; this build refuses 'WorkspaceToProject'.")] string direction = "ProjectToWorkspace",
             [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",
             [Description("dryRun: DEFAULT true — only reports what would change. Pass false to actually synchronize.")] bool dryRun = true,
-            [Description("changedOnly: true selects known differences. False also attempts Unknown objects. Equal objects are skipped in both " +
-                "modes.")] bool changedOnly =
+            [Description("changedOnly: true selects known differences. False also attempts Unknown objects. " +
+                "A refused refresh on Equal requires content verification in both modes.")] bool changedOnly =
                 true)
             => LibraryToolContract.Run("SynchronizeVersionControlWorkspace", !dryRun, true, () =>
             {

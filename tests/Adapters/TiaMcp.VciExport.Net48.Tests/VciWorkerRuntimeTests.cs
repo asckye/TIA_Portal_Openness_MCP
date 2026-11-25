@@ -24,6 +24,11 @@ internal static class VciWorkerRuntimeTests
                 }));
                 return 0;
             }
+            if (args.Length is 1 or 2 && args[0] == "--export-replies")
+            {
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(VciExportFixture.Run(workspace, args.Length == 2 && args[1] == "16")));
+                return 0;
+            }
             Console.WriteLine(runtime);
             string file = Path.Combine(workspace.FullName, "Motor.s7dcl");
             File.Copy(Path.Combine(AppContext.BaseDirectory, "FC_Add_SD.s7dcl"), file);
@@ -67,6 +72,8 @@ internal static class VciWorkerRuntimeTests
         {
             if ((File.GetAttributes(link) & FileAttributes.ReparsePoint) == 0) throw new IOException("Expected a junction.");
             CheckRefusal(workspace, "junction", 1);
+            if (VciExportPolicy.FileExists(new FileInfo(Path.Combine(link, "Table.xml"))) != null)
+                throw new IOException("A missing file below a junction must never be repaired.");
         }
         finally { Directory.Delete(link); }
     }

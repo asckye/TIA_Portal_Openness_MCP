@@ -19,6 +19,46 @@ public sealed class StudioContractTests
         Assert.Equal(expected, StudioGoldenSamples.Serialize(StudioGoldenSamples.All(legacy: true).Single(s => s.Name == name).Value));
     }
 
+    [Fact]
+    public void Merged_sync_samples_match_both_Studio_wire_formats()
+    {
+        var root = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
+        bool capture = Environment.GetEnvironmentVariable("TIA_MCP_UPDATE_GOLDEN") == "1";
+        void Verify(string relative, Dictionary<string, string> samples)
+        {
+            string path = Path.Combine(root, relative);
+            var lines = File.ReadAllLines(path);
+            using var frozen = JsonDocument.Parse(File.ReadAllText(path));
+            foreach (var (name, wire) in samples)
+            {
+                var expected = frozen.RootElement.GetProperty(name).GetRawText();
+                if (capture)
+                {
+                    int index = Array.FindIndex(lines, line => line.StartsWith("  " + JsonSerializer.Serialize(name) + ": ", StringComparison.Ordinal));
+                    lines[index] = lines[index].Replace(expected, wire, StringComparison.Ordinal);
+                }
+                else Assert.Equal(expected, wire);
+            }
+            if (capture) File.WriteAllText(path, string.Join("\n", lines) + "\n");
+        }
+
+        var samples = StudioGoldenSamples.All(legacy: true).Where(s => s.Name.StartsWith("SyncItem.") || s.Name.StartsWith("SyncResult."));
+        Verify("tests/Adapters/TiaMcp.Adapters.Contracts.Tests/StudioGoldenWire.json",
+            samples.ToDictionary(s => s.Name, s => JsonSerializer.Serialize(StudioGoldenSamples.Serialize(s.Value))));
+
+        var item = new TiaOpenness.Contracts.Models.SyncItem { Name = "轴", Outcome = "synchronized", FilePath = @"D:\git\轴.xml",
+            StateBefore = "Equal", Verification = "content-match", FileChanged = true, RefreshMessage = "Refresh refused" };
+        var result = new TiaOpenness.Contracts.Models.SyncResult { WorkspaceName = "LineGit", RootPath = @"D:\git",
+            Direction = TiaOpenness.Contracts.Models.SyncDirection.WorkspaceToProject, Synchronized = 1, SkippedEqual = 2, VerifiedEqual = 1,
+            Items = [new() { Name = "轴", Outcome = "synchronized", NotCompared = ["VendorValue"] }] };
+        Verify("tests/Studio/TiaOpenness.Core.Tests/BridgeJsonGolden.json", new()
+        {
+            ["SyncItem"] = TiaOpenness.Contracts.Rpc.BridgeJson.Serialize(item),
+            ["SyncResult"] = TiaOpenness.Contracts.Rpc.BridgeJson.Serialize(result),
+        });
+        if (capture) Assert.Fail("Sync goldens regenerated. Unset TIA_MCP_UPDATE_GOLDEN and rerun to verify.");
+    }
+
     [Theory]
     [MemberData(nameof(DtoTypes))]
     public void StudioDtosPreserveMemberOrderTypesAndEnumValues(Type type)
