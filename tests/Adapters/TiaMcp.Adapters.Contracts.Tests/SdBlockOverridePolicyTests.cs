@@ -108,6 +108,70 @@ public sealed class SdBlockOverridePolicyTests
         Assert.Equal(new[] { "HeaderVersion", "MemoryLayout" }, SdBlockOverridePolicy.Compare(before, after, none).Select(d => d["name"]));
     }
 
+    [Theory]
+    [InlineData("VAR\n    Type : Int;\n    Function : Bool;\n    Data_Block : Word;\nEND_VAR")]
+    [InlineData("IF #Type = 1 THEN\n    #s.type := 2;\nEND_IF;")]
+    [InlineData("#msg.Function := 1;")]
+    [InlineData("DB.Data_Block := %Type;")]
+    [InlineData("{ Attribute := \"FUNCTION_BLOCK\"; Type := \"Int\" }")]
+    [InlineData("REGION Evaluate type of part\nEND_REGION")]
+    [InlineData("REGION Bob's data\nEND_REGION")]
+    public void Member_names_qualified_operands_and_region_names_are_not_declarations(string body)
+    {
+        var header = SdBlockDeclaration.Scan("FUNCTION_BLOCK \"Real\"\n" + body + "\nEND_FUNCTION_BLOCK");
+        Assert.Equal("FUNCTION_BLOCK", header.RequireBlock("Real"));
+        Assert.Equal(("FUNCTION_BLOCK", "Real"), Assert.Single(header.Declarations));
+    }
+
+    [Theory]
+    [InlineData("\r\n")]
+    [InlineData("\n")]
+    [InlineData("\r")]
+    public void Apostrophes_in_regions_do_not_hide_a_second_declaration(string newline)
+    {
+        string text = string.Join(newline, "FUNCTION_BLOCK First", "    REGION Bob's data", "    END_REGION", "END_FUNCTION_BLOCK",
+            "FUNCTION_BLOCK Second", "    REGION Alice's data", "    END_REGION", "END_FUNCTION_BLOCK");
+        var scanned = SdBlockDeclaration.Scan(text);
+        Assert.Equal(new[] { "First", "Second" }, scanned.Declarations.Select(item => item.Name));
+        Assert.Throws<AdapterPreconditionException>(() => scanned.RequireBlock("First"));
+    }
+
+    [Fact]
+    public void Region_titles_between_blocks_end_before_the_next_header()
+    {
+        string text = "REGION Bob's blocks\nFUNCTION_BLOCK First\nEND_FUNCTION_BLOCK\nEND_REGION\n" +
+            "REGION Alice's blocks\nFUNCTION_BLOCK Second\nEND_FUNCTION_BLOCK\nEND_REGION";
+        var header = SdBlockDeclaration.Scan(text);
+        Assert.Equal(new[] { "First", "Second" }, header.Declarations.Select(item => item.Name));
+        Assert.Throws<AdapterPreconditionException>(() => header.RequireBlock("First"));
+    }
+
+    [Theory]
+    [InlineData("'text\nEND_FUNCTION_BLOCK\nFUNCTION_BLOCK Hidden\n'")]
+    [InlineData("\"name\rEND_FUNCTION_BLOCK\rFUNCTION_BLOCK Hidden\r\"")]
+    [InlineData("'text$\r\nEND_FUNCTION_BLOCK\nFUNCTION_BLOCK Hidden\n'")]
+    [InlineData("FUNCTION_BLOCK Hidden\nEND_FUNCTION_BLOCK")]
+    [InlineData("REGION label\u2028END_FUNCTION_BLOCK\u2028FUNCTION_BLOCK Hidden")]
+    [InlineData("// comment\u0085END_FUNCTION_BLOCK\u0085FUNCTION_BLOCK Hidden")]
+    [InlineData("{ attribute := \"value\"\nEND_FUNCTION_BLOCK")]
+    public void Ambiguous_input_cannot_authorize_an_import(string body)
+    {
+        Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan("FUNCTION_BLOCK Real\n" + body).RequireBlock("Real"));
+    }
+
+    [Theory]
+    [InlineData("DATA_BLOCK \"MotorDB\"\n    \"MotorFB\"\nEND_DATA_BLOCK", "MotorFB")]
+    [InlineData("DATA_BLOCK MotorDB MotorFB\nEND_DATA_BLOCK", "MotorFB")]
+    [InlineData("DATA_BLOCK MotorDB\nVAR\n    Type : Int;\nEND_VAR\nEND_DATA_BLOCK", null)]
+    public void Db_admission_distinguishes_an_instance_from_a_global(string text, string? expected)
+    {
+        var header = SdBlockDeclaration.Scan(text);
+        Assert.Equal("DATA_BLOCK", header.RequireBlock("MotorDB"));
+        Assert.Equal(expected, header.InstanceType);
+        var global = new Dictionary<string, object?> { ["Type"] = "GlobalDB" };
+        Assert.Equal(expected == null, SdBlockOverridePolicy.Refusal("MotorDB", "DATA_BLOCK", true, false, global, header.InstanceType) == null);
+    }
+
     [Fact]
     public void Comments_strings_and_repeated_declarations_cannot_select_a_different_block()
     {

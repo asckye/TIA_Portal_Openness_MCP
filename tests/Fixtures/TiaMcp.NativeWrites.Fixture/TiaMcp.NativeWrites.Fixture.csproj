@@ -18,6 +18,8 @@
     <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Adapter.Imports.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Evidence.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSdBlockSnapshot.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Documents.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcObjectPath.cs" />
     <Compile Include="../../../src/Shared/NativeExportPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetwork.MappingRules.cs" />

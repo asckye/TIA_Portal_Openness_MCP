@@ -14,49 +14,95 @@ namespace TiaMcp.Adapters.Contracts
         public bool TextualInterface { get; private set; }
         public Dictionary<string, string> Pragmas { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+        public string? InstanceType { get; private set; }
+
+        private static bool BlockKeyword(string word) =>
+            word is "ORGANIZATION_BLOCK" or "FUNCTION" or "FUNCTION_BLOCK" or "DATA_BLOCK" or "TYPE";
+
         public static SdBlockDeclaration Scan(string text)
         {
+            // An alternate line separator can end a comment or REGION in one reader and conceal the next declaration in another.
+            foreach (char c in text)
+                if (c is '\u2028' or '\u2029' || char.IsControl(c) && c is not ('\t' or '\r' or '\n'))
+                    throw Invalid("Unsupported SD control character or line separator.");
             var result = new SdBlockDeclaration();
             using var tokens = Tokens(text).GetEnumerator();
-            bool header = true, inAttributes = false, afterName = false;
+            string? block = null;
+            int braces = 0, previousLine = -1;
+            bool previousQualifier = false, afterDeclarationName = false;
+            bool awaitingDbType = false, possibleNestedDeclaration = false;
             while (tokens.MoveNext())
             {
-                var (token, value) = tokens.Current;
-                if (afterName && token == Token.Symbol && value is not (":" or "{" or ";"))
+                var (token, value, line) = tokens.Current;
+                bool newLine = line != previousLine;
+                previousLine = line;
+                string word = token == Token.Word ? value.ToUpperInvariant() : "";
+                bool qualified = previousQualifier && !newLine;
+                previousQualifier = token == Token.Symbol && value is "#" or "." or "%";
+                // A bare keyword followed by a name could start a second block whose predecessor has no END_.
+                if (possibleNestedDeclaration && token is (Token.Word or Token.Identifier))
+                    throw Invalid("Ambiguous declaration inside " + block + " before its END_ keyword.");
+                possibleNestedDeclaration = false;
+
+                if (afterDeclarationName && token == Token.Symbol && value is not (":" or "{" or ";")
+                    && !(newLine && value is ("#" or "%")))
                     throw Invalid("The declared block name must be one exact identifier.");
-                afterName = false;
-                if (token != Token.Word)
+                afterDeclarationName = false;
+                if (token == Token.Region)
                 {
-                    if (token == Token.Symbol && value == "{") inAttributes = true;
-                    if (token == Token.Symbol && value == "}") inAttributes = false;
+                    if (braces != 0) throw Invalid("Unexpected REGION inside an SD attribute list.");
                     continue;
                 }
-                string kind = value.ToUpperInvariant();
-                result.TextualInterface |= kind is "S7_TEXTUALINTERFACE" or "S7_TEXTUAL" or "TEXTUALINTERFACE";
-                result.ExpandedLanguage |= kind is "SCL" or "FBD";
-                if (inAttributes && kind is ("S7_LANGUAGE" or "S7_PREFERREDLANGUAGE" or "S7_EDITORMODE"))
+                if (token == Token.Symbol && value == "{") { braces++; continue; }
+                if (token == Token.Symbol && value == "}")
                 {
-                    if (!tokens.MoveNext() || tokens.Current != (Token.Symbol, ":=") || !tokens.MoveNext() ||
-                        tokens.Current.Kind is not (Token.Identifier or Token.Word))
-                        throw Invalid("Invalid language pragma " + value + ".");
-                    result.ExpandedLanguage |= tokens.Current.Value.ToUpperInvariant() is "SCL" or "FBD";
+                    if (--braces < 0) throw Invalid("Unmatched SD closing brace.");
+                    continue;
                 }
-                else if (kind is "ORGANIZATION_BLOCK" or "FUNCTION" or "FUNCTION_BLOCK" or "DATA_BLOCK" or "TYPE")
+                if (!qualified) result.TextualInterface |= word is "S7_TEXTUALINTERFACE" or "S7_TEXTUAL" or "TEXTUALINTERFACE";
+                if (braces > 0)
                 {
-                    header = false;
+                    bool language = word is "S7_LANGUAGE" or "S7_PREFERREDLANGUAGE" or "S7_EDITORMODE";
+                    bool headerPragma = result.Declarations.Count == 0 && word is ("S7_BLOCKNUMBER" or "S7_VERSION" or "S7_OPTIMIZED");
+                    if (qualified || !(language || headerPragma)) continue;
+                    if (!tokens.MoveNext() || tokens.Current is not (Token.Symbol, ":=", _) || !tokens.MoveNext()
+                        || tokens.Current.Kind is not (Token.Identifier or Token.Word)) throw Invalid("Invalid block pragma " + value + ".");
+                    previousLine = tokens.Current.Line;
+                    if (language) result.ExpandedLanguage |= tokens.Current.Value.ToUpperInvariant() is "SCL" or "FBD";
+                    else
+                    {
+                        string key = word switch { "S7_BLOCKNUMBER" => "S7_BlockNumber", "S7_VERSION" => "S7_Version", _ => "S7_Optimized" };
+                        if (result.Pragmas.ContainsKey(key)) throw Invalid("Duplicate block pragma " + key + ".");
+                        result.Pragmas.Add(key, tokens.Current.Value);
+                    }
+                    continue;
+                }
+                if (awaitingDbType)
+                {
+                    if (token == Token.Symbol && value == ":") continue;
+                    if (token == Token.Identifier || token == Token.Word && word is not ("VAR" or "STRUCT" or "BEGIN" or "END_DATA_BLOCK"))
+                        result.InstanceType = value;
+                    awaitingDbType = false;
+                }
+                if (qualified || token != Token.Word) continue;
+                result.ExpandedLanguage |= word is "SCL" or "FBD";
+                if (word.StartsWith("END_", StringComparison.Ordinal) && BlockKeyword(word.Substring(4)))
+                {
+                    if (word != "END_" + block) throw Invalid("Unexpected " + word + ".");
+                    block = null;
+                }
+                else if (BlockKeyword(word))
+                {
+                    if (block != null) { possibleNestedDeclaration = true; continue; }
                     if (!tokens.MoveNext() || tokens.Current.Kind is not (Token.Identifier or Token.Word)) throw Invalid("Missing declaration name.");
-                    result.Declarations.Add((kind, tokens.Current.Value));
-                    afterName = true;
-                }
-                else if (header && inAttributes && kind is ("S7_BLOCKNUMBER" or "S7_VERSION" or "S7_OPTIMIZED"))
-                {
-                    value = kind switch { "S7_BLOCKNUMBER" => "S7_BlockNumber", "S7_VERSION" => "S7_Version", _ => "S7_Optimized" };
-                    if (!tokens.MoveNext() || tokens.Current != (Token.Symbol, ":=") || !tokens.MoveNext() ||
-                        tokens.Current.Kind is not (Token.Identifier or Token.Word) || result.Pragmas.ContainsKey(value))
-                        throw Invalid("Invalid or duplicate block pragma " + value + ".");
-                    result.Pragmas.Add(value, tokens.Current.Value);
+                    previousLine = tokens.Current.Line;
+                    result.Declarations.Add((word, tokens.Current.Value));
+                    block = word;
+                    afterDeclarationName = true;
+                    awaitingDbType = word == "DATA_BLOCK";
                 }
             }
+            if (braces != 0) throw Invalid("Unclosed SD attribute list.");
             return result;
         }
 
@@ -76,14 +122,15 @@ namespace TiaMcp.Adapters.Contracts
 
         private static AdapterPreconditionException Invalid(string message) => new(message, "name");
 
-        private enum Token { Word, Symbol, Identifier, String }
+        private enum Token { Word, Symbol, Identifier, String, Region }
 
-        private static IEnumerable<(Token Kind, string Value)> Tokens(string text)
+        private static IEnumerable<(Token Kind, string Value, int Line)> Tokens(string text)
         {
-            int i = 0;
+            int i = 0, lineOffset = 0, previousLine = -1;
             while (i < text.Length)
             {
                 char c = text[i++];
+                if (c is '\r' or '\n') { lineOffset = i; continue; }
                 if (char.IsWhiteSpace(c) || c == '\uFEFF') continue;
                 if (c == '/' && i < text.Length && text[i] == '/')
                 {
@@ -98,40 +145,50 @@ namespace TiaMcp.Adapters.Contracts
                     while (i < text.Length && depth > 0)
                     {
                         char next = text[i++];
+                        if (next is '\r' or '\n') lineOffset = i;
                         if (next == c && i < text.Length && text[i] == '*') { depth++; i++; }
                         else if (next == '*' && i < text.Length && text[i] == end) { depth--; i++; }
                     }
                     if (depth != 0) throw Invalid("Unclosed SD comment.");
                     continue;
                 }
+                bool lineStart = previousLine != lineOffset;
+                previousLine = lineOffset;
                 if (c is '"' or '\'')
                 {
                     var value = new StringBuilder();
                     while (true)
                     {
-                        if (i == text.Length) throw Invalid("Unclosed SD quoted token.");
+                        if (i == text.Length || text[i] is '\r' or '\n') throw Invalid("Unclosed SD quoted token before end of line.");
                         char next = text[i++];
                         if (next == c && (i == text.Length || text[i] != c)) break;
                         if ((next == c || next == '$') && i < text.Length)
                         {
                             // Preserve the spelling. Escaped identifiers must never alias the inspected basename.
+                            if (text[i] is '\r' or '\n') throw Invalid("Unclosed SD escape before end of line.");
                             value.Append(next);
                             next = text[i++];
                         }
                         value.Append(next);
                     }
                     // Keep quoted tokens distinct from punctuation and keywords.
-                    yield return (c == '"' ? Token.Identifier : Token.String, value.ToString());
+                    yield return (c == '"' ? Token.Identifier : Token.String, value.ToString(), lineOffset);
                     continue;
                 }
                 if (char.IsLetterOrDigit(c) || c == '_')
                 {
                     int start = i - 1;
                     while (i < text.Length && (char.IsLetterOrDigit(text[i]) || text[i] == '_')) i++;
-                    yield return (Token.Word, text.Substring(start, i - start));
+                    string word = text.Substring(start, i - start);
+                    if (word.Equals("REGION", StringComparison.OrdinalIgnoreCase) && lineStart)
+                    {
+                        while (i < text.Length && text[i] is not ('\r' or '\n')) i++;
+                        yield return (Token.Region, word, lineOffset);
+                    }
+                    else yield return (Token.Word, word, lineOffset);
                 }
-                else if (c == ':' && i < text.Length && text[i] == '=') { i++; yield return (Token.Symbol, ":="); }
-                else yield return (Token.Symbol, c.ToString());
+                else if (c == ':' && i < text.Length && text[i] == '=') { i++; yield return (Token.Symbol, ":=", lineOffset); }
+                else yield return (Token.Symbol, c.ToString(), lineOffset);
             }
         }
     }
@@ -147,19 +204,26 @@ namespace TiaMcp.Adapters.Contracts
             ["IsOnlyStoredInLoadMemory"] = false, ["IsWriteProtectedInAS"] = false, ["DBAccessibleFromOPCUA"] = true,
             ["DBAccessibleFromWebserver"] = true, ["DownloadWithoutReinit"] = false, ["IsRetainMemResEnabled"] = false, ["MemoryReserve"] = 100
         };
+        public static bool RequiredAttribute(string key, string type) =>
+            key is "Type" or "Number" or "AutoNumber" or "ProgrammingLanguage" or "IsKnowHowProtected" or "IsWriteProtected" or "IsSafetyBlock" or "IsFailsafe"
+            || type == "OB" && key == "SecondaryType" || (type == "GlobalDB" ? DbDefaults.ContainsKey(key) : key == "IsIECCheckEnabled");
+
         public static bool Volatile(string key) => key is "CodeModifiedDate" or "CompileDate" or "CreationDate" or "DownloadDate"
             or "InterfaceModifiedDate" or "ModifiedDate" or "ParameterModified" or "StructureModified" or "IsConsistent"
             or "LoadMemoryLength" or "WorkMemoryLength";
 
-        public static string? Refusal(string name, string kind, bool replace, bool elsewhere, IReadOnlyDictionary<string, object?>? before)
+        public static string? Refusal(string name, string kind, bool replace, bool elsewhere, IReadOnlyDictionary<string, object?>? before,
+            string? instanceType = null)
         {
             string Refuse(string property, object? current, object? expected) => $"Block '{name}': {property} = {current ?? "<absent>"}; " +
                 $"SIMATIC SD import: {expected}. Use a SimaticML export with ImportPlcBlock, ImportPlcBlockVerified or ImportPlcBlocksFromDirectory.";
             if (kind == "ORGANIZATION_BLOCK" && before == null) return Refuse("SecondaryType", null, "ProgramCycle");
             if (replace && elsewhere) return Refuse("group", "another group", "same-name overwrite outside the requested group");
-            if (!replace || before == null) return null;
+            if (before == null) return null;
             object? Get(string key) => before.TryGetValue(key, out var value) ? value : null;
             string type = Get("Type") as string ?? "";
+            if (type == "GlobalDB" && instanceType != null) return Refuse("Type", type, "InstanceDB of " + instanceType);
+            if (!replace) return null;
             if (type == "OB" && !Equals(Get("SecondaryType"), "ProgramCycle")) return Refuse("SecondaryType", Get("SecondaryType"), "ProgramCycle");
             foreach (var key in new[] { "IsKnowHowProtected", "IsWriteProtected", "IsSafetyBlock", "IsFailsafe" })
                 if (before.ContainsKey(key) && !Equals(Get(key), false)) return Refuse(key, Get(key), "preservation unsupported");
@@ -195,6 +259,7 @@ namespace TiaMcp.Adapters.Contracts
                 object? old = null;
                 bool presentBefore = before?.TryGetValue(key, out old) == true;
                 bool presentAfter = after.TryGetValue(key, out var actual);
+                if (key == "AutoNumber" && old is true && actual is false && declaration.Pragmas.ContainsKey("S7_BlockNumber")) continue;
                 object? expected = old;
                 if (key == "Number" && declaration.Pragmas.TryGetValue("S7_BlockNumber", out string? requested))
                     expected = int.Parse(requested, CultureInfo.InvariantCulture);

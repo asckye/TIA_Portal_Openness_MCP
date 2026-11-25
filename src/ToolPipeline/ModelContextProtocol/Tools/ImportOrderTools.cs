@@ -245,6 +245,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (current) warnings
                 .Add(new Warning(WarningCode.UnverifiedBehavior, BehaviorCapabilities.CurrentDisclosure,
                         new Dictionary<string, JsonElement>()));
+            if (tool == "ManagePlcBlockDocuments" && data?["warning"] is JsonValue documentWarning)
+                warnings.Add(new Warning(WarningCode.NativeWarning, documentWarning.ToString(), new Dictionary<string, JsonElement>()));
             if (completeness == Completeness.Partial) warnings
                 .Add(new Warning(WarningCode.IncompleteData, "The retained result is incomplete; inspect the per-item evidence.", new Dictionary<string,
                         JsonElement>()));

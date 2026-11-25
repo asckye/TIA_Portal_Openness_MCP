@@ -51,7 +51,7 @@ namespace Siemens.Engineering.SW.Alarm
 namespace Siemens.Engineering.SW.Alarm.TextLists { }
 namespace TiaMcp.Adapters.Native.Plc
 {
-    internal sealed class ImportSession(Exception? failure)
+    internal sealed partial class ImportSession(Exception? failure)
     {
         internal readonly AlarmClassDataProvider Classes = new(failure);
         internal readonly PlcAlarmTextListProvider Texts = new(failure);

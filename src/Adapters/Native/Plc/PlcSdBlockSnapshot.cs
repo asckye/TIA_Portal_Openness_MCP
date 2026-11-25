@@ -11,42 +11,86 @@ using Documents = TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives;
 
 namespace TiaMcp.Adapters.Native.Plc
 {
-    // Keep each inspected declaration read-locked until the corresponding native import returns.
-    internal sealed class SdDeclarationFiles : IDisposable
+    internal sealed class SdDeclarationFiles
     {
-        private readonly List<FileStream> files = new();
+        private readonly Dictionary<string, (string Code, string? Resource)> admitted = new(StringComparer.OrdinalIgnoreCase);
+
         internal string Read(FileInfo file)
         {
-            var stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
-            files.Add(stream);
-            using var reader = new StreamReader(stream, System.Text.Encoding.UTF8, true, 4096, leaveOpen: true);
-            return reader.ReadToEnd();
+            using var stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+            string digest = Hash(stream);
+            stream.Position = 0;
+            using var reader = new StreamReader(stream, System.Text.Encoding.UTF8, true);
+            string text = reader.ReadToEnd();
+            admitted.Add(file.FullName, (digest, ResourceHash(file)));
+            return text;
         }
-        public void Dispose() { foreach (var file in files) file.Dispose(); }
+
+        internal void RequireUnchanged(FileInfo file)
+        {
+            var expected = admitted[file.FullName];
+            try
+            {
+                using var stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+                if (Hash(stream) == expected.Code && ResourceHash(file) == expected.Resource) return;
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                throw AdapterPreconditionException.Failed("Cannot recheck the admitted SD files for " + file.Name + ": " + error.Message,
+                    "sd-input-changed", "importPath");
+            }
+            throw AdapterPreconditionException.Failed("SD declaration or resource changed after admission for " + file.Name + ".",
+                "sd-input-changed", "importPath");
+        }
+
+        private static string? ResourceHash(FileInfo file)
+        {
+            string resource = Path.ChangeExtension(file.FullName, ".s7res");
+            // Fail admission if the directory cannot be inspected or a present resource cannot be opened.
+            if (!Directory.EnumerateFileSystemEntries(file.DirectoryName!, Path.GetFileName(resource)).Any()) return null;
+            using var stream = File.OpenRead(resource);
+            return Hash(stream);
+        }
+
+        private static string Hash(Stream stream)
+        {
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            return Convert.ToBase64String(sha.ComputeHash(stream));
+        }
     }
 
     internal sealed class PlcSdBlockSnapshot
     {
         private readonly SdBlockDeclaration declaration;
         private readonly string name;
-        private readonly Dictionary<string, object?>? before;
+        private Dictionary<string, object?>? before;
+        private readonly Func<PlcBlock?> find;
+        private readonly Func<bool> elsewhere;
         private readonly bool replace;
-        internal PlcBlock? Existing { get; }
-        internal string? Refusal { get; }
+        internal PlcBlock? Existing { get; private set; }
+        internal string? Refusal { get; private set; }
         internal Dictionary<string, object?> Evidence { get; } = new();
 
         internal PlcSdBlockSnapshot(string text, string name, Func<PlcBlock?> find, bool replace, Func<bool> elsewhere)
         {
             declaration = SdBlockDeclaration.Scan(text);
-            string kind = declaration.RequireBlock(name);
+            declaration.RequireBlock(name);
             this.name = name;
-            Existing = find();
+            this.find = find;
+            this.elsewhere = elsewhere;
             this.replace = replace;
-            Evidence["existingBlock"] = null;
             Evidence["notCarried"] = SdBlockOverridePolicy.NotCarried;
             Evidence["comparisonScope"] = "SD text comparison covers .s7dcl/.s7res after line-ending normalization. " +
                 "OB kind, number and DB attributes require separate block property readback.";
             Evidence["contentVerified"] = null;
+            Inspect();
+        }
+
+        private void Inspect()
+        {
+            Existing = find();
+            before = null;
+            Evidence["existingBlock"] = null;
             try
             {
                 if (Existing != null)
@@ -54,7 +98,8 @@ namespace TiaMcp.Adapters.Native.Plc
                     before = Read(Existing);
                     Evidence["existingBlock"] = BlockRow(before);
                 }
-                Refusal = SdBlockOverridePolicy.Refusal(name, kind, replace, replace && elsewhere(), before);
+                Refusal = SdBlockOverridePolicy.Refusal(name, declaration.Declarations[0].Kind, replace,
+                    replace && elsewhere(), before, declaration.InstanceType);
             }
             catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error))
             {
@@ -80,6 +125,22 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             if (!dryRun) foreach (var plan in plans.Values) plan.Backup();
             return plans;
+        }
+
+        // A previous batch import can renumber or replace this target after the initial admission and backup.
+        internal void RefreshForImport()
+        {
+            var admitted = before;
+            var previousTarget = Existing;
+            Inspect();
+            RequireAdmission();
+            if (!replace || (before == null && admitted == null)) return;
+            if (Equals(previousTarget, Existing) && before != null && admitted != null && before.Count == admitted.Count &&
+                before.All(pair => admitted.TryGetValue(pair.Key, out var value) && Equals(value, pair.Value))) return;
+            if (Evidence.TryGetValue("recoveryDirectory", out var initial)) Evidence["initialRecoveryDirectory"] = initial;
+            Evidence.Remove("recoveryDirectory");
+            Evidence.Remove("backupWarning");
+            Backup();
         }
 
         internal void RequireAdmission()
@@ -118,6 +179,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         null or string or decimal or DateTime or TimeSpan or Guid => value,
                         Enum or Version => value.ToString(),
                         _ when value.GetType().IsPrimitive => value,
+                        _ when !SdBlockOverridePolicy.RequiredAttribute(reading, block.GetType().Name) => value.GetType().FullName,
                         _ => throw new InvalidOperationException("Unsupported attribute value type " + value.GetType().FullName)
                     };
                 }
@@ -161,10 +223,21 @@ namespace TiaMcp.Adapters.Native.Plc
             var imported = Find();
             var after = Read(imported);
             string? setterFailure = null;
-            bool restore = replace && before != null && !declaration.Pragmas.ContainsKey("S7_BlockNumber") && !Equals(before["Number"], after["Number"]);
+            string restoreProperty = "Number";
+            bool restore = replace && before != null && !declaration.Pragmas.ContainsKey("S7_BlockNumber")
+                && (!Equals(before["Number"], after["Number"]) || !Equals(before["AutoNumber"], after["AutoNumber"]));
             if (restore)
             {
-                try { RestoreNumber(imported, (int)before!["Number"]!, (bool)before["AutoNumber"]!); }
+                try
+                {
+                    if (!Equals(before!["Number"], after["Number"]))
+                        RestoreNumber(imported, (int)before!["Number"]!, (bool)before["AutoNumber"]!);
+                    else
+                    {
+                        restoreProperty = "AutoNumber";
+                        Documents.SetAutoNumber(imported, (bool)before["AutoNumber"]!);
+                    }
+                }
                 catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error)) { setterFailure = error.Message; }
                 after = Read(Find());
             }
@@ -172,12 +245,18 @@ namespace TiaMcp.Adapters.Native.Plc
             Evidence["numberRestored"] = restore && setterFailure == null && Equals(before!["Number"], after["Number"])
                 && Equals(before["AutoNumber"], after["AutoNumber"]);
             var differences = SdBlockOverridePolicy.Compare(replace ? before : null, after, declaration);
+            if (before == null && differences.SingleOrDefault(item => Equals(item["name"], "Number")) is { } number)
+            {
+                Evidence["warning"] = $"SD requested block number {number["expected"]}. TIA assigned {number["after"]} to new block '{name}'.";
+                differences.Remove(number);
+            }
             if (setterFailure != null)
             {
-                var difference = differences.FirstOrDefault(item => Equals(item["name"], "Number"));
+                var difference = differences.FirstOrDefault(item => Equals(item["name"], restoreProperty));
                 if (difference == null)
                 {
-                    difference = new() { ["name"] = "Number", ["before"] = before!["Number"], ["after"] = after["Number"], ["restored"] = false };
+                    difference = new() { ["name"] = restoreProperty, ["before"] = before![restoreProperty],
+                        ["after"] = after[restoreProperty], ["restored"] = false };
                     differences.Add(difference);
                 }
                 difference["restoreError"] = setterFailure;

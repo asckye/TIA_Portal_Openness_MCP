@@ -1,29 +1,14 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using Siemens.Engineering;
-using Siemens.Engineering.HW.Features;
-using Siemens.Engineering.Library.MasterCopies;
-using Siemens.Engineering.Library.Types;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW.Types;
 using TiaMcp.Adapters.Contracts;
-using TiaMcp.Adapters.Hardware;
 using TiaMcpServer.ModelContextProtocol;
 using EngineeringGroupOperations = TiaMcp.Adapters.Native.Plc.PlcGroupOperations;
 using EngineeringScalarProperties = TiaMcp.Adapters.Native.Plc.PlcB5Scalar;
 using NativeResultState = TiaMcp.Adapters.Native.Plc.PlcB5Result;
-using NativeFileOutput = TiaMcp.Adapters.Native.Plc.PlcSourceFileOutput;
-using ResponseMeta = TiaMcp.Adapters.Native.Plc.PlcB5Meta;
 using PortalException = TiaMcp.Adapters.Contracts.PlcSoftwareException;
 
 namespace TiaMcp.Adapters.Native.Plc
@@ -96,7 +81,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 var declaration = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(Path.Combine(directoryPath, name + ".s7dcl")));
                 if (!declaration.Exists) throw new FileNotFoundException("SIMATIC SD declaration missing.", declaration.FullName);
-                using var files = new SdDeclarationFiles();
+                var files = new SdDeclarationFiles();
                 string text = files.Read(declaration);
                 var option = (ImportDocumentOptions)EngineeringScalarProperties.ConvertValue(PlcB5Scalar.Value(importOption), typeof(ImportDocumentOptions))!;
                 bool replace = (option & ImportDocumentOptions.Override) != 0;
@@ -107,6 +92,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 plan.RequireAdmission();
                 plan.Backup();
                 foreach (var pair in plan.Evidence) meta[pair.Key] = pair.Value;
+                files.RequireUnchanged(declaration);
                 meta["mayHaveChanged"] = true;
                 var result = InvocationJournal.Native("ScopedBlock.ImportFromDocuments", () => group.Blocks.ImportFromDocuments(directory, name, option));
                 meta["writeReturned"] = true;

@@ -19,7 +19,14 @@ namespace TiaMcpServer.Siemens
 
         internal static JsonObject DocumentPreflight(string text, int major, int? installedUpdate)
         {
-            var header = TiaMcp.Adapters.Contracts.SdBlockDeclaration.Scan(text);
+            TiaMcp.Adapters.Contracts.SdBlockDeclaration header;
+            string? scanProblem = null;
+            try { header = TiaMcp.Adapters.Contracts.SdBlockDeclaration.Scan(text); }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException error)
+            {
+                scanProblem = error.Message;
+                header = new TiaMcp.Adapters.Contracts.SdBlockDeclaration();
+            }
             var warnings = new JsonArray();
             if (major == 20 && (installedUpdate == null || installedUpdate < 4))
                 warnings
@@ -36,7 +43,7 @@ namespace TiaMcpServer.Siemens
             foreach (var entry in header.Declarations) declarations.Add(new JsonObject { ["kind"] = entry.Kind, ["name"] = entry.Name });
             var pragmas = new JsonObject();
             foreach (var entry in header.Pragmas) pragmas[entry.Key] = entry.Value;
-            return new JsonObject { ["declarations"] = declarations, ["pragmas"] = pragmas, ["major"] = major, ["installedUpdate"] = installedUpdate,
+            var inspection = new JsonObject { ["declarations"] = declarations, ["pragmas"] = pragmas, ["major"] = major, ["installedUpdate"] = installedUpdate,
                 ["expandedLanguageDetected"] = header.ExpandedLanguage, ["textualInterfaceDetected"] = header.TextualInterface,
                 ["patchSupportKnown"] = major > 20 || major == 20 && installedUpdate >= 4,
                 ["losslessRoundTrip"] = false, ["warnings"] = warnings,
@@ -45,6 +52,12 @@ namespace TiaMcpServer.Siemens
                     "exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2",
                 ["updateSource"] = "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/" +
                     "improvements-in-step-7/improvements-in-update-4" };
+            if (scanProblem != null)
+            {
+                inspection["scanProblem"] = scanProblem;
+                warnings.Add(scanProblem);
+            }
+            return inspection;
         }
         internal static bool ExactNamesPresent(IEnumerable<string> imported, IEnumerable<string> actual)
         {

@@ -90,6 +90,49 @@ public sealed class VerifiedImportOutcomeTests
         Assert.Contains("/v21/", (string?)result["source"]);
     }
 
+    [Theory]
+    [InlineData("plugin/skill/lad-cookbook/MCPVerify_FB_LAD_v3.s7dcl", "FUNCTION_BLOCK")]
+    [InlineData("plugin/skill/lad-cookbook/MCPVerify_FC_LAD.s7dcl", "FUNCTION")]
+    [InlineData("plugin/skill/lad-cookbook/MCPVerify_Mixed_LADSCL.s7dcl", "FUNCTION_BLOCK")]
+    [InlineData("reference/tool-examples/languages/DB_Example.s7dcl", "DATA_BLOCK")]
+    [InlineData("reference/tool-examples/languages/FB_LadStart.s7dcl", "FUNCTION_BLOCK")]
+    [InlineData("reference/tool-examples/languages/FC_Add_SD.s7dcl", "FUNCTION")]
+    [InlineData("reference/tool-examples/languages/FC_FbdAnd.s7dcl", "FUNCTION")]
+    [InlineData("reference/tool-examples/languages/FC_Mixed.s7dcl", "FUNCTION")]
+    [InlineData("reference/tool-examples/languages/UDT_Status.s7dcl", "TYPE")]
+    public void Offline_sd_inspection_reads_repository_documents(string path, string expectedKind)
+    {
+        string file = Path.Combine(TestPaths.RepositoryRoot(AppContext.BaseDirectory), path);
+        foreach (int major in new[] { 20, 21 })
+        {
+            var result = new Host.EngineeringDiagnosticsTools().InspectSimaticSdCompatibility(file, major, 4);
+            Assert.Null(result.Meta!["scanProblem"]);
+            var declaration = Assert.Single(result.Meta["declarations"]!.AsArray())!;
+            Assert.Equal(Path.GetFileNameWithoutExtension(path), (string?)declaration["name"]);
+            Assert.Equal(expectedKind, (string?)declaration["kind"]);
+        }
+    }
+
+    [Theory, InlineData(20), InlineData(21)]
+    public void Offline_sd_inspection_returns_scan_errors_as_data(int major)
+    {
+        var directory = Directory.CreateTempSubdirectory("sd-inspection-");
+        try
+        {
+            string file = Path.Combine(directory.FullName, "Real.s7dcl");
+            File.WriteAllText(file, "FUNCTION_BLOCK Real\n#value := 'open\nEND_FUNCTION_BLOCK\nFUNCTION_BLOCK Hidden\n'closed';");
+            var result = new Host.EngineeringDiagnosticsTools().InspectSimaticSdCompatibilityV4(file, major, 4).StructuredContent!;
+            Assert.True((bool?)result["ok"]);
+            var evidence = result["data"]!["evidence"]!;
+            string problem = (string)evidence["scanProblem"]!;
+            Assert.Contains("end of line", problem);
+            Assert.Contains(problem, evidence["warnings"]!.AsArray().Select(w => (string?)w));
+            Assert.Empty(evidence["declarations"]!.AsArray());
+            Assert.False((bool?)evidence["losslessRoundTrip"]);
+        }
+        finally { directory.Delete(true); }
+    }
+
     private sealed class FixtureNonRecoverableException : Exception { }
 
     [Theory, InlineData(false, false), InlineData(false, true), InlineData(true, false), InlineData(true, true)]

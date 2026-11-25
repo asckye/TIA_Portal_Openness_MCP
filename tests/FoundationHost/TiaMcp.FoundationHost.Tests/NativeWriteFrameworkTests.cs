@@ -1,5 +1,6 @@
 extern alias toolpipeline;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 using TiaMcp.Engine.Tests.Shared;
 using Xunit;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
@@ -94,6 +95,110 @@ public sealed class NativeWriteFrameworkTests
                 Assert.Equal(123, (int?)difference["after"]);
                 Assert.Equal("Number setter refused.", (string?)difference["restoreError"]);
             }
+        }
+    }
+
+    [Fact]
+    public void Batch_restores_the_snapshot_from_immediately_before_the_second_import()
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-batch-refresh", Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(42, (int?)probe["admitted"]);
+        Assert.Equal(88, (int?)probe["evidence"]?["existingBlock"]?["number"]);
+        Assert.Equal(88, (int?)probe["evidence"]?["importedBlock"]?["number"]);
+        Assert.Equal(88, (int?)probe["Number"]);
+        Assert.Equal(2, (int?)probe["Exports"]);
+        Assert.Equal(new[] { "AutoNumber=False", "Number=88", "AutoNumber=True" }, probe["Setters"]!.AsArray().Select(v => (string?)v));
+        foreach (var (field, number) in new[] { ("initialRecoveryDirectory", 42), ("recoveryDirectory", 88) })
+        {
+            string backup = Path.Combine((string)probe["evidence"]![field]!, "000.xml");
+            Assert.Equal(number, (int)XDocument.Load(backup).Descendants("SW.Blocks.GlobalDB").Single().Element("AttributeList")!.Element("Number")!);
+        }
+    }
+
+    [Theory]
+    [InlineData("sd-scoped-startup", "sd-override-not-preserved", "Startup", 0)]
+    [InlineData("sd-scoped-instance", "sd-override-not-preserved", "MotorFB", 0)]
+    [InlineData("sd-scoped-instance-none", "sd-override-not-preserved", "MotorFB", 0)]
+    [InlineData("sd-scoped-required", "sd-override-not-preserved", "MemoryReserve", 0)]
+    [InlineData("sd-scoped-change-code", "sd-input-changed", "changed", 1)]
+    [InlineData("sd-scoped-change-resource", "sd-input-changed", "changed", 1)]
+    [InlineData("sd-scoped-add-resource", "sd-input-changed", "changed", 1)]
+    [InlineData("sd-scoped-remove-resource", "sd-input-changed", "changed", 1)]
+    public void Scoped_document_refusal_never_reaches_the_native_import(string scenario, string condition, string reason, int exports)
+    {
+        using var inputs = new Inputs();
+        var probe = Run(scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(0, (int?)probe["calls"]);
+        Assert.Equal(exports, (int?)probe["Exports"]);
+        Assert.False((bool?)probe["reply"]?["Meta"]?["mayHaveChanged"]);
+        Assert.Equal(condition, (string?)probe["reply"]?["Meta"]?["condition"]);
+        Assert.Contains(reason, (string?)probe["reply"]?["Message"]);
+        if (scenario == "sd-scoped-startup")
+        {
+            var target = probe["reply"]!["Meta"]!["existingBlock"]!;
+            Assert.Equal("MCP_RC_OBStart", (string?)target["name"]);
+            Assert.Equal(151, (int?)target["number"]);
+        }
+    }
+
+    [Theory]
+    [InlineData("sd-scoped-auto-true", true)]
+    [InlineData("sd-scoped-auto-false", false)]
+    public void Scoped_override_restores_only_the_changed_auto_number(string scenario, bool expected)
+    {
+        using var inputs = new Inputs();
+        var probe = Run(scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        var meta = probe["reply"]!["Meta"]!;
+        Assert.Equal(1, (int?)probe["calls"]);
+        Assert.Equal("AutoNumber=" + expected, (string?)Assert.Single(probe["Setters"]!.AsArray()));
+        Assert.True((bool?)meta["propertiesPreserved"]);
+        Assert.True((bool?)meta["numberRestored"]);
+        Assert.Equal(expected, (bool?)meta["importedBlock"]?["autoNumber"]);
+        Assert.Equal(42, (int?)meta["importedBlock"]?["number"]);
+    }
+
+    [Theory]
+    [InlineData("sd-scoped-new-number", 1)]
+    [InlineData("sd-scoped-wrong-number", 42)]
+    [InlineData("sd-scoped-number", 150)]
+    [InlineData("sd-scoped-unrequested-auto", 150)]
+    [InlineData("sd-scoped-optional", 42)]
+    public void Scoped_import_reports_number_and_attribute_outcomes(string scenario, int number)
+    {
+        using var inputs = new Inputs();
+        var probe = Run(scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        var meta = probe["reply"]!["Meta"]!;
+        Assert.Equal(1, (int?)probe["calls"]);
+        Assert.True((bool?)meta["writeReturned"]);
+        Assert.Equal(number, (int?)meta["importedBlock"]?["number"]);
+        Assert.Empty(probe["Setters"]!.AsArray());
+        if (scenario is "sd-scoped-wrong-number" or "sd-scoped-unrequested-auto")
+        {
+            Assert.Equal("BlockPropertiesNotPreserved", (string?)meta["status"]);
+            Assert.False((bool?)meta["operationSuccess"]);
+            var diff = Assert.Single(meta["propertyDifferences"]!.AsArray())!;
+            Assert.Equal(scenario == "sd-scoped-wrong-number" ? "Number" : "AutoNumber", (string?)diff["name"]);
+        }
+        else
+        {
+            Assert.Empty(meta["propertyDifferences"]!.AsArray());
+            Assert.Null(meta["status"]);
+            Assert.Contains("existence verified", (string?)probe["reply"]?["Message"]);
+            if (scenario == "sd-scoped-new-number")
+            {
+                string warning = (string)meta["warning"]!;
+                Assert.Contains("150", warning);
+                Assert.Contains("assigned 1", warning);
+                var response = new Host.ResponseMessage { Message = (string)probe["reply"]!["Message"]!, Meta = meta.DeepClone().AsObject() };
+                var result = Host.OfflineContracts.Map("ManagePlcBlockDocuments", response, true, true).StructuredContent!;
+                Assert.True((bool?)result["ok"]);
+                Assert.Equal(1, (int?)result["data"]?["importedBlock"]?["number"]);
+                Assert.Contains(result["meta"]!["warnings"]!.AsArray(), item => (string?)item?["message"] == warning);
+            }
+            else Assert.True((bool?)meta["propertiesPreserved"]);
+            if (scenario == "sd-scoped-number") Assert.False((bool?)meta["importedBlock"]?["autoNumber"]);
+            if (scenario == "sd-scoped-optional") Assert.Equal("System.Object", (string?)meta["importedBlock"]?["attributes"]?["VendorValue"]);
         }
     }
 

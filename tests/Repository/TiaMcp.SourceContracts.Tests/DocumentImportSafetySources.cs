@@ -126,6 +126,20 @@ public sealed class DocumentImportSafetySources
     }
 
     [Fact]
+    public void Admitted_files_are_rechecked_after_backup_and_before_each_write_attempt()
+    {
+        int refresh = Find(BATCH, "plans[name].RefreshForImport();");
+        int batchHash = Find(BATCH, "inputs.RequireUnchanged(file);");
+        Assert.True(Find(BATCH, "PlcSdBlockSnapshot.PrepareBatch(selected") < refresh && refresh < batchHash);
+        Assert.True(batchHash < Find(BATCH, "LastImportFromDocumentsAttempted++;"));
+        int singleHash = Find(SINGLE, "files.RequireUnchanged(declarationFile);");
+        Assert.True(Find(SINGLE, "plan.Backup();") < singleHash && singleHash < Find(SINGLE, "exchange.StartWrite("));
+        var scoped = Read(Path.Combine(ROOT, "src/Adapters/Native/Plc/PlcB5Documents.cs"));
+        int scopedHash = Find(scoped, "files.RequireUnchanged(declaration);");
+        Assert.True(Find(scoped, "plan.Backup();") < scopedHash && scopedHash < Find(scoped, "group.Blocks.ImportFromDocuments("));
+    }
+
+    [Fact]
     public void Scoped_import_checks_properties_before_any_optional_readback()
     {
         var source = Read(Path.Combine(ROOT, "src/Adapters/Native/Plc/PlcB5Documents.cs"));

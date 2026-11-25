@@ -338,8 +338,9 @@ namespace TiaMcp.Adapters.Native.Plc
                         $"Group path '{groupPath}' not found under PLC '{softwarePath}'. Use GetSoftwareTree for exact group names, or pass an empty groupPath to import at the root.");
             }
 
-            using var files = new SdDeclarationFiles();
-            string text = files.Read(new FileInfo(Path.Combine(dir.FullName, fileNameWithoutExtension + ".s7dcl")));
+            var files = new SdDeclarationFiles();
+            var declarationFile = new FileInfo(Path.Combine(dir.FullName, fileNameWithoutExtension + ".s7dcl"));
+            string text = files.Read(declarationFile);
             var plan = new PlcSdBlockSnapshot(text, fileNameWithoutExtension,
                 () => Documents.FindBlock(Documents.Blocks(targetGroup), fileNameWithoutExtension), (option & ImportDocumentOptions.Override) != 0,
                 () => ExistsOutsideGroup(Documents.BlockGroup(plcSoftware), targetGroup, fileNameWithoutExtension));
@@ -353,6 +354,7 @@ namespace TiaMcp.Adapters.Native.Plc
             if ((option & ImportDocumentOptions.Override) != 0 && existing != null) plan.Backup();
             foreach (var pair in plan.Evidence) exchange.Observe(pair.Key, pair.Value);
 
+            files.RequireUnchanged(declarationFile);
             DocumentImportResultForBlocks? result;
             try
             {
@@ -492,7 +494,7 @@ namespace TiaMcp.Adapters.Native.Plc
             LastImportFromDocumentsScanned = files.Length;
             var selected = files.Where(f => rx == null || rx.IsMatch(Path.GetFileNameWithoutExtension(f.Name))).ToArray();
             LastImportFromDocumentsSelected = selected.Length;
-            using var inputs = new SdDeclarationFiles();
+            var inputs = new SdDeclarationFiles();
             var plans = PlcSdBlockSnapshot.PrepareBatch(selected, inputs, group, (option & ImportDocumentOptions.Override) != 0,
                 name => ExistsOutsideGroup(Documents.BlockGroup(plcSoftware), group, name), request.DryRun);
             exchange.Observe("documentPlans", plans.ToDictionary(pair => pair.Key, pair => pair.Value.Evidence));
@@ -507,6 +509,17 @@ namespace TiaMcp.Adapters.Native.Plc
             foreach (var file in selected)
             {
                 var name = Path.GetFileNameWithoutExtension(file.Name);
+                try
+                {
+                    plans[name].RefreshForImport();
+                    inputs.RequireUnchanged(file);
+                }
+                catch (Exception error)
+                {
+                    LastImportFromDocumentsStopped = true;
+                    failures.Add($"{name}: stopped before this native import. {error.Message}");
+                    throw;
+                }
                 DocumentImportResultForBlocks? result = null;
                 try
                 {
