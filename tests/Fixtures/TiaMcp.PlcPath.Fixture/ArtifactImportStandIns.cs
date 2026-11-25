@@ -39,9 +39,13 @@ namespace Siemens.Engineering.SW.Tags
     }
     public sealed class PlcTagTableComposition : NamedList<PlcTagTable>
     {
+        public Action<PlcTagTable>? OnImport;
+        public Func<string, PlcTagTable?>? OnFind;
+        public new PlcTagTable? Find(string name) => OnFind == null ? base.Find(name) : OnFind(name);
         public List<PlcTagTable> Import(FileInfo file, ImportOptions mode)
         {
             var table = new PlcTagTable { Name = SimaticMlImportWindow.ReadObject(XDocument.Load(file.FullName))!.Value.Name };
+            OnImport?.Invoke(table);
             Add(table);
             return [table];
         }

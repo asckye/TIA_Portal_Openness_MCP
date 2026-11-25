@@ -307,12 +307,19 @@ namespace TiaMcp.Adapters
                 .Exact(TagGroups(PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName)), x => x.Path, PlcExchangePolicy
                     .ObjectPath(folderPath,true,"folderPath"),"folderPath")
                 .Value;
-            return ImportXml("ImportTagTables",input,dryRun,()=>target.TagTables.Import(input, PlcNativeImportOptions.General(overwrite, importOptions))
-                    .Select(t=>t.Name), precheck: document => PlcFoundationPolicy.RequireImportAvailable(document, "SW.Tags.PlcTagTable", overwrite,
-                name => TagGroups(PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName))
-                    .Any(g => PlcFoundationPolicy.SymbolExists(g.Value.TagTables, selectedName => g.Value.TagTables.Find(selectedName), t => t.Name, name))),
-                    unitName: unitName, swImportOptions: swImportOptions, importOptions: importOptions, backups: !overwrite ? null : document => target
-                    .TagTables.Where(t => ImportNames(document).Contains(t.Name, StringComparer.OrdinalIgnoreCase))
+            string? newTable = null;
+            void Precheck(XDocument document)
+            {
+                PlcFoundationPolicy.RequireImportAvailable(document, "SW.Tags.PlcTagTable", overwrite,
+                    name => TagGroups(PlcUnitScope.TagRoot(ReadPlc(softwarePath), unitName))
+                        .Any(g => PlcFoundationPolicy.SymbolExists(g.Value.TagTables, n => g.Value.TagTables.Find(n), t => t.Name, name)));
+                newTable = SingleNewImportName(document, overwrite, "SW.Tags.PlcTagTable");
+            }
+            return ImportXml("ImportTagTables", input, dryRun, () => PlcTagWrites.Import(target.TagTables, input,
+                PlcNativeImportOptions.General(overwrite, importOptions), newTable, null).Select(t => t.Name),
+                    precheck: Precheck, unitName: unitName, swImportOptions: swImportOptions, importOptions: importOptions,
+                    backups: !overwrite ? null : document => target.TagTables
+                        .Where(t => ImportNames(document).Contains(t.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(t => new TiaOpenness.Shared.NativeExportPolicy.RecoveryTarget {
                         Object = folderPath + "/" + t.Name, Export = file => t.Export(file, ExportOptions.WithDefaults) }));
         }
@@ -400,7 +407,7 @@ namespace TiaMcp.Adapters
             var target = PlcFoundationPolicy.Exact(TagGroups(Plc(plc).TagTableGroup), x => x.Path,
                 ObjectPathEncoding.NormalizePath(group,"group"),"group").Value;
             if (target.TagTables.Find(name) != null) throw new AdapterPreconditionException("Tag table already exists.","name");
-            if (!dryRun) target.TagTables.Create(name);
+            if (!dryRun) PlcTagWrites.CreateTable(target, name);
             return Mutation("CreateTagTable", dryRun, new[] { name });
         }
         public PlcMutationResult CreateTag(string plc, string table, string name, string dataType, string address, bool dryRun = true)
@@ -412,7 +419,7 @@ namespace TiaMcp.Adapters
             var target = Table(plc, table);
             if (target.Tags.Find(name) != null) throw new AdapterPreconditionException("Tag already exists.","name");
             RequireUniqueSymbol(plc, name);
-            if (!dryRun) target.Tags.Create(name, dataType, address);
+            if (!dryRun) PlcTagWrites.CreateTag(target, name, dataType, address);
             return Mutation("CreateTag", dryRun, new[] { name });
         }
         public PlcMutationResult CreateUserConstant(string plc, string table, string name, string dataType, string value, bool dryRun = true)
@@ -423,7 +430,7 @@ namespace TiaMcp.Adapters
             var target = Table(plc, table);
             if (target.UserConstants.Find(name) != null) throw new AdapterPreconditionException("User constant already exists.","name");
             RequireUniqueSymbol(plc, name);
-            if (!dryRun) target.UserConstants.Create(name, dataType, value);
+            if (!dryRun) PlcTagWrites.CreateConstant(target, name, dataType, value);
             return Mutation("CreateUserConstant", dryRun, new[] { name });
         }
         // Tags and constants share one symbol namespace per PLC: TIA refuses a duplicate in any table only inside the

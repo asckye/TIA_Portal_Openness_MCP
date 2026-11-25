@@ -17,8 +17,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public bool HasProject { get; }
         public IReadOnlyList<TiaMcp.Adapters.Contracts.IoAddressInfo>? GetDeviceItemAddresses(string path);
         public List<string> DescribeChildItemsWithAddresses(string path);
-        public (bool ok, string message, TiaMcp.Adapters.Contracts.IoAddressInfo? before, TiaMcp.Adapters.Contracts.IoAddressInfo
-                ? after) SetDeviceItemStartAddress(string path, string ioType, int startAddress);
+        public TiaMcp.Adapters.Contracts.IoAddressWriteReply SetDeviceItemStartAddress(string path, string ioType, int startAddress);
         public ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson, int offset, int limit);
         public ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson,
                 string attributesJson, string softwarePath, string processImageObName, bool dryRun);
@@ -217,16 +216,17 @@ namespace TiaMcpServer.ModelContextProtocol
                     };
                 }
 
-                var (ok, message, before, after) =
-                    _service.SetDeviceItemStartAddress(deviceItemPath, ioType, startAddress);
+                var reply = _service.SetDeviceItemStartAddress(deviceItemPath, ioType, startAddress);
+                var before = reply.Before;
+                var after = reply.After;
 
                 var meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,
                     ["dryRun"] = false,
-                    ["success"] = ok,
-                    ["mayHaveChanged"] = before != null,
-                    ["writeOutcomeUnknown"] = before != null && after == null,
+                    ["success"] = reply.Ok,
+                    ["mayHaveChanged"] = reply.MayHaveChanged,
+                    ["writeOutcomeUnknown"] = reply.OutcomeUnknown || before != null && after == null,
                     ["postStateKnown"] = after != null,
                     ["deviceItemPath"] = deviceItemPath,
                     ["ioType"] = ioType,
@@ -237,10 +237,10 @@ namespace TiaMcpServer.ModelContextProtocol
                     // after 是写后读回的那一份，它才是"地址真的改了"的证据。
                     // ok=true 却读不回 after 时，改没改成答不上来 —— 这既不是成功也不是失败，
                     // verified 和读回证据交给 V4 边界区分失败与 unknown。
-                    ["verified"] = ok && after != null
+                    ["verified"] = reply.Ok && after != null
                 };
 
-                if (after != null)
+                if (after != null && reply.MayHaveChanged)
                 {
                     meta["nextActions"] = new JsonArray
                     {
@@ -250,11 +250,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     };
                 }
 
+                if (!reply.Ok && before != null && after != null && !reply.MayHaveChanged) meta["apiCallSuccess"] = false;
                 return new ResponseMessage
                 {
                     Message = after != null
-                        ? message
-                        : $"Warning: UNVERIFIED: {message}: the write call reported no error, but the updated address could not be read back; "
+                        ? reply.Message
+                        : $"Warning: UNVERIFIED: {reply.Message} The updated address could not be read back; "
                           + "the address change **cannot be confirmed**. Verify it with GetDeviceItemIoAddresses or the TIA UI; "
                           + "do not treat the operation as completed before verification.",
                     Meta = meta

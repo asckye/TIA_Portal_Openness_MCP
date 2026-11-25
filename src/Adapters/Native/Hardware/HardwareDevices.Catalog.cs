@@ -39,6 +39,8 @@ namespace TiaMcp.Adapters
             }
             catch (Exception error)
             {
+                if (!NativeRefusalProbe.AllowsRefusalProof(error))
+                    throw new HardwareAddressingException("OpennessError", "CreateWithItem was interrupted; the device inventory is uncertain.", null, error);
                 List<Device> after;
                 try { after = HardwareDeviceInventory(); }
                 catch (Exception readback) {

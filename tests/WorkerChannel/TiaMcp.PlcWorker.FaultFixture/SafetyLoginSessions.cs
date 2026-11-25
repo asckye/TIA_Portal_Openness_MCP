@@ -44,8 +44,9 @@ namespace TiaMcp.Adapters.Native.Safety
         internal (HmiObject Scalars, HmiObject Attributes) RuntimeGroupChanges()
             => (new HmiObject { ["Cycle"] = 2 }, new HmiObject { ["FOBCycleTime"] = 2 });
         internal (HmiObject Scalars, HmiObject Attributes, HmiObject BlockNumbers, string? SafetySystemVersion) SettingsChanges()
-            => (new HmiObject { ["Cycle"] = 2 }, TestWrite == "version" ? new HmiObject() : new HmiObject { ["EnableFCommunicationIdTag"] = true },
-                new HmiObject(), TestWrite == "version" ? "V2" : null);
+            => (new HmiObject { ["Cycle"] = 2 },
+                TestWrite is "version" or "version-abort" ? new HmiObject() : new HmiObject { ["EnableFCommunicationIdTag"] = true },
+                new HmiObject(), TestWrite is "version" or "version-abort" ? "V2" : null);
         internal List<KeyValuePair<string, object>> GlobalChanges() => throw new NotSupportedException();
     }
     internal static class SafetyScalars

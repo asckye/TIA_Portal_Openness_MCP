@@ -46,6 +46,32 @@ namespace TiaMcp.Adapters.Contracts
             }
         }
 
+        // For callers that already captured the exact target immediately before the write.
+        public static bool ProvesUnchanged(Exception failure, Func<bool> readback)
+        {
+            if (!AllowsRefusalProof(failure)) return false;
+            try { return readback(); }
+            catch (Exception) /* swallow(probe-optional): preserve the original write failure when its readback is unavailable. */
+            { return false; }
+        }
+
+        internal static bool ProvesAbsent(Exception failure, string? name, Func<string, bool> exists)
+            => !string.IsNullOrWhiteSpace(name) && name == name!.Trim() && ProvesUnchanged(failure, () => !exists(name));
+
+        public static bool AllowsRefusalProof(Exception failure)
+        {
+            if (UncertainConnection(failure)) return false;
+            for (Exception? cause = failure; cause != null; cause = cause.InnerException)
+            {
+                if (cause is ObjectDisposedException) return false;
+                // These Siemens types can be subclassed. The contracts assembly has no SDK reference.
+                for (Type? type = cause.GetType(); type != null; type = type.BaseType)
+                    if (type.Name is "EngineeringUserAbortException" or "EngineeringObjectDisposedException" or "NonRecoverableException")
+                        return false;
+            }
+            return true;
+        }
+
         public static bool UncertainConnection(Exception error)
         {
             if (HmiReadPolicy.ConnectionUnavailable(error)) return true;

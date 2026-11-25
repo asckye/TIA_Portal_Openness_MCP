@@ -6,6 +6,17 @@ using Xunit;
 public sealed class SafetyLoginFrameworkTests
 {
     [Fact]
+    public void Unreadable_messages_keep_the_returned_compile_counts_on_net48()
+    {
+        var row = RunFixture("foundation", "messages-unreadable");
+        Assert.Equal(1, (int?)row["compileCalls"]);
+        Assert.Equal("Success", (string?)row["result"]?["State"]);
+        Assert.Equal(0, (int?)row["result"]?["ErrorCount"]);
+        Assert.Equal(0, (int?)row["result"]?["WarningCount"]);
+        Assert.Contains("could not be read", (string?)row["result"]?["Warnings"]?[0]);
+    }
+
+    [Fact]
     public void A_returned_generation_diagnostic_retains_its_documented_rollback_on_net48()
     {
         var result = RunFixture("generate-source", "diagnostic")["generation"]!;
@@ -38,6 +49,14 @@ public sealed class SafetyLoginFrameworkTests
         Assert.Equal(scenario != "version", (bool?)row["attributeWritten"]);
         Assert.Equal(0, (int?)row["cycle"]);
         if (scenario == "version") Assert.Equal("V2", (string?)row["version"]);
+        Assert.True((bool?)row["reply"]?["OutcomeUnknown"]);
+        Assert.False((bool?)row["reply"]?["Meta"]?["rollbackCompleted"]);
+    }
+
+    [Theory, InlineData("attribute-abort"), InlineData("version-abort")]
+    public void User_abort_cannot_settle_a_safety_write(string scenario)
+    {
+        var row = RunFixture("safety-update", scenario);
         Assert.True((bool?)row["reply"]?["OutcomeUnknown"]);
         Assert.False((bool?)row["reply"]?["Meta"]?["rollbackCompleted"]);
     }

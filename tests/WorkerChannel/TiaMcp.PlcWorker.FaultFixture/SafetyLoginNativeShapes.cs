@@ -51,7 +51,12 @@ namespace Siemens.Engineering.SW
         public Blocks.PlcBlockGroup BlockGroup { get; } = new Blocks.PlcBlockGroup();
         public override T? GetService<T>() where T : class => this as T;
         internal int CompileCalls;
-        public Compiler.CompilerResult Compile() { CompileCalls++; throw new InvalidOperationException("fixture compiler failure"); }
+        internal Compiler.CompilerResult? ReturnedResult;
+        public Compiler.CompilerResult Compile()
+        {
+            CompileCalls++;
+            return ReturnedResult ?? throw new InvalidOperationException("fixture compiler failure");
+        }
     }
 }
 namespace Siemens.Engineering.SW.Blocks
@@ -142,7 +147,13 @@ namespace Siemens.Engineering.Safety
     {
         public AssignmentOfBlockNumbers? AssignmentOfBlockNumbers => null;
         public int Cycle { get; set; }
-        public SafetySystemVersion? SafetySystemVersion { get; set; }
+        public Exception? VersionFailure { get; set; }
+        private SafetySystemVersion? version;
+        public SafetySystemVersion? SafetySystemVersion
+        {
+            get => version;
+            set { if (VersionFailure != null) throw VersionFailure; version = value; }
+        }
         public IEnumerable<SafetySystemVersion> GetApplicableSafetySystemVersions() => new[] { new SafetySystemVersion() };
         public void CleanSystemGeneratedObjects() => throw new NotSupportedException();
     }

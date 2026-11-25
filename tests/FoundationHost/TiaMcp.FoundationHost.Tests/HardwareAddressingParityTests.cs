@@ -9,6 +9,9 @@ using HostResponse = toolpipeline::TiaMcpServer.ModelContextProtocol.ResponseMes
 public sealed class HardwareAddressingParityTests
 {
     [Theory]
+    [InlineData("SetDeviceItemAttribute", "{\"success\":false,\"apiCallSuccess\":false,\"mayHaveChanged\":false,\"writeOutcomeUnknown\":false}",
+        true, "failed")]
+    [InlineData("SetDeviceItemAttribute", "{\"success\":false,\"mayHaveChanged\":true,\"writeOutcomeUnknown\":true}", true, "unknown")]
     [InlineData("GetDeviceAddressing", "{\"success\":true,\"dataComplete\":false,\"records\":[],\"expectedCount\":0,\"offset\":0,\"limit\":100}", false, "succeeded")]
     [InlineData("GetDeviceAddressing", "{\"success\":false,\"status\":\"ReadOrWriteFailed\",\"error\":\"private stack\"}", false, "read-failed")]
     [InlineData("GetDeviceAddressing", "{\"success\":false,\"status\":\"NotFound\"}", false, "rejected-before-operation")]
@@ -35,6 +38,29 @@ public sealed class HardwareAddressingParityTests
         Assert.True(JsonNode.DeepEquals(expected, actual), actual.ToJsonString());
         Assert.DoesNotContain("private stack", actual.ToJsonString());
         Assert.DoesNotContain("secret stack trace", actual.ToJsonString());
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public void Address_service_preserves_the_worker_mutation_evidence(bool olderWorker, bool changed)
+    {
+        using var correlation = toolpipeline::TiaMcpServer.ModelContextProtocol.InvocationJournal.UseCorrelation("io-refusal");
+        using var release = HostContract.UseRelease("21");
+        var worker = JsonNode.Parse("""
+            {"Ok":false,"Message":"Native setter refused","Before":{"IoType":"Input","StartAddress":2,"Length":1},
+             "After":{"IoType":"Input","StartAddress":2,"Length":1},"OutcomeUnknown":false,"MayHaveChanged":false}
+            """)!.AsObject();
+        if (olderWorker) worker.Remove("MayHaveChanged");
+        var service = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareAddressingService(
+            (_, _) => worker, () => true, () => @"C:\Fixtures\Line.ap21");
+        var response = new toolpipeline::TiaMcpServer.ModelContextProtocol.AddressesTools(service).SetDeviceItemIoAddress("PLC/IO", "Input", 8, false);
+        var evidence = Assert.IsType<JsonObject>(response.Meta);
+        Assert.Equal(changed, (bool?)evidence["mayHaveChanged"]);
+        if (!olderWorker) Assert.False(evidence.ContainsKey("nextActions"));
+        var result = Normalize(HostContract.Map("SetDeviceItemIoAddress", response, true, false));
+        Assert.Equal("failed", (string?)result["meta"]?["outcome"]);
+        Assert.Equal("completed", (string?)result["meta"]?["execution"]);
     }
 
     private static JsonObject Normalize(CallToolResult result)

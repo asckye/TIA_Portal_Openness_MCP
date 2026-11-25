@@ -91,7 +91,7 @@ namespace TiaMcp.Adapters.Native.Plc
     }
     public partial interface IPlcOrganisationSession
     {
-        public MasterCopy ExactMasterCopy(string library, string path) => throw new NotSupportedException();
+        public MasterCopy ExactMasterCopy(string library, string path);
     }
     public sealed partial class PlcOrganisationAdapter
     {
@@ -102,6 +102,11 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
+        private sealed partial class OrganisationSession
+        {
+            public MasterCopy ExactMasterCopy(string library, string path) => throw new NotSupportedException();
+        }
+
         public bool UnitMutationStarted => Artifacts.MutationStarted;
         public Dictionary<string, object?> UpdateUnitComment(PlcUnit unit)
         {

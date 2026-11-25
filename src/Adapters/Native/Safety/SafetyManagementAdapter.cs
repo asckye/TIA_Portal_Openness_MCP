@@ -328,7 +328,8 @@ namespace TiaMcp.Adapters.Native.Safety
                         }
                         if (version != null) {
                             EngineeringWriteJournal.ProbeWrite(meta, "SafetySystemVersion",
-                                () => new object?[] { settings.SafetySystemVersion?.Value }, () => settings.SafetySystemVersion = version);
+                                () => new object?[] { settings.SafetySystemVersion?.Value }, () => settings.SafetySystemVersion = version,
+                                NativeRefusalProbe.AllowsRefusalProof);
                             if (settings.SafetySystemVersion?.Value != version.Value)
                                 throw new InvalidOperationException("SafetySystemVersion readback differs.");
                         }
@@ -466,7 +467,7 @@ namespace TiaMcp.Adapters.Native.Safety
                 meta["lastAttemptedAttribute"] = attribute.Key;
                 object value = attribute.Value is bool flag ? flag : attribute.Value!.GetValue<int>();
                 EngineeringWriteJournal.ProbeWrite(meta, attribute.Key, () => new[] { owner.GetAttribute(attribute.Key) },
-                    () => owner.SetAttribute(attribute.Key, value));
+                    () => owner.SetAttribute(attribute.Key, value), NativeRefusalProbe.AllowsRefusalProof);
                 var readback = owner.GetAttribute(attribute.Key);
                 if (!Equals(Convert.ToString(readback), Convert.ToString(value)))
                     throw new InvalidOperationException("Attribute readback differs: " + attribute.Key + ". Changes are not rolled back.");

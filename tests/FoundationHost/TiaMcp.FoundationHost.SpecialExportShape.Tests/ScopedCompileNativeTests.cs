@@ -35,6 +35,36 @@ public sealed class ScopedCompileNativeTests
         owner.Services.Add(typeof(ICompilable), compiler);
         return (engine, owner, compiler);
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Compile_failure_preserves_the_dispatch_boundary(bool dispatched)
+    {
+        var (engine, _, compiler) = Target("software");
+        engine.TargetOnline = !dispatched;
+        compiler.Compiling = () => throw new InvalidOperationException("Native compile failed.");
+        var error = Assert.Throws<InvalidOperationException>(() => engine.CompileSoftware("CPU", dryRun: false));
+        Assert.Equal(dispatched ? 1 : 0, compiler.Calls);
+        Assert.Equal(!dispatched, error.Data["foundationKnownNoMutation"] is true);
+    }
+
+    [Fact]
+    public void A_message_read_failure_preserves_the_returned_compile_state_and_counts()
+    {
+        var (engine, _, compiler) = Target("software");
+        compiler.Result.State = CompilerResultState.Error;
+        compiler.Result.ErrorCount = 3;
+        compiler.Result.WarningCount = 2;
+        compiler.Result.Messages.Add(null!);
+        var result = engine.CompileSoftware("CPU", dryRun: false);
+        Assert.True(result.Executed);
+        Assert.Equal("Error", result.State);
+        Assert.Equal(3, result.ErrorCount);
+        Assert.Equal(2, result.WarningCount);
+        Assert.Contains(result.Warnings, warning => warning.Contains("diagnostic", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(1, compiler.Calls);
+    }
+
     private static string PathFor(string scope) => scope switch
     { "block" => "Group%2fone/Main%25one", "group" => "Group%2fone", "unit" => "Unit%2fone", _ => "" };
 

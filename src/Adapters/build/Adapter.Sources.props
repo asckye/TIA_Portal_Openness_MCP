@@ -18,6 +18,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Compare.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Download.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Transitions.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Routes.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Scan.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Upload.cs" />
@@ -91,6 +92,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Collaboration/CollaborationEvidence.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.Connect.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VersionControlAdapter.Create.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciExportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciExportAttempts.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Vci/VciSyncAttempts.cs" />
@@ -166,6 +168,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationAdapter.Delete.Block.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSystemGroups.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSoftwareEditing.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSoftwareEditing.InstanceDb.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcDeviceCompile.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcLegacyCompile.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcArtifactExchange.cs" />
@@ -174,6 +177,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcExternalSources.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSourceRules.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcTagDefinitions.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcTagWrites.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcSourceFileOutput.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Plc/PlcOrganisationPrimitives.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Libraries/LibraryService.cs" />
@@ -237,6 +241,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetworkLegacy.Read.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwarePublicType.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareLegacyWrites.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareLegacyWrites.Scalars.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareGroupCreation.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetwork.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Hardware/HardwareNetwork.TransferAreas.cs" />

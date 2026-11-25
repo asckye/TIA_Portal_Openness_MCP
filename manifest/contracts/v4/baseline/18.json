@@ -20672,7 +20672,7 @@
           },
           "port": {
             "default": 0,
-            "description": "port: TCP port (0 = default).",
+            "description": "port: supply the TCP port configured for the server when using connectServer.",
             "type": "integer"
           },
           "projectName": {

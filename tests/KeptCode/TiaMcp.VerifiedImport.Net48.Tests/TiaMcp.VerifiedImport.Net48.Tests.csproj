@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DefineConstants>$(DefineConstants);PLC_HARDWARE_CATALOG;PLC_HARDWARE_CATALOG_ENTRIES;PLC_SAFETY;PLC_SOFTWARE_PROTECTION;ONLINE_DOWNLOAD;ONLINE_RH;STUDIO_VCI;STUDIO_VCI_MODERN</DefineConstants>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
@@ -12,6 +14,8 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" />
     <PackageReference Include="System.Text.Json" />
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
+    <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />
+    <Compile Include="../../Adapters/TiaMcp.Adapters.Contracts.Tests/PlcArtifactRefusalTests.cs" />
     <Compile Include="../../../src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs" />
     <Compile Include="../../../src/Shared/CompilerDiagnostics.cs" />
     <Compile Include="../../../src/Shared/PlcVerifiedImport.cs" />
@@ -20,5 +24,29 @@
     <Compile Include="../TiaMcp.KeptCode.Tests/VerifiedExportStyleTests.cs" />
     <Compile Include="../../Shared/FixtureCrashGuard.cs" />
     <Compile Include="../../Shared/FixtureExit.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareEditing.InstanceDb.cs" />
+    <Compile Include="../../../src/Adapters/Native/Online/OnlineDownloadAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Online/OnlineDownloadAdapter.Transitions.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcTagWrites.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcFoundationPolicy.cs" />
+    <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" />
+    <Compile Include="../../../src/Shared/NativePathSelection.cs" />
+    <Compile Include="../../../src/Shared/NativeInputPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/PlcFoundationEngine.Software.Import.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressing.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareLegacyWrites.Scalars.cs" />
+    <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/PlcDeviceAdd.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/PlcDeviceAddPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/PlcHardwareCatalogPolicy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwarePrimitives.cs" />
+    <Compile Include="../../../src/Adapters/Native/Session/MutationIdentityPolicy.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.FoundationHost.DeviceAdd.Tests/Fakes.cs" />
+    <Compile Include="../../FoundationHost/TiaMcp.FoundationHost.DeviceAdd.Tests/DeviceCreateRefusalTests.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VciSyncAttempts.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VciSyncTarget.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VersionControlAdapter.Policy.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VersionControlAdapter.Create.cs" />
   </ItemGroup>
 </Project>

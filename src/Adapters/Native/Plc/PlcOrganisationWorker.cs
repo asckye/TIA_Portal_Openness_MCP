@@ -248,6 +248,8 @@ namespace TiaMcp.Adapters
                     reply.Failure.Evidence["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
                     reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
                 }
+                if (request.Action == "importTagTable" && error.Data["verifiedAbsent"] is true)
+                    reply.Failure.Evidence["verifiedAbsent"] = true;
                 reply.Failure.Evidence["mayHaveChanged"] = adapter.MutationStarted;
                 reply.Failure.Evidence["status"] = StepFailureStatus.Of(error);
                 if (StepFailureStatus.Parameter(error) is string parameter) reply.Failure.Evidence["parameter"] = parameter;

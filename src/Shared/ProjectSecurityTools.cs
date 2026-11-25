@@ -19,7 +19,7 @@ internal sealed class ProjectSecurityTools
             [Description("projectName: exact project name.")] string projectName="",
             [Description("protocol: Https or Http.")] string protocol="Https",
             [Description("host: server host name or IP address.")] string host="",
-            [Description("port: TCP port (0 = default).")] int port=0,
+            [Description("port: supply the TCP port configured for the server when using connectServer.")] int port=0,
             [Description("commitComment: comment text of the commit.")] string commitComment="",
             [Description("offset: zero-based starting row for bound-session markings, server projects or local sessions; must be non-negative.")] int offset=0,
             [Description("limit: maximum page size for bound-session markings, server projects or local sessions (1..500, default 100).")] int limit=100,

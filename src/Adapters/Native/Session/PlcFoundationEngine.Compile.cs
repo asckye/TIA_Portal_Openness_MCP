@@ -28,6 +28,18 @@ namespace TiaMcp.Adapters
         private PlcCompileResult CompileSoftwareCore(string softwarePath, string password, bool dryRun, string scope, string unitName,
                 string[] parts)
         {
+            bool issued = false;
+            try { return CompileSelected(softwarePath, password, dryRun, scope, unitName, parts, () => issued = true); }
+            catch (Exception error) when (!issued && NativeRefusalProbe.AllowsRefusalProof(error))
+            {
+                error.Data["foundationKnownNoMutation"] = true;
+                throw;
+            }
+        }
+
+        private PlcCompileResult CompileSelected(string softwarePath, string password, bool dryRun, string scope, string unitName,
+            string[] parts, Action markIssued)
+        {
             PlcCompilePolicy.RequirePasswordCapability(ReleaseKey,password);
             var selected=ReadSelection(softwarePath);
             PlcScopedCompileResult? scoped = null;
@@ -95,6 +107,7 @@ namespace TiaMcp.Adapters
                 {
                     using(var secure=new System.Net.NetworkCredential("",password).SecurePassword)
                     {
+                        markIssued();
                         var failure = SafetyLoginFailure.Attempt(() => admin.LoginToSafetyOfflineProgram(secure),
                             () => admin.IsLoggedOnToSafetyOfflineProgram, () => admin.LogoffFromSafetyOfflineProgram(), reportConnectionLoss: true);
                         if (failure != null) throw failure.CompileException();
@@ -102,7 +115,7 @@ namespace TiaMcp.Adapters
                     loggedOnHere=true;
                 }
             }
-            try { RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); result=compiler!.Compile(); }
+            try { RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); markIssued(); result=compiler!.Compile(); }
             catch(Exception ex)
             {
                 if (loggedOnHere)
@@ -121,7 +134,7 @@ namespace TiaMcp.Adapters
                     throw new InvalidOperationException("Compile returned but safety logoff failed; session outcome is unknown."); }
             }
 #else
-            RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); result=compiler!.Compile();
+            RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); markIssued(); result=compiler!.Compile();
 #endif
             PlcCompileResult response = scoped ?? new PlcCompileResult();
             response.Executed = true; response.ProjectFile = Project().Path.FullName; response.State = result.State.ToString();
@@ -129,7 +142,12 @@ namespace TiaMcp.Adapters
             var roots = new List<string>();
             bool checkRoots = scope == "block" || scope == "group";
             string blockName = scope == "block" ? parts.Last() : "";
-            PlcCompilePolicy.Classify(response, Messages(result.Messages, 0, checkRoots ? roots : null, blockName), scope == "block");
+            try { PlcCompilePolicy.Classify(response, Messages(result.Messages, 0, checkRoots ? roots : null, blockName), scope == "block"); }
+            catch (Exception error) when (NativeRefusalProbe.AllowsRefusalProof(error))
+            {
+                response.Warnings = new[] { "Compile returned its state and counts, but the diagnostic messages could not be read." };
+                return response;
+            }
             if (checkRoots)
             {
                 scoped!.CompiledRoots = roots.Distinct(StringComparer.Ordinal).ToArray();

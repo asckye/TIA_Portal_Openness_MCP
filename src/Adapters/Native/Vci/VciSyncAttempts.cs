@@ -71,6 +71,7 @@ internal sealed class VciSyncAttempts
         {
             string failure = Diagnostic(error);
             nativeMessage ??= failure;
+            if (!NativeRefusalProbe.AllowsRefusalProof(error)) return failure;
             var after = target.Snapshot(workspaceRoot, legacyExport);
             bool mappingFound = false;
             bool bothStatusReadsFailed = false;
@@ -90,19 +91,31 @@ internal sealed class VciSyncAttempts
         }
     }
 
+    private bool resolvingNext;
+
+    internal T FindNext<T>(Func<T> lookup)
+    {
+        resolvingNext = true;
+        var mapping = lookup();
+        resolvingNext = false;
+        return mapping;
+    }
+
     internal void AddEvidence(HmiObject meta, Exception? interrupted = null)
     {
         meta["exportsIssued"] = issued;
         meta["synchronized"] = Synchronized;
         meta["mayHaveChanged"] = Synchronized > 0 || unconfirmed > 0;
         meta["unconfirmed"] = unconfirmed;
-        meta["writeOutcomeUnknown"] = unconfirmed > 0 || interrupted != null && Synchronized > 0;
+        meta["writeOutcomeUnknown"] = unconfirmed > 0 || interrupted != null && issued > 0
+            && (!NativeRefusalProbe.AllowsRefusalProof(interrupted) || Synchronized > 0 && !resolvingNext);
         meta["nativeMessage"] = nativeMessage ?? (interrupted == null ? null : Diagnostic(interrupted));
     }
 
     internal HmiObject Interrupted(Exception error)
     {
         var meta = VersionControlAdapter.FailureEvidence(error, issued > 0);
+        if (resolvingNext) meta["failed"] = issued - Synchronized + 1;
         AddEvidence(meta, error);
         return meta;
     }

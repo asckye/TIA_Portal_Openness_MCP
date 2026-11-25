@@ -64,18 +64,7 @@ public sealed partial class PlcFoundationEngine
             "ListTransferRoutes" => adapter.ReadTransferRoutes(request.SoftwarePath, request.MaxItems),
             _ => throw new NotSupportedException("Unsupported online operation: " + request.Operation)
         };
-        var meta = value switch { HmiMessage message => message.Meta, OnlineDownloadResult download => download.Meta,
-            OnlineStateResult online => online.Meta, _ => null };
-        bool attempted = meta != null && meta.TryGetValue("writeAttempted", out var attempt) && attempt is true;
-        bool changed = attempted || meta != null && meta.TryGetValue("mayHaveChanged", out var flag) && flag is true;
-        bool succeeded = meta != null && meta.TryGetValue("success", out var success) && success is true;
-        bool files = meta != null && meta.TryGetValue("mayHaveWrittenFiles", out var written) && written is true;
-        bool rejected = meta != null && meta.TryGetValue("v4Rejection", out var refusal) && refusal != null;
-        string? state = value is OnlineDownloadResult result ? result.State
-            : meta != null && meta.TryGetValue("nativeState", out var nativeState) ? nativeState as string : null;
-        return new OnlineReply { Value = value, MayHaveChanged = changed,
-            OutcomeUnknown = OnlineCompletionPolicy.OutcomeUnknown(request, succeeded,
-                nativeCalls.NativeCallIssued, changed, files, rejected, state) };
+        return OnlineCompletionPolicy.Complete(request, value, nativeCalls.NativeCallIssued);
     }
     private static string? Empty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
 }

@@ -47,12 +47,7 @@ namespace TiaMcp.Adapters
         }
 
         internal static string? SingleNewImportName(XDocument document, bool overwrite, params string[] supported)
-        {
-            if (overwrite) return null;
-            var objects = document.Root!.Elements().Where(e => e.Name != "Engineering" && e.Name != "DocumentInfo").ToArray();
-            if (objects.Length != 1 || objects[0].Name.NamespaceName != "" || !supported.Contains(objects[0].Name.LocalName)) return null;
-            return objects[0].Elements("AttributeList").Elements("Name").Select(e => e.Value).SingleOrDefault();
-        }
+            => overwrite ? null : SimaticMlImportWindow.SingleImportName(document, supported);
 
         internal static T ImportWithReadback<T>(Func<T> import, string? newName, bool defaultOptions, Func<string, bool> exists)
         {
@@ -69,17 +64,10 @@ namespace TiaMcp.Adapters
                     if (reason.Length > 0) native.Data["nativeMessage"] = reason;
                 }
                 catch (Exception) { /* swallow(probe-optional): retain the original Siemens exception message */ }
-                if (newName != null && defaultOptions)
+                if (defaultOptions && NativeRefusalProbe.ProvesAbsent(native, newName, exists))
                 {
-                    try
-                    {
-                        if (!exists(newName))
-                        {
-                            native.Data["foundationKnownNoMutation"] = true;
-                            native.Data["verifiedAbsent"] = true;
-                        }
-                    }
-                    catch (Exception) { /* swallow(probe-optional): an unreadable destination leaves the native write uncertain */ }
+                    native.Data["foundationKnownNoMutation"] = true;
+                    native.Data["verifiedAbsent"] = true;
                 }
                 throw;
             }

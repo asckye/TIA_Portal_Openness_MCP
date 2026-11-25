@@ -30,7 +30,7 @@ namespace Siemens.Engineering.CrossReference
     public sealed class CrossReferenceResult { public SourceObject[] Sources => [new()]; }
     public class ObjectInfo
     {
-        public string Name { get; init; } = "";
+        public string Name { get; set; } = "";
         public string? Path => null;
         public string TypeName => "FC";
         public string Address => "";

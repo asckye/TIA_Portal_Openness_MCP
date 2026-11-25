@@ -136,11 +136,13 @@ namespace TiaMcpServer.Siemens.Services
             var failed = new List<ImportFailure>();
 
             bool unknown = false;
+            bool verifiedRefusal = false;
             ResponseImportBatch Result()
             {
                 var meta = ResponseMeta.Basic(DateTime.Now, failed.Count == 0);
                 meta["mayHaveChanged"] = imported.Count > 0 || unknown;
                 meta["writeOutcomeUnknown"] = unknown;
+                if (verifiedRefusal) meta["verifiedAbsent"] = true;
                 return new ResponseImportBatch { Imported = imported, Failed = failed, Meta = meta };
             }
 
@@ -201,6 +203,7 @@ namespace TiaMcpServer.Siemens.Services
                     catch (Exception error)
                     {
                         if (imported.Count + failed.Count == 0 && error is AdapterPreconditionException or NotSupportedException) throw;
+                        verifiedRefusal |= error.Data["nativeResultEvidence"] is JsonObject evidence && (bool?)evidence["verifiedAbsent"] == true;
                         unknown |= TiaOpenness.Shared.HostFailurePolicy.Classify(error, sent, dryRun) == TiaOpenness.Shared.HostFailureKind.Unknown;
                         failed.Add(new ImportFailure { Path = file, Error = error.Message });
                         if (!unknown && error is not (PortalException or AdapterPreconditionException)) break;

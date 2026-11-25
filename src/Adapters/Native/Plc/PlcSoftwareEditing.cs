@@ -31,11 +31,13 @@ namespace TiaMcp.Adapters.Native.Plc
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["fbPath"] = fbPath; meta["groupPath"] = groupPath; meta["name"] = name;
                 if (!dryRun)
                 {
-                    meta["mayHaveChanged"] = true; MutationStarted = true;
+                    meta["mayHaveChanged"] = true;
                     // Native project evidence: CreateInstanceDB(name, true, 0, fb) created "DB0" and compilation rejected "invalid number 0".
                     // Auto-numbering needs a valid seed, so 1 is passed and TIA assigns the free number.
                     // See docs/reference/real-machine-ledger.md for native acceptance evidence.
-                    var db = group.Blocks.CreateInstanceDB(name, autoNumber, autoNumber && number < 1 ? 1 : number, fb.Name);
+                    InstanceDB db;
+                    try { db = CreateInstanceDb(group, name, autoNumber, number, fb, meta); }
+                    finally { MutationStarted |= meta["mayHaveChanged"] is true; }
                     if (db == null || group.Blocks.Find(name) == null) throw new InvalidOperationException("Native instance DB not found after creation.");
                     meta["after"] = HardwareScalarEvidence.Read(db);
                 }

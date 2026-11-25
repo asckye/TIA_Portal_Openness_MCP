@@ -5,13 +5,13 @@ namespace Siemens.Engineering
 namespace Siemens.Engineering.HW
 {
     public class Device { public string Name="";public object? Parent;public List<DeviceItem> DeviceItems=new(); }
-    public class DeviceItem { public string Name=""; public List<DeviceItem> DeviceItems=new(); public List<DeviceItem> Items=new(); }
+    public partial class DeviceItem { public string Name=""; public List<DeviceItem> DeviceItems=new(); public List<DeviceItem> Items=new(); }
     public class DeviceComposition : List<Device>
     {
-        public object? Owner;public int Calls;public bool ThrowAfterCreate;
+        public object? Owner;public int Calls;public bool ThrowAfterCreate; public Action? BeforeCreate;
         public Device CreateWithItem(string typeIdentifier,string name,string deviceName)
         {
-            Calls++;var d=new Device{Name=deviceName,Parent=Owner};Add(d);
+            Calls++;BeforeCreate?.Invoke();var d=new Device{Name=deviceName,Parent=Owner};Add(d);
             if(ThrowAfterCreate)throw new InvalidOperationException("native failure after addition");return d;
         }
     }

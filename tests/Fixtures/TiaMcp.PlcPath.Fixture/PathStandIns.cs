@@ -71,6 +71,7 @@ namespace Siemens.Engineering.SW.Types
     {
         public string Name { get; set; } = "";
         public string Declaration { get; set; } = "";
+        public Action? OnDelete { get; set; }
         public Exception? ExportFailure { get; set; }
         public void Export(FileInfo file, Siemens.Engineering.ExportOptions options)
         {
@@ -210,7 +211,12 @@ namespace TiaMcp.Adapters
                 result.AddRange(root.Blocks);
                 foreach (var group in root.Groups) GetBlocksRecursive(group, result);
             }
-            public IEqualityComparer<object> ReferenceEqualityComparer => System.Collections.Generic.ReferenceEqualityComparer.Instance;
+            private sealed class IdentityComparer : IEqualityComparer<object>
+            {
+                public new bool Equals(object? left, object? right) => ReferenceEquals(left, right);
+                public int GetHashCode(object item) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(item);
+            }
+            public IEqualityComparer<object> ReferenceEqualityComparer { get; } = new IdentityComparer();
             public object? ResolvePlcTagTableGroup(PlcSoftware plc) => engine.TagGroupReader == null ? plc.TagTableGroup : engine.TagGroupReader();
             public List<string>? GetPlcTagTables(string path, out string? reason)
             {
@@ -250,7 +256,7 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static object ExternalSources(object value) => PlcGroupOperations.Get(value, "ExternalSources");
         internal static object Parent(PlcBlock block) => block.Parent!;
         internal static string Language(PlcBlock block) => block.Language;
-        internal static void Delete(PlcType type) => throw new NotSupportedException();
+        internal static void Delete(PlcType type) => (type.OnDelete ?? throw new NotSupportedException())();
         internal static void Delete(PlcBlock block)
         {
             ((PlcBlockGroup)block.Parent!).OnCall?.Invoke("delete " + block.Name);

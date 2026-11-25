@@ -124,8 +124,7 @@ public sealed class BehaviorDisclosureTests
         }
         public IReadOnlyList<IoAddressInfo>? GetDeviceItemAddresses(string path) => throw new InvalidOperationException();
         public List<string> DescribeChildItemsWithAddresses(string path) => throw new InvalidOperationException();
-        public (bool ok, string message, IoAddressInfo? before, IoAddressInfo? after)
-            SetDeviceItemStartAddress(string path, string ioType, int startAddress) => throw new InvalidOperationException();
+        public IoAddressWriteReply SetDeviceItemStartAddress(string path, string ioType, int startAddress) => throw new InvalidOperationException();
         public ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress,
             string propertiesJson, string attributesJson, string softwarePath, string processImageObName, bool dryRun)
             => throw new InvalidOperationException();

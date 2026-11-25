@@ -15,6 +15,8 @@
     <ProjectReference Include="../../Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj" Aliases="plcpathfixture" />
     <ProjectReference Include="../../Fixtures/TiaMcp.UnifiedWorker.Fixture/TiaMcp.UnifiedWorker.Fixture.csproj" Aliases="unifiedworkerfixture" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareLegacyWrites.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareLegacyWrites.Scalars.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressing.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkLegacy.Connect.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareNetworkLegacy.Read.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcOrganisationGroups.cs" />

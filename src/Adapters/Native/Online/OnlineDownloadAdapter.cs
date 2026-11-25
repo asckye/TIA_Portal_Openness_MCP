@@ -1,35 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Net;
-using System.Reflection;
 using System.Threading;
-using TiaMcp.Adapters.Contracts;
-using TiaMcp.Adapters.Native.Hmi;
-using TiaMcp.Adapters.Native.Plc;
-using TiaMcpServer.Siemens;
-using Siemens.Engineering;
-using Siemens.Engineering.Compiler;
 using Siemens.Engineering.Connection;
 using Siemens.Engineering.Online;
-#if ONLINE_LEGITIMATION
-using Siemens.Engineering.Online.Configurations;
-#endif
-using Siemens.Engineering.HW;
-using Siemens.Engineering.HW.Features;
-using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
-#if ONLINE_DOWNLOAD
-using Siemens.Engineering.Download;
-using Siemens.Engineering.Download.Configurations;
-using Siemens.Engineering.Upload;
-using Siemens.Engineering.Upload.Configurations;
-#endif
+using TiaMcp.Adapters.Contracts;
+using TiaMcp.Adapters.Native.Hmi;
+using TiaMcpServer.Siemens;
+
 namespace TiaMcp.Adapters.Native.Online
 {
     // Historical native observations lack a recorded PLCSIM version/date; see docs/reference/real-machine-ledger.md.
@@ -128,6 +105,7 @@ namespace TiaMcp.Adapters.Native.Online
                     + _session.AvailablePlcPathsSuffix());
             }
 
+            Func<string>? readState = null;
             try
             {
 #if ONLINE_RH
@@ -136,6 +114,7 @@ namespace TiaMcp.Adapters.Native.Online
                     RHOnlineProvider rh = _session.ResolvePlcService<RHOnlineProvider>(softwarePath, plcSoftware)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
                                 "RHOnlineProvider service not available on this PLC (rhTarget applies to R/H systems only).");
+                    readState = () => (rhTarget == "primary" ? rh.PrimaryState : rh.BackupState).ToString();
                     using var rhScope =
                         AttachOnlineLegitimationHandler(rh.Configuration, password, userName, userType, meta, trustDeviceCertificate, allowNonTlsLogin);
                     // ConfigurationAddress has no public constructor: the address object comes from the route tree (target interfaces).
@@ -144,6 +123,7 @@ namespace TiaMcp.Adapters.Native.Online
 #if !ONLINE_ADDRESS_OVERLOAD
                     bool rhApplied = false;
                     string? rhApplyError = null;
+                    meta["mayHaveChanged"] = true;
                     try { rhApplied = rh.Configuration.ApplyConfiguration(rhAddress); }
                     catch (Exception ex) { rhApplyError = ex.GetBaseException().Message; }
                     var rhRefusal = OnlineTransitionPolicy.RouteApplyRefusal(true, rhApplied, rhApplyError, ipAddress!);
@@ -183,7 +163,8 @@ namespace TiaMcp.Adapters.Native.Online
                     AttachOnlineLegitimationHandler(provider.Configuration, password, userName, userType, meta, trustDeviceCertificate, allowNonTlsLogin);
 
                 string routeNote = "";
-                string before = provider.State.ToString();
+                readState = () => provider.State.ToString();
+                string before = readState();
                 meta["onlineStateBefore"] = before;
                 if (before == "Online")
                 {
@@ -195,6 +176,8 @@ namespace TiaMcp.Adapters.Native.Online
                             + "call DisconnectOnlinePlc first to change the route." };
                 }
                 var selection = SelectDownloadRoute(provider.Configuration, pgPcInterface, ipAddress, deferApply: true);
+                if (selection.WriteAttempted) meta["mayHaveChanged"] = true;
+                if (selection.Unreadable) meta["writeOutcomeKnown"] = false;
                 if (selection.Error != null || selection.Address == null)
                 {
                     meta["success"] = false;
@@ -205,6 +188,7 @@ namespace TiaMcp.Adapters.Native.Online
                 }
                 ConfigurationAddress address = selection.Address;
                 string? applyError = null;
+                meta["mayHaveChanged"] = true;
                 try { selection.Applied = provider.Configuration.ApplyConfiguration(address); }
                 catch (Exception ex) { applyError = ex.GetBaseException().Message; }
                 var routeRefusal = OnlineTransitionPolicy.RouteApplyRefusal(true, selection.Applied, applyError, selection.Description);
@@ -249,7 +233,9 @@ namespace TiaMcp.Adapters.Native.Online
                 for (var e = ex; e != null && chain.Count < 6; e = e.InnerException) if (!string.IsNullOrWhiteSpace(e.Message) && !chain.Contains(e.Message))
                     chain.Add(e.Message);
                 string stateNow = "";
-                try { stateNow = _session.ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware)?.State.ToString() ?? ""; } catch (Exception) { /* swallow(probe-optional): a failed state probe must preserve the original GoOnline failure */ }
+                try { stateNow = readState?.Invoke() ?? ""; }
+                catch (Exception) { /* swallow(probe-optional): an unavailable state cannot settle the transition. */ }
+                if (stateNow.Length == 0 || !NativeRefusalProbe.AllowsRefusalProof(ex)) meta["writeOutcomeKnown"] = false;
                 meta["success"] = false; meta["error"] = string.Join(" <- ", chain);
                 meta["nativeMessage"] = meta["error"];
                 meta["phase"] = meta["writeAttempted"] is true ? "goOnline" : "routeSelection";
@@ -257,78 +243,10 @@ namespace TiaMcp.Adapters.Native.Online
                 var hint = stateNow == "Incompatible"
                     ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadPlc), then go online." : "";
                 return new OnlineStateResult {
-                    State = stateNow.Length > 0 && stateNow != "Online" ? stateNow : "NotReachable", IsOnline = false, IsReachable = stateNow == "Incompatible"
-                        || stateNow == "Protected", Message = $"GoOnline failed: {string.Join(" <- ", chain)}{hint}", Meta = meta
+                    State = stateNow.Length > 0 ? stateNow : "Unknown", IsOnline = stateNow == "Online",
+                    IsReachable = stateNow is "Online" or "Incompatible" or "Protected",
+                    Message = $"GoOnline failed: {string.Join(" <- ", chain)}{hint}", Meta = meta
                 };
-            }
-        }
-
-        // Typed walk of Modes -> PcInterfaces -> TargetInterfaces -> Addresses for an exact IP (R/H online targets).
-        private ConfigurationAddress? FindConfigurationAddress(ConnectionConfiguration configuration, string ipAddress)
-        {
-            foreach (ConfigurationMode mode in PlcGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
-                foreach (ConfigurationPcInterface pcInterface in PlcGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
-                {
-                    foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>())
-#if ONLINE_TARGET_ADDRESSES
-                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
-#else
-                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(OnlineRoutePrimitives.TargetAddresses(target))
-                                .Cast<ConfigurationAddress>())
-#endif
-#if ONLINE_ADDRESSES
-                            if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
-#else
-                            if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
-#endif
-                    var viaSubnet = FindSubnetOrGatewayAddress(pcInterface, ipAddress, out _);
-                    if (viaSubnet != null) return viaSubnet;
-                }
-            return null;
-        }
-
-        public HmiMessage GoOffline(string softwarePath)
-        {
-            // 未找到工程、PLC 或在线服务时，不能报告下线成功。
-            if (_session.IsProjectNull())
-            {
-                throw new PortalException(PortalErrorCode.InvalidState,
-                    "DisconnectOnlinePlc: no project is open, so nothing was taken offline. "
-                    + "Call ConnectPortal + OpenProject (or AttachOpenProject) first.");
-            }
-
-            // GoOffline needs no configuration (Siemens online-and-download skill) and acts on an online PLC by definition, so the
-            // offline-export precondition of a write resolution must not run here.
-            var plcSoftware = _session.ResolvePlc(softwarePath, false);
-            if (plcSoftware == null)
-            {
-                throw new PortalException(PortalErrorCode.NotFound,
-                    $"DisconnectOnlinePlc: PLC software not found at '{softwarePath}', so nothing was taken offline."
-                    + _session.AvailablePlcPathsSuffix());
-            }
-
-            try
-            {
-                var provider = _session.ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware);
-                if (provider == null)
-                {
-                    throw new PortalException(PortalErrorCode.OpennessError,
-                        $"DisconnectOnlinePlc: OnlineProvider service is not available on '{softwarePath}', "
-                        + "so the offline transition was NOT performed. Any live online session is still open — "
-                        + "disconnect it in the TIA Portal UI before compiling or exporting.");
-                }
-
-                var before = provider.State.ToString();
-                provider.GoOffline();
-                // GoOffline returns void: the state read back decides the result, as DisconnectOnlinePlcs does.
-                var after = provider.State.ToString();
-                var outcome = OnlineTransitionPolicy.GoOfflineOutcome(softwarePath, before, after);
-                return new HmiMessage { Message = outcome.Message, Meta = HmiMeta.Basic(outcome.Success, ("before", before), ("after", after)) };
-            }
-            catch (Exception ex)
-            {
-                _session.Log.Error(ex, "GoOffline failed for {SoftwarePath}", softwarePath);
-                return new HmiMessage { Message = $"GoOffline error: {ex.Message}" };
             }
         }
 

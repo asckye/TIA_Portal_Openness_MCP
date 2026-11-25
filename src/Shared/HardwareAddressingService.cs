@@ -44,12 +44,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         public List<string> DescribeChildItemsWithAddresses(string path)
             => JsonSerializer.Deserialize<List<string>>(Invoke("DescribeHardwareIoChildren", new JsonObject { ["deviceItemPath"] = path })!.ToJsonString())!;
-        public (bool ok, string message, IoAddressInfo? before, IoAddressInfo? after) SetDeviceItemStartAddress(string path, string ioType, int startAddress)
-        {
-            var reply = JsonSerializer.Deserialize<IoAddressWriteReply>(Invoke("SetHardwareIoAddress", new JsonObject {
+        public IoAddressWriteReply SetDeviceItemStartAddress(string path, string ioType, int startAddress)
+            => JsonSerializer.Deserialize<IoAddressWriteReply>(Invoke("SetHardwareIoAddress", new JsonObject {
                 ["deviceItemPath"] = path, ["ioType"] = ioType, ["startAddress"] = startAddress }, true)!.ToJsonString())!;
-            return (reply.Ok, reply.Message, reply.Before, reply.After);
-        }
 
         private static string[] Path(string json) => V4Json.Deserialize<string[]>(json);
         internal static Dictionary<string, HardwareScalar> Scalars(string json)

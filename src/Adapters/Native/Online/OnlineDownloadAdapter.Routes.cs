@@ -35,6 +35,30 @@ namespace TiaMcp.Adapters.Native.Online
     // Historical native observations lack a recorded PLCSIM version/date; see docs/reference/real-machine-ledger.md.
     internal sealed partial class OnlineDownloadAdapter
     {
+        // Typed walk of Modes -> PcInterfaces -> TargetInterfaces -> Addresses for an exact IP (R/H online targets).
+        private ConfigurationAddress? FindConfigurationAddress(ConnectionConfiguration configuration, string ipAddress)
+        {
+            foreach (ConfigurationMode mode in PlcGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
+                foreach (ConfigurationPcInterface pcInterface in PlcGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
+                {
+                    foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>())
+#if ONLINE_TARGET_ADDRESSES
+                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
+#else
+                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(OnlineRoutePrimitives.TargetAddresses(target))
+                                .Cast<ConfigurationAddress>())
+#endif
+#if ONLINE_ADDRESSES
+                            if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
+#else
+                            if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
+#endif
+                    var viaSubnet = FindSubnetOrGatewayAddress(pcInterface, ipAddress, out _);
+                    if (viaSubnet != null) return viaSubnet;
+                }
+            return null;
+        }
+
         // ---- PG/PC route selection (issue #14) --------------------------------------------------
         // V21: ConnectionConfiguration.ApplyConfiguration(ConfigurationTargetInterface) returns a
         // bool (whether the online route applied) — it does NOT return the IConfiguration. The
@@ -81,6 +105,8 @@ namespace TiaMcp.Adapters.Native.Online
             public ConfigurationAddress? Address;
             public string AddressSource = "";   // targetInterface | subnet | gateway | created | not-created (preview)
             public object? Target;              // the ConfigurationTargetInterface the address belongs to (for the 5-arg Download overload)
+            public bool WriteAttempted;
+            public bool Unreadable;
             public bool Applied;                // ConnectionConfiguration.ApplyConfiguration returned true for the selection
         }
 
@@ -118,7 +144,7 @@ namespace TiaMcp.Adapters.Native.Online
 
         // Official ConfigurationAddressComposition.Create(address) on a target interface (V20 and V21). Returns null when the
         // composition refuses (the exception text is handed back for the error message).
-        private static ConfigurationAddress? TryCreateTargetAddress(object? target, string ipAddress, out string error)
+        private static ConfigurationAddress? TryCreateTargetAddress(object? target, string ipAddress, DownloadRouteSelection selection, out string error)
         {
 #if ONLINE_TARGET_ADDRESSES
             error = "";
@@ -127,9 +153,10 @@ namespace TiaMcp.Adapters.Native.Online
             {
                 var existing = typed.Addresses.Find(ipAddress);
                 if (existing != null) return existing;
+                selection.WriteAttempted = true;
                 return typed.Addresses.Create(ipAddress);
             }
-            catch (Exception ex) { error = ex.Message; return null; }
+            catch (Exception ex) { selection.Unreadable = true; error = ex.Message; return null; }
         
 #else
             error = "Target-interface address creation requires V17 or later.";
@@ -312,7 +339,7 @@ namespace TiaMcp.Adapters.Native.Online
                             var errors = new List<string>();
                             foreach (var route in ordered)
                             {
-                                var created = TryCreateTargetAddress(route.Target, targetIpAddress!, out var error);
+                                var created = TryCreateTargetAddress(route.Target, targetIpAddress!, selection, out var error);
                                 if (created == null) { errors.Add(route.TargetName + ": " + error); continue; }
                                 selection.Address = created; selection.AddressSource = "created"; selection.Target = route.Target;
                                 route.TargetAddresses.Add(targetIpAddress!);
@@ -356,6 +383,7 @@ namespace TiaMcp.Adapters.Native.Online
                 {
                     bool applied = false;
                     string? applyError = null;
+                    selection.WriteAttempted = true;
                     try { applied = typedConfiguration.ApplyConfiguration(selection.Address); }
                     catch (Exception ex) { applyError = ex.GetBaseException().Message; }
                     selection.Configuration = selection.Address;
@@ -387,6 +415,7 @@ namespace TiaMcp.Adapters.Native.Online
                 {
                     try
                     {
+                        if (applyMethod != null) selection.WriteAttempted = true;
                         if (applyMethod?.Invoke(connectionConfiguration, new[] { route.Target }) is bool ok && ok)
                         {
                             selection.Configuration = route.Target;
@@ -409,6 +438,7 @@ namespace TiaMcp.Adapters.Native.Online
             }
             catch (Exception ex)
             {
+                selection.Unreadable = true;
                 // The route tree could not be walked; callers refuse instead of handing the raw configuration to the native call.
                 selection.Error ??= "Route selection failed: " + ex.GetBaseException().Message;
             }

@@ -196,13 +196,8 @@ namespace TiaMcp.Adapters.Native.Plc
         public PlcImportObject Restore(PlcImportInput input)
             => ImportCore(input, true, true);
         internal PlcImportObject ImportXml(PlcImportInput input, bool overwrite, Action dispatch)
-            => ImportCore(input, overwrite, false, dispatch);
-        internal static IList<PlcTagTable> ImportTagTables(PlcTagTableComposition tables, FileInfo file, ImportOptions options, Action? dispatch)
-        {
-            dispatch?.Invoke();
-            return tables.Import(file, options);
-        }
-        private PlcImportObject ImportCore(PlcImportInput input, bool overwrite, bool recovery, Action? dispatch = null)
+            => ImportCore(input, overwrite, false, dispatch, overwrite ? null : input.Target.Name);
+        private PlcImportObject ImportCore(PlcImportInput input, bool overwrite, bool recovery, Action? dispatch = null, string? admittedNewName = null)
         {
             var group = groups[Key(Space(input.Target.Kind), input.Target.GroupPath)]; object[] imported;
             var sw = recovery ? Array.Empty<string>() : SwImportOptions;
@@ -228,8 +223,9 @@ namespace TiaMcp.Adapters.Native.Plc
             else if (input.Target.Kind == "UDT") imported = PlcNativeImportOptions
                 .Types(((PlcTypeGroup)group).Types, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option, sw, dispatch)
                 .Take(2).Cast<object>().ToArray();
-            else if (input.Target.Kind == "TagTable") imported = ImportTagTables(((PlcTagTableGroup)group).TagTables,
-                new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option, dispatch).Take(2).Cast<object>().ToArray();
+            else if (input.Target.Kind == "TagTable") imported = PlcTagWrites.Import(((PlcTagTableGroup)group).TagTables,
+                new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option, admittedNewName, dispatch)
+                .Take(2).Cast<object>().ToArray();
             else imported = PlcNativeImportOptions
                 .Blocks(((PlcBlockGroup)group).Blocks, new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(input.Path)), option, sw, dispatch).Take(2)
                 .Cast<object>().ToArray();

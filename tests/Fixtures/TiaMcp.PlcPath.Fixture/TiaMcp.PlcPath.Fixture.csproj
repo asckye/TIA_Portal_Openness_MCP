@@ -1,11 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net48</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <DefineConstants>$(DefineConstants);PLC_SOFTWARE_CROSS_REFERENCES;PLC_UNITS</DefineConstants>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.Text.Json" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48'" />
+    <InternalsVisibleTo Include="TiaMcp.Adapters.Contracts.Tests" />
+    <InternalsVisibleTo Include="TiaMcp.VerifiedImport.Net48.Tests" />
     <ProjectReference Include="../../../src/Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcOrganisationWorker.Paths.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcObjectPath.cs" />

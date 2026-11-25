@@ -110,12 +110,12 @@ namespace TiaMcp.Adapters
                 foreach(var group in project.DeviceGroups) visit(group,project,0);
                 return rows;
             };
-            var result=PlcDeviceAddPolicy.Run(request,catalog,inventory,check,(identifier,name)=> {
-                var created=NativeHardware.CreateWithItem(NativeHardware.Devices(project),identifier,name,name);
+            var result=PlcDeviceAddPolicy.Run(request,catalog,inventory,check,
+                (identifier,name) => NativeHardware.CreateWithItem(NativeHardware.Devices(project),identifier,name,name), created => {
                 if(created==null) return null!;
                 var createdName=created.Name; var parent=created.Parent;
                 return new PlcDeviceAddItem {
-                    Name=createdName,Identity=DeviceAddIdentity(created),ParentIdentity=DeviceAddIdentity(parent),ParentVerified=object.Equals(parent,project)
+                    Name=createdName,Identity=DeviceAddIdentity(created),ParentIdentity=DeviceAddIdentity(parent!),ParentVerified=object.Equals(parent,project)
                         || object.Equals(parent,ungroupedRoot)
                 };
             });

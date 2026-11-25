@@ -30739,7 +30739,7 @@
               "meaning": "Select ArticleNumber or TypeIdentifier from SearchHardwareCatalog, retaining exact spelling."
             },
             "preferredVersion": {
-              "meaning": "Copy version from the same SearchHardwareCatalog row as preferredMlfb; V3.1 is the verified V19 example, bind to an installed row on other releases.",
+              "meaning": "Copy the firmware version from the same SearchHardwareCatalog row as preferredMlfb. The sample pair comes from repository catalog data. Confirm its availability in the attached portal.",
               "requiresBinding": true
             },
             "deviceName": {
@@ -37060,7 +37060,7 @@
           "resultReading": [
             "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
           ],
-          "note": "Bind leftFilePath and rightFilePath to the two XML revisions. ExportPlcBlock returns the exact path in data.outputFile. V18 planned.xml / after.xml comparisons passed in rows 57 and 58 and returned INVALID_ARGUMENT in row 59. V14 SP1 (rows 26–27), V19 (row 150), V20 (rows 59, 66, 73) and V21 (rows 80, 84, 92) recorded refusals involving DBs with UDT members or before/after recovery files."
+          "note": "Bind leftFilePath and rightFilePath to the two XML revisions. ExportPlcBlock returns each path in data.outputFile. If a document is refused, inspect the reported field and block type, including UDT members in data blocks."
         },
         "ExtractPlcBlockMetrics": {
           "arguments": {
@@ -43809,7 +43809,7 @@
           "validation": "Parameterized example for the registered Classic HMI API on the selected release. Bind exact software, folder and object names from project reads. Unified targets require V19 or newer and the actual requested member. Native acceptance: current / NOT RUN."
         },
         "DescribeHmiTagTable": {
-          "note": "For non-English projects use the localized named example. Run ListHmiTagTables on the same HMI and copy its returned path. The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
+          "note": "Run ListHmiTagTables for the selected HMI and copy the exact returned path, including its localized name. /Default tag table is a sample path. For a PLC table, use ListPlcTagTables.",
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table"
@@ -53069,7 +53069,7 @@
               "meaning": "Select ArticleNumber or TypeIdentifier from SearchHardwareCatalog, retaining exact spelling."
             },
             "preferredVersion": {
-              "meaning": "Copy version from the same SearchHardwareCatalog row as preferredMlfb; V3.1 is the verified V19 example, bind to an installed row on other releases.",
+              "meaning": "Copy the firmware version from the same SearchHardwareCatalog row as preferredMlfb. The sample pair comes from repository catalog data. Confirm its availability in the attached portal.",
               "requiresBinding": true
             },
             "deviceName": {
@@ -54092,7 +54092,7 @@
             "21": "Real-machine verified V21 (2026-11-24), left MCP_RC_FC.xml, right blocks-473cf92217bf229ed0bcf136461fee72de578e283b28f5b94ad6c172c5c2e5e6.xml. rc4-verify-v21, row 73."
           },
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-          "note": "Bind leftFilePath and rightFilePath to the two XML revisions. ExportPlcBlock returns the exact path in data.outputFile. V18 planned.xml / after.xml comparisons passed in rows 57 and 58 and returned INVALID_ARGUMENT in row 59. V14 SP1 (rows 26–27), V19 (row 150), V20 (rows 59, 66, 73) and V21 (rows 80, 84, 92) recorded refusals involving DBs with UDT members or before/after recovery files."
+          "note": "Bind leftFilePath and rightFilePath to the two XML revisions. ExportPlcBlock returns each path in data.outputFile. If a document is refused, inspect the reported field and block type, including UDT members in data blocks."
         },
         "CompareProjects": {
           "arguments": {
@@ -55220,7 +55220,7 @@
           "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN."
         },
         "DescribeHmiTagTable": {
-          "note": "For non-English projects use the localized named example. Run ListHmiTagTables on the same HMI and copy its returned path. The default tag table name is localized. Replace /Default tag table with the exact path from ListHmiTagTables for the selected HMI. For a PLC table, use ListPlcTagTables.",
+          "note": "Run ListHmiTagTables for the selected HMI and copy the exact returned path, including its localized name. /Default tag table is a sample path. For a PLC table, use ListPlcTagTables.",
           "arguments": {
             "softwarePath": "HMI_RT_1",
             "tagTableName": "/Default tag table"

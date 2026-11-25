@@ -158,7 +158,7 @@ namespace Siemens.Engineering.HW
         public void ConnectToIoSystem(IoSystem system) => ConnectedToIoSystem = system;
         public void DisconnectFromIoSystem() => ConnectedToIoSystem = null;
     }
-    public enum AddressIoType { Input, Output }
+    public enum AddressIoType { Input, Output, None }
     public enum ChannelType { Digital, Analog }
     public enum ChannelIoType { Input, Output }
     public enum AttributeAccessMode { ReadWrite }
@@ -390,7 +390,10 @@ namespace Siemens.Engineering.HW
     public sealed class Device : HardwareObject { }
     public sealed class Address : Siemens.Engineering.IEngineeringObject
     {
-        public int StartAddress { get; set; }
+        internal Action<int>? SettingStart;
+        internal Func<int>? ReadingStart;
+        private int start;
+        public int StartAddress { get => ReadingStart?.Invoke() ?? start; set { SettingStart?.Invoke(value); start = value; } }
         public int Length { get; set; }
         public AddressIoType IoType { get; set; } = AddressIoType.Input;
         public object[] AddressControllers { get; set; } = [];

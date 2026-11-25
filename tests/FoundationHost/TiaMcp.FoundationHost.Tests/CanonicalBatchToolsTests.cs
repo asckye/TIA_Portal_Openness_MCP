@@ -346,6 +346,29 @@ public sealed class CanonicalBatchToolsTests
     }
 
     [Fact]
+    public async Task Stale_first_source_leaves_the_batch_not_started()
+    {
+        using var files = new Files();
+        var target = new Target("ImportPlcTagTable");
+        var batch = Batch("ImportPlcTagTablesFromDirectory", target);
+        batch.Approve = (pending, settings, token) => {
+            target.OnPreview = values => {
+                if (Path.GetFileName((string?)values["importPath"]) == "B.xml")
+                    File.AppendAllText(Path.Combine(files.Directory, "A.xml"), "\n");
+            };
+            return Task.FromResult(new ApprovalOutcome(pending, false, null));
+        };
+        var args = files.Arguments();
+        var preview = await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args));
+        Apply(args, preview.StructuredContent!["data"]!.AsObject());
+        var body = (await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args))).StructuredContent!;
+        Assert.Empty(target.Writes);
+        Assert.Equal("PLAN_STALE", (string?)body["data"]?["items"]?[0]?["result"]?["error"]?["code"]);
+        Assert.False((bool?)body["data"]?["executed"]);
+        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+    }
+
+    [Fact]
     public async Task First_failure_retains_canonical_diagnostics_and_marks_remaining_items_not_started()
     {
         using var files = new Files(); var target = new Target("ImportPlcTagTable") { FailWrite = 2 }; var batch =
@@ -862,6 +885,7 @@ public sealed class CanonicalBatchToolsTests
         internal bool OmitRequestId;
         internal bool RejectWrite;
         internal bool UnknownFailure, LegacyReset;
+        internal Action<JsonObject>? OnPreview;
         internal Action<int>? AfterWrite;
         internal JsonArray? Inventory;
         internal List<string> Writes { get; } = new();
@@ -880,6 +904,7 @@ public sealed class CanonicalBatchToolsTests
             var args = JsonSerializer.SerializeToNode(request.Params!.Arguments)!.AsObject();
             Arguments.Add(args.DeepClone().AsObject());
             bool write = (bool?)args["dryRun"] == false;
+            if (!write) OnPreview?.Invoke(args);
             if (!write && PreviewRefusal != null) return ValueTask.FromResult(PreviewRefusal);
             if (write) {
                 var grant = GenerationStepApproval.Match(PendingApproval.Create("test", release, name, args.ToJsonString(), null, 120)); Assert.NotNull(grant);

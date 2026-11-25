@@ -90,6 +90,20 @@ namespace TiaMcp.Adapters
                 throw new InvalidOperationException("Ambiguous device inventory.");
             return items.OrderBy(x=>x.Identity,StringComparer.Ordinal).ToArray();
         }
+        private static IEnumerable<object> InventoryFields(IEnumerable<PlcDeviceAddItem> items)
+        {
+            foreach (var item in items)
+            {
+                yield return item.Identity;
+                yield return item.Name;
+                yield return item.ParentIdentity;
+                yield return item.IsGroup;
+                yield return item.IsUngroupedSystemGroup;
+                yield return item.ItemNames.Length;
+                foreach (var name in item.ItemNames) yield return name;
+            }
+        }
+
         private static void RequireFreeName(PlcDeviceAddRequest r,PlcDeviceAddItem[] items)
         {
             if(items.Any(x=>!x.IsGroup && string.Equals(x.Name,r.Name,StringComparison.OrdinalIgnoreCase)))
@@ -111,10 +125,15 @@ namespace TiaMcp.Adapters
             using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(string.Concat(fields.Select(Field)))))
                 .Replace("-","").ToLowerInvariant();
         }
-        internal static PlcDeviceAddResult Run(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,
-                Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
+        internal static PlcDeviceAddResult Run(PlcDeviceAddRequest r, Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,
+            Func<IEnumerable<PlcDeviceAddItem>> inventory, Action check, Func<string, string, PlcDeviceAddItem> create)
+            => Run(r, catalog, inventory, check, create, null);
+
+        internal static PlcDeviceAddResult Run<T>(PlcDeviceAddRequest r, Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,
+            Func<IEnumerable<PlcDeviceAddItem>> inventory, Action check, Func<string, string, T> create, Func<T, PlcDeviceAddItem>? describe)
+            where T : class
         {
-            try { return RunChecked(r,catalog,inventory,check,create); }
+            try { return RunChecked(r,catalog,inventory,check,create,describe); }
             catch(Exception error) when (error is ArgumentException argument && error is not AdapterPreconditionException)
             { throw new AdapterPreconditionException(argument.Message,argument.ParamName??"arguments",true,error); }
             catch(InvalidOperationException error) when (error is not AdapterPreconditionException)
@@ -123,8 +142,8 @@ namespace TiaMcp.Adapters
                         "device-create-preflight",false,error);
             }
         }
-        private static PlcDeviceAddResult RunChecked(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,
-                Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,PlcDeviceAddItem> create)
+        private static PlcDeviceAddResult RunChecked<T>(PlcDeviceAddRequest r,Func<IEnumerable<PlcHardwareCatalogCandidate>> catalog,
+                Func<IEnumerable<PlcDeviceAddItem>> inventory,Action check,Func<string,string,T> create, Func<T, PlcDeviceAddItem>? describe) where T : class
         {
             ValidateOptions(r); Text(r.RootIdentity,128,"Explicit project root identity required.");
             if(r.ProcessId<=0) throw new ArgumentException("Explicit attached process required.");
@@ -147,9 +166,12 @@ namespace TiaMcp.Adapters
             if(Hash(r,freshSelection,freshInventory)!=hash)
                 throw new AdapterPreconditionException("Device selection or inventory changed before creation; preview again.", "expectedPlanHash", false);
             check(); result.Attempted=true;
+            bool creating = true;
             try
             {
-                var created=create(selected.TypeIdentifier!,r.Name); // Exactly one call, including on native exception.
+                T native = create(selected.TypeIdentifier!, r.Name);
+                creating = false;
+                var created = describe != null ? describe(native) : native as PlcDeviceAddItem;
                 if(created==null || !created.ParentVerified || created.Name!=r.Name || created.IsGroup
                     || !(created.ParentIdentity==r.RootIdentity || before
                             .Any(x=>x.IsGroup && x.IsUngroupedSystemGroup && x.ParentIdentity==r.RootIdentity && x.Identity==created.ParentIdentity))
@@ -163,6 +185,13 @@ namespace TiaMcp.Adapters
                                 .IsUngroupedSystemGroup==x.IsUngroupedSystemGroup)))
                     throw new InvalidOperationException("Post-create inventory differs from the one planned addition.");
                 result.Status="created-verified"; result.Executed=true;
+            }
+            catch (Exception error) when (creating && describe != null && NativeRefusalProbe.ProvesUnchanged(error, () => {
+                check();
+                return InventoryFields(freshInventory).SequenceEqual(InventoryFields(Snapshot(inventory)));
+            }))
+            {
+                throw DeviceCreationRules.TiaRefusal(selected.TypeIdentifier!, r.Name, error.Message, "", "preferredMlfb", error);
             }
             catch(Exception ex) {
                 result.Status="outcome-unknown";result.OutcomeUnknown=true;var error=ex.GetType().Name+": "+ex.Message;result.Error=error.Length<=2048

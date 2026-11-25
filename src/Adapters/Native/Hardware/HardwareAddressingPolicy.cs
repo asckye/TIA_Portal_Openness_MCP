@@ -9,6 +9,14 @@ namespace TiaMcp.Adapters.Hardware
 {
     public static class HardwareAddressingPolicy
     {
+        internal static bool ScalarUnchanged(Exception failure, bool beforeReadable, object? before, Func<object?> readAfter)
+        {
+            return beforeReadable && NativeRefusalProbe.ProvesUnchanged(failure, () => {
+                _ = ScalarValue(before); // A native proxy cannot serve as its own detached baseline.
+                return Equals(before, readAfter());
+            });
+        }
+
         public static bool UnchangedAfterFailedSet(bool beforeReadable, object? before, Func<object?> readAfter)
         {
             object? after;

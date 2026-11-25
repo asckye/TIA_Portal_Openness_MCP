@@ -40,7 +40,8 @@ namespace TiaMcp.Adapters.Contracts
         public IoAddressInfo? Before { get; set; }
         public IoAddressInfo? After { get; set; }
         public bool OutcomeUnknown { get; set; }
-        public bool MayHaveChanged => Before != null;
+        private bool? mayHaveChanged;
+        public bool MayHaveChanged { get => mayHaveChanged ?? Before != null; set => mayHaveChanged = value; }
     }
 
     // Scalar values are explicit at the worker boundary. Native code never parses JSON.

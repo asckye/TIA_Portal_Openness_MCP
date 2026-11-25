@@ -154,7 +154,8 @@ namespace TiaMcp.Adapters
                                 BatchReturnedGroup(t,types!,request.TypeGroup)
                         })
                         .ToArray();
-                    if(planned.Kind=="TagTable") return PlcImportAdapter.ImportTagTables(PlcNative.TagTables(tags!),file,option,dispatch)
+                    if(planned.Kind=="TagTable") return PlcTagWrites.Import(PlcNative.TagTables(tags!),file,option,
+                        request.Overwrite || recovery ? null : planned.Name,dispatch)
                         .Select(t=>new PlcBatchImportObject {
                             Name=t.Name,Kind=t.GetType().Name=="PlcTagTable" ? "TagTable" : t.GetType().Name,GroupPath=
                                 BatchReturnedGroup(t,tags!,request.TagGroup)

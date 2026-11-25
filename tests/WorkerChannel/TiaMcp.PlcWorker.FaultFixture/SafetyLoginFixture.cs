@@ -36,6 +36,12 @@ internal static class SafetyLoginFixture
         if (scenario.StartsWith("read-")) admin.OnReadback = () => throw loss;
         else if (scenario.StartsWith("unreadable")) admin.OnReadback = () => throw new IOException("private native read");
         var session = new SafetySession(admin);
+        if (scenario == "messages-unreadable")
+        {
+            admin.LoginError = null;
+            admin.LoggedOnAfterLogin = true;
+            session.GetSoftwareContainer("CPU").Software.ReturnedResult = new Siemens.Engineering.Compiler.CompilerResult();
+        }
         if (scenario == "offline-refused-cleanup")
         {
             admin.LoginError = null;
@@ -50,7 +56,9 @@ internal static class SafetyLoginFixture
         if (caller == "safety-update")
         {
             session.TestWrite = scenario;
+            if (scenario == "version-abort") admin.Settings.VersionFailure = new Siemens.Engineering.EngineeringUserAbortException();
             admin.Settings.AttributeFailure = scenario switch {
+                "attribute-abort" => new Siemens.Engineering.EngineeringTargetInvocationException(new Siemens.Engineering.EngineeringUserAbortException()),
                 "refused" => new Siemens.Engineering.EngineeringSecurityException(),
                 "ordinary-refusal" => new Siemens.Engineering.EngineeringTargetInvocationException(),
                 "connection-loss" => new Siemens.Engineering.EngineeringTargetInvocationException(new EndOfStreamException()),

@@ -169,52 +169,6 @@ namespace TiaMcp.Adapters.Native.Vci
             catch { /* swallow(probe-optional): An unavailable workspace language is represented by the existing dash placeholder. */ return "-"; }
         }
 
-        public VersionControlResult CreateVersionControlWorkspace(
-            string workspaceName,
-            string folderPath,
-            bool dryRun)
-        {
-            bool issued = false;
-            try
-            {
-                var dir = VciWorkspaceLayout.CreationDirectory(workspaceName, folderPath, TiaOpenness.Shared.NativeInputPolicy.FullPath);
-                var vci = RequireVci();
-                var existing = AllWorkspaces(vci)
-                    .FirstOrDefault(w => string.Equals(PortVci.Name(w), workspaceName.Trim(), StringComparison.OrdinalIgnoreCase));
-                if (existing != null)
-                    return new VersionControlResult
-                    {
-                        Message = "A workspace named '" + workspaceName + "' already exists. " +
-                                  "Use ListVersionControlWorkspaces to inspect it.",
-                        Meta = HmiMeta.Basic(false, ("v4Rejection", "ALREADY_EXISTS")),
-                    };
-
-                if (dryRun)
-                    return new VersionControlResult {
-                        Message = "Version-control workspace '" + workspaceName.Trim() + "' would be created. Folder: " + dir.FullName,
-                        Meta = HmiMeta.Basic(true, ("dryRun", true), ("mayHaveChanged", false), ("rootPath", dir.FullName)),
-                    };
-
-                var group = Keep(PortVci.Group(vci));
-                issued = true;
-                var ws = Keep(PortVci.Create(Keep(PortVci.Workspaces(group)), workspaceName.Trim(), dir));
-                return new VersionControlResult
-                {
-                    Message = "Version-control workspace '" + PortVci.Name(ws) + "' was created. " +
-                              "Call ConnectProjectToWorkspace to map objects, then SynchronizeVersionControlWorkspace to export them. Folder: " + dir.FullName,
-                    Meta = HmiMeta.Basic(true),
-                };
-            }
-            catch (Exception ex)
-            {
-                return new VersionControlResult
-                {
-                    Message = "CreateVersionControlWorkspace failed: " + ex.Message,
-                    Meta = FailureEvidence(ex, issued),
-                };
-            }
-        }
-
         public VersionControlResult GetVersionControlStatus(
             string workspaceName = "",
             bool changedOnly = true)
@@ -389,7 +343,7 @@ namespace TiaMcp.Adapters.Native.Vci
                     WorkspaceMappings(current ??= ReAcquireWorkspace(wsName)), PortVci.FileName, ReadDirectory);
                 foreach (var target in prepared)
                 {
-                    var mo = failed == 0 ? target.Object : FindCurrent(target.Path);
+                    var mo = failed == 0 ? target.Object : attempts.FindNext(() => FindCurrent(target.Path));
                     string? failure = attempts.Synchronize(wsRoot, target.Path, () => PortVci.Synchronize(mo, mode),
                         () => { current = null; return FindCurrent(target.Path); }, ReadStatus, target.ProbeFailed, out var statusAfter, mode.ToString());
                     string name = target.Path.Stem;

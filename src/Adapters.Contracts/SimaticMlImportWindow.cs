@@ -82,6 +82,14 @@ namespace TiaMcp.Adapters.Contracts
         }
 
         // The first SW.Blocks.*, SW.Types.* or SW.Tags.* object (kind = local name after the last dot) and its AttributeList/Name.
+        internal static string? SingleImportName(XDocument document, params string[] supported)
+        {
+            var objects = document.Root!.Elements().Where(e => e.Name != "Engineering" && e.Name != "DocumentInfo").ToArray();
+            if (objects.Length != 1 || objects[0].Name.NamespaceName != "" || !supported.Contains(objects[0].Name.LocalName)) return null;
+            var names = objects[0].Elements("AttributeList").Elements("Name").Take(2).ToArray();
+            return names.Length == 1 ? names[0].Value : null;
+        }
+
         public static (string Kind, string Name)? ReadObject(XDocument document)
         {
             var native = document.Root?.Elements().FirstOrDefault(e => e.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal)

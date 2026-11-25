@@ -10,10 +10,9 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
-        private bool HardwareProjectMissing() { Check(); return EngineeringProjectMissing != null ? EngineeringProjectMissing() : project == null; }
-        private static IoAddressWriteReply IoWrite(bool ok, string message, IoAddressInfo? before, IoAddressInfo? after)
+        private static IoAddressWriteReply IoWrite(bool ok, string message, IoAddressInfo? before, IoAddressInfo? after, bool verifiedRefusal = false)
             => new IoAddressWriteReply { Ok = ok, Message = message, Before = before, After = after,
-                OutcomeUnknown = before != null && after == null };
+                OutcomeUnknown = before != null && after == null, MayHaveChanged = before != null && !verifiedRefusal };
         public IReadOnlyList<IoAddressInfo>? ReadHardwareIoAddresses(string deviceItemPath)
         {
             Check(); HardwareAddressingPolicy.RequireAvailable(ReleaseKey, "GetDeviceItemIoAddresses");
@@ -68,9 +67,13 @@ namespace TiaMcp.Adapters
         }
 
         public static List<IoAddressInfo> ReadAddresses(DeviceItem item)
+            => ReadAddresses(item, out _);
+
+        private static List<IoAddressInfo> ReadAddresses(DeviceItem item, out bool complete)
         {
             var list = new List<IoAddressInfo>();
             var addresses = item.Addresses;
+            complete = addresses != null;
             if (addresses == null)
             {
                 return list;
@@ -80,6 +83,7 @@ namespace TiaMcp.Adapters
             {
                 if (a == null)
                 {
+                    complete = false;
                     continue;
                 }
 
@@ -170,14 +174,22 @@ namespace TiaMcp.Adapters
                 return IoWrite(true, $"The start address is already {startAddress}; no change was made.", before, before);
             }
 
-            var allBefore = ReadAddresses(item);
+            var allBefore = ReadAddresses(item, out bool completeBefore);
             try
             {
                 target.StartAddress = startAddress;
             }
             catch (Exception ex)
             {
-                // 地址重叠、模块不允许改地址等都会走到这里。原因必须回给调用方。
+                IoAddressInfo? verified = null;
+                if (completeBefore && NativeRefusalProbe.ProvesUnchanged(ex, () => {
+                    var rows = ReadAddresses(item, out bool completeAfter);
+                    return completeAfter && allBefore.Select(AddressFields).SequenceEqual(rows.Select(AddressFields))
+                        && (verified = rows.FirstOrDefault(row => AddressFields(row) == AddressFields(before))) != null;
+                }))
+                    return IoWrite(false, $"Writing the start address failed: {ex.Message}. All module address rows are unchanged.",
+                        before, verified, verifiedRefusal: true);
+
                 return IoWrite(false, $"Writing the start address failed: {ex.Message} "
                              + "(common causes: overlap with another module address range, or the module address cannot be modified).", before, null);
             }
@@ -206,6 +218,8 @@ namespace TiaMcp.Adapters
             return IoWrite(true, $"The start address changed from {before.StartAddress} to {after.StartAddress}"
                         + " (native byte offsets)." + rows + " Run CompilePlcSoftware and SaveProject after the change.", before, after);
         }
+
+        private static (string, int, int) AddressFields(IoAddressInfo row) => (row.IoType, row.StartAddress, row.Length);
 
         private static bool TryParseIoType(string text, out AddressIoType value)
         {

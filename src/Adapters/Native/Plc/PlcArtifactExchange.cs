@@ -23,6 +23,7 @@ namespace TiaMcp.Adapters.Native.Plc
             internal string Kind = "";
             internal string Name = "";
             internal bool Temporary;
+            internal string? SingleTag;
             public void Dispose()
             {
                 if (!Temporary) return;
@@ -40,7 +41,8 @@ namespace TiaMcp.Adapters.Native.Plc
             SimaticMlImportWindow.RequireBlockProgram(_session.ReleaseKey, document, parameter);
             var native = SimaticMlImportWindow.ReadObject(document)
                 ?? throw new AdapterPreconditionException("The import file holds no SW.Blocks, SW.Types or SW.Tags object with a Name.", parameter);
-            var prepared = new PreparedImport { Path = path, Kind = native.Kind, Name = native.Name };
+            var prepared = new PreparedImport { Path = path, Kind = native.Kind, Name = native.Name,
+                SingleTag = native.Kind == "PlcTagTable" ? SimaticMlImportWindow.SingleImportName(document, "SW.Tags.PlcTagTable") : null };
             bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
             bool block = document.Root!.Elements().Any(e => e.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal));
             if (hasBom && !block) return prepared;
@@ -66,8 +68,8 @@ namespace TiaMcp.Adapters.Native.Plc
         // overwrite=false (the default of every tool): an existing object of the same name gives a typed refusal before the native
         // import, which then runs with ImportOptions.None ("Throw if exists"). overwrite=true uses ImportOptions.Override; an existing
         // object in another group is refused because Siemens documents that such an import is cancelled ("Importing configuration data").
-        private static void RequireImportTarget(string noun, string name, IEnumerable<(object Parent, string Name)> existing, object destination,
-                bool overwrite)
+        private static void RequireImportTarget<T>(string noun, string name, IEnumerable<(T Parent, string Name)> existing, object destination,
+                bool overwrite) where T : class?
         {
             var hits = existing.Where(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)).ToArray();
             if (hits.Length == 0) return;
@@ -94,11 +96,11 @@ namespace TiaMcp.Adapters.Native.Plc
             foreach (var child in group.Groups) foreach (var item in ExistingTagTables(child, depth + 1)) yield return item;
         }
 
-        private IEnumerable<(object Parent, string Name)> ExistingBlocks(PlcSoftware plc)
+        private IEnumerable<(object? Parent, string Name)> ExistingBlocks(PlcSoftware plc)
         {
             var all = new List<PlcBlock>();
             _session.GetBlocksRecursive(plc.BlockGroup, all);
-            return all.Select(b => ((object)b.Parent, b.Name));
+            return all.Select(b => ((object?)b.Parent, b.Name));
         }
 
         private static void RequireKind(PreparedImport prepared, bool block, bool type, string parameter)
@@ -251,14 +253,25 @@ namespace TiaMcp.Adapters.Native.Plc
 
                 if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PlcSoftwareException("InvalidParams", $"Import file not found: {importPath}");
+                // A BOM-bearing tag XML is passed to TIA at its original path. Keep the admitted declaration stable through Import.
+                using var sourceLock = overwrite ? null : TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.OpenRead(importPath));
                 using var prepared = PrepareXmlForImport(importPath);
                 RequireKind(prepared, false, false, "importPath");
                 RequireImportTarget("tag table", prepared.Name, ExistingTagTables(plc.TagTableGroup), group, overwrite);
 
                 var tables = PlcOrganisationPrimitives.TagTables(group);
                 var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path));
+                bool priorWrite = MutationStarted;
                 MutationStarted = true;
-                var imported = tables.Import(file, overwrite ? ImportOptions.Override : ImportOptions.None);
+                IList<PlcTagTable> imported;
+                try { imported = tables.Import(file, overwrite ? ImportOptions.Override : ImportOptions.None); }
+                catch (Exception error) when (!overwrite && NativeRefusalProbe.ProvesAbsent(error, prepared.SingleTag,
+                    name => tables.Find(name) != null || tables.Any(table => string.Equals(table.Name, name, StringComparison.OrdinalIgnoreCase))))
+                {
+                    MutationStarted = priorWrite;
+                    error.Data["verifiedAbsent"] = true;
+                    throw;
+                }
                 if (imported == null || imported.Count == 0)
                     throw new PlcSoftwareException("ImportFailed", "TagTables.Import returned an empty collection");
             }
@@ -269,8 +282,10 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             catch (Exception ex)
             {
-                throw new PlcSoftwareException("ImportFailed", ex.GetBaseException().GetType().FullName + ": " + ex.GetBaseException().Message
+                var failure = new PlcSoftwareException("ImportFailed", ex.GetBaseException().GetType().FullName + ": " + ex.GetBaseException().Message
                         + ImportOptionsNote, null, ex);
+                if (ex.Data["verifiedAbsent"] is true) failure.Data["verifiedAbsent"] = true;
+                throw failure;
             }
         }
 

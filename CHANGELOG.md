@@ -6,6 +6,10 @@
 
 ### Fixed
 
+- Hardware and PLC creation, tag imports and workspace creation now report a definite refusal when a fresh read verifies the attempted write left the target unchanged.
+  Compound operations retain evidence of earlier changes. Download and disconnect results identify which native operation ran and preserve an unreadable online state.
+- PLC compile results retain the native state and counts when individual diagnostics cannot be read. Interrupted safety writes retain an unknown outcome.
+  A batch stopped by a stale first source file reports that execution never started.
 - Tool usage examples now cover every registered parameter, show release-specific CPU and panel catalog choices, and identify the
   exported PLC block XML, localized HMI table, existing connection and workspace directory required by the corresponding calls.
   The examples distinguish previews from execution, preserve tool-specific units and bounds, and cite the release and run row for verified calls.

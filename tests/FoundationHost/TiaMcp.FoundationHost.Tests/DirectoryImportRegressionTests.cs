@@ -13,6 +13,34 @@ using Organisation = toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisation
 public sealed class DirectoryImportRegressionTests
 {
     [Theory]
+    [InlineData(0, "failed")]
+    [InlineData(1, "partial")]
+    public void Verified_tag_refusal_records_the_native_attempt_and_prior_imports(int prior, string outcome)
+    {
+        using var release = Host.HardwareContract.UseRelease("15.1");
+        var dir = Directory.CreateTempSubdirectory();
+        try
+        {
+            for (int i = 0; i <= prior; i++)
+                File.WriteAllText(Path.Combine(dir.FullName, i + ".xml"),
+                    $"<Document><Engineering version='V15.1'/><SW.Tags.PlcTagTable><AttributeList><Name>T{i}</Name></AttributeList></SW.Tags.PlcTagTable></Document>");
+            int calls = 0;
+            var service = new Organisation((_, args) => {
+                if ((string?)args["request"]?["Action"] == "softwarePath") return new JsonObject { ["Message"] = "PLC" };
+                if (calls++ < prior) return new JsonObject { ["Found"] = true, ["MayHaveChanged"] = true };
+                return JsonSerializer.SerializeToNode(new { MayHaveChanged = false, OutcomeUnknown = false,
+                    Failure = new { Code = "ImportFailed", Message = "Tag table refused.", Evidence = new { verifiedAbsent = true } } });
+            }, () => true, () => "Fixture.ap15_1");
+            var reply = Host.PlcToolContract.Run("ImportPlcTagTablesFromDirectory", true, true,
+                () => service.ImportPlcTagTablesFromDirectory("PLC", "", dir.FullName)).StructuredContent!;
+            Assert.Equal(prior + 1, calls);
+            Assert.Equal(outcome, (string?)reply["meta"]?["outcome"]);
+            Assert.Equal(prior, reply["data"]!["imported"]!.AsArray().Count);
+        }
+        finally { dir.Delete(true); }
+    }
+
+    [Theory]
     [InlineData(0, false, "rejected-before-operation")]
     [InlineData(1, false, "partial")]
     [InlineData(1, true, "unknown")]

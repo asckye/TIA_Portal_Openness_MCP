@@ -181,7 +181,7 @@ public sealed class HardwareAddressingAdmissionTests
         public bool HasProject => throw Unexpected();
         public IReadOnlyList<IoAddressInfo>? GetDeviceItemAddresses(string path) => throw Unexpected();
         public List<string> DescribeChildItemsWithAddresses(string path) => throw Unexpected();
-        public (bool ok, string message, IoAddressInfo? before, IoAddressInfo? after) SetDeviceItemStartAddress(string path, string ioType, int startAddress) => throw Unexpected();
+        public IoAddressWriteReply SetDeviceItemStartAddress(string path, string ioType, int startAddress) => throw Unexpected();
         public HostResponse ReadDeviceAddressing(string devicePathJson, string itemPathJson, int offset, int limit) => throw Unexpected();
         public HostResponse UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson, string attributesJson, string softwarePath, string processImageObName, bool dryRun) => throw Unexpected();
         public JsonObject GetDeviceIpAddress(string path) => throw Unexpected();

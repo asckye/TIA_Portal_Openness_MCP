@@ -174,8 +174,8 @@ internal static class CanonicalBatchTools
                         }
                         if ((string?)item["result"]?["meta"]?["outcome"] == "rejected-before-operation") mayHaveChanged = previousWrite;
                     }
-                    plan["executed"] = admissionFailure == null;
-                    final = admissionFailure == null ? Result(plan, true, id)
+                    plan["executed"] = childStarted;
+                    final = admissionFailure == null ? Result(plan, childStarted, id)
                         : FoundationV4Result.Failure(release, tool.Name, id, false, false, plan, admissionFailure);
                     if (batchDigest != null && (string?)final.StructuredContent?["meta"]?["outcome"] == "unknown")
                         unsettled?.Record(id, tool.Name, batchDigest, DateTimeOffset.UtcNow, args);

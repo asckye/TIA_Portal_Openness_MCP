@@ -178,7 +178,8 @@ namespace TiaMcpServer.ModelContextProtocol
             bool knownFailure = Text("status") == "DocumentReadbackMismatch" || Text("effectiveState") == "Error"
                 || Text("state") == "Error" || Text("outcome") == "failed"
                 || tool == "ImportPlcTagTablesFromDirectory" && failed > 0 && Flag("writeOutcomeUnknown") == false;
-            bool before = Flag("mayHaveChanged") == false && success != true;
+            bool refusedTagImport = tool == "ImportPlcTagTablesFromDirectory" && Flag("verifiedAbsent") == true;
+            bool before = Flag("mayHaveChanged") == false && success != true && !refusedTagImport;
             // RunHmiStepTool's project admission branch has not entered its action and
             // has none of the Failed() execution fields. A caught InvalidState does.
             if (Text("status") == "InvalidState" && evidence.ContainsKey("tool")

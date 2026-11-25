@@ -15,5 +15,6 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("TiaMcp.PlcPath.Fixture")]
 [assembly: InternalsVisibleTo("TiaMcp.KeptCode.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost.DeviceAdd.Tests")]
+[assembly: InternalsVisibleTo("TiaMcp.VerifiedImport.Net48.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.FoundationHost.SpecialExportShape.Tests")]
 [assembly: InternalsVisibleTo("TiaMcp.PlcWorker.FaultFixture")]

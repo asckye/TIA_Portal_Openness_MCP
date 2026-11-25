@@ -976,6 +976,17 @@
     ]
   },
   {
+    "project": "tests/Fixtures/TiaMcp.PlcPath.Fixture/TiaMcp.PlcPath.Fixture.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "PLC_SOFTWARE_CROSS_REFERENCES",
+      "PLC_UNITS",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
     "project": "tests/Fixtures/TiaMcp.UnifiedWorker.Fixture/TiaMcp.UnifiedWorker.Fixture.csproj",
     "properties": {},
     "targetFramework": "net10.0",
@@ -1161,6 +1172,23 @@
     "defineConstants": [
       "RELEASE",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tests/KeptCode/TiaMcp.VerifiedImport.Net48.Tests/TiaMcp.VerifiedImport.Net48.Tests.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "ONLINE_DOWNLOAD",
+      "ONLINE_RH",
+      "PLC_HARDWARE_CATALOG",
+      "PLC_HARDWARE_CATALOG_ENTRIES",
+      "PLC_SAFETY",
+      "PLC_SOFTWARE_PROTECTION",
+      "RELEASE",
+      "STUDIO_VCI",
+      "STUDIO_VCI_MODERN",
       "TRACE"
     ]
   },
