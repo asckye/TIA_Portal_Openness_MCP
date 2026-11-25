@@ -8578,6 +8578,38 @@
           "identifier": "TiaMcp.Engine.Tests.VerifiedExportStyleTests/Compiled_readback_matching_the_existing_declaration_stops_before_the_None_export( ):17c64417c037baaa04f34c9219ddcd5de6faaa5b7bbce5f795cd4b2a8a213718"
         }
       ]
+    },
+    {
+      "task": "SD-OVERRIDE",
+      "maintainerDate": "2026-11-25",
+      "reason": "SD-OVERRIDE.md D7: maintainer approved replacing the five best-effort number-restore assertions with equal or stricter assertions on the snapshot helper.",
+      "items": [
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/DocumentImportSafetySources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/OverrideFeaturePreservedButNotNone( ):28527a1764374e7c4b1f0afc6f4e737abc164812108217673c3a5a848fadb58d:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/DocumentImportSafetySources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/OverrideFeaturePreservedButNotNone( ):a42328507c98038f7ea6c455be02f5564015c1f89d30551d745dd465c4d28088:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/DocumentImportSafetySources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/OverrideFeaturePreservedButNotNone( ):d41d83df3fa0ca39b15a0db7bb932173c2880818562510a3fd6d0adbce610d09:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/DocumentImportSafetySources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/SharedPrimitivesKeepEachNativeOperationAndArgument( ):59d39eccc7b34468458907ef2eaf8e1a58db5e70779021d5a7281255569ca49b:1"
+        },
+        {
+          "path": "tests/Repository/TiaMcp.SourceContracts.Tests/DocumentImportSafetySources.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/SharedPrimitivesKeepEachNativeOperationAndArgument( ):6398ea4be7c5a24a9867f3ddda0ce9bd3333658cb256d2f64a1d2090258e6c6a:1"
+        }
+      ]
     }
   ]
 }
