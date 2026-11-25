@@ -55,7 +55,8 @@ internal static class StudioGoldenSamples
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
         {
             var list = (IList)Activator.CreateInstance(type)!;
-            if (populated && depth > 0) list.Add(Create(type.GetGenericArguments()[0], true, depth - 1));
+            var element = type.GetGenericArguments()[0];
+            if (populated && (depth > 0 || element == typeof(string))) list.Add(Create(element, true, depth - 1));
             return list;
         }
         if (depth < 0) return null;

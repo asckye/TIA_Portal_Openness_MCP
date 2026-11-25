@@ -41,7 +41,7 @@ internal sealed partial class OpennessVersionControl
             // The VCI export stem can be an alias. Admission binds the declaration to the project block name.
             plan = new PlcSdBlockSnapshot(files.Read(file), name, () => block, true, () => ExistsInAnotherGroup(group, name),
                 NativeRefusalProbe.UncertainConnection);
-            item.NotCompared = (string[])plan.Evidence["notCompared"]!;
+            item.NotCompared = ((string[])plan.Evidence["notCompared"]!).ToList();
             plan.RequireAdmission();
             if (dryRun) { item.Outcome = "would sync WorkspaceToProject"; return item; }
 
@@ -100,7 +100,7 @@ internal sealed partial class OpennessVersionControl
         try
         {
             bool preserved = plan.Verify(find);
-            item.NotCompared = (string[])plan.Evidence["notCompared"]!;
+            item.NotCompared = ((string[])plan.Evidence["notCompared"]!).ToList();
             item.Outcome = preserved ? "synchronized" : "failed";
             if (!preserved)
             {

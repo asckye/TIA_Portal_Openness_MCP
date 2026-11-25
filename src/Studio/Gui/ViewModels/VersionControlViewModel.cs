@@ -155,7 +155,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         new SyncRow(item.FilePath ?? item.Name, result.DryRun ? PreviewOutcome(item) : CompletedOutcome(item.Outcome), SyncDetail(item), item.Outcome)
         { RefreshMessage = item.RefreshMessage }) : [];
 
-    private static string SyncDetail(SyncItem item) => item.NotCompared is { Length: > 0 } names
+    private static string SyncDetail(SyncItem item) => item.NotCompared is { Count: > 0 } names
         ? (item.Error + " " + Loc.Current.T("Project.SyncNotCompared", string.Join(", ", names))).Trim() : item.Error;
 
     private static string CompletedOutcome(string? outcome) => outcome?.ToLowerInvariant() switch
@@ -207,22 +207,24 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             : SyncResult is { Failed: > 0 } ? Loc.Current["Project.SyncFailed"] : Loc.Current["Project.Synced"];
     public string SyncCounts => SyncResult is { } result ? SyncCountText(result).Resolve() : "";
 
+    private bool SupportsSdRestore => OpennessApi.PlcDocuments.Includes(_releaseKey?.Invoke());
+
     private bool ModernRestorePreview(SyncResult result) => result.DryRun && result.Direction == SyncDirection.WorkspaceToProject
-        && _releaseKey?.Invoke() is ("20" or "21");
+        && SupportsSdRestore;
 
     private LocalizedText SyncCountText(SyncResult result)
     {
         int refused = result.Items.Count(item => item.Outcome == "refused");
         int unknown = result.Items.Count(item => item.Outcome == "unknown");
-        string key = (ModernRestorePreview(result) || refused + unknown > 0, result.DryRun) switch
+        object[] values = [result.Synchronized, result.SkippedEqual, result.Failed - refused - unknown, refused, unknown];
+        var counts = (ModernRestorePreview(result) || refused + unknown > 0, result.DryRun) switch
         {
-            (true, true) => "Project.SyncPreviewDispositions",
-            (true, false) => "Project.SyncDispositions",
-            (false, true) when result.Failed > 0 => "Project.SyncPreviewErrors",
-            (false, true) => "Project.SyncPreviewCounts",
-            _ => "Project.SyncCounts",
+            (true, true) => LocalizedText.Key("Project.SyncPreviewDispositions", values),
+            (true, false) => LocalizedText.Key("Project.SyncDispositions", values),
+            (false, true) when result.Failed > 0 => LocalizedText.Key("Project.SyncPreviewErrors", values),
+            (false, true) => LocalizedText.Key("Project.SyncPreviewCounts", values),
+            _ => LocalizedText.Key("Project.SyncCounts", values),
         };
-        var counts = LocalizedText.Key(key, result.Synchronized, result.SkippedEqual, result.Failed - refused - unknown, refused, unknown);
         var lines = new List<LocalizedText> { counts };
         if (result.WouldVerify > 0) lines.Add(LocalizedText.Key("Vc.WouldVerifyCount", result.WouldVerify));
         if (result.VerifiedEqual > 0) lines.Add(LocalizedText.Key("Vc.VerifiedCount", result.VerifiedEqual));
@@ -463,7 +465,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
     {
         const SyncDirection direction = SyncDirection.WorkspaceToProject;
         var plan = SyncResult is { DryRun: true, Direction: direction } previous ? previous : null;
-        if (plan == null && (!HasStatus || MappedCount > 0) && _releaseKey?.Invoke() is ("20" or "21") && _client is not McpVersionControlClient)
+        if (plan == null && (!HasStatus || MappedCount > 0) && SupportsSdRestore && _client is not McpVersionControlClient)
         {
             await VcSyncAsync(direction, true);
             if (SelectedWorkspace != workspace || SyncResult is not { DryRun: true, Direction: direction } refreshed) return false;
@@ -506,7 +508,8 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         {
             var kind = result.DryRun ? ToastKind.Warning : ToastKind.Error;
             if (result.Failed == 0 && result.UnverifiedEqual == 0) kind = ToastKind.Info;
-            _activity.SetStatus(result.DryRun ? "Status.VcSyncPreviewDispositions" : "Status.VcSyncAppliedDispositions", kind, SyncCountText(result));
+            if (result.DryRun) _activity.SetStatus("Status.VcSyncPreviewDispositions", kind, SyncCountText(result));
+            else _activity.SetStatus("Status.VcSyncAppliedDispositions", kind, SyncCountText(result));
         }
         else if (result.UnverifiedEqual > 0 && result.DryRun)
             _activity.SetStatus("Status.VcStoredPreview", ToastKind.Warning, result.UnverifiedEqual, result.Synchronized, result.SkippedEqual);

@@ -23,7 +23,7 @@ public sealed class BridgeJsonGoldenTests
     [Fact]
     public void Sync_rows_carry_the_names_of_opaque_SD_attributes_through_both_codecs()
     {
-        var item = new SyncItem { Name = "Main", Outcome = "synchronized", NotCompared = new[] { "VendorValue" } };
+        var item = new SyncItem { Name = "Main", Outcome = "synchronized", NotCompared = ["VendorValue"] };
         Assert.Equal(item.NotCompared, BridgeJson.Deserialize<SyncItem>(OldJson(item)).NotCompared);
         Assert.Equal(item.NotCompared, JsonConvert.DeserializeObject<SyncItem>(BridgeJson.Serialize(item), Legacy.BridgeJson.Settings)!.NotCompared);
     }

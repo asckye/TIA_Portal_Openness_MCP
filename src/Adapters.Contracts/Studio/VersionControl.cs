@@ -91,7 +91,7 @@ namespace TiaMcp.Adapters.Contracts.Studio
 
     public class SyncItem
     {
-        public string[] NotCompared { get; set; }
+        public List<string> NotCompared { get; set; }
         public bool ShouldSerializeNotCompared() => NotCompared != null;
         public string FilePath { get; set; }
         public string StateBefore { get; set; }
