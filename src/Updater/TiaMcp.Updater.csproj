@@ -9,7 +9,7 @@
     <AssemblyName>TiaMcp.Updater</AssemblyName>
     <RootNamespace>TiaMcp.Updater</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>../Studio/Gui/Assets/AppIcon.ico</ApplicationIcon>
+    <ApplicationIcon>../../build-tools/assets/AppIcon.ico</ApplicationIcon>
     <OutputPath Condition="'$(UpdaterTestSource)' != 'true'">$(MSBuildThisFileDirectory)..\..\bin-build\updater\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>latest</LangVersion>

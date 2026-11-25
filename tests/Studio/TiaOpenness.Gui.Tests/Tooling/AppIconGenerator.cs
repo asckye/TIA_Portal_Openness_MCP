@@ -39,7 +39,7 @@ internal static class AppIconGenerator
         var frames = Sizes.Select(size => Render(size <= 32 ? ReadDrawing(small, size) : largeDrawing, size)).ToArray();
         var readme = Render(largeDrawing, 96);
         string xaml = ResourceDictionary(small, largeDrawing);
-        string icoPath = Path.Combine(assets, "AppIcon.ico");
+        string icoPath = Path.Combine(root, "build-tools/assets/AppIcon.ico");
         string titlePath = Path.Combine(root, "src/Studio/Gui/Themes/Palette.AppIcon.xaml");
         string pngPath = Path.Combine(root, "docs/assets/app-icon.png");
         if (check)

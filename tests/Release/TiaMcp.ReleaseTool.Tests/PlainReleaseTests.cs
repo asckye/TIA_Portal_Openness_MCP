@@ -16,7 +16,7 @@ public sealed class PlainReleaseTests
         string root = Path.Combine(Path.GetTempPath(), "Workbench checkout");
         var args = PrepareBuild.LauncherArguments(root, "sdk", "framework", "DesktopVersion.cs");
         string icon = Assert.Single(args, arg => arg.StartsWith("/win32icon:", StringComparison.OrdinalIgnoreCase));
-        Assert.Equal("/win32icon:" + Path.Combine(root, "src/Studio/Gui/Assets/AppIcon.ico"), icon);
+        Assert.Equal("/win32icon:" + Path.Combine(root, "build-tools/assets/AppIcon.ico"), icon);
     }
 
     [Theory]

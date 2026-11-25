@@ -27,7 +27,7 @@ public sealed class AppIconTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            using var file = File.OpenRead(Path.Combine(McpOperatorFixture.RepositoryRoot, "src/Studio/Gui/Assets/AppIcon.ico"));
+            using var file = File.OpenRead(Path.Combine(McpOperatorFixture.RepositoryRoot, "build-tools/assets/AppIcon.ico"));
             var frames = new IconBitmapDecoder(file, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad).Frames;
             Assert.Equal(Sizes, frames.Select(f => f.PixelWidth));
             foreach (var frame in frames)
@@ -94,7 +94,7 @@ public sealed class AppIconTests(WpfContext wpf)
     [Fact]
     public void Native_tray_icon_draws_its_16_pixel_frame()
     {
-        string path = Path.Combine(McpOperatorFixture.RepositoryRoot, "src/Studio/Gui/Assets/AppIcon.ico");
+        string path = Path.Combine(McpOperatorFixture.RepositoryRoot, "build-tools/assets/AppIcon.ico");
         using var icon = new System.Drawing.Icon(path, 16, 16);
         Assert.Equal(new System.Drawing.Size(16, 16), icon.Size);
         using var bitmap = new System.Drawing.Bitmap(16, 16);
@@ -121,7 +121,7 @@ public sealed class AppIconTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            using var file = File.OpenRead(Path.Combine(McpOperatorFixture.RepositoryRoot, "src/Studio/Gui/Assets/AppIcon.ico"));
+            using var file = File.OpenRead(Path.Combine(McpOperatorFixture.RepositoryRoot, "build-tools/assets/AppIcon.ico"));
             var frame = new IconBitmapDecoder(file, BitmapCreateOptions.None, BitmapCacheOption.OnLoad).Frames.Single(f => f.PixelWidth == size);
             var bitmap = new FormatConvertedBitmap(frame, PixelFormats.Bgra32, null, 0);
             var pixel = new byte[4];
@@ -141,7 +141,7 @@ public sealed class AppIconTests(WpfContext wpf)
             Assert.Equal(System.Windows.Forms.ToolTipIcon.Warning, balloon.BalloonTipIcon);
             using var icon = new MemoryStream();
             Assert.IsType<System.Drawing.Icon>(balloon.Icon).Save(icon);
-            Assert.Equal(File.ReadAllBytes(Path.Combine(McpOperatorFixture.RepositoryRoot, "src/Studio/Gui/Assets/AppIcon.ico")), icon.ToArray());
+            Assert.Equal(File.ReadAllBytes(Path.Combine(McpOperatorFixture.RepositoryRoot, "build-tools/assets/AppIcon.ico")), icon.ToArray());
         });
     }
 

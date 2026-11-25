@@ -227,7 +227,7 @@ internal sealed class PrepareBuild
         string[] wpfFiles = ["WindowsBase", "PresentationFramework", "PresentationCore"];
         return [Path.Combine(sdk, "Roslyn/bincore/csc.dll"), "/nologo", "/noconfig", "/nostdlib+", "/langversion:5",
             "/deterministic+", "/pathmap:" + root + "=/_/repo", "/target:winexe", "/optimize+", "/utf8output",
-            "/win32icon:" + Path.Combine(root, "src/Studio/Gui/Assets/AppIcon.ico"), "/out:" + Path.Combine(root, "TiaOpenness.exe"),
+            "/win32icon:" + Path.Combine(root, "build-tools/assets/AppIcon.ico"), "/out:" + Path.Combine(root, "TiaOpenness.exe"),
             .. frameworkFiles.Select(name => "/r:" + Path.Combine(framework, name + ".dll")),
             .. wpfFiles.Select(name => "/r:" + Path.Combine(framework, "WPF", name + ".dll")),
             Path.Combine(root, "src/Studio/Launcher/Launcher.cs"), Path.Combine(root, "src/Shared/ProcessArguments.cs"), metadata];

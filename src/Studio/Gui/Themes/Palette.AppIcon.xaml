@@ -4,7 +4,7 @@
     <DrawingImage.Drawing>
       <DrawingGroup>
         <DrawingGroup.GuidelineSet>
-          <GuidelineSet GuidelinesX="3 21" />
+          <GuidelineSet GuidelinesX="0 3 21 24" />
         </DrawingGroup.GuidelineSet>
         <GeometryDrawing Brush="#204DB4" Geometry="M6 0 H18 Q24 0 24 6 V18 Q24 24 18 24 H6 Q0 24 0 18 V6 Q0 0 6 0Z" />
         <GeometryDrawing Brush="#92D9F5" Geometry="M12 9 L21 14 12 19 3 14Z" />
@@ -18,7 +18,7 @@
     <DrawingImage.Drawing>
       <DrawingGroup>
         <DrawingGroup.GuidelineSet>
-          <GuidelineSet GuidelinesX="3 21" />
+          <GuidelineSet GuidelinesX="0 3 21 24" />
         </DrawingGroup.GuidelineSet>
         <GeometryDrawing Brush="{DynamicResource Primer.brandGradient}" Geometry="M6 0 H18 Q24 0 24 6 V18 Q24 24 18 24 H6 Q0 24 0 18 V6 Q0 0 6 0Z" />
         <GeometryDrawing Brush="{DynamicResource Primer.onPrimary}" Geometry="M12 9 L21 14 12 19 3 14Z" />
