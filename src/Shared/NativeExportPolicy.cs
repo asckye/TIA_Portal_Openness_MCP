@@ -70,6 +70,7 @@ namespace TiaOpenness.Shared
             internal string Object = "", Blocker = "";
             internal Func<string>? InspectBlocker;
             internal Action<FileInfo> Export = _ => { };
+            internal Func<Exception, bool> PropagateError = _ => false;
         }
         internal static void RequireBatchOptions(bool compileAfter,bool stopOnImportFailure,string technologyGroup)
         {
@@ -129,7 +130,7 @@ namespace TiaOpenness.Shared
                     if (blocker == "") ready.Add((index, target));
                     else Skip(target, blocker);
                 }
-                catch (Exception error) /* swallow(native-fallback): an unreadable target refuses the overwrite */
+                catch (Exception error) when (!target.PropagateError(error)) /* swallow(native-fallback): an unreadable target refuses the overwrite */
                 { Skip(target, "target-inspection-failed (" + error.GetType().Name + ")"); }
             }
             if (ready.Count > 0)
@@ -158,7 +159,7 @@ namespace TiaOpenness.Shared
                             .ToLowerInvariant();
                     }
                     catch (AdapterPreconditionException error) when (error.ParamName is "groupPath" or "softwarePath") { throw; }
-                    catch (Exception error) /* swallow(native-fallback): retain successful recovery files and identify each refused export */
+                    catch (Exception error) when (!target.PropagateError(error)) /* swallow(native-fallback): retain successful recovery files */
                     { Skip(target, "export-or-validation-refused (" + error.GetType().Name + ")"); }
                 }
             if (result.Skipped.Count > 0) result.Warning = BackupWarning(result.Skipped);

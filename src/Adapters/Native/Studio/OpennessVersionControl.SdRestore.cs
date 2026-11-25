@@ -5,11 +5,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Siemens.Engineering.SW.Blocks;
-using Siemens.Engineering.SW.Tags;
-using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.VersionControl;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Plc;
+using TiaMcp.Adapters.Native.Vci;
 #if TIA_ADAPTER_INTERNAL_VERSIONING
 using TiaMcp.Adapters.Contracts.Studio;
 #else
@@ -20,27 +19,26 @@ namespace TiaOpenness.Openness;
 
 internal sealed partial class OpennessVersionControl
 {
-    internal static SyncItem? RestoreSdMapping(MappedObject mapped, string rootPath, string label, bool dryRun)
+    internal static SyncItem? RestoreSdMapping(MappedObject mapped, string rootPath, string label, bool dryRun, out bool connectionLost)
     {
         var item = new SyncItem { Name = label, Outcome = "refused" };
         PlcSdBlockSnapshot? plan = null;
         bool dispatched = false;
+        connectionLost = false;
         try
         {
-            string format = VersionControlPrimitives.Format(mapped);
-            if (string.IsNullOrWhiteSpace(format)) throw new InvalidOperationException("Cannot establish the mapped file format for restore.");
-            if (format.IndexOf("s7dcl", StringComparison.OrdinalIgnoreCase) < 0) return null;
-            var target = mapped.EngineeringObject;
-            // These individual mappings contain no project blocks. An aggregate cannot prove its children's admission.
-            if (target is PlcType or PlcTagTable) return null;
-            if (target is not PlcBlock block || block.Parent is not PlcBlockGroup group)
+            var target = mapped.EngineeringObject ?? throw new InvalidOperationException("Cannot establish the exact mapped PLC block or other target.");
+            if (target is not PlcBlock block) return null;
+            if (VciExportPolicy.IsKnownNonSd(VersionControlPrimitives.Format(mapped))) return null;
+            if (block.Parent is not PlcBlockGroup group)
                 throw new InvalidOperationException("Cannot establish the exact mapped PLC block and group for SIMATIC SD restore.");
 
             string name = block.Name;
             var file = DeclarationFile(mapped, rootPath);
             var files = new SdDeclarationFiles();
             // The VCI export stem can be an alias. Admission binds the declaration to the project block name.
-            plan = new PlcSdBlockSnapshot(files.Read(file), name, () => block, true, () => ExistsInAnotherGroup(group, name));
+            plan = new PlcSdBlockSnapshot(files.Read(file), name, () => block, true, () => ExistsInAnotherGroup(group, name),
+                NativeRefusalProbe.UncertainConnection);
             item.NotCompared = (string[])plan.Evidence["notCompared"]!;
             plan.RequireAdmission();
             if (dryRun) { item.Outcome = "would sync WorkspaceToProject"; return item; }
@@ -49,27 +47,58 @@ internal sealed partial class OpennessVersionControl
             files.RequireUnchanged(file);
             dispatched = true;
             VersionControlPrimitives.Synchronize(mapped, SynchronizationMode.WorkspaceToProject);
-            bool preserved = plan.Verify(() => group.Blocks.Find(name));
-            item.NotCompared = (string[])plan.Evidence["notCompared"]!;
-            item.Outcome = preserved ? "synchronized" : "failed";
-            if (!preserved)
-            {
-                var differences = (List<Dictionary<string, object?>>)plan.Evidence["propertyDifferences"]!;
-                item.Error = SdBlockOverridePolicy.Failure + ": " + string.Join(", ", differences.Select(DescribeDifference)) + RecoveryNote(plan);
-            }
+            VerifyRestore(mapped, plan, () => group.Blocks.Find(name), item);
+            if (item.Error != null) item.Error += RecoveryNote(plan);
         }
         catch (Exception error)
         {
+            connectionLost = NativeRefusalProbe.UncertainConnection(error);
             item.Outcome = dispatched ? "unknown" : "refused";
             item.Error = (dispatched ? "Restore may have changed the project. " : "") + error.Message + RecoveryNote(plan);
         }
         return item;
     }
 
+    private static void VerifyRestore(MappedObject mapped, PlcSdBlockSnapshot plan, Func<PlcBlock?> find, SyncItem item)
+    {
+        try
+        {
+            bool preserved = plan.Verify(find);
+            item.NotCompared = (string[])plan.Evidence["notCompared"]!;
+            item.Outcome = preserved ? "synchronized" : "failed";
+            if (!preserved)
+            {
+                var differences = (List<Dictionary<string, object?>>)plan.Evidence["propertyDifferences"]!;
+                item.Error = SdBlockOverridePolicy.Failure + ": " + string.Join(", ", differences.Select(DescribeDifference));
+            }
+        }
+        catch (Exception error) when (!NativeRefusalProbe.UncertainConnection(error))
+        {
+            item.Outcome = "unknown";
+            item.Error = "Cannot verify restored block properties: " + error.Message;
+        }
+
+        // Read the final VCI state after Verify has restored any unrequested number change.
+        string diagnostic;
+        try
+        {
+            var state = VersionControlPrimitives.State(VersionControlPrimitives.ReadStatus(mapped));
+            if (state == CompareState.Equal) return;
+            item.Outcome = "failed";
+            diagnostic = $"Restore not-verified: mapped object state is {state} after synchronization.";
+        }
+        catch (Exception error)
+        {
+            item.Outcome = "unknown";
+            diagnostic = "Cannot read mapping status after synchronization: " + error.Message;
+        }
+        item.Error = item.Error == null ? diagnostic : item.Error + " " + diagnostic;
+    }
+
     private static string DescribeDifference(Dictionary<string, object?> difference)
     {
         var expected = difference.TryGetValue("expected", out var requested) ? requested : difference["before"];
-        string message = $"{difference["name"]} (expected {expected ?? "<absent>"}; read {difference["after"] ?? "<absent>"})";
+        string message = $"{difference["name"]} (expected {expected ?? "<no value>"}; read {difference["after"] ?? "<no value>"})";
         return difference.TryGetValue("restoreError", out var error) ? message + ": " + error : message;
     }
 

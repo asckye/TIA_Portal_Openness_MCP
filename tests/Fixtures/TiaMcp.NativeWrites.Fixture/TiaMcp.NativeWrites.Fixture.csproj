@@ -19,6 +19,7 @@
     <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Evidence.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSdBlockSnapshot.cs" />
     <Compile Include="../../../src/Adapters/Native/Studio/OpennessVersionControl.SdRestore.cs" />
+    <Compile Include="../../../src/Adapters/Native/Vci/VciExportPolicy.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcB5Documents.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcObjectPath.cs" />
     <Compile Include="../../../src/Shared/NativeExportPolicy.cs" />

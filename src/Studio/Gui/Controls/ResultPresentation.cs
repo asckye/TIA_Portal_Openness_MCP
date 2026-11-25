@@ -264,6 +264,8 @@ public sealed class ResultPresentation : INotifyPropertyChanged, IDisposable
                     SyncSummary = Loc.Current.T("Primer.SyncPreview", Arg(0), Arg(2));
                     break;
                 case "Status.VcSyncApplied":
+                case "Status.VcSyncPreviewDispositions":
+                case "Status.VcSyncAppliedDispositions":
                 case "Status.VcStoredPreview":
                 case "Status.VcStoredApplied":
                     SyncSummary = Loc.Current.T(entry.Key, entry.Arguments);

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NativeRefusalProbe = TiaMcp.Adapters.Contracts.NativeRefusalProbe;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.SW;
@@ -273,7 +274,7 @@ namespace TiaOpenness.Openness
             return found;
         }
 
-        private Workspace FindWorkspace(string name)
+        private Workspace FindWorkspace(string name, bool stopOnConnectionLoss = false)
         {
             var all = AllWorkspaces();
             if (all.Count == 0)
@@ -285,12 +286,12 @@ namespace TiaOpenness.Openness
             if (string.IsNullOrWhiteSpace(name)) return all[0];
 
             var match = all.FirstOrDefault(w =>
-                string.Equals(SafeName(w), name.Trim(), StringComparison.OrdinalIgnoreCase));
+                string.Equals(SafeName(w, stopOnConnectionLoss), name.Trim(), StringComparison.OrdinalIgnoreCase));
 
             if (match == null)
             {
                 throw new KeyNotFoundException("No workspace named '" + name + "'. Available: " +
-                    string.Join(", ", all.Select(SafeName)));
+                    string.Join(", ", all.Select(w => SafeName(w, stopOnConnectionLoss))));
             }
             return match;
         }
@@ -312,14 +313,18 @@ namespace TiaOpenness.Openness
             };
         }
 
-        private static string SafeName(Workspace workspace)
+        private static string SafeName(Workspace workspace, bool stopOnConnectionLoss = false)
         {
-            try { return VersionControlPrimitives.Name(workspace); } catch (Exception) /* swallow(probe-optional): a stale workspace name uses the diagnostic placeholder */ { return "?"; }
+            try { return VersionControlPrimitives.Name(workspace); }
+            catch (Exception error) when (!stopOnConnectionLoss || !NativeRefusalProbe.UncertainConnection(error))
+            { /* swallow(probe-optional): a stale workspace name uses the diagnostic placeholder */ return "?"; }
         }
 
-        private static string SafeRoot(Workspace workspace)
+        private static string SafeRoot(Workspace workspace, bool stopOnConnectionLoss = false)
         {
-            try { return VersionControlPrimitives.Root(workspace)?.FullName ?? "?"; } catch (Exception) /* swallow(probe-optional): an unavailable workspace root uses the diagnostic placeholder */ { return "?"; }
+            try { return VersionControlPrimitives.Root(workspace)?.FullName ?? "?"; }
+            catch (Exception error) when (!stopOnConnectionLoss || !NativeRefusalProbe.UncertainConnection(error))
+            { /* swallow(probe-optional): an unavailable workspace root uses the diagnostic placeholder */ return "?"; }
         }
 
         private static string SafeLanguage(Workspace workspace)
@@ -331,10 +336,12 @@ namespace TiaOpenness.Openness
 #endif
         }
 
-        private static string SafeObjectName(MappedObject mapped)
+        private static string SafeObjectName(MappedObject mapped, bool stopOnConnectionLoss = false)
         {
 #if STUDIO_VCI_MODERN
-            try { return VersionControlPrimitives.FileName(mapped) ?? "?"; } catch (Exception) /* swallow(native-fallback): unreadable mapped-object names use the question-mark label in status and sync progress results */ { return "?"; }
+            try { return VersionControlPrimitives.FileName(mapped) ?? "?"; }
+            catch (Exception error) when (!stopOnConnectionLoss || !NativeRefusalProbe.UncertainConnection(error))
+            { /* swallow(native-fallback): unreadable mapping names use a placeholder in status and sync progress */ return "?"; }
 #else
             return Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath);
 #endif

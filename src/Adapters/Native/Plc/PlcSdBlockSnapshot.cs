@@ -68,11 +68,13 @@ namespace TiaMcp.Adapters.Native.Plc
         private readonly Func<PlcBlock?> find;
         private readonly Func<bool> elsewhere;
         private readonly bool replace;
+        private readonly Func<Exception, bool>? stopOnError;
         internal PlcBlock? Existing { get; private set; }
         internal string? Refusal { get; private set; }
         internal Dictionary<string, object?> Evidence { get; } = new();
 
-        internal PlcSdBlockSnapshot(string text, string name, Func<PlcBlock?> find, bool replace, Func<bool> elsewhere)
+        internal PlcSdBlockSnapshot(string text, string name, Func<PlcBlock?> find, bool replace, Func<bool> elsewhere,
+            Func<Exception, bool>? stopOnError = null)
         {
             declaration = SdBlockDeclaration.Scan(text);
             declaration.RequireBlock(name);
@@ -80,6 +82,7 @@ namespace TiaMcp.Adapters.Native.Plc
             this.find = find;
             this.elsewhere = elsewhere;
             this.replace = replace;
+            this.stopOnError = stopOnError;
             Evidence["notCarried"] = SdBlockOverridePolicy.NotCarried;
             Evidence["comparisonScope"] = "SD text comparison covers .s7dcl/.s7res after line-ending normalization. " +
                 "OB kind, number and DB attributes require separate block property readback.";
@@ -104,7 +107,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 Refusal = SdBlockOverridePolicy.Refusal(name, declaration.Declarations[0].Kind, replace,
                     replace && elsewhere(), before, declaration.InstanceType);
             }
-            catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error))
+            catch (Exception error) when (!ConnectionUnavailable(error))
             {
                 Refusal = $"Block '{name}': {error.Message} SIMATIC SD preservation cannot be established. " +
                     "Use a SimaticML export with ImportPlcBlock, ImportPlcBlockVerified or ImportPlcBlocksFromDirectory.";
@@ -152,6 +155,8 @@ namespace TiaMcp.Adapters.Native.Plc
             if (Refusal != null) throw AdapterPreconditionException.Failed(Refusal, "sd-override-not-preserved", "name");
         }
 
+        private bool ConnectionUnavailable(Exception error) => stopOnError?.Invoke(error) ?? HmiReadPolicy.ConnectionUnavailable(error);
+
         internal void Backup()
         {
             var existing = Existing;
@@ -159,6 +164,7 @@ namespace TiaMcp.Adapters.Native.Plc
             var target = new NativeExportPolicy.RecoveryTarget { Object = name,
                 InspectBlocker = () => NativeExportPolicy.ExportBlocker(existing.IsConsistent),
                 Export = file => existing.Export(file, ExportOptions.WithDefaults) };
+            if (stopOnError != null) target.PropagateError = stopOnError;
             var recovery = NativeExportPolicy.SingleImportRecovery(new[] { target }, PlcBatchImportRecovery.Directory,
                 DataLocations.Current.RecoveryAttemptedPath);
             Evidence["recoveryDirectory"] = recovery.Directory;
@@ -253,7 +259,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         Documents.SetAutoNumber(imported, (bool)before["AutoNumber"]!);
                     }
                 }
-                catch (Exception error) when (!HmiReadPolicy.ConnectionUnavailable(error)) { setterFailure = error.Message; }
+                catch (Exception error) when (!ConnectionUnavailable(error)) { setterFailure = error.Message; }
                 after = Read(Find());
             }
             Evidence["importedBlock"] = BlockRow(after);
@@ -285,7 +291,7 @@ namespace TiaMcp.Adapters.Native.Plc
             return differences.Count == 0;
         }
 
-        private static void RestoreNumber(PlcBlock imported, int number, bool autoNumber)
+        private void RestoreNumber(PlcBlock imported, int number, bool autoNumber)
         {
             bool reachable = true;
             try
@@ -293,7 +299,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 Documents.SetAutoNumber(imported, false);
                 Documents.SetNumber(imported, number);
             }
-            catch (Exception error) when (HmiReadPolicy.ConnectionUnavailable(error))
+            catch (Exception error) when (ConnectionUnavailable(error))
             {
                 reachable = false;
                 throw;

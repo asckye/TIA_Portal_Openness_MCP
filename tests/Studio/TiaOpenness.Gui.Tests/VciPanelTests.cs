@@ -18,6 +18,54 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class VciPanelTests(WpfContext wpf)
 {
+    [Theory]
+    [InlineData(AppLanguage.English, "2 refused", "1 unknown", "1 failed")]
+    [InlineData(AppLanguage.Chinese, "已拒绝 2", "结果未知 1", "失败 1")]
+    public void Restore_toast_and_counts_distinguish_refusals_uncertainty_and_failures(AppLanguage language,
+        string refused, string unknown, string failed)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var client = new FakeProjectClient { AttachedProject = new ProjectInfo { Name = "Line", Path = @"D:\Line.ap21" } };
+            client.StatusItems.Add(new MappedObjectInfo { Name = "Main", FileFormat = "SimaticSd", CompareState = VcCompareState.Unequal });
+            client.DifferingItems = 1;
+            client.SyncHandler = (direction, preview) =>
+            {
+                var result = new SyncResult { Direction = direction, DryRun = preview, Failed = preview ? 2 : 4 };
+                result.Items.Add(new() { Name = "Start", Outcome = "refused" });
+                result.Items.Add(new() { Name = "Cycle", Outcome = "refused" });
+                if (!preview)
+                {
+                    result.Items.Add(new() { Name = "DB", Outcome = "failed" });
+                    result.Items.Add(new() { Name = "FB", Outcome = "unknown" });
+                }
+                return Task.FromResult(result);
+            };
+            using var model = new MainViewModel(client, new FakeDialogService { Result = DialogResult.OK }) { SelectedReleaseKey = "21" };
+            model.Session.Connect.Execute(null);
+            var vc = model.VersionControl;
+            WpfContext.Complete(vc.VcRefreshAsync());
+            var warnings = new List<string>();
+            model.Activity.Feedback += (_, feedback) => { if (feedback.Kind == ToastKind.Warning) warnings.Add(feedback.Message.Resolve()); };
+            vc.VcDryRun = true;
+            vc.VcPull.Execute(null);
+            WpfContext.Drain();
+            Assert.Contains(refused, Assert.Single(warnings));
+            Assert.Contains(refused, vc.SyncCounts);
+            vc.VcDryRun = false;
+            vc.VcPull.Execute(null);
+            WpfContext.Drain();
+            Assert.Contains(refused, vc.SyncCounts);
+            Assert.Contains(unknown, vc.SyncCounts);
+            Assert.Contains(failed, vc.SyncCounts);
+            client.SyncHandler = (direction, preview) => Task.FromResult(new SyncResult { Direction = direction, DryRun = preview, Synchronized = 1 });
+            vc.VcDryRun = true;
+            vc.VcPull.Execute(null);
+            WpfContext.Drain();
+            Assert.Contains(language == AppLanguage.English ? "0 refused" : "已拒绝 0", model.Activity.Status);
+        });
+    }
+
     [Theory, InlineData("20"), InlineData("21")]
     public void Direct_restore_shows_the_refused_object_and_reason_before_confirmation(string release)
     {

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NativeRefusalProbe = TiaMcp.Adapters.Contracts.NativeRefusalProbe;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.SW;
@@ -278,30 +279,50 @@ namespace TiaOpenness.Openness
 
         public SyncResult Sync(string workspaceName, SyncDirection direction, bool dryRun, ProgressCallback progress)
         {
-            var workspace = FindWorkspace(workspaceName);
             var mode = direction == SyncDirection.WorkspaceToProject
                 ? SynchronizationMode.WorkspaceToProject
                 : SynchronizationMode.ProjectToWorkspace;
+#if STUDIO_VCI_MODERN
+            bool stopOnConnectionLoss = mode == SynchronizationMode.WorkspaceToProject;
+#else
+            const bool stopOnConnectionLoss = false;
+#endif
+            var workspace = FindWorkspace(workspaceName, stopOnConnectionLoss);
 
             var result = new SyncResult
             {
-                WorkspaceName = SafeName(workspace),
-                RootPath = SafeRoot(workspace),
+                WorkspaceName = SafeName(workspace, stopOnConnectionLoss),
+                RootPath = SafeRoot(workspace, stopOnConnectionLoss),
                 Direction = direction,
                 DryRun = dryRun,
             };
 
+            try { SyncMappings(workspace, mode, result, progress, stopOnConnectionLoss); }
+            catch (Exception error) when (stopOnConnectionLoss && NativeRefusalProbe.UncertainConnection(error))
+            {
+                // Discovery or the row label failed before dispatch. Do not probe the lost session for a name.
+                result.Items.Add(new SyncItem { Name = "?", Outcome = "refused", Error = Flatten(error) });
+                result.Failed++;
+            }
+            return result;
+        }
+
+        private void SyncMappings(Workspace workspace, SynchronizationMode mode, SyncResult result, ProgressCallback progress, bool stopOnConnectionLoss)
+        {
+            var direction = result.Direction;
+            bool dryRun = result.DryRun;
             var targets = new List<(MappedObject Object, string RefreshMessage)>();
             foreach (var mapped in Mappings(workspace).ToList())
             {
                 Keep(mapped);
-                if (StateOf(mapped, out _, out var refreshMessage) == VcCompareState.Equal)
+                if (StateOf(mapped, out _, out var refreshMessage, stopOnConnectionLoss) == VcCompareState.Equal)
                 {
                     result.SkippedEqual++;
                     if (refreshMessage != null)
                     {
                         result.UnverifiedEqual++;
-                        result.Items.Add(new SyncItem { Name = SafeObjectName(mapped), Outcome = "skipped-equal", RefreshMessage = refreshMessage });
+                        result.Items.Add(new SyncItem { Name = SafeObjectName(mapped, stopOnConnectionLoss), Outcome = "skipped-equal",
+                            RefreshMessage = refreshMessage });
                     }
                     continue;
                 }
@@ -311,16 +332,18 @@ namespace TiaOpenness.Openness
             for (var i = 0; i < targets.Count; i++)
             {
                 var (mapped, refreshMessage) = targets[i];
-                var name = SafeObjectName(mapped);
+                var name = SafeObjectName(mapped, stopOnConnectionLoss);
                 if (progress != null) progress("vc-sync", i + 1, targets.Count, name);
 
 #if STUDIO_VCI_MODERN
-                if (mode == SynchronizationMode.WorkspaceToProject && RestoreSdMapping(mapped, result.RootPath, name, dryRun) is { } restore)
+                if (mode == SynchronizationMode.WorkspaceToProject && RestoreSdMapping(mapped, result.RootPath, name, dryRun,
+                    out var connectionLost) is { } restore)
                 {
                     result.Items.Add(restore);
                     if (restore.Outcome is "unknown" or "failed") { result.Failed++; break; }
                     if (restore.Outcome == "refused") result.Failed++;
                     else result.Synchronized++;
+                    if (connectionLost) break;
                     continue;
                 }
 #endif
@@ -344,15 +367,13 @@ namespace TiaOpenness.Openness
                     break;
                 }
             }
-
-            return result;
         }
 
         /// <summary>
         /// <c>GetStatus()</c> returns a result object whose <c>ToString()</c> is the type name,
         /// not the verdict; the verdict is its <c>CompareState</c>.
         /// </summary>
-        private static VcCompareState StateOf(MappedObject mapped, out string error, out string refreshMessage)
+        private static VcCompareState StateOf(MappedObject mapped, out string error, out string refreshMessage, bool stopOnConnectionLoss = false)
         {
             error = null;
             refreshMessage = null;
@@ -365,7 +386,7 @@ namespace TiaOpenness.Openness
                 error = "unrecognised compare state '" + state + "'";
                 return VcCompareState.Unknown;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!stopOnConnectionLoss || !NativeRefusalProbe.UncertainConnection(ex))
             {
                 error = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(ex);
                 return VcCompareState.Unknown;

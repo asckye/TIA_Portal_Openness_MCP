@@ -163,6 +163,7 @@ public sealed class DocumentImportSafetySources
         int stop = Find(source, "if (restore.Outcome is \"unknown\" or \"failed\") { result.Failed++; break; }", report);
         int refuse = Find(source, "if (restore.Outcome == \"refused\") result.Failed++;", stop);
         int next = Find(source, "continue;", refuse);
+        Assert.InRange(Find(source, "if (connectionLost) break;", refuse), refuse, next);
         int endModern = Find(source, "#endif", restore);
         int preview = Find(source, "if (dryRun)", endModern);
         Assert.True(next < endModern && preview < Find(source, "Synchronize(mapped, mode);", preview));

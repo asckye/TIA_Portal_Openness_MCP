@@ -205,6 +205,39 @@ public sealed class SdBlockOverridePolicyTests
         Assert.Equal(new[] { "Added", "Lost" }, differences.Select(row => (string?)row["name"]));
     }
 
+    [Theory]
+    [InlineData("(*", "*)")]
+    [InlineData("/*", "*/")]
+    public void An_unclosed_nested_reading_only_blocks_disagreement_about_declarations(string open, string close)
+    {
+        string text = $"DATA_BLOCK MotorDB\n{open} outer {open} inner {close} ";
+        Assert.Equal("DATA_BLOCK", SdBlockDeclaration.Scan(text + "END_DATA_BLOCK").RequireBlock("MotorDB"));
+        Assert.Equal("MotorFB", SdBlockDeclaration.Scan(text + "MotorFB\nEND_DATA_BLOCK").InstanceType);
+        Assert.Equal("FUNCTION", SdBlockDeclaration.Scan($"FUNCTION Real : Void\nEND_FUNCTION\n{open} trailing prose").RequireBlock("Real"));
+        string pragma = $"{{ S7_BlockNumber := \"17\" {open} outer {open} inner {close} }}\n";
+        // Both readings see the block when the incomplete comment is in an attribute list after its declaration.
+        Assert.Equal("FUNCTION", SdBlockDeclaration.Scan("FUNCTION Real : Void\n" + pragma + "END_FUNCTION").RequireBlock("Real"));
+        Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan(text + "END_DATA_BLOCK\nFUNCTION Hidden : Void\nEND_FUNCTION"));
+        string otherOpen = open == "(*" ? "/*" : "(*";
+        string flatUnclosed = $"FUNCTION Real : Void\nEND_FUNCTION\n{open} {open} inner {close} {otherOpen} {close}";
+        Assert.Equal("FUNCTION", SdBlockDeclaration.Scan(flatUnclosed).RequireBlock("Real"));
+        Assert.Throws<AdapterPreconditionException>(() => SdBlockDeclaration.Scan(flatUnclosed + "\nFUNCTION Hidden : Void\nEND_FUNCTION"));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Nullness_is_comparable_for_an_opaque_attribute(bool startsNull)
+    {
+        var before = new Dictionary<string, object?> { ["Value"] = startsNull ? null : "Vendor.Value" };
+        var after = new Dictionary<string, object?> { ["Value"] = startsNull ? "Vendor.Value" : null };
+        var difference = Assert.Single(SdBlockOverridePolicy.Compare(before, after, SdBlockDeclaration.Scan("FUNCTION F : Void\nEND_FUNCTION"),
+            new HashSet<string> { "Value" }));
+        Assert.Equal("Value", difference["name"]);
+        Assert.Equal(before["Value"], difference["before"]);
+        Assert.Equal(after["Value"], difference["after"]);
+    }
+
     [Fact]
     public void Comments_strings_and_repeated_declarations_cannot_select_a_different_block()
     {

@@ -173,6 +173,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         switch (item.Outcome?.ToLowerInvariant())
         {
             case "refused": return Loc.Current["Project.SyncRefused"];
+            case "unknown": return Loc.Current["Project.SyncUnknown"];
             case "create": case "created": case "would create": return "CREATE";
             case "update": case "updated": case "would update": return "UPDATE";
             case "skip": case "equal": case "skipped": case "skipped-equal": return "SKIP";
@@ -198,13 +199,26 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         : SyncResult?.DryRun == true ? Loc.Current["Project.SyncPreview"] + " · "
             + (SyncResult.Direction == SyncDirection.ProjectToWorkspace ? Loc.Current["Primer.ToWorkspace"] : Loc.Current["Primer.ToProject"])
             : Loc.Current["Project.Synced"];
-    public string SyncCounts => (SyncResult switch
+    public string SyncCounts => SyncResult is { } result ? SyncCountText(result).Resolve() : "";
+
+    private bool ModernRestorePreview(SyncResult result) => result.DryRun && result.Direction == SyncDirection.WorkspaceToProject
+        && _releaseKey?.Invoke() is ("20" or "21");
+
+    private LocalizedText SyncCountText(SyncResult result)
     {
-        { DryRun: true, Failed: > 0 } r => Loc.Current.T("Project.SyncPreviewErrors", r.Synchronized, r.SkippedEqual, r.Failed),
-        { DryRun: true } r => Loc.Current.T("Project.SyncPreviewCounts", r.Synchronized, r.SkippedEqual),
-        { } r => Loc.Current.T("Project.SyncCounts", r.Synchronized, r.SkippedEqual, r.Failed),
-        _ => "",
-    }) + (SyncResult is { UnverifiedEqual: > 0 } stored ? " " + Loc.Current.T("Status.StoredEqual", stored.UnverifiedEqual) : "");
+        int refused = result.Items.Count(item => item.Outcome == "refused");
+        int unknown = result.Items.Count(item => item.Outcome == "unknown");
+        string key = (ModernRestorePreview(result) || refused + unknown > 0, result.DryRun) switch
+        {
+            (true, true) => "Project.SyncPreviewDispositions",
+            (true, false) => "Project.SyncDispositions",
+            (false, true) when result.Failed > 0 => "Project.SyncPreviewErrors",
+            (false, true) => "Project.SyncPreviewCounts",
+            _ => "Project.SyncCounts",
+        };
+        var counts = LocalizedText.Key(key, result.Synchronized, result.SkippedEqual, result.Failed - refused - unknown, refused, unknown);
+        return result.UnverifiedEqual > 0 ? LocalizedText.Lines(counts, LocalizedText.Key("Status.StoredEqual", result.UnverifiedEqual)) : counts;
+    }
     internal void CloseSyncResult() => SyncResult = null;
     private void RefreshSyncState()
     {
@@ -466,7 +480,13 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             _activity.AppendLocalized("Log.Failed", item.Name, item.Error);
         }
 
-        if (result.UnverifiedEqual > 0 && result.DryRun)
+        if (ModernRestorePreview(result) || result.Items.Any(row => row.Outcome is "refused" or "unknown"))
+        {
+            var kind = result.DryRun ? ToastKind.Warning : ToastKind.Error;
+            if (result.Failed == 0 && result.UnverifiedEqual == 0) kind = ToastKind.Info;
+            _activity.SetStatus(result.DryRun ? "Status.VcSyncPreviewDispositions" : "Status.VcSyncAppliedDispositions", kind, SyncCountText(result));
+        }
+        else if (result.UnverifiedEqual > 0 && result.DryRun)
             _activity.SetStatus("Status.VcStoredPreview", ToastKind.Warning, result.UnverifiedEqual, result.Synchronized, result.SkippedEqual);
         else if (result.UnverifiedEqual > 0)
             _activity.SetStatus("Status.VcStoredApplied", result.Failed > 0 ? ToastKind.Error : ToastKind.Warning,

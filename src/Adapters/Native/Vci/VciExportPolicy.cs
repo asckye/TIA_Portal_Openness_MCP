@@ -11,12 +11,16 @@ internal static class VciExportPolicy
     // Siemens' ExportObject example uses this path relative to Workspace.RootPath.
     internal static DirectoryInfo RootDirectory() => new DirectoryInfo(@"\");
 
+    internal static bool IsKnownNonSd(string? format) => Is(format, "SimaticML") || Is(format, "xml") || Is(format, "liblink");
+
+    private static bool Is(string? value, string name) => string.Equals(value, name, StringComparison.OrdinalIgnoreCase);
+
     internal static string? PreferredFormat(IEnumerable<string> formats)
     {
         var available = formats.ToArray();
-        return available.FirstOrDefault(f => f.IndexOf("s7dcl", StringComparison.OrdinalIgnoreCase) >= 0)
-            ?? available.FirstOrDefault(f => f.IndexOf("simatic", StringComparison.OrdinalIgnoreCase) >= 0)
-            ?? available.FirstOrDefault(f => f.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
+        return available.FirstOrDefault(f => Is(f, "SimaticSd") || Is(f, "s7dcl"))
+            ?? available.FirstOrDefault(f => Is(f, "SimaticML"))
+            ?? available.FirstOrDefault(f => Is(f, "xml"))
             ?? available.FirstOrDefault();
     }
 }

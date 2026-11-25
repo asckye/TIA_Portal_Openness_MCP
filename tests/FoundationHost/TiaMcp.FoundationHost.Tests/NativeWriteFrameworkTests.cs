@@ -13,9 +13,20 @@ public sealed class NativeWriteFrameworkTests
     [InlineData("db", "DBAccessibleFromOPCUA", 0)]
     [InlineData("mismatch", "MCP_RC_DBAttr", 0)]
     [InlineData("missing", "Missing.s7dcl", 0)]
-    [InlineData("format", "file format", 0)]
+    [InlineData("unreadable-format", "file format", 0)]
     [InlineData("target", "exact mapped PLC block", 0)]
-    [InlineData("aggregate", "exact mapped PLC block", 0)]
+    [InlineData("orphan", "exact mapped PLC block", 0)]
+    [InlineData("startup-SimaticSD", "Startup", 0)]
+    [InlineData("startup-SimaticSd", "Startup", 0)]
+    [InlineData("startup-s7dcl", "Startup", 0)]
+    [InlineData("startup-Unknown", "Startup", 0)]
+    [InlineData("startup-", "Startup", 0)]
+    [InlineData("startup-SimaticML2", "Startup", 0)]
+    [InlineData("startup-vendor.xml", "Startup", 0)]
+    [InlineData("startup-liblink-custom", "Startup", 0)]
+    [InlineData("missing-SimaticSd", "Missing.s7dcl", 0)]
+    [InlineData("missing-Unknown", "Missing.s7dcl", 0)]
+    [InlineData("missing-", "Missing.s7dcl", 0)]
     [InlineData("elsewhere", "another group", 0)]
     [InlineData("changed", "changed after admission", 1)]
     public void Workbench_refused_SD_mappings_never_synchronize(string scenario, string reason, int exports)
@@ -25,6 +36,8 @@ public sealed class NativeWriteFrameworkTests
         Assert.Equal("refused", (string?)probe["item"]?["Outcome"]);
         Assert.Contains(reason, (string?)probe["item"]?["Error"]);
         Assert.Equal(0, (int?)probe["Calls"]);
+        Assert.Equal(0, (int?)probe["StatusReads"]);
+        Assert.False((bool?)probe["connectionLost"]);
         Assert.Equal(exports, (int?)probe["Exports"]);
         Assert.Empty(probe["Setters"]!.AsArray());
     }
@@ -33,6 +46,15 @@ public sealed class NativeWriteFrameworkTests
     [InlineData("plan", "would sync WorkspaceToProject", 0)]
     [InlineData("xml", null, 0)]
     [InlineData("nonblock", null, 0)]
+    [InlineData("aggregate", null, 0)]
+    [InlineData("tags", null, 0)]
+    [InlineData("hmi", null, 0)]
+    [InlineData("startup-SimaticML", null, 0)]
+    [InlineData("startup-sIMAtiCmL", null, 0)]
+    [InlineData("startup-XML", null, 0)]
+    [InlineData("startup-LIBLINK", null, 0)]
+    [InlineData("liblink", null, 0)]
+    [InlineData("format", "synchronized", 1)]
     [InlineData("absolute", "synchronized", 1)]
     [InlineData("restored", "synchronized", 1)]
     [InlineData("opaque", "synchronized", 1)]
@@ -45,6 +67,9 @@ public sealed class NativeWriteFrameworkTests
         Assert.Equal(outcome, (string?)probe["item"]?["Outcome"]);
         Assert.Equal(calls, (int?)probe["Calls"]);
         Assert.Equal(calls, (int?)probe["Exports"]);
+        Assert.Equal(calls, (int?)probe["StatusReads"]);
+        Assert.Equal(scenario is "nonblock" or "aggregate" or "tags" or "hmi" ? 0 : 1, (int?)probe["FormatReads"]);
+        if (outcome == null) Assert.Empty(probe["Setters"]!.AsArray());
         if (outcome == "synchronized")
         {
             Assert.Equal(9810, (int?)probe["Number"]);
@@ -54,6 +79,65 @@ public sealed class NativeWriteFrameworkTests
         if (outcome == "failed") Assert.Contains("DBAccessibleFromOPCUA", (string?)probe["item"]?["Error"]);
         if (outcome == "unknown") Assert.Contains("MemoryReserve is unreadable", (string?)probe["item"]?["Error"]);
         if (outcome is "unknown" or "failed") Assert.Contains("Recovery:", (string?)probe["item"]?["Error"]);
+    }
+
+    [Theory]
+    [InlineData("format-loss", 0)]
+    [InlineData("backup-loss", 1)]
+    public void Workbench_connection_loss_before_dispatch_signals_a_batch_stop(string scenario, int exports)
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-restore-" + scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal("refused", (string?)probe["item"]?["Outcome"]);
+        Assert.True((bool?)probe["connectionLost"]);
+        Assert.Equal(0, (int?)probe["Calls"]);
+        Assert.Equal(0, (int?)probe["StatusReads"]);
+        Assert.Equal(exports, (int?)probe["Exports"]);
+    }
+
+    [Theory]
+    [InlineData("unequal", "failed", "Unequal")]
+    [InlineData("missing", "failed", "WorkspaceFileMissing")]
+    [InlineData("unknown", "failed", "Unknown")]
+    [InlineData("unreadable", "unknown", "GetStatus unavailable")]
+    [InlineData("unreadable-difference", "unknown", "GetStatus unavailable")]
+    public void Workbench_requires_an_Equal_post_sync_status(string scenario, string outcome, string diagnostic)
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-restore-status-" + scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(1, (int?)probe["Calls"]);
+        Assert.Equal(1, (int?)probe["StatusReads"]);
+        Assert.Equal(9810, (int?)probe["Number"]);
+        Assert.Equal(9810, (int?)probe["numberAtStatus"]);
+        Assert.Equal(outcome, (string?)probe["item"]?["Outcome"]);
+        string? error = (string?)probe["item"]?["Error"];
+        Assert.Contains(diagnostic, error);
+        Assert.Contains("Recovery:", error);
+        if (outcome == "failed") Assert.Contains("not-verified", error);
+        if (scenario == "unreadable-difference") Assert.Contains("DBAccessibleFromOPCUA", error);
+    }
+
+    [Theory]
+    [InlineData("to-null")]
+    [InlineData("from-null")]
+    public void Workbench_reports_nullness_changes_even_for_uncomparable_values(string scenario)
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-restore-" + scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(1, (int?)probe["Calls"]);
+        Assert.Equal(1, (int?)probe["StatusReads"]);
+        Assert.Equal("failed", (string?)probe["item"]?["Outcome"]);
+        Assert.Equal("VendorValue", (string?)Assert.Single(probe["item"]!["NotCompared"]!.AsArray()));
+        Assert.Contains("VendorValue", (string?)probe["item"]?["Error"]);
+    }
+
+    [Fact]
+    public void Vci_export_prefers_native_SD_over_recorded_SimaticML_and_liblink()
+    {
+        using var inputs = new Inputs();
+        var probe = Run("sd-restore-preferred", Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(new[] { "SimaticSd", "s7dcl", "SimaticSD", "SimaticML", "xml", "liblink" },
+            probe["choices"]!.AsArray().Select(choice => (string?)choice));
     }
 
     [Fact]

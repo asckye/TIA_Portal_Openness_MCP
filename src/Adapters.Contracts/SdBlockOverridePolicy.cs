@@ -25,11 +25,17 @@ namespace TiaMcp.Adapters.Contracts
             foreach (char c in text)
                 if (c is '\u2028' or '\u2029' || char.IsControl(c) && c is not ('\t' or '\r' or '\n'))
                     throw Invalid("Unsupported SD control character or line separator.");
-            bool nestedComment = false;
-            var result = ScanTokens(Tokens(text, true, () => nestedComment = true));
-            if (nestedComment && !CommentHeaders(Tokens(text, true)).SequenceEqual(CommentHeaders(Tokens(text, false))))
-                throw Invalid("Nested and non-nested SD comments expose different declarations.");
-            return result;
+            bool useNested = true;
+            if (text.IndexOf("(*", StringComparison.Ordinal) >= 0 || text.IndexOf("/*", StringComparison.Ordinal) >= 0)
+            {
+                bool sawNested = false, unclosed = false;
+                var headers = CommentHeaders(Tokens(text, true, () => sawNested = true, () => unclosed = true)).ToArray();
+                if (sawNested && !headers.SequenceEqual(CommentHeaders(Tokens(text, false))))
+                    throw Invalid("Nested and non-nested SD comments expose different declarations.");
+                // If the nested reading ended inside the comment, read the rest of the matching header in flat mode.
+                useNested = !unclosed;
+            }
+            return ScanTokens(Tokens(text, useNested, strictQuotes: true));
         }
 
         private static SdBlockDeclaration ScanTokens(IEnumerable<(Token Kind, string Value, int Line)> source)
@@ -175,7 +181,8 @@ namespace TiaMcp.Adapters.Contracts
             }
         }
 
-        private static IEnumerable<(Token Kind, string Value, int Line)> Tokens(string text, bool nested, Action? sawNested = null)
+        private static IEnumerable<(Token Kind, string Value, int Line)> Tokens(string text, bool nested, Action? sawNested = null,
+            Action? unclosedComment = null, bool strictQuotes = false)
         {
             int i = 0, lineOffset = 0, previousLine = -1;
             bool afterBranch = false, afterQualifier = false;
@@ -201,7 +208,7 @@ namespace TiaMcp.Adapters.Contracts
                         if (nested && next == c && i < text.Length && text[i] == '*') { sawNested?.Invoke(); depth++; i++; }
                         else if (next == '*' && i < text.Length && text[i] == end) { depth--; i++; }
                     }
-                    if (nested && depth != 0) throw Invalid("Unclosed SD comment.");
+                    if (depth != 0) unclosedComment?.Invoke();
                     continue;
                 }
                 bool lineStart = previousLine != lineOffset;
@@ -217,7 +224,7 @@ namespace TiaMcp.Adapters.Contracts
                     {
                         if (i == text.Length || text[i] is '\r' or '\n')
                         {
-                            if (nested) throw Invalid("Unclosed SD quoted token before end of line.");
+                            if (strictQuotes) throw Invalid("Unclosed SD quoted token before end of line.");
                             break;
                         }
                         char next = text[i++];
@@ -227,7 +234,7 @@ namespace TiaMcp.Adapters.Contracts
                             // Preserve the spelling. Escaped identifiers must never alias the inspected basename.
                             if (text[i] is '\r' or '\n')
                             {
-                                if (nested) throw Invalid("Unclosed SD escape before end of line.");
+                                if (strictQuotes) throw Invalid("Unclosed SD escape before end of line.");
                                 break;
                             }
                             value.Append(next);
@@ -329,7 +336,7 @@ namespace TiaMcp.Adapters.Contracts
                 object? old = null;
                 bool presentBefore = before?.TryGetValue(key, out old) == true;
                 bool presentAfter = after.TryGetValue(key, out var actual);
-                if (presentBefore && presentAfter && notCompared?.Contains(key) == true) continue;
+                if (old != null && actual != null && notCompared?.Contains(key) == true) continue;
                 if (key == "AutoNumber" && old is true && actual is false && declaration.Pragmas.ContainsKey("S7_BlockNumber")) continue;
                 object? expected = old;
                 if (key == "Number" && declaration.Pragmas.TryGetValue("S7_BlockNumber", out string? requested))

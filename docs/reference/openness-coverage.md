@@ -469,13 +469,19 @@ coverage work for 4.1:
 
 The registered synchronization tool refuses `WorkspaceToProject`, including preview. `ConnectProjectToWorkspace` creates files and
 mappings with `ExportObject` on V20/V21; its directory argument is relative to `RootPath`. All mapping paths share the same format
-preference (s7dcl, SimaticML, XML, then the first offered format). Actual returned format names and additional V18/V19 mappable kinds
-need native confirmation. The V16–V19 list remains limited to `PlcBlock`, `PlcType` and `PlcTagTable` until evidence supports more.
+preference. They select an exact SD name (`SimaticSd` or `s7dcl`), then `SimaticML`, then `xml`, then the first offered format.
+Name comparisons ignore case. V20 capture beta5-v20/raw-D/314 records `SimaticML` for Main and other PLC mappings. V21 captures
+beta6-full-v21/raw-E/328 and 339 record `SimaticML` and `liblink`, including `liblink` for MCP_B6F_DSrc. `SimaticSd` is the SDK
+name for SD. The V16–V19 list remains limited to `PlcBlock`, `PlcType` and `PlcTagTable` until evidence supports more.
 
-For Workbench restore on V20/V21, `MappedObject.FileFormat`, `DirectoryPath` and `FileNameWithoutExtension` identify the SD input.
-`EngineeringObject` identifies the project block even when its name differs from the mapped filename. Preview and apply check its
-declaration and block properties. Apply backs up admitted consistent blocks and reads each block again in its group after synchronization.
-An unrestored difference is a failure. An unreadable post-write snapshot leaves the outcome unknown. These paths have offline fixture coverage.
+Workbench restore on V20/V21 first reads `MappedObject.EngineeringObject`. An unresolved target is refused. Non-block targets bypass SD admission. For a `PlcBlock`,
+only the exact formats `SimaticML`, `xml` and `liblink` bypass it (case-insensitive). Every other value, including an empty or unknown
+format, requires a readable `.s7dcl` at the mapped `DirectoryPath` and `FileNameWithoutExtension`. Preview and apply match the declaration
+to the project block name and check its properties. A pre-dispatch connection loss stops the run before subsequent mappings are attempted.
+Apply backs up admitted consistent blocks, synchronizes once, and verifies properties in the original group. An unrestored difference fails.
+After property readback, `MappedObject.GetStatus().CompareState` must be `Equal` for a synchronized result. A readable non-Equal state
+fails verification. An unreadable mapping status leaves the outcome unknown. Any observed property differences remain in the diagnostic.
+SD admission and post-write outcomes have offline fixture coverage.
 
 DCB extension-library import is available on V16–V20 through `ProjectLibrary.ImportDcbLibrary(string)` and on V21 through
 `DcbLibraryImporter.ImportDcbLibrary(string)`. The service moved in V21; import is not a V21 addition. Drive-library reads start at V18.
