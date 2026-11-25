@@ -48,6 +48,7 @@ namespace TiaMcp.Adapters
                             + "') threw and the device inventory could not be read back; the outcome is unknown: " + ShortExceptionMessage(readback), null,
                             error);
                 }
+                // CreateDevice compares device identities and count. Attribute, slot and configuration changes inside surviving devices are unobserved.
                 if (!DeviceCreationRules.SameInventory(before, after))
                     throw new HardwareAddressingException("OpennessError", "CreateWithItem('" + typeIdentifier
                             + "') threw but the device inventory changed; the outcome is unknown. Inspect the project before continuing.", null, error);

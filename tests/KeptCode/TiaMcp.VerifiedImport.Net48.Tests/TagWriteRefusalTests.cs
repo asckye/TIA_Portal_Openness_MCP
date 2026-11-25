@@ -82,7 +82,7 @@ public sealed class TagWriteRefusalTests
         Assert.False(failure.Data.Contains("verifiedAbsent"));
     }
 
-    private static void Import(PlcTagTableComposition tables, ImportOptions options = ImportOptions.None, string? name = "Signals")
+    internal static void Import(PlcTagTableComposition tables, ImportOptions options = ImportOptions.None, string? name = "Signals")
     {
         var file = new FileInfo(Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString("N") + ".xml"));
         File.WriteAllText(file.FullName, "<Document><Engineering version=\"V20\"/><SW.Tags.PlcTagTable ID=\"0\">" +

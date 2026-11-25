@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <DefineConstants>$(DefineConstants);PLC_HARDWARE_CATALOG;PLC_HARDWARE_CATALOG_ENTRIES;PLC_SAFETY;PLC_SOFTWARE_PROTECTION;ONLINE_DOWNLOAD;ONLINE_RH;STUDIO_VCI;STUDIO_VCI_MODERN</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLC_HARDWARE_CATALOG;PLC_HARDWARE_CATALOG_ENTRIES;PLC_SAFETY;PLC_SOFTWARE_PROTECTION;ONLINE_DOWNLOAD;ONLINE_RH;ONLINE_ADDRESSES;ONLINE_TARGET_ADDRESSES;STUDIO_VCI;STUDIO_VCI_MODERN</DefineConstants>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
@@ -18,6 +18,12 @@
     <Compile Include="../../Adapters/TiaMcp.Adapters.Contracts.Tests/PlcArtifactRefusalTests.cs" />
     <Compile Include="../../../src/Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs" />
     <Compile Include="../../../src/Shared/CompilerDiagnostics.cs" />
+    <Compile Include="../../../src/Shared/HostFailurePolicy.cs" />
+    <Compile Include="../../../src/Logic/ModelContextProtocol/ResponseClock.cs" />
+    <Compile Include="../../../src/Adapters/Native/Hmi/HmiEngineeringSteps.cs" />
+    <ProjectReference Include="../../../src/WorkerChannel/TiaMcp.WorkerChannel.csproj" />
+    <Compile Include="../../../src/PlcWorker/WorkerFailurePolicy.cs" />
+    <Compile Include="../../../src/PlcWorker/WorkerJson.cs" />
     <Compile Include="../../../src/Shared/PlcVerifiedImport.cs" />
     <Compile Include="../../../src/Shared/ProcessLossPolicy.cs" />
     <Compile Include="../../../src/PlcWorker/PlcVerifiedImportBridge.cs" />
@@ -26,7 +32,8 @@
     <Compile Include="../../Shared/FixtureExit.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareEditing.InstanceDb.cs" />
     <Compile Include="../../../src/Adapters/Native/Online/OnlineDownloadAdapter.cs" />
-    <Compile Include="../../../src/Adapters/Native/Online/OnlineDownloadAdapter.Transitions.cs" />
+    <Compile Include="../../../src/Adapters/Native/Online/OnlineDownloadAdapter.Routes.cs" />
+    <Compile Include="../../../src/Adapters/Native/Online/OnlineDownloadAdapter.Transfer.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcTagWrites.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcFoundationPolicy.cs" />
     <Compile Include="../../../src/Logic/Siemens/TiaVersionCatalog.cs" />

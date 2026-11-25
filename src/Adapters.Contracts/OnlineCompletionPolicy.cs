@@ -13,17 +13,14 @@ public static class OnlineCompletionPolicy
         bool rejected = meta != null && meta.TryGetValue("v4Rejection", out var refusal) && refusal != null;
         string? state = value is OnlineDownloadResult result ? result.State
             : meta != null && meta.TryGetValue("nativeState", out var nativeState) ? nativeState as string : null;
-        bool explicitPhase = meta != null && meta.TryGetValue("writeAttempted", out var phase) && phase is bool;
-        object? proof = null;
-        bool phased = request.Operation is "ConnectOnlinePlc" or "DownloadPlc" or "DisconnectOnlinePlc";
-        if (!succeeded && phased)
-            meta?.TryGetValue("writeOutcomeKnown", out proof);
-        bool known = request.Operation == "DisconnectOnlinePlc" && proof is true;
-        if (known) changed = false;
-        bool issued = phased && explicitPhase ? attempted || changed : nativeCallIssued;
+        bool unknownDownload = false;
+        if (request.Operation == "DownloadPlc" && meta != null)
+        {
+            if (meta.TryGetValue("writeAttempted", out var phase) && phase is bool) nativeCallIssued = changed;
+            unknownDownload = !succeeded && meta.TryGetValue("writeOutcomeKnown", out var known) && known is false;
+        }
         return new OnlineReply { Value = value, MayHaveChanged = changed,
-            OutcomeUnknown = proof is false || !known && OutcomeUnknown(request, succeeded,
-                issued, changed, files, rejected, state) };
+            OutcomeUnknown = unknownDownload || OutcomeUnknown(request, succeeded, nativeCallIssued, changed, files, rejected, state) };
     }
 
     public static bool OutcomeUnknown(OnlineRequest request, bool success, bool nativeCallIssued,

@@ -7,8 +7,10 @@
 ### Fixed
 
 - Hardware and PLC creation, tag imports and workspace creation now report a definite refusal when a fresh read verifies the attempted write left the target unchanged.
-  Compound operations retain evidence of earlier changes. Download and disconnect results identify which native operation ran and preserve an unreadable online state.
-- PLC compile results retain the native state and counts when individual diagnostics cannot be read. Interrupted safety writes retain an unknown outcome.
+  Compound operations retain evidence of earlier changes. Download results distinguish an unissued transfer, an earlier route change and an issued transfer.
+- SetDeviceItemIoAddress now says the updated address could not be read back and identifies how to verify it. The warning preserves the native setter’s result.
+- Single PLC tag, constant and table creations and single tag-table imports report the Siemens reason when fresh readback proves an issued call failed.
+- Software and unit compile results retain the native state and counts when individual diagnostics cannot be read. Interrupted safety writes retain an unknown outcome.
   A batch stopped by a stale first source file reports that execution never started.
 - Tool usage examples now cover every registered parameter, show release-specific CPU and panel catalog choices, and identify the
   exported PLC block XML, localized HMI table, existing connection and workspace directory required by the corresponding calls.

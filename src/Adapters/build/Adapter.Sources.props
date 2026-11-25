@@ -18,7 +18,7 @@
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Compare.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Download.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Transitions.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Transfer.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Routes.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Scan.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/Adapters/Native/Online/OnlineDownloadAdapter.Upload.cs" />

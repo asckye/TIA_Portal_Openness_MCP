@@ -42,6 +42,9 @@ internal static class V17CompileEnvelope
             throw new IOException("Software compiler response unexpectedly contains a scoped target.");
         return result;
     }
+    internal static bool IncompleteDiagnostics(JsonNode? warnings) =>
+        warnings is JsonArray lines && lines.Any(line => (string?)line == TiaMcp.Adapters.PlcCompileResult.IncompleteDiagnostics);
+
     internal static JsonObject Wrap(string tool,JsonNode? payload,bool dryRun,JsonObject? arguments=null)
     {
         var result=Validate(payload,dryRun,arguments);
@@ -52,6 +55,11 @@ internal static class V17CompileEnvelope
         bool mismatch = !dryRun && (bool?)result["ScopeMismatch"] == true;
         meta["success"]=dryRun || (!mismatch && result["ErrorCount"]!.GetValue<int>()==0
             && !string.Equals(result["State"]!.GetValue<string>(),"Error",StringComparison.OrdinalIgnoreCase));
+        if (IncompleteDiagnostics(result["Warnings"]))
+        {
+            meta["dataComplete"] = false;
+            envelope[Wire("Message")] = TiaMcp.Adapters.PlcCompileResult.IncompleteDiagnostics;
+        }
         if (mismatch) meta["condition"] = "compile-scope-mismatch";
         meta["errorDetailCount"]=((JsonArray)result["Errors"]!).Count;
         meta["warningDetailCount"]=((JsonArray)result["Warnings"]!).Count;

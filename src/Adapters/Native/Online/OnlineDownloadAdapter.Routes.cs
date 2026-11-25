@@ -35,30 +35,6 @@ namespace TiaMcp.Adapters.Native.Online
     // Historical native observations lack a recorded PLCSIM version/date; see docs/reference/real-machine-ledger.md.
     internal sealed partial class OnlineDownloadAdapter
     {
-        // Typed walk of Modes -> PcInterfaces -> TargetInterfaces -> Addresses for an exact IP (R/H online targets).
-        private ConfigurationAddress? FindConfigurationAddress(ConnectionConfiguration configuration, string ipAddress)
-        {
-            foreach (ConfigurationMode mode in PlcGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
-                foreach (ConfigurationPcInterface pcInterface in PlcGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
-                {
-                    foreach (ConfigurationTargetInterface target in PlcGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>())
-#if ONLINE_TARGET_ADDRESSES
-                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
-#else
-                        foreach (ConfigurationAddress address in PlcGroupOperations.Items(OnlineRoutePrimitives.TargetAddresses(target))
-                                .Cast<ConfigurationAddress>())
-#endif
-#if ONLINE_ADDRESSES
-                            if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
-#else
-                            if (string.Equals(OnlineRoutePrimitives.Address(address), ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
-#endif
-                    var viaSubnet = FindSubnetOrGatewayAddress(pcInterface, ipAddress, out _);
-                    if (viaSubnet != null) return viaSubnet;
-                }
-            return null;
-        }
-
         // ---- PG/PC route selection (issue #14) --------------------------------------------------
         // V21: ConnectionConfiguration.ApplyConfiguration(ConfigurationTargetInterface) returns a
         // bool (whether the online route applied) — it does NOT return the IConfiguration. The

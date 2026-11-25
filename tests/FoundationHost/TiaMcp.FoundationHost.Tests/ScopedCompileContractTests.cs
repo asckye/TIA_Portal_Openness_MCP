@@ -17,6 +17,36 @@ public sealed class ScopedCompileContractTests
     private readonly Xunit.Abstractions.ITestOutputHelper output;
     public ScopedCompileContractTests(Xunit.Abstractions.ITestOutputHelper output) => this.output = output;
 
+    [Theory]
+    [InlineData("CompilePlcSoftware", "software")]
+    [InlineData("CompilePlcDiagnostics", "software")]
+    [InlineData("CompilePlcSoftware", "unit")]
+    [InlineData("CompilePlcDiagnostics", "unit")]
+    public async Task Incomplete_diagnostics_are_visible_in_both_host_envelopes(string tool, string scope)
+    {
+        const string warning = "Compile returned its state and counts, but the diagnostic messages could not be read.";
+        var args = new JsonObject { ["softwarePath"] = "devices/D/CPU", ["dryRun"] = false, ["confirm"] = true,
+            ["expectedProjectFile"] = Project, ["scope"] = scope };
+        if (scope == "unit") args["scopePath"] = "Line";
+        using var worker = new Worker();
+        var native = (await worker.Call("CompileSoftware", args, CancellationToken.None))!.AsObject();
+        if (scope == "unit") native["ResolvedObject"] = "devices/D/CPU/units/Line";
+        native["State"] = "Error"; native["ErrorCount"] = 3; native["WarningCount"] = 2;
+        native["Warnings"] = new JsonArray(warning);
+        native["Messages"] = new JsonArray(warning);
+        var legacy = V17CompileEnvelope.Wrap(tool, native, false, args);
+        string Wire(string field) => McpJsonUtilities.DefaultOptions.PropertyNamingPolicy!.ConvertName(field);
+        Assert.False((bool?)legacy[Wire("Meta")]?["dataComplete"]);
+        Assert.Contains(warning, (string?)legacy[Wire("Message")]);
+        var definition = FoundationTools.Definitions.Single(d => d.Name == tool);
+        var body = FoundationV4Result.Worker("20", definition, "fixture", args, native, legacy).StructuredContent!;
+        Assert.Equal("failed", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("partial", (string?)body["meta"]?["completeness"]);
+        Assert.Contains("3 errors and 2 warnings", (string?)body["error"]?["message"]);
+        Assert.Contains("individual error", (string?)body["error"]?["message"], StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(warning, body["data"]!.ToJsonString());
+    }
+
     [Fact]
     public void Report_default_compile_binding_before_and_after_scope_arguments()
     {
@@ -467,6 +497,23 @@ public sealed class ScopedCompileContractTests
             ["confirm"] = confirm, ["expectedProjectFile"] = expectedProject };
         Assert.Throws<ArgumentException>(() => tool.ValidateApplyArguments(args.Deserialize<Dictionary<string, JsonElement>>()!)); Assert
             .Equal(0, worker.Calls);
+    }
+
+    [Theory]
+    [InlineData("block", "Group%2Fone/Main")]
+    [InlineData("group", "Group%2Fone")]
+    public async Task Missing_compiled_roots_after_native_compile_remain_unknown(string scope, string path)
+    {
+        using var worker = new Worker { ApplyScenario = "scoped-messages-unreadable" };
+        var args = new JsonObject { ["softwarePath"] = "CPU", ["scope"] = scope, ["scopePath"] = path, ["dryRun"] = false,
+            ["confirm"] = true, ["expectedProjectFile"] = Project };
+        const string tool = "CompilePlcDiagnostics";
+        var body = (await Tool(tool, worker).InvokeV4Async(Request(tool, args), "21", "fixture", CancellationToken.None)).StructuredContent!;
+        Assert.Equal(1, (int?)worker.Dispatched?["compileCalls"]);
+        Assert.Equal("Unknown", (string?)worker.Dispatched?["outcome"]);
+        Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("unknown", (string?)body["meta"]?["execution"]);
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
     }
 
     [Fact]

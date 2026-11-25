@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace Siemens.Engineering
 {
     public enum ImportOptions { None, Override }
-    public sealed class MessageDataEntry { public string Text => "Import failed"; public string DetailText => ""; }
+    public sealed class MessageDataEntry { public string Text => "Import failed"; public string DetailText => "Siemens rejected the symbol declaration."; }
     public class EngineeringException : Exception
     {
         public MessageDataEntry MessageData => new();

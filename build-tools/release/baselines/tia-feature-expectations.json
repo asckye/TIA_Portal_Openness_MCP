@@ -1180,8 +1180,10 @@
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
+      "ONLINE_ADDRESSES",
       "ONLINE_DOWNLOAD",
       "ONLINE_RH",
+      "ONLINE_TARGET_ADDRESSES",
       "PLC_HARDWARE_CATALOG",
       "PLC_HARDWARE_CATALOG_ENTRIES",
       "PLC_SAFETY",

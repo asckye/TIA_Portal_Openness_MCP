@@ -48,6 +48,32 @@ public sealed class ScopedCompileNativeTests
         Assert.Equal(!dispatched, error.Data["foundationKnownNoMutation"] is true);
     }
 
+    [Theory]
+    [InlineData("block")]
+    [InlineData("group")]
+    public void Unreadable_message_roots_leave_the_issued_compile_unknown(string scope)
+    {
+        var (engine, _, compiler) = Target(scope);
+        compiler.Result.Messages.Add(null!);
+        var error = Assert.Throws<NullReferenceException>(() => engine.CompileSoftwareScoped("CPU", dryRun: false, scope: scope, scopePath: PathFor(scope)));
+        Assert.Equal(1, compiler.Calls);
+        Assert.False(error.Data.Contains("foundationKnownNoMutation"));
+    }
+
+    [Theory]
+    [InlineData("unit")]
+    [InlineData("software")]
+    public void Both_compiler_message_views_disclose_an_incomplete_read(string scope)
+    {
+        var (engine, _, compiler) = Target(scope);
+        compiler.Result.ErrorCount = 3;
+        compiler.Result.Messages.Add(null!);
+        var result = engine.CompileSoftwareScoped("CPU", dryRun: false, scope: scope, scopePath: PathFor(scope));
+        Assert.Contains(result.Messages, line => line.Contains("diagnostic messages could not be read"));
+        Assert.Contains(result.Warnings, line => line.Contains("diagnostic messages could not be read"));
+        Assert.Equal(3, result.ErrorCount);
+    }
+
     [Fact]
     public void A_message_read_failure_preserves_the_returned_compile_state_and_counts()
     {

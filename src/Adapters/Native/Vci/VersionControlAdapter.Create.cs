@@ -48,8 +48,10 @@ namespace TiaMcp.Adapters.Native.Vci
                 issued = true;
                 Siemens.Engineering.VersionControl.Workspace ws;
                 try { ws = PortVci.Create(workspaces, workspaceName.Trim(), dir); }
-                catch (Exception error) when (emptyBefore && NativeRefusalProbe.ProvesUnchanged(error,
-                    () => before.SequenceEqual(Names()) && !dir.EnumerateFileSystemInfos().Any()))
+                catch (Exception error) when (emptyBefore && NativeRefusalProbe.ProvesUnchanged(error, () => {
+                    var after = Names();
+                    return after.Length == before.Length && before.SequenceEqual(after) && !dir.EnumerateFileSystemInfos().Any();
+                }))
                 {
                     var evidence = HmiMeta.Basic(false, ("mayHaveChanged", false), ("apiCallSuccess", false), ("nativeMessage", error.Message));
                     return new VersionControlResult { Message = "Workspace creation refused. Registration and the empty folder were verified.",

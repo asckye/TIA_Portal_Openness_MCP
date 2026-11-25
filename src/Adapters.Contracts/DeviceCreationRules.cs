@@ -149,7 +149,8 @@ public static class DeviceCreationRules
     public static AdapterPreconditionException TiaRefusal(string typeIdentifier, string deviceName, string reason, string candidates, string parameter,
             Exception cause)
         => new AdapterPreconditionException("TIA refused CreateWithItem('" + typeIdentifier + "', '" + deviceName + "'): " + reason
-            + " No device was created (device inventory unchanged); no other type, version or name was tried." + candidates,
+            + " No device was created (device inventory unchanged); no other type, version or name was tried."
+            + " This inventory cannot detect changes to attributes or configuration within existing devices." + candidates,
             reason.IndexOf("name could not be set at device", StringComparison.OrdinalIgnoreCase) >= 0
             && reason.IndexOf("read-only attribute", StringComparison.OrdinalIgnoreCase) >= 0 ? "deviceName" : parameter, false, cause);
 

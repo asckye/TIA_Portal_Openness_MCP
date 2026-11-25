@@ -55,15 +55,7 @@ namespace TiaMcp.Adapters
             catch (EngineeringException native)
             {
                 native.Data["phase"] = "import";
-                native.Data["nativeMessage"] = NativeFailureText.Compose(native.Message, null, Array.Empty<string>());
-                try
-                {
-                    var data = native.MessageData;
-                    string reason = NativeFailureText.Compose(data.Text, data.DetailText,
-                        native.DetailMessageData.SelectMany(detail => new[] { detail.Text, detail.DetailText }));
-                    if (reason.Length > 0) native.Data["nativeMessage"] = reason;
-                }
-                catch (Exception) { /* swallow(probe-optional): retain the original Siemens exception message */ }
+                RecordSiemensReason(native);
                 if (defaultOptions && NativeRefusalProbe.ProvesAbsent(native, newName, exists))
                 {
                     native.Data["foundationKnownNoMutation"] = true;
@@ -71,6 +63,18 @@ namespace TiaMcp.Adapters
                 }
                 throw;
             }
+        }
+        internal static void RecordSiemensReason(EngineeringException native)
+        {
+            native.Data["nativeMessage"] = NativeFailureText.Compose(native.Message, null, Array.Empty<string>());
+            try
+            {
+                var data = native.MessageData;
+                string reason = NativeFailureText.Compose(data.Text, data.DetailText,
+                    native.DetailMessageData.SelectMany(detail => new[] { detail.Text, detail.DetailText }));
+                if (reason.Length > 0) native.Data["nativeMessage"] = reason;
+            }
+            catch (Exception) { /* swallow(probe-optional): retain the original Siemens exception message */ }
         }
     }
 }

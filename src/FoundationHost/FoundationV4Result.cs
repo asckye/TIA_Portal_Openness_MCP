@@ -277,10 +277,11 @@ internal static class FoundationV4Result
                     : SafetyLoginFailure.Message(true, loggedOn, (bool?)login["logoffFailed"] == true, (bool?)login["connectionLost"] == true);
                 return Wire(release, name, id, data, Outcome.Unknown, Execution.Unknown, Completeness.Unknown, new Error(message, unknownLogin), true);
             }
-            if (name is ("ImportPlcBlock" or "ImportPlcType") && worker.KnownNoMutation && retained is JsonObject importEvidence
-                && (bool?)importEvidence["verifiedAbsent"] == true && (bool?)importEvidence["mayHaveChanged"] == false)
+            if (dispatched && mutation && worker.KnownNoMutation && retained is JsonObject absenceEvidence
+                && (string?)absenceEvidence["phase"] is "create" or "import" && (bool?)absenceEvidence["verifiedAbsent"] == true
+                && (bool?)absenceEvidence["mayHaveChanged"] == false)
                 return Wire(release, name, id, data, Outcome.Failed, Execution.Completed, Completeness.Complete,
-                    HostBehavior.UnchangedNativeError(importEvidence), true);
+                    HostBehavior.UnchangedNativeError(absenceEvidence), true);
             if ((string?)retained?["recoveryStatus"] == "backup-skipped")
             {
                 data["recoveryStatus"] = "backup-skipped";
@@ -396,6 +397,7 @@ internal static class FoundationV4Result
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
         if (definition.ResponseMember == "Compile")
         {
+            if (V17CompileEnvelope.IncompleteDiagnostics(data["warnings"])) data["complete"] = false;
             bool mismatch = Flag(data, "scopeMismatch") == true;
             data.Remove("scopeMismatch");
             if (Text(data, "scope") is "block" or "group") data["compiledRoots"] ??= new JsonArray();

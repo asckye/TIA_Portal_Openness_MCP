@@ -33,6 +33,7 @@ namespace TiaMcp.Adapters
     }
     public class PlcCompileResult
     {
+        public const string IncompleteDiagnostics = "Compile returned its state and counts, but the diagnostic messages could not be read.";
         public bool Executed { get; internal set; }
         public string? ProjectFile { get; internal set; }
         public string? State { get; internal set; }

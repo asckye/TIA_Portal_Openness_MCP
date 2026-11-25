@@ -23,5 +23,7 @@ public sealed class VerifiedImportFrameworkTests
         Assert.True(process.ExitCode == 0, summary + Environment.NewLine + await errors);
         Assert.Contains(".NET Framework 4.8", summary);
         Assert.Contains("0 failed, 0 skipped", summary);
+        var count = System.Text.RegularExpressions.Regex.Match(summary, @"(?m)^(\d+) cases,");
+        Assert.True(count.Success && int.Parse(count.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) >= 121, summary);
     }
 }

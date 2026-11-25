@@ -16,6 +16,7 @@ public sealed class PlcArtifactRefusalTests
     [InlineData("unreadable", true)]
     [InlineData("multiple", true)]
     [InlineData("ambiguous-name", true)]
+    [InlineData("padded-name", true)]
     [InlineData("different-case", true)]
     [InlineData("overwrite", true)]
     [InlineData("timeout", true)]
@@ -36,12 +37,45 @@ public sealed class PlcArtifactRefusalTests
         string Table(string name) => $"<SW.Tags.PlcTagTable ID='0'><AttributeList><Name>{name}</Name>" +
             (fault == "ambiguous-name" ? "<Name>Other</Name>" : "") + "</AttributeList></SW.Tags.PlcTagTable>";
         var file = Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString("N") + ".xml");
-        File.WriteAllText(file, "<Document><Engineering version='V19'/>" + Table("Signals") + (fault == "multiple" ? Table("Other") : "") + "</Document>");
+        string tableName = fault == "padded-name" ? " Signals " : "Signals";
+        File.WriteAllText(file, "<Document><Engineering version='V19'/>" + Table(tableName)
+            + (fault == "multiple" ? Table("Other") : "") + "</Document>");
         try
         {
             Assert.Throws<PlcSoftwareException>(() => adapter.ImportPlcTagTable("PLC", "", file, fault == "overwrite"));
             Assert.Equal(1, calls);
             Assert.Equal(uncertain, adapter.MutationStarted);
+        }
+        finally { File.Delete(file); }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Native_import_can_open_the_original_BOM_file_exclusively(bool replaceDeclaration)
+    {
+        var engine = new PathEngine("19");
+        var adapter = engine.Artifacts;
+        string file = Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString("N") + ".xml");
+        const string xml = "<Document><Engineering version='V19'/><SW.Tags.PlcTagTable ID='0'>" +
+            "<AttributeList><Name>Signals</Name></AttributeList></SW.Tags.PlcTagTable></Document>";
+        File.WriteAllText(file, xml, new System.Text.UTF8Encoding(true));
+        bool opened = false;
+        engine.Plc.TagTableGroup.TagTables.OnImport = _ => {
+            using var stream = File.Open(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            opened = true;
+            if (replaceDeclaration)
+            {
+                using var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(true));
+                writer.Write(xml.Replace("Signals", "Changed"));
+            }
+            throw new InvalidOperationException("Native import refused.");
+        };
+        try
+        {
+            Assert.Throws<PlcSoftwareException>(() => adapter.ImportPlcTagTable("PLC", "", file, false));
+            Assert.True(opened);
+            Assert.Equal(replaceDeclaration, adapter.MutationStarted);
         }
         finally { File.Delete(file); }
     }

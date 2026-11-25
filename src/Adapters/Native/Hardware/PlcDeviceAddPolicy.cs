@@ -188,7 +188,8 @@ namespace TiaMcp.Adapters
             }
             catch (Exception error) when (creating && describe != null && NativeRefusalProbe.ProvesUnchanged(error, () => {
                 check();
-                return InventoryFields(freshInventory).SequenceEqual(InventoryFields(Snapshot(inventory)));
+                var after = Snapshot(inventory);
+                return after.Length == freshInventory.Length && InventoryFields(freshInventory).SequenceEqual(InventoryFields(after));
             }))
             {
                 throw DeviceCreationRules.TiaRefusal(selected.TypeIdentifier!, r.Name, error.Message, "", "preferredMlfb", error);

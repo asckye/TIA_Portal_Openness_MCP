@@ -33,6 +33,11 @@ namespace TiaMcp.Adapters
 {
     public sealed partial class PlcFoundationEngine
     {
+        private PlcFoundationEngine EngineeringPlcSession => this;
+        private bool IsProjectNull() => !Bound;
+        private IDisposable AcquireHmiEditAccess() => throw new InvalidOperationException("Unexpected edit lock.");
+        private void RecordExportFailure(Exception error) { }
+        private Func<string, bool, Func<Dictionary<string, object?>, string>, HardwareAddressingReply>? EngineeringServicesStep => null;
         internal DeviceItem Module { get; } = new();
         private DeviceItem? HardwareLegacyItem(string path) => path == "PLC/IO" ? Module : null;
         private bool HardwareProjectMissing() => !Bound;
@@ -104,5 +109,13 @@ namespace TiaMcp.Engine.Tests
             Assert.False(HardwareAddressingPolicy.ScalarUnchanged(refused, true, 4, () => throw new IOException()));
             Assert.False(HardwareAddressingPolicy.ScalarUnchanged(new TimeoutException(), true, 4, () => 4));
         }
+    }
+}
+
+namespace TiaMcp.Adapters.Native.Hmi
+{
+    internal static class HmiReadSafety
+    {
+        internal static bool ConnectionUnavailable(Exception error) => HmiReadPolicy.ConnectionUnavailable(error);
     }
 }

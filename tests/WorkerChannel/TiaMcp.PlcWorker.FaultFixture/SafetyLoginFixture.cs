@@ -14,6 +14,17 @@ using TiaMcp.WorkerChannel;
 
 internal static class SafetyLoginFixture
 {
+    private sealed class CompileGroup(Siemens.Engineering.Compiler.ICompilable compiler)
+        : Siemens.Engineering.SW.Blocks.PlcBlockGroup, Siemens.Engineering.IEngineeringServiceProvider
+    {
+        public T? GetService<T>() where T : class => compiler as T;
+    }
+
+    private sealed class CompileBlock(Siemens.Engineering.Compiler.ICompilable compiler) : Siemens.Engineering.SW.Blocks.PlcBlock
+    {
+        public override T? GetService<T>() where T : class => compiler as T;
+    }
+
     internal static int Run(string caller, string scenario)
     {
         if (caller == "native-writes")
@@ -46,6 +57,14 @@ internal static class SafetyLoginFixture
         {
             admin.LoginError = null;
             admin.LoggedOnAfterLogin = true;
+        }
+        if (scenario == "scoped-messages-unreadable")
+        {
+            var software = session.GetSoftwareContainer("CPU").Software;
+            software.ReturnedResult = new Siemens.Engineering.Compiler.CompilerResult();
+            var group = new CompileGroup(software) { Name = "Group/one" };
+            group.Blocks.Add(new CompileBlock(software) { Name = "Main" });
+            software.BlockGroup.Groups.Add(group);
         }
         if (scenario == "scope-unavailable")
         {

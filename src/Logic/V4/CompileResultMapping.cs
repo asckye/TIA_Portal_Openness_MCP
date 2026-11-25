@@ -66,6 +66,7 @@ namespace TiaMcp.Logic.V4
             var first = messages.Take(MaximumErrorMessages).ToArray();
             string message = "Compile finished with " + errors + " errors and " + warnings + " warnings";
             if (first.Length > 0) message += "; first: " + (first[0].Path == "" ? "" : first[0].Path + ": ") + first[0].Description;
+            else if (errors > 0 && (bool?)data["complete"] == false) message += ". Individual error details could not be read";
             return new Error(message.EndsWith(".", StringComparison.Ordinal) ? message : message + ".", new CompileErrorsDetails(errors, warnings, first));
         }
     }

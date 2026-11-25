@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -24,6 +25,13 @@ namespace TiaMcp.Adapters.Native.Plc
             internal string Name = "";
             internal bool Temporary;
             internal string? SingleTag;
+            internal byte[]? SourceHash;
+            internal byte[] HashFile()
+            {
+                using var sha = SHA256.Create();
+                using var file = File.OpenRead(Path);
+                return sha.ComputeHash(file);
+            }
             public void Dispose()
             {
                 if (!Temporary) return;
@@ -45,7 +53,15 @@ namespace TiaMcp.Adapters.Native.Plc
                 SingleTag = native.Kind == "PlcTagTable" ? SimaticMlImportWindow.SingleImportName(document, "SW.Tags.PlcTagTable") : null };
             bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
             bool block = document.Root!.Elements().Any(e => e.Name.LocalName.StartsWith("SW.Blocks.", StringComparison.Ordinal));
-            if (hasBom && !block) return prepared;
+            if (hasBom && !block)
+            {
+                if (prepared.SingleTag != null)
+                {
+                    using var sha = SHA256.Create();
+                    prepared.SourceHash = sha.ComputeHash(bytes);
+                }
+                return prepared;
+            }
             prepared.Path = System.IO.Path.Combine(TiaOpenness.Shared.DataLocations.Current.TempDirectory,
                 "tia_mcp_import_" + Guid.NewGuid().ToString("N") + ".xml");
             try
@@ -253,23 +269,33 @@ namespace TiaMcp.Adapters.Native.Plc
 
                 if (!new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath)).Exists)
                     throw new PlcSoftwareException("InvalidParams", $"Import file not found: {importPath}");
-                // A BOM-bearing tag XML is passed to TIA at its original path. Keep the admitted declaration stable through Import.
-                using var sourceLock = overwrite ? null : TiaOpenness.Shared.NativeInputPolicy.Read("importPath", () => File.OpenRead(importPath));
                 using var prepared = PrepareXmlForImport(importPath);
                 RequireKind(prepared, false, false, "importPath");
                 RequireImportTarget("tag table", prepared.Name, ExistingTagTables(plc.TagTableGroup), group, overwrite);
 
                 var tables = PlcOrganisationPrimitives.TagTables(group);
                 var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(prepared.Path));
+                if (!overwrite && prepared.Temporary && prepared.SingleTag != null)
+                {
+                    try { prepared.SourceHash = prepared.HashFile(); }
+                    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                    { /* swallow(probe-optional): import still runs; an unreadable baseline cannot establish an unchanged source. */ }
+                }
                 bool priorWrite = MutationStarted;
                 MutationStarted = true;
                 IList<PlcTagTable> imported;
                 try { imported = tables.Import(file, overwrite ? ImportOptions.Override : ImportOptions.None); }
-                catch (Exception error) when (!overwrite && NativeRefusalProbe.ProvesAbsent(error, prepared.SingleTag,
-                    name => tables.Find(name) != null || tables.Any(table => string.Equals(table.Name, name, StringComparison.OrdinalIgnoreCase))))
+                catch (Exception error)
                 {
-                    MutationStarted = priorWrite;
-                    error.Data["verifiedAbsent"] = true;
+                    // Let Import unwind its own file handles before opening the admitted path for readback.
+                    // A single named declaration cannot choose another name. Admission retained no destination count.
+                    bool MayContainTarget(string name) => prepared.SourceHash == null || !prepared.SourceHash.SequenceEqual(prepared.HashFile())
+                        || tables.Find(name) != null || tables.Any(table => string.Equals(table.Name, name, StringComparison.OrdinalIgnoreCase));
+                    if (!overwrite && NativeRefusalProbe.ProvesAbsent(error, prepared.SingleTag, MayContainTarget))
+                    {
+                        MutationStarted = priorWrite;
+                        error.Data["verifiedAbsent"] = true;
+                    }
                     throw;
                 }
                 if (imported == null || imported.Count == 0)

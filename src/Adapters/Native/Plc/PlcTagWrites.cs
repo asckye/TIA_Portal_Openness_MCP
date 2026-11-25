@@ -21,19 +21,24 @@ namespace TiaMcp.Adapters.Native.Plc
             => Create(() => target.UserConstants.Create(name, dataType, value),
                 () => !PlcFoundationPolicy.SymbolExists(target.UserConstants, n => target.UserConstants.Find(n), t => t.Name, name));
 
-        // Each caller already found the requested name absent before dispatch.
+        // These Creates require an explicit symbol name and have no automatic-name overload.
+        // Admission checked that name; it retained no composition count. A case-insensitive lookup covers the only possible new symbol.
         private static void Create(Action write, Func<bool> stillAbsent)
         {
             try { write(); }
             catch (Exception error) when (NativeRefusalProbe.ProvesUnchanged(error, stillAbsent))
             {
+                error.Data["phase"] = "create";
+                error.Data["verifiedAbsent"] = true;
                 error.Data["foundationKnownNoMutation"] = true;
+                if (error is EngineeringException native) PlcFoundationEngine.RecordSiemensReason(native);
                 throw;
             }
         }
 
         internal static IList<PlcTagTable> Import(PlcTagTableComposition tables, FileInfo file, ImportOptions options, string? newName, Action? dispatch)
         {
+            // Default import of one declared tag table preserves its name. Admission did not collect a destination count.
             dispatch?.Invoke();
             return PlcFoundationEngine.ImportWithReadback(() => tables.Import(file, options), newName, options == ImportOptions.None,
                 name => PlcFoundationPolicy.SymbolExists(tables, selected => tables.Find(selected), t => t.Name, name));

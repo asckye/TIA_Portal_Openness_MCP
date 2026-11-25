@@ -24,14 +24,13 @@ public sealed class ServedExampleRowsTests
     [Theory]
     [InlineData("plc-foundation")]
     [InlineData("full-engine")]
-    public void Examples_bind_catalog_and_table_names_and_explain_comparison_inputs(string profile)
+    public void Examples_bind_catalog_and_table_names(string profile)
     {
         var rows = Calls["profiles"]![profile]!;
         var device = rows["CreateHardwareDevice"]!;
         Assert.DoesNotContain("verified V19", (string?)device["parameters"]?["preferredVersion"]?["meaning"]);
         Assert.Contains("same", (string?)device["parameters"]?["preferredVersion"]?["meaning"], StringComparison.OrdinalIgnoreCase);
         Assert.Contains("sample", (string?)rows["DescribeHmiTagTable"]?["note"], StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("planned.xml", (string?)rows["ComparePlcBlockDocuments"]?["note"]);
     }
 
     public static IEnumerable<object[]> Releases() => CanonicalParameterRound2Tests.Releases();

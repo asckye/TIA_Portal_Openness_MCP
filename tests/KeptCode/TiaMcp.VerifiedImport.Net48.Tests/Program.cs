@@ -15,8 +15,13 @@ internal static class Program
         public void SetValue<T>(string name, T value) => this[name] = value!;
     }
 
-    private static int Main() => FixtureCrashGuard.Run(() =>
+    private static int Main(string[] args) => FixtureCrashGuard.Run(() =>
     {
+        if (args.Length == 2 && args[0] == "--worker-reply")
+        {
+            Console.WriteLine(TiaMcp.PlcWorker.WorkerJson.Serialize(TiaMcp.Engine.Tests.RefusalFixture.Reply(args[1])));
+            return 0;
+        }
         string runtime = RuntimeInformation.FrameworkDescription;
         Assert.StartsWith(".NET Framework 4.8", runtime);
         Console.WriteLine(runtime);

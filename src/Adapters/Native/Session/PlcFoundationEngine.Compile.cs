@@ -143,9 +143,10 @@ namespace TiaMcp.Adapters
             bool checkRoots = scope == "block" || scope == "group";
             string blockName = scope == "block" ? parts.Last() : "";
             try { PlcCompilePolicy.Classify(response, Messages(result.Messages, 0, checkRoots ? roots : null, blockName), scope == "block"); }
-            catch (Exception error) when (NativeRefusalProbe.AllowsRefusalProof(error))
+            catch (Exception error) when (!checkRoots && NativeRefusalProbe.AllowsRefusalProof(error))
             {
-                response.Warnings = new[] { "Compile returned its state and counts, but the diagnostic messages could not be read." };
+                response.Messages = new[] { PlcCompileResult.IncompleteDiagnostics };
+                response.Warnings = new[] { PlcCompileResult.IncompleteDiagnostics };
                 return response;
             }
             if (checkRoots)
