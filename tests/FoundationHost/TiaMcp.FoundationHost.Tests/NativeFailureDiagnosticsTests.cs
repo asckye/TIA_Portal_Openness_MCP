@@ -33,6 +33,7 @@ public sealed class NativeFailureDiagnosticsTests
     [InlineData("[Error] CAx 数据导出已完成（错误：1，警告：0）", "[Error] CAx 数据导出已完成（错误：1，警告：0）")]
     [InlineData("[Error] {\"password\":\"x\"}", "[Error] {\"password\":\"••••\"}")]
     [InlineData("[Error] token=abc", "[Error] token=••••")]
+    [InlineData("[Error] password = my pass phrase", "[Error] ••••")]
     [InlineData("[Info]\u00a0[Warning] token=abc", "[Info]\u00a0[Warning] token=••••")]
     [InlineData("[Warning] [Info] [Error] token=abc", "[Warning] [Info] [Error] token=••••")]
     [InlineData("[Information] [Success] [broken", "[Information] [Success] ••••")]

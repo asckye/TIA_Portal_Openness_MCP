@@ -252,6 +252,8 @@ namespace TiaMcp.Logic.V4
                         return "••••";
                     // The ordinary text scrubber handles explicit credential assignments. Other mentions have no reliable value boundary.
                     string prose = Regex.Replace(text, CredentialPair, " ", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+                    // An unquoted value can contain spaces, so text after the pair may still be part of the credential.
+                    if (Regex.IsMatch(text, CredentialPair + @"\s+\S", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1))) return "••••";
                     if (Regex.Matches(prose, @"[\w.-]+", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)).Cast<Match>().Any(m => Credential(m.Value)))
                         return "••••";
                 }
