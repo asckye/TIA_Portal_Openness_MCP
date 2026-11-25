@@ -19,7 +19,11 @@ namespace TiaMcpServer.Siemens.Services
                     .TargetKind, request.CopyMode, request.GenerateOption);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             if (!hasProject()) return NoProject(request.Operation);
-            return Step(Invoke(request));
+            var worker = Invoke(request);
+            var step = Step(worker);
+            if (request.Operation == "ImportPlcBlockVerified" && (bool?)worker["MayHaveChanged"] == true)
+                step.Meta!["mayHaveChanged"] = true;
+            return step;
         }
         public ResponseMessage CreatePlcInstanceDb(string softwarePath, string fbPath, string name, string groupPath = "", bool autoNumber = true, int number =
                 0, bool dryRun = true)

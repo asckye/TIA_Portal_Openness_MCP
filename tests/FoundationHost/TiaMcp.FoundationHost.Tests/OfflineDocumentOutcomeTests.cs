@@ -49,6 +49,45 @@ public sealed class OfflineDocumentOutcomeTests
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
     }
 
+    [Theory, MemberData(nameof(VerifiedImportOutcomeTests.Releases), MemberType = typeof(VerifiedImportOutcomeTests))]
+    public async Task Comparison_keeps_each_expanded_instance_under_its_own_member(string release)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        using var session = fixture.EnterSession();
+        string leftFilePath = Path.Combine(fixture.Root, "before.xml"), rightFilePath = Path.Combine(fixture.Root, "after.xml");
+        string source = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "tests/KeptCode/TiaMcp.KeptCode.Tests/Fixtures/VerifiedImport/17-T2b.xml");
+        var xml = XDocument.Load(source);
+        // Recorded candidate A/B. Reconstruct the two nested UDT expansions observed in V17 rows 69/70.
+        foreach (var instance in xml.Descendants().Where(e => e.Name.LocalName == "Member").ToArray())
+        {
+            XNamespace ns = instance.Name.Namespace;
+            instance.Add(new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None"),
+                new XElement(ns + "Member", new XAttribute("Name", "In"), new XAttribute("Datatype", "\"UDTI\""),
+                    new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None"),
+                        new XElement(ns + "Member", new XAttribute("Name", "Lim"), new XAttribute("Datatype", "Int"))))))));
+        }
+        xml.Save(leftFilePath);
+        xml.Save(rightFilePath);
+        async Task<JsonNode> Compare() => (await fixture.Call("ComparePlcBlockDocuments", new { leftFilePath, rightFilePath })).StructuredContent!;
+        var same = await Compare();
+        Assert.True((bool?)same["ok"], same.ToJsonString());
+        Assert.True((bool?)same["data"]!["identicalAfterNormalization"]);
+        var limit = xml.Descendants().Last(e => (string?)e.Attribute("Name") == "Lim");
+        limit.SetAttributeValue("Datatype", "DInt");
+        xml.Save(rightFilePath);
+        var changed = await Compare();
+        var member = Assert.Single(changed["data"]!["structural"]!["interface"]!["typeChanged"]!.AsArray());
+        Assert.Equal("Static", (string?)member!["section"]);
+        Assert.Equal("B.In.Lim", (string?)member["path"]);
+        limit.AddAfterSelf(new XElement(limit));
+        xml.Save(rightFilePath);
+        var ambiguous = await Compare();
+        AssertRefused(ambiguous);
+        Assert.Contains("Static/B.In.Lim", (string?)ambiguous["error"]!["message"]);
+        Assert.Equal("/rightFilePath", (string?)ambiguous["error"]!["details"]!["parameter"]);
+    }
+
     [Theory]
     [InlineData("GetPlcBlockEditCapabilities")]
     [InlineData("ComparePlcBlockDocuments")]

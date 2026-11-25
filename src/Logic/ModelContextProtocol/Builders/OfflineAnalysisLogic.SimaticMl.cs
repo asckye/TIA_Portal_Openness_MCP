@@ -211,7 +211,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static void ParseXmlInterface(XElement interfaceElement, BlockDocument doc)
         {
-            foreach (var section in interfaceElement.Descendants().Where(e => Local(e) == "Section"))
+            foreach (var section in interfaceElement.Descendants().Where(e => Local(e) == "Section" && !e.Ancestors().Any(a => Local(a) == "Member")))
             {
                 var sectionName = (string?)section.Attribute("Name") ?? "";
                 foreach (var member in section.Elements().Where(e => Local(e) == "Member")) AddXmlMember(sectionName, "", member, doc);
@@ -226,6 +226,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(member)
             });
             foreach (var child in member.Elements().Where(e => Local(e) == "Member")) AddXmlMember(section, path, child, doc);
+            foreach (var child in member.Elements().Where(e => Local(e) == "Sections").Elements().Where(e => Local(e) == "Section")
+                .Elements().Where(e => Local(e) == "Member")) AddXmlMember(section, path, child, doc);
         }
 
         private static string MemberTraits(XElement member)

@@ -148,14 +148,15 @@ namespace TiaMcpServer.ModelContextProtocol
         public static JsonObject CompareFiles(string leftPath, string rightPath, int offset, int limit, int contextLines = 2)
             => Compare(ParseFile(leftPath), ParseFile(rightPath), offset, limit, contextLines);
 
-        public static JsonObject Compare(BlockDocument left, BlockDocument right, int offset, int limit, int contextLines = 2)
+        public static JsonObject Compare(BlockDocument left, BlockDocument right, int offset, int limit, int contextLines = 2,
+            string leftParameter = "leftFilePath", string rightParameter = "rightFilePath")
         {
             ValidatePage(offset, limit);
             var sameFormat = string.Equals(left.Format, right.Format, StringComparison.Ordinal);
             var leftCanonical = sameFormat ? left.Canonical : BuildCanonical(left, false);
             var rightCanonical = sameFormat ? right.Canonical : BuildCanonical(right, false);
             var identical = leftCanonical.SequenceEqual(rightCanonical, StringComparer.Ordinal);
-            var structural = CompareStructure(left, right);
+            var structural = CompareStructure(left, right, leftParameter, rightParameter);
             var entries = identical ? new List<DiffEntry>() : Diff(leftCanonical, rightCanonical);
             var hunks = BuildHunks(entries, contextLines);
             var page = new JsonArray();
@@ -197,7 +198,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static JsonObject Pair(string l, string r) => new JsonObject {
             ["left"] = l, ["right"] = r, ["equal"] = string.Equals(l, r, StringComparison.Ordinal) };
 
-        public static JsonObject CompareStructure(BlockDocument left, BlockDocument right)
+        public static JsonObject CompareStructure(BlockDocument left, BlockDocument right,
+            string leftParameter = "leftFilePath", string rightParameter = "rightFilePath")
         {
             var differences = 0;
             var sameFormat = string.Equals(left.Format, right.Format, StringComparison.Ordinal);
@@ -225,8 +227,8 @@ namespace TiaMcpServer.ModelContextProtocol
             result["attributes"] = new JsonObject { ["changed"] = changed, ["onlyLeft"] = onlyLeft, ["onlyRight"] = onlyRight };
 
             var added = new JsonArray(); var removed = new JsonArray(); var typeChanged = new JsonArray();
-            var leftMembers = left.Members.ToDictionary(m => m.Section + "/" + m.Path, m => m, StringComparer.Ordinal);
-            var rightMembers = right.Members.ToDictionary(m => m.Section + "/" + m.Path, m => m, StringComparer.Ordinal);
+            var leftMembers = IndexMembers(left, leftParameter);
+            var rightMembers = IndexMembers(right, rightParameter);
             foreach (var kv in leftMembers)
             {
                 if (!rightMembers.TryGetValue(kv.Key, out var rm)) { removed.Add(MemberJson(kv.Value)); differences++; continue; }
@@ -274,6 +276,19 @@ namespace TiaMcpServer.ModelContextProtocol
             };
             result["differenceCount"] = differences;
             return result;
+        }
+
+        private static Dictionary<string, InterfaceMember> IndexMembers(BlockDocument doc, string parameter)
+        {
+            var members = new Dictionary<string, InterfaceMember>(StringComparer.Ordinal);
+            foreach (var member in doc.Members)
+            {
+                string key = member.Section + "/" + member.Path;
+                if (members.ContainsKey(key))
+                    throw new TiaMcp.Adapters.Contracts.AdapterPreconditionException("Ambiguous interface member: " + key, parameter);
+                members.Add(key, member);
+            }
+            return members;
         }
 
         private static JsonObject MemberJson(InterfaceMember m) => new JsonObject { ["section"] = m.Section, ["path"] = m.Path, ["datatype"] = m.Datatype };

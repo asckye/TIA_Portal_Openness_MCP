@@ -66,7 +66,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         var after = OfflineToolExecution.ReadDocument(nameof(rightFilePath), () => OfflineAnalysisLogic.ParseFile(right));
                         result = OfflineAnalysisLogic.Compare(before, after, offset, limit, contextLines);
                     }
-                    else result = OfflineAnalysisLogic.CompareFiles(left, right, offset, limit, contextLines);
+                    else result = OfflineAnalysisLogic.Compare(OfflineAnalysisLogic.ParseFile(left), OfflineAnalysisLogic.ParseFile(right),
+                        offset, limit, contextLines, leftTemp == null ? nameof(leftFilePath) : nameof(leftBlockPath),
+                        rightTemp == null ? nameof(rightFilePath) : nameof(rightBlockPath));
                     foreach (var kv in result.ToList()) meta[kv.Key] = kv.Value?.DeepClone();
                     meta["apiCallSuccess"] = true;
                     var identical = result["identicalAfterNormalization"]?.GetValue<bool>() == true;

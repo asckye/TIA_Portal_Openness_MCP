@@ -7,6 +7,7 @@ using TiaMcp.Adapters.Contracts;
 
 namespace Siemens.Engineering
 {
+    public class EngineeringException(string message) : Exception(message) { }
     public enum ExportOptions { None, WithDefaults, WithReadOnly }
     public enum ImportOptions { None, Override }
 }
@@ -25,6 +26,7 @@ namespace Siemens.Engineering.SW.Blocks
         public bool EmptyImportResult { get; set; }
         public Action<PlcBlock>? AfterImport { get; set; }
         public Action<FileInfo>? AfterBlockExport { get; set; }
+        public Func<object?>? Compile { get; set; }
         public GroupList Groups { get; }
         public BlockList Blocks { get; }
         public PlcBlockGroup() { Groups = new(this); Blocks = new(this); }
@@ -52,6 +54,7 @@ namespace Siemens.Engineering.SW.Blocks
         public string Name { get; set; } = "";
         public object? Parent { get; set; }
         public bool IsConsistent { get; set; } = true;
+        public Action? OnNameRead { get; set; }
         public string Language { get; set; } = "LAD";
         public int Exports { get; set; }
         public List<Siemens.Engineering.ExportOptions> ExportOptionsUsed { get; } = new();
@@ -127,13 +130,14 @@ namespace TiaMcp.Adapters.Native.Plc
         internal static NamedList<PlcBlock> Blocks(PlcBlockGroup group) => group.Blocks;
         internal static PlcBlock? Find(NamedList<PlcBlock> blocks, string name) => blocks.Find(name);
         internal static bool IsConsistent(PlcBlock block) => block.IsConsistent;
+        internal static string Name(PlcBlock block) { block.OnNameRead?.Invoke(); return block.Name; }
         internal static List<PlcBlock> Import(IEnumerable<PlcBlock> blocks, FileInfo file, Siemens.Engineering.ImportOptions options)
             => PlcOrganisationPrimitives.Import(blocks, file, options);
-        internal static object? Compiler(PlcBlock block) => null;
-        internal static object Compile(object compiler) => throw new NotSupportedException();
-        internal static string State(object result) => throw new NotSupportedException();
-        internal static int ErrorCount(object result) => throw new NotSupportedException();
-        internal static int WarningCount(object result) => throw new NotSupportedException();
+        internal static object? Compiler(PlcBlock block) => (block.Parent as PlcBlockGroup)?.Compile;
+        internal static object? Compile(object compiler) => ((Func<object?>)compiler)();
+        internal static string State(object result) => ((CompilerResult)result).State;
+        internal static int ErrorCount(object result) => ((CompilerResult)result).ErrorCount;
+        internal static int WarningCount(object result) => ((CompilerResult)result).WarningCount;
         internal static void Export(PlcBlock block, FileInfo file, Siemens.Engineering.ExportOptions options)
         {
             block.Exports++;
@@ -142,6 +146,14 @@ namespace TiaMcp.Adapters.Native.Plc
                 System.Security.SecurityElement.Escape(block.Name) + "</Name></AttributeList></SW.Blocks.FC></Document>");
             (block.Parent as PlcBlockGroup)?.AfterBlockExport?.Invoke(file);
         }
+    }
+    public sealed class CompilerResult
+    {
+        public string State { get; set; } = "Error";
+        public int ErrorCount { get; set; } = 1;
+        public int WarningCount { get; set; }
+        public Func<object?> ReadMessages { get; set; } = () => Array.Empty<object>();
+        public object? Messages => ReadMessages();
     }
 }
 namespace TiaOpenness.Shared
@@ -167,6 +179,7 @@ namespace TiaMcp.Adapters
     {
         public sealed class Software : PlcSoftware { }
         public Func<object?>? TagGroupReader { get; set; }
+        public Func<string>? ReadBindingIdentity { get; set; }
         public PlcOrganisationAdapter Artifacts => new PlcOrganisationAdapter(new OrganisationSession(this));
         public Software Plc { get; } = new();
         public PlcFoundationEngine(string release) => ReleaseKey = release;
@@ -186,8 +199,10 @@ namespace TiaMcp.Adapters
         public HardwareAddressingReply MovePlcBlockToGroup(string path, string group)
             => new PlcOrganisationAdapter(new OrganisationSession(this)).MoveBlockToGroup("PLC", path, group);
         public Func<string, Func<Dictionary<string, object?>, string>, HardwareAddressingReply>? Step { get; set; }
-        public HardwareAddressingReply VerifiedImport(PlcSoftwareRequest request, PlcVerifiedCandidate candidate, Func<PlcVerifiedExecution, string> run)
-            => new PlcOrganisationAdapter(new OrganisationSession(this)).ImportPlcBlockVerified(request, _ => candidate, run);
+        public HardwareAddressingReply VerifiedImport(PlcSoftwareRequest request, PlcVerifiedCandidate candidate, Func<PlcVerifiedExecution, string> run,
+            Func<object, bool, PlcCompilerEvidence>? diagnostics = null)
+            => new PlcOrganisationAdapter(new OrganisationSession(this)).ImportPlcBlockVerified(request, _ => candidate, run,
+                diagnostics ?? ((_, _) => throw new NotSupportedException()));
         public HardwareAddressingReply ApplyMove(string path, string group, string recovery, string hash)
             => new PlcOrganisationAdapter(new OrganisationSession(this)).MoveBlockToGroup("PLC", path, group, true, recovery, false, hash);
         private sealed partial class OrganisationSession : IPlcOrganisationSession
@@ -234,7 +249,7 @@ namespace TiaMcp.Adapters
             public List<PlcCrossReference>? GetCrossReferences(string path, string block, string kind, string filter, out string? reason, out bool queried)
             => new PlcCrossReferences(this).GetCrossReferences(path, block, kind, filter, out reason, out queried, "", "unit");
             public string SerializeEvidence(Dictionary<string, object?> evidence) => System.Text.Json.JsonSerializer.Serialize(evidence);
-            public string BindingIdentity() => engine.ReleaseKey + ":fixture";
+            public string BindingIdentity() => engine.ReadBindingIdentity?.Invoke() ?? engine.ReleaseKey + ":fixture";
             public IDisposable AcquireHmiEditAccess() => new MemoryStream();
             public object ExactPlcForEngineering(string path, bool write) => engine.Plc;
         }

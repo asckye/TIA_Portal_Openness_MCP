@@ -10,7 +10,7 @@ namespace TiaMcp.Adapters.Native.Plc
     public sealed partial class PlcOrganisationAdapter
     {
         public HardwareAddressingReply ImportPlcBlockVerified(PlcSoftwareRequest request, Func<PlcSoftwareRequest, PlcVerifiedCandidate> validate,
-                Func<PlcVerifiedExecution, string> execute)
+                Func<PlcVerifiedExecution, string> execute, Func<object, bool, PlcCompilerEvidence> compilerEvidence)
             => _session.RunHmiStepTool("ImportPlcBlockVerified", meta => {
                 string softwarePath = request.SoftwarePath, blockPath = request.Path;
                 var candidate = validate(request);
@@ -65,9 +65,11 @@ namespace TiaMcp.Adapters.Native.Plc
                     }
                     void Import(string path) {
                         Resolve();
-                        var result = PlcBlockPrimitives
-                            .Import(PlcBlockPrimitives.Blocks(group), new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path)), ImportOptions
-                                .Override);
+                        var blocks = PlcBlockPrimitives.Blocks(group);
+                        var file = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(path));
+                        System.Collections.Generic.IList<PlcBlock> result;
+                        try { result = PlcBlockPrimitives.Import(blocks, file, ImportOptions.Override); }
+                        catch (EngineeringException error) { error.Data["nativeImportThrew"] = true; throw; }
                         if (result == null || result.Count != 1)
                             throw new InvalidOperationException("Import did not return exactly one block; inspect retained evidence.");
                     }
@@ -75,20 +77,31 @@ namespace TiaMcp.Adapters.Native.Plc
                         var compiler = PlcBlockPrimitives.Compiler(Resolve()) ?? throw new NotSupportedException("Block compiler service unavailable.");
                         var result = PlcBlockPrimitives.Compile(compiler);
                         if (result == null) throw new InvalidOperationException("Block compiler returned no result.");
-                        meta["compileState"] = PlcBlockPrimitives.State(result).ToString(); meta["compileErrorCount"] = PlcBlockPrimitives.ErrorCount(result);
+                        string state = PlcBlockPrimitives.State(result).ToString();
+                        int errors = PlcBlockPrimitives.ErrorCount(result);
+                        meta["compileState"] = state; meta["compileErrorCount"] = errors;
                         meta["compileWarningCount"] = PlcBlockPrimitives.WarningCount(result);
-                        if (PlcBlockPrimitives.ErrorCount(result) != 0
-                                || (PlcBlockPrimitives.State(result).ToString() != "Success" && !TiaMcp.Adapters.Contracts.NativeResultStates
-                                    .Succeeded(PlcBlockPrimitives.State(result))))
-                            throw new InvalidOperationException("Imported block compilation failed. Backup retained; no further native readback attempted.");
+                        if (state != "Error" && !NativeResultStates.Succeeded(NativeResultStates.Compiler, state))
+                            throw new InvalidOperationException("Unrecognized block compiler state: " + state);
+                        if (state == "Error" || errors > 0)
+                        {
+                            try { meta["compileMessages"] = compilerEvidence(result, true).Meta; }
+                            catch (Exception error) when (NativeRefusalProbe.AllowsRefusalProof(error)
+                                && !TiaMcpServer.ModelContextProtocol.PortalFailureClassifier.IsPortalProcessLost(error))
+                            { /* swallow(probe-optional): the returned compiler state and counts survive unavailable messages. */ }
+                            throw new PlcSoftwareException("CompileErrors", "Imported block has compile errors. Original backup retained.");
+                        }
                     }
                     string language = PlcOrganisationPrimitives.Language(Resolve()).ToString();
                     SimaticMlImportWindow.RequireBlockProgram(_session.ReleaseKey, document, "importPath", language);
                     var identity = _session.BindingIdentity();
                     if (string.IsNullOrEmpty(identity)) throw new InvalidOperationException("Exact binding identity required.");
+                    string[]? ReadRefusalGroupNames() => exclusive != null && string.Equals(identity, _session.BindingIdentity(), StringComparison.Ordinal)
+                        ? PlcBlockPrimitives.Blocks(group).Select(b => PlcBlockPrimitives.Name(b)).ToArray() : null;
                     var scope = identity + "\n" + softwarePath + "\n" + blockPath;
                     return execute(new PlcVerifiedExecution { Request = request, CandidateXml = candidate.Xml, Binding = scope,
                         Export = Export, Import = Import, ExportType = ExportType, ExportNone = ExportNone, VerifyBinding = Check, Meta = meta,
+                        ReadRefusalGroupNames = ReadRefusalGroupNames,
                         Compile = request.CompileAfterImport ? (Action)Compile : null });
                 }
                 catch (Exception ex) {

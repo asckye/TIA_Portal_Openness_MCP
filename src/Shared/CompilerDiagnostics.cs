@@ -60,7 +60,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        internal static CompilerMessageCollectResult CollectCompilerMessages(object? messagesRoot, int maxNodes = 10000)
+        internal static CompilerMessageCollectResult CollectCompilerMessages(object? messagesRoot, int maxNodes = 10000, bool preserveInterruption = false)
         {
             var result = new CompilerMessageCollectResult { MaxNodes = Math.Max(1, Math.Min(50000, maxNodes)) };
             var watch = Stopwatch.StartNew();
@@ -118,14 +118,19 @@ namespace TiaMcpServer.ModelContextProtocol
                         Walk(children, treePath + "/messages", depth + 1);
                     }
                 }
-                catch (Exception ex) { result.CollectFailures.Add(parent + ": " + (ex.InnerException ?? ex).Message); }
+                catch (Exception ex) when (Optional(ex)) { result.CollectFailures.Add(parent + ": " + (ex.InnerException ?? ex).Message); }
             }
 
             object? Read(object message, string property, string path)
             {
                 try { return message.GetType().GetProperty(property)?.GetValue(message); }
-                catch (Exception ex) { result.CollectFailures.Add(path + "." + property + ": " + (ex.InnerException ?? ex).Message); return null; }
+                catch (Exception ex) when (Optional(ex))
+                {
+                    result.CollectFailures.Add(path + "." + property + ": " + (ex.InnerException ?? ex).Message);
+                    return null;
+                }
             }
+            bool Optional(Exception ex) => !preserveInterruption || TiaMcp.Adapters.Contracts.NativeRefusalProbe.AllowsRefusalProof(ex);
         }
 
         private static int Count(JsonObject node, string property) => int.TryParse(node[property]?.ToString(), out var n) ? n : 0;

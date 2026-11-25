@@ -119,6 +119,16 @@ namespace TiaMcp.Logic.V4
             if (!Flag("writeOutcomeUnknown") && !Flag("unrestoredWrite") && !Flag("connectionUnavailable") && !Flag("portalLost")
                 && !evidence.ContainsKey("rollbackOutcome") && (bool?)evidence["operationSuccess"] == false)
             {
+                if (tool == "ImportPlcBlockVerified" && (string?)evidence["status"] == "CompileErrors"
+                    && (string?)evidence["phase"] == "compile" && Flag("writeReturned") && Flag("importReturned") && Flag("compileRequested")
+                    && Flag("compileReturned") && Flag("mayHaveChanged") && evidence["portalLost"] == null)
+                {
+                    error = CompileResultMapping.Errors(new JsonObject {
+                        ["state"] = evidence["compileState"]?.DeepClone(), ["errorCount"] = evidence["compileErrorCount"]?.DeepClone(),
+                        ["warningCount"] = evidence["compileWarningCount"]?.DeepClone(), ["evidence"] = evidence["compileMessages"]?.DeepClone(),
+                        ["complete"] = false });
+                    if (error != null) { outcome = Outcome.Failed; return true; }
+                }
                 if (tool == "ImportDeviceAml" && (string?)evidence["status"] == "ImportFailed" && Flag("apiCallSuccess") && Flag("mayHaveChanged")
                     && evidence["nativeResult"] is JsonValue verdict && (verdict.TryGetValue<bool>(out var ok) && !ok
                         || verdict.TryGetValue<string>(out var state) && state == "Error"))

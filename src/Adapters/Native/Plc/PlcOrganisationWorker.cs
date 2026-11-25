@@ -33,7 +33,7 @@ namespace TiaMcp.Adapters
                 Failed = batch.Failed.Select(f => new PlcSeedImportFailure { Path = f.Path, Error = f.Error }).ToList(), Meta = batch.Meta };
         }
 
-        public Func<object, bool, PlcCompilerEvidence>? CollectPlcCompilerEvidence { get; set; }
+        public Func<object, bool, bool, PlcCompilerEvidence>? CollectPlcCompilerEvidence { get; set; }
         public Func<PlcSoftwareRequest, PlcVerifiedCandidate>? ValidatePlcVerifiedCandidate { get; set; }
         public Func<PlcVerifiedExecution, string>? ExecutePlcVerifiedWorkflow { get; set; }
         public IPlcOrganisationSession? EngineeringPlcOrganisationSession { get; set; }
@@ -53,7 +53,8 @@ namespace TiaMcp.Adapters
             var adapter = new PlcOrganisationAdapter(EngineeringPlcOrganisationSession ?? new OrganisationSession(this));
             var reply = new PlcSoftwareReply();
             Func<object, bool, PlcCompilerEvidence> compilerEvidence = (result, diagnose) =>
-                CollectPlcCompilerEvidence!(PlcOrganisationAdapter.ObserveCompiler((Siemens.Engineering.Compiler.CompilerResult)result), diagnose);
+                CollectPlcCompilerEvidence!(PlcOrganisationAdapter.ObserveCompiler((Siemens.Engineering.Compiler.CompilerResult)result),
+                    diagnose, request.Operation == "ImportPlcBlockVerified");
             try
             {
                 HardwareAddressingReply? step = null;
@@ -180,7 +181,8 @@ namespace TiaMcp.Adapters
                                 .UnitName, request.UnitKind)
                             ?.ToArray();
                         reply.Reason = reason; reply.Queried = queried; break;
-                    case "ImportPlcBlockVerified": step = adapter.ImportPlcBlockVerified(request, ValidatePlcVerifiedCandidate!, ExecutePlcVerifiedWorkflow!);
+                    case "ImportPlcBlockVerified": step = adapter.ImportPlcBlockVerified(request, ValidatePlcVerifiedCandidate!,
+                        ExecutePlcVerifiedWorkflow!, compilerEvidence);
                     break;
                     case "BuildAndImportPlcArtifact":
                     case "RepairAndReimportPlcBlock":

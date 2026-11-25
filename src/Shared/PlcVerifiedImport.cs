@@ -41,7 +41,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static string Execute(string candidateXml, string binding, string evidenceRoot, bool dryRun, string expectedToken,
             Action<string> export, Action<string> import, Action verifyBinding, JsonObject meta, Action? compile = null,
-            Func<string, string, bool>? exportType = null, Action<string>? exportNone = null)
+            Func<string, string, bool>? exportType = null, Action<string>? exportNone = null,
+            string[]? groupNamesBeforeImport = null, Func<string[]?>? readRefusalGroupNames = null)
         {
             meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["operationSuccess"] = false;
             meta["verificationSuccess"] = false; meta["automaticRollback"] = false; meta["compileRequested"] = compile != null;
@@ -123,9 +124,33 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["cleanupRequired"] = new JsonArray(new JsonObject { ["target"] = target, ["restoreFrom"] = beforePath,
                 ["action"] =
                     "Compare the exact block with the retained original backup and restore it manually if needed; do not replay an unconfirmed import." });
-            import(plannedPath); // An exception exits immediately: no second native call or automatic retry.
+            try { import(plannedPath); }
+            catch (Exception error) when (error.Data["nativeImportThrew"] is true && groupNamesBeforeImport != null && readRefusalGroupNames != null
+                && NativeRefusalProbe.AllowsRefusalProof(error) && TiaOpenness.Shared.ProcessLossPolicy.Reason(error) == null)
+            {
+                if (RefusalVerified(before, folder, meta, verifyBinding, groupNamesBeforeImport!, readRefusalGroupNames!, export))
+                {
+                    meta["mayHaveChanged"] = false; meta["apiCallSuccess"] = false;
+                    meta.Remove("cleanupRequired");
+                    meta["refusalProof"] = "Full target block including dates, and target group block names, under the original exclusive binding. "
+                        + "Other objects, UDTs and libraries were outside the comparison.";
+                    error.Data["foundationKnownNoMutation"] = true;
+                }
+                throw;
+            }
             meta["writeReturned"] = true; meta["importReturned"] = true;
-            if (compile != null) { meta["phase"] = "compile"; verifyBinding(); compile(); meta["compileReturned"] = true; }
+            if (compile != null)
+            {
+                meta["phase"] = "compile";
+                verifyBinding();
+                try { compile(); }
+                catch (PlcSoftwareException error) when (error.Code == "CompileErrors")
+                {
+                    meta["compileReturned"] = true; meta["status"] = error.Code; meta["dataComplete"] = false;
+                    return error.Message;
+                }
+                meta["compileReturned"] = true;
+            }
             meta["phase"] = "exportReadback";
             verifyBinding();
             try { export(afterPath); }
@@ -169,6 +194,29 @@ namespace TiaMcpServer.ModelContextProtocol
                 ? "Imported and re-exported document matches after identifier normalization. Inspect compileRequested/compileReturned for compilation; " +
                 "project was not saved."
                 : "Import returned, but document readback differs. Original backup and both documents retained. No automatic repair or rollback was attempted.";
+        }
+
+        private static bool RefusalVerified(string before, string folder, JsonObject meta, Action verifyBinding, string[] beforeNames,
+            Func<string[]?> readNames, Action<string> export)
+        {
+            try
+            {
+                verifyBinding();
+                var names = readNames();
+                if (names == null || beforeNames.Any(string.IsNullOrEmpty) || names.Any(string.IsNullOrEmpty)
+                    || !beforeNames.OrderBy(n => n, StringComparer.Ordinal).SequenceEqual(names.OrderBy(n => n, StringComparer.Ordinal)))
+                    return false;
+                var path = Path.Combine(folder, "after-refusal.xml");
+                export(path);
+                meta["refusalReadbackPath"] = path;
+                return XNode.DeepEquals(PlcDocumentEditing.RawBlock(before), PlcDocumentEditing.RawBlock(PlcDocumentEditing.Read(path)));
+            }
+            catch (Exception probe)
+            {
+                if (NativeRefusalProbe.UncertainConnection(probe) || TiaOpenness.Shared.ProcessLossPolicy.Reason(probe) != null)
+                    meta["connectionUnavailable"] = true;
+                return false;
+            }
         }
 
         private static string? CompareNone(string path, string candidateXml, XDocument readback, List<XElement> restored, JsonArray preserved,

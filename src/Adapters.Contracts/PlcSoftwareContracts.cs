@@ -39,6 +39,8 @@ namespace TiaMcp.Adapters.Contracts
         public Action<string>? ExportNone { get; set; }
         public Func<string, string, bool> ExportType { get; set; } = null!;
         public Action<string> Import { get; set; } = null!;
+        public string[]? GroupNamesBeforeImport { get; set; }
+        public Func<string[]?>? ReadRefusalGroupNames { get; set; }
         public Action VerifyBinding { get; set; } = null!;
         public Action? Compile { get; set; }
         public Dictionary<string, object?> Meta { get; set; } = null!;

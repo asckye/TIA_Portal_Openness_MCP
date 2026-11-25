@@ -23,6 +23,66 @@ public sealed class NativeRefusalEnvelopeTests
         return JsonNode.Parse(await output)!.AsObject();
     }
 
+    public static IEnumerable<object[]> VerifiedFailures => from row in VerifiedImportOutcomeTests.Releases()
+        from scenario in new[] { "verified-compile/error", "verified-compile/recorded", "verified-compile/count", "verified-compile/messages-unavailable",
+            "verified-compile/thrown", "verified-refusal/unchanged", "verified-refusal/date", "verified-refusal/unmarked", "verified-refusal/prior-change" }
+        select new object[] { row[0], scenario };
+
+    [Theory, MemberData(nameof(VerifiedFailures))]
+    public async Task Verified_import_failure_reaches_the_client_with_its_mutation_evidence(string release, string scenario)
+    {
+        const string tool = "ImportPlcBlockVerified";
+        bool compile = scenario.StartsWith("verified-compile/", StringComparison.Ordinal);
+        bool priorChange = scenario == "verified-refusal/prior-change";
+        bool unknown = priorChange || scenario is "verified-refusal/date" or "verified-refusal/unmarked" or "verified-compile/thrown";
+        var wire = await Reply(priorChange ? "verified-refusal/unchanged" : scenario);
+        if (priorChange) wire["MayHaveChanged"] = true;
+        var channel = new WorkerReplyFixture();
+        using var worker = new DirectoryImportRegressionTests.Worker((operation, input) => {
+            Assert.Equal("plc-software.ExecutePlcOrganisation", operation);
+            return channel.Accept(operation, input, wire);
+        });
+        var raw = PortedToolContract.Create(worker, release).Single(t => t.ProtocolTool.Name == tool);
+        var entry = new FoundationV4Tool(raw, release, () => new TiaOpenness.Shared.ApprovalSettings(false, 5));
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release, worker: worker, replacementTool: entry);
+        using var session = fixture.EnterSession();
+        string input = Path.Combine(fixture.Root, "candidate.xml");
+        bool recorded = scenario == "verified-compile/recorded";
+        var sources = Path.Combine(TestPaths.RepositoryRoot(AppContext.BaseDirectory), "tests/KeptCode/TiaMcp.KeptCode.Tests/Fixtures/VerifiedImport");
+        File.Copy(Path.Combine(sources, recorded ? "14sp1-MCP_RC_DB2_bogus.xml" : compile ? "17-T6.xml" : "17-T4.xml"), input);
+        var body = (await fixture.Call(tool, new { softwarePath = "PLC", blockPath = compile && !recorded ? "MCP_RC_DB6" : "MCP_RC_DB2", importPath = input,
+            evidenceDirectory = fixture.Root, dryRun = false, compileAfterImport = compile, previewToken = "fixture" })).StructuredContent!;
+        if (unknown)
+        {
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+            Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
+            if (priorChange) Assert.True((bool?)body["data"]?["evidence"]?["mayHaveChanged"]);
+            Assert.NotEmpty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot());
+            return;
+        }
+        Assert.True((string?)body["error"]?["code"] == (compile ? "COMPILE_ERRORS" : "NATIVE_OPERATION_FAILED"), body.ToJsonString());
+        Assert.Equal("failed", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("completed", (string?)body["meta"]?["execution"]);
+        var evidence = body["data"]!["evidence"]!;
+        Assert.Equal(compile, (bool?)evidence["mayHaveChanged"]);
+        Assert.NotNull(evidence["backup"]);
+        if (compile)
+        {
+            Assert.Equal(1, (int?)body["error"]?["details"]?["errorCount"]);
+            Assert.Equal(recorded ? 0 : 2, (int?)body["error"]?["details"]?["warningCount"]);
+            if (scenario == "verified-compile/error" || recorded) Assert.Contains("Data type NoSuchType_XYZ is unknown.", (string?)body["error"]?["message"]);
+            Assert.Single(evidence["cleanupRequired"]!.AsArray());
+            Assert.Equal(scenario == "verified-compile/count" ? "Warning" : "Error", (string?)evidence["compileState"]);
+        }
+        else
+        {
+            Assert.Contains("Ghost", (string?)body["error"]?["message"]);
+            Assert.NotNull(evidence["refusalProof"]);
+            Assert.Null(evidence["cleanupRequired"]);
+        }
+        Assert.Empty(toolpipeline::TiaMcp.FoundationHost.UnsettledCalls.For(worker).Snapshot());
+    }
+
     [Theory]
     [InlineData("multi-interface", "Online", "succeeded", "Second LAN")]
     [InlineData("standard-plc", "Online", "succeeded", "LAN")]

@@ -45,13 +45,14 @@ namespace TiaMcpServer.ModelContextProtocol
             || x.Name.LocalName == "SW.Types.PlcStruct");
         public static XDocument Parse(string xml) => ParseDocument(xml, false);
         public static XDocument ParseBlockImport(string xml) => ParseDocument(xml, false, blockImport: true);
-        private static XDocument ParseDocument(string xml, bool editable, bool blockImport = false)
+        internal static XElement RawBlock(string xml) => Block(ParseDocument(xml, false, blockImport: true, options: LoadOptions.PreserveWhitespace));
+        private static XDocument ParseDocument(string xml, bool editable, bool blockImport = false, LoadOptions options = LoadOptions.None)
         {
             if (Encoding.UTF8.GetByteCount(xml) > MaxBytes) throw new ArgumentException("XML exceeds 16 MiB.");
             using var reader = XmlReader
                 .Create(new StringReader(xml), new XmlReaderSettings {
                     DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxBytes });
-            var d = XDocument.Load(reader, LoadOptions.None);
+            var d = XDocument.Load(reader, options);
             if (d.Root?.Name.LocalName != "Document") throw new ArgumentException("One SimaticML Document is required.");
             var objects = d.Root.Elements().Where(x => x.Name.LocalName != "Engineering" && x.Name.LocalName != "DocumentInfo").ToArray();
             if (blockImport && objects.Any(x => x.Name.LocalName.StartsWith("SW.Types.", StringComparison.Ordinal)))

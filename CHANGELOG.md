@@ -9,6 +9,9 @@
 - The Workbench, its launchers and the updater share a cobalt application icon. Approval notifications use it in the tray and retain their warning balloon.
 ### Fixed
 
+- Verified PLC block imports with a returned compiler error now report `COMPILE_ERRORS`, retain the original backup and identify the target for cleanup.
+- `ComparePlcBlockDocuments` now compares expanded instances of the same UDT by their full member paths. The rc.5 limitation also affected
+  V14 SP1, V15.1 and V16. A duplicate within one instance identifies the ambiguous member and the affected document.
 - Verified PLC block import now recognizes empty titles and comments added to hand-written networks and verifies restored block settings across both export styles.
 - Verified import no longer reports a match when an unexpanded UDT member keeps old non-default values in a nested UDT, the false match listed
   in the 4.0.0-rc.5 limitations. After a compile that removed a UDT expansion, it makes one additional standard export and compares the members.

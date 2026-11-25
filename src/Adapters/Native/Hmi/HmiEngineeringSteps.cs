@@ -55,7 +55,8 @@ namespace TiaMcp.Adapters
                     && (tool == "ImportDeviceAml" && meta.TryGetValue("apiCallSuccess", out var api) && api is true
                         && meta.TryGetValue("status", out var aml) && Equals(aml, "ImportFailed")
                     || tool == "ImportPlcBlockVerified" && meta.TryGetValue("importReturned", out var imported) && imported is true
-                        && meta.TryGetValue("status", out var block) && Equals(block, "DocumentReadbackMismatch"));
+                        && meta.TryGetValue("status", out var block) && (Equals(block, "DocumentReadbackMismatch")
+                            || Equals(block, "CompileErrors") && meta.TryGetValue("compileReturned", out var compiled) && compiled is true));
             }
             catch (Exception error)
             {
