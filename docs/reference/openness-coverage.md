@@ -469,7 +469,7 @@ coverage work for 4.1:
 
 The registered synchronization tool refuses `WorkspaceToProject`, including preview. `ConnectProjectToWorkspace` creates files and
 mappings with `ExportObject` on V20/V21; its directory argument is relative to `RootPath`. All mapping paths share the same format
-preference. They select an exact SD name (`SimaticSd` or `s7dcl`), then `SimaticML`, then `xml`, then the first offered format.
+preference: a name containing `s7dcl`, then `simatic`, then `xml`, then the first offered format.
 Name comparisons ignore case. V20 capture beta5-v20/raw-D/314 records `SimaticML` for Main and other PLC mappings. V21 captures
 beta6-full-v21/raw-E/328 and 339 record `SimaticML` and `liblink`, including `liblink` for MCP_B6F_DSrc. `SimaticSd` is the SDK
 name for SD. The V16–V19 list remains limited to `PlcBlock`, `PlcType` and `PlcTagTable` until evidence supports more.
