@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- The Workbench, its launchers and the updater share a cobalt application icon. Approval notifications use it in the tray and retain their warning balloon.
+
 ## [4.0.0-rc.5] - 2026-11-25
 
 ### Fixed

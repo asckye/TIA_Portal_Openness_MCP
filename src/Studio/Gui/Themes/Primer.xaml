@@ -194,6 +194,7 @@
     <Setter Property="Margin" Value="0,0,0,8"/>
   </Style>
   <Style x:Key="Ui.Window" TargetType="Window">
+    <Setter Property="Icon" Value="/TiaOpenness;component/Assets/AppIcon.ico"/>
     <Setter Property="Typography.StandardLigatures" Value="False"/>
     <Setter Property="Typography.ContextualLigatures" Value="False"/>
     <Setter Property="Typography.ContextualAlternates" Value="False"/>

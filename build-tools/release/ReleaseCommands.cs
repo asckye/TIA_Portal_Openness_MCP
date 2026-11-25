@@ -24,6 +24,7 @@ internal static partial class ReleaseCommands
         "prepare" => Prepare.Run(Root, options),
         "merge-check" => MergeCheck.Run(Root, options),
         "wrap-long-lines" => WrapLongLines.Run(Root, options),
+        "generate-app-icon" => GenerateAppIcon(options),
         "generate-tool-capability-matrix" or "generate-tool-counts" or "generate-real-machine-status"
             or "generate-catalogs" or "generate-tool-usage" or "generate-release-migration" or "audit-version-tools" or "audit-tool-usage"
             or "check-tools-list" or "generate-prerelease-notes" => GeneratorCommand(command, options),
@@ -39,6 +40,16 @@ internal static partial class ReleaseCommands
         "upload-draft" => UploadPreparedDraft(options),
         _ => throw new ReleaseException($"Unknown release command '{command}'.", 64)
     };
+
+    private static int GenerateAppIcon(Options options)
+    {
+        const string tool = "tests/Studio/TiaOpenness.Gui.Tests/Tooling/AppIconGenerator.cs";
+        // Use the repository compiler settings without importing the GUI test runner into the stand-alone tool.
+        string[] args = ["run", "--file", tool, "-p:TargetFramework=net10.0-windows", "-p:UseWPF=true", "-p:PublishAot=false",
+            "-p:DirectoryBuildPropsPath=" + Path.Combine(Root, "Directory.Build.props"), "--", Root];
+        if (options.Has("Check")) args = [.. args, "-Check"];
+        return ProcessRunner.Run(Dotnet, args, Root, forwardOutput: true).ExitCode;
+    }
 
     internal static PublishOptions PreparedPublishOptions(Options options) => new(
         options.Get("Version") ?? throw new ReleaseException("-Version is required"), options.Get("Token", ""),

@@ -210,7 +210,6 @@ internal sealed class PrepareBuild
     {
         var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
         var framework = Path.Combine(windows, "Microsoft.NET/Framework64/v4.0.30319");
-        var wpf = Path.Combine(framework, "WPF");
         var sdk = RunDotnet("compiler-path", ["msbuild", Path.Combine(context.Root, "build-tools/release/TiaMcp.ReleaseTool.csproj"),
             "-nologo", "-getProperty:MSBuildToolsPath"]).StandardOutput.Trim();
         var version = ReleaseVersions.Require(context.Version, "Invalid version");
@@ -219,12 +218,19 @@ internal sealed class PrepareBuild
             "[assembly: AssemblyDescription(\"Unified TIA Portal engineering, MCP service and AI client desktop\")]\n" +
             $"[assembly: AssemblyVersion(\"{version.Core}\")]\n[assembly: AssemblyFileVersion(\"{version.FileVersion}\")]\n" +
             $"[assembly: AssemblyInformationalVersion(\"{version.Label}\")]\n[assembly: AssemblyMetadata(\"TiaMcpRelease\", \"{version.Label}\")]\n", new UTF8Encoding(false));
-        var references = new[] { "mscorlib.dll", "System.dll", "System.Windows.Forms.dll", "System.Web.Extensions.dll", "System.Security.dll", "System.Core.dll", "System.Xaml.dll" }
-            .Select(name => "/r:" + Path.Combine(framework, name)).Concat(new[] { "WindowsBase.dll", "PresentationFramework.dll", "PresentationCore.dll" }.Select(name => "/r:" + Path.Combine(wpf, name)));
-        RunDotnet("launcher", [Path.Combine(sdk, "Roslyn/bincore/csc.dll"), "/nologo", "/noconfig", "/nostdlib+", "/langversion:5",
-            "/deterministic+", "/pathmap:" + context.Root + "=/_/repo", "/target:winexe", "/optimize+", "/utf8output",
-            "/out:" + Path.Combine(context.Root, "TiaOpenness.exe"), .. references,
-            Path.Combine(context.Root, "src/Studio/Launcher/Launcher.cs"), Path.Combine(context.Root, "src/Shared/ProcessArguments.cs"), metadata]);
+        RunDotnet("launcher", LauncherArguments(context.Root, sdk, framework, metadata));
+    }
+
+    internal static string[] LauncherArguments(string root, string sdk, string framework, string metadata)
+    {
+        string[] frameworkFiles = ["mscorlib", "System", "System.Windows.Forms", "System.Web.Extensions", "System.Security", "System.Core", "System.Xaml"];
+        string[] wpfFiles = ["WindowsBase", "PresentationFramework", "PresentationCore"];
+        return [Path.Combine(sdk, "Roslyn/bincore/csc.dll"), "/nologo", "/noconfig", "/nostdlib+", "/langversion:5",
+            "/deterministic+", "/pathmap:" + root + "=/_/repo", "/target:winexe", "/optimize+", "/utf8output",
+            "/win32icon:" + Path.Combine(root, "src/Studio/Gui/Assets/AppIcon.ico"), "/out:" + Path.Combine(root, "TiaOpenness.exe"),
+            .. frameworkFiles.Select(name => "/r:" + Path.Combine(framework, name + ".dll")),
+            .. wpfFiles.Select(name => "/r:" + Path.Combine(framework, "WPF", name + ".dll")),
+            Path.Combine(root, "src/Studio/Launcher/Launcher.cs"), Path.Combine(root, "src/Shared/ProcessArguments.cs"), metadata];
     }
 
     private void TestProducers()

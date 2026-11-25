@@ -10,6 +10,15 @@ namespace TiaMcp.ReleaseTool.Tests;
 
 public sealed class PlainReleaseTests
 {
+    [Fact]
+    public void RootLauncherCompilerReceivesTheWorkbenchIcon()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Workbench checkout");
+        var args = PrepareBuild.LauncherArguments(root, "sdk", "framework", "DesktopVersion.cs");
+        string icon = Assert.Single(args, arg => arg.StartsWith("/win32icon:", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("/win32icon:" + Path.Combine(root, "src/Studio/Gui/Assets/AppIcon.ico"), icon);
+    }
+
     [Theory]
     [InlineData(1, 1)]
     [InlineData(4, 1)]
@@ -292,6 +301,7 @@ public sealed class PlainReleaseTests
     public void OnlyTheRetainedCommandsArePublic()
     {
         string[] expected = ["check-loosening", "complexity-report", "scorecard", "check-vulnerable-packages",
+            "generate-app-icon",
             "prepare", "publish-prepared", "upload-draft", "merge-check", "generate-catalogs", "generate-tool-usage",
             "generate-real-machine-status", "generate-tool-capability-matrix", "generate-tool-counts",
             "generate-release-migration", "generate-prerelease-notes", "check-tools-list", "audit-version-tools",

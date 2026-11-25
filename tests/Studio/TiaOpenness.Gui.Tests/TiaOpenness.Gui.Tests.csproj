@@ -7,12 +7,21 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <Compile Include="../../../src/Studio/Launcher/Launcher.cs" Link="Launcher.cs" />
     <Compile Include="../../KeptCode/TiaMcp.KeptCode.Tests/DataLocationsTests.cs" Link="DataLocationsTests.cs" />
-    <ProjectReference Include="../../../src/Studio/Gui/TiaOpenness.Gui.csproj" />
+    <ProjectReference Include="../../../src/Studio/Gui/TiaOpenness.Gui.csproj" OutputItemType="IconApplication" />
+    <ProjectReference Include="../../../src/Updater/TiaMcp.Updater.csproj" ReferenceOutputAssembly="false"
+      SkipGetTargetFrameworkProperties="true" OutputItemType="IconApplication" />
+    <ProjectReference Include="../../../src/Tools/PluginLauncher/TiaMcp.PluginLauncher.csproj" ReferenceOutputAssembly="false"
+      OutputItemType="IconApplication" AdditionalProperties="UseAppHost=true" />
     <ProjectReference Include="../../../src/FoundationHost/TiaMcp.FoundationHost.csproj" ReferenceOutputAssembly="false" OutputItemType="LifecycleHostOutput" />
     <ProjectReference Include="../../../src/Logic/TiaMcp.Logic.csproj" Aliases="PlcRendering" />
     <EmbeddedResource Include="../../../src/Studio/Gui/**/*.xaml;../../../src/Studio/Gui/**/*.cs"
       Exclude="../../../src/Studio/Gui/bin/**;../../../src/Studio/Gui/obj/**" LinkBase="Source" WithCulture="false" />
   </ItemGroup>
+  <Target Name="CopyIconApplications" AfterTargets="Build">
+    <Copy SourceFiles="@(IconApplication->'%(RootDir)%(Directory)%(Filename).exe')" DestinationFolder="$(TargetDir)app-icons" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+  </Target>
   <Target Name="CopyBridgeForFunctionalTests" AfterTargets="Build">
     <ItemGroup><BridgePayload Include="../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.exe;../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.dll;../../../src/Studio/Bridge/bin/$(Configuration)/$(StudioOutputSubdirectory)net48/*.config" /></ItemGroup>
     <Copy SourceFiles="@(BridgePayload)" DestinationFolder="$(TargetDir)bridge" SkipUnchangedFiles="true" />

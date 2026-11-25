@@ -49,10 +49,10 @@
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" MaxWidth="460"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <Rectangle Grid.ColumnSpan="3" Height="1" VerticalAlignment="Bottom" Fill="{DynamicResource Primer.divider}" IsHitTestVisible="False"/>
             <DockPanel Margin="12,0,8,0" MaxWidth="440">
-              <Border Style="{StaticResource Primer.Workbench.Brand}" Margin="0,0,8,0">
-                <Path Style="{StaticResource Primer.Icon}" Data="{StaticResource Icon.WorkbenchLayers}" Width="11" Height="11"
-                  Stroke="{DynamicResource Primer.onPrimary}" StrokeThickness="1.4"/>
-              </Border>
+              <Grid Margin="0,0,8,0" VerticalAlignment="Center">
+                <Image x:Name="BrandIcon" Style="{StaticResource Primer.Workbench.Brand}"/>
+                <Border x:Name="BrandOutline" Style="{StaticResource Primer.Workbench.BrandOutline}"/>
+              </Grid>
               <TextBlock FontSize="{DynamicResource Ui.FontSize.12}" x:Name="BrandTitle" Text="{l:Tr Shell.Brand}" FontWeight="SemiBold" VerticalAlignment="Center"/>
               <TextBlock Text="/" Foreground="{DynamicResource Primer.textFaint}" Margin="8,0" VerticalAlignment="Center"/>
               <TextBlock x:Name="CurrentPageTitle" Style="{StaticResource Primer.Workbench.PageTitle}" ToolTip="{Binding Text,RelativeSource={RelativeSource Self}}" Focusable="True"

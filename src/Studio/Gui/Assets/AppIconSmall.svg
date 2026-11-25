@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" data-guides-x="3 21">
+  <path fill="#204DB4" class="tile" d="M6 0 H18 Q24 0 24 6 V18 Q24 24 18 24 H6 Q0 24 0 18 V6 Q0 0 6 0Z"/>
+  <path fill="#92D9F5" class="plate" d="M12 9 L21 14 12 19 3 14Z"/>
+  <path fill="#629CD7" class="plate" d="M3 14 L12 19 21 14 V17 L12 22 3 17Z"/>
+  <path fill="#D2E8FC" class="tile" d="M3 8 L12 13 21 8 V10 L12 15 3 10Z"/>
+  <path fill="#FFFFFF" class="plate" d="M12 3 L21 8 12 13 3 8Z"/>
+  <path fill="#1D53BC" class="tile" data-min-size="24" d="M10.25 8 A1.75 1.75 0 1 0 13.75 8 A1.75 1.75 0 1 0 10.25 8Z"/>
+</svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="rim" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#A6DDF5"/><stop offset=".48" stop-color="#4587D1"/><stop offset="1" stop-color="#192E70"/>
+    </linearGradient>
+    <radialGradient id="cobalt" cx=".86" cy=".12" r="1.12">
+      <stop offset="0" stop-color="#31CCDD"/><stop offset=".28" stop-color="#248BD6"/>
+      <stop offset=".56" stop-color="#215EC5"/><stop offset="1" stop-color="#192E78"/>
+    </radialGradient>
+    <radialGradient id="shadow">
+      <stop offset="0" stop-color="#152B6C" stop-opacity=".65"/><stop offset="1" stop-color="#152B6C" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glassShadow" cx=".50" cy=".39" r=".59">
+      <stop offset="0" stop-color="#204D96" stop-opacity=".55"/><stop offset=".57" stop-color="#3464A1" stop-opacity=".39"/>
+      <stop offset="1" stop-color="#3A70A6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bottom">
+      <stop offset="0" stop-color="#9DC6EE" stop-opacity=".74"/><stop offset="1" stop-color="#8DCEF3" stop-opacity=".47"/>
+    </linearGradient>
+    <linearGradient id="middle">
+      <stop offset="0" stop-color="#CFE6FC" stop-opacity=".86"/><stop offset="1" stop-color="#B6F0F5" stop-opacity=".65"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#rim)" d="M74 12 H182 Q244 12 244 74 V182 Q244 244 182 244 H74 Q12 244 12 182 V74 Q12 12 74 12Z"/>
+  <path fill="url(#cobalt)" d="M74 14 H182 Q242 14 242 74 V182 Q242 242 182 242 H74 Q14 242 14 182 V74 Q14 14 74 14Z"/>
+  <path fill="url(#shadow)" d="M29 173 A99 61 0 1 0 227 173 A99 61 0 1 0 29 173Z"/>
+  <!-- The two glass plates have a bright front lip and translucent side faces. -->
+  <path fill="url(#bottom)" d="M128 109 L206.5 155 128 201 49.5 155Z"/>
+  <path fill="url(#glassShadow)" d="M128 109 L206.5 155 128 201 49.5 155Z"/>
+  <path fill="#CAF0FD" fill-opacity=".73" d="M49.5 155 L128 109 206.5 155 203 155 128 112 53 155Z"/>
+  <path fill="#B8E3FC" fill-opacity=".85" d="M49.5 155 L128 199 206.5 155 206.5 157 128 203 49.5 157Z"/>
+  <path fill="#8CB8E2" fill-opacity=".85" d="M49.5 157 L128 203 V212 L49.5 166Z"/>
+  <path fill="#69A2D7" fill-opacity=".82" d="M128 203 L206.5 157 V166 L128 212Z"/>
+  <path fill="url(#middle)" d="M128 78 L206.5 124 128 170 49.5 124Z"/>
+  <path fill="url(#glassShadow)" d="M128 78 L206.5 124 128 170 49.5 124Z"/>
+  <path fill="#DFF6FF" fill-opacity=".86" d="M49.5 124 L128 78 206.5 124 203 124 128 81 53 124Z"/>
+  <path fill="#D4F4FC" d="M49.5 124 L128 168 206.5 124 206.5 126 128 172 49.5 126Z"/>
+  <path fill="#ADCFEE" fill-opacity=".92" d="M49.5 126 L128 172 V181 L49.5 135Z"/>
+  <path fill="#91CDE8" fill-opacity=".90" d="M128 172 L206.5 126 V135 L128 181Z"/>
+  <path fill="#CFDFF1" d="M49.5 92 L128 138 V149 L49.5 103Z"/>
+  <path fill="#C1DBEC" d="M128 138 L206.5 92 V103 L128 149Z"/>
+  <path fill="#FFFFFF" d="M128 46 L206.5 92 128 139 49.5 92Z"/>
+  <path fill="#246BD2" d="M109.5 92 A18.5 16.5 0 1 0 146.5 92 A18.5 16.5 0 1 0 109.5 92Z"/>
+  <path fill="#D8F7FF" d="M119 92 A9 8 0 1 0 137 92 A9 8 0 1 0 119 92Z"/>
+</svg>

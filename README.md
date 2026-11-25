@@ -1,4 +1,4 @@
-# Automation Engineering Workbench for TIA Portal
+# <img src="docs/assets/app-icon.png" width="48" height="48" alt="Cobalt Workbench icon with three stacked plates"> Automation Engineering Workbench for TIA Portal
 
 [中文](README.zh-CN.md) · [Beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/automation-engineering-workbench/releases)
 

@@ -100,7 +100,7 @@ internal static class CommandLine
         "check-envelope-rewrite", "check-adapter-boundary", "check-bundle-layout", "check-repository", "check-dead-tool-references",
         "check-tia-features", "check-script-tool-calls", "generate-tool-capability-matrix", "generate-tool-counts", "generate-real-machine-status",
         "generate-catalogs", "generate-tool-usage", "generate-release-migration", "audit-version-tools", "audit-tool-usage", "check-tools-list",
-        "generate-prerelease-notes", "wrap-long-lines"
+        "generate-prerelease-notes", "generate-app-icon", "wrap-long-lines"
     ];
 }
 
