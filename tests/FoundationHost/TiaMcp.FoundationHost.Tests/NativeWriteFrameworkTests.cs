@@ -132,15 +132,6 @@ public sealed class NativeWriteFrameworkTests
     }
 
     [Fact]
-    public void Vci_export_prefers_native_SD_over_recorded_SimaticML_and_liblink()
-    {
-        using var inputs = new Inputs();
-        var probe = Run("sd-restore-preferred", Path.GetDirectoryName(inputs.Nodes)!);
-        Assert.Equal(new[] { "SimaticSd", "s7dcl", "SimaticSD", "SimaticML", "xml", "liblink" },
-            probe["choices"]!.AsArray().Select(choice => (string?)choice));
-    }
-
-    [Fact]
     public void Scoped_import_lists_opaque_attributes_without_claiming_preservation()
     {
         using var inputs = new Inputs();

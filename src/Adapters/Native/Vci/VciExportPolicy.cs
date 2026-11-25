@@ -18,9 +18,9 @@ internal static class VciExportPolicy
     internal static string? PreferredFormat(IEnumerable<string> formats)
     {
         var available = formats.ToArray();
-        return available.FirstOrDefault(f => Is(f, "SimaticSd") || Is(f, "s7dcl"))
-            ?? available.FirstOrDefault(f => Is(f, "SimaticML"))
-            ?? available.FirstOrDefault(f => Is(f, "xml"))
+        return available.FirstOrDefault(f => f.IndexOf("s7dcl", StringComparison.OrdinalIgnoreCase) >= 0)
+            ?? available.FirstOrDefault(f => f.IndexOf("simatic", StringComparison.OrdinalIgnoreCase) >= 0)
+            ?? available.FirstOrDefault(f => f.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0)
             ?? available.FirstOrDefault();
     }
 }

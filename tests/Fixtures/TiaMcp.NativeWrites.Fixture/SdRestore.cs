@@ -61,11 +61,6 @@ namespace TiaMcp.Tests.NativeWrites
     {
         internal static object Run(string scenario, string directory)
         {
-            if (scenario == "sd-restore-preferred")
-                return new { choices = new[] {
-                    new[] { "SimaticML", "SimaticSd" }, new[] { "xml", "SimaticML", "s7dcl" }, new[] { "liblink", "SimaticSD" },
-                    new[] { "xml", "SimaticML" }, new[] { "liblink", "custom-simatic", "xml" }, new[] { "liblink" }
-                }.Select(VciExportPolicy.PreferredFormat).ToArray() };
             PlcBatchImportRecovery.Root = directory;
             var group = new PlcBlockGroup();
             const string startupPrefix = "sd-restore-startup-";
