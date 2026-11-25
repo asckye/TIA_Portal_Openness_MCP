@@ -277,7 +277,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     var item = restored[i];
                     if (item.Parent == planned && PlcDocumentEditing.IgnoreInBlockComparison(item)) continue;
                     var actual = find(item, planned);
-                    if (actual == null || (item.HasElements || actual.HasElements ? !XNode.DeepEquals(item, actual) : item.Value != actual.Value))
+                    if (actual == null || (item.HasElements || actual.HasElements
+                        ? !XNode.DeepEquals(PlcDocumentEditing.NormalizeEmptyElements(item), PlcDocumentEditing.NormalizeEmptyElements(actual))
+                        : item.Value != actual.Value))
                         return "Restored attribute differs in after.xml: " + (string?)preserved[i];
                 }
             }

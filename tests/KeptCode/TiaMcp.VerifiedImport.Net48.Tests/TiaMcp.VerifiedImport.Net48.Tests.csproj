@@ -29,6 +29,7 @@
     <Compile Include="../../../src/PlcWorker/PlcVerifiedImportBridge.cs" />
     <Compile Include="../TiaMcp.KeptCode.Tests/VerifiedExportStyleTests.cs" />
     <Compile Include="../TiaMcp.KeptCode.Tests/VerifiedExportStyleTests.Recorded.cs" />
+    <Compile Include="../TiaMcp.KeptCode.Tests/VerifiedExportStyleTests.EmptyElements.cs" />
     <EmbeddedResource Include="../TiaMcp.KeptCode.Tests/Fixtures/VerifiedImport/*.xml" LogicalName="VerifiedImport.%(Filename)%(Extension)" />
     <Compile Include="../../Shared/FixtureCrashGuard.cs" />
     <Compile Include="../../Shared/FixtureExit.cs" />

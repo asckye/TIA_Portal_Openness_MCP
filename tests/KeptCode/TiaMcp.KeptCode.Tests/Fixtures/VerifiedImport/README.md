@@ -1,6 +1,7 @@
 # Verified PLC import fixtures
 
-Each XML file contains the complete staged `arguments.files[].content` from the indicated rc.5 `results-V.jsonl` row, with LF line endings.
+Each XML file contains the complete staged `arguments.files[].content` from the indicated `results-V.jsonl` run, with LF line endings.
+The table uses rc.5 recordings.
 The prefix identifies the release. V14 SP1 uses the recorded `seq`; other releases use one-based rows.
 The V15.1 rounded-value case starts with the staged DB and reconstructs the subsequent export and patch.
 
@@ -23,3 +24,10 @@ The records supply member paths, values, cultures and preserved names. Object ID
 and unreported element order are fixture values. The text wrapper and its order follow the real [V17 LAD coil export](../../../../FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/LadRung/17/coil.xml).
 The nested reset controls use the V17 T2b candidate and its recorded original B/In/Lim=4. Retaining that value after import is a synthetic negative.
 The zero-value control holds the sparse member shape fixed and changes only B/Speed from the declared 5 to 0.
+
+[VerifiedExportStyleTests.EmptyElements.cs](../../VerifiedExportStyleTests.EmptyElements.cs) uses four rc.6 V14 SP1 candidates.
+Seq 35, 44 and 48 applied `14sp1-DB6_unexp.xml`, `14sp1-DB7_verb.xml` and `14sp1-MCP_RC_DB4_plain.xml` respectively.
+Their sparse readbacks are reconstructed with self-closing members and MemoryReserve=100.
+The full readbacks expand the staged SCL declarations. DB6 omits the inherited start values, and DB4 expands both nested M instances.
+The `none-export` follow-up applied `14sp1-DB6_selfclosed.xml` at seq 17 from the batch staged at seq 8.
+It differs from the seq 35 candidate only in the spelling of the empty D member. Both forms exercise the same compiled and sparse readbacks.

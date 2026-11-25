@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- On all eight releases, verified PLC block import now accepts either spelling of an empty XML element, such as `<Member></Member>` and `<Member />`.
+  This fixes false readback mismatches and misleading member names in difference reports. Significant whitespace and attributes still participate in comparison.
+  Explicit empty end tags can change document fingerprints, declaration fingerprints and the derived preview token compared with rc.6.
+  Preview tokens belong to the running worker session. Run a fresh preview after upgrading.
+
 ## [4.0.0-rc.6] - 2026-11-25
 
 ### Changed

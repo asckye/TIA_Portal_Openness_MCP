@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V14 SP1" />
+  <DocumentInfo>
+    <Created>2000-01-01T00:00:00.0000000Z</Created>
+    <ExportSetting>None</ExportSetting>
+    <InstalledProducts />
+  </DocumentInfo>
+  <SW.Blocks.GlobalDB ID="0">
+    <AttributeList>
+      <Interface>
+        <Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v2">
+          <Section Name="Static">
+            <Member Name="Aa" Datatype="Int"><StartValue>1</StartValue></Member><Member Name="R" Datatype="Real"><StartValue>1.5</StartValue></Member><Member Name="W" Datatype="Int"><StartValue>3</StartValue></Member><Member Name="Motor" Datatype="&quot;MCP_RC_UDT&quot;"></Member>
+          </Section>
+        </Sections>
+      </Interface>
+      <MemoryLayout>Optimized</MemoryLayout>
+      <Name>MCP_RC_DB7</Name>
+      <Number>9807</Number>
+      <ProgrammingLanguage>DB</ProgrammingLanguage>
+    </AttributeList>
+  </SW.Blocks.GlobalDB>
+</Document>

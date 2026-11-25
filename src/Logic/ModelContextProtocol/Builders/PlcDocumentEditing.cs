@@ -45,7 +45,17 @@ namespace TiaMcpServer.ModelContextProtocol
             || x.Name.LocalName == "SW.Types.PlcStruct");
         public static XDocument Parse(string xml) => ParseDocument(xml, false);
         public static XDocument ParseBlockImport(string xml) => ParseDocument(xml, false, blockImport: true);
-        internal static XElement RawBlock(string xml) => Block(ParseDocument(xml, false, blockImport: true, options: LoadOptions.PreserveWhitespace));
+        internal static XElement RawBlock(string xml) =>
+            NormalizeEmptyElements(Block(ParseDocument(xml, false, blockImport: true, options: LoadOptions.PreserveWhitespace)));
+
+        // LINQ to XML remembers a separate end tag even when there are no child nodes. Only change that spelling on comparison trees.
+        internal static XElement NormalizeEmptyElements(XElement root)
+        {
+            foreach (var element in root.DescendantsAndSelf())
+                if (!element.IsEmpty && element.FirstNode == null) element.RemoveNodes();
+            return root;
+        }
+
         private static XDocument ParseDocument(string xml, bool editable, bool blockImport = false, LoadOptions options = LoadOptions.None)
         {
             if (Encoding.UTF8.GetByteCount(xml) > MaxBytes) throw new ArgumentException("XML exceeds 16 MiB.");
@@ -114,14 +124,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 // (including whitespace-only Text/Token values) and xml:space remain exact.
                 if (e.HasElements && !e.Nodes().OfType<XText>().Any(t => !string.IsNullOrWhiteSpace(t.Value))
                     && !e.AncestorsAndSelf().Any(p => (string?)p.Attribute(XNamespace.Xml + "space") == "preserve"))
-                    e.Nodes().OfType<XText>().Where(t => string.IsNullOrWhiteSpace(t.Value)).Remove();
+                    e.Nodes().OfType<XText>().Where(t => t is not XCData && string.IsNullOrWhiteSpace(t.Value)).Remove();
                 if (IsInterfaceMember(e))
                     foreach (var (name, value) in MemberExportDefaults)
                         if (e.Attribute(name) is XAttribute attr && attr.Value == value) attr.Remove();
                 var attrs = e.Attributes().OrderBy(a => a.Name.ToString(), StringComparer.Ordinal).ToArray();
                 e.RemoveAttributes(); e.Add(attrs);
             }
-            return block.ToString(SaveOptions.DisableFormatting);
+            return NormalizeEmptyElements(block).ToString(SaveOptions.DisableFormatting);
         }
 
         private static Dictionary<string, string> ObjectIds(XElement block)
@@ -374,7 +384,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 starts.Remove();
                 member.AddFirst(starts);
             }
-            return shape;
+            return NormalizeEmptyElements(shape);
         }
 
         private static void RemoveImplicitDefault(XElement member)
@@ -389,8 +399,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static string ReadbackDifference(string planned, string readback) => ReadbackDetail(planned, readback).Label;
 
-        internal static (string Label, bool ExtraInUdt, bool NamesMember) ReadbackDetail(string planned, string readback) => DescribeDifference(
-            XElement.Parse(planned, LoadOptions.PreserveWhitespace), XElement.Parse(readback, LoadOptions.PreserveWhitespace), "");
+        internal static (string Label, bool ExtraInUdt, bool NamesMember) ReadbackDetail(string planned, string readback)
+        {
+            XElement ParseSide(string xml) => NormalizeEmptyElements(XElement.Parse(xml, LoadOptions.PreserveWhitespace));
+            return DescribeDifference(ParseSide(planned), ParseSide(readback), "");
+        }
 
         private static (string Label, bool ExtraInUdt, bool NamesMember) DescribeDifference(XElement expected, XElement actual, string prefix)
         {
