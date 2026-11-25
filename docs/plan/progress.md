@@ -1,19 +1,20 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-24，master `960883603`；v4.0.0-rc.4 已发布（2026-11-24，预发布）
+状态：现行 · 最后核对：2026-11-24，master `991b3c334`；v4.0.0-rc.4 已发布（2026-11-24，预发布）；v4.0.0-rc.5 准备中
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
+- **v4.0.0-rc.5 准备中。** rc.4 真机复验的修复（VMFIX-26 至 VMFIX-30）、工具示例（EXAMPLES-RC4）和结果判定更正（UNK-B、UNK-A）已合并到 master `991b3c334`。工具名称和输入没有变化，只有 `ManageMultiuserSession` 的 `port` 说明和两个工具的示例注解改变。代码改动尚未在真机上运行。任务见[开发计划](plan.md#400-rc5)。
 - **v4.0.0-rc.4 已于 2026-11-24 发布（`960883603`，GitHub 预发布，不设为 latest）。** 按最终设计稿改版的工作台已合并到 master `372453e06`：UI-FINAL（外壳与七个页面）、UI-AIHINT（AI 通知卡片）、
-  UI-CFGFIX、UI-RAILFIX（模态框关闭后恢复原有可用状态）和 UI-LOWS（审查发现的修复）。MCP 对外接口与 rc.3 相同。尚未在真机上验证。
+  UI-CFGFIX、UI-RAILFIX（模态框关闭后恢复原有可用状态）和 UI-LOWS（审查发现的修复）。MCP 对外接口与 rc.3 相同。2026-11-24 已在八个版本的真机上定向复验，工作台尚未逐页手动走查。
   任务见[开发计划](plan.md#400-rc4)。
 - **2026-11-22，4.0.0-rc.1 已发布**（提交 `149ab2e4c`，GitHub 预发布，不设 latest）。发布前修了 RDY-RESTART（无 TIA 时 V20/V21 重启 worker 先于审批拒绝，与另外六版一致）。
   rc.1 的公开已获维护者确认，之后的 rc 各自确认。GitHub latest 仍为 v3.3.0。
 - **2026-11-22，GitHub 仓库改名为 `asckye/automation-engineering-workbench`。** 旧网址经 GitHub 重定向，旧名永不再用，
   因为 3.3 和 beta 更新器经重定向读取发布（[ADR 0039](../standards/decisions/0039-repository-rename-never-reuse-old-name.md)）。
-- **v4.0.0-rc.3 已于 2026-11-23 发布（`e26a3249f`，GitHub 预发布，不设为 latest）。** rc.2 在 V14 SP1、V15.1 真机定向复验中各有 2 个 HIGH（带 UDT 成员的 DB 验证导入报读回不一致；带口令的编译在无该 API 的版本上报结果未知），修复（VMFIX-23、VMFIX-24）与工作台界面修复（UI-CENTER、UI-POLISH）已合并，尚未在真机上复验。任务见[开发计划](plan.md#400-rc3)。
+- **v4.0.0-rc.3 已于 2026-11-23 发布（`e26a3249f`，GitHub 预发布，不设为 latest）。** rc.2 在 V14 SP1、V15.1 真机定向复验中各有 2 个 HIGH（带 UDT 成员的 DB 验证导入报读回不一致；带口令的编译在无该 API 的版本上报结果未知），修复（VMFIX-23、VMFIX-24）与工作台界面修复（UI-CENTER、UI-POLISH）已合并，rc.4 真机复验：不支持密码编译的版本已确认修复，验证导入部分修复（见“真机结果”）。任务见[开发计划](plan.md#400-rc3)。
 - **v4.0.0-rc.2 已于 2026-11-23 发布（`bb154034d`，GitHub 预发布，不设为 latest）。** 完整门禁 `merge-check -All` 与 `prepare` 在该提交上通过；rc.1 反馈的修复和 LOW 审查发现都在这个 rc 中。任务与状态见[开发计划](plan.md#400-rc2)。
   - rc.1 之后已合并：LOW-A（`ManageCfcChartProtection` 八版不再注册，[ADR 0041](../standards/decisions/0041-unregister-cfc-chart-protection.md)）、CHECK-FP、GATE-HANG、RC2-LOW（会启动 worker 的工具在无 TIA 时审批前拒绝，[ADR 0040](../standards/decisions/0040-readiness-before-approval.md)）、LOW-TOOLS、VMFIX-20B（含更新检查限流改报 `RESOURCE_UNAVAILABLE`）、RENAME-GH、LOW-RC2C、VMFIX-20A（`ExportDeviceAml` 输出根外与 OPC UA 导出给出确定结果、V14 SP1 读回对照 UDT 声明、审批宿主读取计划）、LOW-RC2D、文档与 ADR 更新（`16f764d6c`）、VMFIX-21（V15.1 目录导入批次汇总）、REV-REL、REV-DESK、REV-SEC、VMFIX-22（V15.1 批次 C、D 的 LOW）。
   - 2026-11-22 全面审查的修复：REV-SEC 宿主拒绝通配与公网绑定地址、AI 调用拒绝网络与设备输入路径（S8）、可备份目标备份失败或读不到状态时拒绝覆盖导入、审计开始记录写不进时拒绝写入、审批卡转义控制与双向字符、派发后异常报未知、用户 XML 禁用 DTD；REV-DESK 审批防误点、第二实例检测、设置原子写入且损坏时 AI 控制关闭、崩溃日志与诊断编号、诊断包隐私、更新器替换前核对暂存包；REV-REL `prepare` 须有同一提交的 `merge-check -All` 通过记录、golden 重新生成不能通过门禁、工作流动作固定、公开时报告 CI 状态。
@@ -22,7 +23,7 @@
 - **2026-11-23 维护者按建议批准全面审查的决定**：MCP 连接继续不设密码或访问密钥（[ADR 0038](../standards/decisions/0038-keyless-http-transport.md)）；
   工具参数中的密码与更新包不签名是 4.0 接受的风险（[ADR 0042](../standards/decisions/0042-accepted-risks-for-4-0.md)）；审批开关范围不变；
   带安全密码的编译须审批。详见[开发计划](plan.md#待维护者决定)。
-- **4.0 正式版之前还剩**：V16、V18、V19、V20 在 rc.2 上复验，rc.2 对 V14 SP1、V15.1 的修复也待真机复验；崩溃探查（V21 OPC UA 报警类型 nodeId、V16–V20 探测、V21 交叉引用带界面检查，需维护者带界面操作）；11 条 ADR 补写；计划中标为待核对的 4.0 前项（T2、T3、U3、U4、C2、S4、S9、COV-V21）；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
+- **4.0 正式版之前还剩**：见[开发计划](plan.md#400-rc5)；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
 - **RC 代码已全部合并（2026-11-19 至 11-21）。**
   - UNIFY-1 全部完成：A–D1（beta.6）以及 B2、C2、D2、E。八版共用一个工具包装、一条就绪规则、一个版本目录和一张官方 API 能力表，
     新出现的按版本号分支由 `ReleaseKeyedSitesTests` 拦下。U3 线程模型（MTA-1）、U6 实机保护、U7 V21 builder 输出按 2026-11-04 决定保留。
@@ -107,8 +108,16 @@
 | RC3 候选 `aa9c749b`，V21 VM，2026-11-21 | 519 个工具：通过 348、按设计拒绝 69、失败 91（HIGH 3，其余 LOW）、未运行 11；TIA 崩溃 2 次；beta.6 的 V21 HIGH/MEDIUM 除 `ConnectProjectToWorkspace`（未复验）外均已修复 | 标签导入误报未知、PLC syslog 崩溃由 VMFIX-19 处理；OPC UA 报警类型 nodeId 更新崩溃待探查 |
 | rc.1（`149ab2e4c`），V14 SP1 VM，2026-11-22 | 287 个工具：通过 177、只有按设计拒绝 64、HIGH 2、MEDIUM 0、LOW 42、未运行 2；TIA 重启与会话中断 0。RC 候选的 14 个 HIGH 修好 13 个（`ImportPlcBlockVerified` 行为改变但仍是 HIGH），5 个 MEDIUM 全部修好。批次 B、C 的变慢经调查为测试时主机负载，不是代码退化 | 2 个 HIGH（`ExportDeviceAml` 输出根外报未知、`ImportPlcBlockVerified` 读回误报不一致）由 VMFIX-20A 修复，待 rc.2 复验；LOW 由 VMFIX-20B 等处理 |
 | rc.1（`149ab2e4c`），V15.1 VM，四批，2026-11-22 至 11-23 | 328 个工具：通过 224、只有按设计拒绝 55、HIGH 3、MEDIUM 0、LOW 42、未运行 4；TIA 重启与会话中断 0。RC 候选的 14 个 HIGH、4 个 MEDIUM 全部修好或不再出现。新 HIGH 3 个：`ManageHardwareUtilities` `exportOpcUa` 确定失败报未知；`ImportHmiScreensFromDirectory` 批次汇总报未知；`ImportPlcBlockVerified` 读回误报不一致（与 V14 SP1 相同）。批次 A 前半段开着审批，写入被拦下，关审批后补跑，表中以补跑为准；测试期间主机负载高，原生调用变慢不算缺陷 | `exportOpcUa`、`ImportPlcBlockVerified` 由 VMFIX-20A 修复，`ImportHmiScreensFromDirectory` 由 VMFIX-21 修复，LOW 由 VMFIX-20A/20B 与 VMFIX-22 处理；均待 rc.2 复验 |
+| rc.4（`960883603`），V14 SP1 VM，2026-11-24，定向复验 | 94 次调用：通过 70、按设计拒绝 12、HIGH 2（1 个缺陷）、MEDIUM 0、LOW 10；没有重启 TIA。rc.3 修复：密码编译确认修复；验证导入部分修复，实例起始值不同于 UDT 声明时仍误报不一致 | VMFIX-29 已合并，待 rc.5 复验 |
+| rc.4，V15.1 VM，2026-11-24，定向复验 | 111 次调用：通过 83、按设计拒绝 23、HIGH 1、MEDIUM 1、LOW 2、未运行 1；没有重启 TIA。rc.3 的两个 HIGH 修复均确认 | 离线修改的参数错误报未知、空标题误报由 VMFIX-26 修复，待 rc.5 复验 |
+| rc.4，V16 VM，2026-11-24，定向复验 | 152 次调用：通过 92、按设计拒绝 45、HIGH 4（3 个缺陷）、MEDIUM 1、LOW 7、未运行 3；无崩溃。密码编译确认修复 | 验证导入由 VMFIX-29、`ExportDeviceAml` 由 VMFIX-28 修复，待 rc.5 复验；VCI 原生导出未解决 |
+| rc.4，V17 VM，2026-11-24，定向复验 | 148 次调用：通过 99、按设计拒绝 29、HIGH 4（3 个缺陷）、MEDIUM 6、LOW 10；无崩溃 | 假安全密码编译报未知由 VMFIX-27，验证导入由 VMFIX-29，离线修改由 VMFIX-26 修复，待 rc.5 复验；VCI 原生导出和 HMI AML 导入未解决 |
+| rc.4，V18 VM，2026-11-24，定向复验 | 199 次调用：通过 131、按设计拒绝 41、HIGH 8（3 个缺陷）、MEDIUM 5、LOW 14；无崩溃 | VMFIX-27 至 VMFIX-29 已合并，待 rc.5 复验 |
+| rc.4，V19 VM，2026-11-24，定向复验 | 162 次调用：通过 109、按设计拒绝 27、HIGH 6（4 个缺陷）、MEDIUM 6、LOW 14；无崩溃 | VMFIX-26、VMFIX-27、VMFIX-29 已合并，待 rc.5 复验；VCI 状态与同步、TP700 拒绝和 HMI AML 导出未解决 |
+| rc.4，V20 VM，2026-11-24，定向复验 | 177 次调用：通过 117、按设计拒绝 38、HIGH 8（3 个缺陷）、MEDIUM 10、LOW 4；无崩溃 | VMFIX-27、VMFIX-29、VMFIX-30 已合并，待 rc.5 复验；两个相同 UDT 实例的比较、TP700 拒绝和 HMI AML 导出未解决 |
+| rc.4，V21 VM，2026-11-24，定向复验 | 169 次调用：通过 116、按设计拒绝 27、HIGH 7（2 个缺陷）、MEDIUM 6、LOW 13；无崩溃。syslog 崩溃确认修复 | VMFIX-27、VMFIX-29 已合并，待 rc.5 复验；两个相同 UDT 实例的比较和 HMI AML 导出未解决 |
 
-原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，每批一份汇总。V16、V18、V19、V20 尚未在 rc.1 上复验。
+原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，rc.4 复验在 `rc4-verify-<版本>/`，每批一份汇总。
 RC 回归中在线写入、下载和仿真执行只预览（VM 无 PLC，PLCSIM 无实例）。beta.4 回归的缺陷原因尚未逐条验证。未测的正常流程：`OpenProject`、`CloseProject`（自有工程）、`CreateProject`、`RetrieveProjectArchive`、`ConnectIsolatedPortal`、`PublishGenerationRecord`；在线、下载、上传、强制和仿真只读取或预览。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
 
 ## 测试者反馈

@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [4.0.0-rc.5] - 2026-11-25
+
 ### Fixed
 
 - Hardware and PLC creation, tag imports and workspace creation now report a definite refusal when a fresh read verifies the attempted write left the target unchanged.
