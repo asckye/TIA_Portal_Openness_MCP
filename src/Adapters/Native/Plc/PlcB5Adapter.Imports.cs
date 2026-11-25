@@ -17,12 +17,46 @@ namespace TiaMcp.Adapters.Native.Plc
 {
     internal sealed partial class PlcB5Adapter
     {
-        private static PlcB5Reply ImportFailure(string message, bool issued)
-            => new PlcB5Reply { Message = message, MayHaveChanged = issued, OutcomeUnknown = issued,
-                Meta = PlcB5Meta.Unstamped(false, ("apiCallSuccess", false), ("mayHaveChanged", issued), ("writeOutcomeUnknown", issued)) };
+        private static T IssueImport<T>(ref bool mayHaveChanged, Func<T> import)
+        {
+            bool prior = mayHaveChanged;
+            mayHaveChanged = true;
+            try { return import(); }
+            catch (Exception error)
+            {
+                if (NativeRefusalProbe.UncertainConnection(error)) throw;
+                for (Exception? cause = error; cause != null; cause = cause.InnerException)
+                    if (cause is EngineeringUserAbortException) throw;
+                // A refusal settles only this import. An earlier Create may still be present.
+                if (OpennessRefusalMapping.Refusal(error, out _) != null) mayHaveChanged = prior;
+                throw;
+            }
+        }
+
+        private static PlcB5Reply ImportFailure(string message, bool mayHaveChanged)
+            => new PlcB5Reply { Message = message, MayHaveChanged = mayHaveChanged, OutcomeUnknown = mayHaveChanged,
+                Meta = PlcB5Meta.Unstamped(false, ("apiCallSuccess", false), ("mayHaveChanged", mayHaveChanged), ("writeOutcomeUnknown", mayHaveChanged)) };
 
 #if PLC_ALARM_TEXTS
+        private static PlcB5Object NativeXlsxEvidence(PlcB5Object meta, string state, bool changesProject, string? log, string path, string enumType)
+        {
+            PlcB5Result.Record(meta, state, changesProject, log, path);
+            meta["nativeStateType"] = enumType;
+            return meta;
+        }
+
 #if PLC_ALARM_CLASSES
+        // Typed AlarmClassExportImportResultMessage rows (Message + per-message State).
+        private static PlcB5Array AlarmClassMessages(AlarmClassExportImportResult? result)
+        {
+            var rows = new PlcB5Array();
+            if (result?.Messages == null) return rows;
+            foreach (AlarmClassExportImportResultMessage message in PlcGroupOperations.Items(result.Messages)
+                    .Cast<AlarmClassExportImportResultMessage>())
+                rows.Add(new PlcB5Object { ["message"] = message.Message, ["state"] = message.State.ToString() });
+            return rows;
+        }
+
         public PlcB5Reply ImportAlarmClasses(string softwarePath, string importPath)
         {
             if (_session.IsProjectNull()) return new PlcB5Reply {
@@ -33,7 +67,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
             };
 
-            bool issued = false;
+            bool mayHaveChanged = false;
             try
             {
                 var provider = plc.GetService<AlarmClassDataProvider>() ?? _session.CurrentProject?.GetService<AlarmClassDataProvider>();
@@ -53,8 +87,7 @@ namespace TiaMcp.Adapters.Native.Plc
                             + importPath + "'.", Meta = ResponseMeta.Unstamped(false, ("v4Rejection", "INVALID_ARGUMENT"), ("mayHaveChanged", false))
                     };
                 var input = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath));
-                issued = true;
-                AlarmClassExportImportResult result = provider.Import(input);
+                AlarmClassExportImportResult result = IssueImport(ref mayHaveChanged, () => provider.Import(input));
                 var state = result?.State.ToString() ?? "Unknown";
                 var errCount = result?.ErrorCount ?? 0;
                 bool ok = TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(TiaMcp.Adapters.Contracts.NativeResultStates.AlarmClasses, state);
@@ -72,7 +105,7 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             catch (Exception ex)
             {
-                return ImportFailure($"Import failed: {ex.Message}", issued);
+                return ImportFailure($"Import failed: {ex.Message}", mayHaveChanged);
             }
         }
 #endif
@@ -86,7 +119,7 @@ namespace TiaMcp.Adapters.Native.Plc
                 Message = $"PLC software not found: '{softwarePath}'." + _session.AvailablePlcPathsSuffix(), Meta = ResponseMeta
                     .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
             };
-            bool issued = false;
+            bool mayHaveChanged = false;
             try
             {
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
@@ -99,8 +132,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
                 };
                 var input = new FileInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(importPath));
-                issued = true;
-                TextListXlsxResult result = provider.ImportFromXlsx(input, ImportOptions.None);
+                TextListXlsxResult result = IssueImport(ref mayHaveChanged, () => provider.ImportFromXlsx(input, ImportOptions.None));
                 var state = result?.State.ToString() ?? "Unknown";
                 bool ok = result != null && TiaMcp.Adapters.Contracts.NativeResultStates.Succeeded(result.State);
                 return new PlcB5Reply
@@ -115,7 +147,7 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             catch (Exception ex)
             {
-                return ImportFailure($"Import failed: {ex.GetBaseException().Message}", issued);
+                return ImportFailure($"Import failed: {ex.GetBaseException().Message}", mayHaveChanged);
             }
         }
 #endif
@@ -131,7 +163,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     .Unstamped(false, ("v4Rejection", "NOT_FOUND"), ("mayHaveChanged", false))
             };
 
-            bool issued = false;
+            bool mayHaveChanged = false;
             try
             {
                 var sig = GetOpcUaServerInterfaceGroup(plc);
@@ -182,7 +214,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     try
                     {
                         NativeRefusalProbe.Run(proof, () => FreshNames(), () => {
-                            issued = true;
+                            mayHaveChanged = true;
                             target = create.Invoke(collection, new object[] { interfaceName });
                         });
                     }
@@ -190,13 +222,12 @@ namespace TiaMcp.Adapters.Native.Plc
                     {
                         return ImportFailure(error.GetBaseException().Message, proof.TryGetValue("mayHaveChanged", out var changed) && changed is true);
                     }
-                    if (target == null) return ImportFailure($"Could not confirm creation of {interfaceType} '{interfaceName}'.", issued);
+                    if (target == null) return ImportFailure($"Could not confirm creation of {interfaceType} '{interfaceName}'.", mayHaveChanged);
                     createdNow = true;
                 }
                 var import = target.GetType().GetMethod("Import", new[] { typeof(FileInfo) });
-                if (import == null) return ImportFailure($"Import(FileInfo) is not exposed by {target.GetType().Name}.", issued);
-                issued = true;
-                try { import.Invoke(target, new object[] { fi }); }
+                if (import == null) return ImportFailure($"Import(FileInfo) is not exposed by {target.GetType().Name}.", mayHaveChanged);
+                try { IssueImport(ref mayHaveChanged, () => import.Invoke(target, new object[] { fi })); }
                 catch (TargetInvocationException tie)
                 {
                     bool removed = false;
@@ -214,7 +245,7 @@ namespace TiaMcp.Adapters.Native.Plc
                         catch { /* swallow(cleanup): retain import uncertainty when removal or fresh name lookup fails */ }
                     }
                     return ImportFailure($"Import failed: {(tie.InnerException ?? tie).Message}"
-                        + (removed ? $" (the new {interfaceType} '{interfaceName}' was removed again)" : ""), !removed);
+                        + (removed ? $" (the new {interfaceType} '{interfaceName}' was removed again)" : ""), mayHaveChanged && !removed);
                 }
                 return new PlcB5Reply { Message = createdNow
                     ? $"{interfaceType} '{interfaceName}' created and imported from '{importPath}'."
@@ -223,7 +254,7 @@ namespace TiaMcp.Adapters.Native.Plc
             }
             catch (Exception ex)
             {
-                return ImportFailure($"Import failed: {ex.Message}", issued);
+                return ImportFailure($"Import failed: {ex.Message}", mayHaveChanged);
             }
         }
 

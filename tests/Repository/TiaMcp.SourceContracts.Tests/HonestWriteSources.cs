@@ -23,7 +23,7 @@ public sealed class HonestWriteSources
     {
         string source = Read("src/Adapters/Native/Plc/PlcB5Alarms.cs");
         int start = source.IndexOf("private static string NativeReason(Exception error)", StringComparison.Ordinal);
-        int end = source.IndexOf("// Typed AlarmClassExportImportResultMessage", start, StringComparison.Ordinal);
+        int end = source.IndexOf("public PlcB5Reply ExportAlarmClasses(", start, StringComparison.Ordinal);
         Assert.True(start >= 0 && end > start);
         string reason = source[start..end];
         Assert.Contains("is EngineeringException engineering", reason, StringComparison.Ordinal);
@@ -40,7 +40,7 @@ public sealed class HonestWriteSources
         Assert.Contains("ex.GetBaseException().GetType().Name == \"TextListNotFoundException\"", textLists, StringComparison.Ordinal);
         Assert.Contains("meta[\"precondition\"] = \"plc-text-lists\"", textLists, StringComparison.Ordinal);
         start = source.IndexOf("public PlcB5Reply ExportAlarmInstanceTexts(", end, StringComparison.Ordinal);
-        end = source.IndexOf("private static PlcB5Object NativeXlsxEvidence", start, StringComparison.Ordinal);
+        end = source.IndexOf("#endregion", start, StringComparison.Ordinal);
         Assert.Contains("(\"nativeMessage\", NativeReason(ex))", source[start..end], StringComparison.Ordinal);
         Assert.Contains("Message = $\"Export failed: {NativeReason(ex)}\"", source[start..end], StringComparison.Ordinal);
     }

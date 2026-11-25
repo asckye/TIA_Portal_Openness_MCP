@@ -50,7 +50,12 @@ internal static class SafetyLoginFixture
         if (caller == "safety-update")
         {
             session.TestWrite = scenario;
-            admin.Settings.RefuseAttribute = scenario == "refused";
+            admin.Settings.AttributeFailure = scenario switch {
+                "refused" => new Siemens.Engineering.EngineeringSecurityException(),
+                "ordinary-refusal" => new Siemens.Engineering.EngineeringTargetInvocationException(),
+                "connection-loss" => new Siemens.Engineering.EngineeringTargetInvocationException(new EndOfStreamException()),
+                _ => (Exception?)null
+            };
             admin.IsSafetyOfflineProgramPasswordSet = false;
             var group = new RuntimeGroup();
             admin.RuntimeGroups.Add(group);
@@ -58,6 +63,7 @@ internal static class SafetyLoginFixture
                 runtimeGroup: scenario == "group" ? "Group" : "", dryRun: false);
             Console.WriteLine(WorkerJson.Serialize(new {
                 framework = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName, reply,
+                storedAttribute = admin.Settings.GetAttribute("EnableFCommunicationIdTag"),
                 attributeWritten = group.AttributeWritten || admin.Settings.AttributeWritten,
                 cycle = scenario == "group" ? group.Cycle : admin.Settings.Cycle, version = admin.Settings.SafetySystemVersion?.Value }));
             return 0;

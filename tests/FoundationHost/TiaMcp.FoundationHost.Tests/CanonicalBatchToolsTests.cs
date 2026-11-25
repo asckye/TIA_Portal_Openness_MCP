@@ -12,6 +12,37 @@ using Xunit;
 public sealed class CanonicalBatchToolsTests
 {
 
+    [Theory, InlineData(0, "rejected-before-operation"), InlineData(1, "partial")]
+    public async Task Batch_item_approval_failure_preserves_each_dispatch_boundary(int refusedIndex, string batchOutcome)
+    {
+        const string name = "ExportTechnologyObjectsToDirectory";
+        using var files = new Files();
+        var source = new Target(name, "20") { TechnologyPaths = new[] { "Group/A", "Group/B", "Group/C" }, HashInEvidence = true };
+        var export = new Target("ExportTechnologyObject", "20");
+        var unsettled = new toolpipeline::TiaMcp.FoundationHost.UnsettledCalls();
+        var batch = new CanonicalBatchTools.BatchTool(Declaration(name), new Dictionary<string, McpServerTool> {
+            [name] = source, [export.ProtocolTool.Name] = export }, "20", () => Binding.DeepClone().AsObject(), unsettled) {
+            Approve = (pending, _, _) => {
+                pending.BatchPlan!["items"]![refusedIndex]!["tool"] = "DifferentApprovedTool";
+                return Task.FromResult(new ApprovalOutcome(pending, false, null));
+            },
+            CompleteApproval = (_, _) => Task.CompletedTask
+        };
+        var args = new JsonObject { ["softwarePath"] = "PLC", ["exportDir"] = files.Directory };
+        var preview = await batch.InvokeAsync(Request(name, args));
+        Apply(args, preview.StructuredContent!["data"]!.AsObject());
+        var result = (await batch.InvokeAsync(Request(name, args))).StructuredContent!;
+        var rows = result["data"]!["items"]!.AsArray();
+        Assert.Equal("rejected-before-operation", (string?)rows[refusedIndex]?["result"]?["meta"]?["outcome"]);
+        Assert.Equal(batchOutcome, (string?)result["meta"]?["outcome"]);
+        Assert.Equal(refusedIndex > 0, (bool?)result["data"]?["executed"]);
+        Assert.Equal(refusedIndex, export.Writes.Count);
+        Assert.All(rows.Take(refusedIndex), row => Assert.Equal("completed", (string?)row?["status"]));
+        Assert.Equal("failed", (string?)rows[refusedIndex]?["status"]);
+        Assert.All(rows.Skip(refusedIndex + 1), row => Assert.Equal("not-started", (string?)row?["status"]));
+        Assert.Empty(unsettled.Snapshot());
+    }
+
     [Fact]
     public async Task Approval_completion_failure_after_export_records_an_unsettled_batch()
     {

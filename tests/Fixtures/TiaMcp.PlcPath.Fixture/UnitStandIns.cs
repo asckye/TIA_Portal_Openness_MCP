@@ -6,7 +6,7 @@ using TiaMcp.Adapters.Native.Engineering;
 
 namespace Siemens.Engineering
 {
-    public interface IEngineeringObject { object GetAttribute(string name); void SetAttribute(string name, object value); }
+    public interface IEngineeringObject { public object GetAttribute(string name); public void SetAttribute(string name, object value); }
     public sealed class MultilingualText { public List<MultilingualTextItem> Items { get; } = new(); }
     public sealed class Language { public CultureInfo Culture => CultureInfo.GetCultureInfo("en-US"); }
     public sealed class MultilingualTextItem
@@ -91,7 +91,7 @@ namespace TiaMcp.Adapters.Native.Plc
     }
     public partial interface IPlcOrganisationSession
     {
-        MasterCopy ExactMasterCopy(string library, string path) => throw new NotSupportedException();
+        public MasterCopy ExactMasterCopy(string library, string path) => throw new NotSupportedException();
     }
     public sealed partial class PlcOrganisationAdapter
     {

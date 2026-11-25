@@ -1,3 +1,4 @@
+using Siemens.Engineering.HmiUnified.UI.Dynamization;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Engineering;
 using TiaMcp.Adapters.Native.Plc;
@@ -31,7 +32,6 @@ namespace Siemens.Engineering.HmiUnified.UI.Dynamization.Tag
 }
 namespace TiaMcp.Adapters.Native.Hmi
 {
-    using Siemens.Engineering.HmiUnified.UI.Dynamization;
     internal sealed class DynCollection : List<TagDynamization>
     {
         internal bool RefuseCreate;

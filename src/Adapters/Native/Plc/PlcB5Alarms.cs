@@ -61,19 +61,6 @@ namespace TiaMcp.Adapters.Native.Plc
             return cause.Message;
         }
 
-        // Typed AlarmClassExportImportResultMessage rows (Message + per-message State).
-#if PLC_ALARM_CLASSES
-        private static PlcB5Array AlarmClassMessages(AlarmClassExportImportResult? result)
-        {
-            var rows = new PlcB5Array();
-            if (result?.Messages == null) return rows;
-            foreach (AlarmClassExportImportResultMessage message in EngineeringGroupOperations.Items(result.Messages)
-                    .Cast<AlarmClassExportImportResultMessage>())
-                rows.Add(new PlcB5Object { ["message"] = message.Message, ["state"] = message.State.ToString() });
-            return rows;
-        }
-#endif
-
 #if PLC_ALARM_CLASSES
         public PlcB5Reply ExportAlarmClasses(string softwarePath, string exportPath)
         {
@@ -236,13 +223,6 @@ namespace TiaMcp.Adapters.Native.Plc
                 }
                 return new PlcB5Reply { Message = $"Export failed: {NativeReason(ex)}", Meta = meta };
             }
-        }
-
-        private static PlcB5Object NativeXlsxEvidence(PlcB5Object meta, string state, bool changesProject, string? log, string path, string enumType)
-        {
-            NativeResultState.Record(meta, state, changesProject, log, path);
-            meta["nativeStateType"] = enumType;
-            return meta;
         }
 
         #endregion

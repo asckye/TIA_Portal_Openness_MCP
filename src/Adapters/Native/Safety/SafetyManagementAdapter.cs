@@ -466,7 +466,7 @@ namespace TiaMcp.Adapters.Native.Safety
                 meta["lastAttemptedAttribute"] = attribute.Key;
                 object value = attribute.Value is bool flag ? flag : attribute.Value!.GetValue<int>();
                 EngineeringWriteJournal.ProbeWrite(meta, attribute.Key, () => new[] { owner.GetAttribute(attribute.Key) },
-                    () => owner.SetAttribute(attribute.Key, value), error => OpennessRefusalMapping.Refusal(error, out _) != null);
+                    () => owner.SetAttribute(attribute.Key, value));
                 var readback = owner.GetAttribute(attribute.Key);
                 if (!Equals(Convert.ToString(readback), Convert.ToString(value)))
                     throw new InvalidOperationException("Attribute readback differs: " + attribute.Key + ". Changes are not rolled back.");

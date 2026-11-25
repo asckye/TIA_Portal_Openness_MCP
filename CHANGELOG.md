@@ -9,6 +9,8 @@
 - Tool usage examples now cover every registered parameter, show release-specific CPU and panel catalog choices, and identify the
   exported PLC block XML, localized HMI table, existing connection and workspace directory required by the corresponding calls.
   The examples distinguish previews from execution, preserve tool-specific units and bounds, and cite the release and run row for verified calls.
+- PLC alarm and OPC UA imports preserve documented native refusals. Safety attribute updates use the stored value to verify refusals.
+  Batch results identify an item refused before dispatch and retain any earlier completed items.
 - Batch exports and seed imports retain completed items when a later step fails. PLC, HMI, and hardware writes report an unknown outcome when
   native changes cannot be verified. CPU settings report the requested and actual values for attributes that TIA normalizes.
 - Offline document tools identify unreadable inputs and name the output to inspect when a PLC report or build fails after file creation.

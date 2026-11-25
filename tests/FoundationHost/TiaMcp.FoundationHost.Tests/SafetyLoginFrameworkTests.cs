@@ -52,6 +52,15 @@ public sealed class SafetyLoginFrameworkTests
         Assert.True((bool?)row["reply"]?["Meta"]?["rollbackCompleted"]);
     }
 
+    [Theory, InlineData("ordinary-refusal", false, false), InlineData("connection-loss", false, true), InlineData("settings", true, true)]
+    public void Safety_attribute_outcome_uses_stored_readback_and_connection_state_on_net48(string scenario, bool stored, bool unknown)
+    {
+        var row = RunFixture("safety-update", scenario);
+        Assert.Equal(unknown, (bool?)row["reply"]?["OutcomeUnknown"]);
+        Assert.Equal(stored, (bool?)row["storedAttribute"]);
+        Assert.Equal(!unknown, (bool?)row["reply"]?["Meta"]?["rollbackCompleted"]);
+    }
+
     [Fact]
     public void Offline_refusal_after_login_and_failed_cleanup_keeps_unknown_on_net48()
     {

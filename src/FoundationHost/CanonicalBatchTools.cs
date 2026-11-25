@@ -134,6 +134,7 @@ internal static class CanonicalBatchTools
                                     new PlanStaleDetails(null, "batch-plan", hash)));
                     var rows = (JsonArray)plan["items"]!;
                     bool stopped = false;
+                    Exception? admissionFailure = null;
                     foreach (var node in rows)
                     {
                         var item = node!.AsObject();
@@ -146,6 +147,7 @@ internal static class CanonicalBatchTools
                         if (targetProperties.TryGetProperty("expectedProjectFile", out _)) values["expectedProjectFile"] = project;
                         if (targetProperties.TryGetProperty("expectedPlanHash", out _)) values["expectedPlanHash"] = item["canonicalPlanHash"]!.DeepClone();
                         bool previousWrite = mayHaveChanged;
+                        bool itemStarted = false;
                         try
                         {
                             if (item["sourceSha256"] is JsonValue sourceHash && sourceHash.GetValue<string>() != Convert
@@ -158,7 +160,7 @@ internal static class CanonicalBatchTools
                             }
                             using var itemApproval = GenerationStepApproval
                                 .EnterBatchItem(approved, item["index"]!.GetValue<int>(), (string)item["tool"]!, values);
-                            childStarted = true;
+                            itemStarted = childStarted = true;
                             mayHaveChanged = true;
                             var child = await Invoke(target, values, request, cancellationToken, ExportRoot(args));
                             item["result"] = Body(child); stopped = child.IsError == true || (bool?)item["result"]?["ok"] != true;
@@ -166,13 +168,15 @@ internal static class CanonicalBatchTools
                         }
                         catch (Exception error)
                         {
-                            item["status"] = "failed"; item["result"] =
-                                Body(FoundationV4Result.Failure(release, (string)item["tool"]!, id, true, true, null, error)); stopped = true;
+                            if (!childStarted) admissionFailure = error;
+                            item["result"] = Body(FoundationV4Result.Failure(release, (string)item["tool"]!, id, itemStarted, itemStarted, null, error));
+                            item["status"] = "failed"; stopped = true;
                         }
                         if ((string?)item["result"]?["meta"]?["outcome"] == "rejected-before-operation") mayHaveChanged = previousWrite;
                     }
-                    plan["executed"] = true;
-                    final = Result(plan, true, id);
+                    plan["executed"] = admissionFailure == null;
+                    final = admissionFailure == null ? Result(plan, true, id)
+                        : FoundationV4Result.Failure(release, tool.Name, id, false, false, plan, admissionFailure);
                     if (batchDigest != null && (string?)final.StructuredContent?["meta"]?["outcome"] == "unknown")
                         unsettled?.Record(id, tool.Name, batchDigest, DateTimeOffset.UtcNow, args);
                     audit?.Complete(final.StructuredContent?.ToJsonString());

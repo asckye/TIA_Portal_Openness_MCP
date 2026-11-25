@@ -8,44 +8,53 @@ namespace Siemens.Engineering
 }
 namespace Siemens.Engineering.SW.Alarm
 {
-    internal enum ImportState { Success }
+    internal enum AlarmClassExportImportResultState { Success, Warning, Error }
+    internal enum TextListXlsxResultState { OK, Warning, Error }
+    internal sealed class AlarmClassExportImportResultMessage
+    {
+        public string Message => "Invalid alarm class.";
+        public AlarmClassExportImportResultState State => AlarmClassExportImportResultState.Error;
+    }
     internal sealed class AlarmClassExportImportResult
     {
-        public ImportState State => ImportState.Success;
-        public int ErrorCount => 0;
+        public AlarmClassExportImportResultState State => AlarmClassExportImportResultState.Error;
+        public AlarmClassExportImportResultMessage[] Messages => new[] { new AlarmClassExportImportResultMessage() };
+        public int ErrorCount => Messages.Length;
         public int WarningCount => 0;
     }
-    internal sealed class AlarmClassDataProvider
+    internal sealed class AlarmClassDataProvider(Exception? failure)
     {
         public int Calls;
         public AlarmClassExportImportResult Import(FileInfo input)
         {
             Calls++;
-            throw new IOException("Alarm class provider lost its import reply.");
+            if (failure != null) throw failure;
+            return new AlarmClassExportImportResult();
         }
     }
     internal sealed class TextListXlsxResult
     {
-        public ImportState State => ImportState.Success;
+        public TextListXlsxResultState State => TextListXlsxResultState.Error;
         public FileInfo? LogFilePath => null;
     }
-    internal sealed class PlcAlarmTextListProvider
+    internal sealed class PlcAlarmTextListProvider(Exception? failure)
     {
         public int Calls;
         public TextListXlsxResult ImportFromXlsx(FileInfo file, ImportOptions options)
         {
             Calls++;
-            throw new IOException("Text list provider lost its import reply.");
+            if (failure != null) throw failure;
+            return new TextListXlsxResult();
         }
     }
 }
 namespace Siemens.Engineering.SW.Alarm.TextLists { }
 namespace TiaMcp.Adapters.Native.Plc
 {
-    internal sealed class ImportSession
+    internal sealed class ImportSession(Exception? failure)
     {
-        internal readonly AlarmClassDataProvider Classes = new();
-        internal readonly PlcAlarmTextListProvider Texts = new();
+        internal readonly AlarmClassDataProvider Classes = new(failure);
+        internal readonly PlcAlarmTextListProvider Texts = new(failure);
         internal object ServerInterfaces { get; set; } = null!;
         internal ImportSession? CurrentProject => this;
         internal bool IsProjectNull() => false;
@@ -59,25 +68,27 @@ namespace TiaMcp.Adapters.Native.Plc
         private readonly ImportSession _session;
         internal PlcB5Adapter(ImportSession session) => _session = session;
         private object GetOpcUaServerInterfaceGroup(ImportSession plc) => new { plc.ServerInterfaces };
-        private static PlcB5Array AlarmClassMessages(AlarmClassExportImportResult? result) => throw new NotSupportedException();
-        private static PlcB5Object NativeXlsxEvidence(PlcB5Object meta, string state, bool change, string? log, string path, string type)
-            => throw new NotSupportedException();
     }
-    internal sealed class Interfaces(string scenario) : List<ServerInterface>
+    internal sealed class Interfaces(string scenario, Exception? failure) : List<ServerInterface>
     {
+        public int ImportCalls;
         public ServerInterface Create(string name)
         {
             if (scenario == "opc-create-refused") throw new InvalidOperationException("OPC creation interrupted.");
-            var item = new ServerInterface(this, name, scenario == "opc-cleaned");
+            var item = new ServerInterface(this, name, scenario == "opc-cleaned", failure);
             Add(item);
             if (scenario == "opc-create-interrupted") throw new InvalidOperationException("OPC creation interrupted.");
             return item;
         }
     }
-    internal sealed class ServerInterface(Interfaces owner, string name, bool remove)
+    internal sealed class ServerInterface(Interfaces owner, string name, bool remove, Exception? failure)
     {
         public string Name => name;
-        public void Import(FileInfo input) => throw new IOException("OPC UA import interrupted.");
+        public void Import(FileInfo input)
+        {
+            owner.ImportCalls++;
+            if (failure != null) throw failure;
+        }
         public void Delete()
         {
             if (remove) owner.Remove(this);

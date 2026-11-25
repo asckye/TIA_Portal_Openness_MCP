@@ -1,3 +1,4 @@
+using Siemens.Engineering;
 using Siemens.Engineering.HW.Features;
 using TiaMcp.Adapters;
 using TiaMcp.Adapters.Contracts;
@@ -13,15 +14,31 @@ public static class NativeWriteFixture
     {
         if (scenario.StartsWith("mapping-", StringComparison.Ordinal) || scenario == "target-refused") return Mapping(scenario);
         if (scenario.StartsWith("dyn-", StringComparison.Ordinal)) return Dynamization(scenario);
-        var interfaces = new Interfaces(scenario);
-        var session = new ImportSession { ServerInterfaces = scenario == "opc-no-create" ? Array.Empty<object>() : interfaces };
+        var parts = scenario.Split('/');
+        var failure = parts.Length == 1 ? new IOException(parts[0].StartsWith("opc-", StringComparison.Ordinal)
+            ? "OPC UA import interrupted." : "Alarm provider lost its import reply.") : parts[1] switch {
+            "security" => new EngineeringSecurityException(),
+            "licence" => new LicenseNotFoundException(),
+            "products" => new MissingProductsException(),
+            "multiuser" => new Siemens.Engineering.Multiuser.MultiuserException(),
+            "malformed" => new InvalidDataException("Invalid native import document."),
+            "native-malformed" => new EngineeringTargetInvocationException(new InvalidDataException("Invalid native import document.")),
+            "lost" => new EngineeringSecurityException(new EndOfStreamException()),
+            "abort" => new EngineeringSecurityException(new EngineeringUserAbortException()),
+            "disposed" => new EngineeringSecurityException(new ObjectDisposedException("provider")),
+            "error-result" => (Exception?)null,
+            _ => throw new ArgumentException("Unknown import fixture case: " + scenario)
+        };
+        var interfaces = new Interfaces(parts[0], failure);
+        if (parts[0] == "opc-existing") interfaces.Create(PlcOpcUaImportDocument.InterfaceName(new FileInfo(input)));
+        var session = new ImportSession(failure) { ServerInterfaces = scenario == "opc-no-create" ? Array.Empty<object>() : interfaces };
         var adapter = new PlcB5Adapter(session);
-        var reply = scenario switch {
+        var reply = parts[0] switch {
             "alarm-class" or "alarm-class-missing" => adapter.ImportAlarmClasses("PLC", input),
             "alarm-text" or "alarm-text-missing" => adapter.ImportTextLists("PLC", input),
             _ => adapter.ImportOpcUaInterface("PLC", input)
         };
-        return new { reply, remaining = interfaces.Count, calls = session.Classes.Calls + session.Texts.Calls };
+        return new { reply, remaining = interfaces.Count, calls = session.Classes.Calls + session.Texts.Calls + interfaces.ImportCalls };
     }
 
     private static object Mapping(string scenario)

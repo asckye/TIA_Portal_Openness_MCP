@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security;
 
-// SDK-free shapes for the linked native callers. Only the safety login surface is exercised.
+// SDK-free shapes for the linked safety, compilation and external-source callers.
 namespace Siemens.Engineering
 {
     public interface IEngineeringObject { public object GetAttribute(string name); public void SetAttribute(string name, object value); }
@@ -13,31 +13,17 @@ namespace Siemens.Engineering
         public object? Parent { get; set; }
         public virtual T? GetService<T>() where T : class => throw new NotSupportedException();
         internal bool AttributeWritten;
-        internal bool RefuseAttribute;
-        public object GetAttribute(string name) => false;
+        internal Exception? AttributeFailure;
+        private readonly Dictionary<string, object> attributes = new Dictionary<string, object>();
+        public object GetAttribute(string name) => attributes.TryGetValue(name, out var value) ? value : false;
         public void SetAttribute(string name, object value)
         {
-            if (RefuseAttribute) throw new EngineeringSecurityException();
+            if (AttributeFailure != null) throw AttributeFailure;
+            attributes[name] = value;
             AttributeWritten = true;
-            throw new InvalidOperationException("Attribute reply lost.");
+            throw new EngineeringTargetInvocationException();
         }
     }
-    public class EngineeringException : Exception
-    {
-        public EngineeringException() { }
-        public EngineeringException(Exception cause) : base("Native diagnostic.", cause) { }
-    }
-    public class EngineeringTargetInvocationException : EngineeringException
-    {
-        public EngineeringTargetInvocationException() { }
-        public EngineeringTargetInvocationException(Exception cause) : base(cause) { }
-    }
-    public class EngineeringUserAbortException : EngineeringTargetInvocationException { }
-    public class EngineeringSecurityException : EngineeringException { }
-    public class MissingProductsException : EngineeringTargetInvocationException { }
-    public class LicenseNotFoundException : EngineeringTargetInvocationException { }
-    public class EngineeringObjectDisposedException : EngineeringException { }
-    public class NonRecoverableException : Exception { }
 }
 namespace Siemens.Engineering.HW
 {

@@ -67,8 +67,3 @@ namespace TiaOpenness.Shared
         internal static Stream OpenRead(string path, string parameter) => throw new NotSupportedException();
     }
 }
-
-namespace Siemens.Engineering.Multiuser
-{
-    public sealed class MultiuserException : EngineeringTargetInvocationException { }
-}
