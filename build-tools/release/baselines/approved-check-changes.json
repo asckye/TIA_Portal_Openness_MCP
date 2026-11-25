@@ -8561,6 +8561,23 @@
           "identifier": "TiaOpenness.Gui.Tests.WorkbenchMcpPrefillTests/Real_window_prefill_preserves_ownership_markers_and_clear_without_executing( int form ):f71cd7c9bbc299636b0d05bdcb07b4b72a61a1f17770c010822e8b19d4101c41:1"
         }
       ]
+    },
+    {
+      "task": "VMFIX-31-part2",
+      "maintainerDate": "2026-11-25",
+      "reason": "VMFIX-31-part2.md: maintainer approved the sparse changed-member assertion and the compiled declaration supplemental export assertion (\u540C\u610F 1 \u548C 2).",
+      "items": [
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/VerifiedExportStyleTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.Engine.Tests.VerifiedExportStyleTests/Apply( string candidate , string before , string after , string none , bool compile , bool extra = true , Exception ? exportFailure = null , string ? declaration = null , Exception ? readbackFailure = null ):78934b5a58ba23b3da2e028cabb8fdeef2bfc4900aa3904412b28e246ffed9eb:1"
+        },
+        {
+          "path": "tests/KeptCode/TiaMcp.KeptCode.Tests/VerifiedExportStyleTests.cs",
+          "kind": "test-removed",
+          "identifier": "TiaMcp.Engine.Tests.VerifiedExportStyleTests/Compiled_readback_matching_the_existing_declaration_stops_before_the_None_export( ):17c64417c037baaa04f34c9219ddcd5de6faaa5b7bbce5f795cd4b2a8a213718"
+        }
+      ]
     }
   ]
 }
