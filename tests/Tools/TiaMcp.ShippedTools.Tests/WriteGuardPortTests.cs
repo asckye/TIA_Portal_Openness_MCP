@@ -68,6 +68,7 @@ public sealed class WriteGuardPortTests
         arguments["json"] = """{"passphrase":"planted-embedded"}""";
         arguments["pairs"] = """passphrase=planted-a authorization=planted-b password="planted c" <Password>planted d</Password> end""";
         arguments["prefix"] = "password=" + new string('x', 4096 - "password=".Length) + " planted-tail";
+        arguments["continuedPrefix"] = "password=a,b" + new string('x', 4096) + "\nplanted-tail";
         arguments["url"] = "https://planted-user:" + new string('x', 4096) + "@host";
         arguments["longJson"] = new JsonObject { ["text"] = "planted-head", ["pwd"] = new string('x', 5000) }.ToJsonString();
         JsonNode deep = new JsonObject { ["name"] = "pwd", ["value"] = "planted-deep" };
@@ -82,11 +83,26 @@ public sealed class WriteGuardPortTests
         Assert.EndsWith("...", (string?)logged["longNote"]);
         Assert.Equal("""passphrase=<redacted> authorization=<redacted> password="<redacted>" <Password><redacted></Password> end""", (string?)logged["pairs"]);
         Assert.Equal("password=<redacted>...", (string?)logged["prefix"]);
+        Assert.Equal("password=<redacted>...", (string?)logged["continuedPrefix"]);
         Assert.Equal("https://<redacted>...", (string?)logged["url"]);
         Assert.Equal("<redacted>...", (string?)logged["longJson"]);
         JsonNode? tail = logged["deep"];
         while (tail is JsonArray layer) tail = Assert.Single(layer);
         Assert.Equal("<truncated>", (string?)tail);
+    }
+
+    [Theory]
+    [InlineData("password=ab,cd more\r\nnext", "password=<redacted>\r\nnext")]
+    [InlineData("Authorization: Digest x, response=\"more\"\nnext", "Authorization: <redacted>\nnext")]
+    [InlineData("Authorization: \"Digest x,more\" tail", "Authorization: \"<redacted>\" tail")]
+    [InlineData("note {\"password\":\"ab,\\\"cd\",\"mode\":\"test\"} tail", "note {\"password\":\"<redacted>\",\"mode\":\"test\"} tail")]
+    [InlineData("note {\"password\":[\"first\",\n\"second\"]}", "note {\"password\":<redacted>")]
+    public void Audit_masks_continued_values_and_json_fields_in_notes(string note, string expected)
+    {
+        using var fixture = new GuardFixture();
+        fixture.ExpectDeny(fixture.Call("DownloadPlc", new JsonObject { ["dryRun"] = false, ["note"] = note }), "ONLINE-WRITE");
+        var row = JsonNode.Parse(File.ReadAllText(fixture.AuditPath))!;
+        Assert.Equal(expected, (string?)row["arguments"]!["note"]);
     }
 
     [Theory]

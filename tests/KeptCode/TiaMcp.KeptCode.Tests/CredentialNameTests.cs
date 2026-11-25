@@ -49,6 +49,21 @@ public sealed class CredentialNameTests
     }
 
     [Theory]
+    [InlineData("password=ab,cd", "password=••••,cd")]
+    [InlineData("Authorization: Digest x", "Authorization: Digest x")]
+    [InlineData("note {\"password\":\"ab,cd\"}", "note {\"password\":\"ab,cd\"}")]
+    public void Audit_note_masking_preserves_approval_digest_and_display(string note, string approved)
+    {
+        var arguments = new JsonObject { ["note"] = note };
+        var card = PendingApproval.Create("engine", "21", "WriteFixture", arguments.ToJsonString(), "{}", 120);
+        var expected = new JsonObject { ["note"] = approved };
+        var review = new JsonObject { ["releaseKey"] = "21", ["tool"] = "WriteFixture", ["identity"] = new JsonObject(), ["arguments"] = expected.DeepClone() };
+        Assert.Equal(PendingApproval.Hash(PendingApproval.Canonical(review)), card.ArgumentDigest);
+        Assert.Equal(PendingApproval.Hash(PendingApproval.Canonical(expected)), card.InvocationArgumentsDigest);
+        Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(card.ParametersJson)));
+    }
+
+    [Theory]
     [InlineData("14sp1")]
     [InlineData("15.1")]
     [InlineData("16")]

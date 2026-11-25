@@ -106,7 +106,8 @@ public sealed class ResponseCredentialTests
     public void Download_preview_keeps_only_the_existing_mask_in_the_planned_password_fields()
     {
         var plan = new JsonObject();
-        foreach (var name in new[] { "moduleAccessPassword", "blockBindingPassword", "masterSecretPassword" })
+        foreach (var name in new[] { "moduleAccessPassword", "blockBindingPassword", "masterSecretPassword", "newPassword", "umacPassword",
+            "serverPassword", "password", "serviceClientSecret" })
             plan[name] = "••••";
         var data = new JsonObject { ["plannedChanges"] = plan, ["observed"] = plan.DeepClone() };
         var reply = new CallToolResult { StructuredContent = new JsonObject { ["data"] = data }, Content = [] };
@@ -116,6 +117,24 @@ public sealed class ResponseCredentialTests
         foreach (var name in plan.Select(p => p.Key).ToArray()) plan[name] = "planted";
         mapped = FoundationV4Result.ReconcileWorker(reply, null, "DownloadPlc").StructuredContent!["data"]!;
         Assert.Empty(mapped["plannedChanges"]!.AsObject());
+    }
+
+    [Fact]
+    public void Preview_marker_exemption_requires_an_exact_direct_string()
+    {
+        var plan = JsonNode.Parse("""{"newPassword":"••••x","serverPassword":["••••"],"nested":{"umacPassword":"••••"}}""");
+        var reply = new CallToolResult { StructuredContent = new JsonObject { ["data"] = new JsonObject { ["plannedChanges"] = plan } }, Content = [] };
+        var mapped = FoundationV4Result.ReconcileWorker(reply, null, "DownloadPlc").StructuredContent!["data"]!["plannedChanges"];
+        Assert.True(JsonNode.DeepEquals(JsonNode.Parse("""{"nested":{}}"""), mapped));
+    }
+
+    [Fact]
+    public void Normalized_plc_test_evidence_keeps_only_the_direct_preview_marker_for_password()
+    {
+        var result = JsonNode.Parse("""{"plannedChanges":{"password":"••••","newPassword":"actual"},"observed":{"password":{"text":"actual"}}}""");
+        var outcome = new JsonObject { ["data"] = new JsonObject { ["result"] = result } };
+        var details = PlcTestEvidence.Normalize(outcome, "passed")["details"]!["result"];
+        Assert.True(JsonNode.DeepEquals(JsonNode.Parse("""{"plannedChanges":{"password":"••••"},"observed":{}}"""), details));
     }
 
     [Fact]

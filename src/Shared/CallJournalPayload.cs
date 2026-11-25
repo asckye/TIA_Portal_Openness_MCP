@@ -347,7 +347,9 @@ namespace TiaOpenness.Shared
                 }
                 else
                 {
-                    value = PairValueStart(text, index);
+                    // A note can contain a JSON member after ordinary prose.
+                    bool quotedName = guard && start > 0 && text[start - 1] == '"' && index < text.Length && text[index] == '"';
+                    value = PairValueStart(text, quotedName ? index + 1 : index);
                     if (value < 0) continue;
                     if (guard && value < text.Length && text[value] is '"' or '\'')
                     {
@@ -359,10 +361,18 @@ namespace TiaOpenness.Shared
                             end++;
                         }
                     }
+                    else if (quotedName && value < text.Length && text[value] is '{' or '[')
+                    {
+                        // A container in an inline fragment can span lines. Hide the rest of this bounded note.
+                        end = text.Length;
+                    }
                     else
                     {
                         end = value;
                         while (end < text.Length && !char.IsWhiteSpace(text[end]) && "&;,\"'<>".IndexOf(text[end]) < 0) end++;
+                        if (guard && end < text.Length && (text[end] == ',' || name.Equals("Authorization", StringComparison.OrdinalIgnoreCase)
+                            && text.Substring(value, end - value).Equals("Digest", StringComparison.OrdinalIgnoreCase)))
+                            while (end < text.Length && text[end] is not ('\r' or '\n')) end++;
                     }
                 }
                 if (end == value) continue;

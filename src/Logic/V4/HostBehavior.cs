@@ -293,33 +293,21 @@ namespace TiaMcp.Logic.V4
                 && (reportedCode == -32602 || reportedOutcome == "rejected-before-operation") ? SafeDiagnostic(error.Message) : null;
         }
 
-        // Native protection metadata and the three masked download prompts present in recorded previews.
-        private static readonly Dictionary<string, Func<JsonNode?, bool>> ResponseCredentialExemptions = new(StringComparer.Ordinal)
-        {
-            ["masterSecret"] = IsMasterSecretState,
-            ["MasterSecretConfiguration"] = IsMasterSecretState,
-            ["expectedMasterSecret"] = node => node is JsonValue value && value.TryGetValue<string>(out var states)
-                && states.Split('|').All(MasterSecretState),
-            ["invalidPasswordCharacters"] = node => node is JsonArray array
-                && array.All(item => item is JsonValue value && value.TryGetValue<string>(out var text) && text.Length == 1),
-            ["moduleAccessPassword"] = IsMaskedPlanArgument,
-            ["blockBindingPassword"] = IsMaskedPlanArgument,
-            ["masterSecretPassword"] = IsMaskedPlanArgument,
-        };
-
         private static bool IsMaskedPlanArgument(JsonNode? node)
             => node is JsonValue value && value.TryGetValue<string>(out var text) && text == ApprovalJournalPayload.Hidden
-                && node.Parent is JsonObject plan && plan.Parent is JsonObject data && ReferenceEquals(data["plannedChanges"], plan);
-        private static bool IsMasterSecretState(JsonNode? node)
-            => node is JsonValue value && value.TryGetValue<string>(out var text) && MasterSecretState(text);
-        private static bool MasterSecretState(string state) => state is "None" or "WithoutPassword" or "WithPassword" or "WithPasswordAllDataProtection";
+                && value.Parent is JsonObject plan && plan.Parent is JsonObject data && ReferenceEquals(data["plannedChanges"], plan);
+
+        // Evidence historically omits the exact password field regardless of its type.
+        internal static bool IsEvidenceCredential(KeyValuePair<string, JsonNode?> member)
+            => member.Key.Equals("password", StringComparison.OrdinalIgnoreCase) ? !IsMaskedPlanArgument(member.Value) : IsResponseCredential(member);
 
         internal static bool IsResponseCredential(KeyValuePair<string, JsonNode?> member)
         {
-            if (ResponseCredentialExemptions.TryGetValue(member.Key, out var exempt) && exempt(member.Value)) return false;
             if (!ApprovalJournalPayload.IsResponseCredentialName(member.Key)) return false;
-            return member.Value is JsonValue value && value.TryGetValue<string>(out _)
-                || member.Value is JsonArray array && array.All(item => item is JsonValue scalar && scalar.TryGetValue<string>(out _));
+            if (member.Value is JsonValue value && value.TryGetValue<string>(out _)) return !IsMaskedPlanArgument(value);
+            if (member.Value is not JsonArray array || !array.All(item => item is JsonValue scalar && scalar.TryGetValue<string>(out _))) return false;
+            // The PLC provider returns its forbidden character alphabet as individual strings.
+            return member.Key != "invalidPasswordCharacters" || array.Any(item => item!.GetValue<string>().Length != 1);
         }
 
         internal static void RemoveResponseCredentials(JsonNode? node)
@@ -356,7 +344,7 @@ namespace TiaMcp.Logic.V4
                         && (pair.Value is JsonArray || pair.Value is JsonValue stackValue && stackValue.TryGetValue<string>(out _))
                         || pair.Key.Equals("stackTrace", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("nativeStackTrace", StringComparison.OrdinalIgnoreCase)
-                        || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase) || IsResponseCredential(pair))
+                        || IsEvidenceCredential(pair))
                         obj.Remove(pair.Key);
                     else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text)
                         && (pair.Key.Equals("nativeMessage", StringComparison.OrdinalIgnoreCase)
