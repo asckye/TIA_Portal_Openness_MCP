@@ -117,6 +117,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var raw = System.Text.Json.JsonSerializer.SerializeToNode(response, response.GetType(),
                 new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })!.AsObject();
+            HostBehavior.RemoveResponseCredentials(raw);
             var evidence = raw["meta"] as JsonObject ?? new JsonObject();
             var data = raw["data"] is JsonObject payload ? (JsonObject)payload.DeepClone() : new JsonObject();
             foreach (var pair in raw)
@@ -285,7 +286,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (pair.Value is JsonValue value && value.TryGetValue<string>(out var line))
                     {
-                        try { obj[pair.Key == "requestLine" ? "request" : "response"] = JsonNode.Parse(line); }
+                        try
+                        {
+                            var parsed = JsonNode.Parse(line);
+                            HostBehavior.RemoveResponseCredentials(parsed);
+                            obj[pair.Key == "requestLine" ? "request" : "response"] = parsed;
+                        }
                         catch (System.Text.Json.JsonException) /* swallow(privacy): invalid protocol text is not a structured result */ { }
                     }
                     obj.Remove(pair.Key);

@@ -74,6 +74,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             string? nativeMessage = HostBehavior.SafeDiagnostic((response as ResponseMessage)?.Message);
             var data = JsonSerializer.SerializeToNode(response, response.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.Web))!.AsObject();
+            HostBehavior.RemoveResponseCredentials(data);
             var evidence = data["meta"] as JsonObject ?? new JsonObject();
             data.Remove("meta");
             if (data["data"] is JsonObject report)

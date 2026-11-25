@@ -10,6 +10,7 @@
   This fixes false readback mismatches and misleading member names in difference reports. Significant whitespace and attributes still participate in comparison.
   Explicit empty end tags can change document fingerprints, declaration fingerprints and the derived preview token compared with rc.6.
   Preview tokens belong to the running worker session. Run a fresh preview after upgrading.
+- The write guard emits denials before masking audit arguments and bounds free-text scans. Tool responses remove password and key values while preserving HMI authorization settings and PLC protection metadata.
 
 ## [4.0.0-rc.6] - 2026-11-25
 

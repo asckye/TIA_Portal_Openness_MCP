@@ -57,6 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static CallToolResult Map(string tool, ResponseMessage response, bool readOnly, bool current)
         {
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
+            HostBehavior.RemoveResponseCredentials(data);
             var success = data.ContainsKey("operationSuccess") ? Flag(data, "operationSuccess") : Flag(data, "success");
             bool issued = Flag(data, "mayHaveChanged") == true || Flag(data, "mayHaveWrittenFiles") == true;
             bool unknown = Flag(data, "mappingVerified") == false || !readOnly && Flag(data, "writeOutcomeUnknown") == true;

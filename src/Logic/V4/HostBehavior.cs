@@ -293,6 +293,47 @@ namespace TiaMcp.Logic.V4
                 && (reportedCode == -32602 || reportedOutcome == "rejected-before-operation") ? SafeDiagnostic(error.Message) : null;
         }
 
+        // Native protection metadata and the three masked download prompts present in recorded previews.
+        private static readonly Dictionary<string, Func<JsonNode?, bool>> ResponseCredentialExemptions = new(StringComparer.Ordinal)
+        {
+            ["masterSecret"] = IsMasterSecretState,
+            ["MasterSecretConfiguration"] = IsMasterSecretState,
+            ["expectedMasterSecret"] = node => node is JsonValue value && value.TryGetValue<string>(out var states)
+                && states.Split('|').All(MasterSecretState),
+            ["invalidPasswordCharacters"] = node => node is JsonArray array
+                && array.All(item => item is JsonValue value && value.TryGetValue<string>(out var text) && text.Length == 1),
+            ["moduleAccessPassword"] = IsMaskedPlanArgument,
+            ["blockBindingPassword"] = IsMaskedPlanArgument,
+            ["masterSecretPassword"] = IsMaskedPlanArgument,
+        };
+
+        private static bool IsMaskedPlanArgument(JsonNode? node)
+            => node is JsonValue value && value.TryGetValue<string>(out var text) && text == ApprovalJournalPayload.Hidden
+                && node.Parent is JsonObject plan && plan.Parent is JsonObject data && ReferenceEquals(data["plannedChanges"], plan);
+        private static bool IsMasterSecretState(JsonNode? node)
+            => node is JsonValue value && value.TryGetValue<string>(out var text) && MasterSecretState(text);
+        private static bool MasterSecretState(string state) => state is "None" or "WithoutPassword" or "WithPassword" or "WithPasswordAllDataProtection";
+
+        internal static bool IsResponseCredential(KeyValuePair<string, JsonNode?> member)
+        {
+            if (ResponseCredentialExemptions.TryGetValue(member.Key, out var exempt) && exempt(member.Value)) return false;
+            if (!ApprovalJournalPayload.IsResponseCredentialName(member.Key)) return false;
+            return member.Value is JsonValue value && value.TryGetValue<string>(out _)
+                || member.Value is JsonArray array && array.All(item => item is JsonValue scalar && scalar.TryGetValue<string>(out _));
+        }
+
+        internal static void RemoveResponseCredentials(JsonNode? node)
+        {
+            if (node is JsonObject obj)
+                foreach (var pair in obj.ToArray())
+                {
+                    if (IsResponseCredential(pair)) obj.Remove(pair.Key);
+                    else RemoveResponseCredentials(pair.Value);
+                }
+            else if (node is JsonArray array)
+                foreach (var item in array) RemoveResponseCredentials(item);
+        }
+
         internal static void SanitizeEvidence(JsonNode? node, bool evidence = true, bool diagnostic = false)
         {
             if (node is JsonObject obj)
@@ -315,7 +356,7 @@ namespace TiaMcp.Logic.V4
                         && (pair.Value is JsonArray || pair.Value is JsonValue stackValue && stackValue.TryGetValue<string>(out _))
                         || pair.Key.Equals("stackTrace", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("nativeStackTrace", StringComparison.OrdinalIgnoreCase)
-                        || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase))
+                        || pair.Key.Equals("password", StringComparison.OrdinalIgnoreCase) || IsResponseCredential(pair))
                         obj.Remove(pair.Key);
                     else if (pair.Value is JsonValue value && value.TryGetValue<string>(out var text)
                         && (pair.Key.Equals("nativeMessage", StringComparison.OrdinalIgnoreCase)

@@ -10,4 +10,7 @@
     <AppHostRelativeDotNet>../dotnet</AppHostRelativeDotNet>
     <AppHostDotNetSearch>AppRelative;EnvironmentVariable;Global</AppHostDotNetSearch>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Shared/CallJournalPayload.cs" Link="Shared/CallJournalPayload.cs" />
+  </ItemGroup>
 </Project>

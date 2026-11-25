@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using TiaOpenness.Shared;
 
 namespace TiaMcp.WriteGuard;
 
@@ -16,8 +17,7 @@ internal static class Program
             .Where(item => item.Key is string && item.Value is string)
             .ToDictionary(item => (string)item.Key, item => (string?)item.Value, StringComparer.OrdinalIgnoreCase);
         string raw = Console.In.ReadToEnd();
-        string output = GuardHost.ProcessInput(raw, environment, AppContext.BaseDirectory, Console.Error);
-        if (output.Length > 0) Console.Out.Write(output);
+        GuardHost.Run(raw, environment, AppContext.BaseDirectory, Console.Out, Console.Error);
         return 0;
     }
 }
@@ -30,25 +30,48 @@ public static class GuardHost
     private static readonly HashSet<string> SafeOperations = new(StringComparer.OrdinalIgnoreCase) { "READ", "SESSION", "OFFLINE" };
     private static readonly HashSet<string> KnownOperations = new(StringComparer.OrdinalIgnoreCase)
         { "READ", "SESSION", "OFFLINE", "WRITE", "FILE", "EXECUTE", "ONLINE", "ONLINE-WRITE" };
-    private static readonly HashSet<string> SecretNames = new(StringComparer.OrdinalIgnoreCase)
-        { "password", "secret", "token", "credential" };
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
     public static string ProcessInput(string raw, IReadOnlyDictionary<string, string?> environment, string baseDirectory, TextWriter? error = null)
     {
+        using var output = new StringWriter(CultureInfo.InvariantCulture);
+        Run(raw, environment, baseDirectory, output, error);
+        return output.ToString();
+    }
+
+    public static void Run(string raw, IReadOnlyDictionary<string, string?> environment, string baseDirectory, TextWriter output, TextWriter? error = null)
+    {
+        var audit = new List<AuditEntry>();
+        string decision = Classify(raw, environment, baseDirectory, error, audit, out var payload);
+        if (decision.Length > 0)
+        {
+            output.Write(decision);
+            output.Flush();
+        }
+        if (audit.Count == 0) return;
+        string? auditPath = GetEnvironment(environment, "TIA_MCP_AUDIT_LOG");
+        string? localAppData = GetEnvironment(environment, "LOCALAPPDATA");
+        foreach (var entry in audit) Audit(entry, payload, auditPath, localAppData);
+    }
+
+    private static string Classify(string raw, IReadOnlyDictionary<string, string?> environment, string baseDirectory, TextWriter? error,
+        List<AuditEntry> audit, out JsonObject? payload)
+    {
+        payload = null;
         if (IsMatch(GetEnvironment(environment, "TIA_MCP_WRITE_GUARD"), "^(0|off|false)$")) return "";
         if (string.IsNullOrWhiteSpace(raw)) return "";
 
         string name = "";
-        JsonNode? payload = null;
+        JsonNode? input = null;
         try
         {
-            payload = JsonNode.Parse(raw);
-            if (payload is not JsonObject payloadObject) return "";
-            string toolName = NodeString(GetProperty(payloadObject, "tool_name"));
+            payload = JsonNode.Parse(raw) as JsonObject;
+            if (payload == null) return "";
+            string toolName = NodeString(GetProperty(payload, "tool_name"));
             Match hookName = Regex.Match(toolName, ToolNames.HookMatcher, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             if (!hookName.Success) return "";
             name = hookName.Groups[1].Value;
+            input = GetProperty(payload, "tool_input");
 
             string root = GetEnvironment(environment, "CLAUDE_PLUGIN_ROOT") ?? "";
             if (string.IsNullOrWhiteSpace(root)) root = Path.GetFullPath(Path.Combine(baseDirectory, "..", ".."));
@@ -63,9 +86,7 @@ public static class GuardHost
             foreach (string extra in (GetEnvironment(environment, "TIA_MCP_GUARD_DENY_OPERATIONS") ?? "").Split(','))
                 if (!string.IsNullOrWhiteSpace(extra)) deny.Add(extra.Trim());
             bool allowed = IsMatch(GetEnvironment(environment, "TIA_MCP_ALLOW_ONLINE_WRITE"), "^(1|true|yes)$");
-            JsonNode? input = GetProperty(payloadObject, "tool_input");
-            var reasons = Inspect(name, input, false, false, 0, entries, deny, allowed, payloadObject,
-                GetEnvironment(environment, "TIA_MCP_AUDIT_LOG"), GetEnvironment(environment, "LOCALAPPDATA"));
+            var reasons = Inspect(name, input, false, false, 0, entries, deny, allowed, audit);
             return reasons.Count == 0 ? "" : Deny(string.Join(" ", reasons));
         }
         catch (Exception ex)
@@ -73,8 +94,7 @@ public static class GuardHost
             if (IsTruthy(GetEnvironment(environment, "TIA_MCP_GUARD_DEBUG")))
                 error?.WriteLine("tia-write-guard: " + ex.Message);
             if (name.Length == 0) return "";
-            Audit(name, GetProperty(payload as JsonObject, "tool_input"), "UNKNOWN", "", false,
-                payload as JsonObject, GetEnvironment(environment, "TIA_MCP_AUDIT_LOG"), GetEnvironment(environment, "LOCALAPPDATA"));
+            audit.Add(new AuditEntry(name, input, "UNKNOWN", "", false));
             return Deny($"TIA write guard: '{name}' cannot be classified; the tool list is out of date or unreadable. Regenerate manifest/tools-list.json (or set TIA_MCP_WRITE_GUARD=0 to disable the guard).");
         }
     }
@@ -100,12 +120,11 @@ public static class GuardHost
     }
 
     private static List<string> Inspect(string target, JsonNode? arguments, bool preview, bool apply, int depth,
-        IReadOnlyDictionary<string, ToolEntry> entries, HashSet<string> deny, bool allowed, JsonObject payload,
-        string? auditPath, string? localAppData)
+        IReadOnlyDictionary<string, ToolEntry> entries, HashSet<string> deny, bool allowed, List<AuditEntry> audit)
     {
         if (!entries.TryGetValue(target, out var entry) || !KnownOperations.Contains(entry.Operation))
         {
-            Audit(target, arguments, "UNKNOWN", "", preview, payload, auditPath, localAppData);
+            audit.Add(new AuditEntry(target, arguments, "UNKNOWN", "", preview));
             return [string.Format(CultureInfo.InvariantCulture, UnknownMessage, target)];
         }
         if (depth >= 20) return [$"TIA write guard: '{target}' exceeds the dispatch nesting limit."];
@@ -117,7 +136,7 @@ public static class GuardHost
         bool isFalseBoolean = dryRunValue is JsonValue dryRunJson && dryRunJson.TryGetValue<bool>(out bool booleanValue) && !booleanValue;
         string dryRunText = NodeString(dryRunValue);
         bool isPreview = preview || (!apply && hasDryRun && !isFalseBoolean && !IsMatch(dryRunText, "^(false|0)$"));
-        Audit(target, argumentObject, entry.Operation, entry.Category, isPreview, payload, auditPath, localAppData);
+        if (!SafeOperations.Contains(entry.Operation)) audit.Add(new AuditEntry(target, argumentObject, entry.Operation, entry.Category, isPreview));
 
         var reasons = new List<string>();
         if (target.Equals("CallTool", StringComparison.OrdinalIgnoreCase) || target.Equals("PreviewToolCall", StringComparison.OrdinalIgnoreCase))
@@ -125,7 +144,7 @@ public static class GuardHost
             string child = NodeString(GetProperty(argumentObject, "name"));
             reasons.AddRange(Inspect(child, GetProperty(argumentObject, "arguments"),
                 preview || target.Equals("PreviewToolCall", StringComparison.OrdinalIgnoreCase), apply, depth + 1,
-                entries, deny, allowed, payload, auditPath, localAppData));
+                entries, deny, allowed, audit));
         }
         else if (target.Equals("RunReadOnlyToolBatch", StringComparison.OrdinalIgnoreCase) ||
                  target.Equals("PreviewToolBatch", StringComparison.OrdinalIgnoreCase) ||
@@ -139,7 +158,7 @@ public static class GuardHost
                 reasons.AddRange(Inspect(child, GetProperty(callObject, "arguments"),
                     preview || target.Equals("PreviewToolBatch", StringComparison.OrdinalIgnoreCase),
                     apply || target.Equals("ApplyToolBatch", StringComparison.OrdinalIgnoreCase), depth + 1,
-                    entries, deny, allowed, payload, auditPath, localAppData));
+                    entries, deny, allowed, audit));
             }
             if (target.Equals("ApplyToolBatch", StringComparison.OrdinalIgnoreCase) && !preview && !allowed)
                 reasons
@@ -160,10 +179,10 @@ public static class GuardHost
         return value == null ? Array.Empty<JsonNode?>() : new JsonNode?[] { value };
     }
 
-    private static void Audit(string target, JsonNode? arguments, string operation, string category, bool preview,
-        JsonObject? payload, string? auditPath, string? localAppData)
+    private sealed record AuditEntry(string Tool, JsonNode? Arguments, string Operation, string Category, bool Preview);
+
+    private static void Audit(AuditEntry entry, JsonObject? payload, string? auditPath, string? localAppData)
     {
-        if (SafeOperations.Contains(operation)) return;
         try
         {
             string path = string.IsNullOrWhiteSpace(auditPath)
@@ -176,18 +195,24 @@ public static class GuardHost
                 ["timestamp"] = DateTimeOffset.Now.ToString("o", CultureInfo.InvariantCulture),
                 ["session"] = NodeString(GetProperty(payload, "session_id")),
                 ["cwd"] = NodeString(GetProperty(payload, "cwd")),
-                ["tool"] = target,
-                ["category"] = category,
-                ["operation"] = operation,
-                ["preview"] = preview,
-                ["arguments"] = Redact(arguments, 0),
+                ["tool"] = entry.Tool,
+                ["category"] = entry.Category,
+                ["operation"] = entry.Operation,
+                ["preview"] = entry.Preview,
+                ["arguments"] = AuditArguments(entry.Arguments),
             };
             File.AppendAllText(path, line.ToJsonString(JsonOptions) + Environment.NewLine, new UTF8Encoding(false));
         }
         catch /* swallow(fail-open-guard): audit failures must not bypass the deny policy */ { }
     }
 
-    private static JsonNode? Redact(JsonNode? value, int depth)
+    private static JsonNode? AuditArguments(JsonNode? arguments)
+    {
+        try { return LimitArguments(CallJournalPayload.RedactGuardArguments(arguments), 0); }
+        catch /* swallow(privacy): retain the audit event even when its arguments cannot be masked */ { return JsonValue.Create("<redacted>"); }
+    }
+
+    private static JsonNode? LimitArguments(JsonNode? value, int depth)
     {
         if (value == null) return null;
         if (depth >= 20) return JsonValue.Create("<truncated>");
@@ -195,14 +220,13 @@ public static class GuardHost
         {
             var result = new JsonObject();
             foreach (var pair in obj)
-                result[pair.Key] = Regex.IsMatch(pair.Key, "password|secret|token|credential", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
-                    ? JsonValue.Create("<redacted>") : Redact(pair.Value, depth + 1);
+                result[pair.Key] = LimitArguments(pair.Value, depth + 1);
             return result;
         }
         if (value is JsonArray array)
         {
             var result = new JsonArray();
-            foreach (JsonNode? item in array) result.Add(Redact(item, depth + 1));
+            foreach (JsonNode? item in array) result.Add(LimitArguments(item, depth + 1));
             return result;
         }
         string text = NodeString(value);

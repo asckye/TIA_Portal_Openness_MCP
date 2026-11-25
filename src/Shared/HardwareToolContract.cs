@@ -151,6 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var body = JsonNode.Parse(JsonSerializer.Serialize(response, response.GetType(),
                 new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }))!.AsObject();
+            HostBehavior.RemoveResponseCredentials(body);
             var evidence = body["meta"] as JsonObject ?? new JsonObject();
             body.Remove("meta");
             if (tool == "ImportDeviceAml" && Bool(evidence, "operationSuccess") == false) HostBehavior.SanitizeAmlDiagnostics(evidence);

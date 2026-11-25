@@ -78,6 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             string? nativeMessage = HostBehavior.SafeDiagnostic(response.Message);
             var evidence = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
+            HostBehavior.RemoveResponseCredentials(evidence);
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success");
             if (Flag(evidence, "success") == false || Flag(evidence, "result") == false) success = false;
             bool issued = Flag(evidence, "mayHaveChanged") == true || Flag(evidence, "mayHaveWrittenFiles") == true;

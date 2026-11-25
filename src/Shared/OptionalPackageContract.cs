@@ -72,6 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static CallToolResult MapOutcome(string tool, ResponseMessage response, bool writes, int? offset, int? limit, bool outcomeLost)
         {
             var data = response.Meta?.DeepClone().AsObject() ?? new JsonObject();
+            HostBehavior.RemoveResponseCredentials(data);
             bool issued = Issued(data);
             bool reset = writes && Flag(data, "writeOutcomeUnknown") == true;
             bool? success = Flag(data, "operationSuccess") ?? Flag(data, "success");

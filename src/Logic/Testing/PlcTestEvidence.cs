@@ -53,7 +53,8 @@ namespace TiaMcp.Logic.Testing
             {
                 var result = new JsonObject();
                 foreach (var pair in obj.Where(p => p.Key.IndexOf("stack", StringComparison.OrdinalIgnoreCase) < 0
-                    && !p.Key.Equals("password", StringComparison.OrdinalIgnoreCase))) result[Scrub(pair.Key)] = Clean(pair.Value);
+                    && !p.Key.Equals("password", StringComparison.OrdinalIgnoreCase) && !HostBehavior.IsResponseCredential(p)))
+                    result[Scrub(pair.Key)] = Clean(pair.Value);
                 return result;
             }
             if (node is JsonArray array) return new JsonArray(array.Select(Clean).ToArray());

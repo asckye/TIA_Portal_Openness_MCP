@@ -48,6 +48,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             string? nativeMessage = HostBehavior.SafeDiagnostic(Redact(response.Message, secrets));
             var data = response.Meta == null ? new JsonObject() : (JsonObject)response.Meta.DeepClone();
+            HostBehavior.RemoveResponseCredentials(data);
             if (data["nativeMessage"] is JsonValue diagnostic && diagnostic.TryGetValue<string>(out var raw))
                 data["nativeMessage"] = Diagnostic(raw, secrets);
             bool? success = data.ContainsKey("operationSuccess") ? Flag(data, "operationSuccess") : Flag(data, "success");

@@ -10,6 +10,85 @@ namespace TiaMcp.ShippedTools.Tests;
 
 public sealed class WriteGuardPortTests
 {
+    [Fact]
+    public async Task Half_megabyte_of_free_text_finishes_well_within_the_hook_timeout()
+    {
+        using var fixture = new GuardFixture();
+        const string header = "-----BEGIN PRIVATE KEY-----\n";
+        string note = string.Concat(Enumerable.Repeat(header, 500 * 1024 / header.Length + 1));
+        var input = new JsonObject { ["dryRun"] = false, ["note"] = note };
+        var watch = Stopwatch.StartNew();
+        string decision = await Task.Run(() => fixture.Call("DownloadPlc", input)).WaitAsync(TimeSpan.FromSeconds(5));
+        fixture.ExpectDeny(decision, "ONLINE-WRITE");
+        var row = JsonNode.Parse(File.ReadAllText(fixture.AuditPath))!;
+        Assert.Equal("<redacted>...", (string?)row["arguments"]!["note"]);
+        Console.WriteLine("WRITE_GUARD_500KB_MS=" + watch.ElapsedMilliseconds);
+    }
+
+    [Fact]
+    public void Denial_is_flushed_before_audit_and_masking_failure_still_records_the_operation()
+    {
+        using var fixture = new GuardFixture();
+        // Duplicate nested properties parse lazily. Classification reads dryRun, masking enumerates the nested object.
+        const string raw = """
+            {"tool_name":"mcp__tia-portal__CallTool","tool_input":{"name":"DownloadPlc",
+             "arguments":{"dryRun":false,"note":{"duplicate":"planted-one","duplicate":"planted-two"}}}}
+            """;
+        using var output = new DecisionWriter(() => Assert.False(File.Exists(fixture.AuditPath)));
+        GuardHost.Run(raw, fixture.Environment, fixture.RepositoryRoot, output);
+        Assert.True(output.Flushed);
+        fixture.ExpectDeny(output.ToString(), "DownloadPlc");
+        string audit = File.ReadAllText(fixture.AuditPath);
+        Assert.DoesNotContain("planted", audit);
+        var row = Assert.Single(File.ReadAllLines(fixture.AuditPath).Select(line => JsonNode.Parse(line)!),
+            line => (string?)line["tool"] == "DownloadPlc");
+        Assert.Equal("ONLINE-WRITE", (string?)row["operation"]);
+        Assert.False((bool)row["preview"]!);
+        Assert.Equal("<redacted>", (string?)row["arguments"]);
+    }
+
+    private sealed class DecisionWriter(Action onFlush) : StringWriter
+    {
+        internal bool Flushed { get; private set; }
+        public override void Flush() { onFlush(); Flushed = true; base.Flush(); }
+    }
+
+    [Fact]
+    public void Audit_masks_nested_credentials_and_free_text_before_truncation()
+    {
+        using var fixture = new GuardFixture();
+        var arguments = JsonNode.Parse("""
+            {"dryRun":false,"nested":[{"apiKey":"planted-key","authorization":["planted-auth"],
+              "access-key":{"nested":"planted-object"},"rows":[{"name":"passphrase","value":["planted-pair"]},
+              {"KEY":"pwd","VALUE":"planted-pwd"}],"notes":["Bearer planted-bearer","password=planted-assignment"],
+              "previewToken":"planted-token"}],"entryKey":"visible-entry","visible":"kept"}
+            """)!.AsObject();
+        arguments["longNote"] = "password=planted-long " + new string('x', 5000);
+        arguments["boundary"] = new string('x', 185) + " Bearer planted-boundary";
+        arguments["json"] = """{"passphrase":"planted-embedded"}""";
+        arguments["pairs"] = """passphrase=planted-a authorization=planted-b password="planted c" <Password>planted d</Password> end""";
+        arguments["prefix"] = "password=" + new string('x', 4096 - "password=".Length) + " planted-tail";
+        arguments["url"] = "https://planted-user:" + new string('x', 4096) + "@host";
+        arguments["longJson"] = new JsonObject { ["text"] = "planted-head", ["pwd"] = new string('x', 5000) }.ToJsonString();
+        JsonNode deep = new JsonObject { ["name"] = "pwd", ["value"] = "planted-deep" };
+        for (int level = 1; level < 20; level++) deep = new JsonArray(deep);
+        arguments["deep"] = deep;
+        fixture.ExpectDeny(fixture.Call("UnknownV4Tool", arguments), "UnknownV4Tool");
+        string audit = File.ReadAllText(fixture.AuditPath);
+        Assert.DoesNotContain("planted-", audit);
+        var logged = JsonNode.Parse(audit)!["arguments"]!;
+        Assert.Equal("kept", (string?)logged["visible"]);
+        Assert.Equal("visible-entry", (string?)logged["entryKey"]);
+        Assert.EndsWith("...", (string?)logged["longNote"]);
+        Assert.Equal("""passphrase=<redacted> authorization=<redacted> password="<redacted>" <Password><redacted></Password> end""", (string?)logged["pairs"]);
+        Assert.Equal("password=<redacted>...", (string?)logged["prefix"]);
+        Assert.Equal("https://<redacted>...", (string?)logged["url"]);
+        Assert.Equal("<redacted>...", (string?)logged["longJson"]);
+        JsonNode? tail = logged["deep"];
+        while (tail is JsonArray layer) tail = Assert.Single(layer);
+        Assert.Equal("<truncated>", (string?)tail);
+    }
+
     [Theory]
     [InlineData("mcp__tia-portal__UnknownV4Tool", true)]
     [InlineData("mcp__plugin_tia-portal-openness-mcp_tia-portal__UnknownV4Tool", true)]

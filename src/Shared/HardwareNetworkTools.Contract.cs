@@ -109,6 +109,8 @@ namespace TiaMcpServer.ModelContextProtocol
             if (tool.StartsWith("ProbeHardwareHmiConnection", StringComparison.Ordinal) && evidence["target"] == null)
                 evidence.Remove("target");
             var data = response is ResponseJsonReport report && report.Data != null ? (JsonObject)report.Data.DeepClone() : new JsonObject();
+            HostBehavior.RemoveResponseCredentials(data);
+            HostBehavior.RemoveResponseCredentials(evidence);
             bool? success = evidence.ContainsKey("operationSuccess") ? Flag(evidence, "operationSuccess") : Flag(evidence, "success");
             if (response is ResponseJsonReport verdict) success = verdict.Ok ?? success;
             foreach (var pair in data) if (!evidence.ContainsKey(pair.Key)) evidence[pair.Key] = pair.Value?.DeepClone();

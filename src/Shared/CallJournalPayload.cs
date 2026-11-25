@@ -58,29 +58,42 @@ namespace TiaOpenness.Shared
                 .Replace("-", "").ToLowerInvariant())!;
         }
         private static JsonNode? TransformArguments(JsonNode? node, Func<JsonNode?, JsonNode?> secret)
+            => TransformArguments(node, secret, Sensitive, guard: false);
+
+        internal static JsonNode? RedactGuardArguments(JsonNode? node)
+            => TransformArguments(node, _ => JsonValue.Create("<redacted>"),
+                name => IsCredentialName(name) || name.IndexOf("token", StringComparison.OrdinalIgnoreCase) >= 0, guard: true);
+
+        private static string RedactGuardText(string prefix, bool truncated)
+            => LooksLikeJson(prefix) ? "<redacted>" : RedactFreeText(prefix, _ => "<redacted>", linearPairs: true, guard: true, truncated: truncated);
+
+        private static JsonNode? TransformArguments(JsonNode? node, Func<JsonNode?, JsonNode?> secret, Func<string, bool> sensitive,
+            bool guard)
         {
             if (node is JsonObject obj)
             {
-                bool named = NamedSecret(obj);
+                bool named = NamedSecret(obj, sensitive);
                 var result = new JsonObject();
                 foreach (var pair in obj)
                 {
                     bool namedValue = named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase);
-                    bool sensitive = Sensitive(pair.Key) || namedValue;
-                    result[pair.Key] = sensitive ? secret(pair.Value) : TransformArguments(pair.Value, secret);
+                    result[pair.Key] = sensitive(pair.Key) || namedValue ? secret(pair.Value) : TransformArguments(pair.Value, secret, sensitive, guard);
                 }
                 return result;
             }
-            if (node is JsonArray array) return new JsonArray(array.Select(item => TransformArguments(item, secret)).ToArray());
+            if (node is JsonArray array) return new JsonArray(array.Select(item => TransformArguments(item, secret, sensitive, guard)).ToArray());
             if (node is JsonValue value && value.TryGetValue<string>(out var text))
             {
+                if (guard && text.Length > ArgumentTextLimit)
+                    return JsonValue.Create(RedactGuardText(text.Substring(0, ArgumentTextLimit), truncated: true) + "...");
                 if (Embedded(text, out var embedded))
                 {
-                    var transformed = TransformArguments(embedded, secret);
+                    var transformed = TransformArguments(embedded, secret, sensitive, guard);
                     return JsonNode.DeepEquals(embedded, transformed) ? node.DeepClone() : JsonValue.Create(transformed?.ToJsonString());
                 }
-                return JsonValue.Create(Text(text, new HashSet<string>(StringComparer.Ordinal), 0, boundedText: true,
-                    replaceSecret: value => secret(JsonValue.Create(value))!.GetValue<string>()));
+                return JsonValue.Create(guard ? RedactGuardText(text, truncated: false)
+                    : Text(text, new HashSet<string>(StringComparer.Ordinal), 0, boundedText: true,
+                        replaceSecret: match => secret(JsonValue.Create(match))!.GetValue<string>()));
             }
             return node?.DeepClone();
         }
@@ -152,25 +165,44 @@ namespace TiaOpenness.Shared
             return text.Substring(0, count) + Truncated;
         }
 
-        internal static bool Sensitive(string key)
+        private static string NormalizeName(string key) => new string(key.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+
+        private static bool PasswordName(string name) => name.Contains("password") || name.Contains("passwd") || name == "pwd" || name == "sk";
+
+        private static bool BroadCredentialName(string name) => name.Contains("secret") || name.Contains("credential") || name.Contains("authorization");
+
+        private static bool ResponseCredentialName(string name)
+            => PasswordName(name) || name.Contains("passphrase") || name.EndsWith("apikey", StringComparison.Ordinal)
+                || name.EndsWith("accesskey", StringComparison.Ordinal) || name.EndsWith("privatekey", StringComparison.Ordinal)
+                || name.EndsWith("secretkey", StringComparison.Ordinal) || name.EndsWith("signingkey", StringComparison.Ordinal)
+                || name.EndsWith("clientsecret", StringComparison.Ordinal);
+
+        internal static bool IsResponseCredentialName(string key) => ResponseCredentialName(NormalizeName(key));
+
+        internal static bool IsCredentialName(string key)
         {
-            string name = new string(key.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
-            if (name == "releasekey") return false;
-            return name.Contains("password") || name.Contains("passwd") || name.Contains("secret") || name.Contains("token")
-                || name.EndsWith("key", StringComparison.Ordinal) || name.EndsWith("keys", StringComparison.Ordinal)
-                || name.Contains("credential") || name.Contains("authorization") || name == "pwd" || name == "sk";
+            string name = NormalizeName(key);
+            return ResponseCredentialName(name) || BroadCredentialName(name);
         }
 
-        private static bool NamedSecret(JsonObject obj) => obj.Any(p =>
+        internal static bool Sensitive(string key)
+        {
+            string name = NormalizeName(key);
+            if (name == "releasekey") return false;
+            return PasswordName(name) || BroadCredentialName(name) || name.Contains("token")
+                || name.EndsWith("key", StringComparison.Ordinal) || name.EndsWith("keys", StringComparison.Ordinal);
+        }
+
+        private static bool NamedSecret(JsonObject obj, Func<string, bool> sensitive) => obj.Any(p =>
             (p.Key.Equals("name", StringComparison.OrdinalIgnoreCase) || p.Key.Equals("key", StringComparison.OrdinalIgnoreCase))
-            && p.Value is JsonValue value && value.TryGetValue<string>(out var name) && Sensitive(name));
+            && p.Value is JsonValue value && value.TryGetValue<string>(out var name) && sensitive(name));
 
         private static void Collect(JsonNode? node, HashSet<string> secrets, int depth, bool boundedText)
         {
             if (depth > 16) return;
             if (node is JsonObject obj)
             {
-                bool named = NamedSecret(obj);
+                bool named = NamedSecret(obj, Sensitive);
                 foreach (var pair in obj)
                     if (Sensitive(pair.Key) || named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase))
                         Values(pair.Value, secrets, boundedText, named && pair.Key.Equals("value", StringComparison.OrdinalIgnoreCase));
@@ -214,7 +246,7 @@ namespace TiaOpenness.Shared
         {
             if (node is JsonObject obj)
             {
-                bool named = NamedSecret(obj);
+                bool named = NamedSecret(obj, Sensitive);
                 foreach (string key in obj.Select(p => p.Key).ToArray())
                 {
                     if (Sensitive(key) || named && key.Equals("value", StringComparison.OrdinalIgnoreCase))
@@ -231,12 +263,17 @@ namespace TiaOpenness.Shared
                     else Scrub(array[i], secrets, depth + 1, boundedText);
         }
 
+        private static bool LooksLikeJson(string text)
+        {
+            int start = 0;
+            while (start < text.Length && char.IsWhiteSpace(text[start])) start++;
+            return start < text.Length && text[start] is '{' or '[';
+        }
+
         private static bool Embedded(string text, out JsonNode? node)
         {
             node = null;
-            int start = 0;
-            while (start < text.Length && char.IsWhiteSpace(text[start])) start++;
-            if (start == text.Length || text[start] != '{' && text[start] != '[') return false;
+            if (!LooksLikeJson(text)) return false;
             try { node = JsonNode.Parse(text); return true; }
             catch (JsonException) /* swallow(privacy): malformed embedded JSON is hidden by the text boundary */ { return false; }
         }
@@ -244,31 +281,41 @@ namespace TiaOpenness.Shared
         private static string Text(string text, HashSet<string> secrets, int depth, bool boundedText, Func<string, string>? replaceSecret = null)
         {
             if (boundedText && text.Length > ArgumentTextLimit) return text;
-            if (text.TrimStart().StartsWith("{", StringComparison.Ordinal) || text.TrimStart().StartsWith("[", StringComparison.Ordinal))
+            if (LooksLikeJson(text))
             {
                 if (depth >= 16 || !Embedded(text, out var embedded)) return replaceSecret == null ? Hidden : replaceSecret(text);
                 Scrub(embedded, secrets, depth + 1, boundedText);
                 text = embedded?.ToJsonString(DisplayOptions) ?? "null";
             }
             foreach (var secret in secrets.OrderByDescending(s => s.Length)) text = text.Replace(secret, Hidden);
-            replaceSecret ??= _ => Hidden;
-            // Only the bounded approval path uses timeout-free scans. Journal rows keep
-            // their existing regexes, timeout and output. Pair names are scanned once:
-            // the journal regex retries a whole dotted name at every word boundary.
-            var timeout = boundedText ? Regex.InfiniteMatchTimeout : TimeSpan.FromSeconds(1);
-            var options = boundedText ? RegexOptions.CultureInvariant : RegexOptions.None;
+            return RedactFreeText(text, replaceSecret ?? (_ => Hidden), boundedText);
+        }
+
+        private static string RedactFreeText(string text, Func<string, string> replaceSecret, bool linearPairs,
+            bool guard = false, bool truncated = false)
+        {
+            // The guard and bounded approval path scan pair names once. Journal rows keep their existing regex and timeout.
+            var timeout = linearPairs && !guard ? Regex.InfiniteMatchTimeout : TimeSpan.FromSeconds(1);
+            var options = linearPairs ? RegexOptions.CultureInvariant : RegexOptions.None;
+#if NET7_0_OR_GREATER
+            if (guard) options |= RegexOptions.NonBacktracking;
+#endif
             text = Regex.Replace(text, @"(?i)\b(Bearer|Basic)\s+[^\s""'<>\\,;]+",
                 match => match.Groups[1].Value + " " + replaceSecret(match.Value.Substring(match.Groups[1].Length).TrimStart()), options, timeout);
-            text = boundedText ? RedactPairs(text, null, replaceSecret)
+            text = linearPairs ? RedactPairs(text, null, replaceSecret, guard)
                 : Regex
                     .Replace(text, @"(?i)\b([\w.-]*(?:password|passwd|pwd|secret|token|key|credential)[\w.-]*\s*[=:]\s*)[^\s&;,""'<>]+",
                         match => match.Groups[1].Value + replaceSecret(match.Value.Substring(match.Groups[1].Length)),
                         RegexOptions.None, timeout);
-            text = Regex.Replace(text, @"(?i)(https?://)[^/\s@]+@",
-                match => match.Groups[1].Value + replaceSecret(match.Value.Substring(match.Groups[1].Length).TrimEnd('@')) + "@", options, timeout);
+            // A prefix boundary may conceal the closing @ or PEM footer.
+            string userInfo = truncated ? @"(?i)(https?://)[^/\s@]+(?:@|\z)" : @"(?i)(https?://)[^/\s@]+@";
+            text = Regex.Replace(text, userInfo, match => match.Groups[1].Value
+                + replaceSecret(match.Value.Substring(match.Groups[1].Length).TrimEnd('@')) + (match.Value.EndsWith("@", StringComparison.Ordinal) ? "@" : ""),
+                options, timeout);
+            string privateKey = truncated ? @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?(?:-----END [^-]*PRIVATE KEY-----|\z)"
+                : @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----";
             return Regex
-                .Replace(text, @"-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----", match => replaceSecret(match.Value), options,
-                    timeout);
+                .Replace(text, privateKey, match => replaceSecret(match.Value), options, timeout);
         }
 
         internal static int PairValueStart(string text, int offset)
@@ -279,7 +326,7 @@ namespace TiaOpenness.Shared
             return offset;
         }
 
-        private static string RedactPairs(string text, HashSet<string>? secrets, Func<string, string>? replaceSecret = null)
+        private static string RedactPairs(string text, HashSet<string>? secrets, Func<string, string>? replaceSecret = null, bool guard = false)
         {
             StringBuilder? output = null;
             int copied = 0, index = 0;
@@ -289,11 +336,35 @@ namespace TiaOpenness.Shared
                 int start = index;
                 while (index < text.Length && NameCharacter(text[index])) index++;
                 string name = text.Substring(start, index - start);
-                if (!IsCredentialPairName(name)) continue;
-                int value = PairValueStart(text, index);
-                if (value < 0) continue;
-                int end = value;
-                while (end < text.Length && !char.IsWhiteSpace(text[end]) && "&;,\"'<>".IndexOf(text[end]) < 0) end++;
+                if (!IsCredentialPairName(name) && !(guard && IsCredentialName(name))) continue;
+                int value, end;
+                if (guard && start > 0 && text[start - 1] == '<' && index < text.Length && text[index] == '>'
+                    && name.Equals("Password", StringComparison.OrdinalIgnoreCase))
+                {
+                    value = index + 1;
+                    end = text.IndexOf("</Password>", value, StringComparison.OrdinalIgnoreCase);
+                    if (end < 0) end = text.Length;
+                }
+                else
+                {
+                    value = PairValueStart(text, index);
+                    if (value < 0) continue;
+                    if (guard && value < text.Length && text[value] is '"' or '\'')
+                    {
+                        char quote = text[value++];
+                        end = value;
+                        while (end < text.Length && text[end] != quote)
+                        {
+                            if (text[end] == '\\' && end + 1 < text.Length) end++;
+                            end++;
+                        }
+                    }
+                    else
+                    {
+                        end = value;
+                        while (end < text.Length && !char.IsWhiteSpace(text[end]) && "&;,\"'<>".IndexOf(text[end]) < 0) end++;
+                    }
+                }
                 if (end == value) continue;
                 string secret = text.Substring(value, end - value);
                 if (secrets != null)

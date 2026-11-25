@@ -78,6 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string? cursor = null, int pageSize = 0, int? offset = null)
         {
             var data = JsonNode.Parse(V4Json.Serialize(response))!.AsObject();
+            HostBehavior.RemoveResponseCredentials(data);
             var evidence = data["meta"] as JsonObject ?? new JsonObject();
             data.Remove("meta");
             var summary = data["message"]?.DeepClone();
