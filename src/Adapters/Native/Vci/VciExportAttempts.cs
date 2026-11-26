@@ -11,6 +11,7 @@ namespace TiaMcp.Adapters.Native.Vci;
 internal sealed class VciExportAttempts
 {
     internal int Issued { get; private set; }
+    internal int ExportsIssued { get; private set; }
     internal int Unconfirmed { get; private set; }
     internal bool MappingProbeFailed { get; private set; }
     internal int MappedAfterFailure { get; private set; }
@@ -87,6 +88,7 @@ internal sealed class VciExportAttempts
             {
                 issuedSeed = true;
                 Issued++;
+                ExportsIssued++;
                 seed();
                 FilesWritten++;
             }
@@ -117,7 +119,8 @@ internal sealed class VciExportAttempts
             return present;
         }
         bool mapped = Export(connect, Lookup, report,
-            () => VciSyncTarget.ConnectSnapshot(file.DirectoryName!, Path.GetFileNameWithoutExtension(file.Name)), stopOnUncertainWrite: true);
+            () => VciSyncTarget.ConnectSnapshot(file.DirectoryName!, Path.GetFileNameWithoutExtension(file.Name)),
+            stopOnUncertainWrite: true, reusingExistingFile: !issuedSeed);
         if (!mapped)
         {
             if (issuedSeed) RecordFailureFile(file, mappingState);
@@ -132,7 +135,8 @@ internal sealed class VciExportAttempts
         => Export(write, freshMapping, report, () => VciSyncTarget.ConnectSnapshot(root, stem), checkTarget: checkTarget);
 
     internal bool Export(Action write, Func<bool> freshMapping, Action<string> report,
-        Func<(string Name, long Length, DateTime Modified)[]?>? snapshot = null, bool stopOnUncertainWrite = false, Func<IDisposable?>? checkTarget = null)
+        Func<(string Name, long Length, DateTime Modified)[]?>? snapshot = null, bool stopOnUncertainWrite = false,
+        Func<IDisposable?>? checkTarget = null, bool reusingExistingFile = false)
     {
         var before = snapshot?.Invoke();
         IDisposable? lease;
@@ -146,6 +150,7 @@ internal sealed class VciExportAttempts
         }
         using var heldTarget = lease;
         Issued++;
+        if (!reusingExistingFile && lease == null) ExportsIssued++;
         Unconfirmed++;
         try { write(); }
         catch (Exception error)

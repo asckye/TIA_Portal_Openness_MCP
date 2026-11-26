@@ -68,6 +68,30 @@ public sealed class DeviceCreationEnvelopeTests
         }
     }
 
+    [Theory, InlineData("CreateDevice"), InlineData("CreateHardwareCatalogDevice")]
+    public async Task Catalog_alias_echoes_only_the_supplied_family(string tool)
+    {
+        using var fixture = new Fixture("18");
+        fixture.Worker.Rows = RecordedTp700Rows();
+        fixture.Worker.AllowCreate = true;
+        foreach (string? family in new string?[] { null, "S7-1500", "HMI" })
+        {
+            var args = new JsonObject { ["deviceName"] = "MCP_RC_HMI2" };
+            if (tool == "CreateDevice") { args["orderNumber"] = Landscape; args["version"] = ""; }
+            else args["keyword"] = Landscape;
+            if (family != null) args["family"] = family;
+            var preview = await fixture.Call(tool, args, true);
+            Confirm(args, preview);
+            var applied = await fixture.Call(tool, args, true);
+            foreach (var body in new[] { preview, applied })
+            {
+                Assert.True((bool?)body["ok"], body.ToJsonString());
+                Assert.Equal(family != null, body["data"]!.AsObject().ContainsKey("family"));
+                Assert.Equal(family, (string?)body["data"]!["family"]);
+            }
+        }
+    }
+
     public static IEnumerable<object[]> ExactIdentifierCases =>
         from release in new[] { "18", "19", "20", "21" }
         from tool in new[] { "CreateDevice", "CreateHardwareDevice", "CreateHardwareCatalogDevice" }
@@ -312,6 +336,7 @@ public sealed class DeviceCreationEnvelopeTests
 
     private sealed class CatalogWorker(string release) : IFoundationWorker
     {
+        internal bool AllowCreate;
         internal PlcHardwareCatalogCandidate[] Rows = [Row(Unified, "13.0.0.0")];
         internal JsonObject? AttributeEvidence;
         internal bool FailAttributeRead;
@@ -346,8 +371,14 @@ public sealed class DeviceCreationEnvelopeTests
                     PreferredMlfb = (string)args["preferredMlfb"]!, PreferredVersion = (string)args["preferredVersion"]!,
                     Name = (string)args["deviceName"]!, DryRun = (bool)args["dryRun"]!, Confirm = (bool?)args["confirm"] == true,
                     ExpectedProject = (string?)args["expectedProjectFile"] ?? "", ExpectedHash = (string?)args["expectedPlanHash"] ?? "" };
-                var result = PlcDeviceAddPolicy.Run(request, () => Rows, () => Array.Empty<PlcDeviceAddItem>(),
-                    () => { }, (_, _) => throw new InvalidOperationException("Unexpected native create."));
+                request.Family = (string?)args["family"] ?? "S7-1500";
+                var items = new List<PlcDeviceAddItem>();
+                var result = PlcDeviceAddPolicy.Run(request, () => Rows, () => items, () => { }, (_, name) => {
+                    if (!AllowCreate) throw new InvalidOperationException("Unexpected native create.");
+                    var item = new PlcDeviceAddItem { Name = name, Identity = "new", ParentIdentity = "root", ParentVerified = true };
+                    items.Add(item);
+                    return item;
+                });
                 return Task.FromResult(JsonSerializer.SerializeToNode(result));
             }
             catch (AdapterPreconditionException error)

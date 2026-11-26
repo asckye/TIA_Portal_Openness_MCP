@@ -176,6 +176,24 @@ public sealed class OfflineDocumentOutcomeTests
             .Where(e => e.Name.LocalName == "StartValue").Select(e => e.Value));
     }
 
+    [Theory, InlineData(true), InlineData(false)]
+    public async Task Patch_changes_reports_the_violated_array_constraint(bool emptyArray)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("18");
+        using var session = fixture.EnterSession();
+        var args = new { filePath = Path.Combine(fixture.Root, "Motor.xml"), expectedDocumentHash = new string('a', 64),
+            changes = emptyArray ? (object)Array.Empty<object>() : "invalid" };
+        var body = (await fixture.Call("PatchPlcBlockDocument", args)).StructuredContent!;
+        AssertRefused(body);
+        Assert.Equal("/changes", (string?)body["error"]!["details"]!["parameter"]);
+        if (emptyArray)
+        {
+            Assert.Contains("at least one change is required", (string?)body["error"]!["message"]);
+            Assert.Equal("non-empty array", (string?)body["error"]!["details"]!["expected"]);
+        }
+        else Assert.Equal("array", (string?)body["error"]!["details"]!["expected"]);
+    }
+
     private static void AssertRefused(JsonNode result)
     {
         Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);

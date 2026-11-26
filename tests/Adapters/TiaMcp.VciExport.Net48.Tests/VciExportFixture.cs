@@ -28,7 +28,7 @@ internal static class VciExportFixture
         var replies = new Dictionary<string, object>();
         foreach (var scenario in new[] { "equal", "unknown", "unequal", "collision", "exportRefused", "createRefused", "lookupRefused",
             "syncRefused", "nativeSuccess", "repair", "repairRefused", "reuse", "newStatusRefused", "seedDisposed", "seedAbort", "seedConnection",
-            "seedNonrecoverable", "sameName", "differentXml", "rc7-comment", "rc7-member", "rc7-after-preview",
+            "seedNonrecoverable", "sameName", "differentXml", "mixed-reuse", "rc7-comment", "rc7-member", "rc7-after-preview",
             "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent", "rc7-fallback-differs", "catch-prior"
 #if STUDIO_VCI_INITIAL
             , "multipleDisconnected", "manyDisconnected"
@@ -36,7 +36,7 @@ internal static class VciExportFixture
             , "studio-conflict", "studio-reuse"
 #endif
 #if STUDIO_VCI_MODERN
-            , "container-format-refusal", "leaf-format-refusal", "ungrouped-format-refusal"
+            , "container-format-refusal", "leaf-format-refusal", "ungrouped-format-refusal", "disconnected-status"
 #endif
         })
         {
@@ -156,6 +156,16 @@ internal static class VciExportFixture
             workspace.Mappings.InitialState = scenario is "unknown" or "newStatusRefused" ? CompareState.Unknown
                 : scenario is "unequal" or "syncRefused" ? CompareState.Unequal : CompareState.Equal;
             workspace.Mappings.RefreshesKnownState = refreshesKnownState;
+            if (scenario == "mixed-reuse")
+            {
+                File.WriteAllText(file, xml);
+                string otherXml = xml.Replace("MCP_RC_FC", "NewFC");
+                plc.BlockGroup.Blocks.Add(new PlcBlock { Name = "NewFC", Write = (target, _) => File.WriteAllText(target.FullName, otherXml) });
+#if !STUDIO_VCI_INITIAL
+                workspace.Mappings.InitialState = CompareState.Unknown;
+                workspace.Mappings.WriteOnSync = target => File.WriteAllText(target.FullName, otherXml);
+#endif
+            }
             if (scenario == "nativeSuccess")
             {
                 workspace.Mappings.InitialState = CompareState.Unknown;
@@ -165,6 +175,13 @@ internal static class VciExportFixture
             workspace.Mappings.RefuseLookupAfterCreate = scenario == "lookupRefused";
             workspace.Mappings.RefuseSync = scenario == "syncRefused";
 #if STUDIO_VCI_MODERN
+            if (scenario == "disconnected-status")
+            {
+                var disposed = workspace.ConnectObject(block, root, "Motor", "xml");
+                disposed.Status.ReadError = new ObjectDisposedException(nameof(MappedObject));
+                replies.Add(scenario, new { reply = adapter.GetVersionControlStatus() });
+                continue;
+            }
             if (scenario == "seedDisposed")
             {
                 var first = workspace.ExportObject(block, root, "Motor", "xml");

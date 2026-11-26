@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TiaMcp.Adapters.Contracts;
 
@@ -25,9 +26,20 @@ public sealed class VersionControlResult : IWorkerOperationReply
     public static string DisconnectedSummary(IReadOnlyCollection<string> names) => names.Count == 0 ? "" :
         " " + names.Count + " disconnected mapping(s) skipped: " + string.Join(", ", names) + ". " + Reconnect;
 
-    public static string NotVerifiedSummary(IReadOnlyCollection<string> names) => names.Count == 0 ? "" :
-        " Not verified: " + string.Join(", ", names) + ". Export the block, type or tag table separately and compare it with the workspace file. "
-        + "After a backup, remove the stale workspace file and synchronize again.";
+    public static string NotVerifiedSummary(IReadOnlyCollection<(string Name, bool Inconsistent, bool Exported)> objects)
+    {
+        string Group(IEnumerable<string> names, string prefix, string suffix)
+        {
+            var list = names.ToArray();
+            return list.Length == 0 ? "" : " " + prefix + string.Join(", ", list) + suffix;
+        }
+        return Group(objects.Where(o => o.Inconsistent).Select(o => o.Name), "Recompile the block(s) ", " and synchronize again.")
+            + Group(objects.Where(o => !o.Inconsistent && o.Exported).Select(o => o.Name), "Not verified: ",
+                ". Export the block, type or tag table separately and compare it with the workspace file. "
+                + "After a backup, remove the stale workspace file and synchronize again.")
+            + Group(objects.Where(o => !o.Inconsistent && !o.Exported).Select(o => o.Name), "Not verified: ",
+                ". Check the comparison diagnostic and retry the comparison export.");
+    }
 
     public string Message { get; set; } = "";
     public IEnumerable<string>? Items { get; set; } = System.Array.Empty<string>();

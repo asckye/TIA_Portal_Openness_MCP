@@ -18,6 +18,7 @@ internal sealed class VciStoredEqual
     internal string Outcome { get; private set; } = "verify-before-export";
     internal string Message { get; private set; }
     internal bool? FileChanged { get; private set; }
+    internal bool Inconsistent { get; private set; }
     internal bool Issued { get; private set; }
     internal bool Unconfirmed { get; private set; }
     internal bool Interrupted { get; private set; }
@@ -73,7 +74,8 @@ internal sealed class VciStoredEqual
                 if (Proof.Matches) Outcome = "verified-equal";
                 else if (Proof.Verification == "not-comparable" && Proof.Message != null && compared is global::Siemens.Engineering.SW.Blocks.PlcBlock block)
                 {
-                    Message = NativeVci.ComparisonDiagnostic(block, Proof.Message);
+                    Message = NativeVci.ComparisonDiagnostic(block, Proof.Message, out bool inconsistent);
+                    Inconsistent = inconsistent;
                 }
             }
             catch (Exception error) when (!NativeVci.Ordinary(error))
@@ -188,6 +190,7 @@ internal sealed class VciStoredEqual
                     Message = NativeFailureText.BoundedDiagnostic(error);
                     Interrupted = ComparisonInterrupted;
                 }
+                if (Proof.ExportSucceeded) Inconsistent = false;
                 string finalHash = Proof.CurrentHash();
                 if (Proof.Sha256 != written || finalHash != written)
                 {

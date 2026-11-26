@@ -180,11 +180,13 @@ namespace TiaMcp.Adapters.Native.Vci
                 var lines = new List<string>();
                 var entries = new HmiArray();
                 var mappingFiles = new MappingFiles();
+                var disconnected = new List<string>();
                 int total = 0, differing = 0, unknown = 0, unverifiedEqual = 0;
                 foreach (var mo in PortVci.Enumerate(Keep(PortVci.MappedObjects(ws))))
                 {
                     total++;
                     CompareState state;
+                    bool mappingDisconnected = false;
                     string? error = null;
                     string? refreshMessage = null;
                     // GetStatus() returns an IndividualObjectCompareResult; ToString() on it yields the type
@@ -194,15 +196,19 @@ namespace TiaMcp.Adapters.Native.Vci
                     {
                         state = CompareState.Unknown;
                         error = NativeFailureText.BoundedDiagnostic(ex);
-#if !STUDIO_VCI_MODERN
-                        if (NativeVci.DisposedStatus(ex)) error = NativeVci.DisconnectedMapping + ": " + error;
+#if STUDIO_VCI_MODERN
+                        mappingDisconnected = NativeRefusalProbe.DisposedTarget(mo, ex);
+#else
+                        mappingDisconnected = NativeVci.DisposedStatus(ex);
 #endif
+                        if (mappingDisconnected) error = NativeVci.DisconnectedMapping + ": " + error;
                     }
                     if (state == CompareState.Unknown) unknown++;
                     else if (state != CompareState.Equal) differing++;
                     else if (refreshMessage != null) unverifiedEqual++;
                     string name = SafeName(mo), path = SafeFile(mo);
                     string? format = SafeFormat(mo);
+                    if (mappingDisconnected) disconnected.Add(name);
                     mappingFiles.Add(name, path, format);
                     if (changedOnly && state == CompareState.Equal && refreshMessage == null) continue;
                     var status = error == null ? state.ToString() : "Unknown(" + error + ")";
@@ -226,7 +232,7 @@ namespace TiaMcp.Adapters.Native.Vci
                         : differing == 0
                             ? " Project and workspace are in sync — nothing to commit."
                             : " Call SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit.")
-                        + VersionControlResult.StoredEqualSummary(unverifiedEqual),
+                        + VersionControlResult.StoredEqualSummary(unverifiedEqual) + VersionControlResult.DisconnectedSummary(disconnected),
                     Items = lines,
                     // envelope: legacy-multiple-dynamic-fields
                     Meta = new HmiObject {
@@ -312,7 +318,7 @@ namespace TiaMcp.Adapters.Native.Vci
 #if STUDIO_VCI_INITIAL
             var plannedFiles = new HmiArray();
 #endif
-            var unprovenNames = new List<string>();
+            var unverified = new List<(string Name, bool Inconsistent, bool Exported)>();
             bool reportRows = false;
             var notAttempted = new List<string>();
             int failed = 0;
@@ -425,7 +431,7 @@ namespace TiaMcp.Adapters.Native.Vci
                     if (proof.Outcome == "not-verified")
                     {
                         failed++;
-                        unprovenNames.Add(name);
+                        unverified.Add((name, proof.Inconsistent, proof.Proof.ExportSucceeded));
                         failures.Add(row);
                     }
                 }
@@ -577,12 +583,19 @@ namespace TiaMcp.Adapters.Native.Vci
                     wsName, mode, attempts.Synchronized, failed, selection.SkippedEqual);
                 if (failed == 0 && selection.Complete && !stopped) summary += " The text files are updated — `git add -A && git commit` from that folder.";
                 summary = selection.Summary(summary) + " Folder: " + wsRoot;
-                summary += VersionControlResult.NotVerifiedSummary(unprovenNames);
                 var resultMeta = Evidence();
+                summary += RecoveryAdvice(resultMeta);
                 resultMeta["failures"] = failures;
                 return new VersionControlResult { Message = summary, Items = lines, Meta = resultMeta };
             }
             catch (Exception ex) { return Interrupted(ex); }
+
+            string RecoveryAdvice(HmiObject meta)
+            {
+                string advice = VersionControlResult.NotVerifiedSummary(unverified);
+                if (advice.Length > 0) meta["notVerifiedAdvice"] = advice;
+                return advice;
+            }
 
             void AddNotAttempted(HmiObject meta)
             {
@@ -603,8 +616,8 @@ namespace TiaMcp.Adapters.Native.Vci
             {
                 var meta = attempts.Interrupted(ex);
                 AddNotAttempted(meta);
-                if (unprovenNames.Count > 0 && meta.TryGetValue("failed", out var previous) && previous is int count)
-                    meta["failed"] = count + unprovenNames.Count;
+                if (unverified.Count > 0 && meta.TryGetValue("failed", out var previous) && previous is int count)
+                    meta["failed"] = count + unverified.Count;
                 selection.AddProbeEvidence(meta);
                 if (reportRows)
                 {
@@ -614,7 +627,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 return new VersionControlResult
                 {
                     Message = selection.Summary("SynchronizeVersionControlWorkspace failed: " + ex.Message)
-                        + VersionControlResult.NotVerifiedSummary(unprovenNames),
+                        + RecoveryAdvice(meta),
                     Items = lines,
                     Meta = meta,
                 };

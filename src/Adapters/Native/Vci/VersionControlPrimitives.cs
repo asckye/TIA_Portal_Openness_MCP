@@ -76,11 +76,16 @@ namespace TiaOpenness.Openness
         internal static Action<FileInfo, bool> Exporter(IEngineeringObject target) =>
             (file, defaults) => ExportObject(target, file, defaults ? ExportOptions.WithDefaults : ExportOptions.None);
 
-        internal static string ComparisonDiagnostic(IEngineeringObject target, string message)
+        internal static string ComparisonDiagnostic(IEngineeringObject target, string message, out bool inconsistent)
         {
+            inconsistent = false;
             if (target is PlcBlock block)
             {
-                try { if (!block.IsConsistent) return message + " Recompile the block, then retry the comparison export."; }
+                try
+                {
+                    inconsistent = !block.IsConsistent;
+                    if (inconsistent) return message + " Recompile the block, then retry the comparison export.";
+                }
                 catch (Exception error) when (Ordinary(error))
                 { /* swallow(probe-optional): keep the comparison failure when consistency cannot be read. */ }
             }
@@ -92,7 +97,7 @@ namespace TiaOpenness.Openness
             var proof = new VciContentProof(root, file);
             proof.Compare(() => Exporter(target), Ordinary);
             if (!proof.Matches && proof.ExportFailure != null)
-                throw new IOException(VciExportPolicy.ExistingFile(file.Name) + " " + ComparisonDiagnostic(target, proof.ExportFailure));
+                throw new IOException(VciExportPolicy.ExistingFile(file.Name) + " " + ComparisonDiagnostic(target, proof.ExportFailure, out _));
             difference = proof.Verification == "no-match" ? " The workspace XML content differs from the project export." : "";
             return proof.Matches && proof.Sha256 == proof.CurrentHash();
         }
@@ -198,9 +203,8 @@ namespace TiaOpenness.Openness
 #endif
         }
 
-#if !STUDIO_VCI_MODERN
         internal const string DisconnectedMapping = "mapping no longer connected to an existing object";
-
+#if !STUDIO_VCI_MODERN
         internal static bool DisposedStatus(System.Exception error)
         {
             if (error.InnerException != null && TiaMcp.Adapters.Contracts.NativeRefusalProbe.UncertainConnection(error.InnerException)) return false;

@@ -217,6 +217,7 @@ namespace TiaOpenness.Openness
                 return true;
             }
             using var heldTarget = existingFile;
+            bool reuse = heldTarget != null;
 #endif
             if (dryRun)
             {
@@ -252,13 +253,13 @@ namespace TiaOpenness.Openness
                 VersionControlPrimitives.SynchronizeNewMapping(mapping);
                 string directory = string.Empty;
 #else
-                var directory = WriteMapping(ref workspace, node, format, heldTarget != null);
+                var directory = WriteMapping(ref workspace, node, format, reuse);
 #endif
                 result.Mapped++;
                 result.Items.Add(new MappingItem
                 {
                     Target = node.Label,
-                    Outcome = "mapped",
+                    Outcome = reuse ? "mapped | reused existing file" : "mapped",
                     FileFormat = format,
                     Directory = directory,
                 });

@@ -493,6 +493,8 @@ namespace TiaMcp.Logic.V4.Inputs
             if (value.ValueKind == JsonValueKind.Array)
             {
                 var entries = value.EnumerateArray().ToArray();
+                if (pointer == "/changes" && entries.Length == 0 && schema.TryGetProperty("minItems", out var minimum) && minimum.GetInt32() == 1)
+                    throw new InputRejectionException(diagnostic: "Invalid changes: at least one change is required.").At(pointer, "non-empty array");
                 Size(schema, entries.Length, "minItems", "maxItems");
                 if (schema.TryGetProperty("items", out var items))
                 {

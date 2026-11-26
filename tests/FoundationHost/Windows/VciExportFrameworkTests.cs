@@ -485,6 +485,62 @@ public sealed class VciExportFrameworkTests
         Assert.Contains("Next | not-attempted", Strings(stopped["Items"]));
     }
 
+    [Theory, InlineData("16", 2), InlineData("17", 2), InlineData("18", 1), InlineData("19", 1), InlineData("20", 1), InlineData("21", 1)]
+    public async Task Connect_distinguishes_a_reuse_from_an_export(string release, int expectedExports)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release);
+        var body = Tools(cases["mixed-reuse"]!).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.True((bool?)body["ok"], body.ToJsonString());
+        var evidence = body["data"]!["evidence"]!;
+        Assert.Equal(2, (int?)evidence["mapped"]);
+        Assert.Equal(expectedExports, (int?)evidence["exportsIssued"]);
+        Assert.Equal(1, (int?)evidence["reused"]);
+        Assert.Contains("MCP_RC_FC | mapped | reused existing file", Assert.Single(
+            Strings(body["data"]!["items"]).Where(line => line.Contains("reused existing file"))));
+
+        var reuse = Tools(cases["reuse"]!).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.True((bool?)reuse["ok"], reuse.ToJsonString());
+        var reuseEvidence = reuse["data"]!["evidence"]!;
+        Assert.Equal(0, (int?)reuseEvidence["exportsIssued"]);
+        Assert.Equal(1, (int?)reuseEvidence["reused"]);
+    }
+
+    [Theory, InlineData("18"), InlineData("20")]
+    public async Task Status_summary_names_disconnected_mappings(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release);
+        var scenario = release == "20" ? cases["disconnected-status"]!
+            : new JsonObject { ["reply"] = cases["proof"]!["disconnected"]!["status"]!.DeepClone() };
+        var status = Tools(scenario).GetVersionControlStatusV4().StructuredContent!;
+        Assert.Contains("1 disconnected mapping(s) skipped: Motor.", (string?)status["data"]!["summary"]);
+    }
+
+    [Fact]
+    public async Task Sync_summary_names_the_blocks_for_each_recovery_action()
+    {
+        using var selected = Host.HardwareContract.UseRelease("19");
+        var proofs = (await ExportReplies("19"))["proof"]!;
+        var inconsistent = proofs["rc7-inconsistent"]!;
+        var reply = inconsistent["reply"]!;
+        var alone = Tools(inconsistent).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
+        foreach (var summary in new[] { (string)reply["Message"]!, (string)alone["data"]!["summary"]! })
+        {
+            Assert.Contains("Recompile the block(s) Motor and synchronize again.", summary);
+            Assert.DoesNotContain("remove the stale workspace file", summary);
+        }
+        var mixed = new JsonObject { ["reply"] = inconsistent["mixedRecovery"]!.DeepClone() };
+        var body = Tools(mixed).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
+        var advice = (string)body["data"]!["summary"]!;
+        Assert.Contains("Recompile the block(s) Motor and synchronize again.", advice);
+        Assert.Contains("Not verified: Other. Export the block", advice);
+        Assert.Contains("remove the stale workspace file", advice);
+        Assert.DoesNotContain("notVerifiedAdvice", body.ToJsonString());
+        var unavailable = Tools(proofs["export-refused"]!).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.DoesNotContain("remove the stale workspace file", (string?)unavailable["data"]!["summary"]);
+    }
+
     [Fact]
     public async Task V20_disposed_synchronize_reacquires_and_attempts_the_second_target()
     {
@@ -722,6 +778,7 @@ public sealed class VciExportFrameworkTests
         Assert.Contains(Strings(cases["rc7-member"]!["preview"]!["Items"]), line => line.Contains("would create a duplicate mapping"));
         var stale = Tools(cases["rc7-member"]!).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
         Assert.Equal("PARTIAL_FAILURE", (string?)stale["error"]!["code"]);
+        Assert.StartsWith("Some objects were mapped to the workspace.", (string?)stale["error"]!["message"]);
         string remedy = (string)stale["error"]!["message"]!;
         Assert.Contains("MCP_RC_PLC_MCP_RC_DB5.xml", remedy);
         Assert.Contains("disconnected mapping of the same object", remedy);
@@ -828,6 +885,7 @@ public sealed class VciExportFrameworkTests
             Assert.Equal(reuse ? 0 : 1, (int?)row["preview"]!["Failed"]);
             Assert.Equal(reuse ? 0 : 1, (int?)row["apply"]!["Failed"]);
             Assert.Equal(reuse ? 1 : 0, (int?)row["apply"]!["Mapped"]);
+            if (reuse) Assert.Contains(row["apply"]!["Items"]!.AsArray(), item => (string?)item!["Outcome"] == "mapped | reused existing file");
             var writes = Strings(row["Calls"]).Where(call => !call.StartsWith("Export:", StringComparison.Ordinal));
             string stem = (string)row["stem"]!;
             string connect = release is "18" or "19" ? "Create:" + stem + ".xml" : "Workspace.ConnectObject:" + stem + ":xml";

@@ -191,7 +191,7 @@ namespace TiaMcp.Adapters.Native.Vci
             bool walkTrace = false)
         {
             var attempts = new VciExportAttempts();
-            int mapped = 0, failed = 0;
+            int mapped = 0, reused = 0, failed = 0;
             bool MayHaveChanged() => (!dryRun && mapped > 0) || attempts.FilesWritten > 0 || attempts.MappedAfterFailure > 0 || attempts.Unconfirmed > 0;
             var lines = new List<string>();
 #if STUDIO_VCI_INITIAL
@@ -299,6 +299,7 @@ namespace TiaMcp.Adapters.Native.Vci
 
                         Note(node);
                         string targetStem = Path.Combine(wsRootPath, flatName);
+                        bool reuse = false;
 #if STUDIO_VCI_INITIAL
                         FileInfo file;
                         bool collision;
@@ -329,7 +330,6 @@ namespace TiaMcp.Adapters.Native.Vci
                             continue;
                         }
 #else
-                        bool reuse = false;
                         FileStream? CheckTarget()
                         {
                             var lease = NativeVci.OpenConnectTarget(wsRootPath, flatName, fmt, node.Obj);
@@ -367,7 +367,11 @@ namespace TiaMcp.Adapters.Native.Vci
 #if STUDIO_VCI_INITIAL
                             bool MatchesExisting()
                             {
-                                if (NativeVci.MatchesExisting(wsRootPath, file, node.Obj, out string difference)) return true;
+                                if (NativeVci.MatchesExisting(wsRootPath, file, node.Obj, out string difference))
+                                {
+                                    reuse = true;
+                                    return true;
+                                }
                                 throw new IOException(mappingFiles.ExistingFile(targetStem, fmt) == null
                                     ? VciExportPolicy.ExistingFile(file.Name) + difference : attempts.RecordDisconnectedFile(file.Name, difference));
                             }
@@ -385,7 +389,9 @@ namespace TiaMcp.Adapters.Native.Vci
                             {
                                 mapped++;
                                 mappingFiles.Add(flatName, targetStem, fmt);
-                                lines.Add(node.Label + " | mapped | format=" + fmt + " | dir=<root> | file=" + flatName);
+                                if (reuse) reused++;
+                                lines.Add(node.Label + " | mapped" + (reuse ? " | reused existing file" : "")
+                                    + " | format=" + fmt + " | dir=<root> | file=" + flatName);
                             }
                             else failed++;
                         }
@@ -451,7 +457,7 @@ namespace TiaMcp.Adapters.Native.Vci
                             ["workspaceName"] = wsName, ["rootPath"] = wsRootPath, ["dryRun"] = dryRun, ["visited"] = visited,
                             ["mapped"] = mapped, ["alreadyMapped"] = already,
                             ["unsupported"] = unsupported, ["failed"] = totalFailed, ["truncated"] = truncated,
-                            ["nativeMessage"] = attempts.NativeMessage, ["exportsIssued"] = attempts.Issued,
+                            ["nativeMessage"] = attempts.NativeMessage, ["exportsIssued"] = attempts.ExportsIssued, ["reused"] = reused,
                             ["queryRefusals"] = attempts.QueryRefusals, ["mappedAfterFailure"] = attempts.MappedAfterFailure,
                             ["unconfirmed"] = attempts.Unconfirmed,
                             ["mayHaveChanged"] = MayHaveChanged(), ["writeOutcomeUnknown"] = attempts.Unconfirmed > 0
@@ -492,7 +498,8 @@ namespace TiaMcp.Adapters.Native.Vci
                 meta["mayHaveChanged"] = MayHaveChanged();
                 attempts.AddFileEvidence(meta);
                 meta["unconfirmed"] = attempts.Unconfirmed;
-                meta["exportsIssued"] = attempts.Issued; meta["mapped"] = mapped; meta["mappedAfterFailure"] = attempts.MappedAfterFailure;
+                meta["exportsIssued"] = attempts.ExportsIssued; meta["reused"] = reused;
+                meta["mapped"] = mapped; meta["mappedAfterFailure"] = attempts.MappedAfterFailure;
                 meta["queryRefusals"] = attempts.QueryRefusals; meta["failed"] = failed + attempts.QueryRefusals + 1;
                 meta["writeOutcomeUnknown"] = attempts.Unconfirmed > 0;
                 meta["nativeMessage"] = attempts.NativeMessage ?? VciExportAttempts.Diagnostic(ex);

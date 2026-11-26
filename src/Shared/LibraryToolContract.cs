@@ -88,6 +88,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (string key in new[] { "members", "masterCopies", "types", "folders", "warnings", "attempts", "readbackItems" })
                     if (data.ContainsKey(key) && data[key] == null) data[key] = new JsonArray();
             data["summary"] = data["message"]?.DeepClone(); data.Remove("message");
+            // Keep only the recovery advice when a failed sync summary is rebuilt without the raw native error.
+            string? notVerifiedAdvice = null;
+            if (tool == "SynchronizeVersionControlWorkspace" && evidence.Remove("notVerifiedAdvice", out var advice))
+                notVerifiedAdvice = (string?)advice;
             data["evidence"] = evidence;
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success") ?? Flag(data, "ok");
             if (Flag(data, "ok") == false) success = false;
@@ -137,13 +141,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 && evidence["exportsIssued"] != null && Flag(evidence, "writeOutcomeUnknown") == false && evidence["v4Rejection"] == null)
             {
                 bool connect = tool == "ConnectProjectToWorkspace";
-                int exported = Count(evidence, connect ? "mapped" : "synchronized");
+                int completed = Count(evidence, connect ? "mapped" : "synchronized");
                 string? diagnostic = disconnected ?? HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) ?? nativeMessage;
-                if (exported > 0)
+                if (completed > 0)
                 {
                     outcome = Outcome.Partial;
-                    error = new Error(("Some objects were exported to the workspace. " + (connect ? diagnostic : null)).TrimEnd(),
-                        new PartialFailureDetails(exported, failed, 0));
+                    string progress = connect && Count(evidence, "reused") > 0
+                        ? "Some objects were mapped to the workspace." : "Some objects were exported to the workspace.";
+                    error = new Error((progress + " " + (connect ? diagnostic : null)).TrimEnd(), new PartialFailureDetails(completed, failed, 0));
                 }
                 else if (connect && Count(evidence, "mappedAfterFailure") > 0)
                 {
@@ -232,7 +237,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     string[] Names(string result) => (evidence["items"] as JsonArray ?? new()).OfType<JsonObject>()
                         .Where(row => (string?)row["outcome"] == result).Select(row => (string?)row["name"] ?? "?").ToArray();
                     data["summary"] = (VciResult.StoredEqualSummary(Count(evidence, "unverifiedEqual"))
-                        + VciResult.NotVerifiedSummary(Names("not-verified")) + VciResult.DisconnectedSummary(Names("skipped-disconnected"))).TrimStart();
+                        + (notVerifiedAdvice ?? VciResult.NotVerifiedSummary(Names("not-verified").Select(name => (name, false, false)).ToArray()))
+                        + VciResult.DisconnectedSummary(Names("skipped-disconnected"))).TrimStart();
                 }
                 else data.Remove("summary");
             }

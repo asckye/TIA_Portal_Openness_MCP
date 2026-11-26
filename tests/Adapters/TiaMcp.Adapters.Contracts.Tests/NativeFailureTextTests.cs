@@ -182,6 +182,7 @@ public sealed class NativeFailureTextTests
             Assert.Contains("TIA returned no further reason", (string?)reply.Meta["nativeMessage"]);
             Assert.Contains("S7-1500 FW V2.9", (string?)reply.Meta["nativeMessage"]);
             Assert.Contains("certificate manager", (string?)reply.Meta["nativeMessage"]);
+            Assert.Contains("TIA V17 and later", (string?)reply.Meta["nativeMessage"]);
         }
     }
 

@@ -6,6 +6,18 @@ namespace TiaMcp.Adapters.Contracts
 {
     public static class NativeRefusalProbe
     {
+        public static bool DisposedTarget<T>(T target, Exception error) where T : class
+        {
+            var type = target.GetType();
+            if (error.InnerException != null && UncertainConnection(error.InnerException)) return false;
+            if (error is ObjectDisposedException disposed)
+                return disposed.ObjectName == typeof(T).Name || disposed.ObjectName == typeof(T).FullName
+                    || disposed.ObjectName == type.Name || disposed.ObjectName == type.FullName;
+            if (!HmiReadPolicy.DisposedObjectOnly(error)) return false;
+            return new[] { typeof(T).FullName, type.FullName, type.Name, typeof(T).Name }
+                .Any(name => error.Message.IndexOf("disposed object of type '" + name + "'", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
         // Fingerprints contain detached scalar values only. A missing snapshot cannot prove a refusal.
         public static void Run(IDictionary<string, object?> meta, Func<object?[]?> fingerprint, Action call)
             => Run(meta, fingerprint, call, null);

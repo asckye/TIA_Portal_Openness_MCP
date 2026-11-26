@@ -72,17 +72,7 @@ internal sealed partial class OpennessVersionControl
         return false;
     }
 
-    private static bool IsDisposedMapping(MappedObject mapped, Exception error)
-    {
-        var type = mapped.GetType();
-        if (error.InnerException != null && NativeRefusalProbe.UncertainConnection(error.InnerException)) return false;
-        if (error is ObjectDisposedException disposed)
-            return disposed.ObjectName == nameof(MappedObject) || disposed.ObjectName == typeof(MappedObject).FullName
-                || disposed.ObjectName == type.Name || disposed.ObjectName == type.FullName;
-        if (!HmiReadPolicy.DisposedObjectOnly(error)) return false;
-        return new[] { typeof(MappedObject).FullName, type.FullName, type.Name, nameof(MappedObject) }
-            .Any(name => error.Message.IndexOf("disposed object of type '" + name + "'", StringComparison.OrdinalIgnoreCase) >= 0);
-    }
+    private static bool IsDisposedMapping(MappedObject mapped, Exception error) => NativeRefusalProbe.DisposedTarget(mapped, error);
 
     internal static CompareState ReadMappedState(MappedObject mapped, out string? error)
     {

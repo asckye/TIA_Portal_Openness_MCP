@@ -225,7 +225,19 @@ internal static class VciProofFixture
                 continue;
             }
             var reply = adapter.SyncVersionControlWorkspace(dryRun: false, changedOnly: key != "mixed");
-            cases.Add(key, new { reply, status, preview, previewEvents, events, calls = mapping.Status.Calls,
+            var applyEvents = events.ToArray();
+            var applyCalls = mapping.Status.Calls.ToArray();
+            TiaMcp.Adapters.Contracts.VersionControlResult? mixedRecovery = null;
+            if (key == "rc7-inconsistent")
+            {
+                var other = new WorkspaceMapping(workspace, "Other.xml", new PlcBlock { Name = "Other",
+                    Write = (file, _) => File.WriteAllText(file.FullName, edited) });
+                other.Status.State = CompareState.Equal;
+                workspace.Mappings.Add(other);
+                File.WriteAllText(Path.Combine(root.FullName, "Other.xml"), xml);
+                mixedRecovery = adapter.SyncVersionControlWorkspace(dryRun: false);
+            }
+            cases.Add(key, new { reply, status, preview, previewEvents, events = applyEvents, calls = applyCalls, mixedRecovery,
                 cleaned = temporary.All(folder => !Directory.Exists(folder)), externalPreserved = key == "race" && File.ReadAllText(path) == defaults });
         }
         return cases;

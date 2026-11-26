@@ -480,7 +480,7 @@ namespace TiaMcp.Logic.V4
             }
             foreach (string key in new[] { "nativeMessage", "phase", "nativeResult", "errorCount", "warningCount", "deviceCountBefore",
                 "deviceCountAfter", "tagCountBefore", "tagCountAfter", "countBefore", "countAfter", "readbackFailed", "writeReturned",
-                "connectionUnavailable", "portalLost", "restored", "exportsIssued", "queryRefusals", "mapped", "mappedAfterFailure",
+                "connectionUnavailable", "portalLost", "restored", "exportsIssued", "reused", "queryRefusals", "mapped", "mappedAfterFailure",
                 "synchronized", "unconfirmed", "failed", "status", "importReturned", "logFileMissing" })
                 if (source[key] is JsonValue scalar)
                 {

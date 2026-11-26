@@ -15,6 +15,7 @@ internal sealed class VciContentProof
     internal string Verification { get; private set; } = "not-comparable";
     internal string? Message { get; private set; }
     internal string? ExportFailure { get; private set; }
+    internal bool ExportSucceeded { get; private set; }
     internal bool Matches => Verification == "content-match";
     private readonly string workspace;
 
@@ -47,6 +48,7 @@ internal sealed class VciContentProof
         Verification = "not-comparable";
         Message = null;
         ExportFailure = null;
+        ExportSucceeded = false;
         Sha256 = null;
         if (File == null)
         {
@@ -78,6 +80,7 @@ internal sealed class VciContentProof
                             error.GetBaseException().Message, Array.Empty<string>()), NativeFailureText.WithoutLocalPaths);
                         continue;
                     }
+                    ExportSucceeded = true;
                     ExportFailure = null;
                     Message = null;
                     try

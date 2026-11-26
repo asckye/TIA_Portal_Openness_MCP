@@ -6468,7 +6468,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "b55148b17452826111a6b0516c5ed55826cb45041595ab0aed32304268ce4565",
+      "descriptionSha256": "87e4d913026952e07b052592f6cd4a02c8adf10a454a1fcc0d2eb377779e500d",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

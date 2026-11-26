@@ -133,7 +133,8 @@ namespace TiaMcp.Adapters
                     Fact("firmwareVersion", firmware);
                     Fact("enableGlobalCertificatesStore", () => globalStore());
                     Fact("certificateCount", () => count());
-                    const string hint = "TIA returned no further reason. This is known on S7-1500 FW V2.9 with TIA V17–V20. Check the certificate manager.";
+                    const string hint = "TIA returned no further reason. This is known on S7-1500 FW V2.9 with TIA V17 and later. "
+                        + "Check the certificate manager.";
                     meta["nativeMessage"] = (meta["nativeMessage"] + " " + hint).TrimStart();
                 }
                 throw;

@@ -129,15 +129,16 @@ internal static class CompatibilityTools
             CallToolResult result;
             try { result = await target.InvokeAsync(request, cancellationToken); }
             finally { request.Params = original; }
-            return tool.Name is "CreateDevice" or "CreateHardwareCatalogDevice" ? ProjectDeviceCatalogResult(result) : result;
+            return tool.Name is "CreateDevice" or "CreateHardwareCatalogDevice" ? ProjectDeviceCatalogResult(result, arguments.ContainsKey("family")) : result;
         }
 
         // The alias audit records the same parameter names that the caller receives.
-        private CallToolResult ProjectDeviceCatalogResult(CallToolResult result)
+        private CallToolResult ProjectDeviceCatalogResult(CallToolResult result, bool suppliedFamily)
         {
             if (result.StructuredContent is not JsonObject body || (string?)body["meta"]?["tool"] != "CreateHardwareDevice") return result;
             var projected = body.DeepClone().AsObject();
             projected["meta"]!["tool"] = tool.Name;
+            if (!suppliedFamily && projected["data"] is JsonObject data) data.Remove("family");
             if ((string?)projected["error"]?["code"] == "INVALID_ARGUMENT" && projected["error"]?["details"]?["parameters"] is JsonArray { Count: 2 } fields
                 && (string?)fields[0] == "/preferredMlfb" && (string?)fields[1] == "/preferredVersion")
                 ProjectCatalogRefusal(projected["error"]!, tool.Name == "CreateHardwareCatalogDevice");
