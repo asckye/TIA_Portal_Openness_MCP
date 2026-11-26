@@ -266,7 +266,7 @@ internal static partial class MergeCheck
             if (job.Name == "check-analyzer-warnings")
             {
                 var paths = AnalyzerWarnings.CompiledChanges(root, Path.Combine(output, "analyzers"), changes);
-                arguments = [.. arguments, .. paths.SelectMany(path => new[] { "-CheckPath", path })];
+                arguments = [.. arguments, .. AnalyzerWarnings.CheckPathArguments(output, paths)];
             }
             var result = process(executable, arguments, root, checkEnvironment);
             return CheckResult(job.Name, result, output, transportFallback);

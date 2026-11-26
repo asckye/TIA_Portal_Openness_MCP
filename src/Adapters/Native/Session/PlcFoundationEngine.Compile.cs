@@ -136,20 +136,29 @@ namespace TiaMcp.Adapters
 #else
             RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); markIssued(); result=compiler!.Compile();
 #endif
-            PlcCompileDiagnosticsResult response = scoped ?? new PlcCompileDiagnosticsResult();
-            response.Executed = true; response.ProjectFile = Project().Path.FullName; response.State = result.State.ToString();
-            response.ErrorCount = result.ErrorCount; response.WarningCount = result.WarningCount; response.OfflineStateNotExposedByDevices = unobservedDevices;
+            var projectFile = Project().Path.FullName;
+            var state = result.State.ToString();
+            var errorCount = result.ErrorCount;
+            var warningCount = result.WarningCount;
+            PlcCompileResult response = scoped ?? new PlcCompileResult();
             var roots = new List<string>();
             bool checkRoots = scope == "block" || scope == "group";
             string blockName = scope == "block" ? parts.Last() : "";
             try { PlcCompilePolicy.Classify(response, Messages(result.Messages, 0, checkRoots ? roots : null, blockName), scope == "block"); }
             catch (Exception error) when (!checkRoots && NativeRefusalProbe.AllowsRefusalProof(error))
             {
-                response.DiagnosticsIncomplete = true;
-                response.Messages = new[] { PlcCompileResult.IncompleteDiagnostics };
-                response.Warnings = new[] { PlcCompileResult.IncompleteDiagnostics };
-                return response;
+                var incomplete = scoped ?? new PlcCompileDiagnosticsResult();
+                incomplete.DiagnosticsIncomplete = true;
+                incomplete.Messages = new[] { PlcCompileResult.IncompleteDiagnostics };
+                incomplete.Warnings = new[] { PlcCompileResult.IncompleteDiagnostics };
+                response = incomplete;
             }
+            response.Executed = true;
+            response.ProjectFile = projectFile;
+            response.State = state;
+            response.ErrorCount = errorCount;
+            response.WarningCount = warningCount;
+            response.OfflineStateNotExposedByDevices = unobservedDevices;
             if (checkRoots)
             {
                 scoped!.CompiledRoots = roots.Distinct(StringComparer.Ordinal).ToArray();

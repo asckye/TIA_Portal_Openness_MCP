@@ -436,6 +436,31 @@ public sealed class AnalyzerWarningTests
     }
 
     [Fact]
+    public void LongMergeCheckPathListReachesTheAnalyzerAcrossTheProcessBoundary()
+    {
+        using var tree = new StaticTree();
+        var reports = Reports(tree, warning: false);
+        var paths = Enumerable.Range(0, 1024).Select(i => $"src/Folder with spaces/编译/Source{i:D4}.cs").Append("src/C.cs").ToArray();
+        Assert.True(string.Join(' ', paths).Length > 32767);
+        var arguments = AnalyzerWarnings.CheckPathArguments(tree.Root, paths);
+        Assert.Equal(2, arguments.Length);
+        Assert.Equal(paths, JsonSerializer.Deserialize<string[]>(File.ReadAllText(arguments[1])));
+
+        var baseline = tree.Write("baseline.json", """{"format":1,"entries":[]}""");
+        CommandResult Check() => ProcessRunner.Run("dotnet", [typeof(Program).Assembly.Location, "check-analyzer-warnings",
+            "-Check", "-Root", tree.Root, "-DiagnosticsDirectory", reports, "-Baseline", baseline, .. arguments], StaticCheckVectorTests.Root);
+        var pass = Check();
+        Assert.True(pass.ExitCode == 0, pass.StandardOutput + pass.StandardError);
+
+        var entry = Warning(tree) with { Reason = "fixture", Contexts = ["ordinary|C.csproj|net48|NET48"] };
+        var json = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        File.WriteAllText(baseline, JsonSerializer.Serialize(new AnalyzerWarningBaseline(1, [entry]), json));
+        var fail = Check();
+        Assert.Equal(1, fail.ExitCode);
+        Assert.Contains("Analyzer baseline warning context was not built: src/C.cs", fail.StandardOutput + fail.StandardError);
+    }
+
+    [Fact]
     public void ScopedUpdateStillRefusesNewWarningsOutsideTheSelectedSource()
     {
         using var tree = new StaticTree(); var reports = Reports(tree);

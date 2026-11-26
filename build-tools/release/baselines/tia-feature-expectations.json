@@ -1260,6 +1260,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "PLC_SAFETY",
+      "PLC_SOFTWARE_PROTECTION",
       "PLC_SOURCE_RESULTS",
       "RELEASE",
       "SAFETY_GLOBAL",

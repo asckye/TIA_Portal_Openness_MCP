@@ -201,6 +201,16 @@ internal static class AnalyzerWarnings
         return compiled.Order(StringComparer.Ordinal).ToArray();
     }
 
+    internal static string[] CheckPathArguments(string directory, string[] paths)
+    {
+        // Keep short lists readable and leave room for the executable and other options on Windows.
+        if (paths.Sum(path => (long)path.Length + "-CheckPath= ".Length + 2) <= 8192)
+            return paths.Select(path => "-CheckPath=" + path).ToArray();
+        var file = Path.Combine(directory, "analyzer-check-paths.json");
+        File.WriteAllText(file, JsonSerializer.Serialize(paths));
+        return ["-CheckPathFile", file];
+    }
+
     internal static AnalyzerWarningCollection Collect(string root, string directory)
     {
         directory = LocalDirectory(directory);
@@ -427,7 +437,15 @@ internal static class AnalyzerWarnings
                     $"Recorded {additions.Length} reviewed warnings for {rules.Count} newly enabled rules; existing entries preserved.");
             }
             var issues = Compare(root, current, baseline, options.Has("Complete") && updatePaths.Count == 0);
-            var checkPaths = options.All("CheckPath").Select(source => RepositoryPath(root, source)).ToHashSet(StringComparer.Ordinal);
+            var sources = options.All("CheckPath").AsEnumerable();
+            foreach (var file in options.All("CheckPathFile"))
+            {
+                var pathFile = Path.Combine(root, RepositoryPath(root, file));
+                var paths = JsonSerializer.Deserialize<string[]>(File.ReadAllText(pathFile))
+                    ?? throw new ReleaseException("Invalid analyzer check path list: " + file);
+                sources = sources.Concat(paths);
+            }
+            var checkPaths = sources.Select(source => RepositoryPath(root, source)).ToHashSet(StringComparer.Ordinal);
             if (checkPaths.Count != 0)
             {
                 if (!options.Has("Check")) throw new ReleaseException("-CheckPath requires -Check", 64);
