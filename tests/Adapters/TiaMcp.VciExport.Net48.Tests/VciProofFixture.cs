@@ -155,6 +155,7 @@ internal static class VciProofFixture
         string defaults = xml.Replace("<Name>MCP_RC_FC</Name>", "<IsFailsafeCompliant>false</IsFailsafeCompliant><Name>MCP_RC_FC</Name>");
         foreach (string key in new[] { "none", "defaults", "stale", "refused", "missing", "export-refused", "no-write", "new-match",
             "external", "bad-xml", "oversize", "compare-aborted", "rc7-inconsistent",
+            "inconsistent-no-write", "inconsistent-final-disposed", "inconsistent-final-different",
             "race", "mixed", "disposed", "abort", "connection", "nonrecoverable", "changed-throw", "pull", "push", "disconnected" })
         {
             var root = parent.CreateSubdirectory("proof-" + key);
@@ -175,7 +176,8 @@ internal static class VciProofFixture
             if (key == "disconnected") mapping.Status.RefreshError = new EngineeringObjectDisposedException(VciExportFixture.Disposed);
             string projectXml = key is "none" or "defaults" or "external" ? xml : edited;
             if (key == "none") projectXml = xml.Replace("V17", "V19").Replace("ID=\"0\"", "ID=\"42\"");
-            block.IsConsistent = key != "rc7-inconsistent";
+            bool inconsistentNoWrite = key.StartsWith("inconsistent-", StringComparison.Ordinal);
+            block.IsConsistent = key != "rc7-inconsistent" && !inconsistentNoWrite;
             block.Write = (file, options) =>
             {
                 events.Add("export:" + options);
@@ -183,7 +185,9 @@ internal static class VciProofFixture
                 temporary.Add(file.DirectoryName!);
                 if (key == "compare-aborted") throw new EngineeringUserAbortException("Aborted before writing");
                 // V18 row 73 lost the comparison diagnostic. Row 74 recorded the export refusal for this FB.
-                if (key == "rc7-inconsistent")
+                bool afterSync = events.Contains("sync:Motor");
+                if (afterSync && key == "inconsistent-final-disposed") throw new EngineeringObjectDisposedException("Final export proxy disposed");
+                if (key == "rc7-inconsistent" || inconsistentNoWrite && !(afterSync && key == "inconsistent-final-different"))
                     throw new EngineeringTargetInvocationException("Compile the inconsistent block before export. Inconsistent objects: MCP_RC_FB.");
                 if (key == "export-refused") throw new EngineeringTargetInvocationException("Export refused");
                 File.WriteAllText(file.FullName, key == "defaults" && options == ExportOptions.WithDefaults ? defaults : projectXml);
@@ -204,7 +208,7 @@ internal static class VciProofFixture
                     throw new EngineeringTargetInvocationException("Refused after a same-length write");
                 }
                 if (key == "new-match") projectXml = xml;
-                if (key is not ("no-write" or "new-match")) File.WriteAllText(path, projectXml);
+                if (key is not ("no-write" or "new-match") && !inconsistentNoWrite) File.WriteAllText(path, projectXml);
             };
             if (key is "race" or "mixed")
             {
@@ -253,7 +257,8 @@ internal static class VciProofFixture
                 mixedRecovery = adapter.SyncVersionControlWorkspace(dryRun: false);
             }
             cases.Add(key, new { reply, status, preview, previewEvents, events = applyEvents, calls = applyCalls, mixedRecovery,
-                cleaned = temporary.All(folder => !Directory.Exists(folder)), externalPreserved = key == "race" && File.ReadAllText(path) == defaults });
+                block.ConsistencyReads, cleaned = temporary.All(folder => !Directory.Exists(folder)),
+                externalPreserved = key == "race" && File.ReadAllText(path) == defaults });
         }
         return cases;
     }

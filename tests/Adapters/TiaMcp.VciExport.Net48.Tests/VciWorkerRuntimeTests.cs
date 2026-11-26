@@ -29,6 +29,11 @@ internal static class VciWorkerRuntimeTests
                 Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(VciExportFixture.Run(workspace, args.Length == 2 && args[1] == "16")));
                 return 0;
             }
+            if (args.Length == 1 && args[0] == "--workspace-files")
+            {
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(VciExportFixture.WorkspaceFileStatus(workspace)));
+                return 0;
+            }
             Console.WriteLine(runtime);
             string file = Path.Combine(workspace.FullName, "Motor.s7dcl");
             File.Copy(Path.Combine(AppContext.BaseDirectory, "FC_Add_SD.s7dcl"), file);

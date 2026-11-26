@@ -149,7 +149,7 @@ namespace Siemens.Engineering.VersionControl
         internal IndividualObjectSynchronizationStatus Status { get; } = new();
         public string FileNameWithoutExtension { get; set; } = "";
         public DirectoryInfo DirectoryPath { get; set; } = null!;
-        public string FileFormat => "xml";
+        public string FileFormat { get; set; } = "xml";
         public IndividualObjectCompareResult GetStatus() => Status.GetStatus();
         public void Synchronize(SynchronizationMode direction) => Status.Synchronize(direction);
     }
@@ -177,16 +177,16 @@ namespace Siemens.Engineering.VersionControl
         public MappedObject ExportObject(IEngineeringObject target, DirectoryInfo directory, string name, string format)
         {
             Calls.Add("Workspace.ExportObject:" + name + ":" + format);
-            return AddMapping(target, name);
+            return AddMapping(target, name, format);
         }
         public MappedObject ConnectObject(IEngineeringObject target, DirectoryInfo directory, string name, string format)
         {
             Calls.Add("Workspace.ConnectObject:" + name + ":" + format);
-            return AddMapping(target, name);
+            return AddMapping(target, name, format);
         }
-        private MappedObject AddMapping(IEngineeringObject target, string name)
+        private MappedObject AddMapping(IEngineeringObject target, string name, string format)
         {
-            var mapping = new MappedObject { Target = (Exportable)target, DirectoryPath = RootPath, FileNameWithoutExtension = name };
+            var mapping = new MappedObject { Target = (Exportable)target, DirectoryPath = RootPath, FileNameWithoutExtension = name, FileFormat = format };
             MappedObjects.Add(mapping);
             mapping.Status.State = CompareState.Equal;
             return mapping;
@@ -281,7 +281,12 @@ namespace Siemens.Engineering.SW
 }
 namespace Siemens.Engineering.SW.Blocks
 {
-    public class PlcBlock : Exportable { public bool IsConsistent { get; set; } = true; }
+    public class PlcBlock : Exportable
+    {
+        private bool isConsistent = true;
+        internal int ConsistencyReads { get; private set; }
+        public bool IsConsistent { get { ConsistencyReads++; return isConsistent; } set => isConsistent = value; }
+    }
     public class PlcBlockComposition : List<PlcBlock> { }
     public class PlcBlockUserGroup : PlcBlockGroup { }
     public class PlcBlockUserGroupComposition : List<PlcBlockUserGroup> { }

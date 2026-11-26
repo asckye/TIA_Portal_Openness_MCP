@@ -225,7 +225,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 string summary = $"Workspace '{PortVci.Name(ws)}': {total} mapped object(s), {differing} differ from the workspace files.";
                 string selectedName = PortVci.Name(ws);
                 string root = SafeRoot(ws);
-                string unlisted = mappingFiles.UnmappedXmlSummary(root);
+                string unlisted = mappingFiles.UnmappedXmlSummary(root, out var unmappedFiles);
                 return new VersionControlResult
                 {
                     Message = summary + (unknown > 0 ? " " + unknown + " comparison(s) are unknown. Inspect the individual status before export."
@@ -240,7 +240,8 @@ namespace TiaMcp.Adapters.Native.Vci
                     Meta = new HmiObject {
                         ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = selectedName,
                             ["rootPath"] = root, ["total"] = total, ["differing"] = differing, ["unknown"] = unknown,
-                            ["dataComplete"] = unknown == 0 && unverifiedEqual == 0, ["unverifiedEqual"] = unverifiedEqual, ["objects"] = entries
+                            ["dataComplete"] = unknown == 0 && unverifiedEqual == 0, ["unverifiedEqual"] = unverifiedEqual,
+                            ["objects"] = entries, ["unmappedFiles"] = unmappedFiles
                     },
                 };
             }
@@ -256,7 +257,7 @@ namespace TiaMcp.Adapters.Native.Vci
 
         private sealed class MappingFiles
         {
-            private readonly Dictionary<string, (string Name, string File, int Count)> entries = new(StringComparer.OrdinalIgnoreCase);
+            private readonly Dictionary<string, (string Name, string Path, string File, int Count)> entries = new(StringComparer.OrdinalIgnoreCase);
             private bool unreadablePath;
             private static string Key(string path, string? format) => path + "|" + (VciExportPolicy.IsXml(format) ? "xml" : format);
             internal string? ExistingFile(string path, string format) => entries.TryGetValue(Key(path, format), out var entry) ? entry.File : null;
@@ -271,23 +272,26 @@ namespace TiaMcp.Adapters.Native.Vci
                 string key = Key(path, format);
                 entries.TryGetValue(key, out var prior);
                 string file = VciExportPolicy.IsXml(format) ? path + ".xml" : path;
-                entries[key] = (name, file, prior.Count + 1);
+                entries[key] = (name, path, file, prior.Count + 1);
             }
 
-            internal string UnmappedXmlSummary(string root)
+            internal string UnmappedXmlSummary(string root, out string[]? unmappedFiles)
             {
+                const int summaryLimit = 20, evidenceLimit = 200;
                 const string unavailable = " Workspace XML files could not be checked for missing mappings.";
+                unmappedFiles = null;
                 if (unreadablePath || !Path.IsPathRooted(root)) return unavailable;
                 try
                 {
+                    var mappedPaths = new HashSet<string>(entries.Values.Select(entry => entry.Path), StringComparer.OrdinalIgnoreCase);
                     var names = new DirectoryInfo(root).EnumerateFiles("*.xml")
                         .Where(file => file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase))
-                        .Where(file => {
-                            string stem = Path.ChangeExtension(file.FullName, null);
-                            return ExistingFile(stem, "xml") == null && ExistingFile(stem, "") == null;
-                        })
+                        .Where(file => !mappedPaths.Contains(file.FullName) && !mappedPaths.Contains(Path.ChangeExtension(file.FullName, null)))
                         .Select(file => file.Name).OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray();
-                    return names.Length == 0 ? "" : $" {names.Length} workspace file(s) without a mapping: {string.Join(", ", names)}. "
+                    unmappedFiles = names.Length <= evidenceLimit ? names : names.Take(evidenceLimit).ToArray();
+                    if (names.Length == 0) return "";
+                    string remaining = names.Length > summaryLimit ? $" and {names.Length - summaryLimit} more" : "";
+                    return $" {names.Length} workspace file(s) without a mapping: {string.Join(", ", names.Take(summaryLimit))}{remaining}. "
                         + "The object may have been re-imported, renamed or deleted. Reconnect it to map it again.";
                 }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Security.SecurityException)

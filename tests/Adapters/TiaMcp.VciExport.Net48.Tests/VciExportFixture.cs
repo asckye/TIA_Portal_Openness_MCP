@@ -19,6 +19,39 @@ internal static class VciExportFixture
     private const string Deleted = "Error when calling method 'UpdateStatus' of type " + IndividualObjectSynchronizationStatus.NativeType
         + " The file is deleted";
 
+    internal static object WorkspaceFileStatus(DirectoryInfo root)
+    {
+        var workspace = new Workspace(root);
+        var project = new Project();
+        project.Vci.WorkspaceGroup.Workspaces.Add(workspace);
+        var adapter = new VersionControlAdapter(() => project);
+        string xml = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "MCP_RC_FC.xml"));
+        foreach (var stem in new[] { "MappedByStem", "MappedByFileName" })
+        {
+            File.WriteAllText(Path.Combine(root.FullName, stem + ".xml"), xml);
+            var block = new PlcBlock { Name = stem };
+#if STUDIO_VCI_MODERN
+            workspace.ConnectObject(block, root, stem == "MappedByStem" ? stem : stem + ".xml", "S7DCL");
+#else
+            var mapping = new WorkspaceMapping(workspace, stem + ".xml", block);
+            mapping.Status.State = CompareState.Equal;
+            workspace.Mappings.Add(mapping);
+#endif
+        }
+        var mapped = adapter.GetVersionControlStatus(changedOnly: false);
+        void AddFiles(int low, int high)
+        {
+            for (int i = high; i >= low; i--)
+                File.WriteAllText(Path.Combine(root.FullName, $"Block{i:D3}.xml"), xml);
+        }
+        AddFiles(1, 20);
+        var twenty = adapter.GetVersionControlStatus();
+        AddFiles(21, 205);
+        var many = adapter.GetVersionControlStatus();
+        workspace.RootPath = new DirectoryInfo(Path.Combine(root.FullName, "Unavailable"));
+        return new { mapped, twenty, many, unavailable = adapter.GetVersionControlStatus() };
+    }
+
     internal static object Run(DirectoryInfo parent, bool refreshesKnownState)
     {
 #if !STUDIO_VCI_MODERN

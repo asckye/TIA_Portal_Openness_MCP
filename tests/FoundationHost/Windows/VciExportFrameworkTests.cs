@@ -361,7 +361,7 @@ public sealed class VciExportFrameworkTests
         Calls(all, "Deleted", "UpdateStatus", "GetStatus", "Synchronize:ProjectToWorkspace", "UpdateStatus", "GetStatus");
     }
 
-    private static async Task<JsonNode> ExportReplies(string release)
+    private static async Task<JsonNode> ExportReplies(string release, string? command = null)
     {
         var (folder, name) = release switch
         {
@@ -369,7 +369,7 @@ public sealed class VciExportFrameworkTests
             "18" or "19" => ("vci-net48", "TiaMcp.VciExport.Net48.Tests.exe"),
             _ => ("vci-modern-net48", "TiaMcp.VciModern.Net48.Tests.exe")
         };
-        using var process = Process.Start(new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory, folder, name), "--export-replies " + release) {
+        using var process = Process.Start(new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory, folder, name), command ?? "--export-replies " + release) {
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
             StandardOutputEncoding = System.Text.Encoding.UTF8
         })!;
@@ -567,6 +567,71 @@ public sealed class VciExportFrameworkTests
             : new JsonObject { ["reply"] = cases["proof"]!["disconnected"]!["status"]!.DeepClone() };
         var status = Tools(scenario).GetVersionControlStatusV4().StructuredContent!;
         Assert.Contains("1 disconnected mapping(s) skipped: Motor.", (string?)status["data"]!["summary"]);
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
+    public async Task Final_comparison_after_no_write_preserves_recompile_advice_only_for_failed_exports(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = (await ExportReplies(release))["proof"]!;
+        foreach (string key in new[] { "inconsistent-no-write", "inconsistent-final-disposed", "inconsistent-final-different" })
+        {
+            var scenario = cases[key]!;
+            var data = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!["data"]!;
+            var row = data["evidence"]!["items"]!.AsArray().Single()!;
+            Assert.Equal("not-verified", (string?)row["outcome"]);
+            Assert.False((bool?)row["fileChanged"]);
+            Assert.Equal(1, (int?)scenario["ConsistencyReads"]);
+            Assert.Equal(1, Strings(scenario["events"]).Count(e => e == "sync:Motor"));
+            if (key == "inconsistent-final-different")
+            {
+                Assert.Equal("no-match", (string?)row["verification"]);
+                Assert.DoesNotContain("Recompile", (string?)data["summary"]);
+                Assert.Contains("remove the stale workspace file", (string?)data["summary"]);
+            }
+            else
+            {
+                Assert.Equal("not-comparable", (string?)row["verification"]);
+                Assert.Contains("Recompile the block, then retry", (string?)row["nativeMessage"]);
+                Assert.Contains("Recompile the block(s) Motor and synchronize again.", (string?)data["summary"]);
+                Assert.Contains("Recompile the block(s) Motor and synchronize again.", (string?)scenario["reply"]!["Message"]);
+            }
+        }
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Status_matches_listed_file_paths_across_formats_and_bounds_unmapped_names(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release, "--workspace-files");
+        foreach (var (key, count) in new[] { ("mapped", 0), ("twenty", 20), ("many", 205) })
+        {
+            var reply = cases[key]!;
+            var data = Tools(new JsonObject { ["reply"] = reply.DeepClone() }).GetVersionControlStatusV4().StructuredContent!["data"]!;
+            var evidence = data["evidence"]!;
+            var names = Enumerable.Range(1, count).Select(i => $"Block{i:D3}.xml").ToArray();
+            Assert.Equal(2, (int?)evidence["total"]);
+            if (count == 0 && release is "20" or "21")
+            {
+                Assert.Equal(2, evidence["objects"]!.AsArray().Count);
+                Assert.All(evidence["objects"]!.AsArray(), row => Assert.Equal("S7DCL", (string?)row!["fileFormat"]));
+            }
+            foreach (var summary in new[] { (string)reply["Message"]!, (string)data["summary"]! })
+            {
+                if (count == 0) Assert.DoesNotContain("without a mapping", summary);
+                else
+                {
+                    var suffix = count > 20 ? $" and {count - 20} more" : "";
+                    Assert.Contains($"{count} workspace file(s) without a mapping: {string.Join(", ", names.Take(20))}{suffix}.", summary);
+                    Assert.DoesNotContain("Block021.xml", summary);
+                }
+            }
+            Assert.Equal(names.Take(200), Strings(evidence["unmappedFiles"]));
+        }
+        var unavailable = Tools(new JsonObject { ["reply"] = cases["unavailable"]!.DeepClone() }).GetVersionControlStatusV4().StructuredContent!["data"]!;
+        Assert.Contains("could not be checked", (string?)unavailable["summary"]);
+        Assert.True(unavailable["evidence"]!.AsObject().ContainsKey("unmappedFiles"));
+        Assert.Null(unavailable["evidence"]!["unmappedFiles"]);
     }
 
     [Fact]

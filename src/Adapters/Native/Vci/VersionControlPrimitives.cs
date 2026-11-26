@@ -76,20 +76,21 @@ namespace TiaOpenness.Openness
         internal static Action<FileInfo, bool> Exporter(IEngineeringObject target) =>
             (file, defaults) => ExportObject(target, file, defaults ? ExportOptions.WithDefaults : ExportOptions.None);
 
-        internal static string ComparisonDiagnostic(IEngineeringObject target, string message, bool exportSucceeded, out bool inconsistent)
+        internal static bool BlockIsInconsistent(IEngineeringObject target)
         {
-            inconsistent = false;
             if (target is PlcBlock block)
             {
-                try
-                {
-                    inconsistent = !block.IsConsistent && !exportSucceeded;
-                    if (inconsistent) return message + " Recompile the block, then retry the comparison export.";
-                }
+                try { return !block.IsConsistent; }
                 catch (Exception error) when (Ordinary(error))
                 { /* swallow(probe-optional): keep the comparison failure when consistency cannot be read. */ }
             }
-            return message;
+            return false;
+        }
+
+        internal static string ComparisonDiagnostic(bool blockInconsistent, string message, bool exportSucceeded, out bool inconsistent)
+        {
+            inconsistent = blockInconsistent && !exportSucceeded;
+            return inconsistent ? message + " Recompile the block, then retry the comparison export." : message;
         }
 
         internal static bool MatchesExisting(string root, FileInfo file, IEngineeringObject target, out string difference)
@@ -98,7 +99,7 @@ namespace TiaOpenness.Openness
             proof.Compare(() => Exporter(target), Ordinary);
             if (!proof.Matches && proof.ExportFailure != null)
                 throw new IOException(VciExportPolicy.ExistingFile(file.Name) + " "
-                    + ComparisonDiagnostic(target, proof.ExportFailure, proof.ExportSucceeded, out _));
+                    + ComparisonDiagnostic(BlockIsInconsistent(target), proof.ExportFailure, proof.ExportSucceeded, out _));
             difference = proof.Verification == "no-match" ? " The workspace XML content differs from the project export." : "";
             return proof.Matches && proof.Sha256 == proof.CurrentHash();
         }

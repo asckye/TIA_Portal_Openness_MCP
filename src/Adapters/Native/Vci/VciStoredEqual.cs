@@ -28,6 +28,7 @@ internal sealed class VciStoredEqual
     internal string InitialHash { get; private set; }
     internal bool NotAttempted { get; private set; }
     private bool comparisonFailed;
+    private bool blockInconsistent;
     private bool invalidated;
     internal string Verification => invalidated ? "not-comparable" : Proof.Verification;
 
@@ -63,6 +64,7 @@ internal sealed class VciStoredEqual
 
     private void Prepare(MappedObject mapping, bool preview)
     {
+        blockInconsistent = false;
         Inconsistent = false;
         Message = null;
         if (preview) Proof.Preview();
@@ -76,8 +78,8 @@ internal sealed class VciStoredEqual
                 if (Proof.Matches) Outcome = "verified-equal";
                 else if (Proof.Verification == "not-comparable" && Proof.Message != null && compared is global::Siemens.Engineering.SW.Blocks.PlcBlock block)
                 {
-                    Message = NativeVci.ComparisonDiagnostic(block, Proof.Message, Proof.ExportSucceeded, out bool inconsistent);
-                    Inconsistent = inconsistent;
+                    blockInconsistent = NativeVci.BlockIsInconsistent(block);
+                    SetComparisonDiagnostic(Proof.Message);
                 }
             }
             catch (Exception error) when (!NativeVci.Ordinary(error))
@@ -89,6 +91,13 @@ internal sealed class VciStoredEqual
         }
         InitialHash = Proof.Sha256;
         Message ??= Proof.Message;
+    }
+
+    // A push only writes to the workspace. Reuse the block observation with each export's own result.
+    private void SetComparisonDiagnostic(string message)
+    {
+        Message = NativeVci.ComparisonDiagnostic(blockInconsistent, message, Proof.ExportSucceeded, out bool inconsistent);
+        Inconsistent = inconsistent;
     }
 
     private static bool LocalDisposal(Exception error) =>
@@ -185,14 +194,18 @@ internal sealed class VciStoredEqual
             {
                 Message = null;
                 Inconsistent = false;
-                try { Proof.Compare(() => NativeVci.Exporter(acquire().LinkedProjectObject), NativeVci.Ordinary); }
+                try
+                {
+                    Proof.Compare(() => NativeVci.Exporter(acquire().LinkedProjectObject), NativeVci.Ordinary);
+                    if (Proof.ExportFailure != null) SetComparisonDiagnostic(Proof.Message);
+                }
                 catch (Exception error)
                 {
                     ComparisonInterrupted = !NativeVci.Ordinary(error) && !LocalDisposal(error);
-                    if (FileChanged != true) throw;
-                    invalidated = true;
-                    Message = NativeFailureText.BoundedDiagnostic(error);
                     Interrupted = ComparisonInterrupted;
+                    SetComparisonDiagnostic(NativeFailureText.BoundedDiagnostic(error));
+                    if (FileChanged != true) return;
+                    invalidated = true;
                 }
                 string finalHash = Proof.CurrentHash();
                 if (Proof.Sha256 != written || finalHash != written)
@@ -213,7 +226,7 @@ internal sealed class VciStoredEqual
                     Outcome = "verified-equal";
                     Message = null;
                 }
-                else Message = Proof.Message ?? "Synchronize returned without writing matching content.";
+                else Message ??= Proof.Message ?? "Synchronize returned without writing matching content.";
             }
             else { Interrupted = true; Unconfirmed = true; Message = "Cannot verify the workspace file after synchronization."; }
         }
