@@ -178,7 +178,12 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 HardwareContract.RequireProject(_service.HasProject);
                 return SetDeviceItemAttribute(deviceItemPath, attributeName, value);
-            }, write: true, current: false), expectedPlanHash, expectedProjectFile);
+            }, write: true, current: false), expectedPlanHash, expectedProjectFile, previewBlocker: () =>
+            {
+                var attribute = _service.GetDeviceItem(deviceItemPath)?.Attributes.FirstOrDefault(item =>
+                    string.Equals(item.Name, attributeName, StringComparison.OrdinalIgnoreCase));
+                return attribute?.AccessMode == "Read" ? $"Attribute '{attribute.Name}' is read-only (AccessMode=Read)." : null;
+            });
 
         public ResponseMessage SetDeviceItemAttribute(
             [Description("deviceItemPath: path in the project structure to the device item")] string deviceItemPath,

@@ -67,7 +67,8 @@ namespace TiaMcp.Adapters
                 .ToLowerInvariant();
         }
         internal static PlcDocumentExportResult Run(string release,string project,string software,string block,string output,string language,bool consistent,
-                bool dryRun,string expectedHash,Action requireOffline,Func<DirectoryInfo,string,string[]> export,Action<DirectoryInfo,DirectoryInfo>? move=null)
+                bool dryRun,string expectedHash,Action requireOffline,Func<DirectoryInfo,string,string[]> export,Action<DirectoryInfo,DirectoryInfo>? move=null,
+                Func<Exception,string?>? exportDiagnostic=null)
         {
             RequireRelease(release);
             block = PlcExchangePolicy.ObjectPath(block,false,"blockPath");
@@ -113,9 +114,10 @@ namespace TiaMcp.Adapters
                 result.Status="failed"; result.NativeResult=ex.Evidence; result.RecoveryDirectory=stage.FullName;
                 result.OutcomeUnknown=false;
             }
-            catch(Exception) /* swallow(native-fallback): failed export or publication returns failed status and retains staging evidence */
+            catch(Exception error) /* swallow(native-fallback): failed export or publication returns failed status and retains staging evidence */
             {
                 result.Status="failed"; result.OutcomeUnknown=false; result.RecoveryDirectory=stage.FullName;
+                if (!exportReturned) result.NativeMessage = exportDiagnostic?.Invoke(error);
             }
             return result;
         }

@@ -20,9 +20,18 @@ public sealed class SdBlockOverridePolicyTests
         var after = Map(row.GetProperty("after"));
         string kind = before["Type"] as string == "OB" ? "ORGANIZATION_BLOCK" : "DATA_BLOCK";
         var header = SdBlockDeclaration.Scan(kind + " \"" + name + "\"");
-        var refusal = SdBlockOverridePolicy.Refusal(name, header.RequireBlock(name), true, false, before);
+        var reasons = new List<string>();
+        var refusal = SdBlockOverridePolicy.Refusal(name, header.RequireBlock(name), true, false, before, header.InstanceType, reasons);
         Assert.Contains(name, refusal);
         Assert.Contains("SimaticML", refusal);
+        if (kind == "DATA_BLOCK")
+        {
+            Assert.Equal(3, reasons.Count);
+            Assert.All(reasons, reason => Assert.Contains(name, reason));
+            Assert.Contains("IsOnlyStoredInLoadMemory = True", refusal);
+            Assert.Contains("IsWriteProtectedInAS = True", refusal);
+            Assert.Contains("DBAccessibleFromOPCUA = False", refusal);
+        }
         Assert.Null(SdBlockOverridePolicy.Refusal(name, kind, true, false, after));
         var differences = SdBlockOverridePolicy.Compare(before, after, header);
         string[] expected = kind == "DATA_BLOCK" ? ["DBAccessibleFromOPCUA", "IsOnlyStoredInLoadMemory", "IsWriteProtectedInAS", "Number"]
@@ -36,6 +45,27 @@ public sealed class SdBlockOverridePolicyTests
         Assert.Equal(1, renumber["after"]);
         Assert.Equal(true, before["AutoNumber"]);
         Assert.Equal(true, after["AutoNumber"]);
+    }
+
+    [Theory]
+    [InlineData("MCP_RC_FBL", "FUNCTION_BLOCK")]
+    [InlineData("MCP_RC_FCL", "FUNCTION")]
+    [InlineData("MCP_RC_FB", "FUNCTION_BLOCK")]
+    [InlineData("MCP_RC_FC", "FUNCTION")]
+    public void Recorded_LAD_override_preserves_properties_across_a_compile_state_change(string name, string kind)
+    {
+        using var stream = typeof(SdBlockOverridePolicyTests).Assembly.GetManifestResourceStream("SdBlockOverride.json")!;
+        using var json = JsonDocument.Parse(stream);
+        var row = json.RootElement.EnumerateArray().Single(r => r.GetProperty("name").GetString() == name);
+        var before = Map(row.GetProperty("before"));
+        var after = Map(row.GetProperty("after"));
+        var header = SdBlockDeclaration.Scan(kind + " " + name);
+        Assert.Equal("该对象为库兼容。", before["LibraryConformanceStatus"]);
+        Assert.Equal("无", after["LibraryConformanceStatus"]);
+        Assert.Null(SdBlockOverridePolicy.Refusal(name, header.RequireBlock(name), true, false, before));
+        Assert.Empty(SdBlockOverridePolicy.Compare(before, after, header));
+        after["HeaderAuthor"] = "changed";
+        Assert.Equal("HeaderAuthor", Assert.Single(SdBlockOverridePolicy.Compare(before, after, header))["name"]);
     }
 
     private static Dictionary<string, object?> Map(JsonElement obj) => obj.EnumerateObject()
@@ -81,7 +111,12 @@ public sealed class SdBlockOverridePolicyTests
     public void Both_import_options_refuse_new_OB_and_override_requires_the_exact_group()
     {
         foreach (bool replace in new[] { false, true })
+        {
             Assert.Contains("ProgramCycle", SdBlockOverridePolicy.Refusal("Startup", "ORGANIZATION_BLOCK", replace, false, null));
+            var refusal = SdBlockOverridePolicy.Refusal("MCP_RC_OBStart", "ORGANIZATION_BLOCK", replace, false, null);
+            Assert.Contains("always creates a cycle OB", refusal);
+            Assert.DoesNotContain("<absent>", refusal);
+        }
         Assert.Contains("another group", SdBlockOverridePolicy.Refusal("DB", "DATA_BLOCK", true, true, null));
     }
 

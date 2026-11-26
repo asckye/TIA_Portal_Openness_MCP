@@ -96,25 +96,27 @@ namespace TiaMcp.Adapters.Native.Plc
             before = null;
             Evidence["existingBlock"] = null;
             Evidence["notCompared"] = Array.Empty<string>();
+            var reasons = new List<string>();
             try
             {
                 if (Existing != null)
                 {
                     before = Read(Existing);
                     Evidence["existingBlock"] = BlockRow(before);
-                    Evidence["notCompared"] = before.NotCompared.ToArray();
+                    Evidence["notCompared"] = before.Exclusions().ToArray();
                 }
                 Refusal = SdBlockOverridePolicy.Refusal(name, declaration.Declarations[0].Kind, replace,
-                    replace && elsewhere(), before, declaration.InstanceType);
+                    replace && elsewhere(), before, declaration.InstanceType, reasons);
             }
             catch (Exception error) when (!ConnectionUnavailable(error))
             {
                 Refusal = $"Block '{name}': {error.Message} SIMATIC SD preservation cannot be established. " +
                     "Use a SimaticML export with ImportPlcBlock, ImportPlcBlockVerified or ImportPlcBlocksFromDirectory.";
+                reasons.Add(Refusal);
             }
             Evidence["applyBlocked"] = Refusal != null;
             Evidence["applyBlockedReason"] = Refusal;
-            Evidence["applyBlockedReasons"] = Refusal == null ? Array.Empty<string>() : new[] { Refusal };
+            Evidence["applyBlockedReasons"] = reasons.ToArray();
         }
 
         internal static Dictionary<string, PlcSdBlockSnapshot> PrepareBatch(FileInfo[] selected, SdDeclarationFiles inputs,
@@ -175,6 +177,8 @@ namespace TiaMcp.Adapters.Native.Plc
         private sealed class BlockAttributes : Dictionary<string, object?>
         {
             internal SortedSet<string> NotCompared { get; } = new(StringComparer.Ordinal);
+            internal List<string> DerivedState { get; } = new();
+            internal IEnumerable<string> Exclusions() => NotCompared.Concat(DerivedState);
 
             internal string RecordType(string name, object value)
             {
@@ -193,7 +197,12 @@ namespace TiaMcp.Adapters.Native.Plc
                 foreach (var info in engineering.GetAttributeInfos())
                 {
                     reading = info.Name;
-                    if (SdBlockOverridePolicy.Volatile(reading)) continue;
+                    if (SdBlockOverridePolicy.Volatile(reading))
+                    {
+                        if (reading is "LibraryConformanceStatus" or "IsConsistent")
+                            attributes.DerivedState.Add(reading + " (derived state recalculated by compilation)");
+                        continue;
+                    }
                     var value = engineering.GetAttribute(reading);
                     attributes[reading] = value switch
                     {
@@ -267,7 +276,8 @@ namespace TiaMcp.Adapters.Native.Plc
                 && Equals(before["AutoNumber"], after["AutoNumber"]);
             var notCompared = new SortedSet<string>(after.NotCompared, StringComparer.Ordinal);
             if (before != null) notCompared.UnionWith(before.NotCompared);
-            Evidence["notCompared"] = notCompared.ToArray();
+            Evidence["notCompared"] = after.Exclusions().Union(before?.Exclusions() ?? Enumerable.Empty<string>(), StringComparer.Ordinal)
+                .OrderBy(key => key, StringComparer.Ordinal).ToArray();
             var differences = SdBlockOverridePolicy.Compare(replace ? before : null, after, declaration, notCompared);
             if (before == null && differences.SingleOrDefault(item => Equals(item["name"], "Number")) is { } number)
             {

@@ -201,7 +201,7 @@ internal static class PortedToolContract
         "GetDeviceItemTree" => new[] { "hardware-devices.HardwareReadItemTree", "ReadState" },
         "SearchInstalledGsdDevices" => new[] { "hardware-devices.HardwareLegacySearchInstalledGsdDevices", "ReadState" },
         "GetDeviceAttributes" => new[] { "hardware-devices.HardwareLegacyDumpDeviceAttributes", "ReadState" },
-        "SetDeviceItemAttribute" => new[] { "hardware-devices.HardwareLegacySetDeviceItemAttribute", "ReadState" },
+        "SetDeviceItemAttribute" => new[] { "hardware-devices.HardwareLegacySetDeviceItemAttribute", "hardware-devices.HardwareDescribeItemAt", "ReadState" },
         "SetPlcCpuSettings" => new[] { "hardware-devices.HardwareLegacySetCpuCommonSettings", "ReadState" },
         "GetDevicePlugLocations" => new[] { "hardware-devices.HardwareReadPlugLocations", "ReadState" },
         "PlugDeviceItem" => new[] { "hardware-devices.HardwarePlugModule", "ReadState" },

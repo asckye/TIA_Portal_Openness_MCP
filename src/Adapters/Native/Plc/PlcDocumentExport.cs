@@ -39,7 +39,8 @@ namespace TiaMcp.Adapters
                         .NativeResultException(TiaMcp.Adapters.Contracts.NativeResultStates.Documents,state,result==null ? null : Documents
                             .Messages(result.Messages));
                 return result.ExportedDocuments.Select(f=>f.FullName).Take(3).ToArray();
-            });
+            }, exportDiagnostic: error => error is Siemens.Engineering.EngineeringTargetInvocationException
+                ? TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(error) : null);
 #else
             throw new TiaMcp.Adapters.Contracts
                 .AdapterPreconditionException("Exact document SDK support is not compiled for this release.","export-plan",false);

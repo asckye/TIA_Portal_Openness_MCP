@@ -17,6 +17,8 @@ namespace Siemens.Engineering.SW
 
 namespace Siemens.Engineering.SW.Blocks
 {
+    internal sealed class FC : PlcBlock { }
+
     internal partial class PlcBlock
     {
         public string Name { get; set; } = "";
@@ -119,7 +121,8 @@ namespace TiaMcp.Tests.NativeWrites
             var session = new ImportSession(null);
             var group = session.Root;
             bool startup = scenario == "sd-scoped-startup";
-            string name = startup ? "MCP_RC_OBStart" : "Target";
+            bool lad = scenario == "sd-scoped-lad";
+            string name = startup ? "MCP_RC_OBStart" : lad ? "MCP_RC_FC" : "Target";
             string code = Path.Combine(directory, name + ".s7dcl");
             string resource = Path.ChangeExtension(code, ".s7res");
             bool hasNumber = scenario is "sd-scoped-new-number" or "sd-scoped-number" or "sd-scoped-wrong-number" or "sd-scoped-unrequested-auto";
@@ -127,12 +130,14 @@ namespace TiaMcp.Tests.NativeWrites
             bool instance = scenario.StartsWith("sd-scoped-instance", StringComparison.Ordinal);
             string body = instance ? "\"MotorFB\"" : "VAR\n    Type : Int;\nEND_VAR";
             string source = startup ? $"ORGANIZATION_BLOCK \"{name}\"\nEND_ORGANIZATION_BLOCK\n"
+                : lad ? $"FUNCTION \"{name}\" : Void\nEND_FUNCTION\n"
                 : header + $"DATA_BLOCK \"{name}\"\n{body}\nEND_DATA_BLOCK\n";
             File.WriteAllText(code, source);
             const string translations = "MultiLingualTexts:\n  - id: MLC_Value\n    en-US: Value\n";
             if (scenario != "sd-scoped-add-resource") File.WriteAllText(resource, translations);
 
             PlcBlock target = startup ? new OB { Number = 151, SecondaryType = "Startup" }
+                : lad ? new FC { Number = 9812, ProgrammingLanguage = "LAD" }
                 : new GlobalDB { Number = 42, ProgrammingLanguage = "DB",
                     AutoNumber = scenario is not ("sd-scoped-auto-false" or "sd-scoped-unrequested-auto") };
             target.Name = name;
@@ -140,6 +145,14 @@ namespace TiaMcp.Tests.NativeWrites
             if (scenario != "sd-scoped-new-number") group.Blocks.Add(name, target);
             switch (scenario)
             {
+                case "sd-scoped-lad":
+                    target.Attributes["IsConsistent"] = true;
+                    target.Attributes["LibraryConformanceStatus"] = "该对象为库兼容。";
+                    group.Blocks.OnImport = block => {
+                        block.Attributes["IsConsistent"] = false;
+                        block.Attributes["LibraryConformanceStatus"] = "无";
+                    };
+                    break;
                 case "sd-scoped-change-code": target.AfterExport = () => ChangeBytes(code, "Int", "int"); break;
                 case "sd-scoped-change-resource": target.AfterExport = () => ChangeBytes(resource, "Value", "VALUE"); break;
                 case "sd-scoped-add-resource": target.AfterExport = () => File.WriteAllText(resource, translations); break;

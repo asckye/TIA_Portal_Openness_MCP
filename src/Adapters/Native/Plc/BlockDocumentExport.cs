@@ -46,7 +46,11 @@ namespace TiaMcp.Adapters
                     ? new BlockDocumentExportReply { Status = "ExportFailed", Message = "Block export produced no .xml for '" + blockPath + "' in " + tempDir }
                     : new BlockDocumentExportReply { TempDir = tempDir, XmlPath = xml };
             }
-            catch (AdapterPreconditionException) { throw; }
+            catch (AdapterPreconditionException error)
+            {
+                if (!error.IsArgument && error.ParamName == "blockPath") error.Data["nativeMessage"] = error.Message;
+                throw;
+            }
             catch (Exception error)
             {
                 // Preserve authored engineering errors from the existing resolver.

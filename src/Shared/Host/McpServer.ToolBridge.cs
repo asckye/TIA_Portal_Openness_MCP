@@ -505,10 +505,20 @@ namespace TiaMcpServer.ModelContextProtocol
             return null;
         }
         internal static CallToolResult RunWritePreview(string tool, bool dryRun, object arguments, Func<CallToolResult> execute, string expectedPlanHash = "",
-                string expectedProjectFile = "", bool writing = true, Func<JsonArray>? plannedFiles = null)
+                string expectedProjectFile = "", bool writing = true, Func<JsonArray>? plannedFiles = null, Func<string?>? previewBlocker = null)
         {
             if (PrepareWritePreview(tool, dryRun, arguments, expectedPlanHash, writing, out var plan, plannedFiles) is CallToolResult rejected) return rejected;
-            if (dryRun && writing) { plan["dryRun"] = true; plan["mayHaveChanged"] = false; return V4Result(tool, plan); }
+            if (dryRun && writing)
+            {
+                plan["dryRun"] = true;
+                plan["mayHaveChanged"] = false;
+                if ((bool?)plan["targetBound"] == true && previewBlocker?.Invoke() is string reason)
+                {
+                    plan["applyBlocked"] = true;
+                    plan["applyBlockedReason"] = reason;
+                }
+                return V4Result(tool, plan);
+            }
             if (WritePlanRefusal(plan, expectedPlanHash, expectedProjectFile, writing) is Error refusal) return V4Reject(tool, refusal);
             return WritePlanResult(execute(), plan, dryRun, writing);
         }
@@ -607,6 +617,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var policy = current ? BehaviorPolicy.Current : BehaviorPolicy.NotApplicable;
             if (ToolBehaviorPolicy(tool, policy) == BehaviorPolicy.SafeV4)
             { policy = BehaviorPolicy.SafeV4; warnings = Array.Empty<Warning>(); }
+            if (tool == "SetDeviceItemAttribute" && (bool?)data?["dryRun"] == true && (string?)data["applyBlockedReason"] is string reason)
+                warnings = warnings.Append(new Warning(WarningCode.NativeWarning, reason, new Dictionary<string, JsonElement>())).ToArray();
             if (tool == "FindTools" && paging?.Complete == false && completeness == Completeness.Partial)
                 warnings = warnings.Append(new Warning(WarningCode.IncompleteData, "More results are available on the next page.",
                     new Dictionary<string, JsonElement>())).ToArray();

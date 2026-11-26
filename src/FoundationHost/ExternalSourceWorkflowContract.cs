@@ -57,10 +57,14 @@ internal static class ExternalSourceWorkflowContract
             if(Text("GenerationOption")!=(old?"parameterless":"None")
                     || Text("ResultBasis")!=(old?"inventory-observation-only; native API returns void":"native-returned-objects-with-path-readback"))
                 throw new InvalidDataException("Generation return semantics mismatch this release.");
-            foreach(var field in new[]{"ObjectsBefore","ObjectsAfter","GeneratedObjects","ObservedChanges"}) ValidateObjects(result[field],field);
+            foreach(var field in new[]{"ObjectsBefore","GeneratedObjects","ObservedChanges"}) ValidateObjects(result[field],field);
+            if (!result.TryGetPropertyValue("ObjectsAfter", out var after))
+                throw new InvalidDataException("Missing generation object list: ObjectsAfter");
+            if (status != "failed" || after != null) ValidateObjects(after, "ObjectsAfter");
             if(old && result["GeneratedObjects"]!.AsArray().Count!=0)
                 throw new InvalidDataException("V14 SP1 void API cannot claim a native generated object list.");
-            if((dryRun || status=="failed") && new[]{"ObjectsAfter","GeneratedObjects","ObservedChanges"}.Any(x=>result[x]!.AsArray().Count!=0))
+            if(dryRun && result["ObjectsAfter"]!.AsArray().Count!=0
+                || (dryRun || status=="failed") && new[]{"GeneratedObjects","ObservedChanges"}.Any(x=>result[x]!.AsArray().Count!=0))
                 throw new InvalidDataException("Preview or rolled-back generation cannot report generated objects.");
             if(status=="completed") foreach(var item in result["GeneratedObjects"]!.AsArray())
                 if(!result["ObjectsAfter"]!.AsArray()

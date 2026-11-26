@@ -18,6 +18,7 @@ namespace TiaMcp.Adapters
         public string Status { get; set; } = "planned";
         public bool OutcomeUnknown { get; set; }
         public TiaMcp.Adapters.Contracts.NativeResultEvidence? NativeResult { get; set; }
+        public string? NativeMessage { get; set; }
         public string Options { get; set; } = "native-default-two-argument-overload";
         public string[] Files { get; set; } = new string[0];
         public string Evidence { get; set; } = "official-manual-source-candidate; exact-sdk-build/native-acceptance-pending; no-cross-version-roundtrip-claim";

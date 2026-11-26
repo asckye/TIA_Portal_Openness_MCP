@@ -289,35 +289,49 @@ namespace TiaMcp.Adapters.Contracts
 
         public static bool Volatile(string key) => key is "CodeModifiedDate" or "CompileDate" or "CreationDate" or "DownloadDate"
             or "InterfaceModifiedDate" or "ModifiedDate" or "ParameterModified" or "StructureModified" or "IsConsistent"
-            or "LoadMemoryLength" or "WorkMemoryLength";
+            or "LoadMemoryLength" or "WorkMemoryLength" or "LibraryConformanceStatus";
 
         public static string? Refusal(string name, string kind, bool replace, bool elsewhere, IReadOnlyDictionary<string, object?>? before,
-            string? instanceType = null)
+            string? instanceType = null) => Refusal(name, kind, replace, elsewhere, before, instanceType, null);
+
+        public static string? Refusal(string name, string kind, bool replace, bool elsewhere, IReadOnlyDictionary<string, object?>? before,
+            string? instanceType, ICollection<string>? details)
         {
-            string Refuse(string property, object? current, object? expected) => $"Block '{name}': {property} = {current ?? "<absent>"}; " +
-                $"SIMATIC SD import: {expected}. Use a SimaticML export with ImportPlcBlock, ImportPlcBlockVerified or ImportPlcBlocksFromDirectory.";
-            if (kind == "ORGANIZATION_BLOCK" && before == null) return Refuse("SecondaryType", null, "ProgramCycle");
-            if (replace && elsewhere) return Refuse("group", "another group", "same-name overwrite outside the requested group");
+            const string guidance = "Use a SimaticML export with ImportPlcBlock, ImportPlcBlockVerified or ImportPlcBlocksFromDirectory.";
+            string Refuse(params string[] reasons)
+            {
+                if (details != null)
+                    foreach (string reason in reasons) details.Add($"Block '{name}': {reason}. {guidance}");
+                return $"Block '{name}': {string.Join(". ", reasons)}. {guidance}";
+            }
+            string Difference(string property, object? current, object? expected) =>
+                $"{property} = {current ?? "<absent>"}; SIMATIC SD import: {expected}";
+            if (kind == "ORGANIZATION_BLOCK" && before == null)
+                return Refuse("SIMATIC SD cannot create an OB of the required kind because it always creates a cycle OB (ProgramCycle)");
+            if (replace && elsewhere) return Refuse(Difference("group", "another group", "same-name overwrite outside the requested group"));
             if (before == null) return null;
             object? Get(string key) => before.TryGetValue(key, out var value) ? value : null;
             string type = Get("Type") as string ?? "";
-            if (type == "GlobalDB" && instanceType != null) return Refuse("Type", type, "InstanceDB of " + instanceType);
-            if (!replace) return null;
-            if (type == "OB" && !Equals(Get("SecondaryType"), "ProgramCycle")) return Refuse("SecondaryType", Get("SecondaryType"), "ProgramCycle");
+            var reasons = new List<string>();
+            if (type == "GlobalDB" && instanceType != null) reasons.Add(Difference("Type", type, "InstanceDB of " + instanceType));
+            if (!replace) return reasons.Count == 0 ? null : Refuse(reasons[0]);
+            if (type == "OB" && !Equals(Get("SecondaryType"), "ProgramCycle")) reasons.Add(Difference("SecondaryType", Get("SecondaryType"), "ProgramCycle"));
             foreach (var key in new[] { "IsKnowHowProtected", "IsWriteProtected", "IsSafetyBlock", "IsFailsafe" })
-                if (before.ContainsKey(key) && !Equals(Get(key), false)) return Refuse(key, Get(key), "preservation unsupported");
+                if (before.ContainsKey(key) && !Equals(Get(key), false)) reasons.Add(Difference(key, Get(key), "preservation unsupported"));
             if (Get("ProgrammingLanguage") is string language && language.StartsWith("F_", StringComparison.OrdinalIgnoreCase))
-                return Refuse("ProgrammingLanguage", language, "safety block preservation undocumented");
+                reasons.Add(Difference("ProgrammingLanguage", language, "safety block preservation undocumented"));
             string expectedType = kind switch { "FUNCTION_BLOCK" => "FB", "FUNCTION" => "FC", "DATA_BLOCK" => "GlobalDB",
                 "ORGANIZATION_BLOCK" => "OB", _ => "" };
-            if (type != expectedType) return Refuse("Type", type, expectedType);
+            if (type != expectedType) reasons.Add(Difference("Type", type, expectedType));
             if (type == "GlobalDB")
             {
                 foreach (var pair in DbDefaults)
-                    if (before.TryGetValue(pair.Key, out var value) && !Same(value, pair.Value)) return Refuse(pair.Key, value, pair.Value);
+                    if (before.TryGetValue(pair.Key, out var value) && !Same(value, pair.Value)) reasons.Add(Difference(pair.Key, value, pair.Value));
             }
-            else if (before.TryGetValue("IsIECCheckEnabled", out var check) && !Equals(check, false)) return Refuse("IsIECCheckEnabled", check, false);
-            return null;
+            else if (before.TryGetValue("IsIECCheckEnabled", out var check) && !Equals(check, false))
+                reasons.Add(Difference("IsIECCheckEnabled", check, false));
+            if (reasons.Count == 0) return null;
+            return type == "GlobalDB" || kind == "DATA_BLOCK" ? Refuse(reasons.ToArray()) : Refuse(reasons[0]);
         }
 
         private static bool Same(object? left, object? right) => Equals(left, right) ||

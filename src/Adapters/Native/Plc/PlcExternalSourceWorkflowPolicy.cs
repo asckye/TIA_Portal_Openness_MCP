@@ -121,6 +121,12 @@ namespace TiaMcp.Adapters
                 result.Status=recoverable ? "failed" : "outcome-unknown";
                 result.OutcomeUnknown=!recoverable;
                 result.Error=ex.GetType().Name+": "+ex.Message;
+                if (recoverable)
+                {
+                    try { result.ObjectsAfter = readObjects(); }
+                    catch (Exception) /* swallow(probe-optional): the compiler failure is definite even if inventory is no longer readable */
+                    { result.ObjectsAfter = null; }
+                }
                 return result;
             }
             Execute(result,()=> {

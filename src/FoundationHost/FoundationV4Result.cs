@@ -486,6 +486,8 @@ internal static class FoundationV4Result
                 == TiaMcp.Adapters.Contracts.NativeStateKind.Unexpected)
             outcome = Outcome.Failed;
         if (outcome == Outcome.Unknown) error = Unknown();
+        else if (outcome == Outcome.Failed && definition.ResponseMember == "DocumentExport" && Text(data, "nativeMessage") is string exportMessage)
+            error = NativeFailure(data, HostBehavior.SafeDiagnostic(exportMessage));
         else if (outcome == Outcome.Failed && definition.Operation == "GenerateBlocksFromExternalSource" && Text(data, "error") is string compilerError)
             error = GenerationFailure(data, compilerError, NativeFailureDiagnostics.RedactSecrets);
         else if (outcome is Outcome.Failed or Outcome.RejectedBeforeOperation) error = definition.ResponseMember == "Compile" ? CompileResultMapping
@@ -658,6 +660,8 @@ internal static class FoundationV4Result
         current = policy == BehaviorPolicy.Current;
         if (outcome == Outcome.Unknown) data?.Remove("recovery");
         var warnings = new List<Warning>();
+        if (name == "ExportPlcBlockDocuments" && (string?)data?["status"] == "inconsistent" && (string?)data["applyBlockedReason"] is string blocker)
+            warnings.Add(new Warning(WarningCode.NativeWarning, blocker, Empty));
         if (name == "ConnectPortal" && (string?)data?["previousOwner"]?["leaseState"] is "BUSY" or "UNCERTAIN" or "ACTIVE")
             warnings.Add(new Warning(WarningCode.PreviousOwnerUnclean,
                 "The previous owner's record is unclean. Inspect its state, these request IDs and their targets before repeating calls.",

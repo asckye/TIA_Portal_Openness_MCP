@@ -1186,6 +1186,17 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.Equal(0, calls);
     }
 
+    private static toolpipeline::TiaMcpServer.Siemens.Services.HardwareDevicesService HardwarePreviewService(Action read) =>
+        new((operation, _) => {
+            Assert.Equal("hardware-devices.HardwareDescribeItemAt", operation);
+            read();
+            return JsonNode.Parse("""
+                {"Name":"MCP_RC_PLC","Description":null,"Attributes":[
+                    {"Name":"OrderNumber","Value":"6ES7 515-2AM02-0AB0","AccessMode":"Read"},
+                    {"Name":"Name","Value":"MCP_RC_PLC","AccessMode":"ReadWrite"}]}
+                """);
+        }, () => true, () => "C:/Projects/original.ap21");
+
     [Fact]
     public void Published_write_wrapper_forwards_the_expected_plan_hash_before_service_access()
     {
@@ -1193,14 +1204,24 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         var shared = LegacyHostToolRegistry.Create(foundationWorker, "21", false, hostPorts: false);
         using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
-        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(null!);
+        int reads = 0;
+        var service = HardwarePreviewService(() => reads++);
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(service);
+        var readOnly = tools.SetDeviceItemAttributeV4("MCP_RC_PLC/MCP_RC_PLC", "OrderNumber", "6ES7 515-2AM02-0AB1").StructuredContent!;
+        Assert.True((bool?)readOnly["ok"]);
+        Assert.True((bool?)readOnly["data"]!["applyBlocked"]);
+        Assert.False((bool?)readOnly["data"]!["mayHaveChanged"]);
+        Assert.Contains(readOnly["meta"]!["warnings"]!.AsArray(), w => (string?)w!["code"] == "NATIVE_WARNING"
+            && ((string)w["message"]!).Contains("OrderNumber", StringComparison.Ordinal));
         var preview = tools.SetDeviceItemAttributeV4("PLC/CPU", "Name", "CPU_2");
+        Assert.DoesNotContain(preview.StructuredContent!["meta"]!["warnings"]!.AsArray(), w => (string?)w!["code"] == "NATIVE_WARNING");
         string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
         var stale = tools.SetDeviceItemAttributeV4("PLC/CPU", "Name", "CPU_3", false, hash, "C:/Projects/original.ap21");
         Assert.Equal("PLAN_STALE", (string?)stale.StructuredContent!["error"]!["code"]);
         Assert.Equal("not-started", (string?)stale.StructuredContent["meta"]!["execution"]);
         var wrongProject = tools.SetDeviceItemAttributeV4("PLC/CPU", "Name", "CPU_2", false, hash, "C:/Projects/other.ap21");
         Assert.Equal("IDENTITY_MISMATCH", (string?)wrongProject.StructuredContent!["error"]!["code"]);
+        Assert.Equal(2, reads);
     }
 
     [Theory]
@@ -1500,6 +1521,8 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
                 technologyReads++;
                 return new JsonObject { ["Found"] = true, ["MayHaveChanged"] = false };
             }, () => true, () => "C:/Projects/original.ap21");
+        int hardwareReads = 0;
+        if (name == "SetDeviceItemAttribute") services[0] = HardwarePreviewService(() => hardwareReads++);
         var target = constructor.Invoke(services);
         var tool = new toolpipeline::TiaMcp.FoundationHost.CanonicalParameterTool(McpServerTool.Create(method, target), release);
         var path = Path.Combine(TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory),
@@ -1554,6 +1577,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         }
         Assert.Equal("read-only", (string?)result.StructuredContent?["meta"]?["execution"]);
         Assert.Matches("^[0-9a-f]{64}$", (string)result.StructuredContent!["data"]!["planHash"]!);
+        if (name == "SetDeviceItemAttribute") Assert.Equal(1, hardwareReads);
         Assert.Equal(0, worker.Calls);
     }
 

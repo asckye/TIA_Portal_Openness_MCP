@@ -45,6 +45,7 @@ internal static class ExternalSourceWorkflowTests
             PlcExternalSourceGenerationResult Generate(bool dry,string hash="")=>PlcExternalSourceWorkflowPolicy.Generate(GenerationResult(release),dry,hash,!dry,dry?"":Project,()=>current,()=>{},()=> {generations++;current=new[]{Block("Existing",day:2),Block("Pump"),Block("Motor","type")};},()=>release=="14sp1"?Array.Empty<PlcExternalSourceObject>():current,_=>false);
             var plan=Generate(true);check(generations==0 && plan.ObjectsBefore.Length==1 && plan.GeneratedObjects.Length==0,"Generation preview does not call native API "+release);
             var generated=Generate(false,plan.PlanHash);
+            Xunit.Assert.NotNull(generated.ObjectsAfter);
             check(generations==1 && generated.Executed && generated.ObjectsAfter.Length==3 && generated.ObservedChanges.Length==3,"Generation observes new block, updated block and UDT "+release);
             check(generated.GeneratedObjects.Length==(release=="14sp1"?0:3) && generated.GenerationOption==(release=="14sp1"?"parameterless":"None"),"Generation distinguishes void and returned-object APIs "+release);
             var args=new JsonObject { ["softwarePath"]=generated.SoftwarePath,["externalSourceName"]="Pump.scl",["dryRun"]=false,["confirm"]=true,["expectedProjectFile"]=Project,["expectedPlanHash"]=plan.PlanHash };

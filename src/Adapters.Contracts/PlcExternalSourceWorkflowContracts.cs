@@ -51,7 +51,7 @@ namespace TiaMcp.Adapters
         public bool MayOverwriteExistingBlocks => true;
         public bool SourceContentReviewed => false;
         public PlcExternalSourceObject[] ObjectsBefore { get; internal set; } = new PlcExternalSourceObject[0];
-        public PlcExternalSourceObject[] ObjectsAfter { get; internal set; } = new PlcExternalSourceObject[0];
+        public PlcExternalSourceObject[]? ObjectsAfter { get; internal set; } = new PlcExternalSourceObject[0];
         public PlcExternalSourceObject[] GeneratedObjects { get; internal set; } = new PlcExternalSourceObject[0];
         public PlcExternalSourceObject[] ObservedChanges { get; internal set; } = new PlcExternalSourceObject[0];
     }

@@ -7,6 +7,45 @@ using Xunit;
 
 public sealed class P707cFoundationTests
 {
+    [Fact]
+    public void Single_SD_export_warns_on_inconsistency_and_retains_a_thrown_native_reason()
+    {
+        var root = Directory.CreateTempSubdirectory();
+        try
+        {
+            string output = Path.Combine(root.FullName, "RC-20-V-SD-MCP_RC_OBS");
+            // Row 22 recorded only the exception type. Use the recorded row 89 diagnostic to exercise message transport.
+            const string reason = "Compile the inconsistent object before export.";
+            const string software = "devices/MCP_RC_PLC/MCP_RC_PLC";
+            PlcDocumentExportResult Export(bool consistent, bool dry = true, string hash = "") => PlcDocumentExportPolicy.Run(
+                "20", @"C:\Projects\项目1.ap20", software, "MCP_RC_OBS", output, "LAD", consistent, dry, hash, () => { },
+                (_, _) => throw new InvalidOperationException(reason), move: (_, _) => throw new InvalidOperationException(),
+                exportDiagnostic: NativeFailureText.BoundedDiagnostic);
+            JsonNode Envelope(PlcDocumentExportResult result, bool preview)
+            {
+                var args = new JsonObject { ["dryRun"] = preview, ["softwarePath"] = software, ["blockPath"] = result.BlockPath,
+                    ["exportPath"] = output, ["expectedProjectFile"] = result.ProjectFile, ["expectedPlanHash"] = result.PlanHash };
+                var raw = JsonSerializer.SerializeToNode(result)!;
+                WorkerProtocol.ValidateExchangeResult("ExportAsDocuments", args, raw);
+                var entry = FoundationTools.Definitions.Single(d => d.Name == "ExportPlcBlockDocuments");
+                return FoundationV4Result.Worker("20", entry, "document-export", args, raw, raw).StructuredContent!;
+            }
+            var preview = Envelope(Export(false), true);
+            Assert.True((bool?)preview["ok"]);
+            Assert.True((bool?)preview["data"]!["applyBlocked"]);
+            Assert.Contains(preview["meta"]!["warnings"]!.AsArray(), w => (string?)w!["code"] == "NATIVE_WARNING" && (string?)w["message"] == reason);
+            var plan = Export(true);
+            Assert.DoesNotContain(Envelope(plan, true)["meta"]!["warnings"]!.AsArray(), w => (string?)w!["code"] == "NATIVE_WARNING");
+            var failed = Envelope(Export(true, false, plan.PlanHash), false);
+            Assert.Equal("NATIVE_OPERATION_FAILED", (string?)failed["error"]!["code"]);
+            Assert.Equal(reason, (string?)failed["error"]!["message"]);
+            Assert.Equal(reason, (string?)failed["error"]!["details"]!["nativeMessage"]);
+            Assert.True(Directory.Exists((string?)failed["data"]!["recoveryDirectory"]));
+            Assert.False(Directory.Exists(output));
+        }
+        finally { root.Delete(true); }
+    }
+
     [Theory]
     [InlineData("Failure", false)]
     [InlineData("PartialSuccess", false)]

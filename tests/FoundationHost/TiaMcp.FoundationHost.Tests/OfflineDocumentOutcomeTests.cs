@@ -99,6 +99,35 @@ public sealed class OfflineDocumentOutcomeTests
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
     }
 
+    [Theory, InlineData(true), InlineData(false)]
+    public void File_and_inconsistent_live_block_report_the_compile_precondition(bool fileOnLeft)
+    {
+        const string block = "MCP_RC_FC";
+        const string software = "devices/MCP_RC_PLC/MCP_RC_PLC";
+        const string reason = "Compile the inconsistent block before export. Inconsistent objects: MCP_RC_FC.";
+        using var worker = new DirectoryImportRegressionTests.Worker((operation, args) => {
+            Assert.Equal("plc-analysis.ExportBlockDocument", operation);
+            Assert.Equal(block, (string?)args["blockPath"]);
+            throw new TiaMcp.FoundationHost.WorkerOperationException(reason, -32603, "rejected-before-operation",
+                new JsonObject { ["exceptionType"] = "AdapterPreconditionException", ["parameter"] = "blockPath",
+                    ["isArgument"] = false, ["nativeMessage"] = reason }.ToJsonString());
+        });
+        var services = TiaMcp.FoundationHost.FoundationHostPorts.CreateServices(worker, "21", () => new JsonObject(), null);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", services, []);
+        using var session = pipeline.EnterSession();
+        string file = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(file, Document);
+            var body = new Host.OfflineAnalysisTools().ComparePlcBlockDocumentsV4(fileOnLeft ? file : "", fileOnLeft ? "" : file,
+                software, fileOnLeft ? "" : block, fileOnLeft ? block : "").StructuredContent!;
+            Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
+            Assert.Equal(reason, (string?)body["error"]!["message"]);
+            Assert.Equal(reason, (string?)body["error"]!["details"]!["nativeMessage"]);
+        }
+        finally { File.Delete(file); }
+    }
+
     [Theory, MemberData(nameof(VerifiedImportOutcomeTests.Releases), MemberType = typeof(VerifiedImportOutcomeTests))]
     public async Task Comparison_keeps_each_expanded_instance_under_its_own_member(string release)
     {

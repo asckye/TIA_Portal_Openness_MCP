@@ -1,7 +1,9 @@
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using ModelContextProtocol.Protocol;
+using TiaMcp.Adapters;
 using TiaMcp.Engine.Tests.Shared;
 using TiaMcp.FoundationHost;
 using TiaMcp.Logic.V4;
@@ -83,6 +85,43 @@ public sealed class ExternalSourceFailureTests
         var input = new JsonObject { ["message"] = recorded[prefix.Length..] };
         var raw = SafetyLoginFrameworkTests.RunFixture("generate-source", "compiler-message", input)["generation"]!;
         AssertRecordedFailure(Envelope(raw), recorded);
+    }
+
+    [Theory, InlineData(true), InlineData(false)]
+    public void Definite_failure_reports_the_fresh_inventory_or_explicitly_unknown(bool readable)
+    {
+        var record = Record("20");
+        var objects = record["rc7ObjectsBefore"]!.AsArray().Select(row => new PlcExternalSourceObject {
+            Kind = (string)row!["kind"]!, Path = (string)row["path"]!, Name = (string)row["name"]!, TypeName = (string)row["typeName"]!,
+            ProgrammingLanguage = (string)row["programmingLanguage"]!, IsConsistent = (bool)row["isConsistent"]!,
+            ModifiedDate = row["modifiedDate"]!.GetValue<DateTime>()
+        }).ToArray();
+        const string project = @"C:\Projects\项目1.ap20";
+        int reads = 0;
+        bool attempted = false;
+        PlcExternalSourceGenerationResult Generate(bool dry, string hash) => PlcExternalSourceWorkflowPolicy.Generate(new() {
+            Operation = Tool, Release = "20", SourceName = (string)record["sourceName"]!, ProjectFile = project,
+            SourceIdentity = "source", SoftwarePath = "devices/MCP_RC_PLC/MCP_RC_PLC", ProcessId = 1080
+        }, dry, hash, !dry, project, () => {
+            if (attempted) { reads++; if (!readable) throw new IOException(); }
+            return objects;
+        }, () => { }, () => { attempted = true; throw new InvalidOperationException((string)record["error"]!); },
+            () => throw new InvalidOperationException("No generated objects were returned."), _ => true);
+
+        var failed = Generate(false, Generate(true, "").PlanHash);
+        var body = Envelope(JsonSerializer.SerializeToNode(failed)!);
+        Assert.Equal(1, reads);
+        Assert.Equal("failed", (string?)body["meta"]!["outcome"]);
+        Assert.Contains("NoSuchType", (string?)body["error"]!["message"]);
+        foreach (var data in new[] { body["data"]!.AsObject(), body["error"]!["details"]!["evidence"]!.AsObject() })
+        {
+            Assert.True(data.ContainsKey("objectsAfter"));
+            if (readable) Assert.Equal(objects.Select(o => o.Name), data["objectsAfter"]!.AsArray().Select(o => (string?)o!["name"]));
+            else Assert.Null(data["objectsAfter"]);
+        }
+        var wire = JsonSerializer.SerializeToNode(failed)!.AsObject();
+        wire["GeneratedObjects"] = wire["ObjectsBefore"]!.DeepClone();
+        Assert.Throws<InvalidDataException>(() => Response(wire));
     }
 
     [Fact]

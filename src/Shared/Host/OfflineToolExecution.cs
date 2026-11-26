@@ -150,6 +150,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal static ResponseMessage AnalysisFailure(string toolName, JsonObject meta, Exception cause)
         {
+            if (toolName == "ComparePlcBlockDocuments"
+                && TiaMcp.Logic.V4.HostBehavior.WorkerReplyEvidence(toolName, cause)?.TryGetValue("nativeMessage", out var reason) == true
+                && reason.ValueKind == JsonValueKind.String)
+                meta["nativeMessage"] = reason.GetString();
             meta["error"] = cause.ToString();
             if (cause is ArgumentException || cause is JsonException)
                 meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";

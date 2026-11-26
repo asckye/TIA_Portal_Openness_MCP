@@ -18,7 +18,8 @@ internal static class DocumentExportContract
             "Executed","ReleaseKey","ProjectFile","SoftwarePath","BlockPath","OutputDirectory","Language","PlanHash","Status","OutcomeUnknown",
                 "NativeResult","Options","Files","Evidence","RecoveryDirectory"
         };
-        if(result.Count!=fields.Length || result.Any(p=>!fields.Contains(p.Key))) throw new InvalidDataException("Unexpected document export shape.");
+        if(fields.Any(key=>!result.ContainsKey(key)) || result.Any(p=>p.Key!="NativeMessage" && !fields.Contains(p.Key)))
+            throw new InvalidDataException("Unexpected document export shape.");
         string Text(string key)=>result[key] is JsonValue v && v.TryGetValue<string>(out var s)?s
             :throw new InvalidDataException("Invalid document field: "+key);
         bool Flag(string key)=>result[key] is JsonValue v && v.TryGetValue<bool>(out var b)?b:throw new InvalidDataException("Invalid document flag: "+key);
@@ -30,6 +31,8 @@ internal static class DocumentExportContract
             throw new InvalidDataException("Unverified document scope.");
         var hash=Text("PlanHash"); if(hash.Length!=64 || hash.Any(c=>!"0123456789abcdef".Contains(c))) throw new InvalidDataException("Invalid document hash.");
         var status=Text("Status");
+        if(result["NativeMessage"] != null && (status!="failed" || result["NativeResult"]!=null || Text("NativeMessage").Length is 0 or >4096))
+            throw new InvalidDataException("Invalid document export diagnostic.");
         if(Flag("Executed")==dryRun || (dryRun?status is not ("planned" or "inconsistent"):status is not ("exported" or "failed"))
                 || Flag("OutcomeUnknown")!=RequiresReset(result)
                 || (status=="failed"?string.IsNullOrWhiteSpace(Text("RecoveryDirectory")):Text("RecoveryDirectory")!=""))

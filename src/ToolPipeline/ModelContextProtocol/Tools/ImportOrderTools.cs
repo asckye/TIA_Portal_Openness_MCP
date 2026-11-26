@@ -228,8 +228,9 @@ namespace TiaMcpServer.ModelContextProtocol
             if (rejection != null && !mayWrite)
                 return Result(tool, data, rejection, Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (writes && (mayWrite || success == null)) return Result(tool, data, Unknown(data), Outcome.Unknown, Completeness.Unknown, current);
-            return Result(tool, data, new Error("The operation did not satisfy its completion criteria.", new NativeOperationFailedDetails(null, null,
-                data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value)))),
+            string? reason = tool == "ComparePlcBlockDocuments" ? HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) : null;
+            var details = new NativeOperationFailedDetails(null, reason, data.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value)));
+            return Result(tool, data, new Error(reason ?? "The operation did not satisfy its completion criteria.", details),
                 writes ? Outcome.Failed : Outcome.ReadFailed, incomplete ? Completeness.Partial : Completeness.Complete, current);
         }
 

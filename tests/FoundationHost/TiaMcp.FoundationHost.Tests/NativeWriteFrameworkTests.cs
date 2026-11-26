@@ -342,6 +342,7 @@ public sealed class NativeWriteFrameworkTests
     [InlineData("sd-scoped-number", 150)]
     [InlineData("sd-scoped-unrequested-auto", 150)]
     [InlineData("sd-scoped-optional", 42)]
+    [InlineData("sd-scoped-lad", 9812)]
     public void Scoped_import_reports_number_and_attribute_outcomes(string scenario, int number)
     {
         using var inputs = new Inputs();
@@ -380,6 +381,9 @@ public sealed class NativeWriteFrameworkTests
                 Assert.Contains("VendorValue", meta["notCompared"]!.ToJsonString());
             }
             else Assert.True((bool?)meta["propertiesPreserved"]);
+            if (scenario == "sd-scoped-lad")
+                Assert.Equal(new[] { "IsConsistent (derived state recalculated by compilation)",
+                    "LibraryConformanceStatus (derived state recalculated by compilation)" }, meta["notCompared"]!.AsArray().Select(v => (string?)v));
             if (scenario == "sd-scoped-number") Assert.False((bool?)meta["importedBlock"]?["autoNumber"]);
             if (scenario == "sd-scoped-optional") Assert.Equal("System.Object", (string?)meta["importedBlock"]?["attributes"]?["VendorValue"]);
         }

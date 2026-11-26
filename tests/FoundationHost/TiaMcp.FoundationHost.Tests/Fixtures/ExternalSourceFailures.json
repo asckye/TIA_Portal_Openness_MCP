@@ -32,7 +32,54 @@
   "20": {
     "record": "rc.5 V20 147",
     "sourceName": "RC-20-V-bad.scl",
-    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-20-V-bad.scl 正在生成块 \"MCP_RC_FCBAD\"... Interface: 数据类型 NoSuchType 未知。   1 个错误，1 个警告：导入“RC-20-V-bad.scl”完成，但存在错误。     行 000004: 块“ MCP_RC_FCBAD” 将创建为具有“优化的块访问”属性。  "
+    "error": "EngineeringTargetInvocationException: Error when calling method 'GenerateBlocksFromSource' of type 'Siemens.Engineering.SW.ExternalSources.PlcExternalSource'.\r\n\r\nAn error occurred during code generation. 外部源文件 RC-20-V-bad.scl 正在生成块 \"MCP_RC_FCBAD\"... Interface: 数据类型 NoSuchType 未知。   1 个错误，1 个警告：导入“RC-20-V-bad.scl”完成，但存在错误。     行 000004: 块“ MCP_RC_FCBAD” 将创建为具有“优化的块访问”属性。  ",
+    "rc7ObjectsBefore": [
+      {
+        "kind": "block",
+        "path": "MCP_RC_DBP",
+        "name": "MCP_RC_DBP",
+        "typeName": "GlobalDB",
+        "programmingLanguage": "DB",
+        "isConsistent": true,
+        "modifiedDate": "2026-11-26T00:13:06.0484775Z"
+      },
+      {
+        "kind": "block",
+        "path": "MCP_RC_FBL",
+        "name": "MCP_RC_FBL",
+        "typeName": "FB",
+        "programmingLanguage": "LAD",
+        "isConsistent": true,
+        "modifiedDate": "2026-11-26T00:13:06.0798149Z"
+      },
+      {
+        "kind": "block",
+        "path": "MCP_RC_FCL",
+        "name": "MCP_RC_FCL",
+        "typeName": "FC",
+        "programmingLanguage": "LAD",
+        "isConsistent": true,
+        "modifiedDate": "2026-11-26T00:13:06.0640297Z"
+      },
+      {
+        "kind": "block",
+        "path": "MCP_RC_SDDB",
+        "name": "MCP_RC_SDDB",
+        "typeName": "GlobalDB",
+        "programmingLanguage": "DB",
+        "isConsistent": true,
+        "modifiedDate": "2026-11-26T00:09:09.1112528Z"
+      },
+      {
+        "kind": "block",
+        "path": "Main",
+        "name": "Main",
+        "typeName": "OB",
+        "programmingLanguage": "LAD",
+        "isConsistent": true,
+        "modifiedDate": "2026-11-26T00:12:47.0484021Z"
+      }
+    ]
   },
   "21": {
     "record": "rc.5 V21 156",
