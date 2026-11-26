@@ -29,7 +29,11 @@ internal static class VciExportFixture
         foreach (var scenario in new[] { "equal", "unknown", "unequal", "collision", "exportRefused", "createRefused", "lookupRefused",
             "syncRefused", "nativeSuccess", "repair", "repairRefused", "reuse", "newStatusRefused", "seedDisposed", "seedAbort", "seedConnection",
             "seedNonrecoverable", "sameName", "differentXml", "rc7-comment", "rc7-member", "rc7-after-preview",
-            "rc7-reconnect", "rc7-sidecar", "rc7-after-create" })
+            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent"
+#if !STUDIO_VCI_INITIAL
+            , "studio-conflict", "studio-reuse"
+#endif
+        })
         {
             var root = parent.CreateSubdirectory(scenario);
             var workspace = new Workspace(root);
@@ -61,14 +65,48 @@ internal static class VciExportFixture
                     + "</Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>";
             block.Write = (target, options) =>
             {
-                workspace.Calls.Add("Export:" + target.Name + ":" + options);
+                bool workspaceTarget = target.FullName.StartsWith(root.FullName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+                var prefix = workspaceTarget && scenario.StartsWith("studio-", StringComparison.Ordinal) ? "Workspace.Export:" : "Export:";
+                workspace.Calls.Add(prefix + target.Name + ":" + options);
                 if (scenario == "seedDisposed") throw new EngineeringObjectDisposedException("Disposed");
                 if (scenario == "seedAbort") throw new EngineeringUserAbortException("Aborted");
                 if (scenario == "seedConnection") throw new EndOfStreamException("Connection lost");
                 if (scenario == "seedNonrecoverable") throw new NonRecoverableException("Nonrecoverable");
-                if (scenario == "exportRefused") throw new EngineeringTargetInvocationException("MCP_RC_FC [FC1] object(s) is not consistent");
+                if (scenario is "exportRefused" or "rc7-inconsistent")
+                    throw new EngineeringTargetInvocationException("MCP_RC_FC [FC1] object(s) is not consistent");
                 File.WriteAllText(target.FullName, xml);
             };
+            if (scenario == "rc7-inconsistent")
+            {
+                block.IsConsistent = false;
+                File.WriteAllText(file, xml);
+            }
+#if !STUDIO_VCI_INITIAL
+            if (scenario.StartsWith("studio-", StringComparison.Ordinal))
+            {
+                var studio = new TiaOpenness.Openness.OpennessVersionControl(() => project);
+                using var hash = System.Security.Cryptography.SHA256.Create();
+                var digest = hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(device.Name + "\n" + block.Name));
+                var stem = device.Name + "_" + block.Name + "_" + BitConverter.ToString(digest, 0, 4).Replace("-", "").ToLowerInvariant();
+                var target = Path.Combine(root.FullName, stem + ".xml");
+                File.WriteAllText(target, scenario == "studio-reuse" ? xml : xml.Replace("<Name>MCP_RC_FC</Name>", "<Name>Other</Name>"),
+                    new System.Text.UTF8Encoding(true));
+                var bytes = File.ReadAllBytes(target);
+                var preview = studio.MapProject("", "", true, null);
+                var previewCalls = workspace.Calls.ToArray();
+                bool previewPreserved = File.ReadAllBytes(target).SequenceEqual(bytes);
+                workspace.Calls.Clear();
+                var applied = studio.MapProject("", "", false, null);
+#if STUDIO_VCI_MODERN
+                var states = workspace.MappedObjects.Select(m => m.Status.Calls);
+#else
+                var states = workspace.Mappings.Select(m => m.Status.Calls);
+#endif
+                replies.Add(scenario, new { preview, previewCalls, previewPreserved, apply = applied, workspace.Calls, states, stem,
+                    preserved = File.ReadAllBytes(target).SequenceEqual(bytes) });
+                continue;
+            }
+#endif
             if (scenario == "sameName") plc.BlockGroup.Blocks.Add(new PlcBlock { Name = block.Name, Write = block.Write });
             workspace.Mappings.RefuseInitialStatus = scenario == "newStatusRefused";
             workspace.Mappings.InitialState = scenario is "unknown" or "newStatusRefused" ? CompareState.Unknown

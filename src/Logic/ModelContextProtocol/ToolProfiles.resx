@@ -7214,6 +7214,13 @@
             "value": "Example"
           },
           {
+            "action": "setMemberStartValue",
+            "section": "None",
+            "memberPath": "Grp/Inner/Speed",
+            "expectedValue": "8",
+            "value": "13"
+          },
+          {
             "action": "setMemberComment",
             "section": "Static",
             "memberPath": "Motor/Speed",
@@ -9696,6 +9703,13 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberStartValue",
+            "section": "None",
+            "memberPath": "Grp/Inner/Speed",
+            "expectedValue": "8",
+            "value": "13"
           },
           {
             "action": "setMemberComment",
@@ -12594,6 +12608,13 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberStartValue",
+            "section": "None",
+            "memberPath": "Grp/Inner/Speed",
+            "expectedValue": "8",
+            "value": "13"
           },
           {
             "action": "setMemberComment",
@@ -15746,6 +15767,13 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberStartValue",
+            "section": "None",
+            "memberPath": "Grp/Inner/Speed",
+            "expectedValue": "8",
+            "value": "13"
           },
           {
             "action": "setMemberComment",
@@ -19221,6 +19249,13 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberStartValue",
+            "section": "None",
+            "memberPath": "Grp/Inner/Speed",
+            "expectedValue": "8",
+            "value": "13"
           },
           {
             "action": "setMemberComment",
@@ -22870,6 +22905,13 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberStartValue",
+            "section": "None",
+            "memberPath": "Grp/Inner/Speed",
+            "expectedValue": "8",
+            "value": "13"
           },
           {
             "action": "setMemberComment",
@@ -27613,6 +27655,13 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberStartValue",
+            "section": "None",
+            "memberPath": "Grp/Inner/Speed",
+            "expectedValue": "8",
+            "value": "13"
           },
           {
             "action": "setMemberComment",
@@ -32670,6 +32719,13 @@
             "culture": "en-US",
             "expectedValue": "Old title",
             "value": "Example"
+          },
+          {
+            "action": "setMemberStartValue",
+            "section": "None",
+            "memberPath": "Grp/Inner/Speed",
+            "expectedValue": "8",
+            "value": "13"
           },
           {
             "action": "setMemberComment",
@@ -47732,6 +47788,13 @@
               "value": "Example"
             },
             {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
+            },
+            {
               "action": "setMemberComment",
               "section": "Static",
               "memberPath": "Motor/Speed",
@@ -57593,6 +57656,13 @@
               "value": "Example"
             },
             {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
+            },
+            {
               "action": "setMemberComment",
               "section": "Static",
               "memberPath": "Motor/Speed",
@@ -63666,6 +63736,13 @@
               "value": "Example"
             },
             {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
+            },
+            {
               "action": "setMemberComment",
               "section": "Static",
               "memberPath": "Motor/Speed",
@@ -69716,6 +69793,13 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
             },
             {
               "action": "setMemberComment",
@@ -76296,6 +76380,13 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
             },
             {
               "action": "setMemberComment",
@@ -83244,6 +83335,13 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
             },
             {
               "action": "setMemberComment",
@@ -90682,6 +90780,13 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
             },
             {
               "action": "setMemberComment",
@@ -99478,6 +99583,13 @@
               "value": "Example"
             },
             {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
+            },
+            {
               "action": "setMemberComment",
               "section": "Static",
               "memberPath": "Motor/Speed",
@@ -107419,6 +107531,13 @@
               "value": "Example"
             },
             {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
+            },
+            {
               "action": "setMemberComment",
               "section": "Static",
               "memberPath": "Motor/Speed",
@@ -114883,6 +115002,13 @@
               "culture": "en-US",
               "expectedValue": "Old title",
               "value": "Example"
+            },
+            {
+              "action": "setMemberStartValue",
+              "section": "None",
+              "memberPath": "Grp/Inner/Speed",
+              "expectedValue": "8",
+              "value": "13"
             },
             {
               "action": "setMemberComment",

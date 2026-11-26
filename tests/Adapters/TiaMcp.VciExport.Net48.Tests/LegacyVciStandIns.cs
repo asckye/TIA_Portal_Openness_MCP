@@ -308,9 +308,19 @@ namespace Siemens.Engineering.SW.Types
     }
 }
 
-#if !STUDIO_VCI_MODERN
 namespace TiaOpenness.Openness
 {
+#if STUDIO_VCI_MODERN
+    // The connect fixture never dispatches a workspace-to-project restore.
+    internal sealed partial class OpennessVersionControl
+    {
+        private static TiaMcp.Adapters.Contracts.Studio.SyncItem? RestoreSdMapping(MappedObject mapped, string root, string label,
+            bool dryRun, out bool connectionLost) => throw new NotSupportedException();
+        private static bool IsDisposedMapping(MappedObject mapped, Exception error) => throw new NotSupportedException();
+        private static CompareState ReadMappedState(MappedObject mapped, out string? error)
+        { error = null; return mapped.GetStatus().CompareState; }
+    }
+#endif
     internal static class PlcNavigator
     {
         internal static IEnumerable<Device> AllDevices(Siemens.Engineering.Project project) => project.Devices;
@@ -318,4 +328,3 @@ namespace TiaOpenness.Openness
             (Siemens.Engineering.SW.PlcSoftware)device.DeviceItems.Single().Container.Software;
     }
 }
-#endif

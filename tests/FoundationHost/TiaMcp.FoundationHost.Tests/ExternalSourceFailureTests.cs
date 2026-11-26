@@ -124,6 +124,32 @@ public sealed class ExternalSourceFailureTests
         Assert.Throws<InvalidDataException>(() => Response(wire));
     }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public void V14_reports_observed_additions_after_successful_void_generation(bool changedMain)
+    {
+        var path = Path.Combine(TestPaths.RepositoryRoot(AppContext.BaseDirectory),
+            "tests/FoundationHost/TiaMcp.FoundationHost.Tests/Fixtures/ExternalSourceV14Generation.json");
+        var record = JsonNode.Parse(File.ReadAllText(path))!;
+        var wire = FailedReply("14sp1", "");
+        wire["Status"] = "completed";
+        wire["Executed"] = true;
+        foreach (var key in new[] { "ObjectsBefore", "ObjectsAfter", "ObservedChanges" })
+            wire[key] = record[key]!.DeepClone();
+        if (changedMain)
+        {
+            var main = wire["ObjectsAfter"]!.AsArray().Single(row => (string?)row!["Name"] == "Main")!;
+            main["IsConsistent"] = false;
+            wire["ObservedChanges"]!.AsArray().Add(main.DeepClone());
+        }
+        var result = Envelope(wire);
+        Assert.True((bool?)result["ok"]);
+        var data = result["data"]!;
+        Assert.Null(data["nativeResult"]);
+        Assert.Equal(new[] { "MCP_RC_FB", "MCP_RC_FC", "MCP_RC_UDT", "MCP_RC_UDT3" },
+            data["generatedObjects"]!.AsArray().Select(row => (string?)row!["name"]));
+        Assert.Equal(changedMain ? 5 : 4, data["observation"]!["observedChanges"]!.AsArray().Count);
+    }
+
     [Fact]
     public void Compiler_line_numbers_and_symbols_survive_a_single_digit_assignment()
     {

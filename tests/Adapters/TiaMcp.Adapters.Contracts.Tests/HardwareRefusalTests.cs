@@ -25,6 +25,34 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Equal(failure != "unchanged", reply.MayHaveChanged);
         }
 
+        [Theory]
+        [InlineData("The name must contain a character.", "The name must contain a character.")]
+        [InlineData("", "An empty name is not allowed.")]
+        [InlineData(null, "TIA refused the name without a reason.")]
+        public void Empty_device_name_preserves_the_native_refusal(string? inner, string expected)
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            var item = new NameTarget(inner);
+            engine.RollbackCpu = item;
+            var reply = engine.HardwareLegacySetDeviceItemAttribute("PLC/CPU", "Name", "");
+            Assert.Equal(1, item.Writes);
+            Assert.False(reply.MayHaveChanged);
+            Assert.Contains(expected, Assert.IsType<string>(reply.Meta["nativeMessage"]));
+        }
+
+        private sealed class NameTarget(string? inner) : HardwareObject
+        {
+            internal int Writes;
+            public override IEnumerable<EngineeringAttributeInfo> GetAttributeInfos() => [new() { Name = "Name" }];
+            public override object GetAttribute(string name) => "MCP_RC_PLC";
+            public override void SetAttribute(string name, object? value)
+            {
+                Writes++;
+                throw new EngineeringException("Error when calling method 'set_Name' of type 'Siemens.Engineering.HW.DeviceItemImpl'.",
+                    inner == null ? null : new Exception(inner));
+            }
+        }
+
         [Fact]
         public void Aborted_cpu_write_with_matching_value_stays_unknown()
         {

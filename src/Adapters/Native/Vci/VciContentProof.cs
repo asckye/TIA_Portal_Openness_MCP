@@ -14,6 +14,7 @@ internal sealed class VciContentProof
     internal string? Sha256 { get; private set; }
     internal string Verification { get; private set; } = "not-comparable";
     internal string? Message { get; private set; }
+    internal string? ExportFailure { get; private set; }
     internal bool Matches => Verification == "content-match";
     private readonly string workspace;
 
@@ -45,6 +46,7 @@ internal sealed class VciContentProof
     {
         Verification = "not-comparable";
         Message = null;
+        ExportFailure = null;
         Sha256 = null;
         if (File == null)
         {
@@ -68,9 +70,16 @@ internal sealed class VciContentProof
                 foreach (bool defaults in new[] { false, true })
                 {
                     var candidate = new FileInfo(Path.Combine(temp.FullName, defaults ? "defaults.xml" : "object.xml"));
+                    try { export(candidate, defaults); }
+                    catch (Exception error) when (ordinary(error))
+                    {
+                        Message = NativeFailureText.BoundedDiagnostic(error);
+                        ExportFailure = NativeFailureText.BoundedMessage(NativeFailureText.Compose(error.Message,
+                            error.GetBaseException().Message, Array.Empty<string>()), NativeFailureText.WithoutLocalPaths);
+                        continue;
+                    }
                     try
                     {
-                        export(candidate, defaults);
                         if (CandidateImportFiles.XmlHash(Read(candidate)) == expected)
                         {
                             Message = null;

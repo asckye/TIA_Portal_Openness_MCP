@@ -896,6 +896,7 @@
       "RELEASE",
       "STUDIO_VCI",
       "STUDIO_VCI_MODERN",
+      "TIA_ADAPTER_INTERNAL_VERSIONING",
       "TRACE"
     ]
   },

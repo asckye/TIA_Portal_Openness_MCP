@@ -72,10 +72,7 @@ internal sealed class VciStoredEqual
                 if (Proof.Matches) Outcome = "verified-equal";
                 else if (Proof.Verification == "not-comparable" && Proof.Message != null && compared is global::Siemens.Engineering.SW.Blocks.PlcBlock block)
                 {
-                    Message = Proof.Message;
-                    try { if (!block.IsConsistent) Message += " Recompile the block, then retry the comparison export."; }
-                    catch (Exception error) when (NativeVci.Ordinary(error))
-                    { /* swallow(probe-optional): retain the comparison diagnostic when the consistency flag cannot be read. */ }
+                    Message = NativeVci.ComparisonDiagnostic(block, Proof.Message);
                 }
             }
             catch (Exception error) when (!NativeVci.Ordinary(error))

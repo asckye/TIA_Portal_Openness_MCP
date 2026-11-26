@@ -5,8 +5,7 @@
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
     <PlatformTarget>x64</PlatformTarget>
-    <DefineConstants>$(DefineConstants);STUDIO_VCI</DefineConstants>
-    <DefineConstants Condition="!$(DefineConstants.Contains('STUDIO_VCI_MODERN'))">$(DefineConstants);TIA_ADAPTER_INTERNAL_VERSIONING</DefineConstants>
+    <DefineConstants>$(DefineConstants);STUDIO_VCI;TIA_ADAPTER_INTERNAL_VERSIONING</DefineConstants>
     <TiaPublicApiRoot Condition="'$(TiaPublicApiRoot)' == ''">$(MSBuildThisFileDirectory)../../../sdk</TiaPublicApiRoot>
     <VciExceptionSdkDir>$(TiaPublicApiRoot)/TIA_V17_PublicAPI/V17</VciExceptionSdkDir>
     <VciExceptionSdkDir Condition="Exists('$(SiemensEngineeringDirectory)/Siemens.Engineering.dll')">$(SiemensEngineeringDirectory)</VciExceptionSdkDir>
@@ -19,8 +18,13 @@
   <ItemGroup Condition="Exists('$(VciExceptionSdk)')">
     <Reference Include="Siemens.Engineering" HintPath="$(VciExceptionSdk)" Aliases="vciSdk" Private="true" />
   </ItemGroup>
-  <ItemGroup Condition="$(DefineConstants.Contains('TIA_ADAPTER_INTERNAL_VERSIONING'))">
+  <ItemGroup Condition="!$(DefineConstants.Contains('STUDIO_VCI_MODERN'))">
     <Compile Include="../../../src/Adapters/Native/Studio/OpennessVersionControl*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(DefineConstants.Contains('STUDIO_VCI_MODERN'))">
+    <Compile Include="../../../src/Adapters/Native/Studio/OpennessVersionControl.cs;../../../src/Adapters/Native/Studio/OpennessVersionControl.Tree.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="../../../src/Adapters.Contracts/Studio/Dto.cs" />
     <Compile Include="../../../src/Adapters.Contracts/Studio/Enums.cs" />
     <Compile Include="../../../src/Adapters.Contracts/Studio/VersionControl.cs" />

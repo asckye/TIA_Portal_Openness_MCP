@@ -1,0 +1,98 @@
+{
+  "ObjectsBefore": [
+    {
+      "Kind": "block",
+      "Path": "Main",
+      "Name": "Main",
+      "TypeName": "OB",
+      "ProgrammingLanguage": "LAD",
+      "IsConsistent": true,
+      "ModifiedDate": "2026-11-25T11:01:06.8411227Z"
+    }
+  ],
+  "ObjectsAfter": [
+    {
+      "Kind": "block",
+      "Path": "MCP_RC_FB",
+      "Name": "MCP_RC_FB",
+      "TypeName": "FB",
+      "ProgrammingLanguage": "SCL",
+      "IsConsistent": false,
+      "ModifiedDate": "2026-11-26T01:11:40.9397484Z"
+    },
+    {
+      "Kind": "block",
+      "Path": "MCP_RC_FC",
+      "Name": "MCP_RC_FC",
+      "TypeName": "FC",
+      "ProgrammingLanguage": "SCL",
+      "IsConsistent": false,
+      "ModifiedDate": "2026-11-26T01:11:40.8617417Z"
+    },
+    {
+      "Kind": "block",
+      "Path": "Main",
+      "Name": "Main",
+      "TypeName": "OB",
+      "ProgrammingLanguage": "LAD",
+      "IsConsistent": true,
+      "ModifiedDate": "2026-11-25T11:01:06.8411227Z"
+    },
+    {
+      "Kind": "type",
+      "Path": "MCP_RC_UDT",
+      "Name": "MCP_RC_UDT",
+      "TypeName": "PlcStruct",
+      "ProgrammingLanguage": "",
+      "IsConsistent": false,
+      "ModifiedDate": "2026-11-26T01:11:40.8145387Z"
+    },
+    {
+      "Kind": "type",
+      "Path": "MCP_RC_UDT3",
+      "Name": "MCP_RC_UDT3",
+      "TypeName": "PlcStruct",
+      "ProgrammingLanguage": "",
+      "IsConsistent": false,
+      "ModifiedDate": "2026-11-26T01:11:40.8305733Z"
+    }
+  ],
+  "ObservedChanges": [
+    {
+      "Kind": "block",
+      "Path": "MCP_RC_FB",
+      "Name": "MCP_RC_FB",
+      "TypeName": "FB",
+      "ProgrammingLanguage": "SCL",
+      "IsConsistent": false,
+      "ModifiedDate": "2026-11-26T01:11:40.9397484Z"
+    },
+    {
+      "Kind": "block",
+      "Path": "MCP_RC_FC",
+      "Name": "MCP_RC_FC",
+      "TypeName": "FC",
+      "ProgrammingLanguage": "SCL",
+      "IsConsistent": false,
+      "ModifiedDate": "2026-11-26T01:11:40.8617417Z"
+    },
+    {
+      "Kind": "type",
+      "Path": "MCP_RC_UDT",
+      "Name": "MCP_RC_UDT",
+      "TypeName": "PlcStruct",
+      "ProgrammingLanguage": "",
+      "IsConsistent": false,
+      "ModifiedDate": "2026-11-26T01:11:40.8145387Z"
+    },
+    {
+      "Kind": "type",
+      "Path": "MCP_RC_UDT3",
+      "Name": "MCP_RC_UDT3",
+      "TypeName": "PlcStruct",
+      "ProgrammingLanguage": "",
+      "IsConsistent": false,
+      "ModifiedDate": "2026-11-26T01:11:40.8305733Z"
+    }
+  ]
+}

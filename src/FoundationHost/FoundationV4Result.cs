@@ -508,6 +508,14 @@ internal static class FoundationV4Result
         if (definition.Operation == "GenerateBlocksFromExternalSource" && release == "14sp1")
         {
             data["nativeResult"] = null;
+            if ((string?)data["status"] == "completed" && data["objectsBefore"] is JsonArray before
+                && data["objectsAfter"] is JsonArray after && data["observedChanges"] is JsonArray changes)
+            {
+                static (string?, string?) Identity(JsonNode? row) => ((string?)row?["kind"], (string?)row?["path"]);
+                var additions = after.Select(Identity).Except(before.Select(Identity)).ToHashSet();
+                data["generatedObjects"] = new JsonArray(changes.Where(row => additions.Contains(Identity(row)))
+                    .Select(row => row!.DeepClone()).ToArray());
+            }
             data["observation"] = new JsonObject { ["source"] = data["resultBasis"]?.DeepClone(),
                 ["objectsBefore"] = data["objectsBefore"]?.DeepClone(), ["objectsAfter"] = data["objectsAfter"]?.DeepClone(),
                 ["observedChanges"] = data["observedChanges"]?.DeepClone() };

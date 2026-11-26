@@ -100,7 +100,17 @@ namespace TiaMcp.Adapters
             }
             catch (Exception ex) /* swallow(probe-optional): Preserve the original optional catalog/module observation; the caller retains its existing fallback and readback. */
             {
-                if (HardwareSiemensReason(ex) is string reason) meta["nativeMessage"] = reason;
+                if (HardwareSiemensReason(ex) is string reason)
+                {
+                    if (string.Equals(attributeName, "Name", StringComparison.OrdinalIgnoreCase)
+                        && meta.TryGetValue("requestedValue", out var requested) && Equals(requested, string.Empty))
+                    {
+                        var inner = ex.InnerException?.Message;
+                        reason = NativeFailureText.Compose(reason, string.IsNullOrWhiteSpace(inner)
+                            ? "TIA refused the name without a reason. An empty name is not allowed." : inner, Array.Empty<string>());
+                    }
+                    meta["nativeMessage"] = reason;
+                }
                 meta["error"] = HardwareExceptionDetail(ex);
                 return new HardwareAddressingReply { Message = $"Failed setting device item attribute '{attributeName}'", Meta = meta };
             }

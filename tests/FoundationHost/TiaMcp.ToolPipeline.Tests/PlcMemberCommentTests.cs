@@ -65,6 +65,9 @@ public sealed class PlcMemberCommentTests
         var edit = Assert.Single(call["arguments"]!["changes"]!.AsArray(), c => (string?)c!["action"] == "setMemberComment")!;
         Assert.Equal(("Static", "Motor/Speed", "zh-CN", ""),
             ((string?)edit["section"], (string?)edit["memberPath"], (string?)edit["culture"], (string?)edit["expectedValue"]));
+        var nested = Assert.Single(call["arguments"]!["changes"]!.AsArray(), c => (string?)c!["action"] == "setMemberStartValue")!;
+        Assert.Equal(("None", "Grp/Inner/Speed", "8", "13"),
+            ((string?)nested["section"], (string?)nested["memberPath"], (string?)nested["expectedValue"], (string?)nested["value"]));
         var reading = call["resultReading"]!.AsArray().Select(row => (string)row!).ToArray();
         Assert.Contains(reading, row => row.Contains("ImportPlcBlockVerified", StringComparison.Ordinal));
         Assert.Contains(reading, row => row.Contains("ExportPlcType", StringComparison.Ordinal)

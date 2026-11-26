@@ -157,6 +157,27 @@ public sealed class DeviceCreationEnvelopeTests
         }
     }
 
+    [Theory]
+    [InlineData("The name must contain a character.")]
+    [InlineData("TIA refused the name without a reason. An empty name is not allowed.")]
+    public async Task V14_empty_device_name_exposes_the_native_reason_in_the_public_error(string reason)
+    {
+        using var fixture = new Fixture("14sp1");
+        var message = "Error when calling method 'set_Name' of type 'Siemens.Engineering.HW.DeviceItemImpl'. " + reason;
+        fixture.Worker.AttributeEvidence = new JsonObject {
+            ["success"] = false, ["deviceItemPath"] = Item, ["attributeName"] = "Name", ["mayHaveChanged"] = false,
+            ["oldValue"] = "MCP_RC_PLC", ["requestedValue"] = "", ["attributeDataType"] = "", ["attributeAccessMode"] = "ReadWrite",
+            ["attributeWritable"] = true, ["writeOutcomeUnknown"] = false, ["apiCallSuccess"] = false, ["nativeMessage"] = message };
+        var args = new JsonObject { ["deviceItemPath"] = Item, ["attributeName"] = "Name", ["value"] = "" };
+        var plan = await fixture.Call("SetDeviceItemAttribute", args, true);
+        Assert.True((bool?)plan["ok"], plan.ToJsonString());
+        Confirm(args, plan, confirm: false);
+        var refused = await fixture.Call("SetDeviceItemAttribute", args, true);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)refused["error"]?["code"]);
+        Assert.Equal(message, (string?)refused["error"]?["message"]);
+        Assert.Equal("failed", (string?)refused["meta"]?["outcome"]);
+    }
+
     [Theory, InlineData("PositionNumber", false, true), InlineData("positionnumber", false, false), InlineData("PositionNumber", true, false)]
     public async Task Attribute_preview_warns_only_for_a_readable_exact_match(string name, bool failedRead, bool blocked)
     {

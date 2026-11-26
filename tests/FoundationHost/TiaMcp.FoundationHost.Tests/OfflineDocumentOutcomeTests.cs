@@ -109,6 +109,45 @@ public sealed class OfflineDocumentOutcomeTests
         else AssertRefused(result);
     }
 
+    [Fact]
+    public async Task V14_expanded_UDT_accepts_the_section_and_path_from_its_capabilities_row()
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("14sp1");
+        using var session = fixture.EnterSession();
+        var filePath = Path.Combine(fixture.Root, "MCP_RC_DB3.xml");
+        var exportFile = Path.Combine(fixture.Root, "patched.xml");
+        // The six interface rows reported by rc7-verify-v14sp1, raw-V/031.
+        File.WriteAllText(filePath, """
+            <Document><Engineering version="V14 SP1"/><SW.Blocks.GlobalDB ID="0"><AttributeList><Name>MCP_RC_DB3</Name>
+            <ProgrammingLanguage>DB</ProgrammingLanguage><Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v2">
+            <Section Name="Static"><Member Name="Count" Datatype="Int"><StartValue>4</StartValue></Member>
+            <Member Name="Motor" Datatype="&quot;MCP_RC_UDT&quot;"/><Member Name="Grp" Datatype="Struct">
+            <Member Name="Inner" Datatype="&quot;MCP_RC_UDT&quot;"><Sections><Section Name="None">
+            <Member Name="Speed" Datatype="Int"><StartValue>8</StartValue></Member></Section></Sections></Member>
+            <Member Name="Flag" Datatype="Bool"><StartValue>TRUE</StartValue></Member></Member>
+            </Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>
+            """);
+        var original = File.ReadAllBytes(filePath);
+        var inspection = (await fixture.Call("GetPlcBlockEditCapabilities", new { filePath })).StructuredContent!;
+        var data = inspection["data"]!["evidence"]!["data"]!;
+        var members = data["members"]!.AsArray();
+        Assert.Equal(6, members.Count);
+        var row = members.Single(m => (string?)m!["memberPath"] == "Grp/Inner/Speed")!;
+        Assert.Equal(("None", "Int", "8"), ((string?)row["section"], (string?)row["datatype"], (string?)row["startValue"]));
+        var changes = new[] { new { action = "setMemberStartValue", section = (string)row["section"]!,
+            memberPath = (string)row["memberPath"]!, expectedValue = (string)row["startValue"]!, value = "13" } };
+        foreach (var dryRun in new[] { true, false })
+        {
+            var result = (await fixture.Call("PatchPlcBlockDocument", new { filePath, exportFile, dryRun, changes,
+                expectedDocumentHash = (string)data["documentFingerprint"]! })).StructuredContent!;
+            Assert.True((bool?)result["ok"], result.ToJsonString());
+            Assert.Equal(!dryRun, File.Exists(exportFile));
+            Assert.Equal(original, File.ReadAllBytes(filePath));
+        }
+        Assert.Equal(new[] { "4", "13", "TRUE" }, XDocument.Load(exportFile).Descendants()
+            .Where(e => e.Name.LocalName == "StartValue").Select(e => e.Value));
+    }
+
     private static void AssertRefused(JsonNode result)
     {
         Assert.Equal("INVALID_ARGUMENT", (string?)result["error"]?["code"]);

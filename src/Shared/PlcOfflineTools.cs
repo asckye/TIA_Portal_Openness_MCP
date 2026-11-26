@@ -64,6 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "expectedDocumentHash from GetPlcBlockEditCapabilities. changes array: setBlockText(field Title/Comment,culture,expectedValue,value), " +
                 "setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value), " +
                 "setMemberComment(section,memberPath,culture,expectedValue,value), e.g. Static/Motor/Speed in zh-CN with expectedValue=\"\". " +
+                "Copy section and memberPath from the same capabilities row. An expanded UDT member can use section None with memberPath Grp/Inner/Speed. " +
                 "StartValue and block/network text must exist; member comments may be added or removed. Use a culture contained in the export, or an explicit "
                     +
                 "culture when it contains none; no guessed defaults, library-connected blocks or read-only members. UDTs return with ImportPlcType " +

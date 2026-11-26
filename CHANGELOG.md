@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+VCI connect checks existing workspace files before writing. If another process creates the target during the native TIA write, TIA can overwrite it. Give connect exclusive write access to the workspace until it finishes.
+
 ## [4.0.0-rc.7] - 2026-11-25
 
 ### Fixed

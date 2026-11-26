@@ -142,7 +142,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (exported > 0)
                 {
                     outcome = Outcome.Partial;
-                    error = new Error(("Some objects were exported to the workspace. " + disconnected).TrimEnd(),
+                    error = new Error(("Some objects were exported to the workspace. " + (connect ? diagnostic : null)).TrimEnd(),
                         new PartialFailureDetails(exported, failed, 0));
                 }
                 else if (connect && Count(evidence, "mappedAfterFailure") > 0)

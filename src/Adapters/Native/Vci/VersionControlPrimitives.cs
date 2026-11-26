@@ -76,10 +76,23 @@ namespace TiaOpenness.Openness
         internal static Action<FileInfo, bool> Exporter(IEngineeringObject target) =>
             (file, defaults) => ExportObject(target, file, defaults ? ExportOptions.WithDefaults : ExportOptions.None);
 
+        internal static string ComparisonDiagnostic(IEngineeringObject target, string message)
+        {
+            if (target is PlcBlock block)
+            {
+                try { if (!block.IsConsistent) return message + " Recompile the block, then retry the comparison export."; }
+                catch (Exception error) when (Ordinary(error))
+                { /* swallow(probe-optional): keep the comparison failure when consistency cannot be read. */ }
+            }
+            return message;
+        }
+
         internal static bool MatchesExisting(string root, FileInfo file, IEngineeringObject target)
         {
             var proof = new VciContentProof(root, file);
             proof.Compare(() => Exporter(target), Ordinary);
+            if (!proof.Matches && proof.ExportFailure != null)
+                throw new IOException(VciExportPolicy.ExistingFile(file.Name) + " " + ComparisonDiagnostic(target, proof.ExportFailure));
             return proof.Matches && proof.Sha256 == proof.CurrentHash();
         }
 

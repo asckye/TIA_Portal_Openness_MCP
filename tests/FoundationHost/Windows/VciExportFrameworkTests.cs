@@ -787,6 +787,42 @@ public sealed class VciExportFrameworkTests
         Assert.Equal(1, (int?)evidence["writtenFilesAfterFailureTotal"]);
     }
 
+    [Theory, InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Studio_compares_existing_files_before_creating_a_mapping(string release)
+    {
+        var cases = await ExportReplies(release);
+        foreach (var key in new[] { "studio-conflict", "studio-reuse" })
+        {
+            var row = cases[key]!;
+            bool reuse = key == "studio-reuse";
+            Assert.True((bool?)row["previewPreserved"]);
+            Assert.True((bool?)row["preserved"]);
+            Assert.All(Strings(row["previewCalls"]), call => Assert.StartsWith("Export:", call));
+            Assert.Equal(reuse ? 0 : 1, (int?)row["preview"]!["Failed"]);
+            Assert.Equal(reuse ? 0 : 1, (int?)row["apply"]!["Failed"]);
+            Assert.Equal(reuse ? 1 : 0, (int?)row["apply"]!["Mapped"]);
+            var writes = Strings(row["Calls"]).Where(call => !call.StartsWith("Export:", StringComparison.Ordinal));
+            string stem = (string)row["stem"]!;
+            string connect = release is "18" or "19" ? "Create:" + stem + ".xml" : "Workspace.ConnectObject:" + stem + ":xml";
+            Assert.Equal(reuse ? new[] { connect } : Array.Empty<string>(), writes);
+            Assert.DoesNotContain(row["states"]!.AsArray().SelectMany(Strings), call => call.StartsWith("Synchronize:"));
+        }
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Connect_reports_the_comparison_export_refusal(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var row = (await ExportReplies(release))["rc7-inconsistent"]!;
+        var body = Tools(row).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        string? message = (string?)body["error"]!["message"];
+        Assert.Contains("object(s) is not consistent", message);
+        Assert.Contains("Recompile the block", message);
+        Assert.Equal(0, (int?)body["data"]!["evidence"]!["exportsIssued"]);
+        Assert.All(Strings(row["Calls"]), call => Assert.StartsWith("Export:", call));
+        Assert.True((bool?)row["preserved"]);
+    }
+
     [Fact]
     public async Task Studio_uses_its_hashed_mapping_name_on_first_export_and_repair()
     {
