@@ -1,12 +1,12 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-26，master `8f58c6c0e`；v4.0.0-rc.7 已发布（2026-11-25，预发布）；v4.0.0-rc.8 准备中
+状态：现行 · 最后核对：2026-11-26，master `039436e36`；v4.0.0-rc.8 已发布（2026-11-26，预发布）
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
-- **v4.0.0-rc.8 准备中。** rc.7 真机复验的修复和审查积累的 LOW 问题已合并到 master `8f58c6c0e`：连接工作区在所有版本上都不覆盖内容不同的已有文件，修复 V18/V19 的 HIGH；V20/V21 SD 覆盖导入不再因 `LibraryConformanceStatus` 误报属性丢失，修复 MEDIUM，并拒绝覆盖库类型实例（VMFIX-35）；RC8-A 至 RC8-E 处理宿主、PLC 软件、硬件、HMI、库、安全、工作台和版本控制的 LOW 问题及维护者决定 D1–D16，RC8-F、RC8-G 修复合并门失败；COV-V21 已完成。工具名称和输入没有变化，部分工具和参数的说明改变，`MonitorPlcWatchTableS7`、`ManagePlcTestLibrary` 等几处错误码和结果改变。代码改动尚未在真机上运行。任务见[开发计划](plan.md#400-rc8)。
+- **v4.0.0-rc.8 已于 2026-11-26 发布（`039436e36`，GitHub 预发布，不设为 latest）。** rc.7 真机复验的修复和审查积累的 LOW 问题已合并到 master `8f58c6c0e`：连接工作区在所有版本上都不覆盖内容不同的已有文件，修复 V18/V19 的 HIGH；V20/V21 SD 覆盖导入不再因 `LibraryConformanceStatus` 误报属性丢失，修复 MEDIUM，并拒绝覆盖库类型实例（VMFIX-35）；RC8-A 至 RC8-E 处理宿主、PLC 软件、硬件、HMI、库、安全、工作台和版本控制的 LOW 问题及维护者决定 D1–D16，RC8-F、RC8-G 修复合并门失败；COV-V21 已完成。工具名称和输入没有变化，部分工具和参数的说明改变，`MonitorPlcWatchTableS7`、`ManagePlcTestLibrary` 等几处错误码和结果改变。代码改动尚未在真机上运行。任务见[开发计划](plan.md#400-rc8)。
 - **v4.0.0-rc.7 已于 2026-11-25 发布（`7431033b7`，GitHub 预发布，不设为 latest）。** rc.6 真机复验的修复已合并到 master `e7343a592`：V20/V21 SIMATIC SD 覆盖导入的核对（SD-OVERRIDE，修复 rc.6 的 HIGH）与工作台 SD 还原检查（SD-RESTORE）、V16–V19 版本控制状态刷新与拒绝原因（VCI-STATUS）、存储 Equal 以内容证明后才跳过（VCI-PROOF）、V16/V17 先写文件再建映射（VCI-EXPORT）、空元素两种写法（VMFIX-34）、工具返回与写保护钩子的凭据遮蔽（S9）、生成失败的编译器文字（LOW-GENERR）、设备创建与只读属性的拒绝原因（LOW-DEVREASON），另在 4.1 计划中加入十个候选项。工具名称和输入没有变化，V16–V21 的版本控制工具和 V20/V21 的 SD 文档工具说明改变，`CreateDevice` 面板版本不兼容的错误码改变。2026-11-25 至 11-26 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc7)。
 - **v4.0.0-rc.6 已于 2026-11-25 发布（`e85fa9910`，GitHub 预发布，不设为 latest）。** rc.5 真机复验的修复（VMFIX-31 至 VMFIX-33）和工作台应用图标（UI-APPICON）已合并到 master `41efb7fe3`。工具名称和输入没有变化，`SetDeviceAddress.startAddress` 的说明改变，部分结果和错误码改变。2026-11-25 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc6)。
 - **v4.0.0-rc.5 已于 2026-11-25 发布（`9862ec67c`，GitHub 预发布，不设为 latest）。** rc.4 真机复验的修复（VMFIX-26 至 VMFIX-30）、工具示例（EXAMPLES-RC4）和结果判定更正（UNK-B、UNK-A）已合并到 master `991b3c334`。工具名称和输入没有变化，只有 `ManageMultiuserSession` 的 `port` 说明和两个工具的示例注解改变。2026-11-25 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc5)。
