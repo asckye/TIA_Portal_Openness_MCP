@@ -8610,6 +8610,85 @@
           "identifier": "TiaMcp.SourceContracts.Tests.DocumentImportSafetySources/SharedPrimitivesKeepEachNativeOperationAndArgument( ):6398ea4be7c5a24a9867f3ddda0ce9bd3333658cb256d2f64a1d2090258e6c6a:1"
         }
       ]
+    },
+    {
+      "task": "RC8-D",
+      "maintainerDate": "2026-11-26",
+      "reason": "RC8-D.md: maintainer approved D1-D16 as recommended on 2026-11-26; D1 ManualButton label, D2 fixed 96-DPI inset, D3 10 s failure-path wait, D4 Assert.Same, D6 unbind after unreadable close, D8 plc-online precondition, D10 neutral example names, D11 executed text-list export.",
+      "items": [
+        {
+          "path": "tests/Adapters/TiaMcp.Adapters.Contracts.Tests/ProjectLifecyclePortTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "ProjectLifecyclePortTests/Discard_needs_post_close_absence_before_reporting_success( bool unreadable ):84c5133e449000e79d3015187cd10831e85bcdfef80e3cb7999fb377cab65a44:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "EngineHttpSessionTestsPlc.Fixture/Dispose( ):46ad51254dfa81c3aad96fad2b6179e68770d144c3a616420f49864ca6f4ab15:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HonestWriteOutcomeTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "HonestWriteOutcomeTests/Missing_text_list_is_a_documented_refusal( string release ):c6d1a1a1359492384c9857de91d54456bb04d54b75d3fa9ebb23af761b60c27b:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/HostCatalogTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.FoundationHost.Tests.HostCatalogTests/All_release_catalog_policy_fields_have_one_value( string release ):961859dcc6d4db4625f38e5fba9d61e53ffcfe80d2a303e801718c7c607a3394:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LiveWatchVerdictTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LiveWatchVerdictTests/Failed_connection_is_a_read_failure( string release ):766157708e59192d88e04929b91d5db79a4025c666536b21f1c5ecea2a22d813:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LiveWatchVerdictTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LiveWatchVerdictTests/Failed_connection_is_a_read_failure( string release ):8e9f588356afdd0807033823e9b450ba28ec79b1eb6fd8ad2982ed6dbfbbea2d:1"
+        },
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/LiveWatchVerdictTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "LiveWatchVerdictTests/Failed_connection_is_a_read_failure( string release ):93c50597ce42f8b7a74f7bf2ad6babe4dd5ce9c883b0a764f1ea3dbd89808ef0:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/ToolExampleCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.ToolExampleCoverageTests/Comparison_evidence_preserves_the_direction_of_the_recorded_file_pair( string release , string left , string right ):35dbfab0a2fc6b848e44fb0d2d218beda6082597b63f33f35559d97faa269b8f:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/ToolExampleCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.ToolExampleCoverageTests/Comparison_evidence_preserves_the_direction_of_the_recorded_file_pair( string release , string left , string right ):3bf15e9dc37b55bd24e1a4a033f48d0619d5ef73d409392c99587e35a81b9dab:1"
+        },
+        {
+          "path": "tests/Release/TiaMcp.ReleaseTool.Tests/ToolExampleCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaMcp.ReleaseTool.Tests.ToolExampleCoverageTests/Comparison_evidence_preserves_the_direction_of_the_recorded_file_pair( string release , string left , string right ):6380ebe78f2596fcafde793e5a921054cfc35d21a4c8a9a945f6c594385d49e0:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/EnvironmentServicesTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.EnvironmentServicesTests/Doctor_fix_outcome_is_ready_new_logon_or_a_failure_with_its_reason( string outcome , bool groupOk , string ? code , string expected , string ? reasonKey ):ef032f836eccfed2fff294c7953752ccb6f975af2b46707ae18c840564055079:1"
+        },
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/MainWindowTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.MainWindowTests/Maximizing_insets_the_frame_and_offers_restore( AppLanguage language ):dd2a2d4da8f9479efd57d81e7436ee6bd8872b960c0343002d0a5879992a3ad9:1"
+        }
+      ]
+    },
+    {
+      "task": "RC8-SEED",
+      "maintainerDate": "2026-11-26",
+      "reason": "RC8-F.md: maintainer approved option A on 2026-11-26: keep the referenceDir containment fix and move the seed donor fixture inside referenceDir.",
+      "items": [
+        {
+          "path": "tests/FoundationHost/TiaMcp.FoundationHost.Tests/WritePreviewCoverageTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "WritePreviewCoverageTests/Seed_preview_and_apply_require_a_layout_and_bind_each_planned_file( ):93c68e24d17cb881c01c0a5647fb61609b6da82667dce95948af3d83ed4f2608:1"
+        }
+      ]
     }
   ]
 }
