@@ -340,7 +340,6 @@ internal static partial class Strings
         ("Env.FirewallPortMissing", "No inbound rule allows TCP port {0}, so remote clients may time out.", "未检测到允许 TCP 端口 {0} 入站的规则，远程客户端可能连接超时。"),
         ("Env.ConfigureNetworkPermission", "Configure network permission", "配置网络权限"),
         ("Env.FixButton", "Join group (administrator)", "加入用户组（管理员）"),
-        ("Env.ManualButton", "Show steps", "查看步骤"),
         ("Env.FixInstall",
                 "Install a supported TIA Portal release (V14 SP1, V15.1, V16–V21) with Openness enabled. Repair the installation if its PublicAPI assemblies are missing.",
                 "安装支持的 TIA Portal（V14 SP1、V15.1、V16–V21），勾选 Openness；缺少 PublicAPI 程序集时修复安装。"),

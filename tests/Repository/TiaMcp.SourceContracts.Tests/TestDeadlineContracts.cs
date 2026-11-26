@@ -64,6 +64,9 @@ public sealed class TestDeadlineContracts
     // Exact statements retain the approved sampling window, expired budgets and fixture behaviour.
     private static readonly HashSet<string> Remains = new(StringComparer.Ordinal)
     {
+        // D3, maintainer-approved 2026-11-26
+        "tests/FoundationHost/TiaMcp.FoundationHost.Tests/EngineHttpSessionTests.cs|" +
+            "Assert.True(process.WaitForExit(10_000), \"Owned fixture host did not exit.\");",
         "tests/FoundationHost/TiaMcp.ToolPipeline.Tests/PipelineTests.cs|while (duration.Elapsed < TimeSpan.FromSeconds(5))",
         "tests/WorkerChannel/TiaMcp.WorkerChannel.Tests/ProtocolTests.cs|await " +
             "Assert.ThrowsAsync<ChannelFaultException>(()=>wire.Client.ConnectAsync(TimeSpan.FromMilliseconds(40)));",

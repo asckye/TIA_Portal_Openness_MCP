@@ -34,9 +34,10 @@ VCI connect checks existing workspace files before writing. If another process c
 ### Fixed
 
 - Worker recovery retries a refused project bind on the attached worker. Closing with discard releases the binding if TIA cannot confirm project absence.
-- The host checks installation readiness for worker-backed test and reporting tools. File-only test library actions remain available offline.
+- The installation readiness guard now lists worker-backed test and reporting tools explicitly. All `ManagePlcTestLibrary` actions operate on local files.
 - An unreachable S7 watch-table target reports `PRECONDITION_FAILED` with condition `plc-online`.
-  An alarm text-list export that TIA refused after invocation reports completed execution and retains the `plc-text-lists` diagnosis.
+  When TIA refuses an alarm text-list export because the list is missing, execution is reported as completed if no file was written.
+  If the target may have changed, the export outcome remains unknown.
 - The alarm text-list master-copy refusal identifies the required global library. Block-comparison examples use neutral revision names.
 - Environment checks without an available action have an empty action label.
 

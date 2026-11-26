@@ -91,9 +91,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, (JsonObject)data.DeepClone(), NativeFailure(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString())
                     ?? (string?)result.StructuredContent["error"]?["details"]?["nativeMessage"]),
                     Outcome.Failed, Completeness.Complete, true);
-            // ExportToXlsx returned the documented empty-list diagnosis.
-            if (tool == "ExportAlarmTextLists" && (string?)result.StructuredContent?["error"]?["details"]?["condition"] == "plc-text-lists")
-                return result;
             return McpServer.ExportFailureResult(tool, result, export);
         }
         private static bool? Flag(JsonObject obj, string key)

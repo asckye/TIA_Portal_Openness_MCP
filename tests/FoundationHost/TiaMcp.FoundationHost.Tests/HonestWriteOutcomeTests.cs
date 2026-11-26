@@ -965,6 +965,32 @@ public sealed class HonestWriteOutcomeTests
         Assert.Equal("completed", (string?)body["meta"]?["execution"]);
     }
 
+    [Theory, InlineData(true, true), InlineData(true, false), InlineData(false, true)]
+    public void Missing_text_list_after_export_wrote_a_file_has_unknown_outcome(bool fileRemains, bool workerSawFile)
+    {
+        using var scope = EngineHostParity.EnterScope();
+        string path = Path.Combine(Path.GetTempPath(), "alarm-" + Guid.NewGuid().ToString("N") + ".xlsx");
+        try
+        {
+            var body = Body(Host.EngineeringToolContract.Export("ExportAlarmTextLists", path, () =>
+            {
+                File.WriteAllBytes(path, [0x50, 0x4b, 0x03, 0x04]);
+                if (!fileRemains) File.Delete(path);
+                return new Host.ResponseMessage {
+                    Meta = new JsonObject { ["operationSuccess"] = false, ["apiCallSuccess"] = false, ["mayHaveChanged"] = false,
+                        ["mayHaveWrittenFiles"] = workerSawFile, ["nativeMessage"] = "There is no text list on this controller.",
+                        ["status"] = "PreconditionFailed", ["precondition"] = "plc-text-lists", ["refusal"] = "This PLC has no alarm text list." }
+                };
+            }));
+            Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+            Assert.Equal("export-file", (string?)body["error"]?["details"]?["stage"]);
+            Assert.Equal("unknown", (string?)body["meta"]?["outcome"]);
+            Assert.Equal("unknown", (string?)body["meta"]?["execution"]);
+            Assert.True((bool?)body["data"]?["mayHaveChanged"]);
+        }
+        finally { File.Delete(path); }
+    }
+
     [Theory, InlineData(true), InlineData(false)]
     public void Download_to_folder_preview_without_native_state_succeeds(bool preview)
     {
