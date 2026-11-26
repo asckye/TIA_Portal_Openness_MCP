@@ -4,10 +4,19 @@
 
 ## [Unreleased]
 
+## [4.0.0-rc.8] - 2026-11-26
+
 VCI connect checks existing workspace files before writing. If another process creates the target during the native TIA write, TIA can overwrite it. Give connect exclusive write access to the workspace until it finishes.
 
 ### Fixed
 
+- On V16–V21, `ConnectProjectToWorkspace` never overwrites an existing workspace file with other content. It reuses a file only when the object's official export matches it;
+  otherwise it refuses the object before any native write and names the file and the remedy. Previews count such files in `willCompare` and report `wouldRefuse`.
+  Connect results and status list a `duplicate mapping` row with the name, file and count when a reconnected object keeps its old disconnected mapping.
+- V20/V21 SIMATIC SD overrides treat `LibraryConformanceStatus` and `IsConsistent` as derived state listed in `notCompared`, so plain FB/FC overrides no longer report a false property loss.
+  Overrides of library type instances are refused before the write. DB refusals list every attribute that cannot be preserved, and a new-OB refusal says that SD always creates a cycle OB.
+- `SetDeviceItemAttribute` previews warn about and block a read-only attribute. `PatchPlcBlockDocument` previews block apply when `exportFile` already exists.
+- `ImportPlcBlocksFromDirectory` previews return `data.importOrder` to copy into apply. `CreateDevice` previews list `family` only when the caller passed it.
 - Mixed invalid and unknown tool arguments include the declared parameter names. Device creation aliases identify the called tool in the result.
 - CloseProject explains when unsaved changes are discarded. CPU settings report the reason for each rejected attribute. A failed boolean CAx export identifies the AML file, its observed presence, and the native log.
 - Block compile reports errors from other blocks. Incomplete compiler diagnostics preserve the reported Error state when individual errors cannot be counted.
@@ -24,8 +33,6 @@ VCI connect checks existing workspace files before writing. If another process c
   The LAD builder rejects TCON, TDISCON, TSEND, TRCV, TUSEND, TURCV, RDREC and WRREC as user FC/FB calls.
 - `DeletePlcTagTable` names user and system constants in previews and deletion reports. A failed block move now reports an `unknown` outcome when it leaves behind target groups it created.
   Legacy safety compilation sanitises connection-loss diagnostics. `EnsureUnifiedHmiButtonAction` specifies when it checks the target tag.
-### Fixed
-
 - Seed manifests now refuse directory overrides outside `referenceDir` and reject device paths before resolving them.
   The refusal identifies a junction or symbolic link in the root or a seed directory.
 - Failed Unified tag imports check the paths of groups and tables as well as exported tag files before reporting that nothing changed.
@@ -37,8 +44,6 @@ VCI connect checks existing workspace files before writing. If another process c
 - SiVArc definition operations require V21. Missing or unloadable engineering options identify the installation to check.
 - The Workbench read-only version-control notice identifies the MCP service in English and Chinese and displays unrecognized release keys.
   The title bar and About icons are decorative for accessibility, and the high-contrast outline follows the tile corners.
-### Fixed
-
 - Worker recovery retries a refused project bind on the attached worker. Closing with discard releases the binding if TIA cannot confirm project absence.
 - The installation readiness guard now lists worker-backed test and reporting tools explicitly. All `ManagePlcTestLibrary` actions operate on local files.
 - An unreachable S7 watch-table target reports `PRECONDITION_FAILED` with condition `plc-online`.
