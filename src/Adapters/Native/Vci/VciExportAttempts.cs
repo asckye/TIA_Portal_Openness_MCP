@@ -26,11 +26,11 @@ internal sealed class VciExportAttempts
 #if STUDIO_VCI_INITIAL
     private readonly List<string> disconnectedFileReasons = new();
 
-    internal string RecordDisconnectedFile(string fileName)
+    internal string RecordDisconnectedFile(string fileName, string difference)
     {
         var remedy = "Target file already exists: " + fileName
             + ". After an overwriting import, the old file belongs to the disconnected mapping of the same object. "
-            + "Compare the file, back it up and remove it from the workspace, then connect again.";
+            + "Compare the file, back it up and remove it from the workspace, then connect again." + difference;
         if (disconnectedFileReasons.Count < 40) disconnectedFileReasons.Add(remedy);
         return remedy;
     }

@@ -713,6 +713,7 @@ public sealed class VciExportFrameworkTests
         Assert.Contains("MCP_RC_PLC_MCP_RC_DB5.xml", remedy);
         Assert.Contains("disconnected mapping of the same object", remedy);
         Assert.Contains("back it up and remove it", remedy);
+        Assert.Contains("content differs", remedy);
         Assert.True((bool?)cases["rc7-member"]!["preserved"]);
         var different = cases["differentXml"]!;
         Assert.False((bool?)Tools(different).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!["ok"]);
@@ -820,6 +821,21 @@ public sealed class VciExportFrameworkTests
         Assert.Contains("Recompile the block", message);
         Assert.Equal(0, (int?)body["data"]!["evidence"]!["exportsIssued"]);
         Assert.All(Strings(row["Calls"]), call => Assert.StartsWith("Export:", call));
+        Assert.True((bool?)row["preserved"]);
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Successful_fallback_export_reports_the_workspace_content_mismatch(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var row = (await ExportReplies(release))["rc7-fallback-differs"]!;
+        var body = Tools(row).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
+        var reason = (string)body["error"]!["message"]!;
+        Assert.Contains("content differs", reason);
+        Assert.DoesNotContain("Export without defaults refused", reason);
+        Assert.Equal(new[] { "Export:object.xml:None", "Export:defaults.xml:WithDefaults" }, Strings(row["Calls"]));
+        Assert.Equal(0, (int?)body["data"]!["evidence"]!["exportsIssued"]);
         Assert.True((bool?)row["preserved"]);
     }
 

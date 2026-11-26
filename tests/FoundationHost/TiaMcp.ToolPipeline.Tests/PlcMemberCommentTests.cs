@@ -61,14 +61,35 @@ public sealed class PlcMemberCommentTests
     [InlineData("21")]
     public void Every_release_serves_the_member_comment_example_and_both_import_workflows(string release)
     {
-        var call = ToolUsageCatalog.ServedCall("PatchPlcBlockDocument", release)!;
+        const string tool = "PatchPlcBlockDocument";
+        var patch = ModelContextProtocol.Server.McpServerTool.Create(new PlcOfflineTools().PatchPlcBlockDocumentV4);
+        var schema = JsonNode.Parse(patch.ProtocolTool.InputSchema.GetRawText())!.AsObject();
+        JsonObject Usage(string operation = "") => ToolUsageCatalog.Describe(tool, release, ToolUsageCatalog.ExampleSource(tool, release),
+            "", schema, operation: operation);
+        JsonObject Example(JsonObject usage, string file)
+        {
+            var call = usage["example"]!["request"]!["params"]!.AsObject();
+            var args = call["arguments"]!.AsObject();
+            Assert.Equal(@"C:\Examples\exports\" + file, (string?)args["filePath"]);
+            Assert.Equal("<fingerprint from GetPlcBlockEditCapabilities>", (string?)args["expectedDocumentHash"]);
+            Assert.True((bool?)args["dryRun"]);
+            Assert.False(args.ContainsKey("operation"));
+            Assert.Single(args["changes"]!.AsArray());
+            return call;
+        }
+        var usage = Usage();
+        var call = Example(usage, "MotorDB.xml");
         var edit = Assert.Single(call["arguments"]!["changes"]!.AsArray(), c => (string?)c!["action"] == "setMemberComment")!;
         Assert.Equal(("Static", "Motor/Speed", "zh-CN", ""),
             ((string?)edit["section"], (string?)edit["memberPath"], (string?)edit["culture"], (string?)edit["expectedValue"]));
+        Assert.Contains(usage["operations"]!.AsArray(), row => (string?)row!["exampleQuery"]!["operation"] == "nestedUdtMember");
+        call = Example(Usage("nestedUdtMember"), "MCP_RC_DB3.xml");
         var nested = Assert.Single(call["arguments"]!["changes"]!.AsArray(), c => (string?)c!["action"] == "setMemberStartValue")!;
         Assert.Equal(("None", "Grp/Inner/Speed", "8", "13"),
             ((string?)nested["section"], (string?)nested["memberPath"], (string?)nested["expectedValue"], (string?)nested["value"]));
-        var reading = call["resultReading"]!.AsArray().Select(row => (string)row!).ToArray();
+        var title = Example(Usage("blockTitle"), "Main.xml")["arguments"]!["changes"]![0]!;
+        Assert.Equal(("setBlockText", "Title"), ((string?)title["action"], (string?)title["field"]));
+        var reading = usage["resultReading"]!.AsArray().Select(row => (string)row!).ToArray();
         Assert.Contains(reading, row => row.Contains("ImportPlcBlockVerified", StringComparison.Ordinal));
         Assert.Contains(reading, row => row.Contains("ExportPlcType", StringComparison.Ordinal)
             && row.Contains("ImportPlcType overwrite=true", StringComparison.Ordinal) && row.Contains("until compiled", StringComparison.Ordinal));

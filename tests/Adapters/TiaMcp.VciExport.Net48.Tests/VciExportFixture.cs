@@ -29,7 +29,7 @@ internal static class VciExportFixture
         foreach (var scenario in new[] { "equal", "unknown", "unequal", "collision", "exportRefused", "createRefused", "lookupRefused",
             "syncRefused", "nativeSuccess", "repair", "repairRefused", "reuse", "newStatusRefused", "seedDisposed", "seedAbort", "seedConnection",
             "seedNonrecoverable", "sameName", "differentXml", "rc7-comment", "rc7-member", "rc7-after-preview",
-            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent", "catch-prior"
+            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent", "rc7-fallback-differs", "catch-prior"
 #if STUDIO_VCI_INITIAL
             , "multipleDisconnected", "manyDisconnected"
 #else
@@ -92,6 +92,8 @@ internal static class VciExportFixture
                 if (scenario == "seedAbort") throw new EngineeringUserAbortException("Aborted");
                 if (scenario == "seedConnection") throw new EndOfStreamException("Connection lost");
                 if (scenario == "seedNonrecoverable") throw new NonRecoverableException("Nonrecoverable");
+                if (scenario == "rc7-fallback-differs" && options == ExportOptions.None)
+                    throw new EngineeringTargetInvocationException("Export without defaults refused.");
                 if (scenario is "exportRefused" or "rc7-inconsistent")
                     throw new EngineeringTargetInvocationException("MCP_RC_FC [FC1] object(s) is not consistent");
                 File.WriteAllText(target.FullName, xml);
@@ -235,7 +237,7 @@ internal static class VciExportFixture
 #endif
                     workspace.Calls.Clear();
                 }
-                if (scenario is "rc7-comment" or "rc7-member") File.WriteAllText(file, edited);
+                if (scenario is "rc7-comment" or "rc7-member" or "rc7-fallback-differs") File.WriteAllText(file, edited);
 #if STUDIO_VCI_INITIAL
                 if (scenario == "rc7-member")
                 {

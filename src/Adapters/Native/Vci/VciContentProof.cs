@@ -78,11 +78,12 @@ internal sealed class VciContentProof
                             error.GetBaseException().Message, Array.Empty<string>()), NativeFailureText.WithoutLocalPaths);
                         continue;
                     }
+                    ExportFailure = null;
+                    Message = null;
                     try
                     {
                         if (CandidateImportFiles.XmlHash(Read(candidate)) == expected)
                         {
-                            Message = null;
                             Verification = "content-match";
                             return;
                         }

@@ -103,7 +103,7 @@ namespace TiaMcp.Adapters
                 if (HardwareSiemensReason(ex) is string reason)
                 {
                     if (string.Equals(attributeName, "Name", StringComparison.OrdinalIgnoreCase)
-                        && meta.TryGetValue("requestedValue", out var requested) && Equals(requested, string.Empty))
+                        && meta.TryGetValue("requestedValue", out var requested) && requested is string name && string.IsNullOrWhiteSpace(name))
                     {
                         var inner = ex.InnerException?.Message;
                         reason = NativeFailureText.Compose(reason, string.IsNullOrWhiteSpace(inner)

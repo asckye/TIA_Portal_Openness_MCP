@@ -6754,24 +6754,10 @@
       },
       "PatchPlcBlockDocument": {
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -6793,13 +6779,48 @@
             "meaning": "Legacy spelling. Use exportFile as described in this schema. Supply only one spelling for the same path."
           }
         },
-        "operations": {},
+        "operations": {
+          "nestedUdtMember": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "filePath": "C:\\Examples\\exports\\MCP_RC_DB3.xml",
+              "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
+              "dryRun": true,
+              "changes": [
+                {
+                  "action": "setMemberStartValue",
+                  "section": "None",
+                  "memberPath": "Grp/Inner/Speed",
+                  "expectedValue": "8",
+                  "value": "13"
+                }
+              ]
+            }
+          },
+          "blockTitle": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "filePath": "C:\\Examples\\exports\\Main.xml",
+              "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
+              "dryRun": true,
+              "changes": [
+                {
+                  "action": "setBlockText",
+                  "field": "Title",
+                  "culture": "en-US",
+                  "expectedValue": "Old title",
+                  "value": "Example"
+                }
+              ]
+            }
+          }
+        },
         "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
         "resultReading": [
           "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility.",
           "Block round trip: export the exact block (ExportPlcBlock, or GetPlcBlockEditCapabilities with blockPath and softwarePath), inspect documentFingerprint and members/comments with GetPlcBlockEditCapabilities, preview PatchPlcBlockDocument, then write a new exportFile with dryRun=false. Review the file, preview ImportPlcBlockVerified and apply with its token; inspect the backup and re-export verification result.",
           "UDT round trip: ExportPlcType, inspect its filePath with GetPlcBlockEditCapabilities, then preview and write PatchPlcBlockDocument using section=None. Review and import with ImportPlcType overwrite=true through its preview and approval, then re-export with ExportPlcType and inspect comments to confirm. Overwrite makes dependent DBs and blocks inconsistent until compiled. Verified UDT import with backup and automatic readback is not available.",
-          "For setMemberComment, expectedValue must exactly match that culture in members/comments (empty when absent); empty value removes it. Use an explicit culture present in the export; only an export with no cultures accepts a new culture. Select only edits applicable to the export. Copy section and memberPath together from the capabilities row. The V14 SP1 expanded UDT member Grp/Inner/Speed uses None, while Motor/Speed in an inline Static struct uses Static."
+          "For setMemberComment, expectedValue must exactly match that culture in members/comments (empty when absent); empty value removes it. Use an explicit culture present in the export; only an export with no cultures accepts a new culture. Use the fingerprint for the file in each call. The default example edits MotorDB.xml. Request GetToolUsage with operation=nestedUdtMember for MCP_RC_DB3.xml or operation=blockTitle for Main.xml. Copy section and memberPath together from the capabilities row. The V14 SP1 expanded UDT member Grp/Inner/Speed uses None, while Motor/Speed in an inline Static struct uses Static."
         ]
       },
       "RenderPlcBlockDocument": {
@@ -37519,24 +37540,10 @@
       },
       "PatchPlcBlockDocument": {
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -37558,12 +37565,47 @@
             "meaning": "Legacy spelling. Use exportFile as described in this schema. Supply only one spelling for the same path."
           }
         },
-        "operations": {},
+        "operations": {
+          "nestedUdtMember": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "filePath": "C:\\Examples\\exports\\MCP_RC_DB3.xml",
+              "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
+              "dryRun": true,
+              "changes": [
+                {
+                  "action": "setMemberStartValue",
+                  "section": "None",
+                  "memberPath": "Grp/Inner/Speed",
+                  "expectedValue": "8",
+                  "value": "13"
+                }
+              ]
+            }
+          },
+          "blockTitle": {
+            "argumentsMode": "complete",
+            "arguments": {
+              "filePath": "C:\\Examples\\exports\\Main.xml",
+              "expectedDocumentHash": "<fingerprint from GetPlcBlockEditCapabilities>",
+              "dryRun": true,
+              "changes": [
+                {
+                  "action": "setBlockText",
+                  "field": "Title",
+                  "culture": "en-US",
+                  "expectedValue": "Old title",
+                  "value": "Example"
+                }
+              ]
+            }
+          }
+        },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "resultReading": [
           "Block round trip: export the exact block (ExportPlcBlock, or GetPlcBlockEditCapabilities with blockPath and softwarePath), inspect documentFingerprint and members/comments with GetPlcBlockEditCapabilities, preview PatchPlcBlockDocument, then write a new exportFile with dryRun=false. Review the file, preview ImportPlcBlockVerified and apply with its token; inspect the backup and re-export verification result.",
           "UDT round trip: ExportPlcType, inspect its filePath with GetPlcBlockEditCapabilities, then preview and write PatchPlcBlockDocument using section=None. Review and import with ImportPlcType overwrite=true through its preview and approval, then re-export with ExportPlcType and inspect comments to confirm. Overwrite makes dependent DBs and blocks inconsistent until compiled. Verified UDT import with backup and automatic readback is not available.",
-          "For setMemberComment, expectedValue must exactly match that culture in members/comments (empty when absent); empty value removes it. Use an explicit culture present in the export; only an export with no cultures accepts a new culture. Select only edits applicable to the export. Copy section and memberPath together from the capabilities row. The V14 SP1 expanded UDT member Grp/Inner/Speed uses None, while Motor/Speed in an inline Static struct uses Static."
+          "For setMemberComment, expectedValue must exactly match that culture in members/comments (empty when absent); empty value removes it. Use an explicit culture present in the export; only an export with no cultures accepts a new culture. Use the fingerprint for the file in each call. The default example edits MotorDB.xml. Request GetToolUsage with operation=nestedUdtMember for MCP_RC_DB3.xml or operation=blockTitle for Main.xml. Copy section and memberPath together from the capabilities row. The V14 SP1 expanded UDT member Grp/Inner/Speed uses None, while Motor/Speed in an inline Static struct uses Static."
         ]
       },
       "PlanArtifactImportOrder": {

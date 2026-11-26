@@ -29,12 +29,15 @@ namespace TiaMcp.Adapters.Contracts.Tests
         [InlineData("The name must contain a character.", "The name must contain a character.")]
         [InlineData("", "An empty name is not allowed.")]
         [InlineData(null, "TIA refused the name without a reason.")]
-        public void Empty_device_name_preserves_the_native_refusal(string? inner, string expected)
+        [InlineData(null, "An empty name is not allowed.", " \t\u3000")]
+        [InlineData("Names cannot consist of spaces.", "Names cannot consist of spaces.", "   ")]
+        public void Empty_device_name_preserves_the_native_refusal(string? inner, string expected, string name = "")
         {
             var engine = HardwareWriteFailureTests.NativeFixture().Engine;
             var item = new NameTarget(inner);
             engine.RollbackCpu = item;
-            var reply = engine.HardwareLegacySetDeviceItemAttribute("PLC/CPU", "Name", "");
+            var reply = engine.HardwareLegacySetDeviceItemAttribute("PLC/CPU", "Name", name);
+            Assert.Equal(name, reply.Meta["requestedValue"]);
             Assert.Equal(1, item.Writes);
             Assert.False(reply.MayHaveChanged);
             Assert.Contains(expected, Assert.IsType<string>(reply.Meta["nativeMessage"]));

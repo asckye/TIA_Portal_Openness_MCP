@@ -193,7 +193,8 @@ namespace TiaOpenness.Openness
                     throw new IOException("Another selected object maps to the same file: " + file.Name);
                 if (!dryRun && VciExportPolicy.TargetExists(file))
                 {
-                    if (!VersionControlPrimitives.MatchesExisting(rootPath, file, node.Object)) throw new IOException(VciExportPolicy.ExistingFile(file.Name));
+                    if (!VersionControlPrimitives.MatchesExisting(rootPath, file, node.Object, out string difference))
+                        throw new IOException(VciExportPolicy.ExistingFile(file.Name) + difference);
                     reuse = true;
                 }
             }

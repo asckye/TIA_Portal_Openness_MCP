@@ -7202,24 +7202,10 @@
       "entry": "PatchPlcBlockDocument",
       "family": "F02",
       "example": {
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\MotorDB.xml",
         "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
-          {
-            "action": "setBlockText",
-            "field": "Title",
-            "culture": "en-US",
-            "expectedValue": "Old title",
-            "value": "Example"
-          },
-          {
-            "action": "setMemberStartValue",
-            "section": "None",
-            "memberPath": "Grp/Inner/Speed",
-            "expectedValue": "8",
-            "value": "13"
-          },
           {
             "action": "setMemberComment",
             "section": "Static",
@@ -9693,24 +9679,10 @@
       "entry": "PatchPlcBlockDocument",
       "family": "F02",
       "example": {
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\MotorDB.xml",
         "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
-          {
-            "action": "setBlockText",
-            "field": "Title",
-            "culture": "en-US",
-            "expectedValue": "Old title",
-            "value": "Example"
-          },
-          {
-            "action": "setMemberStartValue",
-            "section": "None",
-            "memberPath": "Grp/Inner/Speed",
-            "expectedValue": "8",
-            "value": "13"
-          },
           {
             "action": "setMemberComment",
             "section": "Static",
@@ -12598,24 +12570,10 @@
       "entry": "PatchPlcBlockDocument",
       "family": "F02",
       "example": {
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\MotorDB.xml",
         "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
-          {
-            "action": "setBlockText",
-            "field": "Title",
-            "culture": "en-US",
-            "expectedValue": "Old title",
-            "value": "Example"
-          },
-          {
-            "action": "setMemberStartValue",
-            "section": "None",
-            "memberPath": "Grp/Inner/Speed",
-            "expectedValue": "8",
-            "value": "13"
-          },
           {
             "action": "setMemberComment",
             "section": "Static",
@@ -15757,24 +15715,10 @@
       "entry": "PatchPlcBlockDocument",
       "family": "F02",
       "example": {
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\MotorDB.xml",
         "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
-          {
-            "action": "setBlockText",
-            "field": "Title",
-            "culture": "en-US",
-            "expectedValue": "Old title",
-            "value": "Example"
-          },
-          {
-            "action": "setMemberStartValue",
-            "section": "None",
-            "memberPath": "Grp/Inner/Speed",
-            "expectedValue": "8",
-            "value": "13"
-          },
           {
             "action": "setMemberComment",
             "section": "Static",
@@ -19239,24 +19183,10 @@
       "entry": "PatchPlcBlockDocument",
       "family": "F02",
       "example": {
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\MotorDB.xml",
         "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
-          {
-            "action": "setBlockText",
-            "field": "Title",
-            "culture": "en-US",
-            "expectedValue": "Old title",
-            "value": "Example"
-          },
-          {
-            "action": "setMemberStartValue",
-            "section": "None",
-            "memberPath": "Grp/Inner/Speed",
-            "expectedValue": "8",
-            "value": "13"
-          },
           {
             "action": "setMemberComment",
             "section": "Static",
@@ -22895,24 +22825,10 @@
       "entry": "PatchPlcBlockDocument",
       "family": "F02",
       "example": {
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\MotorDB.xml",
         "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
-          {
-            "action": "setBlockText",
-            "field": "Title",
-            "culture": "en-US",
-            "expectedValue": "Old title",
-            "value": "Example"
-          },
-          {
-            "action": "setMemberStartValue",
-            "section": "None",
-            "memberPath": "Grp/Inner/Speed",
-            "expectedValue": "8",
-            "value": "13"
-          },
           {
             "action": "setMemberComment",
             "section": "Static",
@@ -27645,24 +27561,10 @@
       "entry": "PatchPlcBlockDocument",
       "family": "F02",
       "example": {
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\MotorDB.xml",
         "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
-          {
-            "action": "setBlockText",
-            "field": "Title",
-            "culture": "en-US",
-            "expectedValue": "Old title",
-            "value": "Example"
-          },
-          {
-            "action": "setMemberStartValue",
-            "section": "None",
-            "memberPath": "Grp/Inner/Speed",
-            "expectedValue": "8",
-            "value": "13"
-          },
           {
             "action": "setMemberComment",
             "section": "Static",
@@ -32709,24 +32611,10 @@
       "entry": "PatchPlcBlockDocument",
       "family": "F02",
       "example": {
-        "filePath": "C:\\Examples\\exports\\Main.xml",
+        "filePath": "C:\\Examples\\exports\\MotorDB.xml",
         "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
         "dryRun": true,
         "changes": [
-          {
-            "action": "setBlockText",
-            "field": "Title",
-            "culture": "en-US",
-            "expectedValue": "Old title",
-            "value": "Example"
-          },
-          {
-            "action": "setMemberStartValue",
-            "section": "None",
-            "memberPath": "Grp/Inner/Speed",
-            "expectedValue": "8",
-            "value": "13"
-          },
           {
             "action": "setMemberComment",
             "section": "Static",
@@ -47776,24 +47664,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -57644,24 +57518,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -63724,24 +63584,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -69783,24 +69629,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -76370,24 +76202,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -83325,24 +83143,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -90770,24 +90574,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -99571,24 +99361,10 @@
           "plc-foundation"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -107519,24 +107295,10 @@
           "full"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",
@@ -114992,24 +114754,10 @@
           "full"
         ],
         "arguments": {
-          "filePath": "C:\\Examples\\exports\\Main.xml",
+          "filePath": "C:\\Examples\\exports\\MotorDB.xml",
           "expectedDocumentHash": "&lt;fingerprint from GetPlcBlockEditCapabilities&gt;",
           "dryRun": true,
           "changes": [
-            {
-              "action": "setBlockText",
-              "field": "Title",
-              "culture": "en-US",
-              "expectedValue": "Old title",
-              "value": "Example"
-            },
-            {
-              "action": "setMemberStartValue",
-              "section": "None",
-              "memberPath": "Grp/Inner/Speed",
-              "expectedValue": "8",
-              "value": "13"
-            },
             {
               "action": "setMemberComment",
               "section": "Static",

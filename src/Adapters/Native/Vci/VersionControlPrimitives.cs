@@ -87,12 +87,13 @@ namespace TiaOpenness.Openness
             return message;
         }
 
-        internal static bool MatchesExisting(string root, FileInfo file, IEngineeringObject target)
+        internal static bool MatchesExisting(string root, FileInfo file, IEngineeringObject target, out string difference)
         {
             var proof = new VciContentProof(root, file);
             proof.Compare(() => Exporter(target), Ordinary);
             if (!proof.Matches && proof.ExportFailure != null)
                 throw new IOException(VciExportPolicy.ExistingFile(file.Name) + " " + ComparisonDiagnostic(target, proof.ExportFailure));
+            difference = proof.Verification == "no-match" ? " The workspace XML content differs from the project export." : "";
             return proof.Matches && proof.Sha256 == proof.CurrentHash();
         }
 
@@ -124,7 +125,8 @@ namespace TiaOpenness.Openness
             }
             try
             {
-                if (!MatchesExisting(root, xml, target)) throw new IOException(VciExportPolicy.ExistingFile(xml.Name));
+                if (!MatchesExisting(root, xml, target, out string difference))
+                    throw new IOException(VciExportPolicy.ExistingFile(xml.Name) + difference);
                 return lease;
             }
             catch { lease.Dispose(); throw; }

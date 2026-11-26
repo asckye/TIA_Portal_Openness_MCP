@@ -366,9 +366,9 @@ namespace TiaMcp.Adapters.Native.Vci
 #if STUDIO_VCI_INITIAL
                             bool MatchesExisting()
                             {
-                                if (NativeVci.MatchesExisting(wsRootPath, file, node.Obj)) return true;
-                                if (mappingFiles.ExistingFile(targetStem, fmt) == null) return false;
-                                throw new IOException(attempts.RecordDisconnectedFile(file.Name));
+                                if (NativeVci.MatchesExisting(wsRootPath, file, node.Obj, out string difference)) return true;
+                                throw new IOException(mappingFiles.ExistingFile(targetStem, fmt) == null
+                                    ? VciExportPolicy.ExistingFile(file.Name) + difference : attempts.RecordDisconnectedFile(file.Name, difference));
                             }
                             bool exported = attempts.ExportFileFirst(file, () => NativeVci.ExportObject(node.Obj, file, ExportOptions.None), Connect,
                                 Lookup, Report, MatchesExisting);
