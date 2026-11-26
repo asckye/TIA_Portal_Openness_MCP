@@ -257,7 +257,9 @@ internal static class OfflineSymbolManifest
                     if (expansions.Length == 0) return;
                     var contents = expansions[0].Elements().ToArray();
                     Require(expansions.Length == 1 && contents.Length == 1 && contents[0].Name == ns + "Section"
-                        && (string?)contents[0].Attribute("Name") == "None" && IsUdtOrArrayOfUdt(datatype), "unsupported-nested-member-shape");
+                        && (string?)contents[0].Attribute("Name") == "None"
+                        && (IsUdtOrArrayOfUdt(datatype) || prefix == null && !string.IsNullOrWhiteSpace((string?)member.Attribute("Version"))),
+                        "unsupported-nested-member-shape");
                     consumedDeclarations.Add(contents[0]);
                     foreach (var child in contents[0].Elements(ns + "Member")) Member(child, null);
                 }

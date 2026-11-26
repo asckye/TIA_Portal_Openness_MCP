@@ -71,7 +71,7 @@ namespace TiaMcp.Adapters
                 // Keep its bool evidence distinct from the later TransferResult enum.
                 bool ok = cax.Export(device, target, log);
                 return new HardwareAmlExportReply { DeviceName = device.Name ?? devicePath, FilePath = filePath,
-                    Success = ok, State = ok.ToString(), NativeBooleanResult = ok,
+                    Success = ok, State = ok.ToString(), NativeBooleanResult = ok, LogFilePath = log.FullName,
                     Messages = new List<string> { "CAx Export returned bool; native log: " + log.FullName } };
 #endif
             }

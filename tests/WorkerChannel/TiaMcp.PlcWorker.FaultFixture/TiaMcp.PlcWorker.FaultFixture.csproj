@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework><PlatformTarget>x64</PlatformTarget>
     <Nullable>enable</Nullable><LangVersion>latest</LangVersion>
     <AppConfig>../../../src/PlcWorker/App.config</AppConfig>
-    <DefineConstants>$(DefineConstants);PLC_SAFETY;SAFETY_GLOBAL;SAFETY_PROGRAM;PLC_SOURCE_RESULTS</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLC_SAFETY;SAFETY_GLOBAL;SAFETY_PROGRAM;PLC_SOURCE_RESULTS;PLC_SOFTWARE_PROTECTION</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Fixtures/TiaMcp.NativeWrites.Fixture/TiaMcp.NativeWrites.Fixture.csproj" Aliases="nativewrites" />
@@ -38,6 +38,8 @@
     <Compile Include="../../../src/Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
     <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringWriteJournal.cs" Link="EngineeringWriteJournal.cs" />
     <Compile Include="../../../src/Adapters/Native/Safety/SafetyManagementAdapter.cs" Link="SafetyManagementAdapter.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareEditing.CreateInstanceDb.cs" />
+    <Compile Include="../../../src/Adapters/Native/Plc/PlcSoftwareEditing.InstanceDb.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcOrganisationWorker.cs" Link="PlcOrganisationWorker.cs" />
     <Compile Include="../../../src/Adapters/Native/Plc/PlcOrganisationWorker.Outcome.cs" Link="PlcOrganisationWorker.Outcome.cs" />
     <Compile Include="../../../src/Adapters/Native/Safety/SafetyPrimitives.cs" Link="SafetyPrimitives.cs" />

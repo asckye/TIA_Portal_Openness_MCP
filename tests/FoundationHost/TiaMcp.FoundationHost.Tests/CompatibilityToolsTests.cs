@@ -159,6 +159,22 @@ public sealed class CompatibilityToolsTests(Xunit.Abstractions.ITestOutputHelper
         Assert.Equal(mapping.Target, canonical.Name);
     }
 
+    [Theory, InlineData("CreateDevice"), InlineData("CreateHardwareCatalogDevice")]
+    public async Task Device_alias_result_identifies_the_called_tool(string name)
+    {
+        var mapping = CompatibilityTools.Mappings[name];
+        var canonical = new SpyTool(mapping.Target);
+        canonical.Result.StructuredContent = new JsonObject { ["ok"] = true, ["meta"] = new JsonObject { ["tool"] = mapping.Target } };
+        var alias = new CompatibilityTools.Forwarder(new Tool { Name = name }, canonical, mapping, "21");
+        var input = new JsonObject { ["deviceName"] = "CPU" };
+        if (name == "CreateDevice") { input["orderNumber"] = "6ES7 512-1DK01-0AB0"; input["version"] = "V2.9"; }
+        else input["keyword"] = "OrderNumber:6ES7 512-1DK01-0AB0/V2.9";
+        var result = await alias.InvokeAsync(Request(name, input));
+        Assert.Equal(name, (string?)result.StructuredContent?["meta"]?["tool"]);
+        Assert.True(JsonNode.DeepEquals(result.StructuredContent, JsonNode.Parse(((TextContentBlock)result.Content.Single()).Text)));
+        Assert.Equal(mapping.Target, (string?)canonical.Result.StructuredContent?["meta"]?["tool"]);
+    }
+
     [Theory]
     [InlineData("CreateDevice")]
     [InlineData("CreateHardwareCatalogDevice")]

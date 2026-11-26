@@ -58,6 +58,16 @@ namespace TiaMcp.Adapters
         private PlcOrganisationAdapter CreateOrganisationAdapter() => Legacy;
         private void DispatchOrganisationRequest(PlcSoftwareRequest request, bool dryRun, PlcOrganisationAdapter adapter, PlcSoftwareReply reply)
         {
+            if (request.Operation == "CreatePlcInstanceDb")
+            {
+                var step = adapter.CreatePlcInstanceDb(request.SoftwarePath, request.Path, request.Name,
+                    request.GroupPath, request.AutoNumber, request.Number, dryRun);
+                reply.Message = step.Message;
+                reply.Meta = step.Meta;
+                reply.MayHaveChanged = step.MayHaveChanged;
+                reply.OutcomeUnknown = step.OutcomeUnknown;
+                return;
+            }
             if (request.Operation != "RepairAndReimportPlcBlock" || request.Action != "compile" || dryRun)
                 throw new InvalidOperationException("Expected a legacy compile request.");
             adapter.CompileSoftware(request.SoftwarePath, request.Password);

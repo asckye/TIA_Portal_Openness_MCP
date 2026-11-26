@@ -13,6 +13,7 @@ public sealed class SafetyLoginFrameworkTests
         Assert.Equal("Success", (string?)row["result"]?["State"]);
         Assert.Equal(0, (int?)row["result"]?["ErrorCount"]);
         Assert.Equal(0, (int?)row["result"]?["WarningCount"]);
+        Assert.True((bool?)row["result"]?["DiagnosticsIncomplete"]);
         Assert.Contains("could not be read", (string?)row["result"]?["Warnings"]?[0]);
     }
 

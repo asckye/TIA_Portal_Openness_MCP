@@ -42,7 +42,7 @@ internal static class VciProofFixture
         string changed = xml.Replace("<Name>MCP_RC_FC</Name>", "<Name>Changed</Name>");
         var cases = new Dictionary<string, object>();
         foreach (var key in new[] { "import", "disposed", "wrong-write", "invalid-output", "changed-again", "final-proxy",
-            "studio-unknown", "missing-output", "cleanup", "stop", "inconsistent" })
+            "studio-unknown", "studio-final-abort", "missing-output", "cleanup", "stop", "inconsistent" })
         {
             var root = parent.CreateSubdirectory("proof-sequence-" + key);
             var ws = new Workspace(root);
@@ -71,12 +71,13 @@ internal static class VciProofFixture
                     throw new EngineeringUserAbortException("Original abort");
                 }
                 if (afterSync && key == "changed-again") File.WriteAllText(Path.Combine(root.FullName, "Motor.xml"), xml);
+                if (afterSync && key == "studio-final-abort") throw new EngineeringUserAbortException("Final comparison aborted");
                 if (afterSync && key == "final-proxy") throw new EngineeringObjectDisposedException("Final export proxy disposed");
                 File.WriteAllText(file.FullName, key is "wrong-write" or "invalid-output" or "changed-again" or "final-proxy"
-                    or "studio-unknown" or "missing-output" or "inconsistent" ? changed : projectXml);
+                    or "studio-unknown" or "studio-final-abort" or "missing-output" or "inconsistent" ? changed : projectXml);
             });
             first.Status.AcceptEqual = true;
-            if (key is "wrong-write" or "invalid-output" or "changed-again" or "final-proxy")
+            if (key is "wrong-write" or "invalid-output" or "changed-again" or "final-proxy" or "studio-final-abort")
                 first.Status.OnSynchronized = () =>
                 {
                     afterSync = true;
@@ -100,6 +101,8 @@ internal static class VciProofFixture
             {
                 if (key == "import")
                     cases[key] = new OpennessVersionControl(() => project).Sync("", SyncDirection.WorkspaceToProject, false, null);
+                else if (key == "studio-final-abort")
+                    cases[key] = new OpennessVersionControl(() => project).Sync("", SyncDirection.ProjectToWorkspace, false, null);
                 else if (key == "studio-unknown")
                 {
                     var done = Add("Done", (file, _) => File.WriteAllText(file.FullName, xml));
@@ -117,6 +120,8 @@ internal static class VciProofFixture
                 scratch?.Delete(true);
             }
         }
+        var empty = new Workspace(parent.CreateSubdirectory("pending-summary"));
+        cases["studio-pending"] = new OpennessVersionControl(() => new Project()).SummarizePendingRow(empty);
         return cases;
     }
 
@@ -217,6 +222,20 @@ internal static class VciProofFixture
                 cleaned = temporary.All(folder => !Directory.Exists(folder)), externalPreserved = key == "race" && File.ReadAllText(path) == defaults });
         }
         return cases;
+    }
+}
+
+namespace TiaOpenness.Openness
+{
+    internal sealed partial class OpennessVersionControl
+    {
+        internal SyncResult SummarizePendingRow(Workspace workspace)
+        {
+            var result = new SyncResult { Direction = SyncDirection.ProjectToWorkspace };
+            AddNotAttempted(result, "Next");
+            SyncMappings(workspace, SynchronizationMode.ProjectToWorkspace, result, null, false);
+            return result;
+        }
     }
 }
 #endif

@@ -96,6 +96,18 @@ internal static class SafetyLoginFixture
             return 0;
         }
         var engine = new PlcFoundationEngine(session, caller == "legacy-prior");
+        if (caller == "instance-db")
+        {
+            var blocks = session.GetSoftwareContainer("CPU").Software.BlockGroup.Blocks;
+            blocks.Add(new Siemens.Engineering.SW.Blocks.FB { Name = "Motor" });
+            blocks.ChangeOnRefusal = scenario == "changed";
+            var createRequest = new PlcSoftwareRequest { Operation = "CreatePlcInstanceDb", SoftwarePath = "CPU", Path = "Motor",
+                Name = "MotorDB", AutoNumber = true, GroupPath = "", DryRun = false };
+            var result = engine.ExecutePlcOrganisation(createRequest, dryRun: false);
+            Console.WriteLine(WorkerJson.Serialize(new { framework = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName,
+                result, blocks.CreateCalls }));
+            return 0;
+        }
         if (caller == "legacy-worker")
         {
             admin.LoginError = scenario == "disposed" ? new ObjectDisposedException("vendor " + password)

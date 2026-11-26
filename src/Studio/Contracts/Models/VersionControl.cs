@@ -172,6 +172,7 @@ namespace TiaOpenness.Contracts.Models
         public int SkippedDisconnected { get; set; }
         public bool DataComplete { get; set; } = true;
         public int UnverifiedEqual { get; set; }
+        public bool ComparisonInterrupted { get; set; }
         public List<SyncItem> Items { get; set; } = new List<SyncItem>();
     }
 }

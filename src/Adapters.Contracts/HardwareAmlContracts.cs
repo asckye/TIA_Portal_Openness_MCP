@@ -11,6 +11,7 @@ namespace TiaMcp.Adapters.Contracts
         public int ErrorCount { get; set; }
         public int WarningCount { get; set; }
         public List<string> Messages { get; set; } = new List<string>();
+        public string? LogFilePath { get; set; }
         public bool? NativeBooleanResult { get; set; }
     }
 }

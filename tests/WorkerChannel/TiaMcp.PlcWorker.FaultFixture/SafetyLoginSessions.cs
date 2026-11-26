@@ -38,7 +38,9 @@ namespace TiaMcp.Adapters.Native.Safety
             return new HardwareAddressingReply { Message = TestWrite == null ? action(meta)
                 : EngineeringWriteJournal.RunReported(meta, () => action(meta), error => error.Message), Meta = meta };
         }
-        internal object ExactMasterCopyPlcSource(string path, string block, bool exact) => throw new NotSupportedException();
+        internal string ReleaseKey => "19";
+        internal object ExactMasterCopyPlcSource(string path, string block, bool exact) =>
+            container.Software.BlockGroup.Blocks.Find(block) ?? throw new NotSupportedException();
         internal void GetBlocksRecursive(object group, List<PlcBlock> blocks) => throw new NotSupportedException();
         internal string? TestWrite;
         internal (HmiObject Scalars, HmiObject Attributes) RuntimeGroupChanges()
@@ -75,7 +77,13 @@ namespace TiaMcp.Adapters.Native.Hmi
 {
     internal static class HmiReadSafety { internal static bool ConnectionUnavailable(Exception error) => HmiReadPolicy.ConnectionUnavailable(error); }
 }
-namespace TiaMcp.Adapters.Hardware { }
+namespace TiaMcp.Adapters.Hardware
+{
+    internal static class HardwareScalarEvidence
+    {
+        internal static Dictionary<string, object?> Read(object value) => throw new NotSupportedException();
+    }
+}
 namespace TiaMcp.Adapters.Native.Plc
 {
     public sealed partial class PlcOrganisationAdapter
@@ -84,7 +92,13 @@ namespace TiaMcp.Adapters.Native.Plc
         internal bool MutationStarted { get; set; }
         internal PlcOrganisationAdapter(Safety.SafetySession session) => _session = session;
     }
-    internal static class PlcGroupOperations { internal static IEnumerable<object> Items(IEnumerable values) => values.Cast<object>(); }
+    internal static class PlcGroupOperations
+    {
+        internal static IEnumerable<object> Items(IEnumerable values) => values.Cast<object>();
+        internal static string[] Parts(string path) => PlcObjectPath.Parts(path, false);
+        internal static object Group(PlcBlockGroup root, string path, Func<string, string[]> pathParts) =>
+            pathParts(path).Length == 0 ? root : throw new NotSupportedException();
+    }
     internal static class PlcBlockPrimitives
     {
         internal static PlcBlock? Find(List<PlcBlock> blocks, string name) => blocks.Find(b => b.Name == name);

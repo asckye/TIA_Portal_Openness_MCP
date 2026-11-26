@@ -21,6 +21,7 @@ internal sealed class VciStoredEqual
     internal bool Issued { get; private set; }
     internal bool Unconfirmed { get; private set; }
     internal bool Interrupted { get; private set; }
+    internal bool ComparisonInterrupted { get; private set; }
     private readonly string root;
     private MappedObject source;
     internal string InitialHash { get; private set; }
@@ -179,11 +180,13 @@ internal sealed class VciStoredEqual
             {
                 Message = null;
                 try { Proof.Compare(() => NativeVci.Exporter(acquire().LinkedProjectObject), NativeVci.Ordinary); }
-                catch (Exception error) when (FileChanged == true)
+                catch (Exception error)
                 {
+                    ComparisonInterrupted = !NativeVci.Ordinary(error) && !LocalDisposal(error);
+                    if (FileChanged != true) throw;
                     invalidated = true;
                     Message = NativeFailureText.BoundedDiagnostic(error);
-                    Interrupted = !NativeVci.Ordinary(error) && !LocalDisposal(error);
+                    Interrupted = ComparisonInterrupted;
                 }
                 string finalHash = Proof.CurrentHash();
                 if (Proof.Sha256 != written || finalHash != written)

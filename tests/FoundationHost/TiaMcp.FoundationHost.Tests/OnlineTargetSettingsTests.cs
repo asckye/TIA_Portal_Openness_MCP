@@ -51,6 +51,26 @@ public sealed class OnlineTargetSettingsTests
     }
 
     [Fact]
+    public void Save_replaces_settings_with_the_current_reader_and_reproduces_the_original_Windows_sharing_violation()
+    {
+        using var fixture = new SettingsFixture();
+        string path = Path.Combine(fixture.Root, "online-targets.settings");
+        var audit = new AuditLog(Path.Combine(fixture.Root, "audit"));
+        var replacement = OnlineTargetPolicy.Parse("target=192.168.1.11");
+        OnlineTargetSettings.Save(path, OnlineTargetPolicy.Parse("target=192.168.1.10"), audit);
+        if (OperatingSystem.IsWindows())
+        {
+            using var originalReader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var failure = Assert.Throws<IOException>(() => OnlineTargetSettings.Save(path, replacement, audit));
+            Assert.Equal(32, failure.HResult & 0xffff);
+        }
+        using var reader = new StreamReader(OnlineTargetSettings.OpenRead(path));
+        OnlineTargetSettings.Save(path, replacement, audit);
+        Assert.Equal("target=192.168.1.10\n", reader.ReadToEnd());
+        Assert.Equal(replacement.Entries, OnlineTargetSettings.Load(path)!.Entries);
+    }
+
+    [Fact]
     public void Existing_parent_missing_file_is_read_without_creating_a_lock()
     {
         using var fixture = new SettingsFixture();

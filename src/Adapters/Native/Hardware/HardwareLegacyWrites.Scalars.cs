@@ -150,7 +150,7 @@ namespace TiaMcp.Adapters
                         .Select(name => infos.FirstOrDefault(info => string.Equals(info.Name, name, StringComparison.OrdinalIgnoreCase)))
                     .Where(info => info != null && HardwareAttributeWritable(info)).Select(info => info!.Name), name => di.GetAttribute(name));
                 var applied = new List<object?>();
-                var rejected = new List<object?>();
+                var rejected = new List<Dictionary<string, object?>>();
                 meta["applied"] = applied; meta["rejected"] = rejected;
 
                 foreach (var kv in exact)
@@ -221,7 +221,6 @@ namespace TiaMcp.Adapters
                         if (writeIssued && !HardwareAddressingPolicy.ScalarUnchanged(ex, hadOldValue, oldValue, () => di.GetAttribute(info.Name)))
                             meta["writeOutcomeUnknown"] = true;
                         string? reason = HardwareSiemensReason(ex);
-                        if (reason != null) meta["nativeMessage"] = reason;
                         rejected.Add(new Dictionary<string, object?>
                         {
                             ["attribute"] = info.Name,
@@ -233,6 +232,8 @@ namespace TiaMcp.Adapters
 
                 meta["applied"] = applied;
                 meta["rejected"] = rejected;
+                if (rejected.Count > 0)
+                    meta["nativeMessage"] = string.Join(" | ", rejected.Select(row => row["attribute"] + ": " + row["reason"]));
                 meta["readback"] = HardwareBuildDeviceItemNetworkReadbackJson(cpuPath);
                 verifiedMismatch = meta.TryGetValue("valueMismatch", out var mismatch) && mismatch is true;
                 meta["success"] = applied.Count > 0 && rejected.Count == 0;

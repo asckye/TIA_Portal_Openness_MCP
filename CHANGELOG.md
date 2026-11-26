@@ -5,8 +5,14 @@
 ## [Unreleased]
 
 VCI connect checks existing workspace files before writing. If another process creates the target during the native TIA write, TIA can overwrite it. Give connect exclusive write access to the workspace until it finishes.
+
 ### Fixed
 
+- Mixed invalid and unknown tool arguments include the declared parameter names. Device creation aliases identify the called tool in the result.
+- CloseProject explains when unsaved changes are discarded. CPU settings report the reason for each rejected attribute. A failed boolean CAx export identifies the AML file, its observed presence, and the native log.
+- Block compile reports errors from other blocks. Incomplete compiler diagnostics preserve the reported Error state when individual errors cannot be counted.
+- Verified readback retains relative Windows evidence paths on Linux. Offline DB manifests accept versioned system types inside expanded UDTs.
+- Studio reports an interrupted final content comparison and counts an unconfirmed synchronization once in its failure summary.
 - Session recovery now settles calls recorded before the worker learned the TIA process start time. Nested scaffold calls retain evidence of an interrupted write, and worker failures preserve the original request-sent marker.
 - `GetCallResult` returns the newest retained ordinary result for a repeated request ID.
 - `ImportPlcTagTablesFromDirectory` reports `canApply=false` when no files match. Hardware catalog paging can advance past large descriptions on earlier pages.

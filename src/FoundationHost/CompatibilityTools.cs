@@ -135,14 +135,19 @@ internal static class CompatibilityTools
         // The alias audit records the same parameter names that the caller receives.
         private CallToolResult ProjectDeviceCatalogResult(CallToolResult result)
         {
-            if (result.StructuredContent is not JsonObject body || (string?)body["meta"]?["tool"] != "CreateHardwareDevice"
-                || (string?)body["error"]?["code"] != "INVALID_ARGUMENT" || body["error"]?["details"]?["parameters"] is not JsonArray { Count: 2 } fields
-                || (string?)fields[0] != "/preferredMlfb" || (string?)fields[1] != "/preferredVersion") return result;
-
-            bool catalog = tool.Name == "CreateHardwareCatalogDevice";
-            string identifier = catalog ? "keyword" : "orderNumber";
+            if (result.StructuredContent is not JsonObject body || (string?)body["meta"]?["tool"] != "CreateHardwareDevice") return result;
             var projected = body.DeepClone().AsObject();
-            var error = projected["error"]!;
+            projected["meta"]!["tool"] = tool.Name;
+            if ((string?)projected["error"]?["code"] == "INVALID_ARGUMENT" && projected["error"]?["details"]?["parameters"] is JsonArray { Count: 2 } fields
+                && (string?)fields[0] == "/preferredMlfb" && (string?)fields[1] == "/preferredVersion")
+                ProjectCatalogRefusal(projected["error"]!, tool.Name == "CreateHardwareCatalogDevice");
+            return new CallToolResult { IsError = result.IsError, StructuredContent = projected, Meta = result.Meta,
+                Content = new[] { new TextContentBlock { Text = projected.ToJsonString() } } };
+        }
+
+        private static void ProjectCatalogRefusal(JsonNode error, bool catalog)
+        {
+            string identifier = catalog ? "keyword" : "orderNumber";
             var details = error["details"]!;
             details["parameter"] = "/" + identifier;
             details["parameters"] = catalog ? new JsonArray("/keyword") : new JsonArray("/orderNumber", "/version");
@@ -151,8 +156,6 @@ internal static class CompatibilityTools
                 error["message"] = DeviceCreationRules.AmbiguousCatalogRows(identifier, catalog ? null : "version");
             else if (catalog && message == DeviceCreationRules.NoCatalogRow)
                 error["message"] = "No catalog row matches the selection. Run SearchHardwareCatalog and pass the exact typeIdentifier in keyword.";
-            return new CallToolResult { IsError = result.IsError, StructuredContent = projected, Meta = result.Meta,
-                Content = new[] { new TextContentBlock { Text = projected.ToJsonString() } } };
         }
     }
     internal sealed class ActionForwarder : McpServerTool

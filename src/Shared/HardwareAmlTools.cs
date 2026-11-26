@@ -53,10 +53,18 @@ namespace TiaMcpServer.ModelContextProtocol
                         .Record(evidence, result.State, false, targetPath: result.FilePath, messages: new System.Text.Json.Nodes
                             .JsonArray(result.Messages?.Select(m => (JsonNode)m).ToArray() ?? Array.Empty<JsonNode>()));
                 }
+                if (result.NativeBooleanResult == false)
+                {
+                    evidence["filePath"] = result.FilePath;
+                    evidence["logFilePath"] = result.LogFilePath;
+                    evidence["fileExists"] = File.Exists(result.FilePath);
+                }
                 return new ResponseExportDeviceAml
                 {
                     Message = result.NativeBooleanResult == false
-                        ? "CAx export returned false. Inspect the native log listed in data.messages. " + HostBehavior.PartialExportHint
+                        ? "CAx export returned false. " + ((bool?)evidence["fileExists"] == true
+                            ? "A possible partial AML file is present. " : "No AML file was found. ")
+                            + "Inspect the native log listed in data.messages. " + HostBehavior.PartialExportHint
                         : $"Device '{result.DeviceName}' exported to AML at '{result.FilePath}' " +
                             $"(state={result.State}, errors={result.ErrorCount}, warnings={result.WarningCount})",
                     DeviceName = result.DeviceName,

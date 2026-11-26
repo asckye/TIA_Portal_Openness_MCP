@@ -50,6 +50,25 @@ public sealed partial class ReadBatchAdmissionTests
         fixture.AssertNothingDispatched();
     }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public async Task Mixed_unknown_and_invalid_arguments_report_declared_names(bool unknownFirst)
+    {
+        using var fixture = new Fixture("21");
+        using var session = fixture.EnterSession();
+        var target = McpServer.CatalogView.Find("CompareProjects")!;
+        var names = target.Tool.InputSchema.GetProperty("properties").EnumerateObject().Select(p => p.Name).ToArray();
+        var args = new JsonObject { ["kind"] = "software" };
+        if (unknownFirst) args["unknownFixtureKey"] = 1;
+        args["softwarePath"] = false;
+        if (!unknownFirst) args["unknownFixtureKey"] = 1;
+        var result = await fixture.CallResult("CallTool", new JsonObject { ["name"] = "CompareProjects", ["arguments"] = args });
+        var details = result.StructuredContent!["error"]!["details"]!;
+        Assert.Equal("/softwarePath", (string?)details["parameter"]);
+        Assert.All(names, name => Assert.Contains(name, details["allowedValues"]!.AsArray().Select(v => (string?)v)));
+        Assert.DoesNotContain("unknownFixtureKey", result.StructuredContent.ToJsonString());
+        fixture.AssertNothingDispatched();
+    }
+
     public static IEnumerable<object[]> PrivateKeys() => Order.SelectMany(release =>
         new[] { "token=sk-live", "123456" }.Select(key => new object[] { release, key }));
 

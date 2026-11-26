@@ -397,7 +397,8 @@ internal static class FoundationV4Result
         bool preview = args["dryRun"]?.GetValue<bool>() == true;
         if (definition.ResponseMember == "Compile")
         {
-            if (V17CompileEnvelope.IncompleteDiagnostics(data["warnings"])) data["complete"] = false;
+            if (V17CompileEnvelope.DiagnosticsIncomplete(data["diagnosticsIncomplete"], data["warnings"])) data["complete"] = false;
+            data.Remove("diagnosticsIncomplete");
             bool mismatch = Flag(data, "scopeMismatch") == true;
             data.Remove("scopeMismatch");
             if (Text(data, "scope") is "block" or "group") data["compiledRoots"] ??= new JsonArray();

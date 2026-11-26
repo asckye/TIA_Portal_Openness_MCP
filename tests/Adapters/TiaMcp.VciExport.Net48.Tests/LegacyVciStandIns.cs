@@ -168,8 +168,12 @@ namespace Siemens.Engineering.VersionControl
 #if STUDIO_VCI_MODERN
         public MappedObjectComposition MappedObjects { get; } = new();
         internal string ExportFormat = "xml";
-        public IEnumerable<string> GetSupportedFileFormats(IEngineeringObject target) =>
-            target is Exportable ? new[] { ExportFormat } : Array.Empty<string>();
+        internal Action<IEngineeringObject>? QueryFormats;
+        public IEnumerable<string> GetSupportedFileFormats(IEngineeringObject target)
+        {
+            QueryFormats?.Invoke(target);
+            return target is Exportable ? new[] { ExportFormat } : Array.Empty<string>();
+        }
         public MappedObject ExportObject(IEngineeringObject target, DirectoryInfo directory, string name, string format)
         {
             Calls.Add("Workspace.ExportObject:" + name + ":" + format);

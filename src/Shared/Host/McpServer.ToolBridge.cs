@@ -573,7 +573,10 @@ namespace TiaMcpServer.ModelContextProtocol
             var fields = schema.ValidateFields(arguments.Json);
             if (fields.Count == 0 || fields.Any(e => e.Details is not InvalidArgumentDetails)) return error;
             var details = argument.Parameter == "" ? PrimaryFieldDetails(fields, argument) : argument;
-            return new Error(schema.FieldReport(arguments.Json), details);
+            var declaredNames = fields.Select(field => (InvalidArgumentDetails)field.Details)
+                .Where(field => field.Expected == "declared parameter name").SelectMany(field => field.AllowedValues);
+            var allowed = details.AllowedValues.Union(declaredNames, StringComparer.Ordinal).ToArray();
+            return new Error(schema.FieldReport(arguments.Json), new InvalidArgumentDetails(details.Parameter, allowed, details.Parameters, details.Expected));
         }
         private static InvalidArgumentDetails PrimaryFieldDetails(IEnumerable<Error> fields, InvalidArgumentDetails original)
         {

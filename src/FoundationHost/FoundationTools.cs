@@ -23,8 +23,8 @@ internal static class FoundationTools
 {
     private const string BlockHierarchyDescription = "[v17-read-safe-v1] Actual nested block groups, including empty groups; structure only; " +
         "use ListPlcBlocks or GetPlcBlockInfo for details. Accepts unique PLC/device/group aliases or exact address; ambiguity is an error.";
-    private const string CloseProjectDescription = "[v17-project-safe-v1] Close a project opened by this worker. By default a modified project is refused. "
-        + "To discard unsaved changes, preview with discardChanges=true from the session holding the binding. The worker must have started the portal "
+    private const string CloseProjectDescription = "[v17-project-safe-v1] Close a project opened by this worker. CloseProject never saves. By default a modified project is refused. "
+        + "Discarding unsaved changes requires an explicit discardChanges=true preview from the session holding the binding. The worker must have started the portal "
         + "and own the ordinary primary project. Review data.projectFile, data.isModified and data.planHash. Apply with dryRun=false, confirm=true, "
         + "expectedProjectFile and expectedPlanHash from that preview. Discard always requires Workbench approval. Then DisconnectPortal can release the portal.";
     private const string DisconnectDescription =

@@ -144,6 +144,12 @@ public sealed class SessionAuditHostTests
         var refusal = Assert.Throws<AdapterPreconditionException>(() => state.Execute(4321, true, () => disposes++, false, workerStarted: true, ownedProjectOpen: true));
         Assert.False(refusal.IsArgument);
         Assert.Contains("SaveProject", refusal.Message, StringComparison.Ordinal);
+        var description = FoundationTools.Definitions.Single(definition => definition.Name == "CloseProject").Description;
+        foreach (string text in new[] { refusal.Message, description })
+        {
+            Assert.Contains("never saves", text, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("discardChanges=true", text, StringComparison.Ordinal);
+        }
         Assert.False(state.Attempted); Assert.Equal(0, disposes);
         state.RequireActive();
         var result = state.Execute(4321, true, () => disposes++, false, workerStarted: true);

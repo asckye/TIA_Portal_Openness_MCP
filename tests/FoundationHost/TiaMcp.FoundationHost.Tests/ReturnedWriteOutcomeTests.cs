@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.PlcWorker;
+using TiaMcp.FoundationHost;
 using TiaMcpServer.ModelContextProtocol;
 using Host = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Services = toolpipeline::TiaMcpServer.Siemens.Services;
@@ -94,7 +95,7 @@ public sealed class ReturnedWriteOutcomeTests
             File.WriteAllText(log, "CAx export failed.");
             if (partialFile) File.WriteAllText(output, """<CAEXFile SchemaVersion="2.15">""");
             var reply = new HardwareAmlExportReply { DeviceName = "MCP_RC_HMI", FilePath = output, State = "False",
-                Success = false, NativeBooleanResult = false, Messages = ["CAx Export returned bool; native log: " + log] };
+                Success = false, NativeBooleanResult = false, LogFilePath = log, Messages = ["CAx Export returned bool; native log: " + log] };
             return JsonNode.Parse(WorkerOperationResponse.Complete(reply, false, state).ResultJson);
         }, () => true, () => "Project.ap16");
         var body = new Host.HardwareAmlTools(service).ExportDeviceAmlV4("MCP_RC_HMI", output).StructuredContent!;
@@ -108,8 +109,49 @@ public sealed class ReturnedWriteOutcomeTests
         Assert.Contains(log, (string?)body["data"]?["messages"]?[0]);
         Assert.Contains("partial", (string?)body["error"]?["message"], StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("rebuild", (string?)body["error"]?["message"], StringComparison.OrdinalIgnoreCase);
+        var facts = body["error"]!["details"]!["evidence"]!;
+        Assert.Equal(output, (string?)body["data"]?["evidence"]?["filePath"]);
+        Assert.Equal(log, (string?)body["data"]?["evidence"]?["logFilePath"]);
+        Assert.Equal(Path.GetFileName(output), (string?)facts["filePath"]);
+        Assert.Equal(Path.GetFileName(log), (string?)facts["logFilePath"]);
+        Assert.Equal(partialFile, (bool?)facts["fileExists"]);
         Assert.Equal(partialFile, File.Exists(output));
         Assert.True(File.Exists(log));
+    }
+
+    [Fact]
+    public async Task False_CAx_export_leaves_no_unsettled_call_in_the_Foundation_session()
+    {
+        using var files = new Files();
+        using var worker = new FalseExportWorker();
+        var method = typeof(Host.HardwareAmlTools).GetMethod(nameof(Host.HardwareAmlTools.ExportDeviceAmlV4))!;
+        var export = new FoundationV4Tool(new FoundationTool(worker, "16", method, "ExportDeviceAml"), "16", () => new(false, 1),
+            readinessForTest: () => new JsonObject { ["ready"] = true });
+        var args = new JsonObject { ["devicePath"] = "PLC", ["exportPath"] = Path.Combine(files.Root, "Device.aml") };
+        var result = await export.InvokeAsync(SharedPipelineTests.Scope.Request("ExportDeviceAml", args));
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)result.StructuredContent?["error"]?["code"]);
+        Assert.Equal(1, worker.ExportCalls);
+        var query = new FoundationV4Tool(new FoundationTool(FoundationTools.Definitions.Single(d => d.Name == "GetSessionState"), worker), "16");
+        var state = await query.InvokeAsync(SharedPipelineTests.Scope.Request("GetSessionState", new()));
+        Assert.True((bool?)state.StructuredContent?["ok"], state.StructuredContent?.ToJsonString());
+        Assert.Empty(state.StructuredContent!["data"]!["sessionState"]!["unsettled"]!.AsArray());
+    }
+
+    private sealed class FalseExportWorker : IFoundationWorker
+    {
+        internal int ExportCalls;
+        public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
+        {
+            if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject {
+                ["ReleaseKey"] = "16", ["ProjectFile"] = "C:/Project.ap16", ["ProcessId"] = 42, ["IsAttached"] = true,
+                ["OwnsProject"] = false, ["IsLocalSession"] = false, ["IdentityStatus"] = "unverified-cached-pid",
+                ["RuntimeConnectionStatus"] = "not-probed" });
+            Assert.Equal("hardware-aml.ExportHardwareAml", operation);
+            ExportCalls++;
+            return Task.FromResult(JsonSerializer.SerializeToNode(new HardwareAmlExportReply {
+                FilePath = (string)args["exportPath"]!, State = "False", NativeBooleanResult = false }));
+        }
+        public void Dispose() { }
     }
 
     [Theory, InlineData(false), InlineData(true)]
@@ -171,6 +213,18 @@ public sealed class ReturnedWriteOutcomeTests
         meta["writeOutcomeUnknown"] = true;
         var unknown = Host.HardwareContract.Map("ImportDeviceAml", new Host.ResponseMessage { Meta = meta }, true, true).StructuredContent!;
         Assert.Equal("OUTCOME_UNKNOWN", (string?)unknown["error"]?["code"]);
+    }
+
+    [Theory]
+    [InlineData(@"C:\Saved\Evidence\before.xml", "before.xml")]
+    [InlineData(@"C:\Saved\Evidence\..\outside.xml", "<path>")]
+    [InlineData(@"D:\Saved\Evidence\before.xml", "<path>")]
+    public void Cleanup_keeps_only_files_under_the_windows_evidence_directory(string path, string expected)
+    {
+        var evidence = new JsonObject { ["evidenceDirectory"] = @"C:\Saved\Evidence",
+            ["cleanupRequired"] = new JsonArray(new JsonObject { ["restoreFrom"] = path }) };
+        var facts = TiaMcp.Logic.V4.HostBehavior.WorkerReplyEvidence(evidence);
+        Assert.Equal(expected, facts["cleanupRequired"][0].GetProperty("restoreFrom").GetString());
     }
 
     [Fact]

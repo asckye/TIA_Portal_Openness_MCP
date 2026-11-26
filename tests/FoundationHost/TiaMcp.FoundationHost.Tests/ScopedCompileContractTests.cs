@@ -32,6 +32,7 @@ public sealed class ScopedCompileContractTests
         var native = (await worker.Call("CompileSoftware", args, CancellationToken.None))!.AsObject();
         if (scope == "unit") native["ResolvedObject"] = "devices/D/CPU/units/Line";
         native["State"] = "Error"; native["ErrorCount"] = 3; native["WarningCount"] = 2;
+        native["DiagnosticsIncomplete"] = true;
         native["Warnings"] = new JsonArray(warning);
         native["Messages"] = new JsonArray(warning);
         var legacy = V17CompileEnvelope.Wrap(tool, native, false, args);
@@ -45,6 +46,55 @@ public sealed class ScopedCompileContractTests
         Assert.Contains("3 errors and 2 warnings", (string?)body["error"]?["message"]);
         Assert.Contains("individual error", (string?)body["error"]?["message"], StringComparison.OrdinalIgnoreCase);
         Assert.Contains(warning, body["data"]!.ToJsonString());
+    }
+
+    [Theory, InlineData("CompilePlcSoftware"), InlineData("CompilePlcDiagnostics")]
+    public async Task Block_compile_reports_errors_from_other_blocks_in_the_envelope(string tool)
+    {
+        var args = new JsonObject { ["softwarePath"] = "devices/D/CPU", ["scope"] = "block", ["scopePath"] = "Main", ["dryRun"] = false };
+        using var worker = new Worker();
+        var native = (await worker.Call("CompileSoftware", args, CancellationToken.None))!.AsObject();
+        native["ResolvedObject"] = "devices/D/CPU/blocks/Main";
+        native["ErrorCount"] = 1;
+        native["State"] = "Error";
+        native["OtherErrors"] = new JsonArray("Helper: bad operand");
+        var legacy = V17CompileEnvelope.Wrap(tool, native, false, args);
+        Assert.Equal("Helper: bad operand", (string?)legacy["otherErrors"]?[0]);
+    }
+
+    [Theory, InlineData(true), InlineData(false)]
+    public async Task Typed_diagnostic_status_takes_precedence_over_warning_text(bool incomplete)
+    {
+        using var worker = new Worker();
+        var args = new JsonObject { ["softwarePath"] = "CPU", ["dryRun"] = false };
+        var native = (await worker.Call("CompileSoftware", args, CancellationToken.None))!.AsObject();
+        native["DiagnosticsIncomplete"] = incomplete;
+        native["Warnings"] = new JsonArray(incomplete ? "Fixture diagnostic unavailable." : PlcCompileResult.IncompleteDiagnostics);
+        var legacy = V17CompileEnvelope.Wrap("CompilePlcSoftware", native, false, args);
+        Assert.Equal(incomplete, (bool?)legacy["meta"]?["dataComplete"] == false);
+        var definition = FoundationTools.Definitions.Single(d => d.Name == "CompilePlcSoftware");
+        var result = FoundationV4Result.Worker("20", definition, "fixture", args, native, legacy).StructuredContent!;
+        Assert.Equal(incomplete ? "partial" : "complete", (string?)result["meta"]?["completeness"]);
+    }
+
+    [Fact]
+    public void Unreadable_error_count_reports_the_returned_error_state()
+    {
+        var data = new JsonObject { ["errorCount"] = 0, ["state"] = "Error", ["complete"] = false };
+        var error = TiaMcp.Logic.V4.CompileResultMapping.Errors(data)!;
+        Assert.Contains("reported Error", error.Message);
+        Assert.DoesNotContain("0 errors", error.Message);
+    }
+
+    [Theory, InlineData("unchanged", false), InlineData("changed", true)]
+    public void Instance_db_refusal_retains_the_observed_mutation_through_the_worker(string scenario, bool changed)
+    {
+        var reply = SafetyLoginFrameworkTests.RunFixture("instance-db", scenario);
+        Assert.Equal(1, (int?)reply["CreateCalls"]);
+        var result = reply["result"]!;
+        Assert.Contains("CreateInstanceDB refused", (string?)result["Failure"]?["Message"]);
+        Assert.Equal(changed, (bool?)result["MayHaveChanged"]);
+        Assert.Equal(changed, (bool?)result["OutcomeUnknown"]);
     }
 
     [Fact]

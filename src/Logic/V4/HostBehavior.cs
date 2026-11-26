@@ -332,7 +332,7 @@ namespace TiaMcp.Logic.V4
                     if (pair.Key == "cleanupRequired" && pair.Value is JsonArray cleanup)
                         foreach (var task in cleanup.OfType<JsonObject>())
                             if (task["restoreFrom"] is JsonValue restore && restore.TryGetValue<string>(out var path)
-                                && (obj.ContainsKey("evidenceDirectory") || Path.IsPathRooted(path)))
+                                && (obj.ContainsKey("evidenceDirectory") || Path.IsPathRooted(path) || HasWindowsRoot(path)))
                                 task["restoreFrom"] = RestorePath(obj, path);
                     bool sourceText = !evidence && (pair.Key.Equals("code", StringComparison.OrdinalIgnoreCase)
                         || pair.Key.Equals("sourceCode", StringComparison.OrdinalIgnoreCase)
@@ -547,15 +547,30 @@ namespace TiaMcp.Logic.V4
             }
         }
 
+        private static bool HasWindowsRoot(string path) => path.StartsWith("\\", StringComparison.Ordinal)
+            || path.StartsWith("//", StringComparison.Ordinal) || path.Length > 1 && path[1] == ':';
+
         private static string RestorePath(JsonObject evidence, string path)
         {
             if (evidence["evidenceDirectory"] is not JsonValue directory || !directory.TryGetValue<string>(out var root)
-                || !Path.IsPathRooted(root)) return "<path>";
+                || string.IsNullOrWhiteSpace(root)) return "<path>";
             try
             {
-                string boundary = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-                string full = Path.GetFullPath(Path.Combine(boundary, path));
-                return full.StartsWith(boundary, StringComparison.OrdinalIgnoreCase)
+                string boundary, full;
+                bool windows = HasWindowsRoot(root);
+                if (windows)
+                {
+                    boundary = Generation.GenerationProjectPath.Normalize(root).TrimEnd('\\') + "\\";
+                    string file = path.Replace('/', '\\');
+                    full = Generation.GenerationProjectPath.Normalize(HasWindowsRoot(file) ? file : boundary + file);
+                }
+                else
+                {
+                    if (!Path.IsPathRooted(root) || HasWindowsRoot(path)) return "<path>";
+                    boundary = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                    full = Path.GetFullPath(Path.Combine(boundary, path));
+                }
+                return full.StartsWith(boundary, windows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)
                     ? full.Substring(boundary.Length) : "<path>";
             }
             catch (Exception error) when (error is ArgumentException or IOException or NotSupportedException) { return "<path>"; }

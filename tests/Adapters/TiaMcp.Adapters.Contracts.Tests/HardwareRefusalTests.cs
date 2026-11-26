@@ -43,6 +43,21 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.Contains(expected, Assert.IsType<string>(reply.Meta["nativeMessage"]));
         }
 
+        [Fact]
+        public void Cpu_settings_report_each_rejected_attribute_and_its_reason()
+        {
+            var engine = HardwareWriteFailureTests.NativeFixture().Engine;
+            engine.RollbackCpu = new NameTarget("Name unavailable.");
+            var reply = engine.HardwareLegacySetCpuCommonSettings("PLC/CPU", new() {
+                ["Name"] = new HardwareScalar { Kind = "string", Text = "Replacement" },
+                ["UnknownSetting"] = new HardwareScalar { Kind = "number", Text = "2" }
+            });
+            var reason = Assert.IsType<string>(reply.Meta["nativeMessage"]);
+            Assert.Contains("Name: ", reason);
+            Assert.Contains("native message; native detail", reason);
+            Assert.Contains("UnknownSetting: Attribute not found", reason);
+        }
+
         private sealed class NameTarget(string? inner) : HardwareObject
         {
             internal int Writes;

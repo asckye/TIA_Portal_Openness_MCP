@@ -136,7 +136,7 @@ namespace TiaMcp.Adapters
 #else
             RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); markIssued(); result=compiler!.Compile();
 #endif
-            PlcCompileResult response = scoped ?? new PlcCompileResult();
+            PlcCompileDiagnosticsResult response = scoped ?? new PlcCompileDiagnosticsResult();
             response.Executed = true; response.ProjectFile = Project().Path.FullName; response.State = result.State.ToString();
             response.ErrorCount = result.ErrorCount; response.WarningCount = result.WarningCount; response.OfflineStateNotExposedByDevices = unobservedDevices;
             var roots = new List<string>();
@@ -145,6 +145,7 @@ namespace TiaMcp.Adapters
             try { PlcCompilePolicy.Classify(response, Messages(result.Messages, 0, checkRoots ? roots : null, blockName), scope == "block"); }
             catch (Exception error) when (!checkRoots && NativeRefusalProbe.AllowsRefusalProof(error))
             {
+                response.DiagnosticsIncomplete = true;
                 response.Messages = new[] { PlcCompileResult.IncompleteDiagnostics };
                 response.Warnings = new[] { PlcCompileResult.IncompleteDiagnostics };
                 return response;

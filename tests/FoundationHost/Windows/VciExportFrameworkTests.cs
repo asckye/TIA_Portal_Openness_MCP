@@ -460,7 +460,16 @@ public sealed class VciExportFrameworkTests
         Assert.DoesNotContain("fixture-password", line);
         Assert.Contains("Unconfirmed write", (string?)cases["studio-unknown"]);
         Assert.Contains("not-attempted (1): Next", (string?)cases["studio-unknown"]);
+        var pending = cases["studio-pending"]!;
+        Assert.Equal(1, (int?)pending["NotAttempted"]);
+        Assert.Equal(0, (int?)pending["Failed"]);
+        Assert.Equal(0, (int?)pending["UnverifiedEqual"]);
+        Assert.False((bool?)pending["DataComplete"]);
+        var aborted = cases["studio-final-abort"]!;
+        Assert.True((bool?)aborted["ComparisonInterrupted"]);
+        Assert.False((bool?)aborted["DataComplete"]);
         var partial = cases["studio-rows"]!;
+        Assert.Equal(0, (int?)partial["NotVerified"]);
         Assert.False((bool?)partial["DataComplete"]);
         Assert.Equal(1, (int?)partial["Synchronized"]);
         Assert.Equal(1, (int?)partial["Failed"]);
@@ -764,6 +773,19 @@ public sealed class VciExportFrameworkTests
     private sealed class WorkerFailure(JsonNode reply) : Exception("Worker outcome unknown"), TiaMcp.Adapters.Contracts.IWorkerFailureEvidence
     {
         public string EvidenceJson => reply.ToJsonString();
+    }
+
+    [Theory]
+    [InlineData("container-format-refusal", 1, 0)]
+    [InlineData("leaf-format-refusal", 0, 1)]
+    [InlineData("ungrouped-format-refusal", 0, 1)]
+    public async Task Connect_walk_observes_container_and_leaf_format_refusals(string scenario, int mapped, int failures)
+    {
+        var fixture = (await ExportReplies("21"))[scenario]!;
+        Assert.Equal(scenario == "ungrouped-format-refusal" ? new[] { "MCP_RC_PLC" } : new[] { "MCP_RC_PLC", "MCP_RC_FC" },
+            Strings(fixture["queried"]));
+        Assert.Equal(mapped, (int?)fixture["reply"]!["Meta"]!["mapped"]);
+        Assert.Equal(failures, (int?)fixture["reply"]!["Meta"]!["queryRefusals"]);
     }
 
     [Fact]

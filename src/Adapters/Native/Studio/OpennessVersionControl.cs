@@ -515,7 +515,9 @@ namespace TiaOpenness.Openness
                     if (mode == SynchronizationMode.WorkspaceToProject) proof.CompareAfterImports(Acquire, stopped);
                     proof.Finish(Acquire, mode, stopped);
                     if (proof.NotAttempted) result.NotAttempted++;
-                    if (proof.Outcome == "not-verified") { result.NotVerified++; result.Failed++; }
+                    result.ComparisonInterrupted |= proof.ComparisonInterrupted;
+                    if (proof.Unconfirmed) result.Failed++;
+                    else if (proof.Outcome == "not-verified") { result.NotVerified++; result.Failed++; }
                     else
                     {
                         result.UnverifiedEqual--;
@@ -540,7 +542,7 @@ namespace TiaOpenness.Openness
                 stopped |= proof.Interrupted;
             }
 #endif
-            result.DataComplete &= result.UnverifiedEqual == 0 && result.Failed == 0 && !stopped;
+            result.DataComplete &= result.UnverifiedEqual == 0 && result.Failed == 0 && result.NotAttempted == 0 && !stopped;
         }
 
         private static void AddNotAttempted(SyncResult result, string name)

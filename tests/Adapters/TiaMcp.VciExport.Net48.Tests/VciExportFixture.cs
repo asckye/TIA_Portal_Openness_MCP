@@ -35,6 +35,9 @@ internal static class VciExportFixture
 #else
             , "studio-conflict", "studio-reuse"
 #endif
+#if STUDIO_VCI_MODERN
+            , "container-format-refusal", "leaf-format-refusal", "ungrouped-format-refusal"
+#endif
         })
         {
             var root = parent.CreateSubdirectory(scenario);
@@ -52,6 +55,25 @@ internal static class VciExportFixture
             var block = new PlcBlock { Name = scenario.StartsWith("rc7-", StringComparison.Ordinal) ? "MCP_RC_FC5" : "MCP_RC_FC" };
             if (scenario == "rc7-member") block.Name = "MCP_RC_DB5";
             plc.BlockGroup.Blocks.Add(block);
+#if STUDIO_VCI_MODERN
+            if (scenario.EndsWith("-format-refusal", StringComparison.Ordinal))
+            {
+                if (scenario == "ungrouped-format-refusal")
+                {
+                    project.Devices.Remove(device);
+                    project.UngroupedDevicesGroup.Devices.Add(device);
+                }
+                var queried = new List<string>();
+                workspace.QueryFormats = target => {
+                    if (target != device && target != block) return;
+                    string name = target == device ? device.Name : block.Name;
+                    queried.Add(name);
+                    if (target == device || scenario == "leaf-format-refusal") throw new EngineeringTargetInvocationException(name + " refused");
+                };
+                replies[scenario] = new { reply = adapter.ConnectProjectToWorkspace(dryRun: true), queried };
+                continue;
+            }
+#endif
             if (scenario == "catch-prior")
             {
                 var inner = new IOException(@"Catalog lookup refused. password=fixture-credential. File C:\PrivateFixture\Panel.xml");

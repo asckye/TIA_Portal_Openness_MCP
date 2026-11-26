@@ -16,14 +16,11 @@ namespace TiaMcpServer.Siemens.Services
         { this.call = call; this.hasProject = hasProject; this.projectIdentity = projectIdentity; }
         internal bool HasProject => hasProject();
 
-        public CaxExportResult ExportDeviceConfigurationAml(string devicePath, string exportPath)
+        public HardwareAmlExportReply ExportDeviceConfigurationAml(string devicePath, string exportPath)
         {
-            var result = JsonSerializer.Deserialize<HardwareAmlExportReply>(call("hardware-aml.ExportHardwareAml",
+            return JsonSerializer.Deserialize<HardwareAmlExportReply>(call("hardware-aml.ExportHardwareAml",
                 new JsonObject { ["devicePath"] = devicePath, ["exportPath"] = exportPath })!.ToJsonString())
                 ?? throw new InvalidOperationException("Missing hardware AML export reply.");
-            return new CaxExportResult { DeviceName = result.DeviceName, FilePath = result.FilePath, Success = result.Success,
-                State = result.State, NativeBooleanResult = result.NativeBooleanResult,
-                ErrorCount = result.ErrorCount, WarningCount = result.WarningCount, Messages = result.Messages };
         }
 
         public ResponseMessage ImportDeviceAml(string filePath, string logFilePath, string importOption = "RetainTiaDevice",

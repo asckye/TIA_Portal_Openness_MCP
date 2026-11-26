@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -213,7 +214,11 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 outcome = Outcome.Failed;
                 body["summary"] = response.Message;
-                error = Failure(false, evidence, response.Message);
+                // Both files are in the export directory. Keep absolute paths in the operation data.
+                var files = (JsonObject)evidence.DeepClone();
+                files["filePath"] = Path.GetFileName((string?)evidence["filePath"]);
+                files["logFilePath"] = Path.GetFileName((string?)evidence["logFilePath"]);
+                error = Failure(false, files, response.Message);
             }
             else if (unknown || write && verdict != true && (issued || !started.HasValue) && applied == 0
                 && Bool(evidence, "postStateKnown") != true && status != "InvalidState" && status != "HmiReadSessionBlocked")

@@ -352,6 +352,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var (declared, compiled) = pending.Pop();
                 if (declared.Name != compiled.Name) continue;
+                // The parent declaration verifies the nested type reference. Its own readback-only expansion is outside that claim.
                 if (declared.Name == ns + "Member" && compiled.Element(ns + "Sections") is XElement expansion
                     && declared.Element(ns + "Sections") == null
                     && (ReferencedType(declared) != null || !string.IsNullOrWhiteSpace((string?)declared.Attribute("Version")))

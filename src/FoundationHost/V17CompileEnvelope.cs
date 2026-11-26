@@ -42,8 +42,13 @@ internal static class V17CompileEnvelope
             throw new IOException("Software compiler response unexpectedly contains a scoped target.");
         return result;
     }
-    internal static bool IncompleteDiagnostics(JsonNode? warnings) =>
-        warnings is JsonArray lines && lines.Any(line => (string?)line == TiaMcp.Adapters.PlcCompileResult.IncompleteDiagnostics);
+
+    internal static bool DiagnosticsIncomplete(JsonNode? flag, JsonNode? warnings)
+    {
+        if (flag != null) return flag.GetValue<bool>();
+        // Older workers carried this status only in their warning array.
+        return warnings is JsonArray lines && lines.Any(line => (string?)line == TiaMcp.Adapters.PlcCompileResult.IncompleteDiagnostics);
+    }
 
     internal static JsonObject Wrap(string tool,JsonNode? payload,bool dryRun,JsonObject? arguments=null)
     {
@@ -55,7 +60,7 @@ internal static class V17CompileEnvelope
         bool mismatch = !dryRun && (bool?)result["ScopeMismatch"] == true;
         meta["success"]=dryRun || (!mismatch && result["ErrorCount"]!.GetValue<int>()==0
             && !string.Equals(result["State"]!.GetValue<string>(),"Error",StringComparison.OrdinalIgnoreCase));
-        if (IncompleteDiagnostics(result["Warnings"]))
+        if (DiagnosticsIncomplete(result["DiagnosticsIncomplete"], result["Warnings"]))
         {
             meta["dataComplete"] = false;
             envelope[Wire("Message")] = TiaMcp.Adapters.PlcCompileResult.IncompleteDiagnostics;
@@ -73,6 +78,8 @@ internal static class V17CompileEnvelope
                 envelope[Wire(name)]=result[name]!.DeepClone();
         if (result["Scope"]?.GetValue<string>() is "block" or "group")
             envelope[Wire("CompiledRoots")] = result["CompiledRoots"]?.DeepClone() ?? new JsonArray();
+        if ((string?)result["Scope"] == "block")
+            envelope[Wire("OtherErrors")] = result["OtherErrors"]?.DeepClone() ?? new JsonArray();
         if(tool=="CompilePlcSoftware") envelope[Wire("Messages")]=result["Messages"]!.DeepClone();
         else
         {

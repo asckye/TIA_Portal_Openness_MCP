@@ -221,6 +221,7 @@ public sealed class VerifiedImportOutcomeTests
     [InlineData("\"MCP_RC_UDT\"", "twoSections", false)]
     [InlineData("\"MCP_RC_UDT\"", "twoContainers", false)]
     [InlineData("\"MCP_RC_UDT\"", "nestedScalar", false)]
+    [InlineData("\"MCP_RC_UDT\"", "nestedTimer", true)]
     public void Manifest_checks_the_type_and_section_of_each_expanded_member(string datatype, string shape, bool accepted)
     {
         string repo = TiaMcp.Engine.Tests.Shared.TestPaths.RepositoryRoot(AppContext.BaseDirectory);
@@ -235,11 +236,18 @@ public sealed class VerifiedImportOutcomeTests
             case "empty": section.Remove(); break;
             case "twoSections": section.AddAfterSelf(new XElement(section)); break;
             case "twoContainers": sections.AddAfterSelf(new XElement(sections)); break;
+            case "nestedTimer":
+                var timer = section.Elements(ns + "Member").First();
+                timer.SetAttributeValue("Datatype", "IEC_TIMER");
+                timer.SetAttributeValue("Version", "1.0");
+                timer.Add(new XElement(ns + "Sections", new XElement(ns + "Section", new XAttribute("Name", "None"),
+                    new XElement(ns + "Member", new XAttribute("Name", "ET"), new XAttribute("Datatype", "Time")))));
+                break;
             case "nestedScalar": section.Elements(ns + "Member").First().Add(new XElement(ns + "Sections",
                 new XElement(ns + "Section", new XAttribute("Name", "None")))); break;
             default: section.SetAttributeValue("Name", shape); break;
         }
-        string folder = Path.Combine(repo, "bin-build", "manifest-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(Path.GetTempPath(), "manifest-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         try
         {

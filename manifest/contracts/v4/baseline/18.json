@@ -6383,7 +6383,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "12635d8da654be485cfa11bc0582692c92075e479a2ddb6af47fee3fd50a160b",
+      "descriptionSha256": "29e26129509052f635ffdf9d4d4b451261cd4467f2729f9c872bab6cf4771123",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

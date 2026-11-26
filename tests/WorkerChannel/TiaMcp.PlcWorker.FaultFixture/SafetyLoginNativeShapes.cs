@@ -79,8 +79,20 @@ namespace Siemens.Engineering.SW.Blocks
     {
         public PlcBlockGroups Groups { get; } = new PlcBlockGroups();
         public List<PlcBlock> Types { get; } = new List<PlcBlock>();
-        public List<PlcBlock> Blocks { get; } = new List<PlcBlock>();
+        public FixtureBlockComposition Blocks { get; } = new();
         public string Name { get; set; } = "";
+    }
+    public sealed class FixtureBlockComposition : List<PlcBlock>
+    {
+        internal bool ChangeOnRefusal;
+        internal int CreateCalls;
+        public PlcBlock? Find(string name) => Find(block => block.Name == name);
+        public InstanceDB CreateInstanceDB(string name, bool autoNumber, int number, string fbName)
+        {
+            CreateCalls++;
+            if (ChangeOnRefusal) Add(new InstanceDB { Name = name });
+            throw new InvalidOperationException("CreateInstanceDB refused.");
+        }
     }
     public class PlcBlockGroups : List<PlcBlockGroup> { public PlcBlockGroup? Find(string name) => Find(group => group.Name == name); }
 }

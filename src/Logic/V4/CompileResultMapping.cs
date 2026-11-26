@@ -64,7 +64,9 @@ namespace TiaMcp.Logic.V4
             if (errors == 0 && state != "Error" && messages.Count == 0) return null;
             errors = Math.Max(errors, messages.Count);
             var first = messages.Take(MaximumErrorMessages).ToArray();
-            string message = "Compile finished with " + errors + " errors and " + warnings + " warnings";
+            string message = errors == 0 && state == "Error"
+                ? "TIA reported Error without a readable error count or individual error details"
+                : "Compile finished with " + errors + " errors and " + warnings + " warnings";
             if (first.Length > 0) message += "; first: " + (first[0].Path == "" ? "" : first[0].Path + ": ") + first[0].Description;
             else if (errors > 0 && (bool?)data["complete"] == false) message += ". Individual error details could not be read";
             return new Error(message.EndsWith(".", StringComparison.Ordinal) ? message : message + ".", new CompileErrorsDetails(errors, warnings, first));
