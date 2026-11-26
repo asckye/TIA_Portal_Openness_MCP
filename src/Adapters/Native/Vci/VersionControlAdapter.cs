@@ -179,6 +179,7 @@ namespace TiaMcp.Adapters.Native.Vci
 
                 var lines = new List<string>();
                 var entries = new HmiArray();
+                var mappingFiles = new MappingFiles();
                 int total = 0, differing = 0, unknown = 0, unverifiedEqual = 0;
                 foreach (var mo in PortVci.Enumerate(Keep(PortVci.MappedObjects(ws))))
                 {
@@ -200,16 +201,20 @@ namespace TiaMcp.Adapters.Native.Vci
                     if (state == CompareState.Unknown) unknown++;
                     else if (state != CompareState.Equal) differing++;
                     else if (refreshMessage != null) unverifiedEqual++;
+                    string name = SafeName(mo), path = SafeFile(mo);
+                    string? format = SafeFormat(mo);
+                    mappingFiles.Add(name, path, format);
                     if (changedOnly && state == CompareState.Equal && refreshMessage == null) continue;
                     var status = error == null ? state.ToString() : "Unknown(" + error + ")";
-                    var line = $"{SafeName(mo)} | {status} | file={SafeFile(mo)}{SafeFormat(mo)}";
-                    var row = new HmiObject { ["name"] = SafeName(mo), ["compareState"] = state.ToString(),
-                        ["error"] = error, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo).Replace(" | format=", "") };
+                    var line = $"{name} | {status} | file={path}" + (format == null ? "" : " | format=" + format);
+                    var row = new HmiObject { ["name"] = name, ["compareState"] = state.ToString(),
+                        ["error"] = error, ["filePath"] = path, ["fileFormat"] = format ?? "" };
                     if (state == CompareState.Equal && refreshMessage != null) row["verified"] = false;
                     lines.Add(line + RefreshNote(row, refreshMessage));
                     entries.Add(row);
                 }
 
+                mappingFiles.ReportDuplicates(lines);
                 return new VersionControlResult
                 {
                     Message = string.Format(
@@ -241,6 +246,28 @@ namespace TiaMcp.Adapters.Native.Vci
             }
         }
 
+        private sealed class MappingFiles
+        {
+            private readonly Dictionary<string, (string Name, string File, int Count)> entries = new(StringComparer.OrdinalIgnoreCase);
+            private static string Key(string path, string? format) => path + "|" + (VciExportPolicy.IsXml(format) ? "xml" : format);
+            internal string? ExistingFile(string path, string format) => entries.TryGetValue(Key(path, format), out var entry) ? entry.File : null;
+
+            internal void Add(string name, string path, string? format)
+            {
+                if (name == "?" || !System.IO.Path.IsPathRooted(path)) return;
+                string key = Key(path, format);
+                entries.TryGetValue(key, out var prior);
+                string file = VciExportPolicy.IsXml(format) ? path + ".xml" : path;
+                entries[key] = (name, file, prior.Count + 1);
+            }
+
+            internal void ReportDuplicates(List<string> lines)
+            {
+                foreach (var entry in entries.Values.Where(entry => entry.Count > 1))
+                    lines.Add(entry.Name + " | duplicate mapping | file=" + entry.File + " | mappings=" + entry.Count);
+            }
+        }
+
         private static string RefreshNote(HmiObject row, string? refreshMessage)
         {
             if (refreshMessage == null) return "";
@@ -265,9 +292,10 @@ namespace TiaMcp.Adapters.Native.Vci
             catch { /* swallow(probe-optional): An unreadable mapped-object path is represented by the existing question-mark placeholder. */ return "?"; }
         }
 
-        private static string SafeFormat(MappedObject mo)
+        private static string? SafeFormat(MappedObject mo)
         {
-            try { return " | format=" + PortVci.Format(mo); } catch { /* swallow(probe-optional): An unavailable mapped-object format omits the optional format suffix. */ return ""; }
+            try { return PortVci.Format(mo) ?? ""; }
+            catch { /* swallow(probe-optional): An unavailable mapped-object format omits the optional format suffix. */ return null; }
         }
 
         public VersionControlResult SyncVersionControlWorkspace(

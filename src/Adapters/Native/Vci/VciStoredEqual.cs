@@ -67,8 +67,16 @@ internal sealed class VciStoredEqual
             Outcome = "not-verified";
             try
             {
-                Proof.Compare(() => NativeVci.Exporter(mapping.LinkedProjectObject), NativeVci.Ordinary);
+                global::Siemens.Engineering.IEngineeringObject compared = null;
+                Proof.Compare(() => NativeVci.Exporter(compared = mapping.LinkedProjectObject), NativeVci.Ordinary);
                 if (Proof.Matches) Outcome = "verified-equal";
+                else if (Proof.Verification == "not-comparable" && Proof.Message != null && compared is global::Siemens.Engineering.SW.Blocks.PlcBlock block)
+                {
+                    Message = Proof.Message;
+                    try { if (!block.IsConsistent) Message += " Recompile the block, then retry the comparison export."; }
+                    catch (Exception error) when (NativeVci.Ordinary(error))
+                    { /* swallow(probe-optional): retain the comparison diagnostic when the consistency flag cannot be read. */ }
+                }
             }
             catch (Exception error) when (!NativeVci.Ordinary(error))
             {
@@ -155,7 +163,8 @@ internal sealed class VciStoredEqual
             try { NativeVci.Synchronize(mapping, mode); }
             catch (Exception error)
             {
-                Message = NativeFailureText.BoundedDiagnostic(error);
+                string refusal = NativeFailureText.BoundedDiagnostic(error);
+                Message = Proof.Verification == "not-comparable" && Message != null ? "Comparison: " + Message + " Synchronize: " + refusal : refusal;
                 Unconfirmed = true;
                 if (!NativeVci.Ordinary(error)) { Interrupted = true; return; }
                 var after = Path.Snapshot(root);

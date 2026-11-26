@@ -10,6 +10,16 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class VciConnectTests
 {
     [Theory]
+    [InlineData("Motor.s7dcl", "SIMATIC SD", true)]
+    [InlineData("Motor.de-DE.s7res", "SIMATIC SD", true)]
+    [InlineData("Motor.backup", "SIMATIC SD", false)]
+    [InlineData("Motor.liblink", "liblink", true)]
+    [InlineData("Other.liblink", "liblink", false)]
+    [InlineData("Motor.unknown", "OtherFormat", true)]
+    public void Existing_targets_respect_the_selected_format(string name, string format, bool target)
+        => Assert.Equal(target, VciExportPolicy.MayBeExportFile(name, "Motor", format));
+
+    [Theory]
     [InlineData("unchanged", false)]
     [InlineData("empty", false)]
     [InlineData("new-target", true)]

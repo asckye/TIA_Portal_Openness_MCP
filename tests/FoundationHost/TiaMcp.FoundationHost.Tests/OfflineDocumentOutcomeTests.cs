@@ -18,6 +18,23 @@ public sealed class OfflineDocumentOutcomeTests
         </Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>
         """;
 
+    [Theory, InlineData("18"), InlineData("19")]
+    public void Patch_preview_names_an_occupied_export_file(string release)
+    {
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture(release);
+        using var session = fixture.EnterSession();
+        string input = Path.Combine(fixture.Root, "input.xml"), output = Path.Combine(fixture.Root, "edited.xml");
+        File.WriteAllText(input, Document);
+        File.WriteAllText(output, "edited outside TIA");
+        var edit = new TiaMcp.Logic.V4.Domain.MemberStartValueEdit(System.Text.Json.JsonSerializer.SerializeToElement(new {
+            action = "setMemberStartValue", section = "None", memberPath = "Motor/Speed", expectedValue = "1.5", value = "3.5" }));
+        var tool = new Host.PlcOfflineTools();
+        var body = tool.PatchPlcBlockDocumentV4(input, new[] { edit }, (string)Editing.Inspect(Document)["documentFingerprint"]!, output).StructuredContent!;
+        Assert.True((bool?)body["data"]?["applyBlocked"]);
+        Assert.Contains("exportFile already exists", (string?)body["data"]?["applyBlockedReason"]);
+        Assert.Equal("edited outside TIA", File.ReadAllText(output));
+    }
+
     // SW.InterfaceSections_v5 Section_T contains the inherited Sections followed by the declared members.
     private const string InheritedInterface = """
         <Document><Engineering version="V17"/><SW.Blocks.GlobalDB ID="0"><AttributeList><Name>DriveDB</Name>

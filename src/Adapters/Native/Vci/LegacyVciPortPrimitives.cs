@@ -64,11 +64,16 @@ internal static class LegacyVciPortPrimitives
 #if STUDIO_VCI_INITIAL
         NativeVci.SynchronizeNewMapping(mapped);
 #else
-        NativeVci.Synchronize(mapped, SynchronizationMode.ProjectToWorkspace);
+        using var createdFile = NativeVci.OpenConnectTarget(workspace.RootPath.FullName, name, format, target);
+        if (createdFile == null) NativeVci.Synchronize(mapped, SynchronizationMode.ProjectToWorkspace);
 #endif
         return mapped;
     }
 
+#if !STUDIO_VCI_INITIAL
+    internal static WorkspaceMapping ConnectExisting(Workspace workspace, IEngineeringObject target, DirectoryInfo directory, string name, string format)
+        => workspace.Mappings.Create(name + ".xml", target);
+#endif
     internal static object Attribute(IEngineeringObject target, string name) => target.GetAttribute(name);
     internal static DeviceComposition Devices(Project project) => project.Devices;
     internal static DeviceUserGroupComposition DeviceGroups(Project project) => project.DeviceGroups;

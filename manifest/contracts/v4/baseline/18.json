@@ -7219,7 +7219,7 @@
         "openWorldHint": false,
         "readOnlyHint": false
       },
-      "descriptionSha256": "62efc4413aa972e0b30fcd1e10fa8c218e43b67c26cbccd7be731ea4a62b2997",
+      "descriptionSha256": "385c98520f7d09ac4b7c75bbbf8d75875f0eb03a48ebcd137d4c33b3c06450fe",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {

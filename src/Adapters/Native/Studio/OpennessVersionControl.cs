@@ -205,6 +205,17 @@ namespace TiaOpenness.Openness
                     Error = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedDiagnostic(error) });
                 return true;
             }
+#else
+            FileStream existingFile;
+            try { existingFile = VersionControlPrimitives.OpenConnectTarget(rootPath, MappingName(node), format, node.Object); }
+            catch (Exception error) when (VersionControlPrimitives.Ordinary(error))
+            {
+                result.Failed++;
+                result.Items.Add(new MappingItem { Target = node.Label, Outcome = dryRun ? "would refuse" : "failed",
+                    Error = FileDiagnostic(error.Message) });
+                return true;
+            }
+            using var heldTarget = existingFile;
 #endif
             if (dryRun)
             {
@@ -215,7 +226,7 @@ namespace TiaOpenness.Openness
 #if STUDIO_VCI_INITIAL
                     Outcome = VciExportPolicy.FileExists(file) == true ? "existing file will be compared" : "would map",
 #else
-                    Outcome = "would map",
+                    Outcome = heldTarget == null ? "would map" : "existing XML content verified; would reuse",
 #endif
                     FileFormat = format,
                     Directory = string.Empty,
@@ -240,7 +251,7 @@ namespace TiaOpenness.Openness
                 VersionControlPrimitives.SynchronizeNewMapping(mapping);
                 string directory = string.Empty;
 #else
-                var directory = WriteMapping(ref workspace, node, format);
+                var directory = WriteMapping(ref workspace, node, format, heldTarget != null);
 #endif
                 result.Mapped++;
                 result.Items.Add(new MappingItem
@@ -298,15 +309,21 @@ namespace TiaOpenness.Openness
         }
 
 #if !STUDIO_VCI_INITIAL
-        private string WriteMapping(ref Workspace workspace, VcNode node, string format)
+        private string WriteMapping(ref Workspace workspace, VcNode node, string format, bool reuse)
         {
             string flat = MappingName(node);
 #if STUDIO_VCI_MODERN
-            VersionControlPrimitives.Export(workspace, node.Object, TiaMcp.Adapters.Native.Vci.VciExportPolicy.RootDirectory(), flat, format);
+            var directory = VciExportPolicy.RootDirectory();
+            if (reuse) VersionControlPrimitives.ConnectExisting(workspace, node.Object, directory, flat, format);
+            else VersionControlPrimitives.Export(workspace, node.Object, directory, flat, format);
 #else
             var mapping = Keep(Keep(workspace.Mappings).Create(flat + ".xml", node.Object));
-            var service = Keep(mapping.GetService<IndividualObjectSynchronizationStatus>());
-            service.Synchronize(SynchronizationMode.ProjectToWorkspace);
+            if (!reuse)
+            {
+                using var createdFile = VersionControlPrimitives.OpenConnectTarget(workspace.RootPath.FullName, flat, format, node.Object);
+                if (createdFile == null)
+                    Keep(mapping.GetService<IndividualObjectSynchronizationStatus>()).Synchronize(SynchronizationMode.ProjectToWorkspace);
+            }
 #endif
             return string.Empty;
         }

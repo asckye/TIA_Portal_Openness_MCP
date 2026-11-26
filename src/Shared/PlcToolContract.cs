@@ -134,6 +134,11 @@ namespace TiaMcpServer.ModelContextProtocol
             root.Remove("message");
             root["summary"] = summary;
             root["evidence"] = evidence;
+            if (tool == "PatchPlcBlockDocument" && (bool?)evidence["applyBlocked"] == true)
+            {
+                root["applyBlocked"] = true;
+                root["applyBlockedReason"] = evidence["applyBlockedReason"]?.DeepClone();
+            }
             HostBehavior.ExportPreview(root);
             HostBehavior.SanitizeEvidence(root, evidence: false);
             Clean(root);

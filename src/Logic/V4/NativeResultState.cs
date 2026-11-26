@@ -258,13 +258,18 @@ namespace TiaMcp.Logic.V4
                 && changed.TryGetValue<bool>(out var mayChange) && mayChange;
             if (changesProject) outcome = Outcome.Unknown;
             var details = Evidence(evidence, tool);
+            string? exportReason = tool == "ExportDeviceAml" && evidence["nativeMessages"] is JsonArray messages
+                ? NativeFailureText.BoundedMessage(string.Join("\n", messages.Select(row => row?.ToString())), HostBehavior.SafeDiagnostic)
+                : null;
+            // Each severity-labelled line was scrubbed separately. Label the combined diagnostic as a CAx report.
+            exportReason = string.IsNullOrWhiteSpace(exportReason) ? null : "CAx export: " + exportReason;
             error = changesProject
                 ? new Error("The native operation returned " + state + "; partial project changes are possible. Inspect the target and evidence; "
                         + "the call stays on GetSessionState.unsettled. Do not replay it.",
                         new OutcomeUnknownDetails("native-result-state", details))
                 : new Error(testVerdict == false ? "The native test completed with a failed verdict (" + state + ")."
-                        : "The native operation returned " + state + ". The project was unchanged; inspect the file and log evidence.",
-                        new NativeOperationFailedDetails(state, null, details));
+                        : exportReason ?? "The native operation returned " + state + ". The project was unchanged; inspect the file and log evidence.",
+                        new NativeOperationFailedDetails(state, exportReason, details));
             return true;
         }
     }

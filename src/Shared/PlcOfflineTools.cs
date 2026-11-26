@@ -103,6 +103,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     && SimaticMlImportWindow.BlockContent(HardwareContract.ReleaseKey, document) != "native-xml")
                     meta["warnings"] = new JsonArray("This patch edits the XML only. The document cannot establish or restore the SCL implementation.");
                 meta["nativeImportValidated"] = false;
+                if (dryRun && !string.IsNullOrWhiteSpace(outputPath) && (File.Exists(outputPath) || Directory.Exists(outputPath)))
+                {
+                    const string reason = "The requested exportFile already exists. Supply a new absolute output file in an existing directory.";
+                    meta["applyBlocked"] = true;
+                    meta["applyBlockedReason"] = reason;
+                    return reason;
+                }
                 if (!dryRun) {
                     if (string.IsNullOrWhiteSpace(outputPath)) throw new ArgumentException("New absolute outputPath required.");
                     var output = OfflineToolExecution.PlanOutput(outputPath, nameof(outputPath), "Supply a new absolute output file in an existing directory.");

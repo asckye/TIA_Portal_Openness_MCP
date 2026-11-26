@@ -58,6 +58,26 @@ public sealed class NativeFailureDiagnosticsTests
     }
 
     [Fact]
+    public void Failed_V19_aml_export_surfaces_the_recorded_missing_attribute()
+    {
+        using var release = Host.HardwareContract.UseRelease("19");
+        const string reason = "[Error] device MCP_RC_HMI 的执行将跳过。所需属性 TypeIdentifier 无效或缺失。";
+        string[] messages = { "[Error] 正在导出", reason, "[Error] CAx 数据导出已完成（错误：1，警告：0）" };
+        var response = new Host.ResponseExportDeviceAml { Success = false, State = "Error", Messages = messages, Meta = new JsonObject {
+            ["success"] = false, ["nativeStateType"] = "Siemens.Engineering.Cax.TransferResultState", ["nativeResultReturned"] = true,
+            ["nativeState"] = "Error", ["mayHaveChanged"] = false, ["nativeMessages"] = System.Text.Json.JsonSerializer.SerializeToNode(messages) } };
+        var body = Host.HardwareContract.Map("ExportDeviceAml", response, true, true).StructuredContent!;
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Contains(reason, (string?)body["error"]?["message"]);
+        Assert.Equal("Error", (string?)body["error"]?["details"]?["nativeCode"]);
+
+        response.Meta["nativeMessages"]!.AsArray().Insert(1, "[Error] password is private");
+        var scrubbed = Host.HardwareContract.Map("ExportDeviceAml", response, true, true).StructuredContent!;
+        Assert.DoesNotContain("private", (string?)scrubbed["error"]?["message"]);
+        Assert.Contains(reason, (string?)scrubbed["error"]?["message"]);
+    }
+
+    [Fact]
     public void Successful_aml_export_preserves_the_native_messages()
     {
         using var release = Host.HardwareContract.UseRelease("19");

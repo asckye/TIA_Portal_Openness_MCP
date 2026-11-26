@@ -115,6 +115,7 @@ namespace Siemens.Engineering.VersionControl
         internal CompareState InitialState = CompareState.Equal;
         internal bool RefuseInitialStatus, RefuseCreate, RefuseSync, RefuseLookupAfterCreate, RefreshesKnownState;
         internal Action<FileInfo>? WriteOnSync;
+        internal Action<FileInfo>? AfterCreate;
         internal WorkspaceMappingComposition(Workspace owner) => this.owner = owner;
         public WorkspaceMapping? Find(IEngineeringObject target)
         {
@@ -135,6 +136,7 @@ namespace Siemens.Engineering.VersionControl
             mapping.Status.RefreshError = RefuseSync || WriteOnSync == null && !file.Exists
                 ? new EngineeringTargetInvocationException("The file is deleted") : null;
             Add(mapping);
+            AfterCreate?.Invoke(file);
             return mapping;
         }
     }
@@ -158,11 +160,21 @@ namespace Siemens.Engineering.VersionControl
     {
 #if STUDIO_VCI_MODERN
         public MappedObjectComposition MappedObjects { get; } = new();
+        internal string ExportFormat = "xml";
         public IEnumerable<string> GetSupportedFileFormats(IEngineeringObject target) =>
-            target is Exportable ? new[] { "xml" } : Array.Empty<string>();
+            target is Exportable ? new[] { ExportFormat } : Array.Empty<string>();
         public MappedObject ExportObject(IEngineeringObject target, DirectoryInfo directory, string name, string format)
         {
             Calls.Add("Workspace.ExportObject:" + name + ":" + format);
+            return AddMapping(target, name);
+        }
+        public MappedObject ConnectObject(IEngineeringObject target, DirectoryInfo directory, string name, string format)
+        {
+            Calls.Add("Workspace.ConnectObject:" + name + ":" + format);
+            return AddMapping(target, name);
+        }
+        private MappedObject AddMapping(IEngineeringObject target, string name)
+        {
             var mapping = new MappedObject { Target = (Exportable)target, DirectoryPath = RootPath, FileNameWithoutExtension = name };
             MappedObjects.Add(mapping);
             mapping.Status.State = CompareState.Equal;
@@ -258,7 +270,7 @@ namespace Siemens.Engineering.SW
 }
 namespace Siemens.Engineering.SW.Blocks
 {
-    public class PlcBlock : Exportable { }
+    public class PlcBlock : Exportable { public bool IsConsistent { get; set; } = true; }
     public class PlcBlockComposition : List<PlcBlock> { }
     public class PlcBlockUserGroup : PlcBlockGroup { }
     public class PlcBlockUserGroupComposition : List<PlcBlockUserGroup> { }

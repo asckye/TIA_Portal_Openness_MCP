@@ -1,5 +1,5 @@
 #nullable enable
-#if STUDIO_VCI && !STUDIO_VCI_MODERN
+#if STUDIO_VCI
 using System;
 using System.IO;
 using TiaMcp.Adapters.Contracts;

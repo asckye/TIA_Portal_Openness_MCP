@@ -28,7 +28,8 @@ internal static class VciExportFixture
         var replies = new Dictionary<string, object>();
         foreach (var scenario in new[] { "equal", "unknown", "unequal", "collision", "exportRefused", "createRefused", "lookupRefused",
             "syncRefused", "nativeSuccess", "repair", "repairRefused", "reuse", "newStatusRefused", "seedDisposed", "seedAbort", "seedConnection",
-            "seedNonrecoverable", "sameName", "differentXml" })
+            "seedNonrecoverable", "sameName", "differentXml", "rc7-comment", "rc7-member", "rc7-after-preview",
+            "rc7-reconnect", "rc7-sidecar", "rc7-after-create" })
         {
             var root = parent.CreateSubdirectory(scenario);
             var workspace = new Workspace(root);
@@ -42,10 +43,22 @@ internal static class VciExportFixture
             device.DeviceItems.Add(item);
             var plc = (PlcSoftware)item.Container.Software;
             plc.Name = device.Name;
-            var block = new PlcBlock { Name = "MCP_RC_FC" };
+            var block = new PlcBlock { Name = scenario.StartsWith("rc7-", StringComparison.Ordinal) ? "MCP_RC_FC5" : "MCP_RC_FC" };
+            if (scenario == "rc7-member") block.Name = "MCP_RC_DB5";
             plc.BlockGroup.Blocks.Add(block);
             var file = Path.Combine(root.FullName, device.Name + "_" + block.Name + ".xml");
             string xml = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "MCP_RC_FC.xml"));
+            if (scenario.StartsWith("rc7-", StringComparison.Ordinal))
+                xml = xml.Replace("MCP_RC_FC", "MCP_RC_FC5").Replace("</SW.Blocks.FC>",
+                    "<ObjectList><MultilingualText ID=\"1\" CompositionName=\"Comment\"><ObjectList>"
+                    + "<MultilingualTextItem ID=\"2\" CompositionName=\"Items\"><AttributeList><Culture>zh-CN</Culture><Text />"
+                    + "</AttributeList></MultilingualTextItem></ObjectList></MultilingualText></ObjectList></SW.Blocks.FC>");
+            if (scenario == "rc7-member")
+                xml = "<Document><Engineering version=\"V18\"/><SW.Blocks.GlobalDB ID=\"0\"><AttributeList>"
+                    + "<Name>MCP_RC_DB5</Name><ProgrammingLanguage>DB</ProgrammingLanguage><Interface>"
+                    + "<Sections xmlns=\"http://www.siemens.com/automation/Openness/SW/Interface/v5\"><Section Name=\"Static\">"
+                    + "<Member Name=\"Count\" Datatype=\"Int\"><Comment><MultiLanguageText Lang=\"zh-CN\"></MultiLanguageText></Comment></Member>"
+                    + "</Section></Sections></Interface></AttributeList></SW.Blocks.GlobalDB></Document>";
             block.Write = (target, options) =>
             {
                 workspace.Calls.Add("Export:" + target.Name + ":" + options);
@@ -142,6 +155,50 @@ internal static class VciExportFixture
                 continue;
             }
 #endif
+            if (scenario.StartsWith("rc7-", StringComparison.Ordinal))
+            {
+#if STUDIO_VCI_MODERN
+                workspace.ExportFormat = "SimaticML";
+#endif
+                string marker = scenario == "rc7-member" ? "other content" : "vci7 prewritten";
+                string edited = scenario == "rc7-member" ? xml.Replace("</MultiLanguageText>", marker + "</MultiLanguageText>")
+                    : xml.Replace("<Text />", "<Text>" + marker + "</Text>");
+                if (!edited.Contains(marker)) throw new InvalidDataException("No empty multilingual text in the recorded XML.");
+                if (scenario == "rc7-reconnect")
+                {
+                    // The official export is semantically equal. Reusing it must preserve the operator's bytes, including the BOM.
+                    File.WriteAllText(file, xml, new System.Text.UTF8Encoding(true));
+#if STUDIO_VCI_MODERN
+                    workspace.ConnectObject(new PlcBlock(), root, Path.GetFileNameWithoutExtension(file), "xml");
+#else
+                    var stale = new WorkspaceMapping(workspace, Path.GetFileName(file));
+                    stale.Status.RefreshError = new EngineeringObjectDisposedException(Disposed);
+                    workspace.Mappings.Add(stale);
+#endif
+                    workspace.Calls.Clear();
+                }
+                if (scenario is "rc7-comment" or "rc7-member") File.WriteAllText(file, edited);
+#if STUDIO_VCI_MODERN
+                if (scenario == "rc7-sidecar")
+                {
+                    workspace.ExportFormat = "SIMATIC SD";
+                    file = Path.ChangeExtension(file, ".s7res");
+                    File.WriteAllText(file, marker);
+                }
+#endif
+                var preview = adapter.ConnectProjectToWorkspace();
+                if (scenario == "rc7-after-preview") File.WriteAllText(file, edited);
+                if (scenario == "rc7-after-create")
+                    workspace.Mappings.AfterCreate = target => File.WriteAllText(target.FullName, edited);
+                var original = File.Exists(file) ? File.ReadAllBytes(file) : null;
+                workspace.Calls.Clear();
+                var reply = adapter.ConnectProjectToWorkspace(dryRun: false);
+                var connectedStatus = adapter.GetVersionControlStatus(changedOnly: true);
+                replies.Add(scenario, new { preview, reply, status = connectedStatus, workspace.Calls,
+                    preserved = original != null && File.ReadAllBytes(file).SequenceEqual(original),
+                    commentAfterCreate = scenario == "rc7-after-create" && File.Exists(file) && File.ReadAllText(file) == edited });
+                continue;
+            }
             var absent = adapter.ConnectProjectToWorkspace();
             if (scenario == "collision") File.WriteAllText(file, "existing contents");
             if (scenario == "differentXml") File.WriteAllText(file, xml.Replace("<Name>MCP_RC_FC</Name>", "<Name>Other</Name>"));

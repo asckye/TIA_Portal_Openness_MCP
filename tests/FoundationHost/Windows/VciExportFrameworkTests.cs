@@ -407,6 +407,14 @@ public sealed class VciExportFrameworkTests
                 Assert.All(data["items"]!.AsArray(), item => Assert.Equal("not-verified", (string?)item!["outcome"]));
                 Assert.Equal(0, (int?)data["exportsIssued"]);
             }
+            if (key == "rc7-inconsistent")
+            {
+                Assert.Equal("not-verified", (string?)row["outcome"]);
+                Assert.Contains("Inconsistent objects: MCP_RC_FB.", (string?)row["nativeMessage"]);
+                Assert.Contains("Compile the inconsistent block before export", (string?)row["nativeMessage"]);
+                Assert.Contains("retry", (string?)evidence["error"]!["message"]);
+                Assert.False((bool?)row["fileChanged"]);
+            }
             if (key == "race") Assert.True((bool?)scenario["externalPreserved"]);
             var calls = Strings(scenario["calls"]).Count(c => c.StartsWith("Synchronize:"));
             Assert.Equal(key is "none" or "defaults" or "missing" or "oversize" or "compare-aborted" or "race" ? 0 : 1, calls);
@@ -473,6 +481,51 @@ public sealed class VciExportFrameworkTests
         Assert.Equal(2, (int?)evidence["exportsIssued"]);
         Assert.Equal(1, (int?)evidence["synchronized"]);
         Assert.Equal(new[] { "GetStatus", "Synchronize:ProjectToWorkspace" }, Strings(scenario["states"]![1]));
+    }
+
+    [Theory, InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Connect_preserves_other_content_and_names_duplicate_mappings(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release);
+        const string file = "MCP_RC_PLC_MCP_RC_FC5.xml";
+        var conflicts = new List<string> { "rc7-comment", "rc7-member", "rc7-after-preview" };
+        if (release is "20" or "21") conflicts.Add("rc7-sidecar");
+        foreach (string key in conflicts)
+        {
+            var scenario = cases[key]!;
+            string target = key switch { "rc7-sidecar" => Path.ChangeExtension(file, ".s7res"), "rc7-member" => "MCP_RC_PLC_MCP_RC_DB5.xml", _ => file };
+            if (key == "rc7-after-preview") Assert.Contains(Strings(scenario["preview"]!["Items"]), line => line.Contains("would map"));
+            else
+            {
+                Assert.Equal(1, (int?)scenario["preview"]!["Meta"]!["wouldRefuse"]);
+                Assert.Contains(Strings(scenario["preview"]!["Items"]), line => line.Contains("would refuse") && line.Contains(target));
+            }
+            var body = Tools(scenario).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+            Assert.False((bool?)body["ok"]);
+            Assert.Equal(0, (int?)body["data"]!["evidence"]!["exportsIssued"]);
+            Assert.Contains(target, (string?)scenario["reply"]!["Meta"]!["nativeMessage"]);
+            Assert.Contains("back it up", (string?)scenario["reply"]!["Meta"]!["nativeMessage"]);
+            Assert.DoesNotContain(Strings(scenario["Calls"]), c => c.StartsWith("Create:") || c.StartsWith("Workspace."));
+            Assert.True((bool?)scenario["preserved"]);
+        }
+        if (release is "18" or "19")
+        {
+            var raced = cases["rc7-after-create"]!;
+            Assert.True((bool?)raced["commentAfterCreate"]);
+            Assert.Equal(1, (int?)raced["reply"]!["Meta"]!["mappedAfterFailure"]);
+            Assert.Contains(file, (string?)raced["reply"]!["Meta"]!["nativeMessage"]);
+        }
+        var reconnect = cases["rc7-reconnect"]!;
+        Assert.Equal(1, (int?)reconnect["reply"]!["Meta"]!["mapped"]);
+        Assert.Contains(Strings(reconnect["preview"]!["Items"]), line => line.Contains("would reuse"));
+        Assert.Contains(Strings(reconnect["preview"]!["Items"]), line => line.Contains("would create a duplicate mapping") && line.Contains(file));
+        Assert.True((bool?)reconnect["preserved"]);
+        var mapped = Tools(reconnect).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        var status = Tools(new JsonObject { ["reply"] = reconnect["status"]!.DeepClone() }).GetVersionControlStatusV4().StructuredContent!;
+        foreach (var body in new[] { mapped, status })
+            Assert.Contains(Strings(body["data"]!["items"]),
+                line => line.Contains("duplicate mapping") && line.Contains(file) && line.Contains("mappings=2"));
     }
 
     private static string[] Strings(JsonNode? node) => node!.AsArray().Select(item => (string)item!).ToArray();

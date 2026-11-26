@@ -17,8 +17,8 @@ VCI 将受支持的工程对象与本地文本文件对应，Git 再管理这些
 
 1. 在 TIA/MCP 所在电脑上准备用于文本导出的目录，或使用已有 Git 工作目录。
 2. 读取 `GetToolUsage(toolName="CreateVersionControlWorkspace")`，使用明确工作区名和目录创建工作区。
-3. 读取 `ConnectProjectToWorkspace` 的示例，预览映射范围，核对设备及不支持对象。V16、V17 会自行创建缺少的 XML。已有文件在执行时与对象的官方导出比较，匹配后复用。若不匹配，请先比较、备份，再移动或删除该文件，重新连接。
-4. 检查 `ListVersionControlWorkspaces` 和 `GetVersionControlStatus` 的实际结果。
+3. 读取 `ConnectProjectToWorkspace` 的示例，预览映射范围，核对设备及不支持对象。V16、V17 会自行创建缺少的 XML。已有 XML 只有在与对象的官方导出匹配后才会复用。V18–V21 的预览也会点名冲突文件；V20/V21 遇到无法用 XML 核验的已有目标或配套文件时会拒绝该对象。若不匹配，请先比较、备份，再移动或删除该文件，重新连接。
+4. 检查 `ListVersionControlWorkspaces` 和 `GetVersionControlStatus` 的实际结果。重新连接已断开的对象后，连接结果和状态中的 `duplicate mapping` 行会列出重复映射的名称、文件和数量。
 5. 按 `SynchronizeVersionControlWorkspace` 的示例，以 `ProjectToWorkspace` 同步；检查成功、失败、跳过数量及输出文件。
 6. 在文件目录执行 `git status`、`git diff`，选择应纳入版本管理的文件后提交。
 

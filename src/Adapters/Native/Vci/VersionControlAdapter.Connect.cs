@@ -34,9 +34,9 @@ namespace TiaMcp.Adapters.Native.Vci
     // ProjectToWorkspace only and refuses WorkspaceToProject, including previews.
     //
     // ExportObject writes new workspace files and creates their mappings (V20+).
-    // ConnectObject is for existing files and is not exposed by these tools. Older releases use
+    // ConnectObject links a verified existing XML without exporting over it. Older releases use
     // WorkspaceMapping.Create. V16/V17 first export missing XML or verify an existing file,
-    // then synchronize the new mapping if needed. V18/V19 synchronize immediately after Create.
+    // then synchronize the new mapping if needed. V18/V19 synchronize after Create for new files.
     internal sealed partial class VersionControlAdapter
     {
         // ----------------------------------------------------------- whole-project auto mapping
@@ -197,8 +197,8 @@ namespace TiaMcp.Adapters.Native.Vci
 #if STUDIO_VCI_INITIAL
             var plannedFiles = new HmiArray();
             var plannedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            int wouldRefuse = 0;
 #endif
+            int wouldRefuse = 0;
             try
             {
                 var project = VciProject;
@@ -207,6 +207,9 @@ namespace TiaMcp.Adapters.Native.Vci
                 var ws = FindWorkspace(RequireVci(), workspaceName);
                 string wsName = PortVci.Name(ws);
                 string wsRootPath = SafeRoot(ws);
+                var mappingFiles = new MappingFiles();
+                foreach (var mapping in PortVci.Enumerate(PortVci.MappedObjects(ws)))
+                    mappingFiles.Add(SafeName(mapping), SafeFile(mapping), SafeFormat(mapping));
 
                 // A native refusal can invalidate the workspace handle. Reacquire it for the next probe.
                 Workspace ReAcquire() => ReAcquireWorkspace(wsName);
@@ -309,15 +312,36 @@ namespace TiaMcp.Adapters.Native.Vci
                             lines.Add(node.Label + " | duplicate planned target | " + file.FullName);
                             continue;
                         }
-#endif
+#else
+                        bool reuse = false;
+                        FileStream? CheckTarget()
+                        {
+                            var lease = NativeVci.OpenConnectTarget(wsRootPath, flatName, fmt, node.Obj);
+                            reuse = lease != null;
+                            return lease;
+                        }
                         if (dryRun)
                         {
+                            try { using var lease = CheckTarget(); }
+                            catch (Exception error) when (NativeVci.Ordinary(error))
+                            {
+                                wouldRefuse++;
+                                lines.Add(node.Label + " | would refuse | " + NativeFailureText.BoundedDiagnostic(error));
+                                continue;
+                            }
+                        }
+#endif
+                        string targetStem = Path.Combine(wsRootPath, flatName);
+                        if (dryRun)
+                        {
+                            if (mappingFiles.ExistingFile(targetStem, fmt) is string duplicate)
+                                lines.Add(node.Label + " | would create a duplicate mapping | file=" + duplicate);
                             mapped++;
                             lines.Add(node.Label + " | would map | format=" + fmt +
 #if STUDIO_VCI_INITIAL
                                       " | file=" + file.FullName + (collision ? " | existing file will be compared" : ""));
 #else
-                                      " | dir=<root> | file=" + flatName);
+                                      " | dir=<root> | file=" + flatName + (reuse ? " | existing XML content verified; would reuse" : ""));
 #endif
                         }
                         else
@@ -329,11 +353,17 @@ namespace TiaMcp.Adapters.Native.Vci
                             bool exported = attempts.ExportFileFirst(file, () => NativeVci.ExportObject(node.Obj, file, ExportOptions.None), Connect,
                                 Lookup, Report, () => NativeVci.MatchesExisting(wsRootPath, file, node.Obj));
 #else
-                            bool exported = attempts.ExportToWorkspace(wsRootPath, flatName, Connect, Lookup, Report);
+                            void MapTarget()
+                            {
+                                if (reuse) PortVci.ConnectExisting(ws, node.Obj, VciExportPolicy.RootDirectory(), flatName, fmt);
+                                else Connect();
+                            }
+                            bool exported = attempts.ExportToWorkspace(wsRootPath, flatName, MapTarget, Lookup, Report, CheckTarget);
 #endif
                             if (exported)
                             {
                                 mapped++;
+                                mappingFiles.Add(flatName, targetStem, fmt);
                                 lines.Add(node.Label + " | mapped | format=" + fmt + " | dir=<root> | file=" + flatName);
                             }
                             else failed++;
@@ -374,6 +404,7 @@ namespace TiaMcp.Adapters.Native.Vci
                         lines.Add(VciWorkspaceLayout.NothingMappable(device.Label));
                     }
 
+                mappingFiles.ReportDuplicates(lines);
                 unsupported += attempts.UnsupportedContainers;
                 int totalFailed = failed + attempts.QueryRefusals;
                 bool unsupportedOnly = !dryRun && attempts.Issued == 0 && unsupported > 0 && totalFailed == 0;
@@ -411,6 +442,12 @@ namespace TiaMcp.Adapters.Native.Vci
                     result.Meta["plannedFiles"] = plannedFiles;
                     result.Meta["wouldRefuse"] = wouldRefuse;
                     if (wouldRefuse > 0) result.Message += " " + wouldRefuse + " duplicate planned target(s).";
+                }
+#else
+                if (dryRun && wouldRefuse > 0)
+                {
+                    result.Meta["wouldRefuse"] = wouldRefuse;
+                    result.Message += " " + wouldRefuse + " existing workspace target(s) would be refused. See the file names and remedies.";
                 }
 #endif
                 if (attempts.MappingProbeFailed && stack.Count > 0)

@@ -127,7 +127,7 @@ internal static class VciProofFixture
         string edited = xml.Replace("<Name>MCP_RC_FC</Name>", "<Name>Edited</Name>");
         string defaults = xml.Replace("<Name>MCP_RC_FC</Name>", "<IsFailsafeCompliant>false</IsFailsafeCompliant><Name>MCP_RC_FC</Name>");
         foreach (string key in new[] { "none", "defaults", "stale", "refused", "missing", "export-refused", "no-write", "new-match",
-            "external", "bad-xml", "oversize", "compare-aborted",
+            "external", "bad-xml", "oversize", "compare-aborted", "rc7-inconsistent",
             "race", "mixed", "disposed", "abort", "connection", "nonrecoverable", "changed-throw", "pull", "push", "disconnected" })
         {
             var root = parent.CreateSubdirectory("proof-" + key);
@@ -148,16 +148,20 @@ internal static class VciProofFixture
             if (key == "disconnected") mapping.Status.RefreshError = new EngineeringObjectDisposedException(VciExportFixture.Disposed);
             string projectXml = key is "none" or "defaults" or "external" ? xml : edited;
             if (key == "none") projectXml = xml.Replace("V17", "V19").Replace("ID=\"0\"", "ID=\"42\"");
+            block.IsConsistent = key != "rc7-inconsistent";
             block.Write = (file, options) =>
             {
                 events.Add("export:" + options);
                 if (file.FullName.StartsWith(root.FullName, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Workspace export");
                 temporary.Add(file.DirectoryName!);
                 if (key == "compare-aborted") throw new EngineeringUserAbortException("Aborted before writing");
+                // V18 row 73 lost the comparison diagnostic. Row 74 recorded the export refusal for this FB.
+                if (key == "rc7-inconsistent")
+                    throw new EngineeringTargetInvocationException("Compile the inconsistent block before export. Inconsistent objects: MCP_RC_FB.");
                 if (key == "export-refused") throw new EngineeringTargetInvocationException("Export refused");
                 File.WriteAllText(file.FullName, key == "defaults" && options == ExportOptions.WithDefaults ? defaults : projectXml);
             };
-            mapping.Status.AcceptEqual = key is not ("refused" or "mixed" or "export-refused" or "bad-xml");
+            mapping.Status.AcceptEqual = key is not ("refused" or "mixed" or "export-refused" or "bad-xml" or "rc7-inconsistent");
             mapping.Status.OnSynchronized = () =>
             {
                 events.Add("sync:Motor");

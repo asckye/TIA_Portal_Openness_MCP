@@ -69,6 +69,9 @@ namespace TiaOpenness.Openness
         }
 
         internal static bool Ordinary(Exception error) => NativeRefusalProbe.AllowsRefusalProof(error) && !DisposedStatus(error);
+#else
+        internal static bool Ordinary(Exception error) => NativeRefusalProbe.AllowsRefusalProof(error);
+#endif
 
         internal static Action<FileInfo, bool> Exporter(IEngineeringObject target) =>
             (file, defaults) => ExportObject(target, file, defaults ? ExportOptions.WithDefaults : ExportOptions.None);
@@ -80,6 +83,39 @@ namespace TiaOpenness.Openness
             return proof.Matches && proof.Sha256 == proof.CurrentHash();
         }
 
+#if !STUDIO_VCI_INITIAL
+        // Keep a proven XML file read-locked through connection. Other formats can have companion files;
+        // their existing contents cannot be established by the official SimaticML comparison.
+        internal static FileStream OpenConnectTarget(string root, string stem, string format, IEngineeringObject target)
+        {
+            var xml = VciWorkspaceLayout.LegacyMappingFile(root, stem + ".xml");
+            TiaMcp.Adapters.Contracts.Candidates.CandidateImportFiles.SafePath(xml.Directory);
+            bool isXml = VciExportPolicy.IsXml(format);
+            if (!isXml || target is not (PlcBlock or PlcType or PlcTagTable))
+            {
+                foreach (var entry in xml.Directory.EnumerateFileSystemInfos(stem + "*"))
+                {
+                    if (VciExportPolicy.MayBeExportFile(entry.Name, stem, format)) throw new IOException(VciExportPolicy.ExistingFile(entry.Name));
+                }
+                return null;
+            }
+            FileStream lease;
+            try
+            {
+                if (!VciExportPolicy.TargetExists(xml)) return null;
+                lease = xml.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                throw new IOException("Cannot verify workspace target " + xml.Name + ". " + VersionControlResult.Reconnect, error);
+            }
+            try
+            {
+                if (!MatchesExisting(root, xml, target)) throw new IOException(VciExportPolicy.ExistingFile(xml.Name));
+                return lease;
+            }
+            catch { lease.Dispose(); throw; }
+        }
 #endif
 
 #if STUDIO_VCI_INITIAL
@@ -199,6 +235,8 @@ namespace TiaOpenness.Openness
         public static MappedObject Find(MappedObjectComposition mappings, IEngineeringObject target) => mappings.Find(target);
         public static MappedObject Export(Workspace workspace, IEngineeringObject target, DirectoryInfo directory, string name, string format) => workspace
             .ExportObject(target, directory, name, format);
+        internal static MappedObject ConnectExisting(Workspace workspace, IEngineeringObject target, DirectoryInfo directory, string name, string format)
+            => workspace.ConnectObject(target, directory, name, format);
         public static object Attribute(IEngineeringObject target, string name) => target.GetAttribute(name);
         public static DeviceComposition Devices(ProjectBase project) => project.Devices;
         public static DeviceUserGroupComposition DeviceGroups(ProjectBase project) => project.DeviceGroups;

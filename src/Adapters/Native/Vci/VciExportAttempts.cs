@@ -110,13 +110,24 @@ internal sealed class VciExportAttempts
         return mapped;
     }
 
-    internal bool ExportToWorkspace(string root, string stem, Action write, Func<bool> freshMapping, Action<string> report)
-        => Export(write, freshMapping, report, () => VciSyncTarget.ConnectSnapshot(root, stem));
+    internal bool ExportToWorkspace(string root, string stem, Action write, Func<bool> freshMapping, Action<string> report,
+        Func<IDisposable?>? checkTarget = null)
+        => Export(write, freshMapping, report, () => VciSyncTarget.ConnectSnapshot(root, stem), checkTarget: checkTarget);
 
     internal bool Export(Action write, Func<bool> freshMapping, Action<string> report,
-        Func<(string Name, long Length, DateTime Modified)[]?>? snapshot = null, bool stopOnUncertainWrite = false)
+        Func<(string Name, long Length, DateTime Modified)[]?>? snapshot = null, bool stopOnUncertainWrite = false, Func<IDisposable?>? checkTarget = null)
     {
         var before = snapshot?.Invoke();
+        IDisposable? lease;
+        try { lease = checkTarget?.Invoke(); }
+        catch (Exception error)
+        {
+            NativeMessage = NativeFailureText.BoundedDiagnostic(error);
+            report("FAILED: " + NativeMessage);
+            MappingProbeFailed = !NativeRefusalProbe.AllowsRefusalProof(error);
+            return false;
+        }
+        using var heldTarget = lease;
         Issued++;
         Unconfirmed++;
         try { write(); }
