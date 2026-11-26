@@ -124,7 +124,7 @@ namespace TiaMcp.PlcWorker
                     return ChannelResponse.Success(disabledProbe);
                 var values = WorkerJson.ParseArguments(request.ArgumentsJson);
                 // A write-mode reflection request can otherwise resolve a native project during identity validation.
-                if (name == "openness-reflection.ExecuteOpennessReflection" && OptionalEngineeringCapabilities.SivarcBlockDefinitionProblem(releaseKey) != null
+                if (name == "openness-reflection.ExecuteOpennessReflection" && OptionalEngineeringCapabilities.BlocksSivarcProvider(releaseKey)
                     && WorkerJson.Get(values, "request") is var reflection
                     && reflection.ValueKind == JsonValueKind.Object && OpennessReflectionReply.RefuseUnavailableService(releaseKey,
                         JsonSerializer.Deserialize<OpennessReflectionRequest>(reflection.GetRawText())!) is { } refusal)

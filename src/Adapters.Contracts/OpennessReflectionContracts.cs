@@ -9,7 +9,8 @@ namespace TiaMcp.Adapters.Contracts
         {
             const string provider = "Siemens.Engineering.SiVArc.SivarcDataProvider";
             var suffix = service?.Trim();
-            return !string.IsNullOrEmpty(suffix) && provider.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+            return OptionalEngineeringCapabilities.BlocksSivarcProvider(release)
+                && !string.IsNullOrEmpty(suffix) && provider.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
                 ? OptionalEngineeringCapabilities.SivarcBlockDefinitionProblem(release) : null;
         }
 

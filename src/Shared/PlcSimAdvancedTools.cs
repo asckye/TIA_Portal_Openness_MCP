@@ -59,7 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("instanceName: PLCSIM Advanced instance name, e.g. 'PLC_1'.")] string instanceName,
             [Description("action: register | powerOn | run | stop | powerOff | memoryReset | unregister.")] string action,
             [Description("cpuType: only for register; ECPUType name such as CPU1500_Unspecified, CPU1511, CPU1516, CPU1518F; empty = API " +
-                "default.")] string cpuType =
+                "default.[[SearchHardwareCatalog| SearchHardwareCatalog type identifiers cannot be used as ECPUType names.]]")] string cpuType =
                 "",
             [Description("timeoutMs: wait budget for powerOn/run/stop/powerOff/memoryReset (1000..600000).")] int timeoutMs = 60000,
             [Description("confirmInstanceChange: must be true together with dryRun=false to execute the action.")] bool confirmInstanceChange = false,

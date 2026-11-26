@@ -36,7 +36,7 @@ public sealed class ServedOperationPolicyTests
         var (_, usage) = new TiaMcp.Engine.Tests.Shared.ServedToolOperations("21").For("ManagePlcSimAdvancedInstance").First();
         string description = (string)usage["inputSchema"]!["properties"]!["cpuType"]!["description"]!;
         Assert.Contains("ECPUType", description);
-        Assert.DoesNotContain("SearchHardwareCatalog", description);
+        Assert.Contains("SearchHardwareCatalog type identifiers cannot be used as ECPUType names", description);
     }
 
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]

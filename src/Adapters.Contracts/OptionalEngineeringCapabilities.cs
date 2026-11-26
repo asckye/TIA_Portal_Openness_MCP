@@ -6,6 +6,10 @@ namespace TiaMcp.Adapters.Contracts;
 public static class OptionalEngineeringCapabilities
 {
     private static readonly string[] BeforeDefinitions = ReleaseRange.Before(21);
+    // The provider reflection crash starts at V17 and ends when the definition tools become available.
+    private static readonly string[] UnsafeProviderReleases = BeforeDefinitions.Intersect(ReleaseRange.Since("17"), StringComparer.Ordinal).ToArray();
+
+    public static bool BlocksSivarcProvider(string release) => UnsafeProviderReleases.Contains(release, StringComparer.Ordinal);
 
     public static string? SivarcBlockDefinitionProblem(string release, string? blockClass = null)
     {
