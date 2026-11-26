@@ -59,6 +59,8 @@ namespace TiaMcp.Logic.V4
                     .Add(new JsonObject {
                         ["index"] = mapped.Count, ["target"] = item["relativePath"]?.DeepClone(), ["result"] = JsonNode.Parse(V4Json.Serialize(child)) });
             }
+            if (preview && tool == "ImportPlcBlocksFromDirectory")
+                data["importOrder"] = new JsonArray(items.OfType<JsonObject>().Select(item => item["relativePath"]!.DeepClone()).ToArray());
             data["items"] = mapped;
             var aggregate = blockers.Length > 0 ? Outcome.RejectedBeforeOperation : unknown ? Outcome.Unknown : backupFailed ? Outcome.RejectedBeforeOperation
                 : failed + skipped == 0 ? Outcome.Succeeded

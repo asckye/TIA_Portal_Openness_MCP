@@ -212,7 +212,9 @@ namespace TiaMcp.Logic.V4
             if (missing == null && args["importOrder"] is not JsonArray { Count: > 0 }) missing = "importOrder";
             if (missing == null && !PendingApproval.IsHash((string?)args["expectedPlanHash"])) missing = "expectedPlanHash";
             return missing == null ? null
-                : new Error("Apply requires " + missing + " from a reviewed preview.", new InvalidArgumentDetails(missing, Array.Empty<string>()));
+                : new Error(missing == "importOrder" && tool == "ImportPlcBlocksFromDirectory"
+                    ? "Copy data.importOrder from the reviewed preview and pass it as importOrder on apply."
+                    : "Apply requires " + missing + " from a reviewed preview.", new InvalidArgumentDetails(missing, Array.Empty<string>()));
         }
         internal static Error? BatchPreviewRefusal(string tool, JsonObject args, JsonNode? body)
         {

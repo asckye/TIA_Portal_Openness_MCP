@@ -153,6 +153,36 @@ public sealed class DirectoryImportRegressionTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Fact]
+    public void V17_block_directory_preview_supplies_the_order_accepted_by_apply()
+    {
+        const string tool = "ImportPlcBlocksFromDirectory";
+        const string name = "MCP_RC_FC6";
+        var root = Directory.CreateTempSubdirectory();
+        try
+        {
+            File.WriteAllText(Path.Combine(root.FullName, name + ".xml"), BatchImportTests.Xml(name, number: 6));
+            var request = new PlcBatchImportRequest { Release = "17", Directory = root.FullName, Project = "Fixture.ap17",
+                Software = "devices/MCP_RC_PLC/MCP_RC_PLC", Regex = "^MCP_RC_FC6[.]xml$" };
+            PlcBatchImportResult Run() => PlcBatchImportPolicy.Run(request, [], () => { }, (_, planned, dispatch) => { dispatch(); return [planned]; });
+            var preview = Run();
+            var data = JsonSerializer.SerializeToNode(preview, new JsonSerializerOptions(JsonSerializerDefaults.Web))!.AsObject();
+            var envelope = TiaMcp.Logic.V4.PlcBatchImportResultMapping.Result(data, "17", tool, "batch", true);
+            var order = JsonNode.Parse(TiaMcp.Logic.V4.V4Json.Serialize(envelope))!["data"]!["importOrder"]!.AsArray();
+            Assert.Equal(name + ".xml", (string?)Assert.Single(order));
+            var args = new JsonObject { ["confirm"] = true, ["expectedPlanHash"] = preview.PlanHash, ["expectedProjectFile"] = request.Project,
+                ["importOrder"] = new JsonArray() };
+            Assert.Contains("Copy data.importOrder", TiaMcp.Logic.V4.HostBehavior.BatchApplyRefusal(tool, args)!.Message);
+            request.ExpectedHash = preview.PlanHash;
+            request.ExpectedProject = request.Project;
+            request.Confirm = true;
+            request.DryRun = false;
+            request.Order = order.Select(path => (string)path!).ToArray();
+            Assert.Equal(name, Assert.Single(Run().Imported));
+        }
+        finally { root.Delete(true); }
+    }
+
     [Theory, MemberData(nameof(VerifiedImportOutcomeTests.Releases), MemberType = typeof(VerifiedImportOutcomeTests))]
     public async Task Served_examples_identify_the_source_of_the_localized_default_table(string release)
     {

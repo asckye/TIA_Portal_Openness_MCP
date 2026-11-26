@@ -142,6 +142,7 @@ public sealed class DeviceCreationEnvelopeTests
             if (major < 18)
             {
                 Assert.True((bool?)preview["ok"], preview.ToJsonString());
+                Assert.Null(preview["data"]!["plannedChanges"]!["family"]);
                 Confirm(args, preview);
             }
             else
@@ -154,6 +155,19 @@ public sealed class DeviceCreationEnvelopeTests
             }
             PanelRefusal(await fixture.Call(tool, args, true), major);
         }
+    }
+
+    [Theory, InlineData("PositionNumber", false, true), InlineData("positionnumber", false, false), InlineData("PositionNumber", true, false)]
+    public async Task Attribute_preview_warns_only_for_a_readable_exact_match(string name, bool failedRead, bool blocked)
+    {
+        using var fixture = new Fixture("16");
+        fixture.Worker.FailAttributeRead = failedRead;
+        var plan = await fixture.Call("SetDeviceItemAttribute", new JsonObject { ["deviceItemPath"] = Item, ["attributeName"] = name, ["value"] = "2" }, true);
+        Assert.True((bool?)plan["ok"], plan.ToJsonString());
+        Assert.Equal(blocked, (bool?)plan["data"]!["applyBlocked"] == true);
+        Assert.Equal(blocked, plan["meta"]!["warnings"]!.AsArray().Any(warning => ((string?)warning!["message"])?.Contains("read-only") == true));
+        if (blocked) Assert.Contains("read-only", (string?)plan["data"]!["applyBlockedReason"]);
+        else Assert.Null(plan["data"]!["applyBlockedReason"]);
     }
 
     [Theory]
@@ -263,11 +277,18 @@ public sealed class DeviceCreationEnvelopeTests
     {
         internal PlcHardwareCatalogCandidate[] Rows = [Row(Unified, "13.0.0.0")];
         internal JsonObject? AttributeEvidence;
+        internal bool FailAttributeRead;
 
         public Task<JsonNode?> Call(string operation, JsonObject args, CancellationToken token)
         {
             if (operation == "ReadState") return Task.FromResult<JsonNode?>(new JsonObject {
                 ["ProjectFile"] = Project, ["ProcessId"] = 42, ["IsAttached"] = true });
+            if (operation == "hardware-devices.HardwareDescribeItemAt")
+            {
+                if (FailAttributeRead) throw new IOException("Attribute metadata unavailable.");
+                return Task.FromResult(JsonSerializer.SerializeToNode(new { Name = "CPU",
+                    Attributes = new[] { new { Name = "PositionNumber", AccessMode = "Read" } } }));
+            }
             if (operation == "hardware-devices.HardwareLegacySetDeviceItemAttribute")
             {
                 var reply = new JsonObject { ["Message"] = $"Device item attribute '{args["attributeName"]}' is not writable",

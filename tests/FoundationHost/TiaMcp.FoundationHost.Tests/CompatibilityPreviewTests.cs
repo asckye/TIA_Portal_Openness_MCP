@@ -37,6 +37,8 @@ public sealed class CompatibilityPreviewTests
         var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(null!);
         var preview = tools.CreateDeviceV4("article", "version", "Device");
         Assert.True((bool?)preview.StructuredContent?["ok"]);
+        var panel = tools.CreateDeviceV4("6AV2 124-0GC01-0AX0", "16.0.0.0", "MCP_RC_HMI2", family: "HMI");
+        Assert.Equal("HMI", (string?)panel.StructuredContent!["data"]!["plannedChanges"]!["family"]);
         string hash = (string)preview.StructuredContent!["data"]!["planHash"]!;
         Assert.Matches("^[0-9a-f]{64}$", hash);
         var stale = tools.CreateDeviceV4("different", "version", "Device", dryRun: false, confirm: true,

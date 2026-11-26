@@ -693,7 +693,27 @@ public sealed class VciExportFrameworkTests
         Assert.True((bool?)Tools(reuse).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!["ok"]);
         Assert.Equal(new[] { "Export:object.xml:None", "Create:MCP_RC_PLC_MCP_RC_FC.xml" }, Strings(reuse["Calls"]));
         Assert.Contains(Strings(reuse["preview"]!["Items"]), line => line.Contains("will be compared"));
+        foreach (string key in new[] { "reuse", "differentXml" })
+        {
+            var preview = Tools(new JsonObject { ["reply"] = cases[key]!["preview"]!.DeepClone() }).ConnectProjectToWorkspaceV4().StructuredContent!;
+            var plan = preview["data"]!["evidence"]!;
+            Assert.Equal(1, (int?)plan["willCompare"]);
+            Assert.Equal(0, (int?)plan["mapped"]);
+            Assert.Null(plan["wouldRefuse"]);
+        }
         Assert.Contains(Strings(cases["sameName"]!["preview"]!["Items"]), line => line.Contains("duplicate planned target"));
+        var missing = Tools(cases["rc7-missing-workspace"]!).ConnectProjectToWorkspaceV4().StructuredContent!;
+        Assert.False((bool?)missing["ok"]);
+        Assert.Contains("workspace folder is missing", (string?)missing["error"]!["message"]);
+        Assert.DoesNotContain("MCP_RC_Ws", (string?)missing["error"]!["message"]);
+        Assert.Contains(Strings(cases["rc7-member"]!["preview"]!["Items"]), line => line.Contains("would create a duplicate mapping"));
+        var stale = Tools(cases["rc7-member"]!).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.Equal("PARTIAL_FAILURE", (string?)stale["error"]!["code"]);
+        string remedy = (string)stale["error"]!["message"]!;
+        Assert.Contains("MCP_RC_PLC_MCP_RC_DB5.xml", remedy);
+        Assert.Contains("disconnected mapping of the same object", remedy);
+        Assert.Contains("back it up and remove it", remedy);
+        Assert.True((bool?)cases["rc7-member"]!["preserved"]);
         var different = cases["differentXml"]!;
         Assert.False((bool?)Tools(different).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!["ok"]);
         Assert.Contains("<Name>Other</Name>", (string?)different["contents"]);

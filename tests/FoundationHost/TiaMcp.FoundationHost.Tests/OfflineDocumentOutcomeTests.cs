@@ -116,6 +116,20 @@ public sealed class OfflineDocumentOutcomeTests
         Assert.Equal("not-started", (string?)result["meta"]?["execution"]);
     }
 
+    [Fact]
+    public void Offline_comparison_scrubs_the_worker_reason_before_storing_it()
+    {
+        const string tool = "ComparePlcBlockDocuments";
+        var cause = new TiaMcp.FoundationHost.WorkerOperationException("Export failed.", -32603, "rejected-before-operation",
+            new JsonObject { ["nativeMessage"] = @"Cannot export. password=fixture-secret. See C:\Private\Block.xml" }.ToJsonString());
+        var evidence = new JsonObject();
+        Host.OfflineToolExecution.AnalysisFailure(tool, evidence, cause);
+        var reason = (string?)evidence["nativeMessage"];
+        Assert.Contains("Cannot export", reason);
+        Assert.DoesNotContain("Private", reason);
+        Assert.DoesNotContain("fixture-secret", reason);
+    }
+
     [Theory, InlineData(true), InlineData(false)]
     public void File_and_inconsistent_live_block_report_the_compile_precondition(bool fileOnLeft)
     {

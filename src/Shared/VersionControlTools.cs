@@ -116,7 +116,7 @@ namespace TiaMcpServer.ModelContextProtocol
             "Devices of Project.UngroupedDevicesGroup are walked under the fixed workspace folder 'UngroupedDevices' (the group's own " +
             "name is localized); a root-level device or device group that already uses that folder name is refused before anything is " +
             "mapped, and an ungrouped device that VCI refuses is reported as a failure. " +
-            "DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. " +
+            "The default dryRun=true previews mapping. V16/V17 count existing XML in willCompare and compare it on apply. " +
             "After a real run call SynchronizeVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. Current native policy; V4 native " +
                 "acceptance is pending."
                 + " Native behaviorPolicy=current; V4 native acceptance is pending.")]

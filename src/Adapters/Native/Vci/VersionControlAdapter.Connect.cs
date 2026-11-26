@@ -195,6 +195,8 @@ namespace TiaMcp.Adapters.Native.Vci
             bool MayHaveChanged() => (!dryRun && mapped > 0) || attempts.FilesWritten > 0 || attempts.MappedAfterFailure > 0 || attempts.Unconfirmed > 0;
             var lines = new List<string>();
 #if STUDIO_VCI_INITIAL
+            int willCompare = 0;
+            string? disconnectedFileReason = null;
             var plannedFiles = new HmiArray();
             var plannedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 #endif
@@ -206,7 +208,10 @@ namespace TiaMcp.Adapters.Native.Vci
 
                 var ws = FindWorkspace(RequireVci(), workspaceName);
                 string wsName = PortVci.Name(ws);
-                string wsRootPath = SafeRoot(ws);
+                string wsRootPath = PortVci.Root(ws)?.FullName ?? throw new IOException("The workspace root is unavailable.");
+                try { File.GetAttributes(wsRootPath); }
+                catch (Exception error) when (error is FileNotFoundException or DirectoryNotFoundException)
+                { throw new DirectoryNotFoundException("The workspace folder is missing. Restore it or select an existing workspace.", error); }
                 var mappingFiles = new MappingFiles();
                 foreach (var mapping in PortVci.Enumerate(PortVci.MappedObjects(ws)))
                     mappingFiles.Add(SafeName(mapping), SafeFile(mapping), SafeFormat(mapping));
@@ -291,6 +296,7 @@ namespace TiaMcp.Adapters.Native.Vci
                         }
 
                         Note(node);
+                        string targetStem = Path.Combine(wsRootPath, flatName);
 #if STUDIO_VCI_INITIAL
                         FileInfo file;
                         bool collision;
@@ -312,6 +318,14 @@ namespace TiaMcp.Adapters.Native.Vci
                             lines.Add(node.Label + " | duplicate planned target | " + file.FullName);
                             continue;
                         }
+                        if (collision)
+                        {
+                            willCompare++;
+                            lines.Add(node.Label + " | existing file will be compared on apply | file=" + file.FullName);
+                            if (mappingFiles.ExistingFile(targetStem, fmt) is string oldFile)
+                                lines.Add(node.Label + " | reusing matching content would create a duplicate mapping | file=" + oldFile);
+                            continue;
+                        }
 #else
                         bool reuse = false;
                         FileStream? CheckTarget()
@@ -331,7 +345,6 @@ namespace TiaMcp.Adapters.Native.Vci
                             }
                         }
 #endif
-                        string targetStem = Path.Combine(wsRootPath, flatName);
                         if (dryRun)
                         {
                             if (mappingFiles.ExistingFile(targetStem, fmt) is string duplicate)
@@ -339,7 +352,7 @@ namespace TiaMcp.Adapters.Native.Vci
                             mapped++;
                             lines.Add(node.Label + " | would map | format=" + fmt +
 #if STUDIO_VCI_INITIAL
-                                      " | file=" + file.FullName + (collision ? " | existing file will be compared" : ""));
+                                      " | file=" + file.FullName);
 #else
                                       " | dir=<root> | file=" + flatName + (reuse ? " | existing XML content verified; would reuse" : ""));
 #endif
@@ -350,8 +363,17 @@ namespace TiaMcp.Adapters.Native.Vci
                             bool Lookup() { ws = ReAcquire(); return PortVci.Find(PortVci.MappedObjects(ws), node.Obj) != null; }
                             void Report(string detail) => lines.Add(node.Label + " | " + detail);
 #if STUDIO_VCI_INITIAL
+                            bool MatchesExisting()
+                            {
+                                if (NativeVci.MatchesExisting(wsRootPath, file, node.Obj)) return true;
+                                if (mappingFiles.ExistingFile(targetStem, fmt) == null) return false;
+                                disconnectedFileReason = "Target file already exists: " + file.Name
+                                    + ". After an overwriting import, the old file belongs to the disconnected mapping of the same object. "
+                                    + "Compare the file, back it up and remove it from the workspace, then connect again.";
+                                throw new IOException(disconnectedFileReason);
+                            }
                             bool exported = attempts.ExportFileFirst(file, () => NativeVci.ExportObject(node.Obj, file, ExportOptions.None), Connect,
-                                Lookup, Report, () => NativeVci.MatchesExisting(wsRootPath, file, node.Obj));
+                                Lookup, Report, MatchesExisting);
 #else
                             void MapTarget()
                             {
@@ -437,10 +459,13 @@ namespace TiaMcp.Adapters.Native.Vci
                     },
                 };
 #if STUDIO_VCI_INITIAL
+                if (disconnectedFileReason != null) result.Meta["disconnectedFileReason"] = disconnectedFileReason;
                 if (dryRun)
                 {
                     result.Meta["plannedFiles"] = plannedFiles;
-                    result.Meta["wouldRefuse"] = wouldRefuse;
+                    result.Meta["willCompare"] = willCompare;
+                    if (willCompare > 0) result.Message += " " + willCompare + " existing file(s) will be compared on apply before reuse or refusal.";
+                    if (willCompare == 0 || wouldRefuse > 0) result.Meta["wouldRefuse"] = wouldRefuse;
                     if (wouldRefuse > 0) result.Message += " " + wouldRefuse + " duplicate planned target(s).";
                 }
 #else
@@ -472,7 +497,7 @@ namespace TiaMcp.Adapters.Native.Vci
                 meta["exportsIssued"] = attempts.Issued; meta["mapped"] = mapped; meta["mappedAfterFailure"] = attempts.MappedAfterFailure;
                 meta["queryRefusals"] = attempts.QueryRefusals; meta["failed"] = failed + attempts.QueryRefusals + 1;
                 meta["writeOutcomeUnknown"] = attempts.Unconfirmed > 0;
-                meta["nativeMessage"] = attempts.NativeMessage ?? Flatten(ex.GetBaseException().Message);
+                meta["nativeMessage"] = attempts.NativeMessage ?? NativeFailureText.BoundedDiagnostic(ex);
                 return new VersionControlResult
                 {
                     Message = "ConnectProjectToWorkspace failed: " + Flatten(ex.Message),

@@ -153,7 +153,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (toolName == "ComparePlcBlockDocuments"
                 && TiaMcp.Logic.V4.HostBehavior.WorkerReplyEvidence(toolName, cause)?.TryGetValue("nativeMessage", out var reason) == true
                 && reason.ValueKind == JsonValueKind.String)
-                meta["nativeMessage"] = reason.GetString();
+                meta["nativeMessage"] = TiaMcp.Logic.V4.HostBehavior.SafeDiagnostic(reason.GetString());
             meta["error"] = cause.ToString();
             if (cause is ArgumentException || cause is JsonException)
                 meta["parameter"] = TiaOpenness.Shared.HostFailurePolicy.Parameter(cause) ?? "arguments";

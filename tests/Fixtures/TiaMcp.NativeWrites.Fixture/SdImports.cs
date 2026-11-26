@@ -15,6 +15,11 @@ namespace Siemens.Engineering
     internal sealed class SdAttributeInfo(string name) { public string Name => name; }
 }
 
+namespace Siemens.Engineering.Library.Types
+{
+    internal sealed class LibraryTypeInstanceInfo { public object? LibraryTypeVersion { get; set; } }
+}
+
 namespace Siemens.Engineering.SW.Blocks
 {
     internal partial class PlcBlock : IEngineeringObject
@@ -26,6 +31,8 @@ namespace Siemens.Engineering.SW.Blocks
         public bool IsKnowHowProtected => false;
         public string ProgrammingLanguage = "LAD";
         public bool RefuseNumber, Unreadable, RefuseExport;
+        public Library.Types.LibraryTypeInstanceInfo? LibraryInstance;
+        public T? GetService<T>() where T : class => LibraryInstance as T;
         public int Exports;
         public Action? AfterExport;
         public IEnumerable<SdAttributeInfo> GetAttributeInfos() => Attributes.Keys.Select(k => new SdAttributeInfo(k));
@@ -118,6 +125,8 @@ namespace TiaMcp.Tests.NativeWrites
             var group = new PlcBlockGroup();
             if (scenario == "sd-batch-refresh") return BatchRefresh(directory, group);
             var main = new OB { Name = "Main", Number = 1, IsConsistent = scenario != "sd-inconsistent", RefuseExport = scenario == "sd-backup-refusal" };
+            if (scenario.StartsWith("sd-library-", StringComparison.Ordinal))
+                main.LibraryInstance = new() { LibraryTypeVersion = scenario == "sd-library-unlinked" ? null : new object() };
             main.Attributes.Add("IsIECCheckEnabled", false);
             group.Blocks.Add("Main", main);
             bool create = scenario == "sd-new";
@@ -144,9 +153,9 @@ namespace TiaMcp.Tests.NativeWrites
                     group.Blocks.Add("MCP_RC_OBStart", new OB { Number = 151, SecondaryType = "Startup" });
                 }
                 if (scenario == "sd-before-unreadable") main.Unreadable = true;
-                if (scenario == "sd-preview")
+                if (scenario is "sd-preview" or "sd-library-preview")
                 {
-                    main.SecondaryType = "Startup";
+                    if (scenario == "sd-preview") main.SecondaryType = "Startup";
                     var previews = PlcSdBlockSnapshot.PrepareBatch(declarations.ToArray(), files, group, true, _ => false, dryRun: true);
                     return new { evidence = previews["Main"].Evidence, imports, postReads, exports = main.Exports };
                 }

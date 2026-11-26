@@ -180,9 +180,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 return SetDeviceItemAttribute(deviceItemPath, attributeName, value);
             }, write: true, current: false), expectedPlanHash, expectedProjectFile, previewBlocker: () =>
             {
-                var attribute = _service.GetDeviceItem(deviceItemPath)?.Attributes.FirstOrDefault(item =>
-                    string.Equals(item.Name, attributeName, StringComparison.OrdinalIgnoreCase));
-                return attribute?.AccessMode == "Read" ? $"Attribute '{attribute.Name}' is read-only (AccessMode=Read)." : null;
+                try
+                {
+                    var attribute = _service.GetDeviceItem(deviceItemPath)?.Attributes.FirstOrDefault(item =>
+                        string.Equals(item.Name, attributeName, StringComparison.Ordinal));
+                    return attribute?.AccessMode == "Read" ? $"Attribute '{attribute.Name}' is read-only (AccessMode=Read)." : null;
+                }
+                catch (Exception error) when (error is not OperationCanceledException)
+                { /* swallow(probe-optional): Missing attribute metadata leaves the original preview available. */ return null; }
             });
 
         public ResponseMessage SetDeviceItemAttribute(

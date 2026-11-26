@@ -178,6 +178,21 @@ internal static class VciExportFixture
                     workspace.Calls.Clear();
                 }
                 if (scenario is "rc7-comment" or "rc7-member") File.WriteAllText(file, edited);
+#if STUDIO_VCI_INITIAL
+                if (scenario == "rc7-member")
+                {
+                    var stale = new WorkspaceMapping(workspace, Path.GetFileName(file));
+                    stale.Status.RefreshError = new EngineeringObjectDisposedException(Disposed);
+                    workspace.Mappings.Add(stale);
+                    // V16/V17: the import changed the project's Static.Count comment, leaving the workspace DB5 stale.
+                    xml = xml.Replace("V18", refreshesKnownState ? "V16" : "V17");
+                    File.WriteAllText(file, xml);
+                    xml = xml.Replace("</MultiLanguageText>", "vci7 member</MultiLanguageText>");
+                    string fb = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "MCP_RC_FB.xml"));
+                    File.WriteAllText(Path.Combine(root.FullName, device.Name + "_MCP_RC_FB.xml"), fb);
+                    plc.BlockGroup.Blocks.Add(new PlcBlock { Name = "MCP_RC_FB", Write = (target, _) => File.WriteAllText(target.FullName, fb) });
+                }
+#endif
 #if STUDIO_VCI_MODERN
                 if (scenario == "rc7-sidecar")
                 {
@@ -199,6 +214,14 @@ internal static class VciExportFixture
                     commentAfterCreate = scenario == "rc7-after-create" && File.Exists(file) && File.ReadAllText(file) == edited });
                 continue;
             }
+#if STUDIO_VCI_INITIAL
+            if (scenario == "differentXml")
+            {
+                workspace.RootPath = new DirectoryInfo(Path.Combine(root.FullName, "MCP_RC_Ws"));
+                replies["rc7-missing-workspace"] = new { reply = adapter.ConnectProjectToWorkspace() };
+                workspace.RootPath = root;
+            }
+#endif
             var absent = adapter.ConnectProjectToWorkspace();
             if (scenario == "collision") File.WriteAllText(file, "existing contents");
             if (scenario == "differentXml") File.WriteAllText(file, xml.Replace("<Name>MCP_RC_FC</Name>", "<Name>Other</Name>"));

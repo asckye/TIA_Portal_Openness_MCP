@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Siemens.Engineering;
 using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.Library.Types;
 using TiaMcp.Adapters.Contracts;
 using TiaOpenness.Shared;
 using Documents = TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives;
@@ -99,14 +100,24 @@ namespace TiaMcp.Adapters.Native.Plc
             var reasons = new List<string>();
             try
             {
-                if (Existing != null)
+                if (replace && Existing?.GetService<LibraryTypeInstanceInfo>()?.LibraryTypeVersion != null)
                 {
-                    before = Read(Existing);
-                    Evidence["existingBlock"] = BlockRow(before);
-                    Evidence["notCompared"] = before.Exclusions().ToArray();
+                    Evidence["existingBlock"] = new Dictionary<string, object?> { ["name"] = name, ["type"] = Existing.GetType().Name,
+                        ["libraryTypeInstance"] = true };
+                    Refusal = $"Block '{name}' is a library type instance. SIMATIC SD cannot preserve its LibraryTypeVersion.";
+                    reasons.Add(Refusal);
                 }
-                Refusal = SdBlockOverridePolicy.Refusal(name, declaration.Declarations[0].Kind, replace,
-                    replace && elsewhere(), before, declaration.InstanceType, reasons);
+                else
+                {
+                    if (Existing != null)
+                    {
+                        before = Read(Existing);
+                        Evidence["existingBlock"] = BlockRow(before);
+                        Evidence["notCompared"] = before.Exclusions().ToArray();
+                    }
+                    Refusal = SdBlockOverridePolicy.Refusal(name, declaration.Declarations[0].Kind, replace,
+                        replace && elsewhere(), before, declaration.InstanceType, reasons);
+                }
             }
             catch (Exception error) when (!ConnectionUnavailable(error))
             {

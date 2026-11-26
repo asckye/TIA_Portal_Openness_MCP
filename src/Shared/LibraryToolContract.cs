@@ -137,11 +137,13 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 bool connect = tool == "ConnectProjectToWorkspace";
                 int exported = Count(evidence, connect ? "mapped" : "synchronized");
-                string? diagnostic = HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) ?? nativeMessage;
+                string? disconnected = connect ? HostBehavior.SafeDiagnostic((string?)evidence["disconnectedFileReason"]) : null;
+                string? diagnostic = disconnected ?? HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) ?? nativeMessage;
                 if (exported > 0)
                 {
                     outcome = Outcome.Partial;
-                    error = new Error("Some objects were exported to the workspace.", new PartialFailureDetails(exported, failed, 0));
+                    error = new Error(("Some objects were exported to the workspace. " + disconnected).TrimEnd(),
+                        new PartialFailureDetails(exported, failed, 0));
                 }
                 else if (connect && Count(evidence, "mappedAfterFailure") > 0)
                 {

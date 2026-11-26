@@ -390,6 +390,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     "Normalized arguments, input file contents and cached target identity; the target is not verified. Native validation/readback occurs " +
                         "during execution."
                     };
+            // CreateWithItem selects by catalog identifier. Its default descriptive label cannot establish the device family.
+            if (tool == "CreateDevice" && plan["plannedChanges"] is JsonObject changes && (string?)changes["family"] == "S7-1500")
+                changes.Remove("family");
             if (seedFiles != null) plan["plannedFiles"] = seedFiles;
             if (writing)
             {

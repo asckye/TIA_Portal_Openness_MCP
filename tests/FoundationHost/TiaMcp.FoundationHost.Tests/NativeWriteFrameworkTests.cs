@@ -200,6 +200,29 @@ public sealed class NativeWriteFrameworkTests
     }
 
     [Theory]
+    [InlineData("sd-library-linked", false), InlineData("sd-library-unlinked", true)]
+    public void Sd_override_requires_the_existing_block_to_be_independent_of_a_library_version(string scenario, bool admitted)
+    {
+        using var inputs = new Inputs();
+        var probe = Run(scenario, Path.GetDirectoryName(inputs.Nodes)!);
+        Assert.Equal(admitted, (bool?)probe["evidence"]!["operationSuccess"]);
+        Assert.Equal(admitted ? 1 : 0, (int?)probe["imports"]);
+        Assert.Equal(admitted ? 1 : 0, (int?)probe["exports"]);
+        if (!admitted)
+        {
+            Assert.Contains("Main", (string?)probe["evidence"]!["error"]);
+            Assert.Contains("library type instance", (string?)probe["evidence"]!["error"]);
+            Assert.Contains("LibraryTypeVersion", (string?)probe["evidence"]!["error"]);
+            Assert.Empty(probe["Setters"]!.AsArray());
+            var preview = Run("sd-library-preview", Path.GetDirectoryName(inputs.Nodes)!);
+            Assert.True((bool?)preview["evidence"]!["existingBlock"]!["libraryTypeInstance"]);
+            Assert.Contains("LibraryTypeVersion", (string?)preview["evidence"]!["applyBlockedReason"]);
+            Assert.Equal(0, (int?)preview["exports"]);
+            Assert.Equal(0, (int?)preview["imports"]);
+        }
+    }
+
+    [Theory]
     [InlineData("sd-new")]
     [InlineData("sd-backup-refusal")]
     public void Sd_creation_reads_actual_properties_once_and_a_failed_backup_prevents_import(string scenario)

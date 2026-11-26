@@ -96,7 +96,8 @@ namespace TiaMcp.Adapters
                 if(string.IsNullOrEmpty(request.ExpectedProject) || !string.Equals(request.ExpectedProject.Replace('/', '\\'),
                     request.Project?.Replace('/', '\\'), StringComparison.Ordinal))
                     throw new AdapterPreconditionException("Apply requires the exact expected project identity.","expectedProjectFile");
-                if(request.Order.Length==0) throw new AdapterPreconditionException("Apply requires an explicit complete importOrder.","importOrder");
+                if(request.Order.Length==0) throw new AdapterPreconditionException(
+                    "Apply requires an explicit complete importOrder. Copy the reviewed relative paths from the preview in order.","importOrder");
                 if(request.ExpectedHash.Length!=64 || request.ExpectedHash.Any(c=>!"0123456789abcdef".Contains(c)))
                     throw new AdapterPreconditionException("Apply requires expectedPlanHash from a reviewed preview.","expectedPlanHash");
             }
