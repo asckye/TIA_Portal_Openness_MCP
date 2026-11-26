@@ -518,6 +518,35 @@ public sealed class VciExportFrameworkTests
     }
 
     [Fact]
+    public async Task Stored_comparison_uses_only_the_current_export_to_identify_inconsistency()
+    {
+        var proof = (await ExportReplies("19"))["sequences"]!["repeated-comparison"]!;
+        Assert.True((bool?)proof["initial"]);
+        Assert.False((bool?)proof["unreadable"]);
+        Assert.True((bool?)proof["ExportSucceeded"]);
+        Assert.False((bool?)proof["final"]);
+        Assert.DoesNotContain("Recompile", (string?)proof["Message"]);
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Status_names_only_workspace_root_XML_files_without_a_listed_mapping(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var scenario = (await ExportReplies(release))["unlisted-status"]!;
+        var mapped = Tools(new JsonObject { ["reply"] = scenario["fullyMapped"]!.DeepClone() }).GetVersionControlStatusV4().StructuredContent!;
+        Assert.True((bool?)mapped["ok"]);
+        Assert.DoesNotContain("without a mapping", (string?)mapped["data"]!["summary"]);
+        var body = Tools(scenario).GetVersionControlStatusV4().StructuredContent!;
+        Assert.True((bool?)body["ok"]);
+        var summary = (string)body["data"]!["summary"]!;
+        Assert.Contains("1 workspace file(s) without a mapping: MCP_RC_PLC_MCP_RC_FC2.XML.", summary);
+        Assert.Contains("reconnect", summary, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("nothing to commit", summary);
+        Assert.Equal(1, (int?)body["data"]!["evidence"]!["total"]);
+        Assert.True((bool?)scenario["preserved"]);
+    }
+
+    [Fact]
     public async Task Sync_summary_names_the_blocks_for_each_recovery_action()
     {
         using var selected = Host.HardwareContract.UseRelease("19");
@@ -527,6 +556,7 @@ public sealed class VciExportFrameworkTests
         var alone = Tools(inconsistent).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
         foreach (var summary in new[] { (string)reply["Message"]!, (string)alone["data"]!["summary"]! })
         {
+            Assert.Contains("Not verified: Motor.", summary);
             Assert.Contains("Recompile the block(s) Motor and synchronize again.", summary);
             Assert.DoesNotContain("remove the stale workspace file", summary);
         }
@@ -539,6 +569,22 @@ public sealed class VciExportFrameworkTests
         Assert.DoesNotContain("notVerifiedAdvice", body.ToJsonString());
         var unavailable = Tools(proofs["export-refused"]!).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
         Assert.DoesNotContain("remove the stale workspace file", (string?)unavailable["data"]!["summary"]);
+    }
+
+    [Theory, InlineData(true), InlineData(false)]
+    public async Task Worker_failure_retains_sync_advice_after_a_comparison_export(bool throws)
+    {
+        using var selected = Host.HardwareContract.UseRelease("19");
+        var reply = (await ExportReplies("19"))["proof"]!["rc7-inconsistent"]!["mixedRecovery"]!;
+        reply["Meta"]!["writeOutcomeUnknown"] = true;
+        reply["Meta"]!["mayHaveChanged"] = true;
+        var worker = new Host.VersionControlTools(new Services.VersionControlPortService((_, _) =>
+            throws ? throw new WorkerFailure(reply) : reply, () => "Line.ap19"));
+        var failure = worker.SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)failure["error"]!["code"]);
+        var recovery = (string?)failure["error"]!["details"]!["evidence"]!["notVerifiedAdvice"];
+        Assert.Contains("Not verified: Other. Export the block", recovery);
+        Assert.Contains("remove the stale workspace file", recovery);
     }
 
     [Fact]

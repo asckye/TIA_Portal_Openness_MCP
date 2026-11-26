@@ -76,14 +76,14 @@ namespace TiaOpenness.Openness
         internal static Action<FileInfo, bool> Exporter(IEngineeringObject target) =>
             (file, defaults) => ExportObject(target, file, defaults ? ExportOptions.WithDefaults : ExportOptions.None);
 
-        internal static string ComparisonDiagnostic(IEngineeringObject target, string message, out bool inconsistent)
+        internal static string ComparisonDiagnostic(IEngineeringObject target, string message, bool exportSucceeded, out bool inconsistent)
         {
             inconsistent = false;
             if (target is PlcBlock block)
             {
                 try
                 {
-                    inconsistent = !block.IsConsistent;
+                    inconsistent = !block.IsConsistent && !exportSucceeded;
                     if (inconsistent) return message + " Recompile the block, then retry the comparison export.";
                 }
                 catch (Exception error) when (Ordinary(error))
@@ -97,7 +97,8 @@ namespace TiaOpenness.Openness
             var proof = new VciContentProof(root, file);
             proof.Compare(() => Exporter(target), Ordinary);
             if (!proof.Matches && proof.ExportFailure != null)
-                throw new IOException(VciExportPolicy.ExistingFile(file.Name) + " " + ComparisonDiagnostic(target, proof.ExportFailure, out _));
+                throw new IOException(VciExportPolicy.ExistingFile(file.Name) + " "
+                    + ComparisonDiagnostic(target, proof.ExportFailure, proof.ExportSucceeded, out _));
             difference = proof.Verification == "no-match" ? " The workspace XML content differs from the project export." : "";
             return proof.Matches && proof.Sha256 == proof.CurrentHash();
         }

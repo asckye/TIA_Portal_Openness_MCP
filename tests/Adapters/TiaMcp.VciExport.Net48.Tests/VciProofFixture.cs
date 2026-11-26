@@ -129,6 +129,21 @@ internal static class VciProofFixture
         }
         var empty = new Workspace(parent.CreateSubdirectory("pending-summary"));
         cases["studio-pending"] = new OpennessVersionControl(() => new Project()).SummarizePendingRow(empty);
+        var folder = parent.CreateSubdirectory("repeated-comparison");
+        string path = Path.Combine(folder.FullName, "Motor.xml");
+        File.WriteAllText(path, xml);
+        var block = new PlcBlock { IsConsistent = false, Write = (_, _) => throw new EngineeringTargetInvocationException("Export refused") };
+        var mapped = new WorkspaceMapping(new Workspace(folder), "Motor.xml", block);
+        var proof = new VciStoredEqual(folder.FullName, mapped, "Motor", "Refresh refused");
+        VciStoredEqual.PrepareAll(new[] { proof }, false);
+        bool initial = proof.Inconsistent;
+        File.WriteAllText(path, "<Document");
+        proof.CompareAfterImports(() => mapped, false);
+        bool unreadable = proof.Inconsistent;
+        File.WriteAllText(path, xml);
+        block.Write = (output, _) => File.WriteAllText(output.FullName, "<Document");
+        proof.CompareAfterImports(() => mapped, false);
+        cases["repeated-comparison"] = new { initial, unreadable, final = proof.Inconsistent, proof.Proof.ExportSucceeded, proof.Message };
         return cases;
     }
 

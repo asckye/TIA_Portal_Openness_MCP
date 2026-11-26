@@ -29,7 +29,7 @@ internal static class VciExportFixture
         foreach (var scenario in new[] { "equal", "unknown", "unequal", "collision", "exportRefused", "createRefused", "lookupRefused",
             "syncRefused", "nativeSuccess", "repair", "repairRefused", "reuse", "newStatusRefused", "seedDisposed", "seedAbort", "seedConnection",
             "seedNonrecoverable", "sameName", "differentXml", "mixed-reuse", "rc7-comment", "rc7-member", "rc7-after-preview",
-            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent", "rc7-fallback-differs", "catch-prior"
+            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent", "rc7-fallback-differs", "catch-prior", "unlisted-status"
 #if STUDIO_VCI_INITIAL
             , "multipleDisconnected", "manyDisconnected"
 #else
@@ -94,6 +94,27 @@ internal static class VciExportFixture
             }
             var file = Path.Combine(root.FullName, device.Name + "_" + block.Name + ".xml");
             string xml = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "MCP_RC_FC.xml"));
+            if (scenario == "unlisted-status")
+            {
+                string stem = Path.GetFileNameWithoutExtension(file);
+                File.WriteAllText(file, xml);
+#if STUDIO_VCI_MODERN
+                workspace.ConnectObject(block, root, stem, "SimaticML");
+#else
+                var listed = new WorkspaceMapping(workspace, stem + ".xml", block);
+                listed.Status.State = CompareState.Equal;
+                workspace.Mappings.Add(listed);
+#endif
+                File.WriteAllText(Path.Combine(root.CreateSubdirectory("Nested").FullName, "Nested.xml"), xml);
+                File.WriteAllText(Path.Combine(root.FullName, stem + ".xml.bak"), xml);
+                var fullyMapped = adapter.GetVersionControlStatus();
+                string unlisted = Path.Combine(root.FullName, "MCP_RC_PLC_MCP_RC_FC2.XML");
+                File.WriteAllText(unlisted, xml.Replace("MCP_RC_FC", "MCP_RC_FC2"));
+                var original = File.ReadAllBytes(unlisted);
+                var reply = adapter.GetVersionControlStatus();
+                replies.Add(scenario, new { fullyMapped, reply, preserved = original.SequenceEqual(File.ReadAllBytes(unlisted)) });
+                continue;
+            }
             if (scenario.StartsWith("rc7-", StringComparison.Ordinal))
                 xml = xml.Replace("MCP_RC_FC", "MCP_RC_FC5").Replace("</SW.Blocks.FC>",
                     "<ObjectList><MultilingualText ID=\"1\" CompositionName=\"Comment\"><ObjectList>"

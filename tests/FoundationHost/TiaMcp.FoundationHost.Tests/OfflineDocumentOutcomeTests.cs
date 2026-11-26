@@ -186,12 +186,10 @@ public sealed class OfflineDocumentOutcomeTests
         var body = (await fixture.Call("PatchPlcBlockDocument", args)).StructuredContent!;
         AssertRefused(body);
         Assert.Equal("/changes", (string?)body["error"]!["details"]!["parameter"]);
+        Assert.Equal("array", (string?)body["error"]!["details"]!["expected"]);
         if (emptyArray)
-        {
-            Assert.Contains("at least one change is required", (string?)body["error"]!["message"]);
-            Assert.Equal("non-empty array", (string?)body["error"]!["details"]!["expected"]);
-        }
-        else Assert.Equal("array", (string?)body["error"]!["details"]!["expected"]);
+            Assert.Contains("/changes: at least 1 item is required", (string?)body["error"]!["message"]);
+        else Assert.DoesNotContain("at least", (string?)body["error"]!["message"]);
     }
 
     private static void AssertRefused(JsonNode result)
@@ -705,6 +703,16 @@ public sealed class OfflineDocumentOutcomeTests
         Assert.Equal("field", maximum.Parameter);
         Assert.Equal(1, maximum.Limit);
         Assert.Equal(2, maximum.Actual);
+    }
+
+    [Fact]
+    public void Array_minimum_names_the_parameter_and_required_count()
+    {
+        var schema = TiaMcp.Logic.V4.Inputs.InputSchema.Array(TiaMcp.Logic.V4.Inputs.InputSchema.String(), minimum: 2);
+        var input = System.Text.Json.JsonSerializer.SerializeToElement(new[] { "Motor" });
+        var error = schema.Validate(input, "targets")!;
+        Assert.Contains("/targets: at least 2 items are required", error.Message);
+        Assert.Equal("/targets", Assert.IsType<TiaMcp.Logic.V4.InvalidArgumentDetails>(error.Details).Parameter);
     }
 
     [Fact]

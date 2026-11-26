@@ -28,17 +28,17 @@ public sealed class VersionControlResult : IWorkerOperationReply
 
     public static string NotVerifiedSummary(IReadOnlyCollection<(string Name, bool Inconsistent, bool Exported)> objects)
     {
-        string Group(IEnumerable<string> names, string prefix, string suffix)
+        string Group(IEnumerable<string> names, System.Func<string, string> advice)
         {
             var list = names.ToArray();
-            return list.Length == 0 ? "" : " " + prefix + string.Join(", ", list) + suffix;
+            return list.Length == 0 ? "" : " Not verified: " + advice(string.Join(", ", list));
         }
-        return Group(objects.Where(o => o.Inconsistent).Select(o => o.Name), "Recompile the block(s) ", " and synchronize again.")
-            + Group(objects.Where(o => !o.Inconsistent && o.Exported).Select(o => o.Name), "Not verified: ",
-                ". Export the block, type or tag table separately and compare it with the workspace file. "
+        return Group(objects.Where(o => o.Inconsistent).Select(o => o.Name), names => names + ". Recompile the block(s) " + names + " and synchronize again.")
+            + Group(objects.Where(o => !o.Inconsistent && o.Exported).Select(o => o.Name), names =>
+                names + ". Export the block, type or tag table separately and compare it with the workspace file. "
                 + "After a backup, remove the stale workspace file and synchronize again.")
-            + Group(objects.Where(o => !o.Inconsistent && !o.Exported).Select(o => o.Name), "Not verified: ",
-                ". Check the comparison diagnostic and retry the comparison export.");
+            + Group(objects.Where(o => !o.Inconsistent && !o.Exported).Select(o => o.Name), names =>
+                names + ". Check the comparison diagnostic and retry the comparison export.");
     }
 
     public string Message { get; set; } = "";

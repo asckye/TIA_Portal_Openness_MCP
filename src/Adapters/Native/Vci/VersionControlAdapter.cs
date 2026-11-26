@@ -10,6 +10,7 @@ using Siemens.Engineering.VersionControl;
 using System;
 using TiaMcpServer.Siemens;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TiaMcp.Adapters.Contracts;
 using TiaMcp.Adapters.Native.Hmi;
@@ -221,23 +222,24 @@ namespace TiaMcp.Adapters.Native.Vci
                 }
 
                 mappingFiles.ReportDuplicates(lines);
+                string summary = $"Workspace '{PortVci.Name(ws)}': {total} mapped object(s), {differing} differ from the workspace files.";
+                string selectedName = PortVci.Name(ws);
+                string root = SafeRoot(ws);
+                string unlisted = mappingFiles.UnmappedXmlSummary(root);
                 return new VersionControlResult
                 {
-                    Message = string.Format(
-                        "Workspace '{0}': {1} mapped object(s), {2} differ from the workspace files.{3}",
-                        PortVci.Name(ws), total, differing,
-                        unknown > 0 ? " " + unknown + " comparison(s) are unknown. Inspect the individual status before export."
+                    Message = summary + (unknown > 0 ? " " + unknown + " comparison(s) are unknown. Inspect the individual status before export."
                         : total == 0 ? " Use ConnectProjectToWorkspace to map objects."
-                        : differing == 0 && unverifiedEqual > 0 ? ""
+                        : differing == 0 && (unverifiedEqual > 0 || unlisted.Length > 0) ? ""
                         : differing == 0
                             ? " Project and workspace are in sync — nothing to commit."
                             : " Call SynchronizeVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit.")
-                        + VersionControlResult.StoredEqualSummary(unverifiedEqual) + VersionControlResult.DisconnectedSummary(disconnected),
+                        + VersionControlResult.StoredEqualSummary(unverifiedEqual) + VersionControlResult.DisconnectedSummary(disconnected) + unlisted,
                     Items = lines,
                     // envelope: legacy-multiple-dynamic-fields
                     Meta = new HmiObject {
-                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = PortVci.Name(ws),
-                            ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["unknown"] = unknown,
+                        ["timestamp"] = TiaMcpServer.ModelContextProtocol.ResponseClock.Now, ["success"] = true, ["workspaceName"] = selectedName,
+                            ["rootPath"] = root, ["total"] = total, ["differing"] = differing, ["unknown"] = unknown,
                             ["dataComplete"] = unknown == 0 && unverifiedEqual == 0, ["unverifiedEqual"] = unverifiedEqual, ["objects"] = entries
                     },
                 };
@@ -255,16 +257,41 @@ namespace TiaMcp.Adapters.Native.Vci
         private sealed class MappingFiles
         {
             private readonly Dictionary<string, (string Name, string File, int Count)> entries = new(StringComparer.OrdinalIgnoreCase);
+            private bool unreadablePath;
             private static string Key(string path, string? format) => path + "|" + (VciExportPolicy.IsXml(format) ? "xml" : format);
             internal string? ExistingFile(string path, string format) => entries.TryGetValue(Key(path, format), out var entry) ? entry.File : null;
 
             internal void Add(string name, string path, string? format)
             {
-                if (name == "?" || !System.IO.Path.IsPathRooted(path)) return;
+                if (name == "?" || !Path.IsPathRooted(path))
+                {
+                    unreadablePath = true;
+                    return;
+                }
                 string key = Key(path, format);
                 entries.TryGetValue(key, out var prior);
                 string file = VciExportPolicy.IsXml(format) ? path + ".xml" : path;
                 entries[key] = (name, file, prior.Count + 1);
+            }
+
+            internal string UnmappedXmlSummary(string root)
+            {
+                const string unavailable = " Workspace XML files could not be checked for missing mappings.";
+                if (unreadablePath || !Path.IsPathRooted(root)) return unavailable;
+                try
+                {
+                    var names = new DirectoryInfo(root).EnumerateFiles("*.xml")
+                        .Where(file => file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase))
+                        .Where(file => {
+                            string stem = Path.ChangeExtension(file.FullName, null);
+                            return ExistingFile(stem, "xml") == null && ExistingFile(stem, "") == null;
+                        })
+                        .Select(file => file.Name).OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray();
+                    return names.Length == 0 ? "" : $" {names.Length} workspace file(s) without a mapping: {string.Join(", ", names)}. "
+                        + "The object may have been re-imported, renamed or deleted. Reconnect it to map it again.";
+                }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+                { return unavailable; }
             }
 
             internal void ReportDuplicates(List<string> lines)

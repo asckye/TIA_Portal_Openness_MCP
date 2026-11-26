@@ -88,10 +88,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (string key in new[] { "members", "masterCopies", "types", "folders", "warnings", "attempts", "readbackItems" })
                     if (data.ContainsKey(key) && data[key] == null) data[key] = new JsonArray();
             data["summary"] = data["message"]?.DeepClone(); data.Remove("message");
-            // Keep only the recovery advice when a failed sync summary is rebuilt without the raw native error.
-            string? notVerifiedAdvice = null;
-            if (tool == "SynchronizeVersionControlWorkspace" && evidence.Remove("notVerifiedAdvice", out var advice))
-                notVerifiedAdvice = (string?)advice;
             data["evidence"] = evidence;
             bool? success = Flag(evidence, "operationSuccess") ?? Flag(evidence, "success") ?? Flag(data, "ok");
             if (Flag(data, "ok") == false) success = false;
@@ -209,6 +205,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
             var legacyStatusRows = tool == "GetVersionControlStatus" && HardwareContract.ReleaseKey is "16" or "17" or "18" or "19"
                 ? evidence["objects"] as JsonArray : null;
+            // Failure evidence and the public sync summary both need the worker's comparison advice.
+            string? notVerifiedAdvice = null;
+            if (tool == "SynchronizeVersionControlWorkspace" && evidence.Remove("notVerifiedAdvice", out var advice))
+                notVerifiedAdvice = (string?)advice;
             Clean(data, legacyStatusRows);
             var proofRows = (evidence["items"] as JsonArray)?.OfType<JsonObject>().Where(r => (string?)r["outcome"] == "verify-before-export").ToArray();
             if (!writes && tool is ("ConnectProjectToWorkspace" or "SynchronizeVersionControlWorkspace")

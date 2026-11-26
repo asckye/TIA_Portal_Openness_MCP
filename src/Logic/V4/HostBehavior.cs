@@ -491,6 +491,8 @@ namespace TiaMcp.Logic.V4
                 }
             if (source["exportsIssued"] != null)
             {
+                if (source["notVerifiedAdvice"] is JsonValue advice && advice.TryGetValue<string>(out var recovery))
+                    retained["notVerifiedAdvice"] = Diagnostic(recovery);
                 foreach (var key in new[] { "filesWritten", "writtenFilesAfterFailureTotal", "skippedDisconnected", "verifiedEqual",
                     "notVerified", "unverifiedEqual", "notAttempted" })
                     if (source[key] is JsonValue value && value.TryGetValue<int>(out var count)) retained[key] = count;

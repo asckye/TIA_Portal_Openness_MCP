@@ -63,6 +63,8 @@ internal sealed class VciStoredEqual
 
     private void Prepare(MappedObject mapping, bool preview)
     {
+        Inconsistent = false;
+        Message = null;
         if (preview) Proof.Preview();
         else
         {
@@ -74,7 +76,7 @@ internal sealed class VciStoredEqual
                 if (Proof.Matches) Outcome = "verified-equal";
                 else if (Proof.Verification == "not-comparable" && Proof.Message != null && compared is global::Siemens.Engineering.SW.Blocks.PlcBlock block)
                 {
-                    Message = NativeVci.ComparisonDiagnostic(block, Proof.Message, out bool inconsistent);
+                    Message = NativeVci.ComparisonDiagnostic(block, Proof.Message, Proof.ExportSucceeded, out bool inconsistent);
                     Inconsistent = inconsistent;
                 }
             }
@@ -96,6 +98,7 @@ internal sealed class VciStoredEqual
     internal void CompareAfterImports(Func<MappedObject> acquire, bool stopped)
     {
         source = null;
+        Inconsistent = false;
         Outcome = "not-verified";
         if (stopped)
         {
@@ -181,6 +184,7 @@ internal sealed class VciStoredEqual
             if (written != null)
             {
                 Message = null;
+                Inconsistent = false;
                 try { Proof.Compare(() => NativeVci.Exporter(acquire().LinkedProjectObject), NativeVci.Ordinary); }
                 catch (Exception error)
                 {
@@ -190,7 +194,6 @@ internal sealed class VciStoredEqual
                     Message = NativeFailureText.BoundedDiagnostic(error);
                     Interrupted = ComparisonInterrupted;
                 }
-                if (Proof.ExportSucceeded) Inconsistent = false;
                 string finalHash = Proof.CurrentHash();
                 if (Proof.Sha256 != written || finalHash != written)
                 {

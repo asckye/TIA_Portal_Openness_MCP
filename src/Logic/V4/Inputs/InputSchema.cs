@@ -493,9 +493,7 @@ namespace TiaMcp.Logic.V4.Inputs
             if (value.ValueKind == JsonValueKind.Array)
             {
                 var entries = value.EnumerateArray().ToArray();
-                if (pointer == "/changes" && entries.Length == 0 && schema.TryGetProperty("minItems", out var minimum) && minimum.GetInt32() == 1)
-                    throw new InputRejectionException(diagnostic: "Invalid changes: at least one change is required.").At(pointer, "non-empty array");
-                Size(schema, entries.Length, "minItems", "maxItems");
+                Size(schema, entries.Length, "minItems", "maxItems", pointer);
                 if (schema.TryGetProperty("items", out var items))
                 {
                     var failures = new List<InputRejectionException>();
@@ -555,9 +553,16 @@ namespace TiaMcp.Logic.V4.Inputs
             }
         }
 
-        private static void Size(JsonElement schema, int actual, string min, string max)
+        private static void Size(JsonElement schema, int actual, string min, string max, string? arrayPointer = null)
         {
-            if (schema.TryGetProperty(min, out var minimum)) InputGuard.Require(actual >= minimum.GetInt32());
+            if (schema.TryGetProperty(min, out var minimum) && actual < minimum.GetInt32())
+            {
+                if (arrayPointer == null) throw new InputRejectionException();
+                string count = minimum.GetRawText();
+                bool singular = minimum.GetInt32() == 1;
+                string field = arrayPointer.Length == 0 ? "The array" : arrayPointer;
+                throw new InputRejectionException(diagnostic: $"{field}: at least {count} {(singular ? "item is" : "items are")} required.");
+            }
             if (schema.TryGetProperty(max, out var maximum)) InputGuard.Limit(actual, maximum.GetInt32());
         }
         private static bool Matches(JsonElement schema, JsonElement value, JsonElement root)
