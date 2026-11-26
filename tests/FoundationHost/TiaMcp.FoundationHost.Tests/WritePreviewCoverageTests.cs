@@ -1648,16 +1648,16 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             }
             string manifest = Path.Combine(root, "manifest.json");
             // Only the seed plan sees the override's bytes. The general caller snapshot covers the reference root.
-            File.WriteAllText(manifest, """{"plcBlocksDir":"../donors"}""");
+            File.WriteAllText(manifest, """{"plcBlocksDir":"donors"}""");
             var manifestOnly = Call();
             Assert.True((bool?)manifestOnly["ok"], manifestOnly.ToJsonString());
             Assert.Equal("manifest.json", (string?)Assert.Single(manifestOnly["data"]!["plannedFiles"]!.AsArray())!["name"]);
-            string directory = Directory.CreateDirectory(Path.Combine(fixture, "donors")).FullName;
+            string directory = Directory.CreateDirectory(Path.Combine(root, "donors")).FullName;
             string donor = Path.Combine(directory, "MCPVerify_FC_LAD.xml");
             File.Copy(unrelated, donor);
             var plan = Call()["data"]!;
             var files = plan["plannedFiles"]!.AsArray();
-            Assert.Equal(new[] { "manifest.json", "../donors/MCPVerify_FC_LAD.xml" }, files.Select(file => (string?)file!["name"]));
+            Assert.Equal(new[] { "manifest.json", "donors/MCPVerify_FC_LAD.xml" }, files.Select(file => (string?)file!["name"]));
             Assert.Equal("plc/blocks/MCPVerify_FC_LAD.xml", (string?)files[1]!["destination"]);
             string Hash(string path) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
             Assert.Equal(new[] { Hash(manifest), Hash(donor) }, files.Select(file => (string?)file!["sha256"]));
