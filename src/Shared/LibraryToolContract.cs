@@ -203,8 +203,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 && evidence["limit"] is JsonValue limit && limit.TryGetValue<int>(out var size)
                 && (evidence["total"] ?? evidence["totalCount"] ?? evidence["expectedCount"]) is JsonValue total && total.TryGetValue<int>(out var count)
                 && start >= 0 && size > 0 && count >= start) paging = McpServer.OffsetPage(start, size, count);
-            var legacyStatusRows = tool == "GetVersionControlStatus" && HardwareContract.ReleaseKey is "16" or "17" or "18" or "19"
-                ? evidence["objects"] as JsonArray : null;
+            var statusRows = tool == "GetVersionControlStatus" ? evidence["objects"] as JsonArray : null;
+            var legacyStatusRows = statusRows != null && HardwareContract.ReleaseKey is "16" or "17" or "18" or "19" ? statusRows : null;
             // Failure evidence and the public sync summary both need the worker's comparison advice.
             string? notVerifiedAdvice = null;
             if (tool == "SynchronizeVersionControlWorkspace" && evidence.Remove("notVerifiedAdvice", out var advice))
@@ -242,7 +242,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else data.Remove("summary");
             }
-            var vciRows = legacyStatusRows ?? (tool == "SynchronizeVersionControlWorkspace" ? evidence["items"] as JsonArray : null);
+            var vciRows = statusRows ?? (tool == "SynchronizeVersionControlWorkspace" ? evidence["items"] as JsonArray : null);
             var readbacks = tool == "SynchronizeVersionControlWorkspace" ? evidence["failures"] as JsonArray : null;
             var rowsByName = vciRows?.OfType<JsonObject>().ToLookup(r => (string?)r["name"] ?? "");
             var failuresByName = readbacks?.OfType<JsonObject>().ToLookup(r => (string?)r["name"] ?? "");
@@ -254,17 +254,25 @@ namespace TiaMcpServer.ModelContextProtocol
                         string name = endName < 0 ? text : text.Substring(0, endName);
                         JsonObject? Match(ILookup<string, JsonObject>? lookup)
                         {
+                            bool HasFile(JsonObject r) => r["filePath"] is JsonValue path && (text + " | ").Contains(" | file=" + path + " | ");
+                            if (statusRows != null)
+                            {
+                                // The worker emits each visible mapping and its status line together. Duplicate notices follow the mapping rows.
+                                if (i >= statusRows.Count) return null;
+                                if (statusRows[i] is JsonObject ordered && (string?)ordered["name"] == name && HasFile(ordered)) return ordered;
+                            }
                             var matches = lookup?[name].ToArray();
                             if (matches?.Length == 1) return matches[0];
-                            return matches?.FirstOrDefault(r => r["filePath"] is JsonValue path && (text + " | ").Contains(" | file=" + path + " | "));
+                            return matches?.FirstOrDefault(HasFile);
                         }
                         var observed = Match(rowsByName);
-                        if (legacyStatusRows != null && observed is JsonObject row
-                            && row["compareState"]?.ToString() == "Unknown" && row["error"] is JsonValue diagnostic
-                            && diagnostic.TryGetValue<string>(out var statusError))
+                        if (statusRows != null && observed is JsonObject row && row["compareState"] is JsonValue compare
+                            && compare.TryGetValue<string>(out var verdict))
                         {
+                            if (verdict == "Unknown" && row["error"] is JsonValue diagnostic) verdict += "(" + diagnostic + ")";
                             string format = row["fileFormat"]?.ToString() ?? "";
-                            lines[i] = $"{row["name"]} | Unknown({statusError}) | file={row["filePath"]}" + (format.Length == 0 ? "" : " | format=" + format);
+                            lines[i] = $"{row["name"]} | {verdict} | file={row["filePath"]}" + (format.Length == 0 ? "" : " | format=" + format)
+                                + (row["refreshMessage"] is JsonValue refresh ? VciResult.RefreshSeparator + refresh : "");
                             continue;
                         }
                         string note = "";

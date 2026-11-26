@@ -29,7 +29,7 @@ internal static class VciExportFixture
         foreach (var scenario in new[] { "equal", "unknown", "unequal", "collision", "exportRefused", "createRefused", "lookupRefused",
             "syncRefused", "nativeSuccess", "repair", "repairRefused", "reuse", "newStatusRefused", "seedDisposed", "seedAbort", "seedConnection",
             "seedNonrecoverable", "sameName", "differentXml", "mixed-reuse", "rc7-comment", "rc7-member", "rc7-after-preview",
-            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent", "rc7-fallback-differs", "catch-prior", "unlisted-status"
+            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent", "rc7-fallback-differs", "catch-prior", "unlisted-status", "duplicate-status"
 #if STUDIO_VCI_INITIAL
             , "multipleDisconnected", "manyDisconnected"
 #else
@@ -94,6 +94,26 @@ internal static class VciExportFixture
             }
             var file = Path.Combine(root.FullName, device.Name + "_" + block.Name + ".xml");
             string xml = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "MCP_RC_FC.xml"));
+            if (scenario == "duplicate-status")
+            {
+                File.WriteAllText(file, xml);
+#if STUDIO_VCI_MODERN
+                string stem = Path.GetFileNameWithoutExtension(file);
+                var stale = workspace.ConnectObject(block, root, stem, "xml");
+                stale.Status.ReadError = new ObjectDisposedException(nameof(MappedObject));
+                workspace.ConnectObject(block, root, stem, "xml");
+#else
+                var stale = new WorkspaceMapping(workspace, Path.GetFileName(file), block);
+                stale.Status.RefreshError = new EngineeringObjectDisposedException(Disposed);
+                workspace.Mappings.Add(stale);
+                var live = new WorkspaceMapping(workspace, Path.GetFileName(file), block);
+                live.Status.State = CompareState.Equal;
+                live.Status.RefreshesKnownState = refreshesKnownState;
+                workspace.Mappings.Add(live);
+#endif
+                replies.Add(scenario, new { reply = adapter.GetVersionControlStatus(changedOnly: false), filtered = adapter.GetVersionControlStatus() });
+                continue;
+            }
             if (scenario == "unlisted-status")
             {
                 string stem = Path.GetFileNameWithoutExtension(file);

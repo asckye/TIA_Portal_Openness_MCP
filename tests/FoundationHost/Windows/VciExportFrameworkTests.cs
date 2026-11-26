@@ -93,6 +93,58 @@ public sealed class VciExportFrameworkTests
             "Shared | Unknown(Blocks status unavailable) | file=Blocks/Shared.xml | format=xml" }, Strings(data["items"]));
     }
 
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Duplicate_status_items_agree_with_each_mapping_for_the_same_workspace_file(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var scenario = (await ExportReplies(release))["duplicate-status"]!;
+        foreach (bool changedOnly in new[] { false, true })
+        {
+            var reply = scenario[changedOnly ? "filtered" : "reply"]!;
+            var body = Tools(new JsonObject { ["reply"] = reply.DeepClone() }).GetVersionControlStatusV4(changedOnly: changedOnly).StructuredContent!;
+            Assert.True((bool?)body["ok"]);
+            var data = body["data"]!;
+            var evidence = data["evidence"]!;
+            Assert.Equal(2, (int?)evidence["total"]);
+            Assert.Equal(0, (int?)evidence["differing"]);
+            Assert.Equal(1, (int?)evidence["unknown"]);
+            Assert.Equal((string?)reply["Message"], (string?)data["summary"]);
+            Assert.Contains("2 mapped object(s), 0 differ from the workspace files. 1 comparison(s) are unknown.", (string?)data["summary"]);
+
+            var rows = evidence["objects"]!.AsArray();
+            bool showsLive = !changedOnly || release is "17" or "18" or "19";
+            Assert.Equal(showsLive ? new[] { "Unknown", "Equal" } : new[] { "Unknown" }, rows.Select(r => (string?)r!["compareState"]));
+            string name = (string)rows[0]!["name"]!, path = (string)rows[0]!["filePath"]!;
+            var lines = Strings(data["items"]);
+            Assert.Equal(rows.Count + 1, lines.Length);
+            Assert.Equal($"{name} | Unknown({rows[0]!["error"]}) | file={path} | format=xml", lines[0]);
+            if (showsLive)
+            {
+                Assert.Equal(name, (string?)rows[1]!["name"]);
+                Assert.Equal(path, (string?)rows[1]!["filePath"]);
+                Assert.Null(rows[1]!["error"]);
+                string note = rows[1]!["refreshMessage"] is { } refresh ? " | refresh refused: " + refresh : "";
+                Assert.Equal($"{name} | Equal | file={path} | format=xml" + note, lines[1]);
+            }
+            Assert.Equal($"{name} | duplicate mapping | file={path}.xml | mappings=2", lines[^1]);
+        }
+    }
+
+    [Fact]
+    public async Task V17_duplicate_status_uses_mapping_evidence_even_when_both_item_labels_say_disposed()
+    {
+        using var selected = Host.HardwareContract.UseRelease("17");
+        var scenario = (await ExportReplies("17"))["duplicate-status"]!;
+        // Reproduce the repeated text in rc.8 V17 row 61 while retaining its two distinct observations.
+        var items = scenario["reply"]!["Items"]!.AsArray();
+        items[1] = items[0]!.DeepClone();
+        var data = Tools(scenario).GetVersionControlStatusV4(changedOnly: false).StructuredContent!["data"]!;
+        var live = data["evidence"]!["objects"]![1]!;
+        Assert.Equal("Equal", (string?)live["compareState"]);
+        Assert.Equal($"{live["name"]} | Equal | file={live["filePath"]} | format=xml | refresh refused: {live["refreshMessage"]}",
+            (string?)data["items"]![1]);
+    }
+
     [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
     public async Task Only_an_ordinary_native_refresh_refusal_allows_a_status_read(string release)
     {
