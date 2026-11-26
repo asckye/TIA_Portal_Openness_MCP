@@ -24,6 +24,7 @@ public sealed class OpennessApiTests
 
     [Theory]
     [InlineData(null)]
+    [InlineData("19")]
     [InlineData("V20")]
     [InlineData("020")]
     [InlineData("22")]

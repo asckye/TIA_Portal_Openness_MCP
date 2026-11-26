@@ -100,8 +100,9 @@ internal static class SafetyLoginFixture
         {
             admin.LoginError = scenario == "disposed" ? new ObjectDisposedException("vendor " + password)
                 : new COMException("vendor " + password);
-            var compileRequest = new PlcSoftwareRequest { Operation = "RepairAndReimportPlcBlock", Action = "compile", Password = password };
-            var result = PlcFoundationEngine.RunOrganisationOperation(compileRequest, engine.Legacy, _ => engine.Legacy.CompileSoftware("CPU", password));
+            var compileRequest = new PlcSoftwareRequest { Operation = "RepairAndReimportPlcBlock", Action = "compile", SoftwarePath = "CPU",
+                Password = password, DryRun = false };
+            var result = engine.ExecutePlcOrganisation(compileRequest, dryRun: false);
             Console.WriteLine(WorkerJson.Serialize(new { framework = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName, result, admin.Calls }));
             return 0;
         }

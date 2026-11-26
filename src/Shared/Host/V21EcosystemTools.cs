@@ -123,19 +123,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 var ok = run["success"]!.GetValue<bool>() && data["success"]!.GetValue<bool>();
                 // envelope: legacy-independent-verdicts
                 meta["success"] = ok; meta["operationSuccess"] = ok;
-                string message = "Analysis-only decoded logic; do not import this output.";
-                if (!ok)
-                {
-                    string reason = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedMessage((string?)data["error"] ?? "",
-                        TiaMcp.Logic.V4.NativeFailureDiagnostics.Text);
-                    data["error"] = reason;
-                    message = reason.Length == 0 ? "Decode refused or failed." : "Decode refused or failed: " + reason;
-                }
+                string message = ok ? "Analysis-only decoded logic; do not import this output." : DecoderFailureMessage(data);
                 return new ResponseMessage { Message = message, Meta = meta };
             } catch (TiaMcp.Logic.ModelContextProtocol.DecoderRuntimeException) { throw; }
             catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
             catch (TiaOpenness.Shared.DataLocationIOException) { throw; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Decode failed: " + ex.Message, Meta = meta }; }
+        }
+
+        internal static string DecoderFailureMessage(JsonObject data)
+        {
+            const string fallback = "Decode refused or failed.";
+            if (!data.TryGetPropertyValue("error", out var error)) return fallback;
+            string reason = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedMessage((string?)error ?? "", TiaMcp.Logic.V4.NativeFailureDiagnostics.Text);
+            data["error"] = reason;
+            return reason.Length == 0 ? fallback : "Decode refused or failed: " + reason;
         }
     }
 }

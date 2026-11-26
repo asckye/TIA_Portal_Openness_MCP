@@ -51,6 +51,17 @@ namespace TiaMcp.Adapters
             this.session = session;
             Legacy = new PlcOrganisationAdapter(session) { MutationStarted = priorMutation };
         }
+        private void Check()
+        {
+            if (session.IsProjectNull()) throw new InvalidOperationException("Fixture project is closed.");
+        }
+        private PlcOrganisationAdapter CreateOrganisationAdapter() => Legacy;
+        private void DispatchOrganisationRequest(PlcSoftwareRequest request, bool dryRun, PlcOrganisationAdapter adapter, PlcSoftwareReply reply)
+        {
+            if (request.Operation != "RepairAndReimportPlcBlock" || request.Action != "compile" || dryRun)
+                throw new InvalidOperationException("Expected a legacy compile request.");
+            adapter.CompileSoftware(request.SoftwarePath, request.Password);
+        }
         internal string ReleaseKey => "19";
         internal bool CanDetachOnUncertainShutdown => false;
         internal bool DisconnectAttempted => false;

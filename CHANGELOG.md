@@ -16,7 +16,7 @@ VCI connect checks existing workspace files before writing. If another process c
   PLC document comparisons distinguish inherited members from a declared member named `Base`, including inheritance at the top of a section.
 - `ListTechnologyObjects` explains when inconsistent objects lack compiled metadata. `DecodePlcSimaticMl` includes the sanitised decoder refusal in its message.
   The LAD builder rejects TCON, TDISCON, TSEND, TRCV, TUSEND, TURCV, RDREC and WRREC as user FC/FB calls.
-- `DeletePlcTagTable` names user and system constants in previews and deletion reports. Failed block moves report retained target groups as a project change.
+- `DeletePlcTagTable` names user and system constants in previews and deletion reports. A failed block move now reports an `unknown` outcome when it leaves behind target groups it created.
   Legacy safety compilation sanitises connection-loss diagnostics. `EnsureUnifiedHmiButtonAction` specifies when it checks the target tag.
 
 ## [4.0.0-rc.7] - 2026-11-25

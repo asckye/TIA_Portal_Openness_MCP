@@ -272,20 +272,29 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static string? FullReadbackDifference(XDocument candidate, XDocument readback, List<XElement> restored, JsonArray preserved)
+        private static XElement RestoredComparisonCopy(XElement source)
         {
-            var find = PlcDocumentEditing.IndexReadbackAttributes(readback);
+            var copy = PlcDocumentEditing.NormalizeEmptyElements(new XElement(source));
+            foreach (var element in copy.DescendantsAndSelf())
+                if (element.FirstAttribute != element.LastAttribute)
+                    element.ReplaceAttributes(element.Attributes().OrderBy(a => a.Name.ToString(), StringComparer.Ordinal).ToArray());
+            return copy;
+        }
+
+        internal static string? FullReadbackDifference(XDocument candidate, XDocument readback, List<XElement> restored, JsonArray preserved)
+        {
+            var attributes = PlcDocumentEditing.Child(PlcDocumentEditing.Block(readback), "AttributeList");
+            var find = PlcDocumentEditing.IndexReadbackAttributes(restored.Count == 0 ? attributes : RestoredComparisonCopy(attributes));
             if (restored.Count > 0)
             {
                 var planned = PlcDocumentEditing.Child(PlcDocumentEditing.Block(restored[0].Document!), "AttributeList");
-                PlcDocumentEditing.NormalizeEmptyElements(planned);
-                PlcDocumentEditing.NormalizeEmptyElements(PlcDocumentEditing.Child(PlcDocumentEditing.Block(readback), "AttributeList"));
+                var expected = restored.Select(RestoredComparisonCopy).ToArray();
                 for (int i = 0; i < restored.Count; i++)
                 {
                     var item = restored[i];
                     if (item.Parent == planned && PlcDocumentEditing.IgnoreInBlockComparison(item)) continue;
                     var actual = find(item, planned);
-                    if (!XNode.DeepEquals(item, actual))
+                    if (!XNode.DeepEquals(expected[i], actual))
                         return "Restored attribute differs in after.xml: " + (string?)preserved[i];
                 }
             }

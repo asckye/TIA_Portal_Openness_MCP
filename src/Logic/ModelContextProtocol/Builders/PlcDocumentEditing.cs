@@ -254,9 +254,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static bool Unexpanded(XElement member) => member.Element(member.Name.Namespace + "Sections") == null
             && member.Element(member.Name.Namespace + "Member") == null;
 
-        internal static Func<XElement, XElement, XElement?> IndexReadbackAttributes(XDocument readback)
+        internal static Func<XElement, XElement, XElement?> IndexReadbackAttributes(XElement attributes)
         {
-            var attributes = Child(Block(readback), "AttributeList");
             var children = attributes.Elements().Concat(Child(attributes, "Interface").Descendants())
                 .ToLookup(e => (e.Parent, e.Name, (string?)e.Attribute("Name"), (string?)e.Attribute("Path")));
             return (wanted, root) =>
@@ -276,7 +275,7 @@ namespace TiaMcpServer.ModelContextProtocol
         internal static string? UnexpandedReadbackDifference(XDocument candidate, XDocument none)
         {
             var input = Child(Block(candidate), "AttributeList");
-            var find = IndexReadbackAttributes(none);
+            var find = IndexReadbackAttributes(Child(Block(none), "AttributeList"));
             foreach (var member in Child(input, "Interface").Descendants().Where(m => IsInterfaceMember(m) && ReferencedType(m) != null && Unexpanded(m)))
             {
                 var actual = find(member, input);

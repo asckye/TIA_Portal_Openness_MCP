@@ -25,6 +25,16 @@ public sealed class DocumentImportDeclarationTests
         END_DATA_BLOCK
         """;
 
+    [Fact]
+    public void Release_19_document_import_is_refused_by_the_release_check()
+    {
+        var request = new PlcDocumentImportRequest { Release = "19", Name = BlockName };
+        var refusal = Assert.Throws<AdapterPreconditionException>(() => PlcDocumentImportPolicy.ValidateOptions(request));
+        Assert.StartsWith("Document import requires exact release 20 or 21.", refusal.Message, StringComparison.Ordinal);
+        Assert.Equal("export-plan", refusal.ParamName);
+        Assert.False(refusal.IsArgument);
+    }
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(false, true)]

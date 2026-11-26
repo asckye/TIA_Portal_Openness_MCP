@@ -10,6 +10,7 @@ namespace TiaMcp.Adapters
         public string? OfSystemLibElement { get; set; }
         public string? OfSystemLibVersion { get; set; }
         public string? UnavailableReason { get; set; }
+        public bool ShouldSerializeUnavailableReason() => UnavailableReason != null;
         public string[] UnavailableAttributes { get; set; } = new string[0];
         public string Folder { get; set; } = "";
     }

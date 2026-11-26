@@ -113,6 +113,15 @@ public sealed class Round2BlockPageTests : IDisposable
     }
 
     [Fact]
+    public void Decoder_refusal_without_an_error_keeps_the_original_payload()
+    {
+        var payload = new JsonObject { ["success"] = false, ["analysisOnly"] = true };
+        var original = payload.DeepClone();
+        Assert.Equal("Decode refused or failed.", toolpipeline::TiaMcpServer.ModelContextProtocol.V21EcosystemTools.DecoderFailureMessage(payload));
+        Assert.True(JsonNode.DeepEquals(original, payload));
+    }
+
+    [Fact]
     public async Task Decoder_refusal_includes_the_reason_in_the_message()
     {
         TiaMcp.Engine.Tests.Shared.DecoderRuntimeFixture.Ensure();

@@ -146,6 +146,24 @@ public sealed partial class VerifiedExportStyleTests
     }
 
     [Fact]
+    public void Restored_leaf_allows_reordered_attributes_and_preserves_both_documents()
+    {
+        var candidate = DbNone(Staged("17-T1"));
+        var planned = new XDocument(candidate);
+        var readback = new XDocument(candidate);
+        var restored = XElement.Parse("<HeaderAuthor Lang='en' Format='text'></HeaderAuthor>");
+        Attributes(planned).Add(restored);
+        Attributes(readback).Add(XElement.Parse("<HeaderAuthor Format='text' Lang='en'/>"));
+        Attributes(readback).Add(XElement.Parse("<HeaderFamily></HeaderFamily>"));
+        string plannedXml = planned.ToString(SaveOptions.DisableFormatting);
+        string readbackXml = readback.ToString(SaveOptions.DisableFormatting);
+
+        Assert.Null(PlcVerifiedImport.FullReadbackDifference(candidate, readback, [restored], new JsonArray("HeaderAuthor")));
+        Assert.Equal(plannedXml, planned.ToString(SaveOptions.DisableFormatting));
+        Assert.Equal(readbackXml, readback.ToString(SaveOptions.DisableFormatting));
+    }
+
+    [Fact]
     public void An_empty_StartValue_differs_from_an_absent_StartValue()
     {
         string candidate = Staged("17-T1");

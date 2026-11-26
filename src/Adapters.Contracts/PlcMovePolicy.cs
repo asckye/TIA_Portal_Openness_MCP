@@ -22,7 +22,6 @@ namespace TiaMcp.Adapters.Contracts
 
         public static bool RecordRetainedGroups(IDictionary<string, object?> evidence, IReadOnlyCollection<object?> retained, bool deleteStarted)
         {
-            evidence["targetGroupsCreated"] = retained.ToArray();
             if (retained.Count > 0) evidence["nativeMutationIssued"] = true;
             bool changed = deleteStarted || retained.Count > 0 || evidence["mayHaveChanged"] is true;
             evidence["mayHaveChanged"] = changed;

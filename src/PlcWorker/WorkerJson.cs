@@ -28,6 +28,9 @@ namespace TiaMcp.PlcWorker
                     type.Properties.Single(p => p.Name == "RefreshMessage").ShouldSerialize = (_, message) => message != null;
                 if (type.Type == typeof(TiaMcp.Adapters.Contracts.Studio.SyncItem))
                     type.Properties.Single(p => p.Name == "NotCompared").ShouldSerialize = (_, names) => names != null;
+                if (type.Type == typeof(Adapters.PlcTechnologyReadRow))
+                    type.Properties.Single(p => p.Name == nameof(Adapters.PlcTechnologyReadRow.UnavailableReason))
+                        .ShouldSerialize = (_, reason) => reason != null;
                 if (type.Type == typeof(IoAddressWriteReply))
                     type.Properties.Single(p => p.Name == nameof(IoAddressWriteReply.NativeMessage)).ShouldSerialize = (_, reason) => reason != null;
             });
