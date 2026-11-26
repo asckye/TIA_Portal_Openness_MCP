@@ -153,7 +153,7 @@ r.ExpectedProject="other";Reject(()=>Run(),"wrong project");r.ExpectedProject=r.
 r.Name="Other";files=new[]{Path.Combine(documentDirectory,"Other.s7dcl")};Reject(()=>Run(),"filename is not identity");r.Name="Demo";files=new[]{
     Path.Combine(documentDirectory,"Demo.s7dcl")};
 r.Overwrite=true;Reject(()=>Run(),"override rejected");r.Overwrite=false;
-r.Release="20";Reject(()=>Run(),"v20 pair required");r.Release="21";
+r.Release="20";Reject(()=>Run(),"V21 preview hash refuses V20 apply");r.Release="21";
 r.DryRun=true;Reject(()=>Run(inventory:()=>Enumerable.Repeat("item",4097)),"inventory bound");
 Reject(()=>PlcDocumentImportPolicy.Read(new MemoryStream(new byte[PlcDocumentImportPolicy.MaximumBytes+1])),"input bound");
 

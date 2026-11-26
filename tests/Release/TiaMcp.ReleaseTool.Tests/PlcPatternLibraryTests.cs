@@ -577,7 +577,12 @@ public sealed class PlcPatternLibraryTests
         File.WriteAllText(metadataPath, Encode(metadata), new UTF8Encoding(false));
         File.WriteAllText(dbPath, Encode(db), new UTF8Encoding(false));
         File.WriteAllText(rungPath, mutation == "malformed-json" ? "{" : Encode(block), new UTF8Encoding(false));
-        Assert.Throws<ReleaseException>(() => PlcPatternLibrary.Load(fixture.Root));
+        var refusal = Assert.Throws<ReleaseException>(() => PlcPatternLibrary.Load(fixture.Root));
+        if (mutation == "absolute-operand")
+        {
+            Assert.Contains("/operand/local/0", refusal.Message);
+            Assert.Contains("simple PLC identifier", refusal.Message);
+        }
     }
 
     private sealed class Fixture : IDisposable

@@ -54,6 +54,11 @@ namespace TiaMcp.Engine.Tests
                 Assert.Equal("read-only address", ((HmiObject)after["values"]!)["TriggerBitAddress"]);
                 Assert.Equal(2, ((HmiArray)((HmiObject)after["texts"]!)["EventText"]!).Count);
                 Assert.Equal("<body><p>报警</p></body>", alarm.EventText.Items[1].Text);
+                root.DiscreteAlarms.FailText = true;
+                var error = Assert.ThrowsAny<Exception>(() => adapter.ManageUnifiedEngineeringObject("HMI_RT_1", "discreteAlarms", "Failed",
+                    "create", properties, false, texts));
+                Assert.Contains("text failed after mutation", error.GetBaseException().Message);
+                Assert.Same(alarm, Assert.Single(root.DiscreteAlarms));
                 ((HmiObject)UnifiedRequestValues.Inputs[properties]!)["AlarmClass"] = "Missing";
                 Assert.Throws<ArgumentException>(() => adapter.ManageUnifiedEngineeringObject("HMI_RT_1", "discreteAlarms", "Other", "create", properties));
                 Assert.Single(root.DiscreteAlarms);
@@ -75,7 +80,14 @@ namespace TiaMcp.Engine.Tests
         }
         public sealed class Alarms : List<Alarm>
         {
-            public Alarm Create(string name) { var alarm = new Alarm(name, this); Add(alarm); return alarm; }
+            public bool FailText;
+            public Alarm Create(string name)
+            {
+                var alarm = new Alarm(name, this);
+                alarm.EventText.Items[1].Fail = FailText;
+                Add(alarm);
+                return alarm;
+            }
             public Alarm? Find(string name) => this.SingleOrDefault(alarm => alarm.Name == name);
         }
         public sealed class Alarm(string name, Alarms owner)

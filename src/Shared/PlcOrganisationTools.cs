@@ -176,11 +176,13 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var data = _blocks.DeletePlcTagTable(softwarePath, tagTableName, dryRun, crossReferences);
                 int tagCount = data["tagCount"]?.GetValue<int>() ?? 0;
+                string constants = data["userConstantCount"] is JsonValue users && data["systemConstantCount"] is JsonValue system
+                    ? " with " + TiaMcp.Adapters.Contracts.PlcTagTableDeletionText.Constants(users.GetValue<int>(), system.GetValue<int>()) : "";
                 bool crossRefOk = data["crossReferenceAvailable"]?.GetValue<bool>() ?? false;
 
                 var report = BuildDeletionReport(
                     data, dryRun, crossRefOk,
-                    objectLabel: $"Tag table '{data["resolvedTagTablePath"]}' ({tagCount} tag(s))",
+                    objectLabel: $"Tag table '{data["resolvedTagTablePath"]}' ({tagCount} tag(s)){constants}",
                     dryRunTail: "After verifying the preview, use dryRun=false, confirm=true and the exact bound expectedProjectFile to delete.",
                     extraWarning: null,
                     nextActions: dryRun

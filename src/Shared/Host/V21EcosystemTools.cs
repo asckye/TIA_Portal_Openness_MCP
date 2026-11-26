@@ -123,8 +123,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 var ok = run["success"]!.GetValue<bool>() && data["success"]!.GetValue<bool>();
                 // envelope: legacy-independent-verdicts
                 meta["success"] = ok; meta["operationSuccess"] = ok;
-                return new ResponseMessage {
-                    Message = ok ? "Analysis-only decoded logic; do not import this output." : "Decode refused or failed; inspect data.error.", Meta = meta };
+                string message = "Analysis-only decoded logic; do not import this output.";
+                if (!ok)
+                {
+                    string reason = TiaMcp.Adapters.Contracts.NativeFailureText.BoundedMessage((string?)data["error"] ?? "",
+                        TiaMcp.Logic.V4.NativeFailureDiagnostics.Text);
+                    data["error"] = reason;
+                    message = reason.Length == 0 ? "Decode refused or failed." : "Decode refused or failed: " + reason;
+                }
+                return new ResponseMessage { Message = message, Meta = meta };
             } catch (TiaMcp.Logic.ModelContextProtocol.DecoderRuntimeException) { throw; }
             catch (TiaOpenness.Shared.BundleResourceUnavailableException) { throw; }
             catch (TiaOpenness.Shared.DataLocationIOException) { throw; }

@@ -64,6 +64,34 @@ public sealed class OfflineDocumentOutcomeTests
         Assert.Equal("Pump.Base.Speed", (string?)difference["path"]);
     }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public async Task Inherited_speed_is_distinct_from_a_declared_Base_member(bool topLevel)
+    {
+        var document = XDocument.Parse(InheritedInterface);
+        var pump = document.Descendants().Single(e => (string?)e.Attribute("Name") == "Pump");
+        var ns = pump.Name.Namespace;
+        var sections = pump.Element(ns + "Sections")!;
+        var declared = sections.Elements().Last().Element(ns + "Member")!;
+        declared.ReplaceWith(new XElement(ns + "Member", new XAttribute("Name", "Base"), new XAttribute("Datatype", "Struct"), new XElement(declared)));
+        if (topLevel)
+            pump.ReplaceWith(sections.Elements().First().Element(ns + "Sections"), sections.Elements().Last().Elements(ns + "Member"));
+        string xml = document.ToString();
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("17");
+        using var session = fixture.EnterSession();
+        string leftFilePath = Path.Combine(fixture.Root, "left.xml"), rightFilePath = Path.Combine(fixture.Root, "right.xml");
+        File.WriteAllText(leftFilePath, xml);
+        File.WriteAllText(rightFilePath, xml.Replace("Datatype=\"Int\"", "Datatype=\"DInt\""));
+        var body = (await fixture.Call("ComparePlcBlockDocuments", new { leftFilePath, rightFilePath })).StructuredContent!;
+        Assert.True((bool?)body["ok"], body.ToJsonString());
+        var changed = Assert.Single(body["data"]!["structural"]!["interface"]!["typeChanged"]!.AsArray());
+        Assert.Equal("Static", (string?)changed!["section"]);
+        Assert.Equal(topLevel ? "Base.Speed" : "Pump.Base.Speed", (string?)changed["path"]);
+        File.WriteAllText(rightFilePath, xml.Replace("Datatype=\"Real\"", "Datatype=\"LReal\""));
+        var declaredDiff = (await fixture.Call("ComparePlcBlockDocuments", new { leftFilePath, rightFilePath })).StructuredContent!;
+        var literal = Assert.Single(declaredDiff["data"]!["structural"]!["interface"]!["typeChanged"]!.AsArray());
+        Assert.Equal(topLevel ? "\"Base\".Speed" : "Pump.\"Base\".Speed", (string?)literal!["path"]);
+    }
+
     [Fact]
     public async Task Metrics_and_documentation_include_inherited_members_of_one_expanded_instance()
     {

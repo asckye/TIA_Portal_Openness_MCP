@@ -51,10 +51,9 @@ namespace TiaMcp.Adapters
         {
             // Exact PE/XML evidence: both properties have public getters in all
             // eight adapters. OfSystemLibVersion also has a setter; never use it.
-            if (!item.IsConsistent)
-                return new PlcTechnologyReadRow { Name = NativeCalls.Name(item), UnavailableAttributes = new[] { "OfSystemLibElement", "OfSystemLibVersion" } };
+            bool consistent = item.IsConsistent;
             return PlcSupplementaryReadPolicy.TechnologyMetadata(NativeCalls.Name(item),
-                ()=>item.OfSystemLibElement,()=>item.OfSystemLibVersion);
+                ()=>item.OfSystemLibElement,()=>item.OfSystemLibVersion, consistent);
         }
     }
 }

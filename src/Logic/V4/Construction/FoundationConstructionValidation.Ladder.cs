@@ -186,6 +186,7 @@ namespace TiaMcp.Logic.V4.Construction
             switch (name.ToUpperInvariant())
             {
                 case "TSEND_C": case "TRCV_C": case "SEL": case "LIMIT": case "NORM_X": case "SCALE_X":
+                case "TCON": case "TDISCON": case "TSEND": case "TRCV": case "TUSEND": case "TURCV": case "RDREC": case "WRREC":
                 case "MOVE_BLK": case "GET": case "PUT": case "RD_SYS_T":
                 case "MC_POWER": case "MC_RESET": case "MC_HOME": case "MC_HALT": case "MC_STOP":
                 case "MC_MOVEABSOLUTE": case "MC_MOVERELATIVE": case "MC_MOVEVELOCITY": case "MC_MOVEJOG":

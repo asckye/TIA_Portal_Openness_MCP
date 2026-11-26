@@ -130,6 +130,39 @@ public sealed partial class VerifiedExportStyleTests
     }
 
     [Fact]
+    public void Restored_leaf_checks_its_XML_attributes_on_full_readback()
+    {
+        string candidate = Staged("17-T1");
+        var none = DbNone(candidate);
+        var before = WithComputed(none, false);
+        var after = WithComputed(none, true);
+        Attributes(before).Add(new XElement("HeaderAuthor", new XAttribute("Lang", "en"), "Owner"));
+        Attributes(after).Add(new XElement("HeaderAuthor", new XAttribute("Lang", "de"), "Owner"));
+        var speed = Member(after, "Speed");
+        speed.AddBeforeSelf(new XElement(speed.Name, new XAttribute("Name", "Run"), new XAttribute("Datatype", "Bool")));
+        var meta = Apply(candidate, before.ToString(), after.ToString(), none.ToString(), true);
+        Assert.False((bool?)meta["verificationSuccess"]);
+        Assert.Equal("Restored attribute differs in after.xml: HeaderAuthor", (string?)meta["comparison"]!["reason"]);
+    }
+
+    [Fact]
+    public void An_empty_StartValue_differs_from_an_absent_StartValue()
+    {
+        string candidate = Staged("17-T1");
+        var stated = XDocument.Parse(candidate);
+        var speed = Member(stated, "Speed");
+        speed.Element(speed.Name.Namespace + "StartValue")!.RemoveNodes();
+        var absent = new XDocument(stated);
+        Member(absent, "Speed").Element(speed.Name.Namespace + "StartValue")!.Remove();
+        var none = DbNone(absent.ToString());
+        var before = WithComputed(DbNone(stated.ToString()), false);
+        var meta = Apply(stated.ToString(), before.ToString(), WithComputed(none, true).ToString(), none.ToString(), true,
+            expectedDifference: "Static/Grp/Inner/Speed: startValue");
+        Assert.False((bool?)meta["verificationSuccess"]);
+        Assert.Equal("Static/Grp/Inner/Speed: startValue", (string?)meta["comparison"]!["noneDifference"]);
+    }
+
+    [Fact]
     public void Declaration_fingerprint_and_difference_ignore_only_empty_spelling()
     {
         const string first = "<Member Name='First' Datatype='Int'></Member>";

@@ -291,10 +291,7 @@ namespace TiaMcp.Adapters.Native.Plc
                     failureEvidence["cleanupRequired"] = cleanup;
                     failureEvidence["rollbackCompleted"] = false;
                 }
-                failureEvidence["targetGroupsCreated"] = targetGroupsCreated.ToArray();
-                if (targetGroupsCreated.Count > 0) failureEvidence["nativeMutationIssued"] = true;
-                MutationStarted = deleteStarted || failureEvidence["mayHaveChanged"] is true;
-                failureEvidence["mayHaveChanged"] = MutationStarted;
+                MutationStarted = PlcMovePolicy.RecordRetainedGroups(failureEvidence, targetGroupsCreated, deleteStarted);
                 error.Data["nativeResultEvidence"] = failureEvidence;
                 throw;
             }

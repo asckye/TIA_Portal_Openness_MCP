@@ -174,7 +174,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if (compile != null) actual = PlcDocumentEditing.NormalizeCompiledReadback(actual, expected, declarations, out difference, out removedExpansion);
             bool fullMatch = expected == actual;
             bool matches = fullMatch;
-            string? noneMember = null;
+            string? noneLabel = null;
             meta["afterPath"] = afterPath; meta["actualFingerprint"] = PlcDocumentEditing.HashText(actual);
             var comparison = new JsonObject { ["method"] = "plannedWithDefaults" };
             meta["comparison"] = comparison;
@@ -182,19 +182,19 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 comparison["method"] = "candidateWithNone";
                 var reason = CompareNone(Path.Combine(folder, "after-none.xml"), candidateXml, readback, restored, preserved, verifyBinding, exportNone,
-                    fullMatch, comparison, out noneMember);
+                    fullMatch, comparison, out noneLabel);
                 matches = reason == null;
                 if (reason != null) comparison["reason"] = reason;
             }
             meta["verificationSuccess"] = matches; meta["operationSuccess"] = matches;
             meta["status"] = matches ? "DocumentReadbackMatched" : "DocumentReadbackMismatch";
             if (matches) meta.Remove("cleanupRequired");
-            else if (fullMatch) meta["readbackDifference"] = comparison["reason"]!.DeepClone();
-            else if (difference != null) meta["readbackDifference"] = noneMember ?? difference;
+            else if (fullMatch) meta["readbackDifference"] = noneLabel ?? (string?)comparison["reason"];
+            else if (difference != null) meta["readbackDifference"] = noneLabel ?? difference;
             else
             {
                 var full = PlcDocumentEditing.ReadbackDetail(expected, actual);
-                meta["readbackDifference"] = full.ExtraInUdt && noneMember != null ? noneMember : full.Label;
+                meta["readbackDifference"] = full.ExtraInUdt && noneLabel != null ? noneLabel : full.Label;
             }
             meta["phase"] = "complete";
             return matches
@@ -227,9 +227,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static string? CompareNone(string path, string candidateXml, XDocument readback, List<XElement> restored, JsonArray preserved,
-            Action verifyBinding, Action<string> exportNone, bool verifyUnexpanded, JsonObject comparison, out string? noneMember)
+            Action verifyBinding, Action<string> exportNone, bool verifyUnexpanded, JsonObject comparison, out string? noneLabel)
         {
-            noneMember = null;
+            noneLabel = null;
             try
             {
                 verifyBinding();
@@ -244,15 +244,21 @@ namespace TiaMcpServer.ModelContextProtocol
                     comparison["noneDifference"] = detail.Label;
                     var input = PlcDocumentEditing.Child(PlcDocumentEditing.Block(candidate), "AttributeList");
                     if (detail.NamesMember && !PlcDocumentEditing.Child(input, "Interface").Descendants().Where(PlcDocumentEditing.IsInterfaceMember)
-                        .Any(m => m.Elements().Any(e => e.Name.LocalName == "AttributeList"))) noneMember = detail.Label;
+                        .Any(m => m.Elements().Any(e => e.Name.LocalName == "AttributeList"))) noneLabel = detail.Label;
                     if (!verifyUnexpanded) return "Candidate differs from after-none.xml.";
                 }
                 if (verifyUnexpanded)
                 {
-                    if (PlcDocumentEditing.Block(candidate).Name != PlcDocumentEditing.Block(none).Name
-                        || PlcDocumentEditing.Name(candidate) != PlcDocumentEditing.Name(none)) return "Readbacks identify different blocks.";
+                    var block = PlcDocumentEditing.Block(candidate);
+                    bool differentKind = block.Name != PlcDocumentEditing.Block(none).Name;
+                    if (differentKind || PlcDocumentEditing.Name(candidate) != PlcDocumentEditing.Name(none))
+                    {
+                        noneLabel = differentKind ? block.Name.LocalName + ": structure" : "Name: blockAttribute";
+                        return "Readbacks identify different blocks.";
+                    }
                     // The full document already matched. None must show that each omitted instance expansion was reset.
-                    return PlcDocumentEditing.UnexpandedReadbackDifference(candidate, none);
+                    noneLabel = PlcDocumentEditing.UnexpandedReadbackDifference(candidate, none);
+                    return noneLabel;
                 }
                 if (PlcDocumentEditing.Block(candidate).Name != PlcDocumentEditing.Block(readback).Name
                     || PlcDocumentEditing.Name(candidate) != PlcDocumentEditing.Name(readback)) return "Readbacks identify different blocks.";
@@ -272,14 +278,14 @@ namespace TiaMcpServer.ModelContextProtocol
             if (restored.Count > 0)
             {
                 var planned = PlcDocumentEditing.Child(PlcDocumentEditing.Block(restored[0].Document!), "AttributeList");
+                PlcDocumentEditing.NormalizeEmptyElements(planned);
+                PlcDocumentEditing.NormalizeEmptyElements(PlcDocumentEditing.Child(PlcDocumentEditing.Block(readback), "AttributeList"));
                 for (int i = 0; i < restored.Count; i++)
                 {
                     var item = restored[i];
                     if (item.Parent == planned && PlcDocumentEditing.IgnoreInBlockComparison(item)) continue;
                     var actual = find(item, planned);
-                    if (actual == null || (item.HasElements || actual.HasElements
-                        ? !XNode.DeepEquals(PlcDocumentEditing.NormalizeEmptyElements(item), PlcDocumentEditing.NormalizeEmptyElements(actual))
-                        : item.Value != actual.Value))
+                    if (!XNode.DeepEquals(item, actual))
                         return "Restored attribute differs in after.xml: " + (string?)preserved[i];
                 }
             }

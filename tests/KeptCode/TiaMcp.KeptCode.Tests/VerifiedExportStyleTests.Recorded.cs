@@ -396,6 +396,41 @@ public sealed partial class VerifiedExportStyleTests
         Assert.Equal((string?)meta["plannedFingerprint"], (string?)meta["actualFingerprint"]);
     }
 
+    [Theory, InlineData("wrongBlock"), InlineData("struct"), InlineData("array"), InlineData("noNone")]
+    [InlineData("structOverride"), InlineData("arrayOverride")]
+    public void Compiled_full_match_checks_the_available_None_readback(string scenario)
+    {
+        const string type = "MCP_RC_UDT";
+        var candidate = XDocument.Parse(Staged("17-T2a"));
+        var motor = Member(candidate, "Motor");
+        var ns = motor.Name.Namespace;
+        bool nested = scenario is "struct" or "structOverride";
+        if (nested)
+            motor.ReplaceWith(new XElement(motor.Name, new XAttribute("Name", "Group"), new XAttribute("Datatype", "Struct"), new XElement(motor)));
+        if (scenario is "array" or "arrayOverride")
+            motor.AddBeforeSelf(new XElement(motor.Name, new XAttribute("Name", "Drives"), new XAttribute("Datatype", "Array[0..1] of \"Drive\"")));
+        var none = DbNone(candidate.ToString());
+        var full = new XDocument(none);
+        var declared = Section(ns, UdtMembers(type));
+        Member(full, "Motor").Add(new XElement(declared));
+        string? difference = null;
+        if (scenario == "wrongBlock")
+        {
+            Attributes(none).Element("Name")!.Value = "Other";
+            difference = "Name: blockAttribute";
+        }
+        if (scenario is "structOverride" or "arrayOverride")
+        {
+            Member(none, "Motor").Add(new XElement(declared));
+            difference = nested ? "Static/Group/Motor: structure" : "Static/Motor: structure";
+        }
+        var meta = Apply(candidate.ToString(), WithComputed(full, false).ToString(), WithComputed(full, true).ToString(), none.ToString(), true,
+            declaration: Declaration(type, declared), declarationName: type, extra: scenario != "noNone", supportsNone: scenario != "noNone",
+            expectedDifference: difference);
+        Assert.Equal(difference == null, (bool?)meta["verificationSuccess"]);
+        Assert.Equal((string?)meta["plannedFingerprint"], (string?)meta["actualFingerprint"]);
+    }
+
     [Theory, InlineData("fullSetting"), InlineData("missing"), InlineData("duplicate"), InlineData("type"), InlineData("moved"),
         InlineData("io"), InlineData("cancel"), InlineData("lost")]
     public void Supplemental_proof_checks_the_instance_in_a_full_style_candidate(string change)

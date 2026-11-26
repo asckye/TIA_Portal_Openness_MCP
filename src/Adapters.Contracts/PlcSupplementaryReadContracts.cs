@@ -9,6 +9,7 @@ namespace TiaMcp.Adapters
         public string Name { get; set; } = "";
         public string? OfSystemLibElement { get; set; }
         public string? OfSystemLibVersion { get; set; }
+        public string? UnavailableReason { get; set; }
         public string[] UnavailableAttributes { get; set; } = new string[0];
         public string Folder { get; set; } = "";
     }

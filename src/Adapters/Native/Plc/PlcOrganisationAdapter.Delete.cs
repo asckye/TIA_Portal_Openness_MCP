@@ -89,7 +89,7 @@ namespace TiaMcp.Adapters.Native.Plc
 
             var warnings = new List<object?>
             {
-                "Deletion removes all " + tagCount + " tag symbols from this table."
+                $"Deletion removes all {tagCount} tag symbols, {PlcTagTableDeletionText.Constants(userConstants, systemConstants)} from this table. "
                 + "HMI binds PLC tags by symbolic name. PLC compilation may report no error; the broken binding may only become visible on the screen.",
                 "If the deleted tags are used by absolute address (%I/%Q/%M), the program can still compile, "
                 + "but all comments and symbols are lost and cannot be restored afterwards."

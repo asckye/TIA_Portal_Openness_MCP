@@ -96,6 +96,15 @@ internal static class SafetyLoginFixture
             return 0;
         }
         var engine = new PlcFoundationEngine(session, caller == "legacy-prior");
+        if (caller == "legacy-worker")
+        {
+            admin.LoginError = scenario == "disposed" ? new ObjectDisposedException("vendor " + password)
+                : new COMException("vendor " + password);
+            var compileRequest = new PlcSoftwareRequest { Operation = "RepairAndReimportPlcBlock", Action = "compile", Password = password };
+            var result = PlcFoundationEngine.RunOrganisationOperation(compileRequest, engine.Legacy, _ => engine.Legacy.CompileSoftware("CPU", password));
+            Console.WriteLine(WorkerJson.Serialize(new { framework = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName, result, admin.Calls }));
+            return 0;
+        }
         if (caller == "generate-source")
         {
             var source = session.GetSoftwareContainer("CPU").Software.Source;

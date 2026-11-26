@@ -41,8 +41,10 @@ namespace TiaMcp.Adapters
         // Genuine typed getters are supplied by the adapter; tests use explicit
         // fake delegates. Getter failures/nulls are optional metadata, not empty
         // invented values. Validation stays outside the catch so bounds fail closed.
-        internal static PlcTechnologyReadRow TechnologyMetadata(string name,Func<string?> element,Func<Version?> version)
+        internal static PlcTechnologyReadRow TechnologyMetadata(string name,Func<string?> element,Func<Version?> version,bool consistent=true)
         {
+            if(!consistent) return new PlcTechnologyReadRow { Name=Name(name), UnavailableAttributes=new[]{"OfSystemLibElement","OfSystemLibVersion"},
+                UnavailableReason="not compiled (IsConsistent=false)" };
             var unavailable=new List<string>();
             string? Read<T>(string attribute,Func<T> getter,Func<T,string?> format)
             {
@@ -117,7 +119,7 @@ namespace TiaMcp.Adapters
                     if(row.OfSystemLibElement!=null) Name(row.OfSystemLibElement);
                     if(row.OfSystemLibVersion!=null) Name(row.OfSystemLibVersion);
                     var path=folder+"/"+ObjectPathEncoding.EncodeSegment(row.Name);
-                    size+=(long)path.Length+(row.OfSystemLibElement?.Length??0)+(row.OfSystemLibVersion?.Length??0);
+                    size+=(long)path.Length+(row.OfSystemLibElement?.Length??0)+(row.OfSystemLibVersion?.Length??0)+(row.UnavailableReason?.Length??0);
                     if(!paths.Add(path) || result.Count>=10000 || size>1024*1024)
                         throw new InvalidOperationException("Invalid or oversized technology-object snapshot.");
                     row.Folder=folder; result.Add(row);

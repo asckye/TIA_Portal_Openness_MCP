@@ -211,39 +211,40 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static void ParseXmlInterface(XElement interfaceElement, BlockDocument doc)
         {
-            foreach (var section in interfaceElement.Descendants().Where(e => Local(e) == "Section" && !e.Ancestors().Any(a => Local(a) == "Member")))
-            {
-                var sectionName = (string?)section.Attribute("Name") ?? "";
-                foreach (var member in section.Elements().Where(e => Local(e) == "Member")) AddXmlMember(sectionName, "", member, doc);
-            }
-        }
+            foreach (var sections in interfaceElement.Elements().Where(e => Local(e) == "Sections"))
+                foreach (var section in sections.Elements().Where(e => Local(e) == "Section"))
+                    ReadChildren(section, (string?)section.Attribute("Name") ?? "", "");
 
-        private static void AddXmlMember(string section, string prefix, XElement member, BlockDocument doc)
-        {
-            var name = (string?)member.Attribute("Name") ?? "";
-            var path = prefix.Length == 0 ? name : prefix + "." + name;
-            doc.Members.Add(new InterfaceMember {
-                Section = section, Path = path, Datatype = ((string?)member.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(member)
-            });
-            AddChildren(member, path);
-
-            void AddChildren(XElement owner, string ownerPath)
+            void ReadChildren(XElement owner, string section, string prefix)
             {
                 foreach (var child in owner.Elements())
                 {
                     if (Local(child) == "Member")
                     {
-                        if (owner == member || Local(owner) == "Section") AddXmlMember(section, ownerPath, child, doc);
-                        continue;
+                        string name = MemberPathSegment((string?)child.Attribute("Name") ?? "");
+                        string path = Append(prefix, name);
+                        doc.Members.Add(new InterfaceMember { Section = section, Path = path,
+                            Datatype = ((string?)child.Attribute("Datatype") ?? "").Trim(), Traits = MemberTraits(child) });
+                        ReadChildren(child, section, path);
                     }
-                    // Section/Sections describes an inherited interface in the Siemens schema.
-                    bool baseSection = Local(child) == "Section" && ((string?)child.Attribute("Name") == "Base"
-                        || Local(owner) == "Sections" && owner.Parent is XElement enclosing && Local(enclosing) == "Section"
-                            && (string?)enclosing.Attribute("Name") != "Base");
-                    AddChildren(child, baseSection ? ownerPath + ".Base" : ownerPath);
+                    else if (Local(child) == "Sections")
+                        ReadChildren(child, section, prefix);
+                    else if (Local(child) == "Section")
+                    {
+                        bool inherited = (string?)child.Attribute("Name") == "Base"
+                            || Local(owner) == "Sections" && owner.Parent is XElement enclosing && Local(enclosing) == "Section"
+                                && (string?)enclosing.Attribute("Name") != "Base";
+                        ReadChildren(child, section, inherited ? Append(prefix, "Base") : prefix);
+                    }
                 }
             }
+
+            static string Append(string prefix, string part) => prefix.Length == 0 ? part : prefix + "." + part;
         }
+
+        // An unquoted Base denotes inheritance. A literal identifier containing a path separator or a quote also needs quoting.
+        private static string MemberPathSegment(string name) => name == "Base" || name.Contains(".") || name.Contains("\"")
+            ? "\"" + name.Replace("\"", "\"\"") + "\"" : name;
 
         private static string MemberTraits(XElement member)
         {

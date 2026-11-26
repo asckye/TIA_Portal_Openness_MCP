@@ -172,6 +172,7 @@ public sealed class PlcWatchNativeWriteTests
     {
         using var fixture = new Fixture(); var group = fixture.Group("G"); var existing = new PlcWatchTable { Name = "W" };
         group.StoredWatchTables.Add(existing);
+        Assert.Throws<AdapterPreconditionException>(() => fixture.Adapter.ImportPlcWatchTableOffline("PLC", fixture.Document("Watch", "W"), "G", true));
         Assert.Throws<AdapterPreconditionException>(() => fixture.Adapter.ImportPlcWatchTableOffline("PLC", fixture.Document("Watch", "W"), "G", false));
         Assert.Equal(0, group.StoredWatchTables.ImportCalls); Assert.Equal(0, existing.DeleteCalls);
         Assert.Same(existing, Assert.Single(group.StoredWatchTables)); Assert.Equal(false, fixture.Session.LastMeta["mayHaveChanged"]);

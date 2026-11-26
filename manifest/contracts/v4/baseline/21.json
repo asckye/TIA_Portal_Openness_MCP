@@ -18943,7 +18943,7 @@
             "type": "boolean"
           },
           "targetTag": {
-            "description": "targetTag: verified target HMI tag",
+            "description": "targetTag: target HMI tag name. Its existence is checked only during apply.",
             "type": "string"
           }
         },

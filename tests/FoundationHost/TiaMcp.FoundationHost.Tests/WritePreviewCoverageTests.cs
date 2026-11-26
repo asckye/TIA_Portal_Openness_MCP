@@ -328,6 +328,33 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
         Assert.Equal(0, fixture.Worker.Calls);
     }
 
+    [Fact]
+    public async Task Bulk_alarm_creation_applies_each_reviewed_Unified_engineering_object()
+    {
+        const string name = "ManageUnifiedEngineeringObject";
+        using var worker = new BatchPreviewWorker();
+        var calls = new List<(string Name, bool Preview)>();
+        var service = new toolpipeline::TiaMcpServer.Siemens.Services.UnifiedEngineeringService((_, args) => {
+            calls.Add(((string)args["request"]!["Name"]!, (bool)args["dryRun"]!));
+            return new JsonObject { ["Value"] = new JsonObject { ["Message"] = "Alarm", ["Meta"] = new JsonObject { ["operationSuccess"] = true } } };
+        }, () => (string)worker.Binding!["identity"]!["projectPath"]!);
+        var tool = McpServerTool.Create(new toolpipeline::TiaMcpServer.ModelContextProtocol.UnifiedEngineeringTools(service).ManageUnifiedEngineeringObjectV4);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, new[] { tool });
+        using var session = pipeline.EnterSession();
+        var operations = new[] { "Jam", "Overflow" }.Select(alarm => new { name, arguments = new {
+            softwarePath = "HMI", category = "discreteAlarms", name = alarm, action = "create", properties = new { AlarmClass = "Errors" } } });
+        var preview = await pipeline.AllTools.Single(t => t.ProtocolTool.Name == "PreviewToolBatch").InvokeAsync(
+            BatchPreviewFixture.Request("PreviewToolBatch", new { expectedProject = "Fixture", operations }));
+        Assert.True((bool?)preview.StructuredContent!["ok"], preview.StructuredContent.ToJsonString());
+        Assert.Equal(new[] { ("Jam", true), ("Overflow", true) }, calls);
+        string token = (string)preview.StructuredContent["data"]!["previewToken"]!;
+        using var request = Host.UseProgressRequest(BatchPreviewFixture.Request("ApplyToolBatch", new { previewToken = token }), CancellationToken.None);
+        var applied = Host.ApplyToolBatch(token).StructuredContent!;
+        Assert.True((bool?)applied["ok"], applied.ToJsonString());
+        Assert.Equal(new[] { "Jam", "Overflow" }, calls.Where(call => !call.Preview).Select(call => call.Name));
+        Assert.All(applied["data"]!["items"]!.AsArray(), item => Assert.True((bool?)item!["result"]!["ok"]));
+    }
+
     private sealed class BatchPreviewFixture : IDisposable
     {
         internal readonly BatchPreviewWorker Worker = new();
@@ -384,7 +411,7 @@ public sealed class WritePreviewCoverageTests(Xunit.Abstractions.ITestOutputHelp
             return Host.ApplyToolBatch(token).StructuredContent!.AsObject();
         }
 
-        private static RequestContext<CallToolRequestParams> Request(string name, object arguments)
+        internal static RequestContext<CallToolRequestParams> Request(string name, object arguments)
             => new(DispatchProxy.Create<IMcpServer, ServerProxy>()) {
                 Params = new() { Name = name, Arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(JsonSerializer.Serialize(arguments)) }
             };

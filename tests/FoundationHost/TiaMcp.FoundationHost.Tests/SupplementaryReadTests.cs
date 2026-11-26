@@ -7,7 +7,7 @@ using TiaMcp.FoundationHost;
 using TiaMcp.Adapters;
 using TiaMcp.PlcWorker;
 
-internal static class SupplementaryReadTests
+public sealed class SupplementaryReadTests
 {
     // Explicit fake delegates/worker. This exercises production policy and MCP
     // dispatch only; it is not Siemens API compilation or native acceptance.
@@ -24,6 +24,20 @@ internal static class SupplementaryReadTests
         public void Dispose() { }
     }
     private static PlcTechnologyReadRow Row(string name="TO")=>new() { Name=name,OfSystemLibElement="TO_PositioningAxis",OfSystemLibVersion="1.0" };
+    [Xunit.Fact]
+    public void Uncompiled_reason_reaches_the_technology_object_row()
+    {
+        int reads = 0;
+        var row = PlcSupplementaryReadPolicy.TechnologyMetadata("Axis", () => { reads++; return "Axis"; },
+            () => { reads++; return new Version(1, 0); }, consistent: false);
+        Xunit.Assert.Equal(0, reads);
+        Xunit.Assert.Equal(new[] { "OfSystemLibElement", "OfSystemLibVersion" }, row.UnavailableAttributes);
+        var payload = new JsonObject { ["SoftwarePath"] = "PLC", ["ReleaseKey"] = "21",
+            ["Scope"] = SupplementaryReadContract.TechnologyScope, ["Items"] = new JsonArray(JsonSerializer.SerializeToNode(row)) };
+        var result = SupplementaryReadContract.Wrap("ListTechnologyObjects", payload, new JsonSerializerOptions());
+        Xunit.Assert.Equal("not compiled (IsConsistent=false)", (string?)result["Items"]![0]!["UnavailableReason"]);
+    }
+
     internal static async Task Run(IMcpServer server,Action<bool,string> check)
     {
         void Reject(Action action,string message) { try { action(); } catch(Exception ex) when(ex is InvalidOperationException or NotSupportedException or InvalidDataException) {check(true,message);return;} throw new Exception(message); }

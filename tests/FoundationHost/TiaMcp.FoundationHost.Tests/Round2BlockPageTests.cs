@@ -112,6 +112,19 @@ public sealed class Round2BlockPageTests : IDisposable
         Assert.True(typeof(WorkerDataDirectoryCollection).GetCustomAttribute<CollectionDefinitionAttribute>()!.DisableParallelization);
     }
 
+    [Fact]
+    public async Task Decoder_refusal_includes_the_reason_in_the_message()
+    {
+        TiaMcp.Engine.Tests.Shared.DecoderRuntimeFixture.Ensure();
+        using var fixture = new VersionControlAdmissionTests.FileToolFixture("21");
+        using var session = fixture.EnterSession();
+        string file = Path.Combine(fixture.Root, "invalid.xml");
+        File.WriteAllText(file, "<Document/>");
+        var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.V21EcosystemTools();
+        var reply = await tools.DecodePlcSimaticMl(file);
+        Assert.Contains("Exactly one PLC block in a Document is required.", reply.Message);
+    }
+
     [Theory]
     [InlineData(false)] [InlineData(true)]
     public async Task Missing_or_invalid_decoder_runtime_is_rejected_without_install_path(bool invalidReceipt)

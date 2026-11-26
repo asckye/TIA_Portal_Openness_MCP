@@ -12,6 +12,12 @@ VCI connect checks existing workspace files before writing. If another process c
 - `ImportPlcTagTablesFromDirectory` reports `canApply=false` when no files match. Hardware catalog paging can advance past large descriptions on earlier pages.
 - Saving an existing PLC test case without overwrite now returns `PRECONDITION_FAILED` and identifies `overwrite`. Online target settings can be replaced while another reader finishes reading the previous list.
 - PLCSIM Advanced registration describes `cpuType` using simulator enum names.
+- Verified PLC imports compare XML attributes on restored leaf elements and identify block mismatches in the supplemental None export.
+  PLC document comparisons distinguish inherited members from a declared member named `Base`, including inheritance at the top of a section.
+- `ListTechnologyObjects` explains when inconsistent objects lack compiled metadata. `DecodePlcSimaticMl` includes the sanitised decoder refusal in its message.
+  The LAD builder rejects TCON, TDISCON, TSEND, TRCV, TUSEND, TURCV, RDREC and WRREC as user FC/FB calls.
+- `DeletePlcTagTable` names user and system constants in previews and deletion reports. Failed block moves report retained target groups as a project change.
+  Legacy safety compilation sanitises connection-loss diagnostics. `EnsureUnifiedHmiButtonAction` specifies when it checks the target tag.
 
 ## [4.0.0-rc.7] - 2026-11-25
 

@@ -66,6 +66,8 @@ public sealed class FoundationV4ContractsTests
         }, () => "C:/Fixture/Project.ap" + release);
         var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.UnifiedHmiTools(service);
         var tool = McpServerTool.Create(tools.EnsureUnifiedHmiButtonActionV4);
+        Assert.Contains("only during apply", tool.ProtocolTool.InputSchema.GetProperty("properties")
+            .GetProperty("targetTag").GetProperty("description").GetString());
         var arguments = new JsonObject {
             ["hmiSoftwarePath"] = "HMI", ["screenName"] = "Overview", ["buttonName"] = "Start",
             ["eventType"] = "Down", ["actionKind"] = "set-bit", ["targetTag"] = "Run", ["dryRun"] = false };

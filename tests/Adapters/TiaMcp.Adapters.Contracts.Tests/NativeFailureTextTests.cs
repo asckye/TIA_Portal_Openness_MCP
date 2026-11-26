@@ -105,6 +105,21 @@ public sealed class NativeFailureTextTests
     }
 
     [Fact]
+    public void Standalone_login_loss_reaches_the_native_step_connection_handler()
+    {
+        var engine = new TiaMcp.Adapters.PlcFoundationEngine("19");
+        engine.ConfigureFixture();
+        var reply = engine.RunHmiStep("ManagePlcSafety", meta => {
+            meta["mayHaveChanged"] = true;
+            SafetyLoginFailure.Attempt(() => throw new ObjectDisposedException("safety connection"),
+                () => throw new InvalidOperationException("Unexpected readback"), () => throw new InvalidOperationException("Unexpected logoff"));
+            return "unexpected login";
+        }, false);
+        Assert.Equal(true, reply.Meta["connectionUnavailable"]);
+        Assert.True(reply.OutcomeUnknown);
+    }
+
+    [Fact]
     public void Certificate_failure_keeps_the_outer_reason_inner_reason_and_engineering_details()
     {
         var engine = new TiaMcp.Adapters.PlcFoundationEngine("20");
@@ -117,6 +132,12 @@ public sealed class NativeFailureTextTests
         var reply = engine.RunHmiStep("ManagePlcCertificate", meta => { meta["phase"] = "get-certificate-template"; throw error; }, false);
         Assert.Equal("Certificate template lookup; Store refused the request; Template unavailable; WebServer; Unsupported usage; Firmware diagnostic",
             reply.Meta["nativeMessage"]);
+        var sensitiveInner = new Exception("Firmware diagnostic; password=inner-secret");
+        var wrapped = new InvalidOperationException("Certificate template lookup", sensitiveInner);
+        var redacted = engine.RunHmiStep("ManagePlcCertificate", meta => { meta["phase"] = "get-certificate-template"; throw wrapped; }, false);
+        var message = Assert.IsType<string>(redacted.Meta["nativeMessage"]);
+        Assert.Contains("Firmware diagnostic", message);
+        Assert.DoesNotContain("inner-secret", message);
     }
 
     [Theory, InlineData(false), InlineData(true)]

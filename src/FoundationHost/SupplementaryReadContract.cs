@@ -47,7 +47,8 @@ internal static class SupplementaryReadContract
             else
             {
                 if(item is not JsonObject row || row
-                        .Any(p=>p.Key is not ("Name" or "OfSystemLibElement" or "OfSystemLibVersion" or "Folder" or "UnavailableAttributes")))
+                        .Any(p=>p.Key is not ("Name" or "OfSystemLibElement" or "OfSystemLibVersion" or "Folder"
+                            or "UnavailableAttributes" or "UnavailableReason")))
                     throw new InvalidDataException("Invalid technology metadata.");
                 var name=Text(row,"Name"); var folder=Text(row,"Folder",true);
                 if(name is "." or "..") throw new InvalidDataException("Invalid technology object name.");
@@ -61,6 +62,11 @@ internal static class SupplementaryReadContract
                         || missing.Select(v=>v!.GetValue<string>()).Distinct().Count()!=missing.Count)
                     throw new InvalidDataException("Invalid unavailable metadata list.");
                 var copy=new JsonObject { [Wire("Name")]=name,[Wire("Folder")]=folder };
+                if(row["UnavailableReason"]!=null)
+                {
+                    if(missing.Count==0) throw new InvalidDataException("Technology metadata has a reason without missing attributes.");
+                    copy[Wire("UnavailableReason")]=Text(row,"UnavailableReason");
+                }
                 foreach(var key in new[]{"OfSystemLibElement","OfSystemLibVersion"})
                 {
                     bool absent=missing.Any(v=>v!.GetValue<string>()==key);

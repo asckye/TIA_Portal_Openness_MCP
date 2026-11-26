@@ -176,6 +176,10 @@ public sealed class LadRungBoxBuilderTests
         {
             item = Call(); item["block"] = name; yield return Invalid(item, "/block");
         }
+        foreach (string name in new[] { "TCON", "TDISCON", "TSEND", "TRCV", "TUSEND", "TURCV", "RDREC", "WRREC" })
+        {
+            item = Call(); item["block"] = name; yield return Invalid(item, "/block");
+        }
         item = Call(); item["blockType"] = "SFB"; yield return Invalid(item, "/blockType");
         item = Call(); item["library"] = "SECRET_CANARY"; yield return Invalid(item, "");
         item = Call(); item["then"] = new JsonArray(); yield return Invalid(item, "/then");

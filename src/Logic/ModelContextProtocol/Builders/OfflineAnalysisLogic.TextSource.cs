@@ -121,7 +121,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         var m = MemberRegex.Match(codeTrim);
                         if (m.Success)
                         {
-                            var name = m.Groups[1].Value.Trim('"');
+                            var name = MemberPathSegment(m.Groups[1].Value.Trim('"'));
                             var typeText = m.Groups[3].Value;
                             var assign = typeText.IndexOf(":=", StringComparison.Ordinal);
                             if (assign >= 0) typeText = typeText.Substring(0, assign);

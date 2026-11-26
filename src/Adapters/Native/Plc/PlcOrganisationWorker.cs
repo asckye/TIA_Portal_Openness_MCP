@@ -51,12 +51,10 @@ namespace TiaMcp.Adapters
             unavailable ??= PlcB4Capabilities.Unsupported(ReleaseKey, request);
             if (unavailable != null) throw new NotSupportedException(unavailable);
             var adapter = new PlcOrganisationAdapter(EngineeringPlcOrganisationSession ?? new OrganisationSession(this));
-            var reply = new PlcSoftwareReply();
             Func<object, bool, PlcCompilerEvidence> compilerEvidence = (result, diagnose) =>
                 CollectPlcCompilerEvidence!(PlcOrganisationAdapter.ObserveCompiler((Siemens.Engineering.Compiler.CompilerResult)result),
                     diagnose, request.Operation == "ImportPlcBlockVerified");
-            try
-            {
+            return RunOrganisationOperation(request, adapter, reply => {
                 HardwareAddressingReply? step = null;
                 switch (request.Operation)
                 {
@@ -235,35 +233,7 @@ namespace TiaMcp.Adapters
                     reply.Message = step.Message; reply.Meta = step.Meta;
                     reply.OutcomeUnknown = step.OutcomeUnknown; reply.MayHaveChanged = step.MayHaveChanged;
                 }
-            }
-            catch (Exception error) when (error.GetBaseException() is not NonRecoverableException)
-            {
-                reply.Failure = new PlcSoftwareFailure {
-                    Code = error is PlcSoftwareException native ? native.Code : request.Operation == "DescribePlcBlockLogic"
-                        && error is AdapterPreconditionException { Condition: "not-found" } or AdapterPreconditionException { IsArgument: true }
-                        ? StepFailureStatus.Of(error) : error.GetType().Name, Message = error.Message,
-                    Candidates = (error as PlcSoftwareException)?.Candidates?.ToArray() };
-                if (SafetyLoginFailure.FromException(error) is { } login)
-                    login.RecordEvidence(reply.Failure.Evidence, compiling: true);
-                else
-                {
-                    reply.Failure.Evidence["nativeExceptionType"] = error.GetBaseException().GetType().FullName;
-                    reply.Failure.Evidence["nativeMessage"] = error.GetBaseException().Message;
-                }
-                if (request.Action == "importTagTable" && error.Data["verifiedAbsent"] is true)
-                    reply.Failure.Evidence["verifiedAbsent"] = true;
-                reply.Failure.Evidence["mayHaveChanged"] = adapter.MutationStarted;
-                reply.Failure.Evidence["status"] = StepFailureStatus.Of(error);
-                if (StepFailureStatus.Parameter(error) is string parameter) reply.Failure.Evidence["parameter"] = parameter;
-                StepFailureStatus.RecordTarget(error, reply.Failure.Evidence);
-                reply.MayHaveChanged = adapter.MutationStarted; reply.OutcomeUnknown = adapter.MutationStarted;
-                if (request.Operation == "MovePlcBlockToGroup") reply.Failure.Evidence["deleteStarted"] = adapter.MutationStarted;
-                PlcMovePolicy.MergeEvidence(error, reply.Failure.Evidence);
-                if (request.Operation == "MovePlcBlockToGroup" && PlcMovePolicy.SettledByRestore(reply.Failure.Evidence))
-                    reply.OutcomeUnknown = false;
-            }
-            reply.MayHaveChanged |= adapter.MutationStarted;
-            return reply;
+            });
         }
 
         private sealed partial class OrganisationSession : IPlcOrganisationSession

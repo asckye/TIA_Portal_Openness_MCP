@@ -23,7 +23,12 @@ public sealed class PlcBlockImportAdmissionTests
         var selected = new plcpathfixture::Siemens.Engineering.SW.Tags.PlcTagTable { Name = "Tags" };
         root.TagTables.Add(other);
         parent.TagTables.Add(selected);
+        selected.UserConstants.Add(new object());
+        selected.UserConstants.Add(new object());
         selected.OnDelete = () => parent.TagTables.Remove(selected);
+        var preview = engine.Artifacts.DeletePlcTagTable("PLC", "Sub/Tags", true);
+        Assert.Contains("0 tag symbols, 2 user constants and 0 system constants from this table. HMI",
+            Assert.IsType<List<object?>>(preview["warnings"])[0]?.ToString());
         var result = engine.Artifacts.DeletePlcTagTable("PLC", "Sub/Tags", false);
         Assert.Equal(true, result["verifiedAbsent"]);
         Assert.Same(other, Assert.Single(root.TagTables));

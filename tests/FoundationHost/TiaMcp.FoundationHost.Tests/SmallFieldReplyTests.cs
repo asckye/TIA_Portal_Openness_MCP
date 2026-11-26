@@ -24,7 +24,7 @@ public sealed class SmallFieldReplyTests
             Assert.Equal("plc-organisation.ExecutePlcOrganisation", operation);
             Assert.Equal(preview, (bool)arguments["dryRun"]!);
             return JsonNode.Parse(WorkerJson.Serialize(new PlcSoftwareReply { Data = new() {
-                ["resolvedTagTablePath"] = "Group/Table", ["tagCount"] = 2,
+                ["resolvedTagTablePath"] = "Group/Table", ["tagCount"] = 2, ["userConstantCount"] = 3, ["systemConstantCount"] = 1,
                 ["deleted"] = !preview, ["verifiedAbsent"] = scenario == "deleted",
                 ["crossReferenceQueried"] = true, ["crossReferenceAvailable"] = false } }));
         }, () => true, () => "C:/Project/Example.ap21");
@@ -35,6 +35,7 @@ public sealed class SmallFieldReplyTests
             _ => tools.DeletePlcType("PLC_A", "Type", preview)
         };
 
+        if (tool == "DeletePlcTagTable") Assert.Contains("3 user constants and 1 system constant", report.Message);
         Assert.Equal(scenario != "unverified", report.Ok);
         if (tool == "DeletePlcTagTable") Assert.Contains("Tag table 'Group/Table' (2 tag(s))", report.Message);
         if (preview) Assert.Contains("Warning: Cross-references could not be retrieved.", report.Message);

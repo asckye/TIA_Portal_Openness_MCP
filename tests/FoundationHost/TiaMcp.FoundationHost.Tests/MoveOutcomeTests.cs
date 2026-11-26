@@ -159,6 +159,15 @@ public sealed class MoveOutcomeTests
     }
 
     [Fact]
+    public void Retained_groups_record_a_mutation_even_when_block_deletion_never_started()
+    {
+        var evidence = new Dictionary<string, object?> { ["mayHaveChanged"] = false };
+        Assert.True(PlcMovePolicy.RecordRetainedGroups(evidence, new[] { "G" }, false));
+        Assert.Equal(true, evidence["mayHaveChanged"]);
+        Assert.Equal(true, evidence["nativeMutationIssued"]);
+    }
+
+    [Fact]
     public void Refused_nested_group_creation_reports_the_nonempty_parent_left_in_the_project()
     {
         var engine = new PathEngine("21");
@@ -180,6 +189,7 @@ public sealed class MoveOutcomeTests
             Assert.Equal(new[] { "G" }, Assert.IsType<object?[]>(evidence["targetGroupsCreated"]));
             Assert.Equal(false, evidence["deleteStarted"]);
             Assert.Equal(true, evidence["nativeMutationIssued"]);
+            Assert.Equal(true, evidence["mayHaveChanged"]);
             Assert.Equal(false, evidence["rollbackCompleted"]);
             Assert.NotEmpty(Assert.IsAssignableFrom<IEnumerable<object?>>(evidence["cleanupRequired"]));
             Assert.False(File.Exists(file));

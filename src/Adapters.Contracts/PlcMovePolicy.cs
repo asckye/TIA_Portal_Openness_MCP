@@ -20,6 +20,15 @@ namespace TiaMcp.Adapters.Contracts
                 && !Flag("writeOutcomeUnknown") && !Flag("unrestoredWrite") && !Flag("connectionUnavailable");
         }
 
+        public static bool RecordRetainedGroups(IDictionary<string, object?> evidence, IReadOnlyCollection<object?> retained, bool deleteStarted)
+        {
+            evidence["targetGroupsCreated"] = retained.ToArray();
+            if (retained.Count > 0) evidence["nativeMutationIssued"] = true;
+            bool changed = deleteStarted || retained.Count > 0 || evidence["mayHaveChanged"] is true;
+            evidence["mayHaveChanged"] = changed;
+            return changed;
+        }
+
         public static void MergeEvidence(Exception error, IDictionary<string, object?> target)
         {
             var keys = new HashSet<string>(StringComparer.Ordinal);

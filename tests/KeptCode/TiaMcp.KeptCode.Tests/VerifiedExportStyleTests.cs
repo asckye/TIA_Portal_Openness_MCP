@@ -106,7 +106,7 @@ public sealed partial class VerifiedExportStyleTests
     // Exercise the same validation, preview token, apply and metadata conversion as the worker.
     private static JsonObject Apply(string candidate, string before, string after, string none, bool compile, bool extra = true,
         Exception? exportFailure = null, string? declaration = null, Exception? readbackFailure = null, string declarationName = "MotorType",
-        string? expectedDifference = null)
+        string? expectedDifference = null, bool supportsNone = true)
     {
         string directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "verified-style-" + Guid.NewGuid().ToString("N"))).FullName;
         try
@@ -125,7 +125,7 @@ public sealed partial class VerifiedExportStyleTests
                     if (Path.GetFileName(path) == "after.xml" && readbackFailure != null) throw readbackFailure;
                     File.WriteAllText(path, Path.GetFileName(path) == "before.xml" ? before : after);
                 },
-                ExportNone = path => {
+                ExportNone = !supportsNone ? null : path => {
                     calls.Add(Path.GetFileName(path));
                     if (exportFailure != null) throw exportFailure;
                     File.WriteAllText(path, none);

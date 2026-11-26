@@ -195,6 +195,18 @@ public sealed class SafetyLoginFrameworkTests
         Assert.DoesNotContain("fixture transport", row.ToJsonString());
     }
 
+    [Theory, InlineData("disposed"), InlineData("com")]
+    public void Legacy_worker_returns_sanitised_evidence_after_login_loss(string scenario)
+    {
+        var row = RunFixture("legacy-worker", scenario);
+        Assert.Equal(new[] { "precheck", "login" }, row["Calls"]!.AsArray().Select(call => (string?)call));
+        var reply = row["result"]!;
+        Assert.True((bool?)reply["MayHaveChanged"]);
+        Assert.True((bool?)reply["OutcomeUnknown"]);
+        Assert.Contains("lost", (string?)reply["Failure"]?["Evidence"]?["nativeMessage"]);
+        Assert.DoesNotContain("fixture-login-password", reply.ToJsonString());
+    }
+
     [Fact]
     public void Foundation_loss_during_cleanup_preserves_the_readback_on_net48()
     {
