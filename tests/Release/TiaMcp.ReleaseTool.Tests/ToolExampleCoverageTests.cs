@@ -103,7 +103,15 @@ public sealed class ToolExampleCoverageTests(Xunit.Abstractions.ITestOutputHelpe
         Assert.True(missing.Count == 0, string.Join(Environment.NewLine, missing));
     }
 
+    [Theory, InlineData("mode", "Optional."), InlineData("name", "The value."),
+     InlineData("name", "- Optional -"), InlineData("timeoutMs", "Timeout in milliseconds.")]
+    public void Schema_guidance_explains_more_than_the_presence_of_a_value(string parameter, string description)
+    {
+        Assert.Equal(parameter == "timeoutMs", HasDescription(parameter, description));
+    }
+
     private static bool HasDescription(string parameter, string description) => !string.IsNullOrWhiteSpace(description)
+        && Regex.Matches(description, @"\w[\w-]*").Count >= 3
         && !description.Trim(' ', '.', ':').Equals(parameter, StringComparison.OrdinalIgnoreCase)
         && !description.StartsWith("Exact foundation argument:", StringComparison.OrdinalIgnoreCase);
 

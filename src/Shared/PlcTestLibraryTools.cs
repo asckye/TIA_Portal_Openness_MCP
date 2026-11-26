@@ -154,6 +154,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 return McpServer.V4Result(tool, data, completed: action == "save" || action == "delete");
             }
+            catch (TiaMcp.Adapters.Contracts.AdapterPreconditionException ex)
+            { return McpServer.V4Reject(tool, new Error(ex.Message, new PreconditionFailedDetails(ex.Condition, null, ex.ParamName))); }
             catch (PlcTestRunReadException ex)
             { return McpServer.V4Reject(tool, new Error(ex.Message, new IoFailedDetails("plc-test-run", null))); }
             catch (FileNotFoundException) /* swallow(privacy): return NOT_FOUND without exposing the full local file path */

@@ -567,7 +567,7 @@ internal sealed partial class WorkerClient(string releaseKey, string workerExe, 
                 string? reason = TiaMcp.Adapters.Contracts.Candidates.SessionPrimitives.TimeoutReason(true, matching);
                 if (reason != null) ex.Data["sessionReason"] = reason;
             }
-            ex.Data["foundationRequestSent"] = sent;
+            if (!ex.Data.Contains("foundationRequestSent")) ex.Data["foundationRequestSent"] = sent;
             // A read-failed reply can follow portal creation, so only native admission rejection can restore ownership.
             if (ownershipBeforeStart.HasValue && ex is WorkerOperationException { Outcome: "rejected-before-operation" })
                 lock (stateSync) ownsPortal = ownershipBeforeStart.Value;

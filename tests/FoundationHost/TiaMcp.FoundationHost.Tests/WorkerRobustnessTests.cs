@@ -26,6 +26,21 @@ public sealed class WorkerDataDirectoryCollection
 [Collection(WorkerDataDirectoryCollection.Name)]
 public sealed class WorkerRobustnessTests
 {
+    [Fact]
+    public async Task Call_preserves_an_inner_request_sent_marker()
+    {
+        using var worker = new Foundation.WorkerClient("21", "unused", "unused", false);
+        const BindingFlags fields = BindingFlags.Instance | BindingFlags.NonPublic;
+        typeof(Foundation.WorkerClient).GetField("secondaryProjectFile", fields)!.SetValue(worker, "C:/secondary.ap21");
+        typeof(Foundation.WorkerClient).GetField("secondaryProcessId", fields)!.SetValue(worker, Environment.ProcessId);
+        var marked = new IOException("Fixture observation failed.");
+        marked.Data["foundationRequestSent"] = true;
+        worker.SecondaryProcessObservation = _ => throw marked;
+        var error = await Assert.ThrowsAsync<IOException>(() => worker.Call("ReadState", new(), CancellationToken.None));
+        Assert.Same(marked, error);
+        Assert.True((bool?)error.Data["foundationRequestSent"]);
+    }
+
     private static string HostDiagnosticsDirectory()
     {
         var type = typeof(Foundation.WorkerClient).Assembly.GetType("TiaOpenness.Shared.DataLocations")

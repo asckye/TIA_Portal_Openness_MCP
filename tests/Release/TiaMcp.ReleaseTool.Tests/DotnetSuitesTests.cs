@@ -43,6 +43,17 @@ public class DotnetSuitesTests
         Assert.Equal(0, context.Posts);
     }
 
+    [Fact]
+    public void Incomplete_dump_at_the_configured_deadline_fails_the_report()
+    {
+        using var tree = new StaticTree();
+        var before = SuiteHang.Begin(tree.Root, "suite");
+        string dump = tree.Write("empty.dmp", "");
+        var result = SuiteHang.Complete(tree.Root, "suite", before, new CommandResult(0, "", ""), TimeSpan.FromMilliseconds(30));
+        Assert.Equal(1, result.ExitCode);
+        Assert.Contains("Mini dump did not finish writing: " + dump, SuiteHang.Errors(tree.Root, "suite"));
+    }
+
     private sealed class RecordingContext : SynchronizationContext
     {
         private int posts;

@@ -20,6 +20,21 @@ using Approval = TiaOpenness.Shared.ApprovalOutcome;
 [Collection(BundleSelectionCollection.Name)]
 public sealed class PlcTestRunTests
 {
+    [Fact]
+    public void Saving_an_existing_case_identifies_the_overwrite_precondition()
+    {
+        using var fixture = new Fixture();
+        using var session = fixture.Pipeline.EnterSession();
+        fixture.Save("existing");
+        var library = new PlcTestLibrary(fixture.Library);
+        var original = library.Read("existing");
+        var document = PlcTestCaseDocument.Parse(original["testCase"]!.ToJsonString());
+        var reply = fixture.Tools.ManagePlcTestLibrary("save", testCase: document).StructuredContent!;
+        Assert.Equal("PRECONDITION_FAILED", (string?)reply["error"]?["code"]);
+        Assert.Equal("overwrite", (string?)reply["error"]?["details"]?["parameter"]);
+        Assert.True(JsonNode.DeepEquals(original, library.Read("existing")));
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

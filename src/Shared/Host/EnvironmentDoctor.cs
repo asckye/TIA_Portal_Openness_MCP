@@ -255,6 +255,7 @@ namespace TiaMcpServer.Runtime
             #if TIA_ENGINE_HOST || WORKER_SESSION_LIFECYCLE
             return EngineVersionMatch(compiled, detected, _ => null);
 #else
+            // The offline fixture is the only build that probes for a sibling executable.
             return EngineVersionMatch(compiled, detected, key =>
             {
                 try

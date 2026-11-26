@@ -667,6 +667,19 @@ public sealed class NoLockRecoveryTests
         Assert.Equal(0, writes);
     }
 
+    [Fact]
+    public async Task Explicit_attach_on_an_attached_worker_with_pending_rebind_keeps_its_generation()
+    {
+        using var scope = new Scope();
+        using var budgets = new ProductionWorkerBudgets(scope.Worker);
+        await scope.Bind();
+        int child = scope.Child.Id;
+        typeof(WorkerClient).GetField("rebindPending", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(scope.Worker, true);
+        await scope.Worker.Call("Attach", new() { ["processId"] = Environment.ProcessId }, CancellationToken.None);
+        Assert.Equal(child, scope.Child.Id);
+        Assert.DoesNotContain(scope.Trace, IsProcessRead);
+    }
+
     [Theory, MemberData(nameof(Releases))]
     public async Task Explicit_connection_can_replace_a_missing_recovery_target(string release)
     {

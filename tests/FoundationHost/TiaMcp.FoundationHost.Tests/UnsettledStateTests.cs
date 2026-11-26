@@ -13,6 +13,39 @@ namespace TiaMcp.FoundationHost.Tests;
 public sealed class UnsettledStateTests
 {
     [Fact]
+    public async Task Forwarding_does_not_install_a_progress_or_cancellation_context_for_the_bridge()
+    {
+        using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(
+            new toolpipeline::TiaMcp.FoundationHost.EngineSessionContext(new SharedPipelineTests.Worker()));
+        using var scope = new SharedPipelineTests.Scope();
+        var services = FoundationHostPorts.CreateServices(scope.Worker, "21", () => new JsonObject { ["ready"] = true }, null);
+        using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", services, Array.Empty<McpServerTool>());
+        using var session = pipeline.EnterSession();
+        using var cancellation = new CancellationTokenSource();
+        var inner = new SessionStateTests.HostOnlyTool(_ => {
+            Assert.Null(Host.CurrentCallServer);
+            Assert.False(Host.WorkerDispatchCancellation.CanBeCanceled);
+            return ValueTask.FromResult(Host.V4Reject("CallTool", Host.InvalidInput("arguments")));
+        }, "CallTool");
+        var bridge = Assert.Single(Host.WrapWithAuditCalls(new[] { inner }));
+        var result = await bridge.InvokeAsync(Request("CallTool", new JsonObject { ["name"] = "GetToolUsage" }), cancellation.Token);
+        var warnings = result.StructuredContent!["meta"]!["warnings"]!.AsArray();
+        var hint = Assert.Single(warnings, row => (string?)row?["code"] == "RECOVERY_GUIDANCE");
+        Assert.Equal("GetToolUsage", (string?)hint?["details"]?["getToolUsage"]?["toolName"]);
+    }
+
+    [Fact]
+    public void Learning_start_time_settles_early_calls_only_for_that_process()
+    {
+        var calls = new toolpipeline::TiaMcp.FoundationHost.UnsettledCalls();
+        calls.BindProcess(17, null);
+        calls.Record("early", "SaveProject", null, DateTimeOffset.UtcNow);
+        calls.BindProcess(17, "2026-11-24T00:00:00Z");
+        Assert.Empty(calls.SettleExitedProcess(17, "2026-11-25T00:00:00Z"));
+        Assert.Equal("early", Assert.Single(calls.SettleExitedProcess(17, "2026-11-24T00:00:00Z")).RequestId);
+    }
+
+    [Fact]
     public async Task CallTool_records_only_its_target_even_when_the_wrapper_has_its_own_request_id()
     {
         using var context = toolpipeline::TiaMcp.FoundationHost.EngineHostConfiguration.Enter(

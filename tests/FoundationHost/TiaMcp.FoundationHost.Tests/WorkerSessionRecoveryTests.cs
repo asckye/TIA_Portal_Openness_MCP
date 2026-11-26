@@ -8,6 +8,23 @@ using Xunit;
 
 public sealed class WorkerSessionRecoveryTests
 {
+    [Theory, InlineData(true), InlineData(false)]
+    public void Nested_dispatch_preserves_outer_loss_and_write_uncertainty(bool exit)
+    {
+        var outcome = new WorkerSessionOutcomeState();
+        var recovery = new WorkerSessionRecovery(outcome, () => false, () => { }, () => { }, () => { }, () => { });
+        var outer = new ChannelRequest(1, "adapter.SaveProject", "{}", (_, _) => { });
+        var inner = new ChannelRequest(2, "adapter.ReadState", "{}", (_, _) => { });
+        var reply = recovery.Dispatch(outer, _ => {
+            if (exit) recovery.ObserveProcessExit(); else outcome.MarkUncertain();
+            return recovery.Dispatch(inner, _ => ChannelResponse.Success("{}"));
+        });
+        var failure = recovery.Synchronize(outer, reply).Failure;
+        Assert.Equal(ChannelOutcome.Unknown, failure?.Outcome);
+        Assert.Equal(exit ? "tia-process-exited" : null, (string?)System.Text.Json.Nodes.JsonNode.Parse(failure!.EvidenceJson!)?["portalLost"]);
+        Assert.Null(recovery.Synchronize(outer, recovery.Dispatch(outer, _ => ChannelResponse.Success("{}"))).Failure);
+    }
+
     [Theory]
     [InlineData("\"true\"")] [InlineData("\"false\"")] [InlineData("1")] [InlineData("null")] [InlineData("{}")] [InlineData("[]")]
     public void Non_boolean_dry_run_preserves_an_uncertain_write(string dryRun)

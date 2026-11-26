@@ -59,7 +59,17 @@ public sealed class UnsettledCalls
         }
     }
 
-    public void BindProcess(int? pid, string? startUtc) { lock (gate) process = (pid, startUtc); }
+    public void BindProcess(int? pid, string? startUtc)
+    {
+        lock (gate)
+        {
+            process = (pid, startUtc);
+            if (pid == null || startUtc == null) return;
+            for (int index = 0; index < calls.Count; index++)
+                if (calls[index].Process == (pid, (string?)null))
+                    calls[index] = calls[index] with { Process = process };
+        }
+    }
 
     public IReadOnlyList<CallSettlement> SettleExitedProcess(int pid, string? startUtc)
     {

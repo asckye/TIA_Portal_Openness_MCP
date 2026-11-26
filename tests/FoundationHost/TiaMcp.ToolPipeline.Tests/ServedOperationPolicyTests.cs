@@ -4,6 +4,9 @@ extern alias foundationhost;
 using System.Text.Json.Nodes;
 using TiaMcp.Logic.Generation;
 using ClassicHmi = TiaMcp.Adapters.Native.Hmi.ClassicHmiLogic;
+using HardwarePath = TiaMcp.Adapters.Hardware.HardwarePath;
+using LibraryPolicy = TiaMcp.Adapters.Libraries.LibraryPolicy;
+using HostTools = toolpipeline::TiaMcpServer.ModelContextProtocol;
 using Motion = TiaMcp.Adapters.Native.Plc.PlcMotionPolicy;
 using MotionInputs = toolpipeline::TiaMcpServer.Siemens.MotionProDiagClassicHmiLogic;
 using StartdriveLogic = toolpipeline::TiaMcpServer.Siemens.StartdriveLogic;
@@ -15,6 +18,27 @@ namespace TiaMcp.EngineHost.Tests;
 
 public sealed class ServedOperationPolicyTests
 {
+    [Theory]
+    [InlineData("ManagePortInterconnection", """{"action":"read","devicePath":[""],"itemPath":[]}""")]
+    [InlineData("ManageDeviceUserGroup", """{"action":"create","groupPath":"../Line"}""")]
+    [InlineData("ManageGlobalLibrary", """{"action":"open","openMode":"ReadOnly","upgrade":true}""")]
+    [InlineData("ManageCommunicationConnection", """{"action":"create","connectionType":"Unknown","devicePath":["PLC"],"itemPath":[]}""")]
+    [InlineData("ManageMotionAxis", """{"action":"updateMapping","aspect":"toMapping","name":"Axis","properties":{"Alias":"Other"}}""")]
+    public void Example_policy_rejects_invalid_operation_inputs(string tool, string arguments)
+    {
+        var input = new Inputs(JsonNode.Parse(arguments)!.AsObject(), new JsonObject(), "21");
+        Assert.NotNull(Record.Exception(() => Policies[tool](input)));
+    }
+
+    [Fact]
+    public void Simulator_registration_guides_cpu_selection_by_enum_name()
+    {
+        var (_, usage) = new TiaMcp.Engine.Tests.Shared.ServedToolOperations("21").For("ManagePlcSimAdvancedInstance").First();
+        string description = (string)usage["inputSchema"]!["properties"]!["cpuType"]!["description"]!;
+        Assert.Contains("ECPUType", description);
+        Assert.DoesNotContain("SearchHardwareCatalog", description);
+    }
+
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17")]
     [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void Served_reference_queries_accept_an_export_directory_with_an_ob_and_an_fb(string release)
@@ -211,18 +235,30 @@ public sealed class ServedOperationPolicyTests
         },
         ["ManagePlcUserGroup"] = i => toolpipeline::TiaMcpServer.Siemens.Services.PlcOrganisationPortService
             .ValidateGroup(i.Text("groupPath"), i.Text("family") == "types", i.Text("family") == "blocks"),
-        ["ManageDeviceUserGroup"] = i => HardwareNetworkLogic.RequireOneOf(i.Text("action"), HardwareNetworkLogic.DeviceGroupActions, "action"),
+        ["ManageDeviceUserGroup"] = i =>
+        {
+            string action = HardwareNetworkLogic.RequireOneOf(i.Text("action"), HardwareNetworkLogic.DeviceGroupActions, "action");
+            HardwarePath.Parts(i.Text("groupPath"), rootAllowed: action == "read");
+            if (action == "rename") HardwarePath.RequireNewName(i.Text("newName"));
+        },
         ["ManagePortInterconnection"] = i =>
         {
-            string action = HardwareNetworkLogic.RequireOneOf(i.Text("action"), HardwareNetworkLogic.PortActions, "action");
+            string action = i.Text("action");
+            HostTools.HardwareToolContract.Path(i.Names("devicePath"), "devicePath", false, false);
+            HostTools.HardwareToolContract.Path(i.Names("itemPath"), "itemPath", true, false);
+            HostTools.HardwareToolContract.Path(i.Names("partnerDevicePath"), "partnerDevicePath", true, true);
+            HostTools.HardwareToolContract.Path(i.Names("partnerItemPath"), "partnerItemPath", true, true);
+            HostTools.HardwareNetworkTools.ValidatePortAction(action, i.Names("partnerDevicePath"));
             if (action != "read") Assert.NotEmpty(i.Names("partnerDevicePath"));
         },
         ["ManageGlobalLibrary"] = i =>
         {
+            LibraryPolicy.ValidateGlobalAction(i.Text("action"));
+            LibraryPolicy.ValidateUpgrade(i.Text("action"), i.Flag("upgrade"), i.Text("openMode") == "ReadWrite");
             if (i.Text("action") == "archive")
             {
-                LibraryDeepLogic.RequireOneOf(i.Text("archiveMode"), LibraryDeepLogic.ArchivationModes, "archiveMode");
-                LibraryDeepLogic.ValidateArchiveName(i.Text("archiveName"));
+                LibraryPolicy.RequireOneOf(i.Text("archiveMode"), LibraryPolicy.ArchivationModes, "archiveMode");
+                LibraryPolicy.ValidateArchiveName(i.Text("archiveName"));
             }
         },
         ["ManagePlcCertificate"] = i =>
@@ -237,7 +273,8 @@ public sealed class ServedOperationPolicyTests
                 Assert.Throws<NotSupportedException>(() => TiaMcp.Adapters.Contracts.SecurityAttributePolicy
                     .RequireApproved(i.Text("assignment"), TiaMcp.Adapters.Contracts.SecurityAttributePolicy.CertificateNames));
         },
-        ["ManageCommunicationConnection"] = i => HardwareServicesLogic.RequireOneOf(i.Text("action"), ["create", "delete"], "action"),
+        ["ManageCommunicationConnection"] = i => HostTools.HardwareServicesPortTools.ValidateConnectionAction(
+            i.Text("action"), i.Text("connectionType"), i.Flag("dryRun"), i.Flag("confirmDelete")),
         ["ExchangeSystemDiagnosticsSettings"] = i => HardwareServicesLogic.RequireOneOf(i.Text("action"), ["export", "import"], "action"),
         ["ManageWatchForceTableWebAccess"] = i =>
         {
@@ -248,7 +285,11 @@ public sealed class ServedOperationPolicyTests
         {
             string action = i.Text("action"), aspect = i.Text("aspect");
             string category = Motion.MotionCategory(action, aspect);
-            if (category == "mapping") Motion.RequireName(i.Text("name"), "alias");
+            if (category == "mapping")
+            {
+                Motion.RequireName(i.Text("name"), "alias");
+                Motion.ValidateMappingProperties(aspect, i.Map("properties").Select(pair => pair.Key));
+            }
             if (action == "deleteMapping") Assert.True(i.Flag("confirmDelete"));
             if (action == "updateMapping") Assert.NotEmpty(i.Map("properties"));
             if (action == "connect") Motion.RequireConnectionMode(aspect, MotionInputs.ParseConnectionTarget(i.Json("target")).Mode);

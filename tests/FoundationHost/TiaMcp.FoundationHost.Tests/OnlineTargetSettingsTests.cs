@@ -24,6 +24,33 @@ public sealed class OnlineTargetSettingsTests
     }
 
     [Fact]
+    public void Open_reader_allows_the_file_to_be_renamed_while_it_reads_the_original_contents()
+    {
+        using var fixture = new SettingsFixture();
+        string path = Path.Combine(fixture.Root, "online-targets.settings");
+        const string original = "target=192.168.1.10\n";
+        File.WriteAllText(path, original);
+        using var reader = new StreamReader(OnlineTargetSettings.OpenRead(path));
+        File.Move(path, path + ".previous");
+        File.WriteAllText(path, "target=192.168.1.11\n");
+        Assert.Equal(original, reader.ReadToEnd());
+        Assert.Equal(new[] { "192.168.1.11" }, OnlineTargetSettings.Load(path)!.Entries);
+    }
+
+    [Fact]
+    public void Saving_replaces_the_list_while_an_existing_reader_finishes_its_snapshot()
+    {
+        using var fixture = new SettingsFixture();
+        string path = Path.Combine(fixture.Root, "online-targets.settings");
+        var audit = new AuditLog(Path.Combine(fixture.Root, "audit"));
+        OnlineTargetSettings.Save(path, OnlineTargetPolicy.Parse("target=192.168.1.10"), audit);
+        using var reader = new StreamReader(OnlineTargetSettings.OpenRead(path));
+        OnlineTargetSettings.Save(path, OnlineTargetPolicy.Parse("target=192.168.1.11"), audit);
+        Assert.Equal("target=192.168.1.10\n", reader.ReadToEnd());
+        Assert.Equal(new[] { "192.168.1.11" }, OnlineTargetSettings.Load(path)!.Entries);
+    }
+
+    [Fact]
     public void Existing_parent_missing_file_is_read_without_creating_a_lock()
     {
         using var fixture = new SettingsFixture();

@@ -26,8 +26,7 @@ namespace TiaMcp.Adapters
             string archiveName="", string archiveMode="Compressed", bool dryRun=true)
             => RunEngineeringServicesStep("ManageGlobalLibrary", meta => {
                 if (portal == null) throw new InvalidOperationException("Connect to TIA first.");
-                if (!new[] { "list", "infos", "create", "open", "openInfo", "retrieve", "save", "saveAs", "close", "archive" }.Contains(action))
-                    throw new ArgumentException("action must be one of: list/infos/create/open/openInfo/retrieve/save/saveAs/close/archive (case-sensitive).");
+                LibraryPolicy.ValidateGlobalAction(action);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 GlobalLibraryComposition libraries = portal.GlobalLibraries;
                 if (action == "list") {
@@ -112,9 +111,7 @@ namespace TiaMcp.Adapters
                     directory = new DirectoryInfo(TiaOpenness.Shared.NativeInputPolicy.FullPath(destinationDirectory));
                     if (directory.Exists || File.Exists(directory.FullName)) throw new IOException("Destination already exists; overwrite/merge refused.");
                 }
-                if (upgrade && action != "open" && action != "retrieve") throw new ArgumentException("upgrade applies only to open/retrieve.");
-                if (upgrade && action == "open" && mode != OpenMode.ReadWrite)
-                    throw new ArgumentException("OpenWithUpgrade requires explicit ReadWrite mode; native overload has no mode parameter.");
+                LibraryPolicy.ValidateUpgrade(action, upgrade, mode == OpenMode.ReadWrite);
                 if (dryRun) return "Library lifecycle preview. Opening/upgrading can write library files; close is explicit and never saves automatically.";
                 meta["mayHaveChanged"] = true;
                 switch (action) {

@@ -36,12 +36,16 @@ namespace TiaOpenness.Shared
             return targets;
         }
 
+        internal static FileStream OpenRead(string path)
+            => new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+
         internal static OnlineTargetList? Load(string path)
         {
             try
             {
                 // Atomic saves expose the old or new file. Reading must not create a settings directory or a lock file.
-                return OnlineTargetPolicy.Parse(File.ReadAllText(path));
+                using var reader = new StreamReader(OpenRead(path));
+                return OnlineTargetPolicy.Parse(reader.ReadToEnd());
             }
             catch (FileNotFoundException) /* swallow(probe-optional): no file means the optional list is not configured (D1). */
             { return null; }
@@ -59,8 +63,12 @@ namespace TiaOpenness.Shared
         {
             try
             {
-                byte[] bytes = File.ReadAllBytes(path);
-                using var reader = new StreamReader(new MemoryStream(bytes), Encoding.UTF8, true);
+                using var file = OpenRead(path);
+                using var buffer = new MemoryStream();
+                file.CopyTo(buffer);
+                byte[] bytes = buffer.ToArray();
+                buffer.Position = 0;
+                using var reader = new StreamReader(buffer, Encoding.UTF8, true);
                 var list = OnlineTargetPolicy.Parse(reader.ReadToEnd());
                 return (list, Revision(path, bytes), list.IsValid ? null : "invalid");
             }

@@ -43,13 +43,14 @@ namespace TiaMcp.Adapters
                     if(!cursor.MoveNext()) break;
                     visited++;
                     var entry=cursor.Current ?? throw new InvalidOperationException("Hardware catalog returned a null entry.");
+                    if(entry.TypeIdentifier?.Length>MaximumFieldCharacters) { reason="field-character-budget"; break; }
+                    if(string.IsNullOrWhiteSpace(entry.TypeIdentifier)) throw new InvalidOperationException("Catalog entry has no exact type identifier.");
+                    // Preserve exact identifiers, including casing, whitespace and version. Never synthesize an insertion identifier.
+                    if(!seen.Add(entry.TypeIdentifier!) || seen.Count<=offset) continue;
                     var fields=new[]{
                         entry.ArticleNumber,entry.CatalogPath,entry.Description,entry.TypeIdentifier,entry.TypeIdentifierNormalized,entry.TypeName,entry.Version
                     };
                     if(fields.Any(s=>s!=null && s.Length>MaximumFieldCharacters)) { reason="field-character-budget"; break; }
-                    if(string.IsNullOrWhiteSpace(entry.TypeIdentifier)) throw new InvalidOperationException("Catalog entry has no exact type identifier.");
-                    // Preserve exact identifiers, including casing, whitespace and version. Never synthesize an insertion identifier.
-                    if(!seen.Add(entry.TypeIdentifier!) || seen.Count<=offset) continue;
                     if(rows.Count==limit) { reason="result-limit"; break; }
                     var size=fields.Sum(s=>s?.Length??0)+query.Length+32;
                     if(characters+size>MaximumCharacters) { reason="response-character-budget"; break; }

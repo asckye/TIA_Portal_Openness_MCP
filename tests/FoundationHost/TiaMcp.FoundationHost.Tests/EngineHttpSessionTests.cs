@@ -212,6 +212,21 @@ public sealed partial class EngineHttpSessionTestsPlc
         Assert.Equal("RELEASED\n", File.ReadAllText(Path.Combine(host.DataDirectory, "leases", "326-1.lease")));
     }
 
+    [Fact]
+    public async Task Forwarded_call_result_is_retrievable_by_its_returned_request_id()
+    {
+        using var host = await Fixture.Start("21");
+        using var session = new Session(host);
+        await session.Initialize();
+        var forwarded = await session.Tool("CallTool", new() { ["name"] = SessionFixtureTool.Name, ["arguments"] = new JsonObject() });
+        string id = (string)forwarded["meta"]!["requestId"]!;
+        var stored = await session.Tool("GetCallResult", new() { ["requestId"] = id });
+        Assert.Equal(id, (string?)stored["meta"]?["requestId"]);
+        Assert.Equal(SessionFixtureTool.Name, (string?)stored["meta"]?["tool"]);
+        Assert.Equal((int)forwarded["data"]!["fixturePid"]!, (int?)stored["data"]?["fixturePid"]);
+        await session.End();
+    }
+
     [Theory, InlineData("20"), InlineData("21")]
     public async Task Http_sessions_own_workers_disconnect_restart_and_teardown(string release)
     {

@@ -40,7 +40,7 @@ internal static class SuiteHang
             || Path.GetFileName(path).EndsWith("_Sequence.xml", StringComparison.OrdinalIgnoreCase)
             || path.EndsWith(".dmp", StringComparison.OrdinalIgnoreCase));
 
-    internal static CommandResult Complete(string directory, string name, HashSet<string> before, CommandResult result)
+    internal static CommandResult Complete(string directory, string name, HashSet<string> before, CommandResult result, TimeSpan? dumpTimeout = null)
     {
         var files = Artifacts(directory).Where(path => !before.Contains(path)).Order(StringComparer.Ordinal).ToArray();
         var tests = new List<string>();
@@ -58,7 +58,7 @@ internal static class SuiteHang
         }
         var dumps = files.Where(path => path.EndsWith(".dmp", StringComparison.OrdinalIgnoreCase)).ToArray();
         // A collector can publish the path while its writer still owns the file. Length alone can accept a partial dump.
-        using (var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(5)))
+        using (var deadline = new CancellationTokenSource(dumpTimeout ?? TimeSpan.FromMinutes(5)))
             foreach (string dump in dumps)
             {
                 try { WaitForDump(dump, deadline.Token).GetAwaiter().GetResult(); }

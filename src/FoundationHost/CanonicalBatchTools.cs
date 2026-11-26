@@ -273,7 +273,8 @@ internal static class CanonicalBatchTools
                     }
                 }
             }
-            var rows = new JsonArray(); bool ready = true;
+            var rows = new JsonArray();
+            bool ready = tool.Name != "ImportPlcTagTablesFromDirectory" || calls.Count != 0;
             foreach (var call in calls)
             {
                 token.ThrowIfCancellationRequested();

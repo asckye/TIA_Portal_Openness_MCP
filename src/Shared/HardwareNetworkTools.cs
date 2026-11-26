@@ -267,12 +267,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 string partnerItemPathJson = HardwareToolContract.Path(partnerItemPath, "partnerItemPath", rootAllowed: true, optional: true);
                 HardwareToolContract.Check(() =>
                 {
-                    HardwareNetworkLogic.RequireOneOf(action, HardwareNetworkLogic.PortActions, "action");
-                    if (action != "read" && partnerDevicePathJson == "[]")
-                        throw new ArgumentException("connect and disconnect require a nonempty partnerDevicePath.", nameof(partnerDevicePath));
+                    ValidatePortAction(action, partnerDevicePath);
                 }, describeArgument: true);
                 return _hardware.ManagePortInterconnection(devicePathJson,itemPathJson,action,partnerDevicePathJson,partnerItemPathJson,dryRun);
             });
+
+        internal static void ValidatePortAction(string action, string[]? partnerDevicePath)
+        {
+            HardwareNetworkLogic.RequireOneOf(action, HardwareNetworkLogic.PortActions, "action");
+            if (action != "read" && (partnerDevicePath == null || partnerDevicePath.Length == 0))
+                throw new ArgumentException("connect and disconnect require a nonempty partnerDevicePath.", nameof(partnerDevicePath));
+        }
 
         [McpServerTool(Name = "GetDeviceItemNetworkInfo"),
                 Description("[L2][Hardware]Get network-related attributes for a device item (best-effort heuristic filter)")]

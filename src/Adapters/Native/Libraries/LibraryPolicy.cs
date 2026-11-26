@@ -190,6 +190,19 @@ namespace TiaMcp.Adapters.Libraries
             if (kind != "version" && (!string.IsNullOrWhiteSpace(leftVersion) || !string.IsNullOrWhiteSpace(rightVersion)))
                 throw new ArgumentException("leftVersion/rightVersion apply to kind=version only.");
         }
+        internal static void ValidateGlobalAction(string action)
+        {
+            if (action is not ("list" or "infos" or "create" or "open" or "openInfo" or "retrieve" or "save" or "saveAs" or "close" or "archive"))
+                throw new ArgumentException("action must be one of: list/infos/create/open/openInfo/retrieve/save/saveAs/close/archive (case-sensitive).");
+        }
+
+        internal static void ValidateUpgrade(string action, bool upgrade, bool readWrite)
+        {
+            if (upgrade && action != "open" && action != "retrieve") throw new ArgumentException("upgrade applies only to open/retrieve.");
+            if (upgrade && action == "open" && !readWrite)
+                throw new ArgumentException("OpenWithUpgrade requires explicit ReadWrite mode; native overload has no mode parameter.");
+        }
+
         internal static void ValidateArchiveName(string archiveName)
         {
             if (string.IsNullOrWhiteSpace(archiveName) || archiveName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0 || archiveName.Length > 128)

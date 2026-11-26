@@ -18,6 +18,19 @@ public sealed class LateCallsTests
         StructuredContent = new JsonObject { ["meta"] = new JsonObject { ["requestId"] = id, ["outcome"] = outcome } } };
 
     [Fact]
+    public void Duplicate_returned_request_id_reads_the_latest_completion()
+    {
+        var store = new LateCalls();
+        foreach (string outcome in new[] { "succeeded", "partial" })
+        {
+            using var call = store.CreateInvocation("GetProjectInfo", "outer-" + outcome, CancellationToken.None);
+            call.Complete(Completed("duplicate", outcome));
+        }
+        var result = store.Read("21", "duplicate", new UnsettledCalls());
+        Assert.Equal("partial", (string?)result?.StructuredContent?["meta"]?["outcome"]);
+    }
+
+    [Fact]
     public void Seventeen_ordinary_completions_evict_only_the_oldest_ordinary_result()
     {
         var store = new LateCalls();

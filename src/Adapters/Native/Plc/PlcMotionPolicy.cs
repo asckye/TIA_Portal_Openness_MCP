@@ -81,6 +81,13 @@ namespace TiaMcp.Adapters.Native.Plc
             return "connection";
         }
 
+        internal static void ValidateMappingProperties(string aspect, IEnumerable<string> names)
+        {
+            if (names.Contains("Alias")) throw new ArgumentException("Alias is fixed by name; renaming is not supported.");
+            if (aspect != "toMapping" && names.Contains("TechnologicalObject"))
+                throw new ArgumentException("TechnologicalObject applies to toMapping only.");
+        }
+
         internal static void RequireConnectionMode(string aspect, string mode)
         {
             if (!ConnectionModes[aspect].Contains(mode))

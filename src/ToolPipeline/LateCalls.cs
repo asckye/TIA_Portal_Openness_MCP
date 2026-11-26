@@ -127,8 +127,8 @@ public sealed class LateCalls
             entries.TryGetValue(id, out var entry);
             if (entry == null)
             {
-                foreach (var stored in ordinary)
-                    if (stored.Id == id) { ordinaryResult = stored.Result; return null; }
+                ordinaryResult = ordinary.LastOrDefault(stored => stored.Id == id).Result;
+                if (ordinaryResult != null) return null;
                 if (!unsettled.IsUnread(id)) return null;
                 var unknown = unsettled.Snapshot().FirstOrDefault(call => call.RequestId == id);
                 var settlement = unsettled.Settlement(id);

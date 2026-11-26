@@ -26,11 +26,21 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         private static readonly AsyncLocal<RequestContext<CallToolRequestParams>?> ProgressRequest = new AsyncLocal<RequestContext<CallToolRequestParams>?>();
-        static partial void ReadForwardedRecoveryTool(ref string? name)
+        private static readonly AsyncLocal<string?> ForwardedRecoveryTool = new();
+        static partial void ReadForwardedRecoveryTool(ref string? name) => name = ForwardedRecoveryTool.Value;
+
+        internal static IDisposable UseForwardedRecoveryTool(CallToolRequestParams? request)
         {
-            var request = ProgressRequest.Value?.Params;
-            if (request?.Name == "CallTool") name = TiaMcp.Logic.ModelContextProtocol.RecoveryHints.ForwardedTool(request.Arguments);
+            var previous = ForwardedRecoveryTool.Value;
+            ForwardedRecoveryTool.Value = TiaMcp.Logic.ModelContextProtocol.RecoveryHints.ForwardedTool(request?.Arguments);
+            return new ForwardedScope(previous);
         }
+
+        private sealed class ForwardedScope(string? previous) : IDisposable
+        {
+            public void Dispose() => ForwardedRecoveryTool.Value = previous;
+        }
+
         internal static IDisposable UseProgressRequest(RequestContext<CallToolRequestParams> request, CancellationToken token)
         {
             var previous = ProgressRequest.Value;
@@ -166,7 +176,7 @@ namespace TiaMcpServer.ModelContextProtocol
             using var stagingSession = ImportStagingTools.UseSession(request);
             if (string.Equals(ProtocolTool.Name, "CallTool", StringComparison.OrdinalIgnoreCase))
             {
-                using var progressRequest = McpServer.UseProgressRequest(request, cancellationToken);
+                using var forwarded = McpServer.UseForwardedRecoveryTool(request?.Params);
                 bool callToolDisabled = McpServer.ApprovalDisabled(ProtocolTool.Name,
                     System.Text.Json.JsonSerializer.Serialize(request?.Params?.Arguments ?? new Dictionary<string, System.Text.Json.JsonElement>()));
                 using var bridgeNativeCalls = InvocationJournal.BeginNativeCallScope();

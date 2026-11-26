@@ -5,6 +5,11 @@ namespace TiaMcp.Adapters.Hardware
 {
     internal static class HardwarePath
     {
+        internal static void RequireNewName(string newName)
+        {
+            if (Parts(newName).Length != 1) throw new ArgumentException("newName must be one path segment.");
+        }
+
         internal static string[] Parts(string path, bool rootAllowed = false)
         {
             if (rootAllowed && string.IsNullOrEmpty(path)) return Array.Empty<string>();

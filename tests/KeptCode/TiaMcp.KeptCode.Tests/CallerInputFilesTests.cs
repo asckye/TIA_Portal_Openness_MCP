@@ -172,6 +172,9 @@ namespace TiaMcp.Engine.Tests
             var error = Assert.Throws<AdapterPreconditionException>(() =>
                 McpServer.ValidateCallerInputFiles("ImportHmiTagTable", Arguments("importPath", root + "\tagtable__默认变量表.xml")));
             Assert.Equal("importPath", error.ParamName);
+            Assert.True(error.IsArgument);
+            var refusal = McpServer.TargetFailure("ImportHmiTagTable", error, issued: false);
+            Assert.Equal("INVALID_ARGUMENT", (string?)refusal.StructuredContent?["error"]?["code"]);
             Assert.Contains("control characters", error.Message);
         }
 

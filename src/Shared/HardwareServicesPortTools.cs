@@ -83,14 +83,19 @@ namespace TiaMcpServer.ModelContextProtocol
                     .Path(partnerInterfaceItemPath, "partnerInterfaceItemPath", rootAllowed: true, optional: true);
                 HardwareToolContract.Check(() =>
                 {
-                    HardwareServicesLogic.RequireOneOf(action, new[] { "create", "delete" }, "action");
-                    if (action == "delete") HardwareToolContract.Confirm(dryRun, confirmDelete);
-                    if (action == "create") HardwareServicesLogic.ConnectionTypeName(connectionType);
+                    ValidateConnectionAction(action, connectionType, dryRun, confirmDelete);
                 });
                 return _hardware
                     .ManageCommunicationConnection(devicePathJson,itemPathJson,action,connectionType,connectionName,localInterfaceItemPathJson,localNodeName,
                         partnerDevicePathJson,partnerItemPathJson,partnerInterfaceItemPathJson,partnerNodeName,confirmDelete,dryRun);
             });
+
+        internal static void ValidateConnectionAction(string action, string connectionType, bool dryRun, bool confirmDelete)
+        {
+            HardwareServicesLogic.RequireOneOf(action, new[] { "create", "delete" }, "action");
+            if (action == "delete") HardwareToolContract.Confirm(dryRun, confirmDelete);
+            if (action == "create") HardwareServicesLogic.ConnectionTypeName(connectionType);
+        }
 
         [McpServerTool(Name="ExchangeSystemDiagnosticsSettings"),
                 Description("[L2][Hardware][FILE] Export/import system diagnostics settings via SystemdiagnosticsSettingsDataProvider (project-level by " +

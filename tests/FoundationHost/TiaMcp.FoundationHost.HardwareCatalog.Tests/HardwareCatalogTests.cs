@@ -10,6 +10,13 @@ internal static class HardwareCatalogTests
         var second = PlcHardwareCatalogPolicy.Search("20", "CPU", 2, _ => repeated, offset: 2);
         Check(second.Items.Select(item => item.TypeIdentifier).SequenceEqual(new[] { "C", "D" }), "offset counts distinct exact catalog identities");
         Check((bool)second.Meta["complete"], "last offset page reports completion");
+        var oversized = Row("first");
+        oversized.Description = new string('x', PlcHardwareCatalogPolicy.MaximumFieldCharacters + 1);
+        var page = PlcHardwareCatalogPolicy.Search("20", "CPU", 1, _ => new[] { oversized, Row("next") }, offset: 1);
+        Check(page.Items.Select(item => item.TypeIdentifier).SequenceEqual(new[] { "next" }), "offset skips oversized descriptions");
+        var longId = Row(new string('x', PlcHardwareCatalogPolicy.MaximumFieldCharacters + 1));
+        var bounded = PlcHardwareCatalogPolicy.Search("20", "CPU", 1, _ => new[] { longId, Row("next") }, offset: 1);
+        Check((string)bounded.Meta["truncationReason"] == "field-character-budget", "skipped identities still respect the field budget");
         var calls=0;
         PlcHardwareCatalogSearchResult Run(IEnumerable<PlcHardwareCatalogCandidate> rows,int limit=50)=>PlcHardwareCatalogPolicy.Search("19","  CPU  ",limit,q=> { Check(q=="CPU","trim literal query"); calls++; return rows; });
         foreach(var q in new[]{"", " ","* ?", "CPU\n",new string('x',257)}) Reject(()=>PlcHardwareCatalogPolicy.Query(q,50),"query bound");

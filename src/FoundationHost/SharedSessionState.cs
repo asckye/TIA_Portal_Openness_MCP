@@ -16,7 +16,7 @@ internal sealed class SharedSessionState
     private static readonly ConditionalWeakTable<IFoundationWorker, SharedSessionState> States = new();
     private readonly IFoundationWorker worker;
     internal Func<string?> HostSessionKey = () => null;
-    private JsonObject? runtimeState;
+    private volatile JsonObject? runtimeState;
     private SharedSessionState(IFoundationWorker worker) => this.worker = worker;
     internal static SharedSessionState For(IFoundationWorker worker) => States.GetValue(worker, key => new(key));
 

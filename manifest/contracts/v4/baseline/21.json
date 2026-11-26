@@ -34960,7 +34960,7 @@
           },
           "cpuType": {
             "default": "",
-            "description": "cpuType: only for register; ECPUType name such as CPU1500_Unspecified, CPU1511, CPU1516, CPU1518F; empty = API default. Use SearchHardwareCatalog for the corresponding project PLC order number.",
+            "description": "cpuType: only for register; ECPUType name such as CPU1500_Unspecified, CPU1511, CPU1516, CPU1518F; empty = API default.",
             "examples": [
               "<CPU type supported by the installed PLCSIM API>"
             ],

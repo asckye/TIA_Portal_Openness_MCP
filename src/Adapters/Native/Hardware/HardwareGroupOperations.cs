@@ -99,7 +99,7 @@ namespace TiaMcp.Adapters.Hardware
             var result = new Dictionary<string, object?> { ["groupPath"] = path, ["action"] = action, ["dryRun"] = dryRun, ["changed"] = false };
             if (action == "rename")
             {
-                if (Parts(newName).Length != 1) throw new ArgumentException("newName must be one path segment.");
+                HardwarePath.RequireNewName(newName);
                 var conflict = Find(siblings, newName);
                 if (conflict != null && !string.Equals(parts.Last(), newName, StringComparison.OrdinalIgnoreCase))
                     throw AdapterPreconditionException.Failed("Destination group exists: " + newName, "destination-exists", "newName");

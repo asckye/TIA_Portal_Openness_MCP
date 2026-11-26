@@ -19,6 +19,7 @@ namespace TiaMcp.PlcWorker
         private readonly Action? _detachOnShutdown;
         private readonly Func<bool> _canDetachOnShutdown;
         private string? portalLost;
+        private int dispatchDepth;
         private long revisionAtEntry;
         internal JsonArray ShutdownEvidence { get; } = new JsonArray();
 
@@ -50,9 +51,14 @@ namespace TiaMcp.PlcWorker
 
         internal ChannelResponse Dispatch(ChannelRequest request, Func<ChannelRequest, ChannelResponse> dispatch)
         {
-            portalLost = null;
-            revisionAtEntry = _outcome.Revision;
-            return dispatch(request);
+            if (dispatchDepth == 0)
+            {
+                portalLost = null;
+                revisionAtEntry = _outcome.Revision;
+            }
+            dispatchDepth++;
+            try { return dispatch(request); }
+            finally { dispatchDepth--; }
         }
 
         internal ChannelResponse Synchronize(ChannelRequest request, ChannelResponse response)

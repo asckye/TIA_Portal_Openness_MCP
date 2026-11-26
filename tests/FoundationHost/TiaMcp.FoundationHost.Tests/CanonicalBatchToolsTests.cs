@@ -12,6 +12,20 @@ using Xunit;
 public sealed class CanonicalBatchToolsTests
 {
 
+    [Fact]
+    public async Task Import_with_no_matching_xml_cannot_apply()
+    {
+        using var files = new Files();
+        var target = new Target("ImportPlcTagTable");
+        var batch = Batch("ImportPlcTagTablesFromDirectory", target);
+        var args = files.Arguments();
+        args["regexName"] = "^NoMatchingTable$";
+        var preview = (await batch.InvokeAsync(Request(batch.ProtocolTool.Name, args))).StructuredContent!;
+        Assert.Empty(preview["data"]!["items"]!.AsArray());
+        Assert.False((bool?)preview["data"]?["canApply"]);
+        Assert.Empty(target.Arguments);
+    }
+
     [Theory, InlineData(0, "rejected-before-operation"), InlineData(1, "partial")]
     public async Task Batch_item_approval_failure_preserves_each_dispatch_boundary(int refusedIndex, string batchOutcome)
     {

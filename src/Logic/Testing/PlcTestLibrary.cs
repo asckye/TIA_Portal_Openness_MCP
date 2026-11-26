@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.Adapters.Contracts;
 
 namespace TiaMcp.Logic.Testing
 {
@@ -50,9 +51,13 @@ namespace TiaMcp.Logic.Testing
         public JsonObject Save(PlcTestCaseDocument document, bool overwrite = false)
         {
             string path = FindPath(document.Id);
-            if (File.Exists(path) && !overwrite) throw new IOException("Case already exists; use overwrite=true to replace it.");
-            string? previous = File.Exists(path) ? PlcTestCaseDocument.Hash(File.ReadAllBytes(path)) : null;
-            PlcTestRunRecord.WriteAtomic(path, document.CanonicalJson, overwrite);
+            AdapterPreconditionException Exists() => AdapterPreconditionException.Failed(
+                "Case already exists; use overwrite=true to replace it.", "case-exists", "overwrite");
+            if (!overwrite && File.Exists(path)) throw Exists();
+            string? previous = overwrite && File.Exists(path) ? PlcTestCaseDocument.Hash(File.ReadAllBytes(path)) : null;
+            try { PlcTestRunRecord.WriteAtomic(path, document.CanonicalJson, overwrite); }
+            // A concurrent create can win after the existence check but before the atomic move.
+            catch (IOException) when (!overwrite && File.Exists(path)) { throw Exists(); }
             return new JsonObject { ["id"] = document.Id, ["sha256"] = document.Sha256, ["previousSha256"] = previous };
         }
 

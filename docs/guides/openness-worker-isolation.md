@@ -34,7 +34,7 @@ The accepted design and implementation stages are recorded in [ADR 0034](https:/
 
 After a forced worker stop during disconnect (`TerminateForDisconnect`), explicitly attach to TIA or call `RestartOpennessWorker` before `CreateProject` or `OpenProject`.
 
-After an acknowledged `DisconnectPortal`, call `ConnectPortal` and `AttachOpenProject` in the same MCP session. The explicit connection starts a new worker generation. A live lease handle still prevents a second writer. Once the handle closes, BUSY, UNCERTAIN and legacy ACTIVE records add `PREVIOUS_OWNER_UNCLEAN` and disclose the prior lease state in `data.previousOwner.leaseState`. Each `unsettledRequests` entry identifies the request by `requestId` and records its `origin` as `this-session` or `previous-owner`. Save continues to report `UNSETTLED_CALLS`.
+After an acknowledged `DisconnectPortal`, call `ConnectPortal` and `AttachOpenProject` in the same MCP session. The explicit connection starts a new worker generation. A live lease handle still prevents a second writer. Once the handle closes, BUSY, UNCERTAIN and legacy ACTIVE records add `PREVIOUS_OWNER_UNCLEAN` and disclose the prior lease state in `data.previousOwner.leaseState`. Each `unsettledRequests` entry identifies the request by `requestId` and records its `origin` as `this-session` or `previous-owner`. The host omits IDs it has already settled from the previous owner’s `unsettledRequests` list. Save continues to report `UNSETTLED_CALLS`.
 
 ## Automatic worker recovery
 

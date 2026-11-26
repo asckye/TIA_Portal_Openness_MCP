@@ -170,11 +170,10 @@ namespace TiaMcp.Adapters.Native.Plc
 #endif
                     if (propertiesError.Length != 0) throw new ArgumentException(propertiesError);
                     var changes = new Dictionary<string, HardwareScalar>(properties);
-                    if (changes.ContainsKey("Alias")) throw new ArgumentException("Alias is fixed by name; renaming is not supported.");
+                    Logic.ValidateMappingProperties(aspect, changes.Keys);
                     string? masterPath = null;
                     if (changes.ContainsKey("TechnologicalObject"))
                     {
-                        if (aspect != "toMapping") throw new ArgumentException("TechnologicalObject applies to toMapping only.");
                         masterPath = changes["TechnologicalObject"].Text ?? throw new ArgumentException("TechnologicalObject must be an exact object path.");
                         changes.Remove("TechnologicalObject");
                     }
