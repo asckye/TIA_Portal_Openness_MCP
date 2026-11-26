@@ -329,6 +329,20 @@ public sealed class HonestWriteOutcomeTests
         Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
     }
 
+    [Theory, InlineData(null), InlineData("null"), InlineData("false"), InlineData("\"false\""), InlineData("{}")]
+    public void Unsupported_B5_write_requires_readable_mutation_evidence(string? flagJson)
+    {
+        using var release = Host.HardwareContract.UseRelease("17");
+        var reply = new JsonObject {
+            ["Failure"] = new JsonObject { ["Code"] = nameof(NotSupportedException), ["Message"] = "Import refused." },
+            ["OutcomeUnknown"] = false
+        };
+        if (flagJson != null) reply["MayHaveChanged"] = JsonNode.Parse(flagJson);
+        var service = new Services.PlcB5PortService((_, _) => reply, () => "fixture.ap17");
+        var body = Body(Host.EngineeringToolContract.Run("ImportAlarmClasses", true, () => service.ImportAlarmClasses("PLC", "alarms.dat")));
+        Assert.Equal(flagJson == "false" ? "UNSUPPORTED_CAPABILITY" : "OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+    }
+
     [Fact]
     public void Missing_Umc_user_is_refused_by_name_before_delete()
     {

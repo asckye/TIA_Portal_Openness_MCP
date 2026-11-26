@@ -53,6 +53,7 @@ public sealed class OptionalEngineeringBoundaryTests
         Assert.Contains("installation", (string?)error["message"]);
         Assert.DoesNotContain("selected object", (string?)error["message"]);
         Assert.Equal(0, nativeCalls);
+        Assert.Equal(0, worker.Calls);
     }
 
     [Theory]

@@ -32,6 +32,15 @@ namespace TiaMcp.Logic.V4
             NativeInputPolicy.RequireLocal(root, "referenceDir");
             var layout = new SeedReferenceLayout();
             if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root)) throw Missing();
+            void RequireSeedDirectory(string path)
+            {
+                var comparison = Path.DirectorySeparatorChar == '/' ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                if (!CallerInputFiles.IsInsideOutputRoot(path, root, comparison, out bool crossesLink))
+                    throw AdapterPreconditionException.Failed(crossesLink
+                        ? "referenceDir and its seed directories must not pass through a junction or symbolic link."
+                        : "Seed directories must stay inside referenceDir.", Condition, "referenceDir");
+            }
+            RequireSeedDirectory(root);
             string manifest = Path.Combine(root, "manifest.json");
             bool hasManifest = File.Exists(manifest);
             if (hasManifest)
@@ -48,9 +57,7 @@ namespace TiaMcp.Logic.V4
                 string directory = layout.Manifest?[key]?.ToString() ?? destination;
                 NativeInputPolicy.RequireLocal(directory, "referenceDir");
                 string source = Path.GetFullPath(Path.Combine(root, directory));
-                var comparison = Path.DirectorySeparatorChar == '/' ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-                if (!CallerInputFiles.IsInsideOutputRoot(source, root, comparison))
-                    throw AdapterPreconditionException.Failed("Seed directories must stay inside referenceDir.", Condition, "referenceDir");
+                RequireSeedDirectory(source);
                 NativeInputPolicy.RequireLocal(source, "referenceDir");
                 CallerInputFiles.RefuseHumanSettingsTargets(new JsonObject { ["referenceDir"] = source });
                 if (!Directory.Exists(source)) return;

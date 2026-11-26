@@ -11,7 +11,15 @@ public sealed class NativeFailureTextTests
         var error = Assert.Throws<NotSupportedException>(() => Hardware.HardwareOfficialService.Require(
             new object(), "Fixture.MissingService", "Siemens.Engineering.MissingOption"));
         Assert.Equal("NotSupportedOnVersion", StepFailureStatus.Of(error));
-        Assert.Null(error.Data["unsupportedBy"]);
+        Assert.Equal("installation", error.Data["unsupportedBy"]);
+        var engine = new PlcFoundationEngine("17");
+        engine.ConfigureFixture();
+        var reply = engine.RunHmiStep("GetSivarcRuleTree", _ => throw error, requiresProject: false);
+        Assert.Equal("installation", reply.Meta["unsupportedBy"]);
+        var refusal = TiaMcp.Logic.V4.UnsupportedCapabilityDetails.ErrorFor("17", "GetSivarcRuleTree", null,
+            error.Message, (string?)reply.Meta["unsupportedBy"]);
+        Assert.Contains("installation", refusal.Message);
+        Assert.DoesNotContain("unavailable on TIA", refusal.Message);
         Assert.Contains("licence", error.Message);
     }
 

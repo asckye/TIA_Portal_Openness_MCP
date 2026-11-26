@@ -494,6 +494,7 @@ namespace TiaMcp.Adapters
                     var type=ExactLibraryType(library,typePath);meta["typePath"]=typePath;meta["createOptions"]=createOptions;meta["before"]=TypeRow(type,true);
                     if(dryRun)return "Library version document import preview; CreateOptions.None fails natively if an in-work version exists.";
                     using var access=HardwareEditAccess();
+                    bool countProof = LibraryPolicy.CanUseDocumentImportCountProof(importOptions, createOptions, environment != null);
                     int versionCountBefore = PlcGroupOperations.Items(type.Versions).Count();
                     var environmentProof = CaptureLibraryImportEnvironment(targetPlc, importOptions, createOptions,
                         () => LibraryVersionSet(PlcGroupOperations.Get(library, "TypeFolder")));
@@ -504,7 +505,7 @@ namespace TiaMcp.Adapters
                     catch
                     {
                         RecordUnchangedLibraryImport(meta, environmentProof, versionCountBefore,
-                            () => PlcGroupOperations.Items(type.Versions).Count(), false);
+                            () => PlcGroupOperations.Items(type.Versions).Count(), countProof);
                         throw;
                     }
                     meta["transferResultState"]=result.TransferResultState.ToString();

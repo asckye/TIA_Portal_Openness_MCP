@@ -50,33 +50,36 @@ namespace TiaMcpServer.Siemens.Services
                 string code = (string?)error["Code"] ?? "", message = (string?)error["Message"] ?? "";
                 bool writes = !request.DryRun && ToolTaxonomy.OperationOf(request.Operation, null)
                     .Operation is "WRITE" or "ONLINE-WRITE" or "FILE" or "EXECUTE";
+                bool? mayHaveChanged = reply["MayHaveChanged"] is JsonValue changed && changed.TryGetValue<bool>(out var mutation) ? mutation : null;
                 if (request.Operation == "GenerateOpcUaModelledInterface" && writes
-                    && ((bool?)reply["MayHaveChanged"] != false || (bool?)reply["OutcomeUnknown"] != false))
+                    && (mayHaveChanged != false || (bool?)reply["OutcomeUnknown"] != false))
                     throw new TiaMcp.Logic.V4.HostBehavior.UncertainWorkerFailure(message, reply);
                 if (request.Operation is "ImportPlcBlockDocuments" or "ImportPlcBlocksDocuments" && (bool?)reply["OutcomeUnknown"] == false)
                 {
-                    if ((bool?)reply["MayHaveChanged"] == true && code == SdBlockOverridePolicy.Failure)
+                    if (mayHaveChanged == true && code == SdBlockOverridePolicy.Failure)
                         throw new InvalidOperationException(message);
-                    if ((bool?)reply["MayHaveChanged"] == false && code is ("INVALID_ARGUMENT" or "PRECONDITION_FAILED"))
+                    if (mayHaveChanged == false && code is ("INVALID_ARGUMENT" or "PRECONDITION_FAILED"))
                     {
                         string? parameter = (string?)error["Evidence"]?["parameter"];
                         if (code == "INVALID_ARGUMENT") throw new AdapterPreconditionException(message, parameter);
                         throw AdapterPreconditionException.Failed(message, (string?)error["Evidence"]?["condition"] ?? "native-admission", parameter);
                     }
                 }
-                if ((bool?)reply["MayHaveChanged"] == true || writes && (bool?)reply["OutcomeUnknown"] == true)
+                if (mayHaveChanged == true || writes && (bool?)reply["OutcomeUnknown"] == true)
                 {
                     var uncertain = new InvalidOperationException(message);
                     uncertain.Data["workerOutcomeUnknown"] = true;
                     uncertain.Data["foundationRequestSent"] = true;
                     throw uncertain;
                 }
-                if ((!writes || (bool?)reply["MayHaveChanged"] == false)
-                    && Enum.TryParse<PortalErrorCode>(code, out var native) && native != PortalErrorCode.OpennessError)
-                    throw new PortalException(native, message);
-                if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
+                if (!writes || mayHaveChanged == false)
+                {
+                    if (Enum.TryParse<PortalErrorCode>(code, out var native) && native != PortalErrorCode.OpennessError)
+                        throw new PortalException(native, message);
+                    if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
+                }
                 if (request.Operation == "GenerateOpcUaModelledInterface" && error["Evidence"] is JsonObject evidence
-                    && (bool?)reply["MayHaveChanged"] == false && (bool?)reply["OutcomeUnknown"] == false)
+                    && mayHaveChanged == false && (bool?)reply["OutcomeUnknown"] == false)
                 {
                     string? parameter = (string?)evidence["parameter"];
                     if ((string?)evidence["v4FailureCode"] == "NOT_FOUND") throw new PortalException(PortalErrorCode.NotFound, message);
@@ -86,7 +89,7 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 var nativeFailure = new PortalException(PortalErrorCode.OpennessError, message);
                 nativeFailure.Data["foundationRequestSent"] = true;
-                nativeFailure.Data["foundationKnownNoMutation"] = (bool?)reply["MayHaveChanged"] == false
+                nativeFailure.Data["foundationKnownNoMutation"] = mayHaveChanged == false
                     && (!writes || (bool?)reply["OutcomeUnknown"] == false);
                 throw nativeFailure;
             }

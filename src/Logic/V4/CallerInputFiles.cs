@@ -13,8 +13,12 @@ namespace TiaMcp.Logic.V4
 {
     internal static class CallerInputFiles
     {
-        internal static bool IsInsideOutputRoot(string path, string? root, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+        internal static bool IsInsideOutputRoot(string path, string? root)
+            => IsInsideOutputRoot(path, root, StringComparison.OrdinalIgnoreCase, out _);
+
+        internal static bool IsInsideOutputRoot(string path, string? root, StringComparison comparison, out bool crossesLink)
         {
+            crossesLink = false;
             if (string.IsNullOrWhiteSpace(root) || string.IsNullOrWhiteSpace(path)) return false;
             try
             {
@@ -29,7 +33,14 @@ namespace TiaMcp.Logic.V4
                     StringSplitOptions.RemoveEmptyEntries);
                 for (int index = 0; ; index++)
                 {
-                    try { if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0) return false; }
+                    try
+                    {
+                        if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+                        {
+                            crossesLink = true;
+                            return false;
+                        }
+                    }
                     catch (FileNotFoundException) /* swallow(env-probe): missing children end the existing ancestry; the root must exist */
                     { return index != 0; }
                     catch (DirectoryNotFoundException) /* swallow(env-probe): missing children end the existing ancestry; the root must exist */

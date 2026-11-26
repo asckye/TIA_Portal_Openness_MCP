@@ -21,9 +21,10 @@ VCI connect checks existing workspace files before writing. If another process c
 ### Fixed
 
 - Seed manifests now refuse directory overrides outside `referenceDir` and reject device paths before resolving them.
+  The refusal identifies a junction or symbolic link in the root or a seed directory.
 - Failed Unified tag imports check the paths of groups and tables as well as exported tag files before reporting that nothing changed.
   Failed library version imports also compare dependency versions, including those in other library folders.
-- B5 write failures with a native error code and no mutation evidence now report an unknown outcome.
+- B5 write failures, including unsupported-operation replies, report an unknown outcome when mutation evidence is missing or unreadable.
   Unified event and dynamization reads and previews return the apply parameter `previewToken` alongside `token`.
 - Multiuser lock-state and security property errors identify the caller's input. Library releases identify invalid `newVersion` values,
   and library comparison paths use the name on the side where the object exists.

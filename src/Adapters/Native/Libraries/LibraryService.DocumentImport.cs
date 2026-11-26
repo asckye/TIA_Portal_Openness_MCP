@@ -23,7 +23,11 @@ namespace TiaMcp.Adapters
                 var libraryBefore = librarySnapshot?.Invoke();
                 return () => Equals(libraryBefore, librarySnapshot?.Invoke()) && before.SequenceEqual(Names(), StringComparer.Ordinal);
             }
-            catch (Exception) { /* swallow(probe-optional): import may proceed without an unchanged-environment proof. */ return null; }
+            catch (Exception)
+            {
+                /* swallow(probe-optional): counts cannot stand in for the unreadable snapshot. */
+                return () => false;
+            }
         }
 
         internal static string LibraryVersionSet(object root)

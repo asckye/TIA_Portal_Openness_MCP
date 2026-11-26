@@ -130,6 +130,15 @@ namespace TiaMcp.Adapters.Contracts.Tests
             Assert.False(proof());
         }
 
+        [Fact]
+        public void Unreadable_library_version_snapshot_keeps_an_eligible_count_proof_uncertain()
+        {
+            var proof = PlcFoundationEngine.CaptureLibraryImportEnvironment(null, "None", "None", () => throw new InvalidOperationException());
+            var meta = new Dictionary<string, object?> { ["mayHaveChanged"] = true };
+            PlcFoundationEngine.RecordUnchangedLibraryImport(meta, proof, 1, () => 1, true);
+            Assert.Equal(true, meta["mayHaveChanged"]);
+        }
+
         [Theory, InlineData("unchanged"), InlineData("type-renamed"), InlineData("block-added"), InlineData("count"),
             InlineData("library-type-count"), InlineData("before-unreadable"), InlineData("after-unreadable"),
             InlineData("override"), InlineData("cultures")]

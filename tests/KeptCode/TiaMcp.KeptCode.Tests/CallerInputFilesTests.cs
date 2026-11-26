@@ -158,6 +158,7 @@ namespace TiaMcp.Engine.Tests
             var error = Assert.Throws<AdapterPreconditionException>(() => TiaMcp.Logic.V4.SeedReferenceLayout.Read(root, "21", null));
             Assert.False(error.IsArgument);
             Assert.Equal("referenceDir", error.ParamName);
+            Assert.Contains("must stay inside referenceDir", error.Message);
         }
 
         [Fact]
@@ -288,6 +289,14 @@ namespace TiaMcp.Engine.Tests
             try
             {
                 Assert.False(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(Path.Combine(link, "x"), root));
+                File.WriteAllText(Path.Combine(root, "manifest.json"), """{"plcTypesDir":"link/types"}""");
+                foreach (var seedRoot in new[] { root, link })
+                {
+                    var error = Assert.Throws<AdapterPreconditionException>(() => TiaMcp.Logic.V4.SeedReferenceLayout.Read(seedRoot, "21", null));
+                    Assert.Equal("referenceDir", error.ParamName);
+                    Assert.Equal("seed-reference-layout", error.Condition);
+                    Assert.Contains("junction or symbolic link", error.Message);
+                }
                 Directory.CreateDirectory(Path.Combine(link, "exports"));
                 Assert.True(TiaMcp.Logic.V4.CallerInputFiles.IsInsideOutputRoot(Path.Combine(link, "exports", "x"),
                     Path.Combine(link, "exports")));
