@@ -1,6 +1,8 @@
 extern alias toolpipeline;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using TiaMcp.FoundationHost;
 using TiaOpenness.Shared;
 using Xunit;
@@ -8,6 +10,15 @@ using Host = toolpipeline::TiaMcpServer.ModelContextProtocol.McpServer;
 
 public sealed class CompatibilityPreviewTests
 {
+    [Fact]
+    public void CreateDevice_registers_the_method_classified_as_a_write()
+    {
+        var methods = typeof(toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools).GetMethods();
+        var registered = Assert.Single(methods, method => method.GetCustomAttribute<McpServerToolAttribute>()?.Name == "CreateDevice");
+        Assert.Equal("CreateDeviceV4", registered.Name);
+        Assert.Equal("WRITE", TiaMcpServer.ModelContextProtocol.ToolMetadata.RuntimeOperation(registered.Name));
+    }
+
     [Fact]
     public void MovePreviewExposesItsNativeHashAndBoundProjectToThePlanner()
     {
@@ -35,7 +46,7 @@ public sealed class CompatibilityPreviewTests
         using var pipeline = new toolpipeline::TiaMcp.FoundationHost.EngineHostPipeline("21", worker, shared);
         using var session = pipeline.EnterSession();
         var tools = new toolpipeline::TiaMcpServer.ModelContextProtocol.HardwareDevicesTools(null!);
-        var preview = tools.CreateDeviceV4("article", "version", "Device");
+        var preview = tools.CreateDeviceFromRequest("article", "version", "Device");
         Assert.True((bool?)preview.StructuredContent?["ok"]);
         Assert.False(preview.StructuredContent!["data"]!["plannedChanges"]!.AsObject().ContainsKey("family"));
         var explicitDefault = tools.CreateDeviceV4("article", "version", "Device", family: "S7-1500");

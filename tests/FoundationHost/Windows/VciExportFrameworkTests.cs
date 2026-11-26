@@ -893,7 +893,7 @@ public sealed class VciExportFrameworkTests
         }
     }
 
-    [Theory, InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Connect_refuses_a_missing_or_file_workspace_root_before_walking(string release)
     {
         using var selected = Host.HardwareContract.UseRelease(release);
@@ -906,7 +906,10 @@ public sealed class VciExportFrameworkTests
                 var row = scenario[dryRun ? "reply" : "apply"]!;
                 var body = Tools(new JsonObject { ["reply"] = row.DeepClone() }).ConnectProjectToWorkspaceV4(dryRun: dryRun).StructuredContent!;
                 Assert.Equal("NOT_FOUND", (string?)body["error"]!["code"]);
-                Assert.Contains("The workspace folder is missing. Restore it or select an existing workspace.", (string?)body["error"]!["message"]);
+                if (key == "file-workspace")
+                    Assert.Contains("A file occupies the workspace path. Select an existing workspace folder.", (string?)body["error"]!["message"]);
+                else
+                    Assert.Contains("The workspace folder is missing. Restore it or select an existing workspace.", (string?)body["error"]!["message"]);
                 Assert.DoesNotContain("MCP_RC_Ws", (string?)body["error"]!["message"]);
                 Assert.Equal(0, (int?)row["Meta"]!["exportsIssued"]);
                 Assert.Empty(Strings(row["Items"]));

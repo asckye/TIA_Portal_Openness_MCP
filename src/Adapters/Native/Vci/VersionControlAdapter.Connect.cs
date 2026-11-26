@@ -208,11 +208,12 @@ namespace TiaMcp.Adapters.Native.Vci
                 var ws = FindWorkspace(RequireVci(), workspaceName);
                 string wsName = PortVci.Name(ws);
                 string wsRootPath = PortVci.Root(ws)?.FullName ?? throw new IOException("The workspace root is unavailable.");
-                bool rootIsDirectory;
-                try { rootIsDirectory = (File.GetAttributes(wsRootPath) & FileAttributes.Directory) != 0; }
+                FileAttributes rootAttributes;
+                try { rootAttributes = File.GetAttributes(wsRootPath); }
                 catch (Exception error) when (error is FileNotFoundException or DirectoryNotFoundException)
-                { rootIsDirectory = false; }
-                if (!rootIsDirectory) throw new DirectoryNotFoundException("The workspace folder is missing. Restore it or select an existing workspace.");
+                { throw new DirectoryNotFoundException("The workspace folder is missing. Restore it or select an existing workspace."); }
+                if ((rootAttributes & FileAttributes.Directory) == 0)
+                    throw new DirectoryNotFoundException("A file occupies the workspace path. Select an existing workspace folder.");
                 var mappingFiles = new MappingFiles();
                 foreach (var mapping in PortVci.Enumerate(PortVci.MappedObjects(ws)))
                     mappingFiles.Add(SafeName(mapping), SafeFile(mapping), SafeFormat(mapping));
