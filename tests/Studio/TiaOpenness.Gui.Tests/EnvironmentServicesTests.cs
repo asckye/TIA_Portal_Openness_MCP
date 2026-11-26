@@ -140,7 +140,7 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
                     }
                     var row = EnvironmentCheckCatalogue.Row(mapped);
                     Assert.Equal(
-                        expected == "Pass" ? string.Empty : Loc.Current[expected == "FixFailed" ? "Env.FixButton" : "Env.ManualButton"],
+                        expected == "FixFailed" ? Loc.Current["Env.FixButton"] : string.Empty,
                         row.FixAction.Resolve());
                     if (expected == "NewLogon") Assert.Contains(Loc.Current["Env.FixLogon"], row.Detail.Resolve(), StringComparison.Ordinal);
                     Assert.DoesNotContain("[Env.", row.Detail.Resolve(), StringComparison.Ordinal);
@@ -252,7 +252,11 @@ public sealed class EnvironmentServicesTests(WpfContext wpf)
                         foreach (var language in new[] { AppLanguage.Chinese, AppLanguage.English })
                         {
                             Loc.Current.Language = language;
-                            foreach (var text in new[] { row.Name, row.Result, row.FixAction, row.Detail, EnvironmentCheckCatalogue.Fix(id) })
+                            var expectedAction = id == "membership" && result != "NewLogon" ? Loc.Current["Env.FixButton"]
+                                : id == "proxy-remote" && result == "Fail" ? Loc.Current["Env.ProxyFixButton"] : string.Empty;
+                            Assert.Equal(expectedAction, row.FixAction.Resolve());
+                            Assert.DoesNotContain("[Env.", row.FixAction.Resolve());
+                            foreach (var text in new[] { row.Name, row.Result, row.Detail, EnvironmentCheckCatalogue.Fix(id) })
                             { Assert.NotEmpty(text.Resolve()); Assert.DoesNotContain("[Env.", text.Resolve()); }
                         }
                     }

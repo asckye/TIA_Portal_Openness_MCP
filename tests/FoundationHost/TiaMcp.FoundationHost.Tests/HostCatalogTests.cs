@@ -22,8 +22,7 @@ public sealed class HostCatalogTests : IDisposable
     [InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public void All_release_catalog_policy_fields_have_one_value(string release)
     {
-        foreach (var field in typeof(Data).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-            Assert.Equal(field.GetValue(Data.Releases["14sp1"]), field.GetValue(Data.Releases[release]));
+        Assert.Same(Data.Releases["14sp1"], Data.Releases[release]);
     }
 
     [Theory, InlineData("14sp1"), InlineData("15.1"), InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"),

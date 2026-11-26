@@ -188,11 +188,17 @@ public sealed class PackagedNoTiaReadinessTests
             .Select(tool => new FoundationV4Tool(tool, release, readinessForTest: () => environment))
             .Where(tool => (string?)tool.ReadinessRefusal("parity")?.StructuredContent?["error"]?["details"]?["resource"] == "tia-openness-environment")
             .Select(tool => tool.ProtocolTool.Name).ToHashSet(StringComparer.Ordinal);
-        var hosted = PortedFamilies.All.Where(f => f.Name is "F01" or "F02" or "F03").SelectMany(f => f.Tools).ToHashSet();
+        // Runtime and VCI host endpoints share the guard with the worker-backed host tools.
+        // Inspect their public admission independently of the production taxonomy and family table.
+        string[] guardedHostEndpoints = {
+            "ManagePlcTestLibrary", "GetPlcLiveValuesOpcUa", "GetPlcLiveValuesS7", "GetPlcRunStateS7", "GetPlcWebDiagnostics", "GetPlcWebVars",
+            "GetUnifiedRuntimeAlarms", "GetUnifiedRuntimeTags", "InvokeUnifiedOpenPipe", "ManagePlcGitRepository", "ProbeS7CpuIdentity",
+            "RunPlcCompanionTool", "SamplePlcLiveValuesS7", "SetPlcWebOperatingMode", "WritePlcWebVars", "WriteUnifiedRuntimeTags"
+        };
         foreach (var tool in Server.CatalogView.All.Values.Where(tool => tool.Execution != "foundation"))
         {
-            bool expected = hosted.Contains(tool.Name) ? HostedWorkerTools.Contains(tool.Name)
-                : !TiaMcpServer.ModelContextProtocol.ToolTaxonomy.IsSafeWithoutTia(tool.Name);
+            bool expected = tool.Execution == "worker" ? tool.Name != "InitializeEnvironment"
+                : HostedWorkerTools.Contains(tool.Name) || guardedHostEndpoints.Contains(tool.Name);
             Assert.True(expected == ReadinessGuard.RequiresOpenness(tool.Name), $"{release}/{tool.Name}: expected requires Openness = {expected}");
         }
         return Server.CatalogView.All.Values.ToDictionary(tool => tool.Name, tool => ReadinessGuard.RequiresOpenness(tool.Name)

@@ -102,7 +102,11 @@ namespace TiaMcpServer.Siemens.Services
                     ["moduleTypeName"] = read.Identity.ModuleTypeName,
                     ["szlError"] = read.Identity.SzlError
                 };
-                if (read.Error != null) data["readError"] = read.Error;
+                if (read.Error != null)
+                {
+                    data["readError"] = read.Error;
+                    if (!read.Identity.Connected) data["unreachableTarget"] = ip;
+                }
                 foreach (var it in read.Items)
                 {
                     string rowName = "", rowAddr = it.Spec;

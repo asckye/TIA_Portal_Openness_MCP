@@ -402,7 +402,8 @@ public sealed class NoLockRecoveryTests
         scope.Facts(scope.ProjectFile);
         var blocks = await scope.Worker.Call("ReadBlocks", new(), CancellationToken.None);
         Assert.Equal("fixture", (string?)blocks?[0]?["Name"]);
-        if (!missingProject) Assert.Equal(generation, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+        Assert.Equal(generation, (long?)scope.Worker.OperatorSnapshot()["generation"]);
+        if (missingProject) Assert.Equal(2, scope.Trace.Count(row => (string?)row["method"] == "adapter.Attach"));
     }
 
     [Theory]

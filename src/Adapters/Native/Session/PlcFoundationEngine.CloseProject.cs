@@ -42,7 +42,15 @@ namespace TiaMcp.Adapters
                 if (localSession != null) { localSession.Close(); localSession = null; } else
 #endif
                     ((Project)target).Close();
-                if (discardChanges && portal!.Projects.Any(open => string.Equals(open.Path.FullName, file, StringComparison.OrdinalIgnoreCase)))
+                bool stillOpen;
+                try { stillOpen = discardChanges && portal!.Projects.Any(open => string.Equals(open.Path.FullName, file, StringComparison.OrdinalIgnoreCase)); }
+                catch
+                {
+                    // Close returned. The old handle cannot establish the current project's identity.
+                    ReleaseProjectLifecycleProject();
+                    throw;
+                }
+                if (stillOpen)
                     throw new IOException("Project.Close returned but the project is still listed. Inspect GetProjectInfo before repeating the call.");
                 project = null;
                 lifecycle.Unbound();

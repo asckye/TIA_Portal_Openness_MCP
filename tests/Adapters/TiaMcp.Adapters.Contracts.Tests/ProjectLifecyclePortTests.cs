@@ -101,7 +101,7 @@ public sealed class ProjectLifecyclePortTests
         Assert.Throws<IOException>(() => engine.CloseProject(false, discardChanges: true, expectedPlanHash: hash,
             bindingOwnedByCaller: true, confirm: true, expectedProjectFile: project.Path.FullName));
         Assert.Equal(1, project.CloseCalls);
-        Assert.Equal(project.Path.FullName, engine.ProjectFile);
+        Assert.Equal(unreadable ? null : project.Path.FullName, engine.ProjectFile);
     }
 
     public static IEnumerable<object[]> SecondaryReleases()

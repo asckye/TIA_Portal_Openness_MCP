@@ -58,8 +58,13 @@ namespace TiaMcpServer.Siemens
             if (!TextListActions.Contains(action)) throw new ArgumentException("action must be read/createFromMasterCopy/delete.");
             if (action == "read") return false;
             if (action == "delete" && string.IsNullOrWhiteSpace(name)) throw new ArgumentException("delete requires the exact user text list name.");
-            if (action == "createFromMasterCopy" && (string.IsNullOrWhiteSpace(libraryName) || string.IsNullOrWhiteSpace(masterCopyPath)))
-                throw new ArgumentException("createFromMasterCopy requires libraryName and masterCopyPath.");
+            if (action == "createFromMasterCopy")
+            {
+                if (string.IsNullOrWhiteSpace(libraryName))
+                    throw new ArgumentException("Set libraryName to the exact name of an open global library containing the master copy.");
+                if (string.IsNullOrWhiteSpace(masterCopyPath))
+                    throw new ArgumentException("Set masterCopyPath to the folder and name of the master copy in that library.");
+            }
             if (dryRun) return false;
             if (action == "delete" && !confirmDelete) throw new ArgumentException("Real deletion requires confirmDelete=true besides dryRun=false.");
             return true;

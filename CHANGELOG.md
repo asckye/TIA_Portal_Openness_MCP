@@ -31,6 +31,14 @@ VCI connect checks existing workspace files before writing. If another process c
 - SiVArc definition operations require V21. Missing or unloadable engineering options identify the installation to check.
 - The Workbench read-only version-control notice identifies the MCP service in English and Chinese and displays unrecognized release keys.
   The title bar and About icons are decorative for accessibility, and the high-contrast outline follows the tile corners.
+### Fixed
+
+- Worker recovery retries a refused project bind on the attached worker. Closing with discard releases the binding if TIA cannot confirm project absence.
+- The host checks installation readiness for worker-backed test and reporting tools. File-only test library actions remain available offline.
+- An unreachable S7 watch-table target reports `PRECONDITION_FAILED` with condition `plc-online`.
+  An alarm text-list export that TIA refused after invocation reports completed execution and retains the `plc-text-lists` diagnosis.
+- The alarm text-list master-copy refusal identifies the required global library. Block-comparison examples use neutral revision names.
+- Environment checks without an available action have an empty action label.
 
 ## [4.0.0-rc.7] - 2026-11-25
 

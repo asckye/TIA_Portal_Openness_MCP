@@ -332,7 +332,7 @@ public static class EnvironmentCheckCatalogue
             _ when issue?.Endpoint != null => issue.Action,
             _ => null,
         };
-        var label = status == CheckStatus.Pass ? LocalizedText.Empty : action ?? LocalizedText.Key("Env.ManualButton");
+        var label = status == CheckStatus.Pass ? LocalizedText.Empty : action ?? LocalizedText.Empty;
         return new(finding.Id, status, Name(finding.Id), result, label,
             LocalizedText.Key("Env.CheckDetail", result, Fix(finding.Id, finding.Result == "NewLogon"), evidence))
             { Issue = issue, CanRepair = allowFix && action.HasValue };

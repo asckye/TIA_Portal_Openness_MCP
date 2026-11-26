@@ -160,14 +160,15 @@ public sealed class ToolExampleCoverageTests(Xunit.Abstractions.ITestOutputHelpe
         Assert.Contains("NOT RUN", scopedCompile);
     }
 
-    [Theory, InlineData("18", "left blocks-", "right MCP_RC_FC.xml"), InlineData("20", "left MCP_RC_FB.xml", "right blocks-")]
-    [InlineData("21", "left MCP_RC_FC.xml", "right blocks-")]
+    [Theory, InlineData("18", "left exported FC", "right reference FC"), InlineData("20", "left reference FB", "right exported FB")]
+    [InlineData("21", "left reference FC", "right exported FC")]
     public void Comparison_evidence_preserves_the_direction_of_the_recorded_file_pair(string release, string left, string right)
     {
         var example = Usage("ComparePlcBlockDocuments", release);
         Assert.Contains(left, (string?)example["validation"]);
         Assert.Contains(right, (string?)example["validation"]);
         Assert.Contains("passed in rows 57 and 58", (string?)example["note"]);
+        Assert.Contains("planned and readback XML", (string?)example["note"]);
     }
 
     [Theory, InlineData("GetVersionControlStatus"), InlineData("GetProjectSettings"), InlineData("CheckLibraryUpdates")]

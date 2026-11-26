@@ -143,6 +143,9 @@ namespace TiaMcpServer.ModelContextProtocol
             HostBehavior.SanitizeEvidence(root, evidence: false);
             Clean(root);
 
+            if (tool == "MonitorPlcWatchTableS7" && (string?)root["unreachableTarget"] is string target && (string?)root["readError"] is string readError)
+                return Result(tool, root, new Error(HostBehavior.SafeDiagnostic(readError) ?? "The PLC could not be reached.",
+                    new PreconditionFailedDetails("plc-online", target)), Outcome.RejectedBeforeOperation, Completeness.None, current);
             if (HostBehavior.DocumentedRefusal(evidence) is Error refusal)
                 return Result(tool, root, refusal, Outcome.RejectedBeforeOperation, Completeness.None, current, writes);
             if (HostBehavior.KnownRefusal(evidence, Bool(evidence["operationSuccess"]) ?? Bool(evidence["success"]),

@@ -10,6 +10,11 @@
 
 模板能被解析不等于已适配所有 TIA 版本。UDT/Global DB builder 可显式输出八版格式；其余六种 PLC builder 仍输出 V21 候选 XML。使用 V20 时核对每项输入格式与实际原生支持，参见 [Builder](plc/builders.md)。
 
+`SeedProjectFromReference` 的 `referenceDir` 指向宿主可读取的参考目录，保留 `manifest.json` 或约定的 XML 子目录（如 `plc/types`、`plc/blocks`）。
+`StageImportFiles` 只接收单层文件名和支持的工程文件类型，子目录和 JSON 清单均不能通过该工具暂存。
+
+`PlanProjectGeneration` 的审批帧或会话计划容量超限时返回 `LIMIT_EXCEEDED`。审批帧过大时按阶段或单元拆分计划。
+
 ## 分阶段操作
 
 | 阶段 | 做什么 | 检查什么 |

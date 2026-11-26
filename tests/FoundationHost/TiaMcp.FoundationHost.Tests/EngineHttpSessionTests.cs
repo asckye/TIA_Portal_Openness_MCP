@@ -564,7 +564,7 @@ public sealed partial class EngineHttpSessionTestsPlc
                     try
                     {
                         Stop();
-                        Assert.True(process.WaitForExit(TestDeadlines.HangMilliseconds), "Owned fixture host did not exit.");
+                        Assert.True(process.WaitForExit(10_000), "Owned fixture host did not exit.");
                     }
                     finally
                     {

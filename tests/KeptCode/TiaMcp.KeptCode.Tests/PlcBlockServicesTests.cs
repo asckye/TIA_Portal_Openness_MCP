@@ -48,6 +48,10 @@ namespace TiaMcp.Engine.Tests
             check(PlcBlockServicesLogic.ValidateTextListRequest("delete", "A", "", "", true, false), "textlist: confirmed delete is a write (sentinel)");
             check(Fails<ArgumentException>(() => PlcBlockServicesLogic.ValidateTextListRequest("createFromMasterCopy", "", "Lib", "", false, true)), "textlist: createFromMasterCopy without path refused");
             check(Fails<ArgumentException>(() => PlcBlockServicesLogic.ValidateTextListRequest("createFromMasterCopy", "", "", "Folder/TL", false, true)), "textlist: createFromMasterCopy without library refused");
+            var missingLibrary = Xunit.Assert.Throws<ArgumentException>(() =>
+                PlcBlockServicesLogic.ValidateTextListRequest("createFromMasterCopy", "", "", "Folder/TL", false, true));
+            check(missingLibrary.Message.Contains("exact name of an open global library", StringComparison.Ordinal),
+                "textlist: empty library explains which name to supply");
             check(PlcBlockServicesLogic.ValidateTextListRequest("createFromMasterCopy", "", "Lib", "Folder/TL", false, false), "textlist: real create is a write (sentinel)");
 
             // Cultures: JSON array of exact, unique, known culture names.

@@ -159,6 +159,7 @@ internal static class SharedReleaseHost
             session.Pipeline.OperatorTools, () => session.Services.OperatorSnapshot(), session.Dispose,
             lateResults: session.Worker.LateResults, unsettled: session.Worker.Unsettled, clock: options.SessionClock);
         session.Worker.OwnerSession = host;
+        // HTTP assigns the caller's key on bind. Discard ownership and Workbench control must see that same current key.
         SharedSessionState.For(session.Worker).HostSessionKey = () => session.Worker.OwnerSession?.SessionKey;
         if (operatorOwned || options.Transport == "stdio") host.RegisterSession(host.SessionKey, session.Pipeline.RegisterStagingSession);
         else host.RegisterSessionOnBind(session.Pipeline.RegisterHttpSession);

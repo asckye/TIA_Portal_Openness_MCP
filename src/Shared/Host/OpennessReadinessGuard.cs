@@ -23,15 +23,17 @@ namespace TiaMcpServer.Dispatch
 #if TIA_ENGINE_HOST
             // The Foundation target checks readiness after capability admission.
             if (McpServer.CatalogView.Find(name)?.Execution == "foundation") return false;
+            if (name is "RestartOpennessWorker" or "RunPlcTestLibrary" or "ManagePlcTestLibrary" or "RunOnlineMonitoringSafetySelfTest"
+                or "GenerateAcceptanceReport" or "RunOfflineReleaseValidationSuite" or "ComparePlcBlockDocuments" or "RenderPlcBlockDocument"
+                or "PreviewToolBatch" or "ApplyToolBatch" or "RunReadOnlyToolBatch")
+                return McpServer.Worker.RequiresOpennessInstallation;
             // Reviewed host operations with no Openness dependency. Keep their dispatch lanes
             // independent of installation readiness. New tools default to guarded.
             if (name is "BuildReleaseHandoffArtifacts" or "CheckProductUpdate" or "ExportPlcTestReport" or "GenerateErrorReport"
-                or "ManagePlcTestLibrary" or "AuditEngineeringExports" or "ExtractPlcBlockMetrics" or "GeneratePlcDocumentation"
+                or "AuditEngineeringExports" or "ExtractPlcBlockMetrics" or "GeneratePlcDocumentation"
                 or "InstantiatePlcTemplates" or "PatchPlcBlockDocument" or "ManageUnifiedCwcPackage" or "RunClassicHmiOfflineValidationSuite"
                 or "RunClassicHmiTemporaryImportPreflight" or "RunHmiActionScriptRecipeSafetySelfTest" or "RunHmiTemplatePlcSyncPrecheckSuite"
                 or "WriteClassicHmiMinimalPackageFiles" or "CallTool") return false;
-            if (!McpServer.Worker.RequiresOpennessInstallation && TiaMcp.Adapters.Contracts.PortedFamilies.Contains(name)
-                && TiaMcp.Adapters.Contracts.PortedFamilies.ForTool(name).Name is "F01" or "F02" or "F03") return false;
 #endif
             return !ToolTaxonomy.IsSafeWithoutTia(name);
         }
@@ -65,6 +67,9 @@ namespace TiaMcpServer.Dispatch
                 return null;
             }
 #if TIA_ENGINE_HOST
+            // The six catalogued management actions use only the local case and run stores.
+            if (name == "ManagePlcTestLibrary" && field("action") is { ValueKind: JsonValueKind.String } action
+                && action.GetString() is "list" or "read" or "save" or "delete" or "listRuns" or "readRun") return null;
             // Only execution of a test library or export of a project block calls the worker.
             if (name == "RunPlcTestLibrary" && field("dryRun").ValueKind != JsonValueKind.False
                 || name == "ComparePlcBlockDocuments" && !HasText("leftBlockPath") && !HasText("rightBlockPath")

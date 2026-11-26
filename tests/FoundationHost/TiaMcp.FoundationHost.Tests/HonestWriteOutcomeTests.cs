@@ -962,7 +962,7 @@ public sealed class HonestWriteOutcomeTests
         }));
         Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
         Assert.Equal("plc-text-lists", (string?)body["error"]?["details"]?["condition"]);
-        Assert.Equal("not-started", (string?)body["meta"]?["execution"]);
+        Assert.Equal("completed", (string?)body["meta"]?["execution"]);
     }
 
     [Theory, InlineData(true), InlineData(false)]

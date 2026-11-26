@@ -88,18 +88,38 @@ internal sealed partial class WorkerClient
         }
     }
 
+    private async Task<int> ResolveRecoveryProcess(RebindTarget target, CancellationToken cancellationToken)
+    {
+        var facts = await CallCore("HostObserve", new JsonObject { ["operation"] = "recovery-processes", ["arguments"] = new JsonObject() },
+            true, false, cancellationToken);
+        var processes = facts!.AsArray().Select(row => new PortalProcessFact((int)row!["ProcessId"]!,
+            (string?)row["ProcessStartUtc"], (string?)row["ProjectPath"], (int)row["AttachedSessions"]!)).ToArray();
+        var resolution = RebindTargetResolver.Resolve(target, processes);
+        string candidates = string.Join(", ", resolution.Candidates.Select(candidate => candidate.Id));
+        if (resolution.Disposition == RebindDisposition.Gone)
+            throw RecoveryRefusal("tia-process-gone",
+                $"TIA PID {target.ProcessId} is gone. The next binding call will try again. Project: {target.ProjectFile}");
+        if (resolution.Disposition is RebindDisposition.Ambiguous or RebindDisposition.Held)
+            throw RecoveryRefusal("project-not-open", "Cannot rebind the project. "
+                + (resolution.Disposition == RebindDisposition.Ambiguous ? $"Several matching TIA processes are open ({candidates}). "
+                    : $"TIA PID {candidates} has an attached Openness client. ") + $"Select a process with ConnectPortal. Project: {target.ProjectFile}");
+        return resolution.Process!.Id;
+    }
+
     internal async Task RecoverLostWorker(bool rebind, CancellationToken cancellationToken)
     {
         RebindTarget? target;
         string reason;
         long previousGeneration;
-        bool restart;
+        bool restart, attach;
         lock (stateSync)
         {
             ForgetSecondaryIfHolderGone();
             if (takenOverBy != null) return;
             if (recovering || !Faulted && portalLostReason == null && !rebindPending) return;
-            restart = Faulted || portalLostReason != null || rebind && rebindPending && attachedProcessId.HasValue;
+            restart = Faulted || portalLostReason != null;
+            // A successful recovery Attach survives a refused BindProject on this channel.
+            attach = restart || !attachedProcessId.HasValue;
             if (!restart && !rebind) return;
             if (CallRunning || UnansweredRequest) throw Busy();
             if (restart && process is { HasExited: false } && ownsPortal && !TiaOpenness.Shared.ProcessLossPolicy.IsConfirmedLoss(portalLostReason))
@@ -137,22 +157,12 @@ internal sealed partial class WorkerClient
         string phase = "processes";
         try
         {
-            var facts = await CallCore("HostObserve", new JsonObject { ["operation"] = "recovery-processes", ["arguments"] = new JsonObject() },
-                true, false, cancellationToken);
-            var processes = facts!.AsArray().Select(row => new PortalProcessFact((int)row!["ProcessId"]!,
-                (string?)row["ProcessStartUtc"], (string?)row["ProjectPath"], (int)row["AttachedSessions"]!)).ToArray();
-            var resolution = RebindTargetResolver.Resolve(target, processes);
-            string candidates = string.Join(", ", resolution.Candidates.Select(candidate => candidate.Id));
-            if (resolution.Disposition == RebindDisposition.Gone)
-                throw RecoveryRefusal("tia-process-gone",
-                    $"TIA PID {target.ProcessId} is gone. The next binding call will try again. Project: {target.ProjectFile}");
-            if (resolution.Disposition is RebindDisposition.Ambiguous or RebindDisposition.Held)
-                throw RecoveryRefusal("project-not-open", "Cannot rebind the project. "
-                    + (resolution.Disposition == RebindDisposition.Ambiguous ? $"Several matching TIA processes are open ({candidates}). "
-                        : $"TIA PID {candidates} has an attached Openness client. ") + $"Select a process with ConnectPortal. Project: {target.ProjectFile}");
-            int pid = resolution.Process!.Id;
-            phase = "attach";
-            await CallCore("Attach", new JsonObject { ["processId"] = pid }, false, false, cancellationToken);
+            if (attach)
+            {
+                int pid = await ResolveRecoveryProcess(target, cancellationToken);
+                phase = "attach";
+                await CallCore("Attach", new JsonObject { ["processId"] = pid }, false, false, cancellationToken);
+            }
             if (target.ProjectFile != null)
             {
                 phase = "project";

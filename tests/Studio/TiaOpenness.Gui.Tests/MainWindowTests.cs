@@ -106,10 +106,6 @@ public class MainWindowTests(WpfContext wpf)
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern IntPtr SendMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
 
-    [DllImport("user32.dll", ExactSpelling = true)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    private static extern int GetSystemMetricsForDpi(int metric, uint dpi);
-
     [Theory]
     [InlineData(AppLanguage.Chinese)]
     [InlineData(AppLanguage.English)]
@@ -121,13 +117,10 @@ public class MainWindowTests(WpfContext wpf)
             WpfContext.ShowWindow(window);
             var peer = new System.Windows.Automation.Peers.ButtonAutomationPeer(window.MaximizeWindowButton);
             var normal = (window.Root.Margin, window.ShellFrame.CornerRadius, window.ShellFrame.BorderThickness, window.MaximizeGlyph.Data);
+            VisualTreeHelper.SetRootDpi(window, new DpiScale(1, 1));
             window.WindowState = WindowState.Maximized;
             WpfContext.Drain();
-            var scale = VisualTreeHelper.GetDpi(window);
-            uint dpi = (uint)Math.Round(scale.PixelsPerInchX);
-            double x = (GetSystemMetricsForDpi(32, dpi) + GetSystemMetricsForDpi(92, dpi)) / scale.DpiScaleX;
-            double y = (GetSystemMetricsForDpi(33, dpi) + GetSystemMetricsForDpi(92, dpi)) / scale.DpiScaleY;
-            Assert.Equal(new Thickness(x, y, x, y), window.Root.Margin);
+            Assert.Equal(new Thickness(8), window.Root.Margin);
             Assert.Equal(new CornerRadius(0), window.ShellFrame.CornerRadius);
             Assert.Equal(new Thickness(0), window.ShellFrame.BorderThickness);
             Assert.Equal(Loc.Current["Access.Restore"], peer.GetName());

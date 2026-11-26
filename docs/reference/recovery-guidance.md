@@ -24,4 +24,10 @@ write. Workbench confirmation remains an explicit human decision.
 
 An `OUTCOME_UNKNOWN` result applies to that call. Read `GetCallResult(requestId)` and inspect its target before repeating it. A running call returns `in-progress` with `OPERATION_IN_PROGRESS`. An identical write returns `same-call-unsettled` until its completed result has been read. `GetSessionState.data.sessionState.unsettled` lists unknown request IDs. `SaveProject` and `SaveProjectCopy` carry `UNSETTLED_CALLS` during preview and apply while that list is nonempty.
 
+If recovery attaches to TIA and the project bind fails, the next binding-dependent call retries the recorded project on the attached worker.
+When process exit settles a previously read unknown result, the new settlement marks it unread so the caller sees the updated evidence.
+
+If `CloseProject` returns from native close and cannot read back project absence, the worker releases its local binding.
+The close outcome stays unknown. Inspect the open projects before binding again.
+
 An explicit `DisconnectPortal` returns `sessionState=disconnected`. Reconnect with `ConnectPortal` and `AttachOpenProject` in the same MCP session. A released lease handle admits the next owner, with `PREVIOUS_OWNER_UNCLEAN` for BUSY, UNCERTAIN or legacy ACTIVE records and `data.previousOwner.leaseState` identifying that state. Each entry in `data.previousOwner.unsettledRequests` carries a `requestId` and an `origin` of `this-session` or `previous-owner`. The host omits request IDs it has already settled when importing the previous owner’s lease record. Unsettled IDs continue to warn on save. Inspect their targets before repeating a call.

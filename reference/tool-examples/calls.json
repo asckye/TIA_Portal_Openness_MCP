@@ -6649,15 +6649,15 @@
         },
         "operations": {},
         "verified": {
-          "18": "Real-machine verified V18 (2026-11-24), left blocks-473cf92217bf229ed0bcf136461fee72de578e283b28f5b94ad6c172c5c2e5e6.xml, right MCP_RC_FC.xml. rc4-verify-v18, row 207.",
-          "20": "Real-machine verified V20 (2026-11-24), left MCP_RC_FB.xml, right blocks-6a99a401fe980a2ee193946ed16b781c8ebe8dff6c46beed8132fda906388473.xml. rc4-verify-v20, row 51.",
-          "21": "Real-machine verified V21 (2026-11-24), left MCP_RC_FC.xml, right blocks-473cf92217bf229ed0bcf136461fee72de578e283b28f5b94ad6c172c5c2e5e6.xml. rc4-verify-v21, row 73."
+          "18": "Real-machine verified V18 (2026-11-24), left exported FC, right reference FC. rc4-verify-v18, row 207.",
+          "20": "Real-machine verified V20 (2026-11-24), left reference FB, right exported FB. rc4-verify-v20, row 51.",
+          "21": "Real-machine verified V21 (2026-11-24), left reference FC, right exported FC. rc4-verify-v21, row 73."
         },
         "validation": "Schema/managed fixture checks only. Newly enabled release behaviorPolicy=current / NOT RUN; VM acceptance pending.",
         "resultReading": [
           "This release retains its full catalog. Discovery and CallTool reach only this exact release's registered tools. Native block-path analysis is unsupported before V20; supply exported file paths. Unified offline artifacts require V19 or later and do not establish native import compatibility."
         ],
-        "note": "Bind leftFilePath and rightFilePath to the two XML revisions. ExportPlcBlock returns the exact path in data.outputFile. V18 planned.xml / after.xml comparisons passed in rows 57 and 58 and returned INVALID_ARGUMENT in row 59. V14 SP1 (rows 26–27), V19 (row 150), V20 (rows 59, 66, 73) and V21 (rows 80, 84, 92) recorded refusals involving DBs with UDT members or before/after recovery files."
+        "note": "Bind leftFilePath and rightFilePath to the two XML revisions. ExportPlcBlock returns the exact path in data.outputFile. V18 planned and readback XML comparisons passed in rows 57 and 58 and returned INVALID_ARGUMENT in row 59. V14 SP1 (rows 26–27), V19 (row 150), V20 (rows 59, 66, 73) and V21 (rows 80, 84, 92) recorded refusals involving DBs with UDT members or before/after recovery files."
       },
       "ExtractPlcBlockMetrics": {
         "arguments": {
@@ -23719,12 +23719,12 @@
         },
         "operations": {},
         "verified": {
-          "18": "Real-machine verified V18 (2026-11-24), left blocks-473cf92217bf229ed0bcf136461fee72de578e283b28f5b94ad6c172c5c2e5e6.xml, right MCP_RC_FC.xml. rc4-verify-v18, row 207.",
-          "20": "Real-machine verified V20 (2026-11-24), left MCP_RC_FB.xml, right blocks-6a99a401fe980a2ee193946ed16b781c8ebe8dff6c46beed8132fda906388473.xml. rc4-verify-v20, row 51.",
-          "21": "Real-machine verified V21 (2026-11-24), left MCP_RC_FC.xml, right blocks-473cf92217bf229ed0bcf136461fee72de578e283b28f5b94ad6c172c5c2e5e6.xml. rc4-verify-v21, row 73."
+          "18": "Real-machine verified V18 (2026-11-24), left exported FC, right reference FC. rc4-verify-v18, row 207.",
+          "20": "Real-machine verified V20 (2026-11-24), left reference FB, right exported FB. rc4-verify-v20, row 51.",
+          "21": "Real-machine verified V21 (2026-11-24), left reference FC, right exported FC. rc4-verify-v21, row 73."
         },
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
-        "note": "Bind leftFilePath and rightFilePath to the two XML revisions. ExportPlcBlock returns the exact path in data.outputFile. V18 planned.xml / after.xml comparisons passed in rows 57 and 58 and returned INVALID_ARGUMENT in row 59. V14 SP1 (rows 26–27), V19 (row 150), V20 (rows 59, 66, 73) and V21 (rows 80, 84, 92) recorded refusals involving DBs with UDT members or before/after recovery files."
+        "note": "Bind leftFilePath and rightFilePath to the two XML revisions. ExportPlcBlock returns the exact path in data.outputFile. V18 planned and readback XML comparisons passed in rows 57 and 58 and returned INVALID_ARGUMENT in row 59. V14 SP1 (rows 26–27), V19 (row 150), V20 (rows 59, 66, 73) and V21 (rows 80, 84, 92) recorded refusals involving DBs with UDT members or before/after recovery files."
       },
       "CompareProjects": {
         "arguments": {

@@ -91,6 +91,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Result(tool, (JsonObject)data.DeepClone(), NativeFailure(HostBehavior.SafeDiagnostic(evidence["nativeMessage"]?.ToString())
                     ?? (string?)result.StructuredContent["error"]?["details"]?["nativeMessage"]),
                     Outcome.Failed, Completeness.Complete, true);
+            // ExportToXlsx returned the documented empty-list diagnosis.
+            if (tool == "ExportAlarmTextLists" && (string?)result.StructuredContent?["error"]?["details"]?["condition"] == "plc-text-lists")
+                return result;
             return McpServer.ExportFailureResult(tool, result, export);
         }
         private static bool? Flag(JsonObject obj, string key)
@@ -137,7 +140,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 ?? HostBehavior
                     .KnownRefusalWithMessage(evidence, success, HardwareContract.ReleaseKey, tool, nativeMessage, field => McpServer
                         .MissingTargetDetails(tool, field))) is Error refusal)
-            { outcome = Outcome.RejectedBeforeOperation; error = refusal; }
+            {
+                error = refusal;
+                outcome = tool == "ExportAlarmTextLists" && refusal.Details is PreconditionFailedDetails { Condition: "plc-text-lists" }
+                    ? Outcome.Failed : Outcome.RejectedBeforeOperation;
+            }
             else if (HostBehavior.UnchangedNativeFailure(evidence, success, allowWrittenFiles: (string?)evidence["action"] == "export"))
             { outcome = writes ? Outcome.Failed : Outcome.ReadFailed; error = HostBehavior.UnchangedNativeError(evidence, nativeMessage); }
             else if (unknown || writes && success != true && !before && !nativeKnown && !settledImports && !projectMissing && status != "HmiReadSessionBlocked")

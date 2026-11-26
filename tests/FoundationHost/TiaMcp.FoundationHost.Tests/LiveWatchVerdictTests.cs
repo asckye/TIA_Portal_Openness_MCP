@@ -87,13 +87,26 @@ public sealed class LiveWatchVerdictTests
         const string reason = "Connect to 192.0.2.10 (rack 0, slot 1) failed: TCP: Error receiving Data";
         var body = Monitor(new S7ReadResult { Error = reason });
         Assert.False((bool)body["ok"]!);
-        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
-        Assert.Equal("read-failed", (string?)body["meta"]?["outcome"]);
+        Assert.Equal("PRECONDITION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal("rejected-before-operation", (string?)body["meta"]?["outcome"]);
         Assert.NotEqual("complete", (string?)body["meta"]?["completeness"]);
-        Assert.Contains("Connect to 192.0.2.10", (string?)body["error"]?["details"]?["nativeMessage"], StringComparison.Ordinal);
+        Assert.Equal("plc-online", (string?)body["error"]?["details"]?["condition"]);
+        Assert.Equal("192.0.2.10", (string?)body["error"]?["details"]?["target"]);
         Assert.Equal(reason, (string?)body["error"]?["message"]);
         Assert.Equal(reason, (string?)body["data"]?["readError"]);
         Assert.False((bool)body["data"]!["evidence"]!["success"]!);
+    }
+
+    [Theory, MemberData(nameof(Releases))]
+    public void A_read_failure_after_connect_preserves_the_native_diagnosis(string release)
+    {
+        using var scope = Host.HardwareContract.UseRelease(release);
+        const string reason = "The connected CPU did not match the requested module.";
+        var read = new S7ReadResult { Error = reason };
+        read.Identity.Connected = true;
+        var body = Monitor(read);
+        Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]?["code"]);
+        Assert.Equal(reason, (string?)body["error"]?["details"]?["nativeMessage"]);
     }
 
     [Theory, MemberData(nameof(Releases))]
