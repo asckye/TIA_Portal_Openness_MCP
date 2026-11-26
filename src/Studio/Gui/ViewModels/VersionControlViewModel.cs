@@ -231,6 +231,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
         if (result.VerifiedEqual > 0) lines.Add(LocalizedText.Key("Vc.VerifiedCount", result.VerifiedEqual));
         if (result.NotAttempted > 0) lines.Add(LocalizedText.Key("Vc.NotAttemptedCount", result.NotAttempted));
         if (result.NotVerified > 0) lines.Add(LocalizedText.Key("Vc.NotVerifiedCount", result.NotVerified));
+        if (result.ComparisonInterrupted) lines.Add(LocalizedText.Key("Vc.ComparisonInterrupted"));
         if (result.UnverifiedEqual > 0) lines.Add(LocalizedText.Key("Status.StoredEqual", result.UnverifiedEqual));
         if (result.SkippedDisconnected > 0) lines.Add(LocalizedText.Key("Status.VcDisconnected", result.SkippedDisconnected));
         return LocalizedText.Lines(lines.ToArray());

@@ -42,7 +42,7 @@ internal static class VciProofFixture
         string changed = xml.Replace("<Name>MCP_RC_FC</Name>", "<Name>Changed</Name>");
         var cases = new Dictionary<string, object>();
         foreach (var key in new[] { "import", "disposed", "wrong-write", "invalid-output", "changed-again", "final-proxy",
-            "studio-unknown", "studio-final-abort", "missing-output", "cleanup", "stop", "inconsistent" })
+            "studio-unknown", "studio-final-abort", "studio-final-disposed", "missing-output", "cleanup", "stop", "inconsistent" })
         {
             var root = parent.CreateSubdirectory("proof-sequence-" + key);
             var ws = new Workspace(root);
@@ -72,9 +72,9 @@ internal static class VciProofFixture
                 }
                 if (afterSync && key == "changed-again") File.WriteAllText(Path.Combine(root.FullName, "Motor.xml"), xml);
                 if (afterSync && key == "studio-final-abort") throw new EngineeringUserAbortException("Final comparison aborted");
-                if (afterSync && key == "final-proxy") throw new EngineeringObjectDisposedException("Final export proxy disposed");
+                if (afterSync && key is "final-proxy" or "studio-final-disposed") throw new EngineeringObjectDisposedException("Final export proxy disposed");
                 File.WriteAllText(file.FullName, key is "wrong-write" or "invalid-output" or "changed-again" or "final-proxy"
-                    or "studio-unknown" or "studio-final-abort" or "missing-output" or "inconsistent" ? changed : projectXml);
+                    or "studio-unknown" or "studio-final-abort" or "studio-final-disposed" or "missing-output" or "inconsistent" ? changed : projectXml);
             });
             first.Status.AcceptEqual = true;
             if (key is "wrong-write" or "invalid-output" or "changed-again" or "final-proxy" or "studio-final-abort")
@@ -90,6 +90,13 @@ internal static class VciProofFixture
             if (key == "inconsistent")
                 first.Status.OnSynchronized = () => throw new EngineeringTargetInvocationException("Motor is not consistent. password=fixture-password");
             var next = Add("Next", (file, _) => File.WriteAllText(file.FullName, xml));
+            if (key == "studio-final-disposed")
+            {
+                first.Status.OnSynchronized = () => afterSync = true;
+                ((PlcBlock)next.LinkedProjectObject).Write = (file, _) => File.WriteAllText(file.FullName, changed);
+                next.Status.AcceptEqual = true;
+                next.Status.OnSynchronized = () => File.WriteAllText(Path.Combine(root.FullName, "Next.xml"), changed);
+            }
             if (key is "import" or "stop" or "cleanup")
             {
                 next.Status.State = CompareState.Unequal;
@@ -101,7 +108,7 @@ internal static class VciProofFixture
             {
                 if (key == "import")
                     cases[key] = new OpennessVersionControl(() => project).Sync("", SyncDirection.WorkspaceToProject, false, null);
-                else if (key == "studio-final-abort")
+                else if (key is "studio-final-abort" or "studio-final-disposed")
                     cases[key] = new OpennessVersionControl(() => project).Sync("", SyncDirection.ProjectToWorkspace, false, null);
                 else if (key == "studio-unknown")
                 {

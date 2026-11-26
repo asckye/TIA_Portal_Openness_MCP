@@ -78,18 +78,6 @@ namespace TiaMcpServer.ModelContextProtocol
         public int? Score { get; set; }
     }
 
-    public class CaxExportResult
-    {
-        public string? DeviceName { get; set; }
-        public string? FilePath { get; set; }
-        public bool Success { get; set; }
-        public string? State { get; set; }
-        public bool? NativeBooleanResult { get; set; }
-        public int ErrorCount { get; set; }
-        public int WarningCount { get; set; }
-        public List<string>? Messages { get; set; }
-    }
-
     public class ResponseAttributes : ResponseMessage
     {
         public IEnumerable<Attribute>? Attributes { get; set; }

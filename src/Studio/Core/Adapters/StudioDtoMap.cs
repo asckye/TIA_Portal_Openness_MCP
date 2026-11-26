@@ -204,6 +204,7 @@ namespace TiaOpenness.Core.Adapters
             SkippedDisconnected = value.SkippedDisconnected,
             DataComplete = value.DataComplete,
             UnverifiedEqual = value.UnverifiedEqual,
+            ComparisonInterrupted = value.ComparisonInterrupted,
             Items = MapList(value.Items, Map),
         };
     }

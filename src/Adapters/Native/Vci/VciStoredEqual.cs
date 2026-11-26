@@ -215,7 +215,7 @@ internal sealed class VciStoredEqual
         {
             Message = NativeFailureText.BoundedDiagnostic(error);
             Unconfirmed |= Issued && FileChanged != false;
-            Interrupted = !NativeVci.Ordinary(error) && (Issued || !LocalDisposal(error));
+            Interrupted = !NativeVci.Ordinary(error) && !LocalDisposal(error);
         }
     }
 }

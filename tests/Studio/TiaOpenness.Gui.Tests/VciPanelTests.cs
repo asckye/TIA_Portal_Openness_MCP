@@ -19,6 +19,32 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class VciPanelTests(WpfContext wpf)
 {
     [Theory]
+    [InlineData(AppLanguage.English, "Final comparison interrupted.")]
+    [InlineData(AppLanguage.Chinese, "最终比较已中断。")]
+    public void Sync_counts_show_when_the_final_comparison_was_interrupted(AppLanguage language, string notice)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var client = new FakeProjectClient { AttachedProject = new ProjectInfo { Name = "Line", Path = @"D:\Line.ap17" } };
+            bool interrupted = true;
+            client.SyncHandler = (direction, preview) => Task.FromResult(new SyncResult {
+                Direction = direction, DryRun = preview, Synchronized = 1, ComparisonInterrupted = interrupted, DataComplete = !interrupted });
+            using var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = "17" };
+            model.Session.Connect.Execute(null);
+            var vc = model.VersionControl;
+            WpfContext.Complete(vc.VcRefreshAsync());
+            vc.VcDryRun = false;
+            vc.VcPush.Execute(null);
+            WpfContext.Drain();
+            Assert.Contains(notice, vc.SyncCounts);
+            interrupted = false;
+            vc.VcPush.Execute(null);
+            WpfContext.Drain();
+            Assert.Equal(Loc.Current.T("Project.SyncCounts", 1, 0, 0), vc.SyncCounts);
+        });
+    }
+
+    [Theory]
     [InlineData(AppLanguage.English, "2 refused", "1 unknown", "1 failed")]
     [InlineData(AppLanguage.Chinese, "已拒绝 2", "结果未知 1", "失败 1")]
     public void Restore_toast_and_counts_distinguish_refusals_uncertainty_and_failures(AppLanguage language,

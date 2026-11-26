@@ -468,6 +468,10 @@ public sealed class VciExportFrameworkTests
         var aborted = cases["studio-final-abort"]!;
         Assert.True((bool?)aborted["ComparisonInterrupted"]);
         Assert.False((bool?)aborted["DataComplete"]);
+        var localDisposal = cases["studio-final-disposed"]!;
+        Assert.False((bool?)localDisposal["ComparisonInterrupted"]);
+        Assert.Equal(new[] { "Motor:not-verified", "Next:synchronized" },
+            localDisposal["Items"]!.AsArray().Select(row => (string?)row!["Name"] + ":" + (string?)row["Outcome"]));
         var partial = cases["studio-rows"]!;
         Assert.Equal(0, (int?)partial["NotVerified"]);
         Assert.False((bool?)partial["DataComplete"]);

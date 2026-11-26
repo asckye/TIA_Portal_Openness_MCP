@@ -465,6 +465,7 @@ internal static partial class Strings
         ("Vc.WouldVerifyCount", "{0} to verify on apply.", "执行时需核对 {0} 个。"),
         ("Vc.VerifiedCount", "{0} verified by content.", "已通过内容核实 {0} 个。"),
         ("Vc.NotVerifiedCount", "{0} failed verification.", "未能验证 {0} 个。"),
+        ("Vc.ComparisonInterrupted", "Final comparison interrupted.", "最终比较已中断。"),
         ("Vc.VerifiedEqual", "Verified equal", "已验证相同"),
         ("Status.StoredEqual", StoredEqualEn, StoredEqualZh),
         ("Status.RefreshRefused", "Refresh refused: {0}", "刷新被拒：{0}"),

@@ -127,6 +127,15 @@ public sealed class AdapterTiaSessionTests
         Assert.Single(state.Calls);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Sync_mapping_preserves_the_final_comparison_status(bool interrupted)
+    {
+        var result = StudioDtoMap.Map(new D.SyncResult { ComparisonInterrupted = interrupted });
+        Assert.Equal(interrupted, result.ComparisonInterrupted);
+    }
+
     [Fact]
     public void Version_control_tracks_the_current_project_capability()
     {
