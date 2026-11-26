@@ -4,6 +4,26 @@
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-11-26
+
+The final 4.0 release for all eight supported TIA Portal releases, V14 SP1, V15.1 and V16–V21. It fixes the LOW findings of the rc.8 real-machine re-verification.
+GitHub marks it Latest; the 3.3 updater does not offer it. What 4.0 brings over 3.3 is summarized in [v4.0.0](docs/releases/v4.0.0.md).
+
+### Fixed
+
+- `CreateDevice` and `CreateHardwareCatalogDevice` previews and results list `family` only when the caller passed it, so an HMI panel preview no longer shows `S7-1500`.
+  The family used for the catalog lookup is unchanged.
+- On V16–V21, a synchronization summary distinguishes why objects are not verified. It names inconsistent blocks and says to compile them and synchronize again.
+  The advice to back up and remove a stale workspace file remains only for objects whose comparison export differs or cannot prove the content.
+- `PatchPlcBlockDocument` with `changes=[]` returns `INVALID_ARGUMENT` that names `changes` and says that at least one change is required.
+  Every `minItems` violation names its parameter and the required count; a value that is not an array still reports the type.
+- `ConnectProjectToWorkspace` reports a reused existing file as `mapped | reused existing file` and counts it in a new `reused` evidence field, separate from `exportsIssued`.
+  When reuses are among the successes, a partial failure says "Some objects were mapped to the workspace."
+- The certificate-template hint says the limit is known on S7-1500 FW V2.9 with TIA V17 and later, including V21.
+- `GetVersionControlStatus` names mappings that an import or override disconnected, as synchronization already did, and names workspace XML files that no mapping references
+  (up to 20 in the message; the new `unmappedFiles` evidence field lists up to 200, `[]` when all are mapped, `null` when the scan was not possible).
+  Status lines of duplicate mappings after a reconnect show each mapping's own state instead of repeating the disconnected one.
+
 ## [4.0.0-rc.8] - 2026-11-26
 
 VCI connect checks existing workspace files before writing. If another process creates the target during the native TIA write, TIA can overwrite it. Give connect exclusive write access to the workspace until it finishes.

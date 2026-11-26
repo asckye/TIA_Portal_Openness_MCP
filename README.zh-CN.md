@@ -5,7 +5,7 @@
 面向 Siemens TIA Portal Openness 的 MCP 服务器与 Windows 桌面工作台，精确支持 **V14 SP1、V15.1 及 V16–V21** 八个版本。既可接入各类 AI 编程客户端，也可在工作台内直接操作项目，提供浏览、PLC/HMI 生成与导入导出、编译、测试与诊断，并默认由“预览预检、工作台人工审批、审计哈希链与会话隔离 worker”保护工程安全。
 
 > [!NOTE]
-> **名称与版本说明**：原名 **TIA Portal Openness MCP**。可执行文件 `TiaOpenness.exe`、Claude Code 插件 ID `tia-portal-openness-mcp` 和 MCP 服务名 `tia-portal` 继续兼容现有配置。GitHub 会将旧仓库链接重定向至新地址。本页说明尚未正式发布的 4.0 源码（当前预发布：[v4.0.0-rc.8](docs/releases/v4.0.0-rc.8.md)），GitHub 的 **Latest** 仍为稳定版 3.3；已下载版本以包内文档为准。
+> **名称与版本说明**：原名 **TIA Portal Openness MCP**。可执行文件 `TiaOpenness.exe`、Claude Code 插件 ID `tia-portal-openness-mcp` 和 MCP 服务名 `tia-portal` 继续兼容现有配置。GitHub 会将旧仓库链接重定向至新地址。本页说明 4.0 源码（当前版本：[v4.0.0](docs/releases/v4.0.0.md)，GitHub 的 **Latest**）。3.3 的更新器不会提供 4.0，请按[3.3 到 4.0 迁移指南](docs/guides/migrate-3.3-to-4.0.md)并排安装；已下载版本以包内文档为准。
 
 ![AI MCP 客户端与工作台项目页共享 FoundationHost 会话，由匹配版本的隔离 PLC worker 操作 TIA Portal](docs/assets/architecture.zh-CN.svg)
 
@@ -81,10 +81,10 @@
 
 ## 开发和维护
 
-仅维护 `master`，运行二进制随 Release 分发，不提交到 Git。准备好文档规定的 SDK 目录和固定版本的伴随 Python 环境后，在干净 checkout 的根目录运行以下命令（版本号须与 `Version.props` 一致，当前为 `4.0.0-rc.8`）：
+仅维护 `master`，运行二进制随 Release 分发，不提交到 Git。准备好文档规定的 SDK 目录和固定版本的伴随 Python 环境后，在干净 checkout 的根目录运行以下命令（版本号须与 `Version.props` 一致，当前为 `4.0.0`）：
 
 ```powershell
-dotnet run --project build-tools/release -- prepare -Version 4.0.0-rc.8 -BuildOnly -PublicApiRoot <SDK-root> -Python <python.exe>
+dotnet run --project build-tools/release -- prepare -Version 4.0.0 -BuildOnly -PublicApiRoot <SDK-root> -Python <python.exe>
 ```
 
 `-BuildOnly` 仅构建并打包八个版本，不运行完整检查门禁，也不生成可发布候选。

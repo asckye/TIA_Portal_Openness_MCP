@@ -1,6 +1,6 @@
 # 从 3.3 迁移到 4.0
 
-本页写给已经在用 3.3 的人：4.0 与 3.3 并排安装、确认可用后再切换客户端，以及怎样回退到 3.3。适用于 4.0 预发布版本和正式版本。完整变化见 [4.0 发布说明](../releases/v4.0.0.md)（英文）。
+本页写给已经在用 3.3 的人：4.0 与 3.3 并排安装、确认可用后再切换客户端，以及怎样回退到 3.3。适用于 4.0 预发布版本和正式版本。完整变化见 [4.0 发布说明](../releases/v4.0.0.md)（中英文）。
 
 4.0.0 正式发布后，3.3 工作台的“检查更新”可能会显示 GitHub Latest 的版本号。3.3 更新器无法识别正式版的交付包名，会在下载前停止。升级需要手动下载安装。
 
@@ -147,7 +147,7 @@ TIA Portal、Openness 组件和许可证仍需单独安装。工作台和宿主�
 
 ### 结果
 
-每个结果都是 V4 信封。先看 `ok`，再看 `meta.outcome`、`meta.execution`、`meta.completeness` 和 `meta.requestId`；失败时看 `error.code` 和 `error.details`。结果取值和错误码列表见 [4.0 发布说明](../releases/v4.0.0.md#result-envelope-and-errors)（英文），处理方法见[调用失败时如何处理](../troubleshooting/errors.md)。
+每个结果都是 V4 信封。先看 `ok`，再看 `meta.outcome`、`meta.execution`、`meta.completeness` 和 `meta.requestId`；失败时看 `error.code` 和 `error.details`。结果取值和错误码列表见 [4.0 发布说明](../releases/v4.0.0.md#result-envelope-and-errors)，处理方法见[调用失败时如何处理](../troubleshooting/errors.md)。
 
 遇到 `OUTCOME_UNKNOWN` 时，检查该调用的目标和日志。`GetSessionState.data.sessionState.unsettled` 列出未确认调用，后续独立请求可继续。`SaveProject` 与 `SaveProjectCopy` 的预览和执行通过 `UNSETTLED_CALLS` 提示核对请求编号。禁止自动重放。真正的 worker 故障按 `worker-faulted` 的提示显式恢复。
 
@@ -176,7 +176,7 @@ TIA Portal、Openness 组件和许可证仍需单独安装。工作台和宿主�
 
 ## 相关文档
 
-- [4.0 发布说明](../releases/v4.0.0.md)（英文）和[工具迁移表](../releases/v4.0.0-tool-migration.md)（英文）
+- [4.0 发布说明](../releases/v4.0.0.md)（中英文）和[工具迁移表](../releases/v4.0.0-tool-migration.md)（英文）
 - [配置指南](../getting-started/configuration.md) · [插件安装指南](../getting-started/plugin.md) · [CLI 指南](../getting-started/cli.md)
 - [worker 与恢复](openness-worker-isolation.md)（英文） · [已知限制](../troubleshooting/openness-limitations.md)
 - [预发布真机验证清单](beta-tester-checklist.md)

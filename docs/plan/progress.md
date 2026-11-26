@@ -1,12 +1,13 @@
 # 开发进度
 
-状态：现行 · 最后核对：2026-11-26，master `039436e36`；v4.0.0-rc.8 已发布（2026-11-26，预发布）
+状态：现行 · 最后核对：2026-11-26，master `ff72c1cf5`；v4.0.0-rc.8 已发布（2026-11-26，预发布）；v4.0.0 准备中
 
 本页记录当前 worktree 基线包含的实现和测试者反馈，范围、顺序与放行门槛见[开发计划](plan.md)。本页的集成记录不证明已发布或已通过真机验收。
 
 ## 当前状态
 
-- **v4.0.0-rc.8 已于 2026-11-26 发布（`039436e36`，GitHub 预发布，不设为 latest）。** rc.7 真机复验的修复和审查积累的 LOW 问题已合并到 master `8f58c6c0e`：连接工作区在所有版本上都不覆盖内容不同的已有文件，修复 V18/V19 的 HIGH；V20/V21 SD 覆盖导入不再因 `LibraryConformanceStatus` 误报属性丢失，修复 MEDIUM，并拒绝覆盖库类型实例（VMFIX-35）；RC8-A 至 RC8-E 处理宿主、PLC 软件、硬件、HMI、库、安全、工作台和版本控制的 LOW 问题及维护者决定 D1–D16，RC8-F、RC8-G 修复合并门失败；COV-V21 已完成。工具名称和输入没有变化，部分工具和参数的说明改变，`MonitorPlcWatchTableS7`、`ManagePlcTestLibrary` 等几处错误码和结果改变。代码改动尚未在真机上运行。任务见[开发计划](plan.md#400-rc8)。
+- **v4.0.0 准备中。** rc.8 真机复验（2026-11-26，八个版本）HIGH 0、没有新的 MEDIUM，rc.7 的 HIGH 和 MEDIUM 确认修复。复验的 LOW 由 GA-LOWS 修复：设备创建预览只回显传入的 `family`，同步汇总按未验证原因给建议（不一致的块提示编译），`minItems` 错误写出参数名和数量，连接报告复用的已有文件并单独计数 `reused`，证书提示包括 V21，状态点名断开的映射和没有映射的工作区文件。工具名称和输入没有变化，连接结果多一个 `reused` 计数，部分消息文字改变。GA-LOWS 只经过离线测试和 V17 复验数据的回放，不在真机上重跑。[4.0 发布说明](../releases/v4.0.0.md)已定稿，待维护者确认。任务见[开发计划](plan.md#400)。
+- **v4.0.0-rc.8 已于 2026-11-26 发布（`039436e36`，GitHub 预发布，不设为 latest）。** rc.7 真机复验的修复和审查积累的 LOW 问题已合并到 master `8f58c6c0e`：连接工作区在所有版本上都不覆盖内容不同的已有文件，修复 V18/V19 的 HIGH；V20/V21 SD 覆盖导入不再因 `LibraryConformanceStatus` 误报属性丢失，修复 MEDIUM，并拒绝覆盖库类型实例（VMFIX-35）；RC8-A 至 RC8-E 处理宿主、PLC 软件、硬件、HMI、库、安全、工作台和版本控制的 LOW 问题及维护者决定 D1–D16，RC8-F、RC8-G 修复合并门失败；COV-V21 已完成。工具名称和输入没有变化，部分工具和参数的说明改变，`MonitorPlcWatchTableS7`、`ManagePlcTestLibrary` 等几处错误码和结果改变。2026-11-26 已在八个版本的真机上复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc8)。
 - **v4.0.0-rc.7 已于 2026-11-25 发布（`7431033b7`，GitHub 预发布，不设为 latest）。** rc.6 真机复验的修复已合并到 master `e7343a592`：V20/V21 SIMATIC SD 覆盖导入的核对（SD-OVERRIDE，修复 rc.6 的 HIGH）与工作台 SD 还原检查（SD-RESTORE）、V16–V19 版本控制状态刷新与拒绝原因（VCI-STATUS）、存储 Equal 以内容证明后才跳过（VCI-PROOF）、V16/V17 先写文件再建映射（VCI-EXPORT）、空元素两种写法（VMFIX-34）、工具返回与写保护钩子的凭据遮蔽（S9）、生成失败的编译器文字（LOW-GENERR）、设备创建与只读属性的拒绝原因（LOW-DEVREASON），另在 4.1 计划中加入十个候选项。工具名称和输入没有变化，V16–V21 的版本控制工具和 V20/V21 的 SD 文档工具说明改变，`CreateDevice` 面板版本不兼容的错误码改变。2026-11-25 至 11-26 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc7)。
 - **v4.0.0-rc.6 已于 2026-11-25 发布（`e85fa9910`，GitHub 预发布，不设为 latest）。** rc.5 真机复验的修复（VMFIX-31 至 VMFIX-33）和工作台应用图标（UI-APPICON）已合并到 master `41efb7fe3`。工具名称和输入没有变化，`SetDeviceAddress.startAddress` 的说明改变，部分结果和错误码改变。2026-11-25 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc6)。
 - **v4.0.0-rc.5 已于 2026-11-25 发布（`9862ec67c`，GitHub 预发布，不设为 latest）。** rc.4 真机复验的修复（VMFIX-26 至 VMFIX-30）、工具示例（EXAMPLES-RC4）和结果判定更正（UNK-B、UNK-A）已合并到 master `991b3c334`。工具名称和输入没有变化，只有 `ManageMultiuserSession` 的 `port` 说明和两个工具的示例注解改变。2026-11-25 已在八个版本的真机上定向复验（见“真机结果”）。任务见[开发计划](plan.md#400-rc5)。
@@ -26,7 +27,7 @@
 - **2026-11-23 维护者按建议批准全面审查的决定**：MCP 连接继续不设密码或访问密钥（[ADR 0038](../standards/decisions/0038-keyless-http-transport.md)）；
   工具参数中的密码与更新包不签名是 4.0 接受的风险（[ADR 0042](../standards/decisions/0042-accepted-risks-for-4-0.md)）；审批开关范围不变；
   带安全密码的编译须审批。详见[开发计划](plan.md#待维护者决定)。
-- **4.0 正式版之前还剩**：见[开发计划](plan.md#400-rc8)；最后一个 rc 经验证后定稿 [4.0 发布说明](../releases/v4.0.0.md)并由维护者确认。
+- **4.0 正式版之前还剩**：见[开发计划](plan.md#400)；GA-LOWS 已合并（`ff72c1cf5`），完整 `prepare` 后直接发布（维护者 2026-11-26 同意）；维护者走查工作台、核对 S4，不阻塞发布。
 - **RC 代码已全部合并（2026-11-19 至 11-21）。**
   - UNIFY-1 全部完成：A–D1（beta.6）以及 B2、C2、D2、E。八版共用一个工具包装、一条就绪规则、一个版本目录和一张官方 API 能力表，
     新出现的按版本号分支由 `ReleaseKeyedSitesTests` 拦下。U3 线程模型（MTA-1）、U6 实机保护、U7 V21 builder 输出按 2026-11-04 决定保留。
@@ -143,8 +144,16 @@
 | rc.7，V19 VM，2026-11-26，定向复验 | 103 行：通过 93、按设计拒绝 7、失败 3；会话待定级 1 行，复核后记 HIGH（同 V18）、MEDIUM 1（已知：证书）、LOW 4；无崩溃，未决 0。VCI 检查通过，没有过期 Equal | HIGH 由 VMFIX-35 修复，待 rc.8 复验；全新附加、TIA 外改删文件没有测 |
 | rc.7，V20 VM，2026-11-25，定向复验 | 100 行：通过 84、按设计拒绝 12、失败 4；HIGH 0、MEDIUM 3（2 个新：普通 FB/FC 的 SD 覆盖导入误报；1 个已知：证书）、LOW 2；无崩溃，未决 0。rc.6 的 SD 覆盖导入 HIGH 确认修复 | MEDIUM 由 VMFIX-35 修复，待 rc.8 复验；启动 OB 无法 SD 导出，没有测 |
 | rc.7，V21 VM，2026-11-25，定向复验 | 108 行：通过 87、按设计拒绝 15、失败 6；HIGH 0、MEDIUM 5（3 行同一新缺陷：普通 FB/FC 的 SD 覆盖导入误报；2 个已知：HMI AML）、LOW 3；无崩溃，未决 0。rc.6 的 SD 覆盖导入 HIGH 确认修复 | MEDIUM 由 VMFIX-35 修复，待 rc.8 复验 |
+| rc.8（`039436e36`），V14 SP1 VM，2026-11-26，冒烟检查 | 63 行：通过 61、按设计拒绝 2、失败 0；HIGH 0、MEDIUM 0、LOW 0；无崩溃，未决 0。rc.7 的 V14 SP1 LOW（`generatedObjects`、嵌套 UDT 示例、空名称原因）确认修复 | 无 |
+| rc.8，V15.1 VM，2026-11-26，冒烟检查 | 48 行：通过 46、按设计拒绝 2、失败 0；HIGH 0、MEDIUM 0、LOW 0；无崩溃，未决 0。`objectsAfter`、只读属性预览确认修复 | 无 |
+| rc.8，V16 VM，2026-11-26，冒烟检查 | 59 行：通过 55、按设计拒绝 4、失败 0；HIGH 0、MEDIUM 0、LOW 0；无崩溃，未决 0。连接已有文件规则通过：内容不同的文件写入前被拒、未改变、无映射 | 无 |
+| rc.8，V17 VM，2026-11-26，冒烟检查 | 69 行：通过 62、按设计拒绝 6、失败 1；HIGH 0、MEDIUM 1（已知：证书）、LOW 1（新：重复映射的状态行都写成断开的状态）；无崩溃，未决 0。连接已有文件规则通过 | LOW 由 GA-LOWS 修复，不在真机上重跑 |
+| rc.8，V18 VM，2026-11-26，定向复验 | 88 行：通过 78、按设计拒绝 8、失败 1、未跑 1（Openness 访问对话框超时，确认后重连成功）；HIGH 0、MEDIUM 1（已知：证书）、LOW 3（`family` 回显、`changes=[]` 消息、复用只写 mapped）；无崩溃，未决 0。rc.7 的 HIGH 确认修复：内容不同的文件被拒且未覆盖，一致的文件复用 | LOW 由 GA-LOWS 修复；规范化后一致但字节不同的文件仍被拒，按决定保持严格比较 |
+| rc.8，V19 VM，2026-11-26，定向复验 | 86 行：通过 77、按设计拒绝 7、失败 2；HIGH 0、MEDIUM 1（已知：证书）、LOW 2（不一致块的同步建议、`family` 回显）；无崩溃，未决 0。rc.7 的 HIGH 确认修复 | LOW 由 GA-LOWS 修复 |
+| rc.8，V20 VM，2026-11-26，定向复验 | 119 行：通过 108、按设计拒绝 10、失败 1；HIGH 0、MEDIUM 1（已知：证书）、LOW 2（已知：`family` 回显）；无崩溃，未决 0。rc.7 的 SD 覆盖导入 MEDIUM 确认修复；连接已有文件规则通过 | LOW 和“导入断开映射后状态不提示”由 GA-LOWS 修复；启动 OB 的 SD 导出需要 V20 Update 4 和 SimaticSdEnabler |
+| rc.8，V21 VM，2026-11-26，定向复验 | 105 行：通过 92、按设计拒绝 10、失败 3；HIGH 0、MEDIUM 1（已知：证书）、LOW 4（新：证书提示漏写 V21；已知 3）；无崩溃，未决 0。rc.7 的 SD 覆盖导入 MEDIUM 确认修复；连接已有文件规则通过 | LOW 由 GA-LOWS 修复 |
 
-原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，rc.4 复验在 `rc4-verify-<版本>/`，rc.5 复验在 `rc5-verify-<版本>/`，rc.6 复验在 `rc6-verify-<版本>/`，rc.7 复验在 `rc7-verify-<版本>/`，每批一份汇总。rc.5 至 rc.7 各行的数字按各份汇总原样抄录，各复验会话的计数方式不同，不宜跨版本比较。
+原始记录在维护者本机：beta.3 在 `bin-build/refactor/vm-test/`，尚待 FB-VM 登记；beta.4 在 `bin-build/vm-test/beta4-v21/`，含明文密码的原始返回，不入库，也不复制到夹具；RC 回归在 `bin-build/vm-test/rc-full-<版本>/`、`rc2-full-v17/`、`rc3-full-v21/`，rc.1 复验在 `rc1-full-v14sp1/`、`rc1-full-v15.1/`，rc.4 复验在 `rc4-verify-<版本>/`，rc.5 复验在 `rc5-verify-<版本>/`，rc.6 复验在 `rc6-verify-<版本>/`，rc.7 复验在 `rc7-verify-<版本>/`，rc.8 复验在 `rc8-verify-<版本>/`，每批一份汇总。rc.5 至 rc.8 各行的数字按各份汇总原样抄录，各复验会话的计数方式不同，不宜跨版本比较。
 RC 回归中在线写入、下载和仿真执行只预览（VM 无 PLC，PLCSIM 无实例）。beta.4 回归的缺陷原因尚未逐条验证。未测的正常流程：`OpenProject`、`CloseProject`（自有工程）、`CreateProject`、`RetrieveProjectArchive`、`ConnectIsolatedPortal`、`PublishGenerationRecord`；在线、下载、上传、强制和仿真只读取或预览。调查列出的无任务缺陷和测试缺口已在计划中标为提议，不能当作已分配或已修复。离线检查不能证明原生行为；验收边界以[真机台账](../reference/real-machine-ledger.md)为准。
 
 ## 测试者反馈
