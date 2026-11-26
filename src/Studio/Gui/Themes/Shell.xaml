@@ -319,7 +319,7 @@
     <Setter Property="Margin" Value="0,0,0,12"/>
   </Style>
   <Style x:Key="Primer.Workbench.BrandOutline" TargetType="Border" BasedOn="{StaticResource Primer.HighContrastBorder}">
-    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="CornerRadius" Value="5"/>
     <Setter Property="IsHitTestVisible" Value="False"/>
   </Style>
   <Style x:Key="Primer.Workbench.Brand" TargetType="Image">

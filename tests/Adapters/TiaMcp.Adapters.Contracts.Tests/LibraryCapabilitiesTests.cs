@@ -9,6 +9,18 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class LibraryCapabilitiesTests
 {
     [Fact]
+    public void Release_requires_a_new_version_number()
+        => Assert.Throws<ArgumentException>("newVersion", () => LibraryPolicy.ReleaseVersion(""));
+
+    [Theory, InlineData("LeftMissing", "不存在", "Valve"), InlineData("RightMissing", "Valve", "不存在")]
+    public void Compare_path_uses_the_present_side(string result, string left, string right)
+    {
+        var row = new Dictionary<string, object?> { ["leftName"] = left, ["rightName"] = right, ["comparisonResult"] = result };
+        var rows = Engineering.EngineeringEvidence.FlattenCompareTree(row, _ => [], _ => row, 8, 100, out _);
+        Assert.Equal("Valve", Assert.Single(rows)["path"]);
+    }
+
+    [Fact]
     public void Only_V16_refuses_block_master_copies()
     {
         foreach (string release in ReleaseRange.All)

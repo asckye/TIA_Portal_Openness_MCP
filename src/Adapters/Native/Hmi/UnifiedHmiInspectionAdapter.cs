@@ -23,7 +23,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var handler=HmiExactAccess.Event(ExactHmiItem(softwarePath,screenPath,buttonName),eventType);
                 var data=HmiExactAccess.EventDto(handler);
                 meta["event"]=data;
-                meta["token"]=HmiExactAccess.Token(softwarePath+":"+screenPath+":"+buttonName+":"+eventType,data);
+                meta["previewToken"]=meta["token"]=HmiExactAccess.Token(softwarePath+":"+screenPath+":"+buttonName+":"+eventType,data);
                 meta["exists"]=true;
                 return "Existing event read without creating or changing it.";
             });
@@ -37,7 +37,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var data=HmiExactAccess.EventDto(handler);
                 var scope=softwarePath+":"+screenPath+":"+buttonName+":"+eventType;
                 var token=HmiExactAccess.Token(scope,data);
-                meta["before"]=data;meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
+                meta["before"]=data;meta["previewToken"]=meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
                 var empty=!data["scriptExists"]!.GetValue<bool>()
                     || (data["ScriptCode"]?.ToString()==""
                         && !HmiExchangePolicy.EventDefinitionHasCode(data["GlobalDefinitionAreaScriptCode"]?.ToString()));
@@ -67,7 +67,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var dyn=ExactDynamization(ExactHmiItem(softwarePath,screenPath,itemName),propertyName);
                 var data=HmiSnapshot.Capture(dyn,8,2000);
                 meta["dynamization"]=data;
-                meta["token"]=HmiExactAccess.Token(softwarePath+":"+screenPath+":"+itemName+":"+propertyName,data);
+                meta["previewToken"]=meta["token"]=HmiExactAccess.Token(softwarePath+":"+screenPath+":"+itemName+":"+propertyName,data);
                 return "Selected property dynamization read; coverage is recorded in the snapshot.";
             });
         public HmiMessage DeleteUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName,bool dryRun=true,
@@ -78,7 +78,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var dyn=ExactDynamization(item,propertyName);
                 var data=HmiSnapshot.Capture(dyn,8,2000);
                 var token=HmiExactAccess.Token(softwarePath+":"+screenPath+":"+itemName+":"+propertyName,data);
-                meta["before"]=data;meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
+                meta["before"]=data;meta["previewToken"]=meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
                 var refusal = HmiExchangePolicy.UnifiedDynamizationDeleteRefusal(data);
                 if (refusal != null) throw new PlcSoftwareException("InvalidState", refusal);
                 if (data["incomplete"] is true) meta["unboundTagDynamization"] = true;

@@ -71,7 +71,9 @@ namespace TiaMcpServer.Siemens.Services
                     uncertain.Data["foundationRequestSent"] = true;
                     throw uncertain;
                 }
-                if (Enum.TryParse<PortalErrorCode>(code, out var native) && native != PortalErrorCode.OpennessError) throw new PortalException(native, message);
+                if ((!writes || (bool?)reply["MayHaveChanged"] == false)
+                    && Enum.TryParse<PortalErrorCode>(code, out var native) && native != PortalErrorCode.OpennessError)
+                    throw new PortalException(native, message);
                 if (code == nameof(NotSupportedException)) throw new NotSupportedException(message);
                 if (request.Operation == "GenerateOpcUaModelledInterface" && error["Evidence"] is JsonObject evidence
                     && (bool?)reply["MayHaveChanged"] == false && (bool?)reply["OutcomeUnknown"] == false)

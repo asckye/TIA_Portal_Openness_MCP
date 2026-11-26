@@ -11,6 +11,13 @@ namespace TiaMcp.Adapters.Contracts
 
         public static string[] Since(string first) => Between(first, Keys[Keys.Length - 1]);
 
+        public static string[] Before(int firstMajor)
+        {
+            var result = new string[Index(firstMajor.ToString(System.Globalization.CultureInfo.InvariantCulture))];
+            Array.Copy(Keys, result, result.Length);
+            return result;
+        }
+
         public static string[] Between(string first, string last)
         {
             var start = Index(first);

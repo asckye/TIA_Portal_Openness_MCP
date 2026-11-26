@@ -391,6 +391,23 @@ public sealed class HardwareWriteFailureTests
     }
 
     [Fact]
+    public void Read_only_channel_attribute_returns_target_refusal_from_hardware_step()
+    {
+        var fixture = NativeFixture("17");
+        var channel = new Siemens.Engineering.HW.Channel {
+            AddressInfo = new() { AccessMode = Siemens.Engineering.HW.AttributeAccessMode.Read }
+        };
+        fixture.Cpu.Channels.Add(channel);
+        var result = fixture.Engine.HardwareUpdateDeviceItemChannel(["PLC"], ["CPU"], "Digital", "Input", 0,
+            new() { ["ChannelAddress"] = new HardwareScalar { Kind = "number", Text = "4" } }, dryRun: false);
+        Assert.Equal("NotSupportedOnVersion", result.Meta["status"]);
+        Assert.Equal("target", result.Meta["unsupportedBy"]);
+        Assert.False(result.MayHaveChanged);
+        Assert.False(result.OutcomeUnknown);
+        Assert.DoesNotContain("set:ChannelAddress", channel.Calls);
+    }
+
+    [Fact]
     public void Syslog_unapproved_attribute_is_unchanged_without_native_write_or_reset()
     {
         var fixture = NativeFixture();

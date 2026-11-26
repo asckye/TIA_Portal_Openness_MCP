@@ -153,6 +153,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                 : line == "Import of scripts" + suffix || line == "Import of script modules" + suffix);
         }
 
+        internal static Dictionary<string, string> TagFingerprint(object software, Func<DirectoryInfo, object> export)
+        {
+            var hashes = ExportFingerprint(export).ToDictionary(pair => "file/" + pair.Key, pair => pair.Value, StringComparer.Ordinal);
+            var tables = HmiExchangePolicy.TagTables(software, recordGroup: path => hashes.Add("group" + path, ""));
+            foreach (var table in tables) hashes.Add("table" + table.Path, "");
+            return hashes;
+        }
+
         internal static Dictionary<string, string> ExportFingerprint(Func<DirectoryInfo, object> export)
         {
             // On .NET Framework, Directory.CreateDirectory(path).ToString() returns only the leaf name.

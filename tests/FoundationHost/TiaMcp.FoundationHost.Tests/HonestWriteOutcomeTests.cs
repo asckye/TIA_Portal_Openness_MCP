@@ -319,6 +319,17 @@ public sealed class HonestWriteOutcomeTests
     }
 
     [Fact]
+    public void B5_typed_write_failure_without_mutation_evidence_is_unknown()
+    {
+        using var release = Host.HardwareContract.UseRelease("17");
+        var service = new Services.PlcB5PortService((_, _) => new JsonObject {
+            ["Failure"] = new JsonObject { ["Code"] = "NotFound", ["Message"] = "Import refused." }
+        }, () => "fixture.ap17");
+        var body = Body(Host.EngineeringToolContract.Run("ImportAlarmClasses", true, () => service.ImportAlarmClasses("PLC", "alarms.dat")));
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)body["error"]?["code"]);
+    }
+
+    [Fact]
     public void Missing_Umc_user_is_refused_by_name_before_delete()
     {
         var reply = adaptertests::TiaMcp.Adapters.Contracts.Tests.MutationEvidenceTests.RunStep("17", "ManageUmcUsers", meta => {

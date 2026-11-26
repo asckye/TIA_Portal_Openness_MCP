@@ -61,7 +61,7 @@ namespace TiaMcp.Adapters.Native.Hmi
             return Items(collection).Select(Name).ToList();
         }
 
-        internal static List<(string Path, object Value)> TagTables(object software, int initialDepth = 0)
+        internal static List<(string Path, object Value)> TagTables(object software, int initialDepth = 0, Action<string>? recordGroup = null)
         {
             var root = Get(software, "TagFolder") ?? software;
             var result = new List<(string, object)>();
@@ -80,9 +80,14 @@ namespace TiaMcp.Adapters.Native.Hmi
                     result.Add((path + "/" + ObjectPathEncoding.EncodeSegment(Name(table)), table));
                 }
                 var groups = Get(folder, childProperty);
+                if (groups == null && recordGroup != null) throw new NotSupportedException(childProperty + " unavailable.");
                 if (groups != null)
                     foreach (var child in Items(groups))
-                        Walk(child, path + "/" + ObjectPathEncoding.EncodeSegment(Name(child)), childProperty == "Folders" ? "Folders" : "Groups", depth + 1);
+                    {
+                        string childPath = path + "/" + ObjectPathEncoding.EncodeSegment(Name(child));
+                        recordGroup?.Invoke(childPath);
+                        Walk(child, childPath, childProperty == "Folders" ? "Folders" : "Groups", depth + 1);
+                    }
                 ancestors.Remove(folder);
             }
         }

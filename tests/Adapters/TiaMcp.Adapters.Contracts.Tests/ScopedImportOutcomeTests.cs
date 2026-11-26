@@ -116,6 +116,20 @@ namespace TiaMcp.Adapters.Contracts.Tests
                 TiaOpenness.Shared.HostFailurePolicy.Classify(failure, dispatched: true, readOnly: false));
         }
 
+        [Fact]
+        public void Version_import_cannot_prove_unchanged_when_a_dependency_version_is_replaced()
+        {
+            var versions = new List<object> { new { VersionNumber = new Version(1, 0) } };
+            var dependency = new { Name = "Motor", Versions = versions };
+            var root = new { Types = new[] { new { Name = "Valve", Versions = Array.Empty<object>() } },
+                Folders = new[] { new { Name = "Library", Types = new[] { dependency }, Folders = Array.Empty<object>() } } };
+            var proof = PlcFoundationEngine.CaptureLibraryImportEnvironment(null, "None", "None", () => PlcFoundationEngine.LibraryVersionSet(root));
+            Assert.NotNull(proof);
+            Assert.True(proof());
+            versions[0] = new { VersionNumber = new Version(2, 0) };
+            Assert.False(proof());
+        }
+
         [Theory, InlineData("unchanged"), InlineData("type-renamed"), InlineData("block-added"), InlineData("count"),
             InlineData("library-type-count"), InlineData("before-unreadable"), InlineData("after-unreadable"),
             InlineData("override"), InlineData("cultures")]

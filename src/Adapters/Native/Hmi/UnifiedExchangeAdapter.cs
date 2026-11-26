@@ -72,12 +72,13 @@ namespace TiaMcp.Adapters.Native.Hmi
                 meta["expectedCount"] = expected.Length;
                 HmiExchangePolicy.BeforeOpaqueImport(hmi.Tags, overwrite, meta);
                 if (dryRun) return "Unified tag import preview; no changes.";
-                Dictionary<string, string> Fingerprint() => UnifiedExchangeLogic.ExportFingerprint(output => {
+                Dictionary<string, string> Fingerprint()
+                {
                     var software = ExactUnifiedSoftware(softwarePath);
                     var fresh = string.IsNullOrWhiteSpace(tagTable) ? software.Tags
                         : (FindUnifiedTagTable(software, tagTable) ?? throw new InvalidOperationException("Tag table unavailable for export.")).Tags;
-                    return fresh.Export(output);
-                });
+                    return UnifiedExchangeLogic.TagFingerprint(software, output => fresh.Export(output));
+                }
                 bool ok = UnifiedExchangeLogic.Import(meta, name, () => tags.Import(dir), () => tags.Import(dir, name), Fingerprint);
                 meta["nativeSuccess"] = ok; meta["apiCallSuccess"] = true;
                 if (!ok) throw new InvalidOperationException("Native HmiTagComposition.Import returned false; project may have changed partially.");

@@ -31,6 +31,7 @@ namespace TiaMcp.Adapters.Native.Hmi
                 var before=handler==null ? new HmiObject{["exists"]=false} : HmiExactAccess.EventDto(handler);
                 var scope=softwarePath+"|"+UnifiedObjectAddress.Parse(objectPathJson).ToJsonString()+"|"+propertyName+"|"+eventType;
                 var token=HmiExactAccess.Token(scope,before);
+                meta["previewToken"]=token;
                 meta["before"]=before;meta["token"]=token;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;meta["exists"]=handler!=null;
                 if(action=="read")return "Exact event/script read without creation; raw script text preserved.";
                 if((action=="create")== (handler!=null))

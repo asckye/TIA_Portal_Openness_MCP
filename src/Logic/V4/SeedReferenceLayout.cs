@@ -46,7 +46,11 @@ namespace TiaMcp.Logic.V4
             void Add(string key, string destination)
             {
                 string directory = layout.Manifest?[key]?.ToString() ?? destination;
+                NativeInputPolicy.RequireLocal(directory, "referenceDir");
                 string source = Path.GetFullPath(Path.Combine(root, directory));
+                var comparison = Path.DirectorySeparatorChar == '/' ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                if (!CallerInputFiles.IsInsideOutputRoot(source, root, comparison))
+                    throw AdapterPreconditionException.Failed("Seed directories must stay inside referenceDir.", Condition, "referenceDir");
                 NativeInputPolicy.RequireLocal(source, "referenceDir");
                 CallerInputFiles.RefuseHumanSettingsTargets(new JsonObject { ["referenceDir"] = source });
                 if (!Directory.Exists(source)) return;

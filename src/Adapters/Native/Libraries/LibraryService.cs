@@ -79,7 +79,7 @@ namespace TiaMcp.Adapters
                             + ". Use a software scope with a single matching instance; ambiguous edits are refused.");
                     editInstance = instances[0];
                 }
-                if (action == "release") releaseVersion = Version.Parse(newVersion);
+                if (action == "release") releaseVersion = LibraryPolicy.ReleaseVersion(newVersion);
 #endif
                 if (action == "updateInstances")
                 {
@@ -494,10 +494,9 @@ namespace TiaMcp.Adapters
                     var type=ExactLibraryType(library,typePath);meta["typePath"]=typePath;meta["createOptions"]=createOptions;meta["before"]=TypeRow(type,true);
                     if(dryRun)return "Library version document import preview; CreateOptions.None fails natively if an in-work version exists.";
                     using var access=HardwareEditAccess();
-                    bool countProof = LibraryPolicy.CanUseDocumentImportCountProof(importOptions, createOptions, environment != null);
                     int versionCountBefore = PlcGroupOperations.Items(type.Versions).Count();
                     var environmentProof = CaptureLibraryImportEnvironment(targetPlc, importOptions, createOptions,
-                        () => LibraryTypeCount((LibraryTypeFolder)PlcGroupOperations.Get(library, "TypeFolder")));
+                        () => LibraryVersionSet(PlcGroupOperations.Get(library, "TypeFolder")));
                     meta["mayHaveChanged"]=true;
                     VersionCreateTransferResults result;
                     try { result=environment==null?type.Versions.CreateFromDocuments(file.Directory!,fileName,create,
@@ -505,7 +504,7 @@ namespace TiaMcp.Adapters
                     catch
                     {
                         RecordUnchangedLibraryImport(meta, environmentProof, versionCountBefore,
-                            () => PlcGroupOperations.Items(type.Versions).Count(), countProof);
+                            () => PlcGroupOperations.Items(type.Versions).Count(), false);
                         throw;
                     }
                     meta["transferResultState"]=result.TransferResultState.ToString();

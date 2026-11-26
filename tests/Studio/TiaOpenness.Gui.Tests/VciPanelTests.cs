@@ -107,6 +107,26 @@ public sealed class VciPanelTests(WpfContext wpf)
     }
 
     [Theory]
+    [InlineData(AppLanguage.English, "an AI client connected to the MCP service")]
+    [InlineData(AppLanguage.Chinese, "已连接到 MCP 服务的 AI 客户端")]
+    public void Read_only_notice_identifies_the_MCP_connection(AppLanguage language, string connection)
+        => wpf.RunWithLanguage(language, () => Assert.Contains(connection, Loc.Current["Vc.ReadOnlyBridge"]));
+
+    [Fact]
+    public void Unknown_release_is_displayed_verbatim()
+    {
+        wpf.Run(() =>
+        {
+            var session = new ProjectPageInteractionTests.DocumentSession((_, _) => throw new NotSupportedException())
+                { Release = "99", AdvertiseTools = false };
+            using var project = new McpProjectClient(session);
+            using var model = new VersionControlViewModel(new McpVersionControlClient(project), new FakeDialogService(), new WorkbenchActivity(), () => null);
+            Assert.Equal(Loc.Current.T("Vc.Unavailable", "99"), model.AccessNotice);
+            Assert.Empty(session.Calls);
+        });
+    }
+
+    [Theory]
     [InlineData("14sp1", "Vc.Unavailable")]
     [InlineData("15.1", "Vc.Unavailable")]
     [InlineData("16", "Vc.ReadOnlyBridge")]

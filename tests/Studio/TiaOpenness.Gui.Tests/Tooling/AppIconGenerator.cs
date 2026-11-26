@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -35,10 +36,11 @@ internal static class AppIconGenerator
     {
         string assets = Path.Combine(root, "src/Studio/Gui/Assets");
         var small = XElement.Load(Path.Combine(assets, "AppIconSmall.svg"));
-        var largeDrawing = ReadDrawing(XElement.Load(Path.Combine(assets, "AppIcon.svg")));
+        var large = XElement.Load(Path.Combine(assets, "AppIcon.svg"));
+        var largeDrawing = ReadDrawing(large);
         var frames = Sizes.Select(size => Render(size <= 32 ? ReadDrawing(small, size) : largeDrawing, size)).ToArray();
         var readme = Render(largeDrawing, 96);
-        string xaml = ResourceDictionary(small, largeDrawing);
+        string xaml = ResourceDictionary(small, large);
         string icoPath = Path.Combine(root, "build-tools/assets/AppIcon.ico");
         string titlePath = Path.Combine(root, "src/Studio/Gui/Themes/Palette.AppIcon.xaml");
         string pngPath = Path.Combine(root, "docs/assets/app-icon.png");
@@ -174,7 +176,7 @@ internal static class AppIconGenerator
             if (Math.Abs(stored[i] - rendered[i]) > 2) throw new InvalidDataException($"Stale {size}px image in {path} at pixel {i / 4}.");
     }
 
-    private static string ResourceDictionary(XElement small, Vector large)
+    private static string ResourceDictionary(XElement small, XElement large)
     {
         XElement Drawing(bool highContrast)
         {
@@ -196,14 +198,39 @@ internal static class AppIconGenerator
                 new XElement(Wpf + "DrawingImage.Drawing", new XElement(Wpf + "DrawingGroup", guides, layers)));
         }
         // DrawingImage sizes to its ink. Include the SVG viewport so the large tile retains its transparent margin.
-        var about = new DrawingGroup();
-        using (var dc = about.Open())
+        var gradients = large.Element(Svg + "defs")!.Elements().ToDictionary(e => (string)e.Attribute("id")!, Gradient);
+        XElement LargeLayer(XElement path)
         {
-            dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, large.Width, large.Width));
-            dc.DrawDrawing(large.Drawing);
+            string fill = (string)path.Attribute("fill")!;
+            var layer = new XElement(Wpf + "GeometryDrawing", new XAttribute("Geometry", (string)path.Attribute("d")!));
+            if (fill.StartsWith("url(#", StringComparison.Ordinal))
+            {
+                var gradient = gradients[fill[5..^1]];
+                var brush = gradient switch
+                {
+                    LinearGradientBrush linear => new XElement(Wpf + "LinearGradientBrush",
+                        new XAttribute("StartPoint", linear.StartPoint.ToString(CultureInfo.InvariantCulture)),
+                        new XAttribute("EndPoint", linear.EndPoint.ToString(CultureInfo.InvariantCulture))),
+                    RadialGradientBrush radial => new XElement(Wpf + "RadialGradientBrush",
+                        new XAttribute("Center", radial.Center.ToString(CultureInfo.InvariantCulture)),
+                        new XAttribute("GradientOrigin", radial.GradientOrigin.ToString(CultureInfo.InvariantCulture)),
+                        new XAttribute("RadiusX", radial.RadiusX), new XAttribute("RadiusY", radial.RadiusY)),
+                    _ => throw new InvalidDataException("Unsupported icon brush.")
+                };
+                foreach (var stop in gradient.GradientStops)
+                    brush.Add(new XElement(Wpf + "GradientStop", new XAttribute("Offset", stop.Offset), new XAttribute("Color", stop.Color.ToString())));
+                layer.Add(new XElement(Wpf + "GeometryDrawing.Brush", brush));
+            }
+            else layer.SetAttributeValue("Brush", fill);
+            return path.Attribute("fill-opacity") is { } opacity
+                ? new XElement(Wpf + "DrawingGroup", new XAttribute("Opacity", opacity.Value), layer) : layer;
         }
-        var largeImage = XElement.Parse(System.Windows.Markup.XamlWriter.Save(new DrawingImage(about)));
-        largeImage.SetAttributeValue(Xaml + "Key", "AppIcon.Large");
+        var viewport = new XElement(Wpf + "GeometryDrawing", new XAttribute("Brush", "Transparent"),
+            new XElement(Wpf + "GeometryDrawing.Geometry", new XElement(Wpf + "RectangleGeometry",
+                new XAttribute("Rect", $"0,0,{large.Attribute("width")!.Value},{large.Attribute("height")!.Value}"))));
+        var largeImage = new XElement(Wpf + "DrawingImage", new XAttribute(Xaml + "Key", "AppIcon.Large"),
+            new XElement(Wpf + "DrawingImage.Drawing",
+                new XElement(Wpf + "DrawingGroup", viewport, large.Elements(Svg + "path").Select(LargeLayer))));
         var dict = new XElement(Wpf + "ResourceDictionary", new XAttribute(XNamespace.Xmlns + "x", Xaml),
             new XComment(" Generated from AppIconSmall.svg and AppIcon.svg by generate-app-icon. "), Drawing(false), Drawing(true), largeImage);
         return dict.ToString().ReplaceLineEndings("\n") + "\n";

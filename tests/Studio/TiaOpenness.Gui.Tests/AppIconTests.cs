@@ -192,6 +192,8 @@ public sealed class AppIconTests(WpfContext wpf)
                     var about = window.SettingsContent.AboutIcon;
                     Assert.Same(window.FindResource("AppIcon.Large"), Assert.IsType<DrawingImage>(about.Source));
                     Assert.Equal(new Size(40, 40), new Size(about.Width, about.Height));
+                    foreach (var icon in new[] { window.BrandIcon, about })
+                        Assert.Null(System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(icon));
                     if (highContrast)
                     {
                         var group = Assert.IsType<DrawingGroup>(image.Drawing);
@@ -200,6 +202,7 @@ public sealed class AppIconTests(WpfContext wpf)
                         Assert.True(inks.SetEquals([PaletteColor("Primer.brandGradient"), PaletteColor("Primer.onPrimary")]));
                         Assert.Same(window.FindResource("Primer.hcOutline"), window.BrandOutline.BorderBrush);
                         Assert.Equal(new Thickness(1), window.BrandOutline.BorderThickness);
+                        Assert.Equal(new CornerRadius(5), window.BrandOutline.CornerRadius);
                     }
                     if (Environment.GetEnvironmentVariable("TIA_WORKBENCH_RENDER_DIR") is { } folder)
                     {

@@ -249,7 +249,7 @@
                   <Button x:Name="OpenReleases" Content="GitHub Releases ↗" AutomationProperties.Name="{l:Tr Settings.Releases}"
                     Style="{StaticResource Primer.Button.Secondary.Small}"/>
                 </StackPanel>
-                <Image x:Name="AboutIcon" Style="{StaticResource Primer.ProductIcon}" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                <ux:DecorativeImage x:Name="AboutIcon" Style="{StaticResource Primer.ProductIcon}" Margin="0,0,14,0" VerticalAlignment="Center"/>
                 <StackPanel VerticalAlignment="Center">
                   <TextBlock Text="{l:Tr App.Title}" Style="{StaticResource Primer.ContainerTitle}" ToolTip="{Binding Text, ElementName=PackageText}"/>
                   <DockPanel Margin="0,2,0,0">

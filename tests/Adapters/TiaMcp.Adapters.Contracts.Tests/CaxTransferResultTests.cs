@@ -65,6 +65,24 @@ public sealed class CaxTransferResultTests
         finally { directory.Delete(true); }
     }
 
+    [Fact]
+    public void Legacy_CAEX_exception_after_dispatch_is_reported_by_the_hardware_step()
+    {
+        var directory = Directory.CreateTempSubdirectory("cax-");
+        try
+        {
+            string source = Path.Combine(directory.FullName, "input.aml");
+            File.WriteAllText(source, """<CAEXFile SchemaVersion="2.15" FileName="input.aml"><InstanceHierarchy Name="Project"/></CAEXFile>""");
+            var reply = HardwareWriteFailureTests.ImportWithLog(source, Path.Combine(directory.FullName, "import.log"),
+                _ => throw new InvalidOperationException("Action is not supported within ExclusiveAccess."));
+            Assert.Equal("import", reply.Meta["phase"]);
+            Assert.True(reply.MayHaveChanged);
+            Assert.True(reply.OutcomeUnknown);
+            Assert.Contains("ExclusiveAccess", (string?)reply.Meta["nativeMessage"]);
+        }
+        finally { directory.Delete(true); }
+    }
+
     [Theory, InlineData("gbk"), InlineData("utf8"), InlineData("utf16-bom"), InlineData("utf8-cut")]
     public void Legacy_log_decodes_bom_then_strict_utf8_then_ansi(string format)
     {

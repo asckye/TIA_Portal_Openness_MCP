@@ -18,6 +18,18 @@ VCI connect checks existing workspace files before writing. If another process c
   The LAD builder rejects TCON, TDISCON, TSEND, TRCV, TUSEND, TURCV, RDREC and WRREC as user FC/FB calls.
 - `DeletePlcTagTable` names user and system constants in previews and deletion reports. A failed block move now reports an `unknown` outcome when it leaves behind target groups it created.
   Legacy safety compilation sanitises connection-loss diagnostics. `EnsureUnifiedHmiButtonAction` specifies when it checks the target tag.
+### Fixed
+
+- Seed manifests now refuse directory overrides outside `referenceDir` and reject device paths before resolving them.
+- Failed Unified tag imports check the paths of groups and tables as well as exported tag files before reporting that nothing changed.
+  Failed library version imports also compare dependency versions, including those in other library folders.
+- B5 write failures with a native error code and no mutation evidence now report an unknown outcome.
+  Unified event and dynamization reads and previews return the apply parameter `previewToken` alongside `token`.
+- Multiuser lock-state and security property errors identify the caller's input. Library releases identify invalid `newVersion` values,
+  and library comparison paths use the name on the side where the object exists.
+- SiVArc definition operations require V21. Missing or unloadable engineering options identify the installation to check.
+- The Workbench read-only version-control notice identifies the MCP service in English and Chinese and displays unrecognized release keys.
+  The title bar and About icons are decorative for accessibility, and the high-contrast outline follows the tile corners.
 
 ## [4.0.0-rc.7] - 2026-11-25
 

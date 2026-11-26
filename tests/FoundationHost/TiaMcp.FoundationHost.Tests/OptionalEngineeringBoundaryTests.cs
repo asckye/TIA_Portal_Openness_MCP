@@ -49,6 +49,9 @@ public sealed class OptionalEngineeringBoundaryTests
         }).ToArray();
         Refusal(Body((CallToolResult)map.Invoke(null, arguments)!));
         Assert.Equal(0, worker.Calls);
+        var error = Body((CallToolResult)map.Invoke(null, arguments)!)["error"]!;
+        Assert.Contains("installation", (string?)error["message"]);
+        Assert.DoesNotContain("selected object", (string?)error["message"]);
         Assert.Equal(0, nativeCalls);
     }
 

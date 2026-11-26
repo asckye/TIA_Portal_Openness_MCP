@@ -3,11 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.Siemens;
+using Xunit;
 
 namespace TiaMcp.Engine.Tests
 {
-    internal static class ProjectSecurityTests
+    public sealed class ProjectSecurityTests
     {
+        [Theory, InlineData("", "P", "serverName"), InlineData("S", "", "projectName")]
+        public void Lock_state_names_the_missing_argument(string server, string project, string parameter)
+        {
+            Assert.Throws<ArgumentException>(parameter, () =>
+                ProjectSecurityLogic.ValidateMultiuser("readLockState", server, project, "", "", 0, "", false, true));
+        }
+
         private sealed class Node
         {
             public string Left = "", Right = "", State = "ObjectsDifferent";

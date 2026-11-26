@@ -9,6 +9,10 @@ namespace TiaMcp.Adapters.Libraries
     // clean-up, type and version details, detailed object comparison, global library infos and archiving). No Siemens dependency.
     internal static class LibraryPolicy
     {
+        internal static Version ReleaseVersion(string newVersion)
+            => Version.TryParse(newVersion, out var version) ? version
+                : throw new ArgumentException("Provide a version number in newVersion for release.", nameof(newVersion));
+
         internal static bool CanUseDocumentImportCountProof(string importOptions, string createOptions, bool hasTargetEnvironment)
             => importOptions == "None" && createOptions == "None" && !hasTargetEnvironment;
 

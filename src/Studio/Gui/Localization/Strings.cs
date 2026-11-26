@@ -45,8 +45,8 @@ internal static partial class Strings
         ("Blocks.Overwrite", "Overwrite existing blocks", "覆盖已有程序块"),
         ("Vc.Unavailable", "Version control is not available on TIA Portal {0}.", "TIA Portal {0} 不支持版本控制。"),
         ("Vc.ReadOnlyBridge", "This page is read-only. The reader supports V16–V19. To make changes, use the MCP version-control tools "
-            + "from an AI client connected to this Workbench.",
-            "此页为只读。读取功能支持 V16–V19。要进行更改，请在已连接到此工作台的 AI 客户端中使用 MCP 版本控制工具。"),
+            + "from an AI client connected to the MCP service.",
+            "此页为只读。读取功能支持 V16–V19。要进行更改，请在已连接到 MCP 服务的 AI 客户端中使用 MCP 版本控制工具。"),
         ("Vc.ReaderUnavailable", "The reader supports V16–V19 and cannot read this release. Use the MCP version-control tools to make changes.",
             "读取功能仅支持 V16–V19，无法读取当前版本。请使用 MCP 版本控制工具进行更改。"),
         ("Vc.ReadOnlySession", "This page is read-only in this session. Make changes with the MCP version-control tools.",

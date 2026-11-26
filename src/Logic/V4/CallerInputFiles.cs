@@ -13,18 +13,18 @@ namespace TiaMcp.Logic.V4
 {
     internal static class CallerInputFiles
     {
-        internal static bool IsInsideOutputRoot(string path, string? root)
+        internal static bool IsInsideOutputRoot(string path, string? root, StringComparison comparison = StringComparison.OrdinalIgnoreCase)
         {
             if (string.IsNullOrWhiteSpace(root) || string.IsNullOrWhiteSpace(path)) return false;
             try
             {
                 string target = Path.GetFullPath(path.Trim());
                 if (target.StartsWith(@"\\", StringComparison.Ordinal)) return false;
-                string boundary = Path.GetFullPath(root!.Trim()).TrimEnd(Path.DirectorySeparatorChar);
-                if (!target.Equals(boundary, StringComparison.OrdinalIgnoreCase)
-                    && !target.StartsWith(boundary + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return false;
+                string current = Path.GetFullPath(root!.Trim());
+                string boundary = current.TrimEnd(Path.DirectorySeparatorChar);
+                if (!target.Equals(boundary, comparison)
+                    && !target.StartsWith(boundary + Path.DirectorySeparatorChar, comparison)) return false;
                 // Check only the root and its descendants: install ancestors may themselves be junctions.
-                string current = boundary;
                 string[] descendants = target.Substring(boundary.Length).Split(new[] { Path.DirectorySeparatorChar },
                     StringSplitOptions.RemoveEmptyEntries);
                 for (int index = 0; ; index++)

@@ -2,14 +2,27 @@ using System;
 using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.Siemens;
+using Xunit;
 
 namespace TiaMcp.Engine.Tests
 {
     // Phase 3 sub-batch 3 (2.7.32) pure logic: syslog (project / PLC) request gating, password-policy targets and ranges,
     // UMC user / group / server request model with credential rules, certificate template properties and subject
     // alternative names, plus the anonymous-user actions added to ProjectSecurityLogic.
-    internal static class SecurityDeepTests
+    public sealed class SecurityDeepTests
     {
+        [Theory, InlineData("read"), InlineData("update"), InlineData("unknown"), InlineData("template")]
+        public void Property_refusals_name_the_public_input(string kind)
+        {
+            var properties = kind == "update" ? new JsonObject() : new JsonObject { ["Unexpected"] = 1 };
+            var error = Assert.Throws<ArgumentException>(() => {
+                if (kind == "template") SecurityDeepLogic.ValidateTemplateProperties(properties);
+                else SecurityDeepLogic.ValidatePolicyRequest(kind == "read" ? "read" : "update", "umac", properties, false, true);
+            });
+            Assert.Contains("properties", error.Message);
+            Assert.DoesNotContain("propertiesJson", error.Message);
+        }
+
         private static bool Fails<T>(Action a) where T : Exception { try { a(); return false; } catch (T) { return true; } }
         private static JsonObject O(string json) => (JsonObject)JsonNode.Parse(json)!;
 

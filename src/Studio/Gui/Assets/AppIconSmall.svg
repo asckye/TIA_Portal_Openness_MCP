@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" data-guides-x="0 3 21 24">
+  <!-- The generator reads data-guides-x for pixel alignment and data-min-size for size-specific layers. -->
   <path fill="#204DB4" class="tile" d="M6 0 H18 Q24 0 24 6 V18 Q24 24 18 24 H6 Q0 24 0 18 V6 Q0 0 6 0Z"/>
   <path fill="#92D9F5" class="plate" d="M12 9 L21 14 12 19 3 14Z"/>
   <path fill="#629CD7" class="plate" d="M3 14 L12 19 21 14 V17 L12 22 3 17Z"/>

@@ -6,6 +6,16 @@ namespace TiaMcp.Adapters.Contracts.Tests;
 public sealed class NativeFailureTextTests
 {
     [Fact]
+    public void Missing_optional_assembly_reports_installation_and_licence_without_target_refusal()
+    {
+        var error = Assert.Throws<NotSupportedException>(() => Hardware.HardwareOfficialService.Require(
+            new object(), "Fixture.MissingService", "Siemens.Engineering.MissingOption"));
+        Assert.Equal("NotSupportedOnVersion", StepFailureStatus.Of(error));
+        Assert.Null(error.Data["unsupportedBy"]);
+        Assert.Contains("licence", error.Message);
+    }
+
+    [Fact]
     public void Certificate_template_keeps_each_requested_ip_only_once()
     {
         var names = new[] { "192.0.2.1", "2001:db8::1", "192.0.2.2", "192.0.2.2" }

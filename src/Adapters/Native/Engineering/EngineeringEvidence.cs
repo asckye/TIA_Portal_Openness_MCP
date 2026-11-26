@@ -36,8 +36,13 @@ namespace TiaMcp.Adapters.Engineering
             {
                 var (node, parentPath, depth) = stack.Pop();
                 if (rows.Count >= maxRows) { truncated = true; break; }
-                var row = describe(node); string name = (string?)row["leftName"] ?? "";
-                if (name.Length == 0) name = (string?)row["rightName"] ?? "";
+                var row = describe(node);
+                string? left = (string?)row["leftName"], right = (string?)row["rightName"];
+                string name = row["comparisonResult"] switch {
+                    "LeftMissing" => right ?? "",
+                    "RightMissing" => left ?? "",
+                    _ => string.IsNullOrEmpty(left) ? right ?? "" : left
+                };
                 string path = parentPath.Length == 0 ? name : parentPath + "/" + name;
                 var kids = children(node).ToList(); row["path"] = path; row["depth"] = depth; row["childCount"] = kids.Count;
                 if (depth >= maxDepth && kids.Count > 0) { row["childrenOmitted"] = true; truncated = true; kids.Clear(); }

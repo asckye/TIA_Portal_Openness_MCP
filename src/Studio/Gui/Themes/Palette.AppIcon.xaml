@@ -28,188 +28,102 @@
       </DrawingGroup>
     </DrawingImage.Drawing>
   </DrawingImage>
-  <DrawingImage xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Key="AppIcon.Large">
+  <DrawingImage x:Key="AppIcon.Large">
     <DrawingImage.Drawing>
       <DrawingGroup>
-        <DrawingGroup.Children>
-          <GeometryDrawing Brush="#00FFFFFF" Pen="{x:Null}">
-            <GeometryDrawing.Geometry>
-              <RectangleGeometry Rect="0,0,256,256" />
-            </GeometryDrawing.Geometry>
-          </GeometryDrawing>
-          <DrawingGroup>
-            <DrawingGroup.Children>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Pen="{x:Null}" Geometry="M74,12L182,12Q244,12,244,74L244,182Q244,244,182,244L74,244Q12,244,12,182L12,74Q12,12,74,12z">
-                    <GeometryDrawing.Brush>
-                      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <LinearGradientBrush.GradientStops>
-                          <GradientStop Color="#FFA6DDF5" Offset="0" />
-                          <GradientStop Color="#FF4587D1" Offset="0.48" />
-                          <GradientStop Color="#FF192E70" Offset="1" />
-                        </LinearGradientBrush.GradientStops>
-                      </LinearGradientBrush>
-                    </GeometryDrawing.Brush>
-                  </GeometryDrawing>
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Pen="{x:Null}" Geometry="M74,14L182,14Q242,14,242,74L242,182Q242,242,182,242L74,242Q14,242,14,182L14,74Q14,14,74,14z">
-                    <GeometryDrawing.Brush>
-                      <RadialGradientBrush Center="0.86,0.12" RadiusX="1.12" RadiusY="1.12" GradientOrigin="0.86,0.12">
-                        <RadialGradientBrush.GradientStops>
-                          <GradientStop Color="#FF31CCDD" Offset="0" />
-                          <GradientStop Color="#FF248BD6" Offset="0.28" />
-                          <GradientStop Color="#FF215EC5" Offset="0.56" />
-                          <GradientStop Color="#FF192E78" Offset="1" />
-                        </RadialGradientBrush.GradientStops>
-                      </RadialGradientBrush>
-                    </GeometryDrawing.Brush>
-                  </GeometryDrawing>
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Pen="{x:Null}" Geometry="M29,173A99,61,0,1,0,227,173A99,61,0,1,0,29,173z">
-                    <GeometryDrawing.Brush>
-                      <RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5" GradientOrigin="0.5,0.5">
-                        <RadialGradientBrush.GradientStops>
-                          <GradientStop Color="#A6152B6C" Offset="0" />
-                          <GradientStop Color="#00152B6C" Offset="1" />
-                        </RadialGradientBrush.GradientStops>
-                      </RadialGradientBrush>
-                    </GeometryDrawing.Brush>
-                  </GeometryDrawing>
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Pen="{x:Null}" Geometry="M128,109L206.5,155 128,201 49.5,155z">
-                    <GeometryDrawing.Brush>
-                      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <LinearGradientBrush.GradientStops>
-                          <GradientStop Color="#BD9DC6EE" Offset="0" />
-                          <GradientStop Color="#788DCEF3" Offset="1" />
-                        </LinearGradientBrush.GradientStops>
-                      </LinearGradientBrush>
-                    </GeometryDrawing.Brush>
-                  </GeometryDrawing>
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Pen="{x:Null}" Geometry="M128,109L206.5,155 128,201 49.5,155z">
-                    <GeometryDrawing.Brush>
-                      <RadialGradientBrush Center="0.5,0.39" RadiusX="0.59" RadiusY="0.59" GradientOrigin="0.5,0.39">
-                        <RadialGradientBrush.GradientStops>
-                          <GradientStop Color="#8C204D96" Offset="0" />
-                          <GradientStop Color="#633464A1" Offset="0.57" />
-                          <GradientStop Color="#003A70A6" Offset="1" />
-                        </RadialGradientBrush.GradientStops>
-                      </RadialGradientBrush>
-                    </GeometryDrawing.Brush>
-                  </GeometryDrawing>
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="0.73">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFCAF0FD" Pen="{x:Null}" Geometry="M49.5,155L128,109 206.5,155 203,155 128,112 53,155z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="0.85">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFB8E3FC" Pen="{x:Null}" Geometry="M49.5,155L128,199 206.5,155 206.5,157 128,203 49.5,157z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="0.85">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FF8CB8E2" Pen="{x:Null}" Geometry="M49.5,157L128,203 128,212 49.5,166z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="0.82">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FF69A2D7" Pen="{x:Null}" Geometry="M128,203L206.5,157 206.5,166 128,212z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Pen="{x:Null}" Geometry="M128,78L206.5,124 128,170 49.5,124z">
-                    <GeometryDrawing.Brush>
-                      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <LinearGradientBrush.GradientStops>
-                          <GradientStop Color="#DBCFE6FC" Offset="0" />
-                          <GradientStop Color="#A6B6F0F5" Offset="1" />
-                        </LinearGradientBrush.GradientStops>
-                      </LinearGradientBrush>
-                    </GeometryDrawing.Brush>
-                  </GeometryDrawing>
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Pen="{x:Null}" Geometry="M128,78L206.5,124 128,170 49.5,124z">
-                    <GeometryDrawing.Brush>
-                      <RadialGradientBrush Center="0.5,0.39" RadiusX="0.59" RadiusY="0.59" GradientOrigin="0.5,0.39">
-                        <RadialGradientBrush.GradientStops>
-                          <GradientStop Color="#8C204D96" Offset="0" />
-                          <GradientStop Color="#633464A1" Offset="0.57" />
-                          <GradientStop Color="#003A70A6" Offset="1" />
-                        </RadialGradientBrush.GradientStops>
-                      </RadialGradientBrush>
-                    </GeometryDrawing.Brush>
-                  </GeometryDrawing>
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="0.86">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFDFF6FF" Pen="{x:Null}" Geometry="M49.5,124L128,78 206.5,124 203,124 128,81 53,124z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFD4F4FC" Pen="{x:Null}" Geometry="M49.5,124L128,168 206.5,124 206.5,126 128,172 49.5,126z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="0.92">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFADCFEE" Pen="{x:Null}" Geometry="M49.5,126L128,172 128,181 49.5,135z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="0.9">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FF91CDE8" Pen="{x:Null}" Geometry="M128,172L206.5,126 206.5,135 128,181z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFCFDFF1" Pen="{x:Null}" Geometry="M49.5,92L128,138 128,149 49.5,103z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFC1DBEC" Pen="{x:Null}" Geometry="M128,138L206.5,92 206.5,103 128,149z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFFFFFFF" Pen="{x:Null}" Geometry="M128,46L206.5,92 128,139 49.5,92z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FF246BD2" Pen="{x:Null}" Geometry="M109.5,92A18.5,16.5,0,1,0,146.5,92A18.5,16.5,0,1,0,109.5,92z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-              <DrawingGroup Opacity="1">
-                <DrawingGroup.Children>
-                  <GeometryDrawing Brush="#FFD8F7FF" Pen="{x:Null}" Geometry="M119,92A9,8,0,1,0,137,92A9,8,0,1,0,119,92z" />
-                </DrawingGroup.Children>
-              </DrawingGroup>
-            </DrawingGroup.Children>
-          </DrawingGroup>
-        </DrawingGroup.Children>
+        <GeometryDrawing Brush="Transparent">
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="0,0,256,256" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M74 12 H182 Q244 12 244 74 V182 Q244 244 182 244 H74 Q12 244 12 182 V74 Q12 12 74 12Z">
+          <GeometryDrawing.Brush>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Offset="0" Color="#FFA6DDF5" />
+              <GradientStop Offset="0.48" Color="#FF4587D1" />
+              <GradientStop Offset="1" Color="#FF192E70" />
+            </LinearGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M74 14 H182 Q242 14 242 74 V182 Q242 242 182 242 H74 Q14 242 14 182 V74 Q14 14 74 14Z">
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.86,0.12" GradientOrigin="0.86,0.12" RadiusX="1.12" RadiusY="1.12">
+              <GradientStop Offset="0" Color="#FF31CCDD" />
+              <GradientStop Offset="0.28" Color="#FF248BD6" />
+              <GradientStop Offset="0.56" Color="#FF215EC5" />
+              <GradientStop Offset="1" Color="#FF192E78" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M29 173 A99 61 0 1 0 227 173 A99 61 0 1 0 29 173Z">
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+              <GradientStop Offset="0" Color="#A6152B6C" />
+              <GradientStop Offset="1" Color="#00152B6C" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M128 109 L206.5 155 128 201 49.5 155Z">
+          <GeometryDrawing.Brush>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+              <GradientStop Offset="0" Color="#BD9DC6EE" />
+              <GradientStop Offset="1" Color="#788DCEF3" />
+            </LinearGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M128 109 L206.5 155 128 201 49.5 155Z">
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.5,0.39" GradientOrigin="0.5,0.39" RadiusX="0.59" RadiusY="0.59">
+              <GradientStop Offset="0" Color="#8C204D96" />
+              <GradientStop Offset="0.57" Color="#633464A1" />
+              <GradientStop Offset="1" Color="#003A70A6" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <DrawingGroup Opacity=".73">
+          <GeometryDrawing Geometry="M49.5 155 L128 109 206.5 155 203 155 128 112 53 155Z" Brush="#CAF0FD" />
+        </DrawingGroup>
+        <DrawingGroup Opacity=".85">
+          <GeometryDrawing Geometry="M49.5 155 L128 199 206.5 155 206.5 157 128 203 49.5 157Z" Brush="#B8E3FC" />
+        </DrawingGroup>
+        <DrawingGroup Opacity=".85">
+          <GeometryDrawing Geometry="M49.5 157 L128 203 V212 L49.5 166Z" Brush="#8CB8E2" />
+        </DrawingGroup>
+        <DrawingGroup Opacity=".82">
+          <GeometryDrawing Geometry="M128 203 L206.5 157 V166 L128 212Z" Brush="#69A2D7" />
+        </DrawingGroup>
+        <GeometryDrawing Geometry="M128 78 L206.5 124 128 170 49.5 124Z">
+          <GeometryDrawing.Brush>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+              <GradientStop Offset="0" Color="#DBCFE6FC" />
+              <GradientStop Offset="1" Color="#A6B6F0F5" />
+            </LinearGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M128 78 L206.5 124 128 170 49.5 124Z">
+          <GeometryDrawing.Brush>
+            <RadialGradientBrush Center="0.5,0.39" GradientOrigin="0.5,0.39" RadiusX="0.59" RadiusY="0.59">
+              <GradientStop Offset="0" Color="#8C204D96" />
+              <GradientStop Offset="0.57" Color="#633464A1" />
+              <GradientStop Offset="1" Color="#003A70A6" />
+            </RadialGradientBrush>
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <DrawingGroup Opacity=".86">
+          <GeometryDrawing Geometry="M49.5 124 L128 78 206.5 124 203 124 128 81 53 124Z" Brush="#DFF6FF" />
+        </DrawingGroup>
+        <GeometryDrawing Geometry="M49.5 124 L128 168 206.5 124 206.5 126 128 172 49.5 126Z" Brush="#D4F4FC" />
+        <DrawingGroup Opacity=".92">
+          <GeometryDrawing Geometry="M49.5 126 L128 172 V181 L49.5 135Z" Brush="#ADCFEE" />
+        </DrawingGroup>
+        <DrawingGroup Opacity=".90">
+          <GeometryDrawing Geometry="M128 172 L206.5 126 V135 L128 181Z" Brush="#91CDE8" />
+        </DrawingGroup>
+        <GeometryDrawing Geometry="M49.5 92 L128 138 V149 L49.5 103Z" Brush="#CFDFF1" />
+        <GeometryDrawing Geometry="M128 138 L206.5 92 V103 L128 149Z" Brush="#C1DBEC" />
+        <GeometryDrawing Geometry="M128 46 L206.5 92 128 139 49.5 92Z" Brush="#FFFFFF" />
+        <GeometryDrawing Geometry="M109.5 92 A18.5 16.5 0 1 0 146.5 92 A18.5 16.5 0 1 0 109.5 92Z" Brush="#246BD2" />
+        <GeometryDrawing Geometry="M119 92 A9 8 0 1 0 137 92 A9 8 0 1 0 119 92Z" Brush="#D8F7FF" />
       </DrawingGroup>
     </DrawingImage.Drawing>
   </DrawingImage>

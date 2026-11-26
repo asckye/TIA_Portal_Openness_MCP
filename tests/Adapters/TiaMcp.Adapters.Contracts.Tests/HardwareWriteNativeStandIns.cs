@@ -161,15 +161,19 @@ namespace Siemens.Engineering.HW
     public enum AddressIoType { Input, Output, None }
     public enum ChannelType { Digital, Analog }
     public enum ChannelIoType { Input, Output }
-    public enum AttributeAccessMode { ReadWrite }
-    public sealed class AttributeInfo { public string Name { get; set; } = "ChannelAddress"; public AttributeAccessMode AccessMode =>
-        AttributeAccessMode.ReadWrite; }
+    public enum AttributeAccessMode { ReadWrite, Read }
+    public sealed class AttributeInfo
+    {
+        public string Name { get; set; } = "ChannelAddress";
+        public AttributeAccessMode AccessMode { get; init; } = AttributeAccessMode.ReadWrite;
+    }
     public sealed class Channel : HardwareObject
     {
         public int Number { get; set; }
         public ChannelType Type { get; set; }
         public ChannelIoType IoType { get; set; }
-        public IEnumerable<AttributeInfo> GetAttributeInfos() => new[] { new AttributeInfo() };
+        public AttributeInfo AddressInfo { get; init; } = new();
+        public IEnumerable<AttributeInfo> GetAttributeInfos() => new[] { AddressInfo };
     }
     public sealed class ChannelComposition : List<Channel>
     {

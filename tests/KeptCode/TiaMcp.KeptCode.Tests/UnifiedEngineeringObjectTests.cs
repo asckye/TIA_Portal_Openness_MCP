@@ -69,6 +69,7 @@ namespace TiaMcp.Engine.Tests
         public sealed class Entry(string name, List<Entry> owner)
         {
             public string Name => name;
+            public object[] EventHandlers { get; } = { new { EventType = "Tapped", Script = (object?)null } };
             public List<object> Tags { get; } = new();
             public void Delete() { Tags.Clear(); owner.Remove(this); }
         }
@@ -101,6 +102,29 @@ namespace TiaMcp.Engine.Tests
             public WriteRollbackTests.MultilingualText EventText { get; } = new();
             public void Delete() => owner.Remove(this);
         }
+        [Fact]
+        public void Existing_event_delete_preview_exposes_the_token_under_the_apply_parameter()
+        {
+            var root = new Siemens.Engineering.HmiUnified.HmiSoftware();
+            root.Connections.Add(new Entry("Panel", root.Connections));
+            string address = """[{"property":"Connections","name":"Panel"}]""";
+            var previous = UnifiedRequestValues.Inputs;
+            var previousToken = HmiExactAccess.ContentToken;
+            HmiExactAccess.ContentToken = (scope, content) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(scope + System.Text.Json.JsonSerializer.Serialize(content))));
+            var renderer = HmiValues.Renderer;
+            HmiValues.Renderer = value => System.Text.Json.JsonSerializer.Serialize(value);
+            UnifiedRequestValues.Inputs = new() { [address] = new HmiArray(new HmiObject { ["property"] = "Connections", ["name"] = "Panel" }) };
+            try
+            {
+                using var session = new Session(root);
+                var meta = new UnifiedEventsAdapter(session).ManageUnifiedEvent("HMI", address, "Tapped", "delete").Meta;
+                Assert.NotEmpty(Assert.IsType<string>(meta["token"]));
+                Assert.Equal(meta["token"], meta["previewToken"]);
+            }
+            finally { UnifiedRequestValues.Inputs = previous; HmiValues.Renderer = renderer; HmiExactAccess.ContentToken = previousToken; }
+        }
+
         [Theory]
         [InlineData("bad", "Tapped", "{}", "action")]
         [InlineData("read", "", "{}", "eventType")]

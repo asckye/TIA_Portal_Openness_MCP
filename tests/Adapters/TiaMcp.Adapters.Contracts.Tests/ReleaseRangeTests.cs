@@ -18,6 +18,15 @@ public sealed class ReleaseRangeTests
     }
 
     [Fact]
+    public void Before_excludes_the_boundary_and_preserves_service_pack_keys()
+        => Assert.Equal(new[] { "14sp1", "15.1" }, ReleaseRange.Before(16));
+
+    [Theory]
+    [InlineData("14sp1")][InlineData("15.1")][InlineData("16")]
+    public void Early_releases_refuse_the_SiVArc_definition_subsystem(string release)
+        => Assert.Contains("require V21", OptionalEngineeringCapabilities.SivarcBlockDefinitionProblem(release));
+
+    [Fact]
     public void SinceIncludesEveryReleaseFromFirst()
         => Assert.Equal(new[] { "19", "20", "21" }, ReleaseRange.Since("19"));
 

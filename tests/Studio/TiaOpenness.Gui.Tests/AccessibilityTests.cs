@@ -61,6 +61,8 @@ public sealed class AccessibilityTests(WpfContext wpf)
                 foreach (string page in pages)
                 {
                     window.Navigate(page);
+                    if (page == "Engineering") CheckSurface(window, "Engineering default");
+                    if (page == "Settings") CheckSurface(window.SettingsContent, "Settings default");
                     if (page == "Engineering")
                         ((ViewModels.MainViewModel)window.DataContext).Engineering.Document = ViewModels.ProjectDocument.Compile;
                     if (page == "Environment")

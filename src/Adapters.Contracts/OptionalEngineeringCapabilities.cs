@@ -5,9 +5,11 @@ namespace TiaMcp.Adapters.Contracts;
 
 public static class OptionalEngineeringCapabilities
 {
+    private static readonly string[] BeforeDefinitions = ReleaseRange.Before(21);
+
     public static string? SivarcBlockDefinitionProblem(string release, string? blockClass = null)
     {
-        if (release is "17" or "18" or "19" or "20")
+        if (BeforeDefinitions.Contains(release, StringComparer.Ordinal))
             return "SiVArc block definitions, expression resolution and definition upgrades require V21. "
                 + "Accessing the definition subsystem on this release can crash TIA Portal.";
         if (blockClass != null && blockClass != "FB" && blockClass != "FC")

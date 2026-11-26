@@ -18,14 +18,14 @@ internal static class OptionalAssemblyAdmission
                 /* swallow(probe-optional): expected resolution failures return a typed refusal before native calls. */
                 var refusal = OptionalEngineeringCapabilities.Refusal(
                     "Official optional component is not installed: " + assembly + " is not in the selected PublicAPI folder.");
-                refusal.Meta["unsupportedBy"] = "target";
+                refusal.Meta["unsupportedBy"] = "installation";
                 return refusal;
             }
             catch (Exception error) when (error is FileLoadException || error is BadImageFormatException)
             {
                 /* swallow(probe-optional): load failures retain the native reason in a typed refusal before native calls. */
                 var refusal = OptionalEngineeringCapabilities.LoadFailure(assembly, error);
-                refusal.Meta["unsupportedBy"] = "target";
+                refusal.Meta["unsupportedBy"] = "installation";
                 return refusal;
             }
         }

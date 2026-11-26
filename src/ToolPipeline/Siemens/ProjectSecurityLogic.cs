@@ -119,9 +119,9 @@ namespace TiaMcpServer.Siemens
             if (mutation && !dryRun && !confirmChange)
                 throw new ArgumentException("Real multiuser changes require confirmChange=true together with dryRun=false.");
             if (action != "read" && action != "commit" && string.IsNullOrWhiteSpace(serverName))
-                throw new ArgumentException("Exact serverName (server alias) required for " + action + ".");
+                throw new ArgumentException("Exact serverName (server alias) required for " + action + ".", nameof(serverName));
             if ((action == "readLockState" || action == "listLocalSessions") && string.IsNullOrWhiteSpace(projectName))
-                throw new ArgumentException("Exact server projectName required for " + action + ".");
+                throw new ArgumentException("Exact server projectName required for " + action + ".", nameof(projectName));
             if (action == "connectServer")
             {
                 if (protocol != "Https" && protocol != "Http") throw new ArgumentException("protocol must be Https or Http.");

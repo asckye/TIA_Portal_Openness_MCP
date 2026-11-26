@@ -60,6 +60,7 @@
     <Compile Include="../../../src/Logic/Siemens/NativeFileOutput.cs" />
     <Compile Include="../../../src/Logic/Siemens/ArgumentRules.cs" />
     <Compile Include="../../../src/Adapters/Native/Security/ProjectProtection.cs" Link="Security/ProjectProtection.cs" />
+    <Compile Include="../../../src/Adapters/Native/Engineering/EngineeringEvidence.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareAddressingSteps.cs" Link="Hardware/HardwareAddressingSteps.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareServices.cs" Link="Hardware/HardwareServices.cs" />
     <Compile Include="../../../src/Adapters/Native/Hardware/HardwareOfficialService.cs" Link="Hardware/HardwareOfficialService.cs" />

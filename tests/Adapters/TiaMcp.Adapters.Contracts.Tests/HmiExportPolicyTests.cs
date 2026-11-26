@@ -1,11 +1,49 @@
 using TiaMcp.Adapters.Native.Hmi;
 using TiaMcp.Adapters.Native.Plc;
+using TiaOpenness.Shared;
 using Xunit;
 
 namespace TiaMcp.Adapters.Contracts.Tests
 {
     public sealed class HmiExportPolicyTests
     {
+        [Theory, InlineData("unchanged"), InlineData("table"), InlineData("group")]
+        public void Failed_import_checks_for_new_empty_tables_and_groups(string change)
+        {
+            var folder = new { Name = "Area", TagTables = new List<object>(), Groups = new List<object>() };
+            var root = new { TagTables = new List<object>(), TagTableGroups = new[] { folder } };
+            var output = Directory.CreateTempSubdirectory("hmi-tag-proof-");
+            var previous = DataLocations.OverrideForTests.Value;
+            try
+            {
+                DataLocations.OverrideForTests.Value =
+                    DataLocations.Resolve(AppContext.BaseDirectory, output.FullName, output.FullName, output.FullName);
+                var reply = MutationEvidenceTests.RunStep("21", "ExchangeUnifiedTags", meta => {
+                    Dictionary<string, string> Snapshot() => UnifiedExchangeLogic.TagFingerprint(root, directory => {
+                        var file = new FileInfo(Path.Combine(directory.FullName, "Tags.hmi.yml"));
+                        File.WriteAllText(file.FullName, "Tags: []");
+                        return new[] { file };
+                    });
+                    bool Import()
+                    {
+                        if (change == "group") folder.Groups.Add(new { Name = "New", TagTables = new List<object>(), Groups = new List<object>() });
+                        else if (change == "table") folder.TagTables.Add(new { Name = "New" });
+                        throw new InvalidOperationException("Native tag import failed.");
+                    }
+                    UnifiedExchangeLogic.Import(meta, "", Import, Import, Snapshot);
+                    return "imported";
+                });
+                Assert.False(reply.Meta.ContainsKey("beforeExportError"), reply.Meta.GetValueOrDefault("beforeExportError")?.ToString());
+                Assert.Equal(change != "unchanged", reply.MayHaveChanged);
+                Assert.Equal(change != "unchanged", reply.OutcomeUnknown);
+            }
+            finally
+            {
+                DataLocations.OverrideForTests.Value = previous;
+                output.Delete(true);
+            }
+        }
+
         [Theory, InlineData("19"), InlineData("20"), InlineData("21")]
         public void Served_unified_exchange_operations_satisfy_native_file_and_selection_rules(string release)
         {

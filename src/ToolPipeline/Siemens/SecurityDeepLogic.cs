@@ -105,13 +105,13 @@ namespace TiaMcpServer.Siemens
             if (action == "read")
             {
                 if (!string.IsNullOrEmpty(target)) RequireOneOf(target, PolicyTargets, "target");
-                if (properties.Count != 0) throw new ArgumentException("propertiesJson applies to action=update only.");
+                if (properties.Count != 0) throw new ArgumentException("properties applies to action=update only.");
                 return;
             }
             RequireOneOf(target, PolicyTargets, "target");
             if (properties.Count == 0)
-                throw new ArgumentException("update needs at least one property in propertiesJson (" + string.Join(" / ", PolicyProperties(target)) + ").");
-            RequireKeys(properties, PolicyProperties(target), "propertiesJson");
+                throw new ArgumentException("update needs at least one property in properties (" + string.Join(" / ", PolicyProperties(target)) + ").");
+            RequireKeys(properties, PolicyProperties(target), "properties");
             foreach (var pair in properties)
             {
                 bool boolean = pair.Key == "PasswordPolicyEnabled" || pair.Key == "IncludesLowerCaseAndUpperCaseCharacters" || pair
@@ -220,7 +220,7 @@ namespace TiaMcpServer.Siemens
 
         internal static void ValidateTemplateProperties(JsonObject properties)
         {
-            RequireKeys(properties, TemplateProperties, "propertiesJson");
+            RequireKeys(properties, TemplateProperties, "properties");
             if (properties.TryGetPropertyValue("Signature", out var signature)) RequireOneOf(signature?.ToString() ?? "", SignatureAlgorithms, "Signature");
             if (properties.TryGetPropertyValue("Usage", out var usage)) RequireOneOf(usage?.ToString() ?? "", CertificateUsages, "Usage");
             if (properties.TryGetPropertyValue("SubjectCommonName", out var cn) && string.IsNullOrWhiteSpace(cn?.ToString()))

@@ -152,6 +152,15 @@ namespace TiaMcp.Engine.Tests
         }
 
         [Fact]
+        public void Seed_directory_overrides_must_stay_within_referenceDir()
+        {
+            File.WriteAllText(Path.Combine(root, "manifest.json"), """{"plcTypesDir":"../donors"}""");
+            var error = Assert.Throws<AdapterPreconditionException>(() => TiaMcp.Logic.V4.SeedReferenceLayout.Read(root, "21", null));
+            Assert.False(error.IsArgument);
+            Assert.Equal("referenceDir", error.ParamName);
+        }
+
+        [Fact]
         public void Missing_seed_reference_directory_reports_the_expected_layout_at_file_admission()
         {
             var error = Assert.Throws<AdapterPreconditionException>(() =>

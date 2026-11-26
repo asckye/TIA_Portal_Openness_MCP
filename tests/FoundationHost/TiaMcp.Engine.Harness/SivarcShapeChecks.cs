@@ -142,6 +142,9 @@ internal static class SivarcShapeChecks
         check(portal.Tool("GenerateSivarc").DeclaringType!.IsDefined(typeof(McpServerToolTypeAttribute)),"SiVArc tools declare their MCP tool type");
         foreach(var tool in new[]{"ListSivarcBlockDefinitions","ManageSivarcBlockDefinition","ResolveSivarcExpression","UpgradeSivarcDefinitions"})
             check(PortedFamilies.Available(v20 ? "20" : "21",tool)==!v20,tool+" is registered from V21");
+        foreach (var release in ReleaseRange.Before(21))
+            foreach (var tool in new[] { "ListSivarcBlockDefinitions", "ManageSivarcBlockDefinition", "ResolveSivarcExpression", "UpgradeSivarcDefinitions" })
+                check(!PortedFamilies.Available(release, tool), tool + " is unavailable on " + release);
         check(portal.Tool("GenerateSivarc")!.GetParameters().Any(p=>p.Name=="additionalHmiDeviceNames"),"GenerateSivarc takes additionalHmiDeviceNames (multi-device overload)");
     }
 }

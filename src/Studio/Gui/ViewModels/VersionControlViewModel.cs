@@ -81,7 +81,7 @@ public sealed class VersionControlViewModel : ObservableObject, IDisposable
             if (_client is not McpVersionControlClient { UsesFallback: true } session)
                 return IsReadOnly ? Loc.Current["Vc.ReadOnlySession"] : "";
             if (session.BoundReleaseKey is { } release && !OpennessApi.VersionControl.Includes(release))
-                return Loc.Current.T("Vc.Unavailable", TiaVersionCatalog.Get(release).DisplayName);
+                return Loc.Current.T("Vc.Unavailable", TiaVersionCatalog.All.FirstOrDefault(version => version.Key == release)?.DisplayName ?? release);
             return _client.CanRead ? Loc.Current["Vc.ReadOnlyBridge"] : Loc.Current["Vc.ReaderUnavailable"];
         }
     }

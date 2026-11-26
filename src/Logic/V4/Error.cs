@@ -446,7 +446,12 @@ namespace TiaMcp.Logic.V4
                 new UnsupportedCapabilityDetails(release, tool, action));
 
         public static Error ErrorFor(string release, string tool, string? action, string? reason, string? unsupportedBy)
-            => unsupportedBy == "target" ? TargetErrorFor(release, tool, action, reason) : ErrorFor(release, tool, action, reason);
+            => unsupportedBy switch {
+                "target" => TargetErrorFor(release, tool, action, reason),
+                "installation" => new Error("Check the option installation and licence for " + tool + "."
+                    + (string.IsNullOrEmpty(reason) ? "" : " " + reason), new UnsupportedCapabilityDetails(release, tool, action)),
+                _ => ErrorFor(release, tool, action, reason)
+            };
 
         public UnsupportedCapabilityDetails(string? releaseKey, string? capability, string? action)
         {
