@@ -116,9 +116,11 @@ namespace Siemens.Engineering.VersionControl
         internal bool RefuseInitialStatus, RefuseCreate, RefuseSync, RefuseLookupAfterCreate, RefreshesKnownState;
         internal Action<FileInfo>? WriteOnSync;
         internal Action<FileInfo>? AfterCreate;
+        internal Action? BeforeLookup;
         internal WorkspaceMappingComposition(Workspace owner) => this.owner = owner;
         public WorkspaceMapping? Find(IEngineeringObject target)
         {
+            BeforeLookup?.Invoke();
             if (RefuseLookupAfterCreate && owner.Calls.Any(call => call.StartsWith("Create:", StringComparison.Ordinal)))
                 throw new EngineeringTargetInvocationException("Mapping lookup unavailable");
             return this.FirstOrDefault(m => m.LinkedProjectObject == target);
@@ -153,7 +155,12 @@ namespace Siemens.Engineering.VersionControl
     }
     public sealed class MappedObjectComposition : List<MappedObject>
     {
-        public MappedObject? Find(IEngineeringObject target) => this.FirstOrDefault(m => m.Target == target);
+        internal Action? BeforeLookup;
+        public MappedObject? Find(IEngineeringObject target)
+        {
+            BeforeLookup?.Invoke();
+            return this.FirstOrDefault(m => m.Target == target);
+        }
     }
 #endif
     public sealed class Workspace

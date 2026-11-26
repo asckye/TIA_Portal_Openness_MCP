@@ -196,7 +196,6 @@ namespace TiaMcp.Adapters.Native.Vci
             var lines = new List<string>();
 #if STUDIO_VCI_INITIAL
             int willCompare = 0;
-            string? disconnectedFileReason = null;
             var plannedFiles = new HmiArray();
             var plannedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 #endif
@@ -209,9 +208,11 @@ namespace TiaMcp.Adapters.Native.Vci
                 var ws = FindWorkspace(RequireVci(), workspaceName);
                 string wsName = PortVci.Name(ws);
                 string wsRootPath = PortVci.Root(ws)?.FullName ?? throw new IOException("The workspace root is unavailable.");
-                try { File.GetAttributes(wsRootPath); }
+                bool rootIsDirectory;
+                try { rootIsDirectory = (File.GetAttributes(wsRootPath) & FileAttributes.Directory) != 0; }
                 catch (Exception error) when (error is FileNotFoundException or DirectoryNotFoundException)
-                { throw new DirectoryNotFoundException("The workspace folder is missing. Restore it or select an existing workspace.", error); }
+                { rootIsDirectory = false; }
+                if (!rootIsDirectory) throw new DirectoryNotFoundException("The workspace folder is missing. Restore it or select an existing workspace.");
                 var mappingFiles = new MappingFiles();
                 foreach (var mapping in PortVci.Enumerate(PortVci.MappedObjects(ws)))
                     mappingFiles.Add(SafeName(mapping), SafeFile(mapping), SafeFormat(mapping));
@@ -367,10 +368,7 @@ namespace TiaMcp.Adapters.Native.Vci
                             {
                                 if (NativeVci.MatchesExisting(wsRootPath, file, node.Obj)) return true;
                                 if (mappingFiles.ExistingFile(targetStem, fmt) == null) return false;
-                                disconnectedFileReason = "Target file already exists: " + file.Name
-                                    + ". After an overwriting import, the old file belongs to the disconnected mapping of the same object. "
-                                    + "Compare the file, back it up and remove it from the workspace, then connect again.";
-                                throw new IOException(disconnectedFileReason);
+                                throw new IOException(attempts.RecordDisconnectedFile(file.Name));
                             }
                             bool exported = attempts.ExportFileFirst(file, () => NativeVci.ExportObject(node.Obj, file, ExportOptions.None), Connect,
                                 Lookup, Report, MatchesExisting);
@@ -459,7 +457,6 @@ namespace TiaMcp.Adapters.Native.Vci
                     },
                 };
 #if STUDIO_VCI_INITIAL
-                if (disconnectedFileReason != null) result.Meta["disconnectedFileReason"] = disconnectedFileReason;
                 if (dryRun)
                 {
                     result.Meta["plannedFiles"] = plannedFiles;
@@ -497,10 +494,10 @@ namespace TiaMcp.Adapters.Native.Vci
                 meta["exportsIssued"] = attempts.Issued; meta["mapped"] = mapped; meta["mappedAfterFailure"] = attempts.MappedAfterFailure;
                 meta["queryRefusals"] = attempts.QueryRefusals; meta["failed"] = failed + attempts.QueryRefusals + 1;
                 meta["writeOutcomeUnknown"] = attempts.Unconfirmed > 0;
-                meta["nativeMessage"] = attempts.NativeMessage ?? NativeFailureText.BoundedDiagnostic(ex);
+                meta["nativeMessage"] = attempts.NativeMessage ?? VciExportAttempts.Diagnostic(ex);
                 return new VersionControlResult
                 {
-                    Message = "ConnectProjectToWorkspace failed: " + Flatten(ex.Message),
+                    Message = "ConnectProjectToWorkspace failed: " + NativeFailureText.BoundedDiagnostic(ex),
                     Items = lines,
                     Meta = meta,
                 };

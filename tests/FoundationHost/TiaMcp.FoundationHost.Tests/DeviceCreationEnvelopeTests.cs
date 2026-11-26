@@ -157,6 +157,22 @@ public sealed class DeviceCreationEnvelopeTests
         }
     }
 
+    [Theory, InlineData(false), InlineData(true)]
+    public async Task Device_preview_preserves_explicit_family_including_the_default_label(bool viaBridge)
+    {
+        using var fixture = new Fixture("17");
+        foreach (string? family in new string?[] { null, "S7-1500", "HMI" })
+        {
+            var args = new JsonObject { ["orderNumber"] = Tp700, ["version"] = Tp700Version, ["deviceName"] = "MCP_RC_HMI2" };
+            if (family != null) args["family"] = family;
+            var preview = await fixture.Call("CreateDevice", args, viaBridge);
+            Assert.True((bool?)preview["ok"], preview.ToJsonString());
+            var changes = preview["data"]!["plannedChanges"]!.AsObject();
+            Assert.Equal(family != null, changes.ContainsKey("family"));
+            Assert.Equal(family, (string?)changes["family"]);
+        }
+    }
+
     [Theory]
     [InlineData("The name must contain a character.")]
     [InlineData("TIA refused the name without a reason. An empty name is not allowed.")]

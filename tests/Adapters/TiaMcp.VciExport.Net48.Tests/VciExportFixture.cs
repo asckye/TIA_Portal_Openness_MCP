@@ -29,8 +29,10 @@ internal static class VciExportFixture
         foreach (var scenario in new[] { "equal", "unknown", "unequal", "collision", "exportRefused", "createRefused", "lookupRefused",
             "syncRefused", "nativeSuccess", "repair", "repairRefused", "reuse", "newStatusRefused", "seedDisposed", "seedAbort", "seedConnection",
             "seedNonrecoverable", "sameName", "differentXml", "rc7-comment", "rc7-member", "rc7-after-preview",
-            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent"
-#if !STUDIO_VCI_INITIAL
+            "rc7-reconnect", "rc7-sidecar", "rc7-after-create", "rc7-inconsistent", "catch-prior"
+#if STUDIO_VCI_INITIAL
+            , "multipleDisconnected", "manyDisconnected"
+#else
             , "studio-conflict", "studio-reuse"
 #endif
         })
@@ -50,6 +52,24 @@ internal static class VciExportFixture
             var block = new PlcBlock { Name = scenario.StartsWith("rc7-", StringComparison.Ordinal) ? "MCP_RC_FC5" : "MCP_RC_FC" };
             if (scenario == "rc7-member") block.Name = "MCP_RC_DB5";
             plc.BlockGroup.Blocks.Add(block);
+            if (scenario == "catch-prior")
+            {
+                var inner = new IOException(@"Catalog lookup refused. password=fixture-credential. File C:\PrivateFixture\Panel.xml");
+                var refusal = new InvalidOperationException("Outer workspace refusal", inner);
+                var direct = new VersionControlAdapter(() => throw refusal);
+                replies["catch-direct"] = new { reply = direct.ConnectProjectToWorkspace(dryRun: false) };
+
+                bool lookupFailed = false;
+                void RefuseLookup() { lookupFailed = true; throw refusal; }
+#if STUDIO_VCI_MODERN
+                workspace.MappedObjects.BeforeLookup = RefuseLookup;
+#else
+                workspace.Mappings.BeforeLookup = RefuseLookup;
+#endif
+                var prior = new VersionControlAdapter(() => lookupFailed ? throw new IOException("Workspace reacquisition failed.") : project);
+                replies[scenario] = new { reply = prior.ConnectProjectToWorkspace(dryRun: false) };
+                continue;
+            }
             var file = Path.Combine(root.FullName, device.Name + "_" + block.Name + ".xml");
             string xml = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "MCP_RC_FC.xml"));
             if (scenario.StartsWith("rc7-", StringComparison.Ordinal))
@@ -253,13 +273,40 @@ internal static class VciExportFixture
                 continue;
             }
 #if STUDIO_VCI_INITIAL
-            if (scenario == "differentXml")
+            if (scenario is "multipleDisconnected" or "manyDisconnected")
             {
-                workspace.RootPath = new DirectoryInfo(Path.Combine(root.FullName, "MCP_RC_Ws"));
-                replies["rc7-missing-workspace"] = new { reply = adapter.ConnectProjectToWorkspace() };
-                workspace.RootPath = root;
+                int count = scenario == "multipleDisconnected" ? 2 : 32;
+                for (int index = 0; index < count; index++)
+                {
+                    string name = "MCP_RC_FC_" + index.ToString("D2");
+                    string filename = device.Name + "_" + name + ".xml";
+                    string current = xml.Replace("MCP_RC_FC", name);
+                    File.WriteAllText(Path.Combine(root.FullName, filename), current.Replace("<Name>" + name, "<Name>Old_" + name));
+                    workspace.Mappings.Add(new WorkspaceMapping(workspace, filename));
+                    plc.BlockGroup.Blocks.Add(new PlcBlock { Name = name, Write = (target, _) => File.WriteAllText(target.FullName, current) });
+                }
+                if (scenario == "multipleDisconnected")
+                {
+                    var write = block.Write;
+                    block.Write = (_, _) => throw new EngineeringUserAbortException("Interrupted during the remaining export");
+                    replies["uncertainDisconnected"] = new { reply = adapter.ConnectProjectToWorkspace(dryRun: false) };
+                    block.Write = write;
+                }
+                replies[scenario] = new { reply = adapter.ConnectProjectToWorkspace(dryRun: false) };
+                continue;
             }
 #endif
+            if (scenario == "differentXml")
+            {
+                var target = new DirectoryInfo(Path.Combine(root.FullName, "MCP_RC_Ws"));
+                workspace.RootPath = target;
+                replies["rc7-missing-workspace"] = new { reply = adapter.ConnectProjectToWorkspace(),
+                    apply = adapter.ConnectProjectToWorkspace(dryRun: false) };
+                File.WriteAllText(target.FullName, "occupied root");
+                replies["file-workspace"] = new { reply = adapter.ConnectProjectToWorkspace(), apply = adapter.ConnectProjectToWorkspace(dryRun: false),
+                    contents = File.ReadAllText(target.FullName), calls = workspace.Calls.ToArray() };
+                workspace.RootPath = root;
+            }
             var absent = adapter.ConnectProjectToWorkspace();
             if (scenario == "collision") File.WriteAllText(file, "existing contents");
             if (scenario == "differentXml") File.WriteAllText(file, xml.Replace("<Name>MCP_RC_FC</Name>", "<Name>Other</Name>"));

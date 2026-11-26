@@ -697,7 +697,8 @@ internal sealed partial class FoundationTool
             : arguments.TryGetValue(p.Name!, out var value)
             ? JsonSerializer
                 .Deserialize(value.GetRawText(), p.ParameterType, new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false })
-                : p.DefaultValue).ToArray();
+                // The plan hashes the effective family but displays only a caller-supplied label.
+                : tool.Name == "CreateDevice" && p.Name == "family" ? null : p.DefaultValue).ToArray();
         using var nativeCalls = InvocationJournal.BeginNativeCallScope();
         try
         {

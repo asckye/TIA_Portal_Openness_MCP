@@ -364,6 +364,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static JsonObject WritePreviewPlan(string tool, object arguments, bool writing, Func<JsonArray>? plannedFiles)
         {
             var normalized = JsonSerializer.SerializeToNode(arguments)!.AsObject();
+            bool defaultDeviceFamily = tool == "CreateDevice" && normalized["family"] == null;
+            if (defaultDeviceFamily) normalized["family"] = "S7-1500";
             if (plannedFiles != null)
             {
                 CallerInputFiles.RequireLocalInputs(tool, normalized);
@@ -391,8 +393,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         "during execution."
                     };
             // CreateWithItem selects by catalog identifier. Its default descriptive label cannot establish the device family.
-            if (tool == "CreateDevice" && plan["plannedChanges"] is JsonObject changes && (string?)changes["family"] == "S7-1500")
-                changes.Remove("family");
+            if (defaultDeviceFamily && plan["plannedChanges"] is JsonObject changes) changes.Remove("family");
             if (seedFiles != null) plan["plannedFiles"] = seedFiles;
             if (writing)
             {

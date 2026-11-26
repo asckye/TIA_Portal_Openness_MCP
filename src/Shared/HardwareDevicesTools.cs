@@ -319,7 +319,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "selection, inventory, plan hash, confirm and expectedProjectFile, one create, readback, result and diagnostics. V14" +
                 " SP1–V17 retain the exact native device creation route with the same preview/hash/project contract. Native " +
                 "behaviorPolicy=current; V4 native acceptance is pending.")]
-        public CallToolResult CreateDeviceV4(
+        public CallToolResult CreateDeviceFromRequest(
             [Description("Exact catalog article number or full OrderNumber TypeIdentifier, passed unchanged to preferredMlfb.")] string orderNumber,
             [Description("Exact catalog version; empty for a full TypeIdentifier, passed unchanged to preferredVersion.")] string version,
             string deviceName,
@@ -330,7 +330,11 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("expectedProjectFile: exact project file path returned by this tool's dry-run preview; required when " +
                 "dryRun=false.")] string expectedProjectFile =
                 "")
-            // V18+ forwards to the canonical tool; older releases retain the exact native creation route.
+            => CreateDeviceV4(orderNumber, version, deviceName, family, dryRun, confirm, expectedPlanHash, expectedProjectFile);
+
+        // V18+ forwards to the canonical tool; older releases retain the exact native creation route.
+        internal CallToolResult CreateDeviceV4(string orderNumber, string version, string deviceName, string? family = null, bool dryRun = true,
+            bool confirm = false, string expectedPlanHash = "", string expectedProjectFile = "")
             => !dryRun && !confirm ? McpServer.V4Reject("CreateDevice", McpServer.InvalidInput("confirm"))
                 : McpServer.RunWritePreview("CreateDevice", dryRun, new { orderNumber, version, deviceName, family },
                 () => HardwareContract.Run("CreateDevice", () => {

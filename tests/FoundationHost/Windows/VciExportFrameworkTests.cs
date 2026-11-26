@@ -823,6 +823,83 @@ public sealed class VciExportFrameworkTests
         Assert.True((bool?)row["preserved"]);
     }
 
+    [Theory, InlineData("16"), InlineData("17")]
+    public async Task Connect_reports_a_bounded_remedy_for_each_disconnected_file(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release);
+        var body = Tools(cases["multipleDisconnected"]!).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.Equal("PARTIAL_FAILURE", (string?)body["error"]!["code"]);
+        var message = (string)body["error"]!["message"]!;
+        foreach (var id in new[] { "00", "01" })
+        {
+            var remedy = "Target file already exists: MCP_RC_PLC_MCP_RC_FC_" + id + ".xml. After an overwriting import, "
+                + "the old file belongs to the disconnected mapping of the same object. Compare the file, back it up and remove it from the workspace, "
+                + "then connect again.";
+            Assert.Contains(remedy, message);
+            Assert.Equal(message.IndexOf(remedy, StringComparison.Ordinal), message.LastIndexOf(remedy, StringComparison.Ordinal));
+        }
+
+        var uncertain = Tools(cases["uncertainDisconnected"]!).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.Equal("OUTCOME_UNKNOWN", (string?)uncertain["error"]!["code"]);
+        string uncertainMessage = (string)uncertain["error"]!["message"]!;
+        Assert.Contains("Inspect the target", uncertainMessage);
+        Assert.Contains("MCP_RC_PLC_MCP_RC_FC_00.xml", uncertainMessage);
+        Assert.Contains("MCP_RC_PLC_MCP_RC_FC_01.xml", uncertainMessage);
+
+        var many = Tools(cases["manyDisconnected"]!).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+        Assert.Equal(32, (int?)many["data"]!["evidence"]!["failed"]);
+        Assert.Equal(32, Strings(many["data"]!["items"]).Count(line => line.Contains("disconnected mapping of the same object")));
+        var bounded = (string)many["error"]!["message"]!;
+        Assert.Contains("then connect again.", bounded);
+        Assert.InRange(System.Text.Encoding.UTF8.GetByteCount(bounded), 1, 4096);
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Connect_catch_all_sanitizes_inner_native_messages(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release);
+        foreach (string key in new[] { "catch-direct", "catch-prior" })
+        {
+            var row = cases[key]!;
+            var body = Tools(row).ConnectProjectToWorkspaceV4(dryRun: false).StructuredContent!;
+            Assert.Equal("NATIVE_OPERATION_FAILED", (string?)body["error"]!["code"]);
+            Assert.Equal(key == "catch-prior" ? 1 : 0, (int?)row["reply"]!["Meta"]!["queryRefusals"]);
+            foreach (var native in new[] { row["reply"]!["Meta"]!["nativeMessage"], body["error"]!["details"]!["nativeMessage"], body["error"]!["message"] })
+            {
+                var text = (string)native!;
+                Assert.Contains("Catalog lookup refused", text);
+                Assert.DoesNotContain("PrivateFixture", text);
+                Assert.DoesNotContain("Panel.xml", text);
+                Assert.DoesNotContain("fixture-credential", text);
+            }
+        }
+    }
+
+    [Theory, InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Connect_refuses_a_missing_or_file_workspace_root_before_walking(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release);
+        foreach (var key in new[] { "rc7-missing-workspace", "file-workspace" })
+        {
+            var scenario = cases[key]!;
+            foreach (var dryRun in new[] { true, false })
+            {
+                var row = scenario[dryRun ? "reply" : "apply"]!;
+                var body = Tools(new JsonObject { ["reply"] = row.DeepClone() }).ConnectProjectToWorkspaceV4(dryRun: dryRun).StructuredContent!;
+                Assert.Equal("NOT_FOUND", (string?)body["error"]!["code"]);
+                Assert.Contains("The workspace folder is missing. Restore it or select an existing workspace.", (string?)body["error"]!["message"]);
+                Assert.DoesNotContain("MCP_RC_Ws", (string?)body["error"]!["message"]);
+                Assert.Equal(0, (int?)row["Meta"]!["exportsIssued"]);
+                Assert.Empty(Strings(row["Items"]));
+            }
+        }
+        Assert.Equal("occupied root", (string?)cases["file-workspace"]!["contents"]);
+        Assert.Empty(Strings(cases["file-workspace"]!["calls"]));
+    }
+
     [Fact]
     public async Task Studio_uses_its_hashed_mapping_name_on_first_export_and_repair()
     {

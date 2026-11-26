@@ -126,6 +126,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool knownPartial = evidence["createdType"] is JsonObject || evidence["createdVersion"] is JsonObject
                 || Flag(data, "imported") == true;
             if (writes && success != true && knownPartial && nativeKnown) succeeded = Math.Max(1, succeeded);
+            string? disconnected = tool == "ConnectProjectToWorkspace" ? HostBehavior.SafeDiagnostic((string?)evidence["disconnectedFileReason"]) : null;
             Outcome outcome; Error? error = null;
             if ((HostBehavior.DocumentedRefusal(evidence)
                 ?? HostBehavior
@@ -137,7 +138,6 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 bool connect = tool == "ConnectProjectToWorkspace";
                 int exported = Count(evidence, connect ? "mapped" : "synchronized");
-                string? disconnected = connect ? HostBehavior.SafeDiagnostic((string?)evidence["disconnectedFileReason"]) : null;
                 string? diagnostic = disconnected ?? HostBehavior.SafeDiagnostic((string?)evidence["nativeMessage"]) ?? nativeMessage;
                 if (exported > 0)
                 {
@@ -218,6 +218,12 @@ namespace TiaMcpServer.ModelContextProtocol
             if (NativeResultState.TryUnsuccessful(evidence, writes, out var nativeOutcome, out var nativeError, tool)) {
                 outcome = nativeOutcome; error = nativeError; completeness = outcome == Outcome.Unknown ? Completeness.Unknown : outcome == Outcome.Partial
                     ? Completeness.Partial : Completeness.Complete;
+            }
+            if (error != null && disconnected != null)
+            {
+                var messages = error.Message.Contains(disconnected) ? new[] { error.Message } : new[] { error.Message, disconnected };
+                string message = string.Join(" ", TiaMcp.Adapters.Contracts.NativeFailureText.BoundedLines(messages, line => line));
+                error = new Error(message, error.Details, error.Innererror);
             }
             if (outcome != Outcome.Succeeded)
             {

@@ -23,8 +23,25 @@ internal sealed class VciExportAttempts
             writtenAfterFailure.Add(new HmiObject { ["fileName"] = file.Name, ["mappingState"] = state });
     }
 
+#if STUDIO_VCI_INITIAL
+    private readonly List<string> disconnectedFileReasons = new();
+
+    internal string RecordDisconnectedFile(string fileName)
+    {
+        var remedy = "Target file already exists: " + fileName
+            + ". After an overwriting import, the old file belongs to the disconnected mapping of the same object. "
+            + "Compare the file, back it up and remove it from the workspace, then connect again.";
+        if (disconnectedFileReasons.Count < 40) disconnectedFileReasons.Add(remedy);
+        return remedy;
+    }
+#endif
+
     internal void AddFileEvidence(IDictionary<string, object?> meta)
     {
+#if STUDIO_VCI_INITIAL
+        if (disconnectedFileReasons.Count > 0)
+            meta["disconnectedFileReason"] = string.Join(" ", NativeFailureText.BoundedLines(disconnectedFileReasons, NativeFailureText.WithoutLocalPaths));
+#endif
         if (FilesWritten > 0) meta["filesWritten"] = FilesWritten;
         if (writtenFailureCount > 0)
         {
@@ -160,6 +177,5 @@ internal sealed class VciExportAttempts
         return true;
     }
 
-    private static string Diagnostic(Exception error) =>
-        NativeFailureText.Compose(error.GetBaseException().Message, null, Array.Empty<string>());
+    internal static string Diagnostic(Exception error) => NativeFailureText.BoundedDiagnostic(error.GetBaseException());
 }
