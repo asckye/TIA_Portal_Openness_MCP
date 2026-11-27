@@ -32,10 +32,10 @@
 
 ## 提前准备候选
 
-以下以 `4.0.0` 为例。版本号必须与准备好的源文件一致；命令不会替维护者改版本或提交文件。
+以下以 `4.0.1` 为例。版本号必须与准备好的源文件一致；命令不会替维护者改版本或提交文件。
 
 ```powershell
-dotnet run --project build-tools/release -- prepare -Version 4.0.0
+dotnet run --project build-tools/release -- prepare -Version 4.0.1
 ```
 
 完整准备核对完整门禁记录后运行依赖漏洞扫描，再按顺序完成构建、暂存校验、ZIP 和摘要生成，再对提取的 ZIP 运行交付检查，然后写候选记录并上传私有草稿，2026-11-04 实测约 6 分钟（未计入漏洞扫描）。注册套件、传输、配置页、原生安全、工具用法与活动输入检查由 `merge-check` 执行，范围及最低通过数、最大跳过数见[验证](validation.md)。只有全部通过、工作树仍干净且测试用运行文件与 ZIP 一致时才写入 `candidate.json`；各检查运行到底后统一报告失败。各阶段和检查输出耗时，供后续优化使用。`BehaviorParityTests` 在 `merge-check` 中随 `foundation-api` 执行；不再单独构建或运行 `host-behavior-parity` 作业。
@@ -73,7 +73,7 @@ dotnet run --project build-tools/release -- prepare -Version 4.0.0
 上传失败不会删除通过检查的本地候选。使用准备阶段已经构建的 Debug 发布工具重试：
 
 ```powershell
-dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0.0
+dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0.1
 ```
 
 命令创建或复用同版本草稿，核对并保留匹配的资产、替换不匹配的资产，草稿最终只有 ZIP 和 `.sha256` 两项资产。草稿说明来自对应版本的发布说明，包含候选提交和未验收边界。成功后回写候选中的 ID；无需重新构建或测试。
@@ -83,7 +83,7 @@ dotnet run --no-build --project build-tools/release -- upload-draft -Version 4.0
 维护者先审查准备结果和发布说明，再明确确认发布。确认后保持候选提交及工作树不变，从同一检出运行：
 
 ```powershell
-dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.0
+dotnet run --no-build --project build-tools/release -- publish-prepared -Version 4.0.1
 ```
 
 命令先核对候选、HEAD、干净工作树、ZIP 与 sidecar、草稿资产的大小与摘要以及已有标签的目标。核对通过后推送候选提交到 `origin/master`，按需创建 `v<版本>` 标签，公开草稿，再确认公开资产可下载。正式版设置 `prerelease=false`、`make_latest=true`，成为 GitHub **Latest**。beta 和 rc 设置 `prerelease=true`、`make_latest=false`。核对草稿与标签期间，工具向 GitHub Actions 查询候选提交，逐个显示工作流最近一次运行的最新尝试及其结论或当前状态。推送 master 应触发 offline-checks、validate-bundle 和 vulnerability-scan，任一失败或缺失都会报警。若没有匹配的运行，工具另查远端是否已有该提交；提交尚未推送时会明确提示。CI 状态不可用或查询超时也只报警，继续公开。

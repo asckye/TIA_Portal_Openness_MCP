@@ -5,7 +5,7 @@
 An MCP server and Windows desktop Workbench for Siemens TIA Portal Openness across eight exact releases: **V14 SP1, V15.1, and V16–V21**. Connect AI coding agents or work directly in the Workbench to browse projects, author PLC/HMI artifacts, compile, test, and diagnose—backed by preview-first write approvals, hash-chained audit logs, and isolated per-session Openness workers.
 
 > [!NOTE]
-> **Name and release status:** Formerly **TIA Portal Openness MCP**. Executables (`TiaOpenness.exe`), the Claude Code plugin ID `tia-portal-openness-mcp`, and the MCP server name `tia-portal` keep their original names so existing configurations continue to work. GitHub redirects old repository links. This page documents the 4.0 source (current release: [v4.0.0](docs/releases/v4.0.0.md), GitHub **Latest**). The 3.3 updater does not offer 4.0; install it side by side as described in the [3.3 to 4.0 migration guide](docs/guides/migrate-3.3-to-4.0.md). For a downloaded release, use the documentation bundled inside its archive.
+> **Name and release status:** Formerly **TIA Portal Openness MCP**. Executables (`TiaOpenness.exe`), the Claude Code plugin ID `tia-portal-openness-mcp`, and the MCP server name `tia-portal` keep their original names so existing configurations continue to work. GitHub redirects old repository links. This page documents the 4.0 source (current release: [v4.0.1](docs/releases/v4.0.1.md), GitHub **Latest**). The 3.3 updater does not offer 4.0; install it side by side as described in the [3.3 to 4.0 migration guide](docs/guides/migrate-3.3-to-4.0.md). For a downloaded release, use the documentation bundled inside its archive.
 
 ![AI MCP clients and the Workbench Project page share a FoundationHost session with an isolated version-matched PLC worker](docs/assets/architecture.svg)
 
@@ -20,7 +20,7 @@ An MCP server and Windows desktop Workbench for Siemens TIA Portal Openness acro
 ## Get started
 
 > [!IMPORTANT]
-> Download the delivery ZIP and its `.sha256` sidecar from [Releases](https://github.com/asckye/automation-engineering-workbench/releases), then extract the entire archive to a short, permanent directory. For a 4.0 beta or rc, select the entry marked **Pre-release**. The 4.0.0 final ZIP will appear under **Latest** as `TIA_MCP_v4.0.0_<date>.zip`. GitHub's `Source code` archives contain no runtime binaries. Because executables are unsigned, Windows SmartScreen may warn on first launch.
+> Download the delivery ZIP and its `.sha256` sidecar from [Releases](https://github.com/asckye/automation-engineering-workbench/releases), then extract the entire archive to a short, permanent directory. For a 4.0 beta or rc, select the entry marked **Pre-release**. Final releases appear under **Latest** as `TIA_MCP_v<version>_<date>.zip`, for example `TIA_MCP_v4.0.1_<date>.zip`. GitHub's `Source code` archives contain no runtime binaries. Because executables are unsigned, Windows SmartScreen may warn on first launch.
 
 4.0 packages omit Siemens TIA Portal assemblies and load Openness from your own TIA installation. Existing 3.x release assets stay as published.
 
@@ -81,10 +81,10 @@ Some cells use records from an older candidate, marked ᵒ in the full table.
 
 ## Development
 
-`master` is the maintained branch, and runtime binaries are distributed as release assets rather than tracked Git files. From a clean checkout with the documented SDK layout and pinned companion Python environment, build and package all eight releases using the version in `Version.props` (currently `4.0.0`):
+`master` is the maintained branch, and runtime binaries are distributed as release assets rather than tracked Git files. From a clean checkout with the documented SDK layout and pinned companion Python environment, build and package all eight releases using the version in `Version.props` (currently `4.0.1`):
 
 ```powershell
-dotnet run --project build-tools/release -- prepare -Version 4.0.0 -BuildOnly -PublicApiRoot <SDK-root> -Python <python.exe>
+dotnet run --project build-tools/release -- prepare -Version 4.0.1 -BuildOnly -PublicApiRoot <SDK-root> -Python <python.exe>
 ```
 
 `-BuildOnly` compiles and packages all eight versions without running the full validation gates or creating a publishable candidate.

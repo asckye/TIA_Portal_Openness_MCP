@@ -2,15 +2,13 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/automation-engineering-workbench/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。预发布版本为 X.Y.Z-beta.N 或 X.Y.Z-rc.N，条目写作 `## [4.0.0-beta.1] - YYYY-MM-DD`，与正式版本相同，在发布命令前写入；`## [Unreleased]` 不被视为版本条目。
 
-## [Unreleased]
+## [4.0.1] - 2026-11-27
+
+The first 4.0 patch release for all eight supported TIA Portal releases. It fixes the two known limitations that 4.0.0 planned for 4.0.1 and a long evidence path in verified import.
+Tool names, parameters and result shapes are unchanged. See [v4.0.1](docs/releases/v4.0.1.md).
 
 ### Fixed
 
-- On V16–V19, the block message reports the error that interrupted its final comparison export. If the block remains unverified,
-  the synchronization summary advises retrying the comparison. An ordinary export refusal for an inconsistent block still advises recompiling it.
-- On V16–V21, `GetVersionControlStatus` returns mapping rows and totals when the workspace root path is invalid.
-  The summary says the workspace XML files could not be checked and `unmappedFiles` is `null`.
-- On .NET Framework, `ImportPlcBlockVerified` returns `INVALID_ARGUMENT` before export or import when an evidence file path would reach 260 characters.
 - On V16–V19, synchronization advises backing up and removing a stale workspace file only when the exports with and without defaults
   both compare successfully and differ from that file. An interrupted export reports its error, and an incomplete comparison advises retrying.
   In the final comparison after synchronization, if neither export succeeds because of an ordinary refusal or a locally disposed
@@ -19,7 +17,7 @@
   handle an invalid mapping file path this way, as V16–V19 already did. The summary says the workspace XML files could not be checked
   and `unmappedFiles` is `null`.
 - On all eight supported TIA Portal releases, `ImportPlcBlockVerified` returns `INVALID_ARGUMENT` before export or import
-  if an evidence file path would reach 260 characters.
+  if an evidence file path would reach 260 characters, naming `evidenceDirectory` and its maximum length.
 
 ## [4.0.0] - 2026-11-26
 
