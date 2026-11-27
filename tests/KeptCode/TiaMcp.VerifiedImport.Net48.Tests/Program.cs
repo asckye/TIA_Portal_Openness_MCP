@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using TiaMcp.Engine.Tests.Shared;
 using Xunit;
 using Xunit.Abstractions;
@@ -17,9 +18,14 @@ internal static class Program
 
     private static int Main(string[] args) => FixtureCrashGuard.Run(() =>
     {
+        Console.InputEncoding = new UTF8Encoding(false);
+        Console.OutputEncoding = new UTF8Encoding(false);
         if (args.Length == 2 && args[0] == "--worker-reply")
         {
-            Console.WriteLine(TiaMcp.PlcWorker.WorkerJson.Serialize(TiaMcp.Engine.Tests.RefusalFixture.Reply(args[1])));
+            object reply = args[1].StartsWith("echo/", StringComparison.Ordinal)
+                ? new { message = args[1].Substring("echo/".Length) }
+                : TiaMcp.Engine.Tests.RefusalFixture.Reply(args[1]);
+            Console.WriteLine(TiaMcp.PlcWorker.WorkerJson.Serialize(reply));
             return 0;
         }
         string runtime = RuntimeInformation.FrameworkDescription;

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using TiaMcp.Engine.Tests.Shared;
 using Xunit;
@@ -12,18 +13,28 @@ public sealed class VerifiedImportFrameworkTests
     [Fact]
     public async Task Same_style_worker_matrix_passes_on_dotnet_framework()
     {
-        string file = Path.Combine(AppContext.BaseDirectory, "verified-net48", "TiaMcp.VerifiedImport.Net48.Tests.exe");
-        using var process = Process.Start(new ProcessStartInfo(file) {
-            UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true
-        })!;
-        var output = process.StandardOutput.ReadToEndAsync();
-        var errors = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
-        string summary = await output;
-        Assert.True(process.ExitCode == 0, summary + Environment.NewLine + await errors);
-        Assert.Contains(".NET Framework 4.8", summary);
-        Assert.Contains("0 failed, 0 skipped", summary);
-        var count = System.Text.RegularExpressions.Regex.Match(summary, @"(?m)^(\d+) cases,");
-        Assert.True(count.Success && int.Parse(count.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) >= 121, summary);
+        string source = Path.Combine(AppContext.BaseDirectory, "verified-net48");
+        string directory = Path.Combine(Path.GetTempPath(), "matrix-" + Guid.NewGuid().ToString("N")).PadRight(160, 'x');
+        Directory.CreateDirectory(directory);
+        try
+        {
+            foreach (string sourceFile in Directory.EnumerateFiles(source))
+                File.Copy(sourceFile, Path.Combine(directory, Path.GetFileName(sourceFile)));
+            string file = Path.Combine(directory, "TiaMcp.VerifiedImport.Net48.Tests.exe");
+            using var process = Process.Start(new ProcessStartInfo(file) {
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true,
+                StandardOutputEncoding = new UTF8Encoding(false), StandardErrorEncoding = new UTF8Encoding(false)
+            })!;
+            var output = process.StandardOutput.ReadToEndAsync();
+            var errors = process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
+            string summary = await output;
+            Assert.True(process.ExitCode == 0, summary + Environment.NewLine + await errors);
+            Assert.Contains(".NET Framework 4.8", summary);
+            Assert.Contains("0 failed, 0 skipped", summary);
+            var count = System.Text.RegularExpressions.Regex.Match(summary, @"(?m)^(\d+) cases,");
+            Assert.True(count.Success && int.Parse(count.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) >= 121, summary);
+        }
+        finally { Directory.Delete(directory, true); }
     }
 }

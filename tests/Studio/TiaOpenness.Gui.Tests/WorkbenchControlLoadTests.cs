@@ -17,10 +17,11 @@ public sealed class WorkbenchControlLoadTests(WpfContext wpf)
     {
         wpf.Run(() =>
         {
-            var (window, _, _) = Window();
+            var (window, _, _) = Window(designWidth: true);
             try
             {
-                Assert.Equal(1360, window.Width);
+                Assert.Equal(1360, window.Root.Width);
+                Assert.Equal(1360, window.Root.ActualWidth);
                 Assert.Equal(WorkbenchControlStatus.Done, window.ApplyControl(Request(WorkbenchControlOperation.DisplayCall)).Status);
                 WpfContext.Drain();
                 Assert.Same(window.DockedInspector, window.DrawerPanel.Parent);

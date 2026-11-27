@@ -51,7 +51,7 @@ public sealed partial class WorkbenchControlTests(WpfContext wpf)
             Fields = new WorkbenchBlockFilterFields { Filter = "Main" } },
     };
     internal static (MainWindow Window, MainViewModel Model, FakeProjectClient Client) Window(bool connected = true,
-        ControlInputGuard? input = null, Func<TimeSpan>? toastClock = null)
+        ControlInputGuard? input = null, Func<TimeSpan>? toastClock = null, bool designWidth = false)
     {
         var client = new FakeProjectClient { AttachedProject = new() { Name = "Line", Path = Project } };
         var model = new MainViewModel(client, new FakeDialogService()) { SelectedReleaseKey = "21" };
@@ -62,6 +62,7 @@ public sealed partial class WorkbenchControlTests(WpfContext wpf)
         var journal = new FeaturePageFixtures.Journal();
         journal.Replace([journal.Calls[0] with { RequestId = CallId, JournalKey = CallId }]);
         window.ConfigureFeaturePages(journal, new FeaturePageFixtures.Audit(), new FeaturePageFixtures.Environment());
+        if (designWidth) window.Root.Width = window.Width;
         WpfContext.ShowWindow(window); WpfContext.Drain(); client.Calls.Clear();
         return (window, model, client);
     }

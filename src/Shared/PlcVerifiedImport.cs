@@ -15,6 +15,37 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static readonly string Session = Guid.NewGuid().ToString("N");
 
+        private static class EvidenceFile
+        {
+            internal const string Before = "before.xml", Planned = "planned.xml", After = "after.xml";
+            internal const string AfterNone = "after-none.xml", AfterRefusal = "after-refusal.xml";
+            internal static string Type(int index) => $"type-{index}.xml";
+
+#if NETFRAMEWORK
+            // Each distinct type needs at least one byte in the input XML.
+            internal static readonly int LongestNameLength = new[] { Before, Planned, After, AfterNone, AfterRefusal, Type(PlcDocumentEditing.MaxBytes) }
+                .Max(name => name.Length);
+#endif
+        }
+
+#if NETFRAMEWORK
+        private const int MaxPath = 260;
+
+        private static AdapterPreconditionException EvidencePathTooLong(string directory) =>
+            new AdapterPreconditionException($"Use a shorter evidence folder. Files under '{directory}' must have paths under {MaxPath} characters.",
+                "evidenceDirectory");
+#endif
+
+        private static string FullEvidenceRoot(string path)
+        {
+#if NETFRAMEWORK
+            try { return Path.GetFullPath(path); }
+            catch (PathTooLongException) { throw EvidencePathTooLong(path); }
+#else
+            return Path.GetFullPath(path);
+#endif
+        }
+
         public static object? PlainValue(JsonNode? node)
         {
             if (node is JsonObject obj) return obj.ToDictionary(pair => pair.Key, pair => PlainValue(pair.Value), StringComparer.Ordinal);
@@ -51,15 +82,18 @@ namespace TiaMcpServer.ModelContextProtocol
             if (!dryRun && string.IsNullOrWhiteSpace(expectedToken))
                 throw new AdapterPreconditionException("Preview previewToken is required.", "previewToken");
             if (!Path.IsPathRooted(evidenceRoot)) throw new ArgumentException("Absolute evidence directory required.");
-            var root = new DirectoryInfo(Path.GetFullPath(evidenceRoot));
+            var root = new DirectoryInfo(FullEvidenceRoot(evidenceRoot));
+            var folder = Path.Combine(root.FullName, "plc-import-" + Guid.NewGuid().ToString("N"));
+#if NETFRAMEWORK
+            if (folder.Length + 1 + EvidenceFile.LongestNameLength >= MaxPath) throw EvidencePathTooLong(folder);
+#endif
             for (var p = root; p != null; p = p.Parent)
                 if (p.Exists && (p.Attributes & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Reparse evidence paths refused.");
-            var folder = Path.Combine(root.FullName, "plc-import-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(folder);
             meta["evidenceDirectory"] = folder;
-            var beforePath = Path.Combine(folder, "before.xml");
-            var plannedPath = Path.Combine(folder, "planned.xml");
-            var afterPath = Path.Combine(folder, "after.xml");
+            var beforePath = Path.Combine(folder, EvidenceFile.Before);
+            var plannedPath = Path.Combine(folder, EvidenceFile.Planned);
+            var afterPath = Path.Combine(folder, EvidenceFile.After);
             meta["phase"] = "exportBefore"; verifyBinding();
             try { export(beforePath); }
             catch (PlcSoftwareException error) when (error.Code == "BlockInconsistent")
@@ -80,7 +114,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var typeHashes = new JsonObject();
                 foreach (string name in PlcDocumentEditing.UnexpandedTypes(expected))
                 {
-                    string path = Path.Combine(folder, $"type-{typeHashes.Count}.xml");
+                    string path = Path.Combine(folder, EvidenceFile.Type(typeHashes.Count));
                     var section = exportType(name, path) ? PlcDocumentEditing.TypeDeclaration(PlcDocumentEditing.Read(path), name) : null;
                     if (section != null) declarations.Add(name, section);
                     typeHashes[name] = section == null ? null : PlcDocumentEditing.DeclarationFingerprint(section);
@@ -181,7 +215,7 @@ namespace TiaMcpServer.ModelContextProtocol
             if ((!fullMatch || removedExpansion) && exportNone != null)
             {
                 comparison["method"] = "candidateWithNone";
-                var reason = CompareNone(Path.Combine(folder, "after-none.xml"), candidateXml, readback, restored, preserved, verifyBinding, exportNone,
+                var reason = CompareNone(Path.Combine(folder, EvidenceFile.AfterNone), candidateXml, readback, restored, preserved, verifyBinding, exportNone,
                     fullMatch, comparison, out noneLabel);
                 matches = reason == null;
                 if (reason != null) comparison["reason"] = reason;
@@ -213,7 +247,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (names == null || beforeNames.Any(string.IsNullOrEmpty) || names.Any(string.IsNullOrEmpty)
                     || !beforeNames.OrderBy(n => n, StringComparer.Ordinal).SequenceEqual(names.OrderBy(n => n, StringComparer.Ordinal)))
                     return false;
-                var path = Path.Combine(folder, "after-refusal.xml");
+                var path = Path.Combine(folder, EvidenceFile.AfterRefusal);
                 export(path);
                 meta["refusalReadbackPath"] = path;
                 return XNode.DeepEquals(PlcDocumentEditing.RawBlock(before), PlcDocumentEditing.RawBlock(PlcDocumentEditing.Read(path)));

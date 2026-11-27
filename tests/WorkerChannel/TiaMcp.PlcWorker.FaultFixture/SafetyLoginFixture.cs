@@ -4,6 +4,7 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json.Nodes;
 using Siemens.Engineering.Safety;
 using TiaMcp.Adapters;
@@ -27,6 +28,14 @@ internal static class SafetyLoginFixture
 
     internal static int Run(string caller, string scenario)
     {
+        Console.InputEncoding = new UTF8Encoding(false);
+        Console.OutputEncoding = new UTF8Encoding(false);
+        if (caller == "echo")
+        {
+            string message = (string)JsonNode.Parse(Console.ReadLine()!)!["message"]!;
+            Console.WriteLine(WorkerJson.Serialize(new { framework = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName, message }));
+            return 0;
+        }
         if (caller == "native-writes")
         {
             var input = JsonNode.Parse(Console.ReadLine()!)!;

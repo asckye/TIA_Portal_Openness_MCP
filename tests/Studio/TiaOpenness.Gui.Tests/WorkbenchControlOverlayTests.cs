@@ -256,12 +256,12 @@ public sealed partial class WorkbenchControlOverlayTests(WpfContext wpf)
             var (window, _, _) = Window();
             try
             {
-                window.Width = 1360;
+                window.Width = window.Root.Width = 1360;
                 window.Navigate("Calls"); WpfContext.Drain();
                 window.Features.OpenCall(window.Features.Calls[0]); WpfContext.Drain();
                 Assert.True(window.DockedInspector.IsVisible);
                 window.OpenSettings(); WpfContext.Drain();
-                window.Width = 1024; WpfContext.Drain(); window.UpdateLayout();
+                window.Width = window.Root.Width = 1024; WpfContext.Drain(); window.UpdateLayout();
                 Assert.Equal("Calls", window.CurrentPage);
                 Assert.True(window.SettingsOverlay.IsEnabled);
                 Assert.True(window.SettingsOverlay.IsKeyboardFocusWithin);

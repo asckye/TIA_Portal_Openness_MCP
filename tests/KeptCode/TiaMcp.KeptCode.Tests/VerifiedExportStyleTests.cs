@@ -108,7 +108,7 @@ public sealed partial class VerifiedExportStyleTests
         Exception? exportFailure = null, string? declaration = null, Exception? readbackFailure = null, string declarationName = "MotorType",
         string? expectedDifference = null, bool supportsNone = true)
     {
-        string directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "verified-style-" + Guid.NewGuid().ToString("N"))).FullName;
+        string directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "vs-" + Guid.NewGuid().ToString("N"))).FullName;
         try
         {
             var request = new PlcSoftwareRequest { FilePath = Path.Combine(directory, "candidate.xml"), EvidenceDirectory = directory,

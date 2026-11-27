@@ -17,12 +17,39 @@ public sealed class VerifiedRefusalTests
         + "Error when calling method 'Create' of type 'Siemens.Engineering.SW.Blocks.PlcBlockComposition'.; "
         + "MCP_RC_DB2.Motor: The Openness import failed: 找不到元素“Ghost”，请检查所用类型的一致性。";
 
+    [Fact]
+    public void Evidence_file_at_the_framework_path_limit_is_refused_before_export_or_import()
+    {
+        const string suffix = @"\plc-import-00000000000000000000000000000000\after-refusal.xml";
+        string root = Path.Combine(Path.GetTempPath(), "path-" + Guid.NewGuid().ToString("N")).PadRight(260 - suffix.Length, 'x');
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var stream = typeof(VerifiedRefusalTests).Assembly.GetManifestResourceStream("VerifiedImport.17-T4.xml");
+            using var reader = new StreamReader(stream!);
+            var meta = new System.Text.Json.Nodes.JsonObject();
+            var calls = new List<string>();
+            var error = Assert.Throws<AdapterPreconditionException>(() =>
+                TiaMcpServer.ModelContextProtocol.PlcVerifiedImport.Execute(reader.ReadToEnd(), "PLC/MCP_RC_DB2", root, false, "fixture",
+                    _ => calls.Add("export"), _ => calls.Add("import"), () => calls.Add("bind"), meta));
+            Assert.Equal("INVALID_ARGUMENT", MutationEvidence.FailureCode(error));
+            Assert.True(error.IsArgument);
+            Assert.Equal("evidenceDirectory", error.ParamName);
+            Assert.Contains(root, error.Message);
+            Assert.Contains("260", error.Message);
+            Assert.False((bool?)meta["mayHaveChanged"]);
+            Assert.Empty(calls);
+            Assert.Empty(Directory.EnumerateFileSystemEntries(root));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     private sealed class EngineeringUserAbortException() : NativeException("Import aborted") { }
     private sealed class EngineeringObjectDisposedException() : NativeException("Block disposed") { }
 
     internal static PlcSoftwareReply Run(string scenario, string release = "17")
     {
-        var directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "refusal-" + Guid.NewGuid().ToString("N")));
+        var directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "refusal-" + Guid.NewGuid().ToString("N")));
         try
         {
             using var stream = typeof(VerifiedRefusalTests).Assembly.GetManifestResourceStream("VerifiedImport.17-T4.xml");

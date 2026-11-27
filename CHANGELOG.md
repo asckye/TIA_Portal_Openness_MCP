@@ -10,6 +10,7 @@
   the synchronization summary advises retrying the comparison. An ordinary export refusal for an inconsistent block still advises recompiling it.
 - On V16–V21, `GetVersionControlStatus` returns mapping rows and totals when the workspace root path is invalid.
   The summary says the workspace XML files could not be checked and `unmappedFiles` is `null`.
+- On .NET Framework, `ImportPlcBlockVerified` returns `INVALID_ARGUMENT` before export or import when an evidence file path would reach 260 characters.
 
 ## [4.0.0] - 2026-11-26
 

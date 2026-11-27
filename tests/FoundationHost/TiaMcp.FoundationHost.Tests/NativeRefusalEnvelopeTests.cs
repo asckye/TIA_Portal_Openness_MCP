@@ -1,5 +1,6 @@
 extern alias toolpipeline;
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json.Nodes;
 using TiaMcp.FoundationHost;
 using TiaMcp.WorkerChannel;
@@ -14,13 +15,22 @@ public sealed class NativeRefusalEnvelopeTests
     {
         string file = Path.Combine(AppContext.BaseDirectory, "verified-net48", "TiaMcp.VerifiedImport.Net48.Tests.exe");
         using var process = Process.Start(new ProcessStartInfo(file, "--worker-reply " + scenario) {
-            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+            StandardOutputEncoding = new UTF8Encoding(false), StandardErrorEncoding = new UTF8Encoding(false)
         })!;
         var output = process.StandardOutput.ReadToEndAsync();
         var errors = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync().WaitAsync(TestDeadlines.Hang);
         Assert.True(process.ExitCode == 0, await errors);
         return JsonNode.Parse(await output)!.AsObject();
+    }
+
+    [Fact]
+    public async Task Worker_reply_preserves_unicode_diagnostics()
+    {
+        const string message = "找不到元素“Ghost”ก😀";
+        var row = await Reply("echo/" + message);
+        Assert.Equal(message, (string?)row["message"]);
     }
 
     public static IEnumerable<object[]> VerifiedFailures => from row in VerifiedImportOutcomeTests.Releases()

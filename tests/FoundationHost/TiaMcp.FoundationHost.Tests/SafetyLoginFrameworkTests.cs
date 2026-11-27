@@ -1,10 +1,15 @@
 using System.Diagnostics;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using TiaMcp.Engine.Tests.Shared;
 using Xunit;
 
 public sealed class SafetyLoginFrameworkTests
 {
+    private static readonly JsonSerializerOptions RequestJson = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
     [Fact]
     public void Unreadable_messages_keep_the_returned_compile_counts_on_net48()
     {
@@ -90,6 +95,14 @@ public sealed class SafetyLoginFrameworkTests
         Assert.Equal("Unknown", (string?)row["outcome"]);
     }
 
+    [Fact]
+    public void Safety_login_fixture_preserves_unicode_diagnostics()
+    {
+        const string message = "找不到元素“Ghost”ก😀";
+        var row = RunFixture("echo", "message", new JsonObject { ["message"] = message });
+        Assert.Equal(message, (string?)row["message"]);
+    }
+
     internal static JsonObject RunFixture(string caller, string scenario, JsonObject? request = null)
     {
         const string project = "TiaMcp.PlcWorker.FaultFixture";
@@ -100,12 +113,13 @@ public sealed class SafetyLoginFrameworkTests
                 "bin", "Debug", "net48", project + ".exe");
 #endif
         var start = new ProcessStartInfo(exe) {
-            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardInput = true
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardInput = true,
+            StandardOutputEncoding = new UTF8Encoding(false), StandardInputEncoding = new UTF8Encoding(false)
         };
         foreach (string argument in new[] { "--safety-login", caller, scenario }) start.ArgumentList.Add(argument);
         using var process = Process.Start(start)!;
         var output = process.StandardOutput.ReadToEndAsync();
-        process.StandardInput.WriteLine(request?.ToJsonString());
+        process.StandardInput.WriteLine(request?.ToJsonString(RequestJson));
         process.StandardInput.Close();
         Assert.True(process.WaitForExit(30000), "The offline safety login fixture did not exit.");
         Assert.Equal(0, process.ExitCode);

@@ -16,7 +16,7 @@ public sealed class VerifiedCompileTests
 
     internal static PlcSoftwareReply Run(string scenario)
     {
-        var directory = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "verified-" + Guid.NewGuid().ToString("N")));
+        var directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "verified-" + Guid.NewGuid().ToString("N")));
         try
         {
             bool recorded = scenario == "recorded";
