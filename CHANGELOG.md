@@ -18,6 +18,8 @@
 - On V16–V21, `GetVersionControlStatus` returns mapping rows and totals when the workspace root is invalid. V20 and V21 now also
   handle an invalid mapping file path this way, as V16–V19 already did. The summary says the workspace XML files could not be checked
   and `unmappedFiles` is `null`.
+- On all eight supported TIA Portal releases, `ImportPlcBlockVerified` returns `INVALID_ARGUMENT` before export or import
+  if an evidence file path would reach 260 characters.
 
 ## [4.0.0] - 2026-11-26
 

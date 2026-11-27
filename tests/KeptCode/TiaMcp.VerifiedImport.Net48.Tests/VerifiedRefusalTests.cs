@@ -17,11 +17,36 @@ public sealed class VerifiedRefusalTests
         + "Error when calling method 'Create' of type 'Siemens.Engineering.SW.Blocks.PlcBlockComposition'.; "
         + "MCP_RC_DB2.Motor: The Openness import failed: 找不到元素“Ghost”，请检查所用类型的一致性。";
 
+    private static string EvidenceRootForFilePath(int length)
+    {
+        const string suffix = @"\plc-import-00000000000000000000000000000000\after-refusal.xml";
+        return Path.Combine(Path.GetTempPath(), "path-" + Guid.NewGuid().ToString("N")).PadRight(length - suffix.Length, 'x');
+    }
+
+    [Fact]
+    public void Evidence_file_just_below_the_framework_path_limit_allows_preview()
+    {
+        string root = EvidenceRootForFilePath(259);
+        Directory.CreateDirectory(root);
+        try
+        {
+            using var stream = typeof(VerifiedRefusalTests).Assembly.GetManifestResourceStream("VerifiedImport.17-T4.xml");
+            using var reader = new StreamReader(stream!);
+            string xml = reader.ReadToEnd();
+            var meta = new System.Text.Json.Nodes.JsonObject();
+            TiaMcpServer.ModelContextProtocol.PlcVerifiedImport.Execute(xml, "PLC/MCP_RC_DB2", root, true, "",
+                path => File.WriteAllText(path, xml), _ => throw new InvalidOperationException("Preview attempted an import."), () => { }, meta);
+            Assert.Equal("preview", (string?)meta["phase"]);
+            Assert.True(File.Exists((string)meta["plannedPath"]!));
+            Assert.Equal(259, Path.Combine((string)meta["evidenceDirectory"]!, "after-refusal.xml").Length);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Fact]
     public void Evidence_file_at_the_framework_path_limit_is_refused_before_export_or_import()
     {
-        const string suffix = @"\plc-import-00000000000000000000000000000000\after-refusal.xml";
-        string root = Path.Combine(Path.GetTempPath(), "path-" + Guid.NewGuid().ToString("N")).PadRight(260 - suffix.Length, 'x');
+        string root = EvidenceRootForFilePath(260);
         Directory.CreateDirectory(root);
         try
         {
@@ -37,6 +62,8 @@ public sealed class VerifiedRefusalTests
             Assert.Equal("evidenceDirectory", error.ParamName);
             Assert.Contains(root, error.Message);
             Assert.Contains("260", error.Message);
+            Assert.Contains($"'{root}'", error.Message);
+            Assert.Contains("at most 197 characters", error.Message);
             Assert.False((bool?)meta["mayHaveChanged"]);
             Assert.Empty(calls);
             Assert.Empty(Directory.EnumerateFileSystemEntries(root));

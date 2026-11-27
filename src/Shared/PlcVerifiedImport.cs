@@ -28,12 +28,18 @@ namespace TiaMcpServer.ModelContextProtocol
 #endif
         }
 
+        private static string EvidenceFolderName(Guid id) => $"plc-import-{id:N}";
+
 #if NETFRAMEWORK
         private const int MaxPath = 260;
 
-        private static AdapterPreconditionException EvidencePathTooLong(string directory) =>
-            new AdapterPreconditionException($"Use a shorter evidence folder. Files under '{directory}' must have paths under {MaxPath} characters.",
-                "evidenceDirectory");
+        private static AdapterPreconditionException EvidencePathTooLong(string directory)
+        {
+            int suffixLength = 1 + EvidenceFolderName(Guid.Empty).Length + 1 + EvidenceFile.LongestNameLength;
+            int maxDirectoryLength = MaxPath - 1 - suffixLength;
+            return new AdapterPreconditionException($"The full path of evidenceDirectory '{directory}' must be at most {maxDirectoryLength} characters " +
+                $"(excluding a trailing separator) to keep evidence file paths under {MaxPath} characters.", "evidenceDirectory");
+        }
 #endif
 
         private static string FullEvidenceRoot(string path)
@@ -83,9 +89,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new AdapterPreconditionException("Preview previewToken is required.", "previewToken");
             if (!Path.IsPathRooted(evidenceRoot)) throw new ArgumentException("Absolute evidence directory required.");
             var root = new DirectoryInfo(FullEvidenceRoot(evidenceRoot));
-            var folder = Path.Combine(root.FullName, "plc-import-" + Guid.NewGuid().ToString("N"));
+            var folder = Path.Combine(root.FullName, EvidenceFolderName(Guid.NewGuid()));
 #if NETFRAMEWORK
-            if (folder.Length + 1 + EvidenceFile.LongestNameLength >= MaxPath) throw EvidencePathTooLong(folder);
+            if (folder.Length + 1 + EvidenceFile.LongestNameLength >= MaxPath) throw EvidencePathTooLong(evidenceRoot);
 #endif
             for (var p = root; p != null; p = p.Parent)
                 if (p.Exists && (p.Attributes & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Reparse evidence paths refused.");
