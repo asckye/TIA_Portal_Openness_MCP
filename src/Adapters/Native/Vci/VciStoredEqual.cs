@@ -30,7 +30,8 @@ internal sealed class VciStoredEqual
     private bool comparisonFailed;
     private bool blockInconsistent;
     private bool invalidated;
-    internal string Verification => invalidated ? "not-comparable" : Proof.Verification;
+    // One match proves equality. A mismatch needs a comparison for every export mode.
+    internal string Verification => !invalidated && (Proof.Matches || Proof.AllExportsDiffer) ? Proof.Verification : "not-comparable";
 
     internal VciStoredEqual(string root, MappedObject mapping, string name, string refresh)
     {

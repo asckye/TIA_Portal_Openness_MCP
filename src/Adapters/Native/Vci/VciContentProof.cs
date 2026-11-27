@@ -16,6 +16,7 @@ internal sealed class VciContentProof
     internal string? Message { get; private set; }
     internal string? ExportFailure { get; private set; }
     internal bool ExportSucceeded { get; private set; }
+    internal bool AllExportsDiffer { get; private set; }
     internal bool Matches => Verification == "content-match";
     private readonly string workspace;
 
@@ -49,6 +50,7 @@ internal sealed class VciContentProof
         Message = null;
         ExportFailure = null;
         ExportSucceeded = false;
+        AllExportsDiffer = false;
         Sha256 = null;
         if (File == null)
         {
@@ -66,10 +68,12 @@ internal sealed class VciContentProof
             CandidateImportFiles.SafePath(temp.Parent!);
             temp.Create();
             bool comparisonThrew = false;
+            var exportModes = new[] { false, true };
+            int mismatches = 0;
             try
             {
                 var export = getExport();
-                foreach (bool defaults in new[] { false, true })
+                foreach (bool defaults in exportModes)
                 {
                     var candidate = new FileInfo(Path.Combine(temp.FullName, defaults ? "defaults.xml" : "object.xml"));
                     try { export(candidate, defaults); }
@@ -91,6 +95,7 @@ internal sealed class VciContentProof
                             return;
                         }
                         Verification = "no-match";
+                        mismatches++;
                     }
                     catch (Exception error) when (ordinary(error))
                     { Message = NativeFailureText.BoundedDiagnostic(error); }
@@ -107,6 +112,7 @@ internal sealed class VciContentProof
                 catch (Exception) when (comparisonThrew || Message != null)
                 { /* swallow(cleanup): preserve the native comparison exception and its batch-stop semantics. */ }
             }
+            AllExportsDiffer = mismatches == exportModes.Length;
         }
         catch (Exception error) when (ordinary(error))
         {

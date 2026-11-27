@@ -11,6 +11,13 @@
 - On V16–V21, `GetVersionControlStatus` returns mapping rows and totals when the workspace root path is invalid.
   The summary says the workspace XML files could not be checked and `unmappedFiles` is `null`.
 - On .NET Framework, `ImportPlcBlockVerified` returns `INVALID_ARGUMENT` before export or import when an evidence file path would reach 260 characters.
+- On V16–V19, synchronization advises backing up and removing a stale workspace file only when the exports with and without defaults
+  both compare successfully and differ from that file. An interrupted export reports its error, and an incomplete comparison advises retrying.
+  In the final comparison after synchronization, if neither export succeeds because of an ordinary refusal or a locally disposed
+  export proxy, a block observed to be inconsistent still gets recompile advice.
+- On V16–V21, `GetVersionControlStatus` returns mapping rows and totals when the workspace root is invalid. V20 and V21 now also
+  handle an invalid mapping file path this way, as V16–V19 already did. The summary says the workspace XML files could not be checked
+  and `unmappedFiles` is `null`.
 
 ## [4.0.0] - 2026-11-26
 

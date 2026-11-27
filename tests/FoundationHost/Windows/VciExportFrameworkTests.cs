@@ -626,6 +626,74 @@ public sealed class VciExportFrameworkTests
         }
     }
 
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
+    public async Task Interrupted_defaults_export_after_a_mismatch_advises_retrying_the_comparison(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var scenario = (await ExportReplies(release))["sequences"]!["final-defaults-interrupted"]!;
+        var data = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!["data"]!;
+        var row = Assert.Single(data["evidence"]!["items"]!.AsArray())!;
+        Assert.True((bool?)scenario["ExportSucceeded"]);
+        Assert.True((bool?)scenario["ComparisonInterrupted"]);
+        Assert.Equal("not-verified", (string?)row["outcome"]);
+        Assert.Equal("Defaults comparison connection lost", (string?)row["nativeMessage"]);
+        foreach (var summary in new[] { (string?)scenario["reply"]!["Message"], (string?)data["summary"] })
+        {
+            Assert.DoesNotContain("remove the stale workspace file", summary);
+            Assert.Contains("Not verified: Motor. Check the comparison diagnostic and retry the comparison export.", summary);
+        }
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
+    public async Task Incomplete_comparisons_advise_retrying_even_when_one_export_differs(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = (await ExportReplies(release))["sequences"]!;
+        Assert.All(new[] { ("initial-defaults-interrupted", 0), ("final-defaults-disposed", 1),
+            ("final-first-refused", 1), ("final-defaults-unreadable", 1) }, item =>
+        {
+            var (key, syncs) = item;
+            var scenario = cases[key]!;
+            var data = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!["data"]!;
+            var evidence = data["evidence"]!;
+            var row = Assert.Single(evidence["items"]!.AsArray())!;
+            Assert.True((bool?)scenario["ExportSucceeded"]);
+            Assert.False((bool?)scenario["Inconsistent"]);
+            Assert.Equal(syncs, (int?)evidence["exportsIssued"]);
+            Assert.Equal("not-verified", (string?)row["outcome"]);
+            foreach (var summary in new[] { (string?)scenario["reply"]!["Message"], (string?)data["summary"] })
+            {
+                Assert.DoesNotContain("remove the stale workspace file", summary);
+                Assert.Contains("Not verified: Motor. Check the comparison diagnostic and retry the comparison export.", summary);
+            }
+            Assert.Equal("not-comparable", (string?)row["verification"]);
+        });
+    }
+
+    [Fact]
+    public async Task Interrupted_post_import_comparison_discards_the_previous_complete_mismatch()
+    {
+        var proof = (await ExportReplies("19"))["sequences"]!["post-import-defaults-interrupted"]!;
+        Assert.Equal("no-match", (string?)proof["previousVerification"]);
+        Assert.True((bool?)proof["Interrupted"]);
+        Assert.Equal("Defaults comparison connection lost", (string?)proof["Message"]);
+        Assert.Equal("not-comparable", (string?)proof["Verification"]);
+    }
+
+    [Fact]
+    public async Task Locally_disposed_final_export_keeps_recompile_advice_for_an_inconsistent_block()
+    {
+        using var selected = Host.HardwareContract.UseRelease("19");
+        var scenario = (await ExportReplies("19"))["sequences"]!["final-local-disposal"]!;
+        var data = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!["data"]!;
+        var row = Assert.Single(data["evidence"]!["items"]!.AsArray())!;
+        Assert.False((bool?)scenario["ComparisonInterrupted"]);
+        Assert.True((bool?)scenario["Inconsistent"]);
+        Assert.Contains("Final comparison proxy disposed", (string?)row["nativeMessage"]);
+        Assert.Contains("Recompile the block, then retry the comparison export.", (string?)row["nativeMessage"]);
+        Assert.Contains("Recompile the block(s) Motor and synchronize again.", (string?)data["summary"]);
+    }
+
     [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Status_matches_listed_file_paths_across_formats_and_bounds_unmapped_names(string release)
     {
@@ -681,6 +749,25 @@ public sealed class VciExportFrameworkTests
             Assert.Equal(2, (int?)evidence["total"]);
             Assert.Equal(2, evidence["objects"]!.AsArray().Count);
         });
+    }
+
+    [Theory, InlineData("20"), InlineData("21")]
+    public async Task Status_keeps_other_mappings_when_a_mapping_file_path_is_invalid(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var reply = (await ExportReplies(release, "--workspace-files"))["invalidMapping"]!;
+        var body = Tools(new JsonObject { ["reply"] = reply.DeepClone() }).GetVersionControlStatusV4(changedOnly: false).StructuredContent!;
+        Assert.True((bool?)body["ok"], body.ToJsonString());
+        var data = body["data"]!;
+        var evidence = data["evidence"]!;
+        Assert.Equal(2, (int?)evidence["total"]);
+        var rows = evidence["objects"]!.AsArray();
+        Assert.EndsWith(@"\Bad|Stem", (string?)rows[0]!["filePath"]);
+        Assert.EndsWith(@"\MappedByFileName.xml", (string?)rows[1]!["filePath"]);
+        Assert.Equal("Equal", (string?)rows[1]!["compareState"]);
+        Assert.Contains("could not be checked", (string?)data["summary"]);
+        Assert.True(evidence.AsObject().ContainsKey("unmappedFiles"));
+        Assert.Null(evidence["unmappedFiles"]);
     }
 
     [Fact]

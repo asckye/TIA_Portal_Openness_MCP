@@ -144,35 +144,61 @@ internal static class VciProofFixture
         block.Write = (output, _) => File.WriteAllText(output.FullName, "<Document");
         proof.CompareAfterImports(() => mapped, false);
         cases["repeated-comparison"] = new { initial, unreadable, final = proof.Inconsistent, proof.Proof.ExportSucceeded, proof.Message };
-        cases["final-interrupted"] = FinalComparisonFailure(parent.CreateSubdirectory("final-interrupted"), xml, interrupted: true);
-        cases["final-refused"] = FinalComparisonFailure(parent.CreateSubdirectory("final-refused"), xml, interrupted: false);
+        void RecordComparison(string name, Action<FileInfo, ExportOptions> initialExport, Action<FileInfo, ExportOptions> finalExport) =>
+            cases[name] = ComparisonFailure(parent.CreateSubdirectory(name), xml, initialExport, finalExport);
+        void Refuse(FileInfo file, ExportOptions options) => throw new EngineeringTargetInvocationException("Comparison export refused");
+        void InterruptWithDefaults(FileInfo file, ExportOptions options)
+        {
+            if (options == ExportOptions.WithDefaults) throw new EndOfStreamException("Defaults comparison connection lost");
+            File.WriteAllText(file.FullName, changed);
+        }
+        RecordComparison("final-interrupted", Refuse, (_, _) => throw new EndOfStreamException("Final comparison connection lost"));
+        RecordComparison("final-refused", Refuse, Refuse);
+        RecordComparison("final-defaults-interrupted", Refuse, InterruptWithDefaults);
+        RecordComparison("final-local-disposal", Refuse, (_, _) => throw new ObjectDisposedException("Motor", "Final comparison proxy disposed"));
+        RecordComparison("initial-defaults-interrupted", InterruptWithDefaults, Refuse);
+        RecordComparison("final-defaults-disposed", Refuse, (file, options) =>
+        {
+            if (options == ExportOptions.WithDefaults) throw new ObjectDisposedException("Motor", "Defaults comparison proxy disposed");
+            File.WriteAllText(file.FullName, changed);
+        });
+        RecordComparison("final-first-refused", Refuse, (file, options) =>
+        {
+            if (options == ExportOptions.None) Refuse(file, options);
+            File.WriteAllText(file.FullName, changed);
+        });
+        RecordComparison("final-defaults-unreadable", Refuse, (file, options) =>
+            File.WriteAllText(file.FullName, options == ExportOptions.WithDefaults ? "<Document" : changed));
+
+        block.Write = (file, _) => File.WriteAllText(file.FullName, changed);
+        proof.CompareAfterImports(() => mapped, false);
+        string previousVerification = proof.Verification;
+        block.Write = InterruptWithDefaults;
+        proof.CompareAfterImports(() => mapped, false);
+        cases["post-import-defaults-interrupted"] = new { previousVerification, proof.Verification, proof.Interrupted, proof.Message };
         return cases;
     }
 
-    private static object FinalComparisonFailure(DirectoryInfo root, string xml, bool interrupted)
+    private static object ComparisonFailure(DirectoryInfo root, string xml, Action<FileInfo, ExportOptions> initialExport,
+        Action<FileInfo, ExportOptions> finalExport)
     {
         var ws = new Workspace(root);
         var project = new Project();
         project.Vci.WorkspaceGroup.Workspaces.Add(ws);
         File.WriteAllText(Path.Combine(root.FullName, "Motor.xml"), xml);
-        bool afterSync = false;
-        var block = new PlcBlock { IsConsistent = false, Write = (_, _) =>
-        {
-            if (afterSync && interrupted) throw new EndOfStreamException("Final comparison connection lost");
-            throw new EngineeringTargetInvocationException("Comparison export refused");
-        } };
+        var block = new PlcBlock { IsConsistent = false, Write = initialExport };
         var mapped = new WorkspaceMapping(ws, "Motor.xml", block);
         mapped.Status.State = CompareState.Equal;
         mapped.Status.AcceptEqual = true;
-        mapped.Status.OnSynchronized = () => afterSync = true;
+        mapped.Status.OnSynchronized = () => block.Write = finalExport;
         ws.Mappings.Add(mapped);
 
         var proof = new VciStoredEqual(root.FullName, mapped, "Motor", "Refresh refused");
         VciStoredEqual.PrepareAll(new[] { proof }, false);
         proof.Finish(() => mapped, SynchronizationMode.ProjectToWorkspace, false);
-        afterSync = false;
+        block.Write = initialExport;
         var reply = new VersionControlAdapter(() => project).SyncVersionControlWorkspace(dryRun: false);
-        return new { proof.Inconsistent, proof.ComparisonInterrupted, reply };
+        return new { proof.Inconsistent, proof.ComparisonInterrupted, proof.Proof.ExportSucceeded, reply };
     }
 
     internal static Dictionary<string, object> Run(DirectoryInfo parent)

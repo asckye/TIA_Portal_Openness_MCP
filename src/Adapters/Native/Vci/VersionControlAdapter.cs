@@ -264,7 +264,11 @@ namespace TiaMcp.Adapters.Native.Vci
 
             internal void Add(string name, string path, string? format)
             {
-                if (name == "?" || !Path.IsPathRooted(path))
+                bool readable;
+                try { readable = name != "?" && Path.IsPathRooted(path); }
+                catch (ArgumentException) /* swallow(probe-optional): An invalid row path makes the unmapped-file scan inconclusive. */
+                { readable = false; }
+                if (!readable)
                 {
                     unreadablePath = true;
                     return;
@@ -463,7 +467,7 @@ namespace TiaMcp.Adapters.Native.Vci
                     if (proof.Outcome == "not-verified")
                     {
                         failed++;
-                        unverified.Add((name, proof.Inconsistent, proof.Proof.ExportSucceeded));
+                        unverified.Add((name, proof.Inconsistent, proof.Verification == "no-match"));
                         failures.Add(row);
                     }
                 }

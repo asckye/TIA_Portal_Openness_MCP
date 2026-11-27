@@ -67,7 +67,16 @@ internal static class VciExportFixture
             reported.RootPath = (DirectoryInfo)new ReportedDirectory(root.FullName + "\\" + suffix).GetTransparentProxy();
             return adapter.GetVersionControlStatus(changedOnly: false);
         }
-        return new { mapped, twenty, many, unavailable, invalidCharacter = InvalidRoot("bad|root"), midPathColon = InvalidRoot("bad:root") };
+        var cases = new Dictionary<string, object> {
+            ["mapped"] = mapped, ["twenty"] = twenty, ["many"] = many, ["unavailable"] = unavailable,
+            ["invalidCharacter"] = InvalidRoot("bad|root"), ["midPathColon"] = InvalidRoot("bad:root")
+        };
+#if STUDIO_VCI_MODERN
+        reported.RootPath = root;
+        reported.MappedObjects[0].FileNameWithoutExtension = "Bad|Stem";
+        cases["invalidMapping"] = adapter.GetVersionControlStatus(changedOnly: false);
+#endif
+        return cases;
     }
 
     // A local DirectoryInfo constructor validates the path before status can read FullName.
