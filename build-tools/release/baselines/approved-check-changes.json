@@ -8689,6 +8689,18 @@
           "identifier": "WritePreviewCoverageTests/Seed_preview_and_apply_require_a_layout_and_bind_each_planned_file( ):93c68e24d17cb881c01c0a5647fb61609b6da82667dce95948af3d83ed4f2608:1"
         }
       ]
+    },
+    {
+      "task": "CI-FIX",
+      "maintainerDate": "2026-11-26",
+      "reason": "Maintainer approved on 2026-11-26: the default-width check reads the layout root (Root.Width and Root.ActualWidth) because the CI desktop caps the native window at 1044",
+      "items": [
+        {
+          "path": "tests/Studio/TiaOpenness.Gui.Tests/WorkbenchControlLoadTests.cs",
+          "kind": "assertion-removed",
+          "identifier": "TiaOpenness.Gui.Tests.WorkbenchControlLoadTests/Default_width_docks_the_AI_call_detail_without_a_modal_blocker_or_focus_trap( ):77982b9d044bf70174b65a443c80dab01088aa4290caf82b15f1b02cecba916b:1"
+        }
+      ]
     }
   ]
 }
