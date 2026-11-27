@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
+using System.Runtime.Remoting.Proxies;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.SW;
@@ -49,7 +51,34 @@ internal static class VciExportFixture
         AddFiles(21, 205);
         var many = adapter.GetVersionControlStatus();
         workspace.RootPath = new DirectoryInfo(Path.Combine(root.FullName, "Unavailable"));
-        return new { mapped, twenty, many, unavailable = adapter.GetVersionControlStatus() };
+        var unavailable = adapter.GetVersionControlStatus();
+
+        // Keep the individual mapping paths readable while the workspace reports a malformed root.
+        workspace.RootPath = root;
+        var reported = new Workspace(root);
+#if STUDIO_VCI_MODERN
+        reported.MappedObjects.AddRange(workspace.MappedObjects);
+#else
+        reported.Mappings.AddRange(workspace.Mappings);
+#endif
+        project.Vci.WorkspaceGroup.Workspaces[0] = reported;
+        object InvalidRoot(string suffix)
+        {
+            reported.RootPath = (DirectoryInfo)new ReportedDirectory(root.FullName + "\\" + suffix).GetTransparentProxy();
+            return adapter.GetVersionControlStatus(changedOnly: false);
+        }
+        return new { mapped, twenty, many, unavailable, invalidCharacter = InvalidRoot("bad|root"), midPathColon = InvalidRoot("bad:root") };
+    }
+
+    // A local DirectoryInfo constructor validates the path before status can read FullName.
+    private sealed class ReportedDirectory(string path) : RealProxy(typeof(DirectoryInfo))
+    {
+        public override IMessage Invoke(IMessage message)
+        {
+            var call = (IMethodCallMessage)message;
+            if (call.MethodName != "get_FullName") throw new NotSupportedException(call.MethodName);
+            return new ReturnMessage(path, null, 0, call.LogicalCallContext, call);
+        }
     }
 
     internal static object Run(DirectoryInfo parent, bool refreshesKnownState)

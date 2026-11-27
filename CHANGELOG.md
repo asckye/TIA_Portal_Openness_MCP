@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- On V16–V19, the block message reports the error that interrupted its final comparison export. If the block remains unverified,
+  the synchronization summary advises retrying the comparison. An ordinary export refusal for an inconsistent block still advises recompiling it.
+- On V16–V21, `GetVersionControlStatus` returns mapping rows and totals when the workspace root path is invalid.
+  The summary says the workspace XML files could not be checked and `unmappedFiles` is `null`.
+
 ## [4.0.0] - 2026-11-26
 
 The final 4.0 release for all eight supported TIA Portal releases, V14 SP1, V15.1 and V16–V21. It fixes the LOW findings of the rc.8 real-machine re-verification.

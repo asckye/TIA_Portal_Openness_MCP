@@ -144,7 +144,35 @@ internal static class VciProofFixture
         block.Write = (output, _) => File.WriteAllText(output.FullName, "<Document");
         proof.CompareAfterImports(() => mapped, false);
         cases["repeated-comparison"] = new { initial, unreadable, final = proof.Inconsistent, proof.Proof.ExportSucceeded, proof.Message };
+        cases["final-interrupted"] = FinalComparisonFailure(parent.CreateSubdirectory("final-interrupted"), xml, interrupted: true);
+        cases["final-refused"] = FinalComparisonFailure(parent.CreateSubdirectory("final-refused"), xml, interrupted: false);
         return cases;
+    }
+
+    private static object FinalComparisonFailure(DirectoryInfo root, string xml, bool interrupted)
+    {
+        var ws = new Workspace(root);
+        var project = new Project();
+        project.Vci.WorkspaceGroup.Workspaces.Add(ws);
+        File.WriteAllText(Path.Combine(root.FullName, "Motor.xml"), xml);
+        bool afterSync = false;
+        var block = new PlcBlock { IsConsistent = false, Write = (_, _) =>
+        {
+            if (afterSync && interrupted) throw new EndOfStreamException("Final comparison connection lost");
+            throw new EngineeringTargetInvocationException("Comparison export refused");
+        } };
+        var mapped = new WorkspaceMapping(ws, "Motor.xml", block);
+        mapped.Status.State = CompareState.Equal;
+        mapped.Status.AcceptEqual = true;
+        mapped.Status.OnSynchronized = () => afterSync = true;
+        ws.Mappings.Add(mapped);
+
+        var proof = new VciStoredEqual(root.FullName, mapped, "Motor", "Refresh refused");
+        VciStoredEqual.PrepareAll(new[] { proof }, false);
+        proof.Finish(() => mapped, SynchronizationMode.ProjectToWorkspace, false);
+        afterSync = false;
+        var reply = new VersionControlAdapter(() => project).SyncVersionControlWorkspace(dryRun: false);
+        return new { proof.Inconsistent, proof.ComparisonInterrupted, reply };
     }
 
     internal static Dictionary<string, object> Run(DirectoryInfo parent)

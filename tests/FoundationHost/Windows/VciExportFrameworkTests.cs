@@ -599,6 +599,33 @@ public sealed class VciExportFrameworkTests
         }
     }
 
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19")]
+    public async Task Interrupted_final_comparison_of_an_inconsistent_block_reports_only_the_connection_failure(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = (await ExportReplies(release))["sequences"]!;
+        foreach (bool interrupted in new[] { false, true })
+        {
+            var scenario = cases[interrupted ? "final-interrupted" : "final-refused"]!;
+            var data = Tools(scenario).SynchronizeVersionControlWorkspaceV4(dryRun: false).StructuredContent!["data"]!;
+            var row = Assert.Single(data["evidence"]!["items"]!.AsArray())!;
+            Assert.Equal("not-verified", (string?)row["outcome"]);
+            Assert.Equal(interrupted, (bool?)scenario["ComparisonInterrupted"]);
+            Assert.Equal(!interrupted, (bool?)scenario["Inconsistent"]);
+            if (interrupted)
+            {
+                Assert.Equal("Final comparison connection lost", (string?)row["nativeMessage"]);
+                Assert.DoesNotContain("Recompile", (string?)data["summary"]);
+                Assert.Contains("Not verified: Motor. Check the comparison diagnostic", (string?)data["summary"]);
+            }
+            else
+            {
+                Assert.Contains("Recompile the block, then retry", (string?)row["nativeMessage"]);
+                Assert.Contains("Recompile the block(s) Motor and synchronize again.", (string?)data["summary"]);
+            }
+        }
+    }
+
     [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
     public async Task Status_matches_listed_file_paths_across_formats_and_bounds_unmapped_names(string release)
     {
@@ -632,6 +659,28 @@ public sealed class VciExportFrameworkTests
         Assert.Contains("could not be checked", (string?)unavailable["summary"]);
         Assert.True(unavailable["evidence"]!.AsObject().ContainsKey("unmappedFiles"));
         Assert.Null(unavailable["evidence"]!["unmappedFiles"]);
+    }
+
+    [Theory, InlineData("16"), InlineData("17"), InlineData("18"), InlineData("19"), InlineData("20"), InlineData("21")]
+    public async Task Status_reports_mappings_when_the_workspace_root_is_invalid(string release)
+    {
+        using var selected = Host.HardwareContract.UseRelease(release);
+        var cases = await ExportReplies(release, "--workspace-files");
+        Assert.All(new[] { ("invalidCharacter", "bad|root"), ("midPathColon", "bad:root") }, item =>
+        {
+            var (key, suffix) = item;
+            var body = Tools(new JsonObject { ["reply"] = cases[key]!.DeepClone() })
+                .GetVersionControlStatusV4(changedOnly: false).StructuredContent!;
+            Assert.True((bool?)body["ok"], body.ToJsonString());
+            var data = body["data"]!;
+            var evidence = data["evidence"]!;
+            Assert.EndsWith(suffix, (string?)evidence["rootPath"]);
+            Assert.Contains("could not be checked", (string?)data["summary"]);
+            Assert.True(evidence.AsObject().ContainsKey("unmappedFiles"));
+            Assert.Null(evidence["unmappedFiles"]);
+            Assert.Equal(2, (int?)evidence["total"]);
+            Assert.Equal(2, evidence["objects"]!.AsArray().Count);
+        });
     }
 
     [Fact]

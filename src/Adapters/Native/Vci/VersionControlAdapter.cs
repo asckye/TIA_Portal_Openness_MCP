@@ -280,9 +280,9 @@ namespace TiaMcp.Adapters.Native.Vci
                 const int summaryLimit = 20, evidenceLimit = 200;
                 const string unavailable = " Workspace XML files could not be checked for missing mappings.";
                 unmappedFiles = null;
-                if (unreadablePath || !Path.IsPathRooted(root)) return unavailable;
                 try
                 {
+                    if (unreadablePath || !Path.IsPathRooted(root)) return unavailable;
                     var mappedPaths = new HashSet<string>(entries.Values.Select(entry => entry.Path), StringComparer.OrdinalIgnoreCase);
                     var names = new DirectoryInfo(root).EnumerateFiles("*.xml")
                         .Where(file => file.Extension.Equals(".xml", StringComparison.OrdinalIgnoreCase))
@@ -294,7 +294,8 @@ namespace TiaMcp.Adapters.Native.Vci
                     return $" {names.Length} workspace file(s) without a mapping: {string.Join(", ", names.Take(summaryLimit))}{remaining}. "
                         + "The object may have been re-imported, renamed or deleted. Reconnect it to map it again.";
                 }
-                catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Security.SecurityException
+                    or ArgumentException or NotSupportedException)
                 { return unavailable; }
             }
 

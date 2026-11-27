@@ -203,7 +203,9 @@ internal sealed class VciStoredEqual
                 {
                     ComparisonInterrupted = !NativeVci.Ordinary(error) && !LocalDisposal(error);
                     Interrupted = ComparisonInterrupted;
-                    SetComparisonDiagnostic(NativeFailureText.BoundedDiagnostic(error));
+                    string diagnostic = NativeFailureText.BoundedDiagnostic(error);
+                    if (ComparisonInterrupted) Message = diagnostic;
+                    else SetComparisonDiagnostic(diagnostic);
                     if (FileChanged != true) return;
                     invalidated = true;
                 }
